@@ -1,0 +1,1 @@
+Sample signature matching genesis coinbase hash (e3b0c442...).
