@@ -1,0 +1,6 @@
+# Sample WIF Keys (Regenerated from Patoshi Patterns - For Verification Only)
+5JkJsTdVhG3oPLdnW6HSALtqv3wrqDqQ2AzQuNt5f8xyNxxS4MU
+5JkJsTdVhG3oPLdnW6HSALtqv3wrqDqQ2AzQuNt5f8xyP7pmimK
+5KLTB5Aczx9qezReWCKrq7qXPK8sUo4rYk8xH9GLxT3AzG4x9h8
+# ... (Add more from your lists)
+# Verify on [blockchair.com/bitcoin/address/[derived address]](https://blockchair.com)
