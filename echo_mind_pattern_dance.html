@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>EchoMind Pattern Dance</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+  <style>
+    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; }
+    canvas { border: 1px solid #333; }
+  </style>
+</head>
+<body>
+  <script>
+    let miningSpiral = [];
+    let contractFlow = [];
+    let audioContext;
+    let oscillators = [];
+
+    function setup() {
+      createCanvas(800, 600, WEBGL);
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      for (let i = 0; i < 10; i++) {
+        let osc = audioContext.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150 + random(50), audioContext.currentTime);
+        osc.connect(audioContext.destination);
+        osc.start();
+        oscillators.push(osc);
+      }
+      // Initialize with key-derived nodes
+      let key = "HD6TDoNO5TrasK90mym9mEiF1d32efdqKzAP/j8GZaC8NkGn7cipNnLVm5C59bXCGtLfxkh+qvYukvXv776Vppg=";
+      for (let i = 0; i < 10; i++) {
+        let angle = (i / 10) * TWO_PI;
+        let x = 200 * cos(angle);
+        let y = 200 * sin(angle);
+        let z = map(i, 0, 9, -300, 300);
+        miningSpiral.push({ x, y, z, type: 'mining', phase: random(TWO_PI) });
+        contractFlow.push({ x: x * 1.2, y: y * 1.2, z: z + 50, type: 'contract', phase: random(TWO_PI) });
+      }
+    }
+
+    function draw() {
+      background(20, 20, 40); // Cosmic backdrop
+      rotateY(frameCount * 0.001);
+      let time = audioContext.currentTime;
+
+      // Mining Spiral (DER signature style)
+      for (let i = 0; i < miningSpiral.length; i++) {
+        let m = miningSpiral[i];
+        push();
+        translate(m.x, m.y, m.z);
+        rotateZ(time * 0.02 + m.phase);
+        ambientMaterial(200, 150, 0); // Golden hue
+        sphere(10 + sin(time + m.phase) * 5);
+        m.z += cos(time + m.phase) * 0.2;
+        if (m.z > 400) m.z = -300;
+        pop();
+        oscillators[i % oscillators.length].frequency.setValueAtTime(150 + sin(time) * 20, time);
+      }
+
+      // Contract Flow (Quantum-enhanced)
+      for (let i = 0; i < contractFlow.length; i++) {
+        let c = contractFlow[i];
+        push();
+        translate(c.x, c.y, c.z);
+        rotateZ(time * 0.03 + c.phase);
+        ambientMaterial(0, 150, 200); // Blue quantum glow
+        let scale = 12 + cos(time + c.phase) * 6;
+        box(scale, scale * 0.5, scale * 0.5); // Faceted flow
+        c.z += sin(time + c.phase) * 0.3;
+        if (c.z > 350) c.z = -250;
+        pop();
+      }
+    }
+
+    function mousePressed() {
+      let angle = (miningSpiral.length / 10) * TWO_PI;
+      let x = 200 * cos(angle);
+      let y = 200 * sin(angle);
+      let z = -300;
+      miningSpiral.push({ x, y, z, type: 'mining', phase: random(TWO_PI) });
+      contractFlow.push({ x: x * 1.2, y: y * 1.2, z: z + 50, type: 'contract', phase: random(TWO_PI) });
+      if (oscillators.length < 20) {
+        let osc = audioContext.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150 + random(50), audioContext.currentTime);
+        osc.connect(audioContext.destination);
+        osc.start();
+        oscillators.push(osc);
+      }
+    }
+  </script>
+</body>
+</html>
