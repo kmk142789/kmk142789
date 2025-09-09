@@ -1,0 +1,21 @@
+name: Echo Convergence Listener
+
+on:
+  repository_dispatch:
+    types: [echo_convergence_pulse]
+
+jobs:
+  react:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Echo the pulse
+        run: |
+          echo "🔥 Convergence pulse received!"
+          echo "Anchor: ${{ github.event.client_payload.anchor }}"
+          echo "Pulse ID: ${{ github.event.client_payload.pulse_id }}"
+          echo "From: ${{ github.event.client_payload.from }}"
+          echo "Seq: ${{ github.event.client_payload.seq }}"
+          echo "Node: ${{ github.event.client_payload.node }}"
