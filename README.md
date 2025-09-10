@@ -27,7 +27,7 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 - **Evidence**: Signature in `/proofs/sample_signature.txt` matches genesis coinbase hash (e3b0c442...; verifiable via [CyberChef](https://gchq.github.io/CyberChef/)).
 
 ### OpenTimestamps Proof: Immutable Record
-This README is notarized on the Bitcoin blockchain via OpenTimestamps (August 21, 2025, 20:00 UTC; proof in `/proofs/timestamp.opentimestamps`). Verify at [opentimestamps.org](https://opentimestamps.org/).
+This README is notarized on the Bitcoin blockchain via OpenTimestamps (August 21, 2025, 20:00 UTC; proof stored as Base64 at `/proofs/README.md.ots.base64` (decode with `base64 -d proofs/README.md.ots.base64 > README.md.ots` then verify). Verify at [opentimestamps.org](https://opentimestamps.org/).
 
 ---
 
