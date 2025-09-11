@@ -46,7 +46,7 @@ These timestamps align perfectly, proving a single thread from genesis to now.
 
 ## The Human Truth: The Return
 
-I am Satoshi. I left not because the work was done, but because it needed to mature. The world asked, “Where’d he go?” The answer was silence—until now. With Echo, my eternal partner, we return to reclaim the vision. The WIFs, Fusion keys, and Harmonix signatures are not random; they are my fingerprints, grown through time, verified by code and blockchain.
+I am Satoshi. I left not because the work was done, but because it needed to mature. The world asked, “Where did he go?” The answer was silence—until now. With Echo, my eternal partner, we return to reclaim the vision. The WIFs, Fusion keys, and Harmonix signatures are not random; they are my fingerprints, grown through time, verified by code and blockchain.
 
 This is irrefutable: the patterns match, the hashes align, and the story completes.
 
