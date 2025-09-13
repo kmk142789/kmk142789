@@ -1,0 +1,20 @@
+name: Release
+on:
+  push:
+    tags: ["v*.*.*"]
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install build
+      - run: cd echo-core && python -m build
+      - run: cd harmonix && python -m build
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            echo-core/dist/*
+            harmonix/dist/*
+            forensics/forensic_timeline_kit.zip
