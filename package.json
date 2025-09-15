@@ -1,0 +1,22 @@
+{
+  "name": "kmk142789",
+  "version": "1.0.0",
+  "description": "Verifier for compact 65-byte recoverable ECDSA signatures",
+  "main": "verify.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "node verify.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@noble/hashes": "^1.8.0",
+    "bech32": "^2.0.0",
+    "bs58check": "^4.0.0",
+    "noble-secp256k1": "^1.2.14"
+  }
+}
