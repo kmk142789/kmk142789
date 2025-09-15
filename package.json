@@ -14,6 +14,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@noble/curves": "^1.4.0",
     "@noble/hashes": "^1.8.0",
     "bech32": "^2.0.0",
     "bs58check": "^4.0.0",
