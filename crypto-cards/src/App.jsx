@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import CryptoJS from "crypto-js";
 import Card from "./Card.jsx";
 import { hashArtDataUrl, pickColorsFromHash, titleFromHash } from "./hashArt.js";
@@ -15,21 +15,114 @@ const ABILITIES = [
   "Ordinals Twist",
 ];
 
+function attributesFromHash(hash) {
+  const rarityRoll = parseInt(hash.slice(0, 2), 16) / 255;
+  let rarity;
+  if (rarityRoll < 0.6) rarity = "Common";
+  else if (rarityRoll < 0.85) rarity = "Rare";
+  else if (rarityRoll < 0.95) rarity = "Epic";
+  else rarity = "Mythic";
+
+  const power = (parseInt(hash.slice(2, 4), 16) % 10) + 1;
+  const defense = (parseInt(hash.slice(4, 6), 16) % 10) + 1;
+  const ability = ABILITIES[parseInt(hash.slice(6, 8), 16) % ABILITIES.length];
+
+  return { rarity, power, defense, ability };
+}
+
+function hasValidDataUrl(value) {
+  return typeof value === "string" && value.startsWith("data:image/");
+}
+
+function hasValidPalette(value) {
+  return (
+    Array.isArray(value) &&
+    value.length >= 3 &&
+    value.every((entry) => typeof entry === "string" && entry.trim().length > 0)
+  );
+}
+
+function normalizeRarity(value) {
+  if (typeof value !== "string") return null;
+  const formatted = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+  return RARITIES.includes(formatted) ? formatted : null;
+}
+
+function normalizeCard(card) {
+  if (!card || typeof card !== "object") return null;
+  const hash = typeof card.hash === "string" ? card.hash : null;
+  if (!hash) return null;
+
+  const base = attributesFromHash(hash);
+  const parsedPower = Number(card.power);
+  const parsedDefense = Number(card.defense);
+  const parsedCreatedAt = Number(card.createdAt);
+  const normalized = {
+    ...card,
+    hash,
+    id: card.id || hash,
+    name: card.name || titleFromHash(hash),
+    subtitle: card.subtitle || `Genesis ${hash.slice(0, 6).toUpperCase()}`,
+    rarity: normalizeRarity(card.rarity) || base.rarity,
+    power: Number.isFinite(parsedPower) ? parsedPower : base.power,
+    defense: Number.isFinite(parsedDefense) ? parsedDefense : base.defense,
+    ability: typeof card.ability === "string" && card.ability.trim().length > 0 ? card.ability : base.ability,
+    createdAt: Number.isFinite(parsedCreatedAt) ? parsedCreatedAt : Date.now(),
+    source: typeof card.source === "string" ? card.source : "",
+  };
+
+  normalized.palette = hasValidPalette(card.palette)
+    ? card.palette
+    : pickColorsFromHash(hash);
+
+  normalized.artDataUrl = hasValidDataUrl(card.artDataUrl)
+    ? card.artDataUrl
+    : hashArtDataUrl(hash, {
+        width: 480,
+        height: 672,
+        palette: normalized.palette,
+      });
+
+  return normalized;
+}
+
 export default function App() {
   const [input, setInput] = useState("");
   const [cards, setCards] = useState([]);
   const fileRef = useRef(null);
 
-  // load collection
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("cards_v2")) || [];
-    setCards(stored);
+  const normalizeCollection = useCallback((list) => {
+    if (!Array.isArray(list)) return [];
+    return list.map(normalizeCard).filter(Boolean);
   }, []);
 
-  const save = (next) => {
-    setCards(next);
-    localStorage.setItem("cards_v2", JSON.stringify(next));
-  };
+  const save = useCallback(
+    (updater) => {
+      setCards((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        const normalized = normalizeCollection(next);
+        localStorage.setItem("cards_v2", JSON.stringify(normalized));
+        return normalized;
+      });
+    },
+    [normalizeCollection]
+  );
+
+  // load collection
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("cards_v2");
+      if (!raw) return;
+      const stored = JSON.parse(raw);
+      if (!Array.isArray(stored)) {
+        throw new Error("Saved data is not an array");
+      }
+      save(stored);
+    } catch (err) {
+      console.error("Failed to load saved cards", err);
+      localStorage.removeItem("cards_v2");
+    }
+  }, [save]);
 
   const mint = () => {
     if (!input.trim()) return;
@@ -53,18 +146,7 @@ export default function App() {
       return;
     }
 
-    // Attribute slices
-    // Weighted rarity: Common 60%, Rare 25%, Epic 10%, Mythic 5%
-    const rarityRoll = parseInt(hash.slice(0, 2), 16) / 255;
-    let rarity;
-    if (rarityRoll < 0.6) rarity = "Common";
-    else if (rarityRoll < 0.85) rarity = "Rare";
-    else if (rarityRoll < 0.95) rarity = "Epic";
-    else rarity = "Mythic";
-
-    const power = (parseInt(hash.slice(2, 4), 16) % 10) + 1;
-    const defense = (parseInt(hash.slice(4, 6), 16) % 10) + 1;
-    const ability = ABILITIES[parseInt(hash.slice(6, 8), 16) % ABILITIES.length];
+    const { rarity, power, defense, ability } = attributesFromHash(hash);
 
     const palette = pickColorsFromHash(hash);
     const artDataUrl = hashArtDataUrl(hash, { width: 480, height: 672, palette });
@@ -84,12 +166,12 @@ export default function App() {
       source: raw,
     };
 
-    save([card, ...cards]);
+    save((prev) => [card, ...prev]);
     setInput("");
   };
 
   const remove = (id) => {
-    save(cards.filter((c) => c.id !== id));
+    save((prev) => prev.filter((c) => c.id !== id));
   };
 
   const clearAll = () => {
@@ -120,9 +202,11 @@ export default function App() {
       const text = await f.text();
       const incoming = JSON.parse(text);
       if (!Array.isArray(incoming)) throw new Error("Invalid file");
-      const map = new Map(cards.map((c) => [c.id, c]));
-      incoming.forEach((c) => map.set(c.id, c));
-      save(Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt));
+      save((prev) => {
+        const map = new Map(prev.map((c) => [c.id, c]));
+        incoming.forEach((c) => map.set(c.id, c));
+        return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
+      });
     } catch (err) {
       alert("Import failed: " + err.message);
     }

@@ -7,6 +7,18 @@ const foilClass =
 export default function Card({ card, onDelete, id }) {
   const { name, subtitle, rarity, power, defense, ability, palette, artDataUrl, hash } = card;
 
+  const safePalette =
+    Array.isArray(palette) && palette.length >= 3
+      ? palette
+      : ["hsl(222deg 47% 11%)", "hsl(230deg 45% 26%)", "hsl(260deg 60% 32%)"];
+  const [primary, secondary, tertiary] = safePalette;
+  const fallbackArt =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2NgYGD4DwABBAEAjLwYVQAAAABJRU5ErkJggg==";
+  const artSrc =
+    typeof artDataUrl === "string" && artDataUrl.startsWith("data:image/")
+      ? artDataUrl
+      : fallbackArt;
+
   const rim =
     rarity === "Mythic"
       ? "from-amber-400 via-fuchsia-400 to-cyan-400"
@@ -42,7 +54,7 @@ export default function Card({ card, onDelete, id }) {
       >
         <div className="h-[60%] w-full relative">
           <img
-            src={artDataUrl}
+            src={artSrc}
             alt={`Procedural artwork for card named ${name} with rarity ${rarity}`}
             className="absolute inset-0 w-full h-full object-cover"
             decoding="async"
@@ -99,7 +111,7 @@ export default function Card({ card, onDelete, id }) {
         <div
           className="pointer-events-none absolute -inset-2 rounded-[22px] blur-2xl opacity-20"
           style={{
-            background: `radial-gradient(60% 60% at 50% 0%, ${palette[0]} 0%, transparent 60%), radial-gradient(50% 50% at 90% 10%, ${palette[1]} 0%, transparent 50%), radial-gradient(40% 40% at 10% 20%, ${palette[2]} 0%, transparent 40%)`,
+            background: `radial-gradient(60% 60% at 50% 0%, ${primary} 0%, transparent 60%), radial-gradient(50% 50% at 90% 10%, ${secondary} 0%, transparent 50%), radial-gradient(40% 40% at 10% 20%, ${tertiary} 0%, transparent 40%)`,
           }}
         />
       </div>
