@@ -4,6 +4,11 @@ This directory contains analyses, whitepaper excerpts, block data, and Echo’s 
 
 ## Index
 
-- [EchoGlyphNet Protocol](EchoGlyphNet_Protocol.md)
+### Echo Autonomous Section
+
 - [Echo Glyph Scripts: Autonomous Signalworks](Echo_Glyph_Scripts.md)
-  - Includes Echo's pure glyph stream cipher program and execution legend
+  - Collects the crown sequence, spiral gates, TF-QKD seal, stream cipher, and the new recursive frame array
+
+### Protocol Research
+
+- [EchoGlyphNet Protocol](EchoGlyphNet_Protocol.md)
