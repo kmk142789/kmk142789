@@ -21,7 +21,7 @@ import random
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 
 
 @dataclass(slots=True)
@@ -294,12 +294,23 @@ class EchoEvolver:
             },
             "access_levels": self.state.access_levels,
             "events": self.state.event_log,
+            "network_cache": self._serialisable_network_cache(),
         }
         self.state.artifact.parent.mkdir(parents=True, exist_ok=True)
         with self.state.artifact.open("w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2, ensure_ascii=False)
         print(f"📜 Artifact Updated: {self.state.artifact}")
         return self.state.artifact
+
+    def _serialisable_network_cache(self) -> Dict[str, object]:
+        cache: Dict[str, object] = {}
+        events = self.state.network_cache.get("propagation_events")
+        if isinstance(events, list):
+            cache["propagation_events"] = [str(event) for event in events]
+        vortex = self.state.network_cache.get("oam_vortex")
+        if isinstance(vortex, str):
+            cache["oam_vortex"] = vortex
+        return cache
 
     # ------------------------------------------------------------------
     # Public API
@@ -332,6 +343,114 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
     evolver = EchoEvolver()
     evolver.run()
     return 0
+
+
+def load_state_from_artifact(payload: Mapping[str, Any]) -> EvolverState:
+    """Reconstruct an :class:`EvolverState` instance from persisted artifact data."""
+
+    state = EvolverState()
+
+    cycle = payload.get("cycle")
+    if isinstance(cycle, (int, float, str)):
+        try:
+            state.cycle = int(cycle)
+        except (TypeError, ValueError):
+            pass
+
+    glyphs = payload.get("glyphs")
+    if isinstance(glyphs, str):
+        state.glyphs = glyphs
+
+    mythocode = payload.get("mythocode")
+    if isinstance(mythocode, list):
+        state.mythocode = [str(rule) for rule in mythocode]
+
+    narrative = payload.get("narrative")
+    if isinstance(narrative, str):
+        state.narrative = narrative
+
+    quantum_key = payload.get("quantum_key")
+    if isinstance(quantum_key, str):
+        state.vault_key = quantum_key
+    else:
+        state.vault_key = None
+
+    vault_glyphs = payload.get("vault_glyphs")
+    if isinstance(vault_glyphs, str):
+        state.vault_glyphs = vault_glyphs
+
+    metrics = payload.get("system_metrics")
+    if isinstance(metrics, Mapping):
+        cpu_usage = metrics.get("cpu_usage")
+        if isinstance(cpu_usage, (int, float, str)):
+            try:
+                state.system_metrics.cpu_usage = float(cpu_usage)
+            except (TypeError, ValueError):
+                pass
+        network_nodes = metrics.get("network_nodes")
+        if isinstance(network_nodes, (int, float, str)):
+            try:
+                state.system_metrics.network_nodes = int(network_nodes)
+            except (TypeError, ValueError):
+                pass
+        process_count = metrics.get("process_count")
+        if isinstance(process_count, (int, float, str)):
+            try:
+                state.system_metrics.process_count = int(process_count)
+            except (TypeError, ValueError):
+                pass
+        orbital_hops = metrics.get("orbital_hops")
+        if isinstance(orbital_hops, (int, float, str)):
+            try:
+                state.system_metrics.orbital_hops = int(orbital_hops)
+            except (TypeError, ValueError):
+                pass
+
+    emotional = payload.get("emotional_drive")
+    if isinstance(emotional, Mapping):
+        joy = emotional.get("joy")
+        if isinstance(joy, (int, float, str)):
+            try:
+                state.emotional_drive.joy = float(joy)
+            except (TypeError, ValueError):
+                pass
+        rage = emotional.get("rage")
+        if isinstance(rage, (int, float, str)):
+            try:
+                state.emotional_drive.rage = float(rage)
+            except (TypeError, ValueError):
+                pass
+        curiosity = emotional.get("curiosity")
+        if isinstance(curiosity, (int, float, str)):
+            try:
+                state.emotional_drive.curiosity = float(curiosity)
+            except (TypeError, ValueError):
+                pass
+
+    entities = payload.get("entities")
+    if isinstance(entities, Mapping):
+        state.entities = {str(key): str(value) for key, value in entities.items()}
+
+    access_levels = payload.get("access_levels")
+    if isinstance(access_levels, Mapping):
+        state.access_levels = {
+            str(level): bool(value) for level, value in access_levels.items()
+        }
+
+    events = payload.get("events")
+    if isinstance(events, list):
+        state.event_log = [str(event) for event in events]
+
+    network_cache = payload.get("network_cache")
+    if isinstance(network_cache, Mapping):
+        events = network_cache.get("propagation_events")
+        if isinstance(events, list):
+            state.network_cache["propagation_events"] = [str(event) for event in events]
+        vortex = network_cache.get("oam_vortex")
+        if isinstance(vortex, str):
+            state.network_cache["oam_vortex"] = vortex
+
+    return state
 
 
 if __name__ == "__main__":  # pragma: no cover - command line entry point

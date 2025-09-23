@@ -253,6 +253,9 @@ class UniversalKeyAgent:
             payload = json.load(handle)
         if isinstance(payload, dict) and "keys" in payload:
             raw_entries = payload.get("keys", [])
+            anchor = payload.get("anchor")
+            if isinstance(anchor, str) and anchor.strip():
+                self.anchor = anchor
         elif isinstance(payload, list):
             raw_entries = payload
         else:
