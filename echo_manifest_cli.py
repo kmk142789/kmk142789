@@ -57,9 +57,12 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _load_artifact(path: Path) -> dict:
-    with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
+def _load_artifact(path: Path) -> object:
+    text = path.read_text(encoding="utf-8")
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return text
 
 
 def main(argv: Optional[Iterable[str]] = None) -> int:

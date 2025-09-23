@@ -85,6 +85,24 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertIn("network_cache", payload)
         self.assertIn("propagation_events", payload["network_cache"])
 
+    def test_legacy_artifact_round_trip(self) -> None:
+        legacy_path = Path(self.tmp.name) / "artifact.echo"
+        evolver = EchoEvolver(
+            artifact_path=legacy_path,
+            rng=random.Random(99),
+            time_source=lambda: 987654321,
+        )
+        state = evolver.run(enable_network=False, persist_artifact=True, artifact_format="text")
+        self.assertTrue(legacy_path.exists())
+        legacy_payload = legacy_path.read_text(encoding="utf-8")
+        self.assertIn("EchoEvolver: Nexus Evolution Cycle v4", legacy_payload)
+
+        rehydrated = load_state_from_artifact(legacy_payload)
+        self.assertEqual(rehydrated.cycle, state.cycle)
+        self.assertEqual(rehydrated.glyphs, state.glyphs)
+        self.assertEqual(rehydrated.mythocode, state.mythocode)
+        self.assertEqual(rehydrated.vault_key, state.vault_key)
+
 
 class EchoManifestIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -190,6 +208,46 @@ class EchoManifestIntegrationTests(unittest.TestCase):
         self.assertEqual(
             manifest_payload["evolver"]["propagation_channels"],
             len(state.network_cache["propagation_events"]),
+        )
+
+    def test_manifest_cli_accepts_legacy_artifact(self) -> None:
+        self.agent.add_private_key(
+            "b71c71a687c6b8e42d620aa6bb0ddc093274e5b88ad61f8ad3c4fe0f7f5f8eb4"
+        )
+        self.agent.anchor = "Legacy Anchor"
+        self.agent.save_vault()
+
+        legacy_artifact = Path(self.tmp.name) / "artifact.legacy.echo"
+        evolver = EchoEvolver(
+            artifact_path=legacy_artifact,
+            rng=random.Random(11),
+            time_source=lambda: 111222333,
+        )
+        state = evolver.run(enable_network=False, persist_artifact=True, artifact_format="text")
+
+        output_path = Path(self.tmp.name) / "legacy_manifest.json"
+        exit_code = echo_manifest_cli.main(
+            [
+                "--artifact",
+                str(legacy_artifact),
+                "--vault",
+                str(self.agent.vault_path),
+                "--format",
+                "json",
+                "--output",
+                str(output_path),
+            ]
+        )
+        self.assertEqual(exit_code, 0)
+        with output_path.open("r", encoding="utf-8") as handle:
+            manifest_payload = json.load(handle)
+        rehydrated = load_state_from_artifact(legacy_artifact.read_text(encoding="utf-8"))
+
+        self.assertEqual(manifest_payload["anchor"], "Legacy Anchor")
+        self.assertEqual(manifest_payload["key_count"], 1)
+        self.assertEqual(
+            manifest_payload["evolver"]["propagation_channels"],
+            len(rehydrated.network_cache.get("propagation_events", [])),
         )
 
 
