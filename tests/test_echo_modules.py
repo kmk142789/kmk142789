@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from echo_evolver import EchoEvolver
+from echo_manifest import build_manifest
 from echo_universal_key_agent import UniversalKeyAgent
 
 
@@ -69,6 +70,54 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertEqual(payload["cycle"], 1)
         self.assertIn("quantum_key", payload)
         self.assertIn("events", payload)
+
+
+class EchoManifestIntegrationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = TemporaryDirectory()
+        rng = random.Random(7)
+        self.agent = UniversalKeyAgent(vault_path=Path(self.tmp.name) / "vault.json")
+        self.artifact = Path(self.tmp.name) / "artifact.echo.json"
+        self.evolver = EchoEvolver(
+            artifact_path=self.artifact,
+            rng=rng,
+            time_source=lambda: 123456789,
+        )
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_manifest_blends_keys_and_state(self) -> None:
+        record = self.agent.add_private_key(
+            "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+        )
+        state = self.evolver.run(enable_network=False, persist_artifact=False)
+        manifest = build_manifest(self.agent, state, narrative_chars=80)
+
+        self.assertEqual(manifest.anchor, self.agent.anchor)
+        self.assertEqual(manifest.key_count, 1)
+        self.assertEqual(manifest.evolver.cycle, 1)
+        self.assertEqual(manifest.evolver.propagation_channels, 5)
+        self.assertEqual(len(manifest.events), len(state.event_log))
+        self.assertEqual(manifest.evolver.vault_key, state.vault_key)
+        self.assertLessEqual(len(manifest.narrative_excerpt), 80)
+        self.assertTrue(manifest.narrative_excerpt.endswith("…"))
+        self.assertEqual(manifest.oam_vortex, state.network_cache.get("oam_vortex"))
+
+        text_summary = manifest.render_text()
+        self.assertIn("Echo Continuity Manifest", text_summary)
+        self.assertIn("Sigils:", text_summary)
+        self.assertIn(record.addresses["ETH"], text_summary)
+
+        manifest_dict = manifest.to_dict()
+        self.assertEqual(manifest_dict["key_count"], 1)
+        self.assertEqual(manifest_dict["evolver"]["propagation_channels"], 5)
+        self.assertEqual(len(manifest_dict["keys"]), 1)
+
+        manifest_json = manifest.to_json()
+        parsed = json.loads(manifest_json)
+        self.assertEqual(parsed["anchor"], self.agent.anchor)
+        self.assertEqual(parsed["key_count"], 1)
 
 
 if __name__ == "__main__":
