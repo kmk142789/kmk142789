@@ -145,6 +145,58 @@ class ConstellationFrame:
             {"label": star.star_id, "payload": star.wallet_payload()} for star in self.stars
         ]
 
+    def render_ascii(self, *, width: int = 41, height: int = 21) -> str:
+        """Render the constellation to a simple ASCII sky map.
+
+        The output deliberately keeps the glyph positions deterministic so that
+        snapshots can be compared in version control.  ``width`` and ``height``
+        specify the drawable area inside the border.  A small legend is appended
+        so readers can link glyphs back to their star identifiers.
+        """
+
+        if width < 3 or height < 3:
+            raise ValueError("width and height must be at least 3 characters")
+
+        header = f"Constellation :: Anchor={self.anchor} | Cycle={self.cycle}"
+        if not self.stars:
+            border = "+" + "-" * width + "+"
+            return "\n".join([header, border, "|" + " " * width + "|", border, "Legend: (none)"])
+
+        xs = [star.coordinates[0] for star in self.stars]
+        ys = [star.coordinates[1] for star in self.stars]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        if min_x == max_x:
+            min_x -= 1.0
+            max_x += 1.0
+        if min_y == max_y:
+            min_y -= 1.0
+            max_y += 1.0
+
+        grid = [[" " for _ in range(width)] for _ in range(height)]
+        span_x = max_x - min_x
+        span_y = max_y - min_y
+        for star in self.stars:
+            x, y = star.coordinates
+            norm_x = (x - min_x) / span_x
+            norm_y = (max_y - y) / span_y
+            col = min(width - 1, max(0, round(norm_x * (width - 1))))
+            row = min(height - 1, max(0, round(norm_y * (height - 1))))
+            glyph = star.glyph[:1] or "*"
+            grid[row][col] = glyph
+
+        border = "+" + "-" * width + "+"
+        body = ["|" + "".join(row) + "|" for row in grid]
+
+        legend_lines = ["Legend:"]
+        for star in self.stars:
+            glyph = star.glyph[:1] or "*"
+            legend_lines.append(
+                f"  {glyph} {star.star_id} @ ({star.coordinates[0]:.2f}, {star.coordinates[1]:.2f})"
+            )
+
+        return "\n".join([header, border, *body, border, *legend_lines])
+
 
 # ---------------------------------------------------------------------------
 # Helpers
