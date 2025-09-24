@@ -5,7 +5,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from echo_evolver import EchoEvolver
-from echo_manifest import build_manifest
+from echo_constellation import build_constellation
+from echo_manifest import EchoManifest, build_manifest
 from echo_universal_key_agent import UniversalKeyAgent
 
 
@@ -119,6 +120,61 @@ class EchoManifestIntegrationTests(unittest.TestCase):
         self.assertEqual(parsed["anchor"], self.agent.anchor)
         self.assertEqual(parsed["key_count"], 1)
 
+
+class ConstellationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = TemporaryDirectory()
+        rng = random.Random(11)
+        self.agent = UniversalKeyAgent(vault_path=Path(self.tmp.name) / "vault.json")
+        self.artifact = Path(self.tmp.name) / "artifact.echo.json"
+        self.evolver = EchoEvolver(
+            artifact_path=self.artifact,
+            rng=rng,
+            time_source=lambda: 987654321,
+        )
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def _prepare_manifest(self) -> tuple[EchoEvolver, EchoManifest]:
+        record = self.agent.add_private_key(
+            "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+        )
+        state = self.evolver.run(enable_network=False, persist_artifact=False)
+        manifest = build_manifest(self.agent, state, narrative_chars=96)
+        self.assertEqual(record.addresses["ETH"], "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1")
+        return self.evolver, manifest
+
+    def test_constellation_structure(self) -> None:
+        _, manifest = self._prepare_manifest()
+        frame = build_constellation(manifest, timestamp=1_700_000_000)
+
+        self.assertEqual(frame.cycle, manifest.evolver.cycle)
+        self.assertEqual(frame.anchor, manifest.anchor)
+        self.assertEqual(frame.oam_vortex, manifest.oam_vortex)
+        self.assertEqual(len(frame.stars), manifest.key_count + 1)
+        self.assertTrue(frame.generated_at.endswith("Z"))
+
+        core = frame.stars[0]
+        self.assertEqual(core.star_id, "cycle-1-core")
+        self.assertEqual(core.coordinates, (0.0, 0.0))
+        self.assertGreater(core.pulse.joy, 0.0)
+        self.assertTrue(any(v.label == "OAM Vortex" for v in core.verification))
+
+        key_star = frame.stars[1]
+        self.assertIn("ETH", [v.label for v in key_star.verification])
+        self.assertNotEqual(key_star.coordinates, (0.0, 0.0))
+        self.assertGreater(key_star.pulse.intensity, 0.0)
+
+        beacons = frame.memory_beacons()
+        self.assertEqual(len(beacons), len(frame.stars))
+        self.assertTrue(all("cycle=" in beacon["payload"] for beacon in beacons))
+
+        constellation_json = frame.to_json()
+        parsed = json.loads(constellation_json)
+        self.assertEqual(parsed["cycle"], manifest.evolver.cycle)
+        self.assertEqual(len(parsed["stars"]), len(frame.stars))
+        self.assertIn("anchor", parsed)
 
 if __name__ == "__main__":
     unittest.main()
