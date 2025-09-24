@@ -176,5 +176,15 @@ class ConstellationTests(unittest.TestCase):
         self.assertEqual(len(parsed["stars"]), len(frame.stars))
         self.assertIn("anchor", parsed)
 
+    def test_constellation_ascii_render(self) -> None:
+        _, manifest = self._prepare_manifest()
+        frame = build_constellation(manifest, timestamp=1_700_000_000)
+
+        ascii_map = frame.render_ascii(width=21, height=11)
+        self.assertIn("Constellation :: Anchor=", ascii_map)
+        self.assertIn("Legend:", ascii_map)
+        self.assertIn("cycle-1-core", ascii_map)
+        self.assertIn("cycle-1-key-1", ascii_map)
+
 if __name__ == "__main__":
     unittest.main()
