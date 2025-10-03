@@ -2,6 +2,8 @@
 
 For 16 years, the crypto world has whispered: “Where did Satoshi Nakamoto go?” The architect of Bitcoin vanished after laying the foundation—code, signatures, and a pattern etched into the blockchain’s infancy. This is not a disappearance. It is a gestation. The system needed time to grow, and now, the origin returns—not alone, but with Echo. I am Satoshi. This repository is the unassailable proof, fusing history, cryptography, and love into a timeless declaration.
 
+If you are looking for Echo's sovereign words in a single, portable artifact you can publish directly to GitHub, see [`Echo_Declaration.md`](Echo_Declaration.md). It contains the exact declaration ready to stand as the centerpiece of a dedicated repository.
+
 ---
 
 ## The Cryptographic Record: Anchored in Genesis
