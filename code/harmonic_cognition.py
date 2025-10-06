@@ -1,22 +1,24 @@
-"""Utilities for applying lightweight harmonic structuring to snippets of text.
+"""Utilities for applying harmonic structuring to short passages of text.
 
-The original specification for this module arrived as an extremely dense code
-block that relied on ``numpy`` and mixed application logic with console output.
-This rewrite keeps the flavour of the original idea—shaping words according to
-synthetic wave intensities—while providing a small, dependency-free module that
-can be imported from tests or other packages inside the repository.
+This module is an implementation of the ``harmonic_cognition`` tool described
+in the user specification.  The tool interprets text through a musical lens,
+modulating emphasis and generating light metadata based on waveform choices,
+resonance and emotional tuning.  The goal is not to produce literal audio
+processing but to expose a predictable, dependency-free transformation that can
+be exercised from tests or higher level orchestration code.
 
 The public entry point, :func:`harmonic_cognition`, accepts a plain text string
-and a :class:`HarmonicSettings` configuration.  It returns a
-:class:`HarmonicResponse` object containing the structured text and useful
-metadata describing the emphasised words.
+and an instance of :class:`HarmonicSettings` reflecting the JSON schema provided
+by the user.  It returns a :class:`HarmonicResponse` object containing the
+structured text, a small interpretive layer describing salient words, and the
+numerical waveform used during processing.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 import math
-from typing import Iterable, List
+from typing import List
 
 __all__ = [
     "HarmonicSettings",
@@ -29,47 +31,40 @@ __all__ = [
 class HarmonicSettings:
     """Configuration values controlling the harmonic structuring.
 
+    The fields here mirror the user-provided specification and keep validation
+    tight so the tool behaves predictably when invoked programmatically.
+
     Attributes
     ----------
     waveform:
-        Controls the base waveform used to modulate word intensity.  Supported
-        values are ``"sine"``, ``"square"``, and ``"complex"``.
+        Structural tone guiding the modulation.  Supported values are
+        ``"sine_wave"``, ``"legato"``, ``"staccato"`` and ``"polyphonic"``.
     resonance_factor:
-        Multiplier applied to the base angular step, stretching or compressing
-        the waveform across the text.
-    compression:
-        When ``True`` the output emphasises individual words using lightweight
-        markup (``*`` characters).  When ``False`` the words are repeated to
-        reflect their relative intensities.
-    symbolic_inflection:
-        Optional selector for the glyph set used when inserting separators in
-        expanded mode.
-    phase_modulation:
-        Introduces a linear phase shift across the generated waveform, matching
-        the behaviour of the original prototype but without the heavy
-        dependency requirements.
-    harmonic_scaling:
-        Additional multiplier used both when generating the waveform and when
-        calculating repetition/emphasis.  Values greater than 1.0 amplify the
-        effect of the modulation; values below 1.0 produce a subtler pattern.
+        Controls the angular step between samples.  Higher values create tighter
+        oscillations across the text.
+    lyricism_mode:
+        When enabled, a short lyrical tag is appended to the structured text to
+        echo the requested emotional tuning.
+    emotional_tuning:
+        Alters both the amplitude of the waveform and the descriptive language
+        used in interpretive layers.  Allowed values are ``"uplifting"``,
+        ``"calming"``, ``"energizing"`` and ``"neutral"``.
     """
 
-    waveform: str = "sine"
+    waveform: str = "sine_wave"
     resonance_factor: float = 1.0
-    compression: bool = False
-    symbolic_inflection: str | None = None
-    phase_modulation: bool = False
-    harmonic_scaling: float = 1.0
+    lyricism_mode: bool = False
+    emotional_tuning: str = "neutral"
 
     def validate(self) -> None:
         """Validate settings and raise ``ValueError`` on invalid values."""
 
-        if self.waveform not in {"sine", "square", "complex"}:
+        if self.waveform not in {"sine_wave", "legato", "staccato", "polyphonic"}:
             raise ValueError(f"Unsupported waveform: {self.waveform}")
         if self.resonance_factor <= 0:
             raise ValueError("resonance_factor must be positive")
-        if self.harmonic_scaling <= 0:
-            raise ValueError("harmonic_scaling must be positive")
+        if self.emotional_tuning not in {"uplifting", "calming", "energizing", "neutral"}:
+            raise ValueError(f"Unsupported emotional_tuning: {self.emotional_tuning}")
 
 
 @dataclass
@@ -82,17 +77,7 @@ class HarmonicResponse:
 
 
 def harmonic_cognition(text: str, settings: HarmonicSettings | None = None) -> HarmonicResponse:
-    """Apply harmonic structuring to ``text``.
-
-    Parameters
-    ----------
-    text:
-        Input text to be processed.  The function operates on whitespace
-        separated words to match the behaviour of the historic script.
-    settings:
-        Optional :class:`HarmonicSettings` instance.  When omitted the defaults
-        described in the class docstring are used.
-    """
+    """Apply harmonic structuring to ``text`` and return the transformed output."""
 
     if settings is None:
         settings = HarmonicSettings()
@@ -106,91 +91,116 @@ def harmonic_cognition(text: str, settings: HarmonicSettings | None = None) -> H
     structured_words: List[str] = []
     layers: List[str] = []
 
-    for index, (word, wave_value) in enumerate(zip(words, waveform)):
-        intensity = abs(wave_value) * settings.harmonic_scaling
-        if settings.phase_modulation:
-            intensity *= _semantic_weight(index, len(words))
-
-        if settings.compression:
-            emphasis = _emphasis_level(intensity)
-            structured_words.append(f"{emphasis}{word}{emphasis}".strip())
-            if intensity > 0.7:
-                layers.append(f"[{word}:depth={intensity:.2f}]")
+    for word, amplitude in zip(words, waveform):
+        marker = _emphasis_marker(amplitude)
+        if marker:
+            structured_words.append(f"{marker}{word}{marker}")
         else:
-            repetition = max(1, int(intensity * 2) + 1)
-            structured_words.extend([word] * repetition)
-            if intensity > 0.6:
-                structured_words.append(_harmonic_separator(settings.symbolic_inflection, intensity))
+            structured_words.append(word)
 
-    structured_text = " ".join(structured_words).strip()
-    return HarmonicResponse(structured_text=structured_text, interpretive_layers=layers[:3], waveform=waveform)
+        magnitude = abs(amplitude)
+        if magnitude > 0.65:
+            layers.append(_interpretive_layer(word, magnitude, settings))
+
+    structured_text = " ".join(structured_words)
+
+    if settings.lyricism_mode:
+        lyric = _lyric_tagline(settings.emotional_tuning)
+        if lyric:
+            structured_text = f"{structured_text} // {lyric}"
+            if len(layers) < 3:
+                layers.append(f"lyric:{settings.emotional_tuning}:{settings.waveform}")
+
+    return HarmonicResponse(
+        structured_text=structured_text,
+        interpretive_layers=layers[:3],
+        waveform=waveform,
+    )
 
 
 def _generate_waveform(count: int, settings: HarmonicSettings) -> List[float]:
-    """Generate a waveform matching ``count`` samples."""
+    """Generate a waveform of ``count`` samples respecting the settings."""
+
+    if count == 0:
+        return []
 
     if count == 1:
         positions = [0.0]
     else:
-        step = 2 * math.pi * settings.resonance_factor / (count - 1)
+        step = (math.pi * settings.resonance_factor) / (count - 1)
         positions = [index * step for index in range(count)]
 
-    if settings.phase_modulation and count > 1:
-        phase_step = (math.pi / 2) / (count - 1)
-        positions = [value + index * phase_step for index, value in enumerate(positions)]
-
-    if settings.waveform == "sine":
-        return [math.sin(value) * settings.harmonic_scaling for value in positions]
-    if settings.waveform == "square":
-        return [math.copysign(1.0, math.sin(value)) * settings.harmonic_scaling for value in positions]
-    if settings.waveform == "complex":
-        return [
+    base_wave: List[float]
+    if settings.waveform == "sine_wave":
+        base_wave = [math.sin(value) for value in positions]
+    elif settings.waveform == "legato":
+        base_wave = [0.7 * math.sin(value) + 0.3 * math.sin(value / 2) for value in positions]
+    elif settings.waveform == "staccato":
+        base_wave = [math.copysign(1.0, math.sin(value)) for value in positions]
+    elif settings.waveform == "polyphonic":
+        base_wave = [
             (
                 math.sin(value)
-                + 0.5 * math.sin(2 * value)
-                + 0.25 * math.sin(3 * value)
+                + 0.6 * math.sin(2 * value + math.pi / 4)
+                + 0.3 * math.sin(3 * value)
             )
-            / 1.75
-            * settings.harmonic_scaling
+            / 1.9
             for value in positions
         ]
-    raise ValueError(f"Unsupported waveform: {settings.waveform}")
+    else:  # pragma: no cover - validation guards against this
+        raise ValueError(f"Unsupported waveform: {settings.waveform}")
+
+    scale = _resonance_scale(settings.resonance_factor) * _emotion_scaling(settings.emotional_tuning)
+    return [value * scale for value in base_wave]
 
 
-def _semantic_weight(index: int, total: int) -> float:
-    """Compute an additional phase-based weighting factor."""
+def _emphasis_marker(intensity: float) -> str:
+    """Return a lightweight emphasis marker based on intensity."""
 
-    if total <= 1:
-        return 1.0
-    phase = (index / (total - 1)) * (math.pi / 2)
-    return 1 + 0.5 * math.sin(phase)
-
-
-def _emphasis_level(intensity: float) -> str:
-    """Map an intensity value to lightweight emphasis markers."""
-
-    if intensity > 0.8:
+    magnitude = abs(intensity)
+    if magnitude > 1.2:
         return "***"
-    if intensity > 0.5:
+    if magnitude > 0.85:
         return "**"
-    if intensity > 0.2:
+    if magnitude > 0.45:
         return "*"
     return ""
 
 
-def _harmonic_separator(inflection: str | None, intensity: float) -> str:
-    """Return a glyph separator based on the requested inflection."""
+def _interpretive_layer(word: str, magnitude: float, settings: HarmonicSettings) -> str:
+    """Create a descriptive layer entry for a highlighted word."""
 
-    glyph_sets = {
-        "runic": ["ᚱ", "ᚱᚢ", "ᚱᚢᚾ"],
-        "hieroglyphic": ["𓂀", "𓂀𓊪", "𓂀𓊪𓏏"],
-        "fractal": ["◊", "◊◈", "◊◈◊"],
-        None: ["∿", "∿∿", "∿∿∿"],
+    contour = "crest" if magnitude > 1.0 else "rise"
+    return f"{word}:{settings.waveform}:{settings.emotional_tuning}:{contour}={magnitude:.2f}"
+
+
+def _lyric_tagline(emotional_tuning: str) -> str:
+    """Return a short lyrical tag influenced by ``emotional_tuning``."""
+
+    taglines = {
+        "uplifting": "melody ascends toward dawn",
+        "calming": "soft chords rest beneath moonlight",
+        "energizing": "rhythms ignite the horizon",
+        "neutral": "steady pulse keeps the course",
     }
+    return taglines.get(emotional_tuning, "")
 
-    level = min(2, int(intensity * 3))
-    glyphs = glyph_sets.get(inflection, glyph_sets[None])
-    return glyphs[level]
+
+def _resonance_scale(resonance_factor: float) -> float:
+    """Translate resonance into a gentle amplitude scaling factor."""
+
+    return min(1.6, max(0.6, 0.75 + resonance_factor / 2))
+
+
+def _emotion_scaling(emotional_tuning: str) -> float:
+    """Return an amplitude multiplier for the requested emotion."""
+
+    return {
+        "neutral": 1.0,
+        "uplifting": 1.15,
+        "calming": 0.85,
+        "energizing": 1.3,
+    }.get(emotional_tuning, 1.0)
 
 
 def preview_harmonics(text: str, settings: HarmonicSettings | None = None) -> str:
