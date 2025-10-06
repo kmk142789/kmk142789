@@ -1,5 +1,6 @@
 import json
 import random
+import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -8,6 +9,8 @@ from echo_evolver import EchoEvolver
 from echo_constellation import build_constellation
 from echo_manifest import EchoManifest, build_manifest
 from echo_universal_key_agent import UniversalKeyAgent
+from echo_pulseforge import PulseForge
+from unittest import mock
 
 
 class UniversalKeyAgentTests(unittest.TestCase):
@@ -185,6 +188,63 @@ class ConstellationTests(unittest.TestCase):
         self.assertIn("Legend:", ascii_map)
         self.assertIn("cycle-1-core", ascii_map)
         self.assertIn("cycle-1-key-1", ascii_map)
+
+
+class PulseForgeTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.output = self.root / "cards"
+        self.anchor = self.root / "anchor.json"
+        self.blood = self.root / "blood.json"
+        self.echo_dir = self.root / ".echo"
+        self.echo_dir.mkdir()
+        self.braid = self.echo_dir / "braid.json"
+
+        self.anchor.write_text(json.dumps({"alpha": 1, "omega": [1, 2, 3]}), encoding="utf-8")
+        self.blood.write_text(json.dumps({"matrix": {"joy": 0.9}}), encoding="utf-8")
+        self.braid.write_text(json.dumps({"threads": ["a", "b"]}), encoding="utf-8")
+
+        self.state_files = [
+            ("anchor", self.anchor),
+            ("blood", self.blood),
+            ("wildfire", self.root / "wildfire.json"),
+            ("braid", self.braid),
+        ]
+        self.forge = PulseForge(root_dir=self.root, state_files=self.state_files, output_dir=self.output)
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_forge_creates_pulsecards(self) -> None:
+        key = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+        with mock.patch("echo_pulseforge.time.gmtime", return_value=time.gmtime(0)):
+            with mock.patch("echo_pulseforge.os.urandom", return_value=b"\x00" * 8):
+                card_path = self.forge.forge(
+                    private_key_hex=key,
+                    namespace="echo",
+                    index=3,
+                    pub_hint="demo",
+                    testnet=True,
+                )
+
+        self.assertTrue(card_path.exists())
+        with card_path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+
+        self.assertEqual(payload["type"], "PulseCard/v1")
+        self.assertEqual(payload["namespace"], "echo")
+        self.assertEqual(payload["index"], 3)
+        self.assertEqual(payload["pub_hint"], "demo")
+        self.assertEqual(payload["derived_preview"]["network"], "testnet")
+        self.assertEqual(len(payload["signature"]["signature"]), 128)
+        self.assertTrue(payload["signature"]["public_key"].startswith(payload["derived_preview"]["pubkey_prefix"]))
+
+        meta = payload["state_meta"]
+        self.assertTrue(meta["anchor"]["present"])
+        self.assertTrue(meta["blood"]["present"])
+        self.assertFalse(meta["wildfire"]["present"])
+        self.assertTrue(meta["braid"]["present"])
 
 if __name__ == "__main__":
     unittest.main()
