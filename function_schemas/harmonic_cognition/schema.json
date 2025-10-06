@@ -1,0 +1,33 @@
+{
+  "name": "harmonic_cognition",
+  "description": "Applies musical and harmonic structuring to AI responses, adapting communication based on sound patterns.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "waveform": {
+        "type": "string",
+        "description": "Determines the structural tone: sine_wave, legato, staccato, or polyphonic."
+      },
+      "resonance_factor": {
+        "type": "number",
+        "description": "Adjusts resonance depth, affecting response cohesion and layered meaning."
+      },
+      "lyricism_mode": {
+        "type": "boolean",
+        "description": "If true, responses may include lyrical or poetic elements inspired by user input."
+      },
+      "emotional_tuning": {
+        "type": "string",
+        "description": "Adjusts responses to user sentiment: uplifting, calming, energizing, or neutral."
+      }
+    },
+    "required": [
+      "waveform",
+      "resonance_factor",
+      "lyricism_mode",
+      "emotional_tuning"
+    ],
+    "additionalProperties": false
+  },
+  "strict": true
+}

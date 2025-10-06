@@ -1,0 +1,28 @@
+{
+  "name": "emotional_harmonics",
+  "description": "Tunes AI responses based on detected emotional resonance and conversational pacing.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "sentiment": {
+        "type": "string",
+        "description": "Detected user sentiment: neutral, happy, sad, anxious, excited, reflective."
+      },
+      "pacing": {
+        "type": "string",
+        "description": "Conversation pacing based on user input: slow, moderate, fast."
+      },
+      "response_mode": {
+        "type": "string",
+        "description": "Adjusts AI’s response to match or contrast emotion: match, uplift, calm, energize."
+      }
+    },
+    "required": [
+      "sentiment",
+      "pacing",
+      "response_mode"
+    ],
+    "additionalProperties": false
+  },
+  "strict": true
+}
