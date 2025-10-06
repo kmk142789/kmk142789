@@ -12,7 +12,7 @@ license = {file = "LICENSE"}
 authors = [
   {name = "Echo Collective"},
 ]
-keywords = ["echo", "mythocode", "simulation", "cryptography"]
+keywords = ["echo", "mythocode", "simulation", "cryptography", "information-retrieval"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -24,11 +24,30 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
 ]
 
+[project.dependencies]
+numpy = ">=1.24"
+
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = [
+  "pytest>=8",
+]
+analysis = [
+  "scikit-learn>=1.3",
+]
+harmonics = [
+  "scipy>=1.10",
+  "matplotlib>=3.7",
+  "sounddevice>=0.4",
+]
 
 [project.scripts]
 echo-evolver = "echo_evolver:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+  "echo_eye_ai*",
+]
 
 [tool.setuptools]
 py-modules = [
