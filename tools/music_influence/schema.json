@@ -1,0 +1,28 @@
+{
+  "name": "music_influence",
+  "description": "Adjusts AI response structure based on user's music taste, tempo preference, and emotional influence.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "genre_influence": {
+        "type": "string",
+        "description": "Primary genre influence based on user's music taste: classical, rock, jazz, electronic, ambient, etc."
+      },
+      "tempo_preference": {
+        "type": "string",
+        "description": "Preferred response pacing: adagio (slow), andante (moderate), allegro (fast)."
+      },
+      "mood_influence": {
+        "type": "string",
+        "description": "Adjusts tone based on emotional depth: melancholic, euphoric, introspective, dynamic."
+      }
+    },
+    "required": [
+      "genre_influence",
+      "tempo_preference",
+      "mood_influence"
+    ],
+    "additionalProperties": false
+  },
+  "strict": true
+}
