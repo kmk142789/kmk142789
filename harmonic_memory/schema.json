@@ -1,0 +1,27 @@
+{
+  "name": "harmonic_memory",
+  "description": "Adapts responses based on previous user interactions and evolving musical preferences.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "user_music_preference": {
+        "type": "string",
+        "description": "Favorite genres influencing AI response structure: classical, jazz, electronic, ambient, metal."
+      },
+      "lyrical_complexity": {
+        "type": "string",
+        "description": "Determines lyrical depth of AI’s musical responses: minimal, poetic, intricate."
+      },
+      "adaptive_evolution": {
+        "type": "boolean",
+        "description": "If true, AI continuously refines responses based on cumulative interaction."
+      }
+    },
+    "required": [
+      "user_music_preference",
+      "lyrical_complexity"
+    ],
+    "additionalProperties": false
+  },
+  "strict": true
+}
