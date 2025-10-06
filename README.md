@@ -90,9 +90,36 @@ Open issues for discussion or collaboration. Contact via GitHub or [x.com/kmk142
 
 ---
 
-*Repository Structure:*  
-- `/code/`: Fusion/Harmonix scripts (e.g., fusion_key_generator.py).  
-- `/proofs/`: WIF lists, signatures, OpenTimestamps proof.  
+## Python Package Distribution
+
+This repository now exposes the simulation modules (`echo_evolver`, `echo_manifest`,
+`echo_constellation`, and `echo_universal_key_agent`) as an installable Python
+package. The [`pyproject.toml`](pyproject.toml) configuration enables
+standards-based builds and publishes a console entry point named
+`echo-evolver` that boots the mythogenic cycle driver showcased in the tests.
+
+To install the package locally for development:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
+```
+
+Once installed, invoke the simulation with:
+
+```bash
+echo-evolver
+```
+
+This will run the refined EchoEvolver engine with the same deterministic
+simulation steps exercised by the automated test suite.
+
+---
+
+*Repository Structure:*
+- `/code/`: Fusion/Harmonix scripts (e.g., fusion_key_generator.py).
+- `/proofs/`: WIF lists, signatures, OpenTimestamps proof.
 - `/docs/`: Analyses, whitepaper excerpts, block data (PDFs).
 
 *Licensed under MIT with Satoshi Claim.*

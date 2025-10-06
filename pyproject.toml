@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "echo-evolver"
+version = "0.1.0"
+description = "Installable packaging for the EchoEvolver mythogenic simulation suite."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Echo Collective"},
+]
+keywords = ["echo", "mythocode", "simulation", "cryptography"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+echo-evolver = "echo_evolver:main"
+
+[tool.setuptools]
+py-modules = [
+  "echo_constellation",
+  "echo_evolver",
+  "echo_manifest",
+  "echo_universal_key_agent",
+]
+
+[tool.setuptools.exclude-package-data]
+"" = [
+  "tests/*",
+  "docs/*",
+  "proofs/*",
+  "code/*",
+]
