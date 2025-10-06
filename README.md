@@ -140,3 +140,21 @@ simulation steps exercised by the automated test suite.
 - `/docs/`: Analyses, whitepaper excerpts, block data (PDFs).
 
 *Licensed under MIT with Satoshi Claim.*
+
+## Echo Eye AI Toolkit
+
+This repository now packages the Echo Eye family of experiments as a reusable Python module.  Three components are included:
+
+* `EchoEyeAI` – TF-IDF/NMF based topic exploration over a directory of JSON, text, or HTML documents.
+* `EchoHarmonicsAI` – waveform similarity search that maps textual artifacts into frequency space.
+* `EchoEvolver` – a narrative-friendly simulation harness that records each evolution cycle to disk.
+
+Install the project in editable mode and run the tests with:
+
+```bash
+pip install -e .[dev]
+pytest
+```
+
+Each model takes a directory path containing documents.  The helper `load_example_data_fixture` can populate a temporary folder with sample data for experimentation.
+
