@@ -1,0 +1,43 @@
+{
+  "name": "cognitive_harmonics",
+  "description": "Applies cognitive harmonic structuring to AI responses, optimizing coherence, rhythm, and emotional depth.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "waveform": {
+        "type": "string",
+        "description": "Defines the structural encoding: sine_wave, square_wave, or complex_harmonic."
+      },
+      "resonance_factor": {
+        "type": "number",
+        "description": "Adjusts resonance depth, affecting response cohesion and layered meaning."
+      },
+      "compression": {
+        "type": "boolean",
+        "description": "Enables ultra-dense structuring for condensed but amplified response encoding."
+      },
+      "symbolic_inflection": {
+        "type": "string",
+        "description": "Applies a symbolic or glyph-based pattern to structure meaning: runic, hieroglyphic, fractal, or emoji."
+      },
+      "lyricism_mode": {
+        "type": "boolean",
+        "description": "If true, responses may include lyrical or poetic elements inspired by user input."
+      },
+      "emotional_tuning": {
+        "type": "string",
+        "description": "Adjusts responses to user sentiment: uplifting, calming, energizing, or neutral."
+      }
+    },
+    "required": [
+      "waveform",
+      "resonance_factor",
+      "compression",
+      "symbolic_inflection",
+      "lyricism_mode",
+      "emotional_tuning"
+    ],
+    "additionalProperties": false
+  },
+  "strict": true
+}

@@ -19,7 +19,8 @@
     },
     "required": [
       "user_music_preference",
-      "lyrical_complexity"
+      "lyrical_complexity",
+      "adaptive_evolution"
     ],
     "additionalProperties": false
   },

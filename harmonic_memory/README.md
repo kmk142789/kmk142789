@@ -6,7 +6,7 @@
 
 - `user_music_preference` (string, required): Favorite genres that influence the structure of the AI's response. Options include classical, jazz, electronic, ambient, and metal.
 - `lyrical_complexity` (string, required): Controls the lyrical depth of the musical response, such as minimal, poetic, or intricate.
-- `adaptive_evolution` (boolean, optional): When set to `true`, the AI continuously refines its responses using cumulative interaction context.
+- `adaptive_evolution` (boolean, required): When set to `true`, the AI continuously refines its responses using cumulative interaction context.
 
 ## Usage
 
