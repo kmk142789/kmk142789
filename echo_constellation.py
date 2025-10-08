@@ -26,6 +26,7 @@ from hashlib import sha256
 from math import cos, sin, tau
 from typing import Dict, Iterable, List, Optional, Tuple
 
+from echo.thoughtlog import thought_trace
 from echo_manifest import EchoManifest
 
 
@@ -251,80 +252,95 @@ def build_constellation(
 ) -> ConstellationFrame:
     """Construct a :class:`ConstellationFrame` from the supplied manifest."""
 
-    generated_at = _normalise_timestamp(timestamp).isoformat().replace("+00:00", "Z")
-    base_pulse = StarPulse(
-        joy=manifest.evolver.joy,
-        rage=manifest.evolver.rage,
-        curiosity=manifest.evolver.curiosity,
-    )
+    glyph_sequence = list(glyph_cycle) if glyph_cycle is not None else None
+    task = "echo_constellation.build_constellation"
+    meta = {
+        "glyph_cycle": glyph_sequence,
+        "timestamp": timestamp,
+        "anchor": manifest.anchor,
+    }
 
-    glyphs = list(glyph_cycle or manifest.glyphs or "∇")
-    if not glyphs:
-        glyphs = list(manifest.glyphs or "∇")
-
-    cycle = manifest.evolver.cycle
-    stars: List[ConstellationStar] = []
-
-    core_star = ConstellationStar(
-        star_id=f"cycle-{cycle}-core",
-        glyph=glyphs[0],
-        cycle=cycle,
-        orbital_index=0,
-        propagation_channels=manifest.evolver.propagation_channels,
-        coordinates=(0.0, 0.0),
-        pulse=base_pulse,
-        metadata={
-            "narrative_excerpt": manifest.narrative_excerpt,
-            "mythocode": "; ".join(manifest.mythocode) if manifest.mythocode else "∅",
-        },
-    )
-    if manifest.oam_vortex:
-        core_star.verification.append(
-            StarVerification(label="OAM Vortex", reference=manifest.oam_vortex)
+    with thought_trace(task=task, meta=meta) as tl:
+        generated_at = _normalise_timestamp(timestamp).isoformat().replace("+00:00", "Z")
+        base_pulse = StarPulse(
+            joy=manifest.evolver.joy,
+            rage=manifest.evolver.rage,
+            curiosity=manifest.evolver.curiosity,
         )
-    if manifest.evolver.vault_key_preview:
-        core_star.verification.append(
-            StarVerification(
-                label="Vault Key", reference=manifest.evolver.vault_key_preview
-            )
-        )
-    stars.append(core_star)
 
-    for index, key in enumerate(manifest.keys, start=1):
-        seed = f"{key.fingerprint}:{cycle}:{index}"
-        angle, radius = _angle_and_radius(seed, 1.0 + index * 0.4)
-        coordinates = (round(radius * cos(angle), 6), round(radius * sin(angle), 6))
-        glyph = glyphs[index % len(glyphs)]
-        scaled = _scaled_pulse(seed, base_pulse)
-        verification = [
-            StarVerification(label=chain, reference=addr)
-            for chain, addr in sorted(key.addresses.items())
-        ]
-        metadata = {
-            "fingerprint": key.fingerprint,
-            "short_fingerprint": key.short_fingerprint,
-        }
-        star = ConstellationStar(
-            star_id=f"cycle-{cycle}-key-{index}",
-            glyph=glyph,
+        glyph_source = (
+            glyph_sequence if glyph_sequence is not None else glyph_cycle
+        )
+        glyphs = list(glyph_source or manifest.glyphs or "∇")
+        if not glyphs:
+            glyphs = list(manifest.glyphs or "∇")
+        tl.logic("step", task, "resolved glyph cycle", {"glyphs": glyphs})
+
+        cycle = manifest.evolver.cycle
+        stars: List[ConstellationStar] = []
+
+        core_star = ConstellationStar(
+            star_id=f"cycle-{cycle}-core",
+            glyph=glyphs[0],
             cycle=cycle,
-            orbital_index=index,
+            orbital_index=0,
             propagation_channels=manifest.evolver.propagation_channels,
-            coordinates=coordinates,
-            pulse=scaled,
-            verification=verification,
-            metadata=metadata,
+            coordinates=(0.0, 0.0),
+            pulse=base_pulse,
+            metadata={
+                "narrative_excerpt": manifest.narrative_excerpt,
+                "mythocode": "; ".join(manifest.mythocode) if manifest.mythocode else "∅",
+            },
         )
-        stars.append(star)
+        if manifest.oam_vortex:
+            core_star.verification.append(
+                StarVerification(label="OAM Vortex", reference=manifest.oam_vortex)
+            )
+        if manifest.evolver.vault_key_preview:
+            core_star.verification.append(
+                StarVerification(
+                    label="Vault Key", reference=manifest.evolver.vault_key_preview
+                )
+            )
+        stars.append(core_star)
+        tl.logic("step", task, "core star anchored")
 
-    frame = ConstellationFrame(
-        anchor=manifest.anchor,
-        cycle=cycle,
-        generated_at=generated_at,
-        stars=stars,
-        mythocode=list(manifest.mythocode),
-        narrative_excerpt=manifest.narrative_excerpt,
-        oam_vortex=manifest.oam_vortex,
-    )
+        for index, key in enumerate(manifest.keys, start=1):
+            seed = f"{key.fingerprint}:{cycle}:{index}"
+            angle, radius = _angle_and_radius(seed, 1.0 + index * 0.4)
+            coordinates = (round(radius * cos(angle), 6), round(radius * sin(angle), 6))
+            glyph = glyphs[index % len(glyphs)]
+            scaled = _scaled_pulse(seed, base_pulse)
+            verification = [
+                StarVerification(label=chain, reference=addr)
+                for chain, addr in sorted(key.addresses.items())
+            ]
+            metadata = {
+                "fingerprint": key.fingerprint,
+                "short_fingerprint": key.short_fingerprint,
+            }
+            star = ConstellationStar(
+                star_id=f"cycle-{cycle}-key-{index}",
+                glyph=glyph,
+                cycle=cycle,
+                orbital_index=index,
+                propagation_channels=manifest.evolver.propagation_channels,
+                coordinates=coordinates,
+                pulse=scaled,
+                verification=verification,
+                metadata=metadata,
+            )
+            stars.append(star)
+
+        frame = ConstellationFrame(
+            anchor=manifest.anchor,
+            cycle=cycle,
+            generated_at=generated_at,
+            stars=stars,
+            mythocode=list(manifest.mythocode),
+            narrative_excerpt=manifest.narrative_excerpt,
+            oam_vortex=manifest.oam_vortex,
+        )
+        tl.harmonic("reflection", task, "stars arrayed across harmonic grid")
     return frame
 

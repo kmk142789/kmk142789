@@ -24,8 +24,9 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
 ]
 
-[project.dependencies]
-numpy = ">=1.24"
+dependencies = [
+  "numpy>=1.24",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -46,6 +47,7 @@ echo-evolver = "echo_evolver:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
+  "echo*",
   "echo_eye_ai*",
 ]
 
@@ -59,7 +61,7 @@ py-modules = [
 ]
 
 [tool.setuptools.exclude-package-data]
-"" = [
+"*" = [
   "tests/*",
   "docs/*",
   "proofs/*",

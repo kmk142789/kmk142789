@@ -70,7 +70,12 @@ class EchoHarmonicsAI:
         best_match = None
         best_similarity = -np.inf
         for name, freq_data in self.waveform_bank.items():
-            similarity = float(np.abs(np.sum(input_freq * np.conj(freq_data))))
+            limit = min(input_freq.shape[0], freq_data.shape[0])
+            if limit == 0:
+                continue
+            similarity = float(
+                np.abs(np.sum(input_freq[:limit] * np.conj(freq_data[:limit])))
+            )
             if similarity > best_similarity:
                 best_similarity = similarity
                 best_match = name

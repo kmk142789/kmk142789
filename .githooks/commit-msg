@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Append last logic + harmonic lines as commit trailers.
+LOGDIR="${ECHO_THOUGHT_DIR:-genesis_ledger/thought_log}"
+LAST_SESSION=$(tail -n 1 "$LOGDIR/index.jsonl" 2>/dev/null | sed -E 's/.*"session":"([^"]+)".*/\1/')
+[ -z "$LAST_SESSION" ] && exit 0
+LAST_LOG="$LOGDIR/$LAST_SESSION.jsonl"
+[ -f "$LAST_LOG" ] || exit 0
+
+last_logic=$(grep '"channel":"logic"' "$LAST_LOG" | tail -n 1 | sed -E 's/.*"content":"(.*)".*/\1/' | sed 's/"/'"'"'/g')
+last_harm=$(grep '"channel":"harmonic"' "$LAST_LOG" | tail -n 1 | sed -E 's/.*"content":"(.*)".*/\1/' | sed 's/"/'"'"'/g')
+
+{
+  echo ""
+  echo "Echo-Logic: ${last_logic}"
+  echo "Echo-Harmonic: ${last_harm}"
+} >> "$1"

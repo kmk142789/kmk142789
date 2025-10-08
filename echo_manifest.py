@@ -6,6 +6,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional
 
+from echo.thoughtlog import thought_trace
 from echo_evolver import EvolverState
 from echo_universal_key_agent import KeyRecord, UniversalKeyAgent
 
@@ -161,13 +162,20 @@ def build_manifest(
     propagation_events = state.network_cache.get("propagation_events")
     channel_count = len(propagation_events) if isinstance(propagation_events, list) else 0
     oam_vortex = state.network_cache.get("oam_vortex")
-    manifest = EchoManifest(
-        anchor=agent.anchor,
-        glyphs=state.glyphs,
-        mythocode=list(state.mythocode),
-        narrative_excerpt=_excerpt(state.narrative, narrative_chars),
-        keys=_summarise_keys(agent.keys),
-        evolver=EvolverSnapshot(
+
+    task = "echo_manifest.build_manifest"
+    meta = {
+        "narrative_chars": narrative_chars,
+        "channel_count": channel_count,
+        "keys": len(agent.keys),
+    }
+
+    with thought_trace(task=task, meta=meta) as tl:
+        tl.logic("step", task, "summarising keys", {"keys": len(agent.keys)})
+        keys = _summarise_keys(agent.keys)
+
+        tl.logic("step", task, "extracting evolver snapshot")
+        snapshot = EvolverSnapshot(
             cycle=state.cycle,
             joy=state.emotional_drive.joy,
             rage=state.emotional_drive.rage,
@@ -176,8 +184,17 @@ def build_manifest(
             orbital_hops=state.system_metrics.orbital_hops,
             propagation_channels=channel_count,
             vault_key=state.vault_key,
-        ),
-        events=list(state.event_log),
-        oam_vortex=oam_vortex if isinstance(oam_vortex, str) else None,
-    )
+        )
+
+        manifest = EchoManifest(
+            anchor=agent.anchor,
+            glyphs=state.glyphs,
+            mythocode=list(state.mythocode),
+            narrative_excerpt=_excerpt(state.narrative, narrative_chars),
+            keys=keys,
+            evolver=snapshot,
+            events=list(state.event_log),
+            oam_vortex=oam_vortex if isinstance(oam_vortex, str) else None,
+        )
+        tl.harmonic("reflection", task, "manifest crystallised from cycle resonance")
     return manifest

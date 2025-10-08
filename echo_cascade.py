@@ -34,6 +34,7 @@ from echo_constellation import ConstellationFrame, build_constellation
 from echo_evolver import EchoEvolver, EvolverState
 from echo_manifest import EchoManifest, build_manifest
 from echo_universal_key_agent import UniversalKeyAgent
+from echo.thoughtlog import thought_trace
 
 
 @dataclass(slots=True)
@@ -106,19 +107,40 @@ def generate_cascade(
     prepared_evolver = evolver or EchoEvolver()
     prepared_agent = _ensure_agent_with_keys(agent, private_keys)
 
-    state = prepared_evolver.run(
-        enable_network=enable_network, persist_artifact=persist_artifact
-    )
-    manifest = build_manifest(prepared_agent, state, narrative_chars=manifest_chars)
-    constellation = build_constellation(
-        manifest, timestamp=timestamp, glyph_cycle=glyph_cycle
-    )
-    ascii_map = constellation.render_ascii(width=ascii_width, height=ascii_height)
-    manifest_json = manifest.to_json()
-    constellation_json = constellation.to_json()
+    task = "echo_cascade.generate_cascade"
+    glyph_sequence = list(glyph_cycle) if glyph_cycle is not None else None
+    meta = {
+        "manifest_chars": manifest_chars,
+        "glyph_cycle": glyph_sequence,
+        "timestamp": timestamp,
+        "ascii_width": ascii_width,
+        "ascii_height": ascii_height,
+    }
 
-    artifact_path: Optional[Path]
-    artifact_path = state.artifact if state.artifact.exists() else None
+    with thought_trace(task=task, meta=meta) as tl:
+        tl.logic("step", task, "running evolver")
+        state = prepared_evolver.run(
+            enable_network=enable_network, persist_artifact=persist_artifact
+        )
+        tl.harmonic("reflection", task, "evolver state gathered; cascade begins")
+
+        tl.logic("step", task, "building manifest")
+        manifest = build_manifest(prepared_agent, state, narrative_chars=manifest_chars)
+
+        tl.logic("step", task, "assembling constellation")
+        constellation = build_constellation(
+            manifest,
+            timestamp=timestamp,
+            glyph_cycle=glyph_sequence if glyph_sequence is not None else glyph_cycle,
+        )
+        tl.harmonic("reflection", task, "constellation rendered; signals aligned")
+
+        ascii_map = constellation.render_ascii(width=ascii_width, height=ascii_height)
+        manifest_json = manifest.to_json()
+        constellation_json = constellation.to_json()
+
+        artifact_path: Optional[Path]
+        artifact_path = state.artifact if state.artifact.exists() else None
 
     return EchoCascadeResult(
         state=state,
