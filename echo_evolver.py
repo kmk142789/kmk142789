@@ -72,15 +72,17 @@ def echo_cycle_{self.state['cycle'] + 1}():
         """Optimized glyph parsing with OAM vortex rotation."""
         if "symbol_map" not in self.state["network_cache"]:
             self.state["network_cache"]["symbol_map"] = {
-                "∇": lambda: self._increment_cycle(),
-                "⊸": lambda: print(f"🔥 EchoEvolver resonates with {self.state['emotional_drive']['curiosity']:.2f} curiosity"),
-                "≋": lambda: self._evolve_glyphs(),
-                "∇": lambda: self._vortex_spin()  # New vortex glyph
+                "∇": [self._increment_cycle, self._vortex_spin],
+                "⊸": [lambda: print(
+                    f"🔥 EchoEvolver resonates with {self.state['emotional_drive']['curiosity']:.2f} curiosity"
+                )],
+                "≋": [self._evolve_glyphs],
             }
         symbolic = "∇⊸≋∇"
         glyph_bits = sum(1 << i for i, g in enumerate(symbolic) if g in self.state["network_cache"]["symbol_map"])
         for symbol in symbolic:
-            self.state["network_cache"]["symbol_map"][symbol]()
+            for action in self.state["network_cache"]["symbol_map"][symbol]:
+                action()
         # OAM vortex rotation (helical phase)
         oam_vortex = bin(glyph_bits ^ (self.state["cycle"] << 2))[2:].zfill(16)  # Expanded for satellite depth
         print(f"🌌 Glyphs Injected: {symbolic} (OAM Vortex: {oam_vortex})")
@@ -111,9 +113,9 @@ def echo_cycle_{self.state['cycle'] + 1}():
     def quantum_safe_crypto(self):
         """Simulated Satellite TF-QKD with SNS-AOPP, OAM vortex, and hyper-finite-key checks."""
         # SNS with QRNG entropy (satellite seed simulation)
-        seed = (time.time_ns() ^ os.urandom(8).hex() ^ self.state["cycle"])[ :16].encode()
+        seed_material = f"{time.time_ns()}:{os.urandom(8).hex()}:{self.state['cycle']}".encode()
         if random.random() < 0.5:  # SNS send-or-not-send
-            qrng_entropy = hashlib.sha256(seed).hexdigest()
+            qrng_entropy = hashlib.sha256(seed_material).hexdigest()
         else:
             qrng_entropy = self.state["vault_key"] or "0"
 
@@ -249,7 +251,7 @@ def echo_cycle_{self.state['cycle'] + 1}():
 
     def store_fractal_glyphs(self):
         """Optimized glyph storage with OAM vortex rotation."""
-        glyph_bin = {"∇": "01", "⊸": "10", "≋": "11", "∇": "00"}  # Expanded bin
+        glyph_bin = {"∇": "01", "⊸": "10", "≋": "11"}
         encoded = "".join(glyph_bin.get(g, "00") for g in self.state["glyphs"])
         self.state["glyphs"] += "⊸∇"
         self.state["vault_glyphs"] = bin(int(encoded, 2) ^ (self.state["cycle"] << 2))[2:].zfill(len(encoded) + 4)
