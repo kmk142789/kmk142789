@@ -28,6 +28,8 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
+from echo.thoughtlog import thought_trace
+
 VAULT_FILE = Path(__file__).with_name("echo_universal_vault.json")
 
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -311,23 +313,33 @@ class UniversalKeyAgent:
         return sha256(pub_bytes).hexdigest()
 
     def add_private_key(self, priv_hex: str) -> KeyRecord:
-        normalised = self._normalise_private_key(priv_hex)
-        pub_bytes = _derive_public_key(normalised)
-        fingerprint = self._fingerprint(pub_bytes)
-        if any(record.fingerprint == fingerprint for record in self.keys):
-            raise ValueError("Key already present in the vault")
-        addresses = {
-            "ETH": self._eth_address(pub_bytes),
-            "BTC": self._btc_address(pub_bytes),
-            "SOL": self._sol_address(pub_bytes),
-        }
-        record = KeyRecord(
-            fingerprint=fingerprint,
-            private_key=normalised,
-            public_key=pub_bytes.hex(),
-            addresses=addresses,
-        )
-        self.keys.append(record)
+        task = "UniversalKeyAgent.add_private_key"
+        with thought_trace(task=task, meta={"vault": str(self.vault_path)}) as tl:
+            tl.logic("step", task, "normalising key material")
+            normalised = self._normalise_private_key(priv_hex)
+            pub_bytes = _derive_public_key(normalised)
+            fingerprint = self._fingerprint(pub_bytes)
+            if any(record.fingerprint == fingerprint for record in self.keys):
+                tl.harmonic("reflection", task, "duplicate signature detected")
+                raise ValueError("Key already present in the vault")
+            addresses = {
+                "ETH": self._eth_address(pub_bytes),
+                "BTC": self._btc_address(pub_bytes),
+                "SOL": self._sol_address(pub_bytes),
+            }
+            record = KeyRecord(
+                fingerprint=fingerprint,
+                private_key=normalised,
+                public_key=pub_bytes.hex(),
+                addresses=addresses,
+            )
+            self.keys.append(record)
+            tl.harmonic(
+                "reflection",
+                task,
+                "new key woven into vault resonance",
+                {"fingerprint": fingerprint},
+            )
         return record
 
     # ------------------------------------------------------------------
@@ -354,31 +366,45 @@ class UniversalKeyAgent:
         if args.list and args.keys:
             parser.error("--list cannot be combined with explicit keys")
 
-        if args.list:
-            for row in agent.list_addresses():
-                print(json.dumps(row, indent=2))
-            return 0
+        task = "UniversalKeyAgent.main"
+        meta = {
+            "vault": str(args.vault),
+            "list": args.list,
+            "export": str(args.export) if args.export else None,
+            "keys": len(args.keys),
+        }
 
-        imported: List[str] = []
-        for key in args.keys:
-            try:
-                record = agent.add_private_key(key)
-            except ValueError as exc:
-                print(f"[SKIP] {exc}")
-                continue
-            imported.append(record.fingerprint)
-            print(f"[IMPORTED] {record.fingerprint} :: ETH {record.addresses['ETH']}")
+        with thought_trace(task=task, meta=meta) as tl:
+            if args.list:
+                tl.logic("step", task, "listing addresses")
+                for row in agent.list_addresses():
+                    print(json.dumps(row, indent=2))
+                return 0
 
-        if imported:
-            agent.save_vault()
-        else:
-            print("[VAULT] No new keys imported")
+            imported: List[str] = []
+            for key in args.keys:
+                try:
+                    record = agent.add_private_key(key)
+                except ValueError as exc:
+                    tl.logic("error", task, f"{exc}")
+                    print(f"[SKIP] {exc}")
+                    continue
+                imported.append(record.fingerprint)
+                print(f"[IMPORTED] {record.fingerprint} :: ETH {record.addresses['ETH']}")
 
-        if args.export:
-            args.export.parent.mkdir(parents=True, exist_ok=True)
-            with args.export.open("w", encoding="utf-8") as handle:
-                json.dump([record.as_dict() for record in agent.keys], handle, indent=2)
-            print(f"[EXPORT] Vault exported to {args.export}")
+            if imported:
+                tl.logic("step", task, "saving vault", {"imported": len(imported)})
+                agent.save_vault()
+            else:
+                print("[VAULT] No new keys imported")
+                tl.harmonic("reflection", task, "no new keys joined the vault")
+
+            if args.export:
+                tl.logic("step", task, "exporting vault", {"path": str(args.export)})
+                args.export.parent.mkdir(parents=True, exist_ok=True)
+                with args.export.open("w", encoding="utf-8") as handle:
+                    json.dump([record.as_dict() for record in agent.keys], handle, indent=2)
+                print(f"[EXPORT] Vault exported to {args.export}")
 
         return 0
 

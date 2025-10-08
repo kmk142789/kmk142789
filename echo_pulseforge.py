@@ -35,6 +35,8 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Iterable, List, Mapping, Optional, Sequence, Tuple
 
+from echo.thoughtlog import thought_trace
+
 ASCII_BADGE = r"""
   ____      _                _____      _           _
  |  _ \ ___| | ___  ___ ___ |  ___|   _| |__   __ _| |_ ___  _ __
@@ -233,31 +235,35 @@ class PulseForge:
     # State gathering and Merkle root construction
     # ------------------------------------------------------------------
     def gather_state(self) -> Tuple[str, Mapping[str, StateEntry]]:
-        leaves: List[bytes] = []
-        metadata: dict[str, StateEntry] = {}
-        for label, path in self.state_files:
-            data = _read_json(path)
-            if data is not None:
-                canonical = _canonical_json(data)
-                encoded = canonical.encode("utf-8")
-                leaves.append(_sha256_bytes(encoded))
-                entry = StateEntry(
-                    label=label,
-                    path=path,
-                    present=True,
-                    hash_hex=_sha256_hex(canonical),
-                    size_bytes=len(encoded),
-                )
-            else:
-                entry = StateEntry(
-                    label=label,
-                    path=path,
-                    present=False,
-                    hash_hex=None,
-                    size_bytes=0,
-                )
-            metadata[label] = entry
-        return _merkle_root(leaves), metadata
+        task = "PulseForge.gather_state"
+        with thought_trace(task=task, meta={"state_files": len(self.state_files)}) as tl:
+            leaves: List[bytes] = []
+            metadata: dict[str, StateEntry] = {}
+            for label, path in self.state_files:
+                data = _read_json(path)
+                if data is not None:
+                    canonical = _canonical_json(data)
+                    encoded = canonical.encode("utf-8")
+                    leaves.append(_sha256_bytes(encoded))
+                    entry = StateEntry(
+                        label=label,
+                        path=path,
+                        present=True,
+                        hash_hex=_sha256_hex(canonical),
+                        size_bytes=len(encoded),
+                    )
+                else:
+                    entry = StateEntry(
+                        label=label,
+                        path=path,
+                        present=False,
+                        hash_hex=None,
+                        size_bytes=0,
+                    )
+                metadata[label] = entry
+            tl.logic("step", task, "state compiled", {"present": sum(1 for e in metadata.values() if e.present)})
+            tl.harmonic("reflection", task, "state lattice ready for forging")
+            return _merkle_root(leaves), metadata
 
     # ------------------------------------------------------------------
     # Signing and persistence
@@ -293,47 +299,58 @@ class PulseForge:
         pub_hint: Optional[str] = None,
         testnet: bool = False,
     ) -> Path:
-        root_hex, meta = self.gather_state()
-        derived_key = self.derive_child_key(private_key_hex, namespace, index)
-        pub_key = _derive_public_key(derived_key).hex()
-        hint = pub_hint or pub_key[:16]
-
-        payload = self.build_payload(root_hex, namespace=namespace, index=index, pub_hint=hint)
-        signature = _sign_payload(derived_key, payload)
-
-        timestamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-        card = {
-            "type": "PulseCard/v1",
-            "root": root_hex,
+        task = "PulseForge.forge"
+        meta_info = {
             "namespace": namespace,
             "index": index,
-            "issued_at": payload.splitlines()[4].split("=")[1],
-            "pub_hint": hint,
-            "signature": {
-                "algorithm": signature.algorithm,
-                "signature": signature.signature,
-                "public_key": signature.public_key,
-            },
-            "derived_preview": {
-                "pubkey_prefix": pub_key[:16],
-                "network": "testnet" if testnet else "mainnet",
-            },
-            "state_meta": {
-                label: {
-                    "present": entry.present,
-                    "path": str(entry.path.relative_to(self.root_dir))
-                    if entry.path.is_absolute()
-                    else str(entry.path),
-                    "hash": entry.hash_hex,
-                    "size_bytes": entry.size_bytes,
-                }
-                for label, entry in meta.items()
-            },
+            "testnet": testnet,
+            "output_dir": str(self.output_dir),
         }
+        with thought_trace(task=task, meta=meta_info) as tl:
+            root_hex, meta = self.gather_state()
+            tl.logic("step", task, "state hash computed", {"root": root_hex})
 
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = self.output_dir / f"pulse_{timestamp}.json"
-        output_path.write_text(json.dumps(card, indent=2) + "\n", encoding="utf-8")
+            derived_key = self.derive_child_key(private_key_hex, namespace, index)
+            pub_key = _derive_public_key(derived_key).hex()
+            hint = pub_hint or pub_key[:16]
+
+            payload = self.build_payload(root_hex, namespace=namespace, index=index, pub_hint=hint)
+            signature = _sign_payload(derived_key, payload)
+
+            timestamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+            card = {
+                "type": "PulseCard/v1",
+                "root": root_hex,
+                "namespace": namespace,
+                "index": index,
+                "issued_at": payload.splitlines()[4].split("=")[1],
+                "pub_hint": hint,
+                "signature": {
+                    "algorithm": signature.algorithm,
+                    "signature": signature.signature,
+                    "public_key": signature.public_key,
+                },
+                "derived_preview": {
+                    "pubkey_prefix": pub_key[:16],
+                    "network": "testnet" if testnet else "mainnet",
+                },
+                "state_meta": {
+                    label: {
+                        "present": entry.present,
+                        "path": str(entry.path.relative_to(self.root_dir))
+                        if entry.path.is_absolute()
+                        else str(entry.path),
+                        "hash": entry.hash_hex,
+                        "size_bytes": entry.size_bytes,
+                    }
+                    for label, entry in meta.items()
+                },
+            }
+
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = self.output_dir / f"pulse_{timestamp}.json"
+            output_path.write_text(json.dumps(card, indent=2) + "\n", encoding="utf-8")
+            tl.harmonic("reflection", task, "PulseCard sealed and archived", {"path": str(output_path)})
         return output_path
 
     # ------------------------------------------------------------------
@@ -380,14 +397,24 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     else:
         parent_key = _read_key_from_file(args.key_file).strip().lower()
 
-    forge = PulseForge(root_dir=Path.cwd())
-    output = forge.forge(
-        private_key_hex=parent_key,
-        namespace=args.ns,
-        index=args.index,
-        pub_hint=args.pub_hint,
-        testnet=args.testnet,
-    )
+    task = "PulseForge.main"
+    meta = {
+        "namespace": args.ns,
+        "index": args.index,
+        "pub_hint": args.pub_hint,
+        "testnet": args.testnet,
+    }
+
+    with thought_trace(task=task, meta=meta) as tl:
+        forge = PulseForge(root_dir=Path.cwd())
+        output = forge.forge(
+            private_key_hex=parent_key,
+            namespace=args.ns,
+            index=args.index,
+            pub_hint=args.pub_hint,
+            testnet=args.testnet,
+        )
+        tl.harmonic("reflection", task, "PulseCard forged from command line")
 
     print(f"[✓] PulseCard written: {output.relative_to(Path.cwd())}")
     print("    Share this card publicly; it contains no private material.")

@@ -5,6 +5,8 @@ from __future__ import annotations
 import math
 from typing import Iterable, List
 
+from echo.thoughtlog import thought_trace
+
 __all__ = ["sine_wave_text"]
 
 
@@ -51,21 +53,33 @@ def sine_wave_text(
         The transformed text.
     """
 
-    words = text.split()
-    if not words:
-        return ""
+    task = "echo_text_wave.sine_wave_text"
+    meta = {
+        "frequency": frequency,
+        "amplitude": amplitude,
+        "divider": divider,
+    }
 
-    wave = _generate_wave(len(words), frequency=frequency, amplitude=amplitude)
+    with thought_trace(task=task, meta=meta) as tl:
+        words = text.split()
+        if not words:
+            tl.logic("result", task, "empty input")
+            return ""
 
-    parts: List[str] = []
-    for word, value in zip(words, wave):
-        intensity = max(1, math.floor(abs(value)) + 1)
-        parts.append(" ".join([word] * intensity))
-        if intensity > 1 and divider:
-            parts.append(divider)
+        wave = _generate_wave(len(words), frequency=frequency, amplitude=amplitude)
+        tl.logic("step", task, "wave generated", {"samples": len(wave)})
 
-    if divider and parts and parts[-1] == divider:
-        parts.pop()
+        parts: List[str] = []
+        for word, value in zip(words, wave):
+            intensity = max(1, math.floor(abs(value)) + 1)
+            parts.append(" ".join([word] * intensity))
+            if intensity > 1 and divider:
+                parts.append(divider)
 
-    return " ".join(parts)
+        if divider and parts and parts[-1] == divider:
+            parts.pop()
+
+        result = " ".join(parts)
+        tl.harmonic("reflection", task, "text wave rendered", {"length": len(result)})
+        return result
 
