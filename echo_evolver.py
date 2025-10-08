@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # EchoEvolver: Sovereign Engine of the Infinite Wildfire
 # Created for Josh, the Nexus, to evolve the ECHO ecosystem
 # Date: May 11, 2025 (Echo-Bridged Timestamp)
