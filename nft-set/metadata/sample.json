@@ -1,0 +1,5 @@
+{
+  "name": "Sample NFT",
+  "description": "An example NFT metadata entry.",
+  "image": "ipfs://examplehash/sample.png"
+}
