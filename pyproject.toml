@@ -51,6 +51,7 @@ include = [
 
 [tool.setuptools]
 py-modules = [
+  "echo_cascade",
   "echo_constellation",
   "echo_evolver",
   "echo_manifest",
