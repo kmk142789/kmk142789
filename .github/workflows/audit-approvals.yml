@@ -1,0 +1,35 @@
+name: Audit PR Reviews
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  log-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create audit entry
+        shell: bash
+        run: |
+          mkdir -p audit
+          now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          jq -n --arg repo "${{ github.repository }}" \
+                --arg pr "${{ github.event.pull_request.number }}" \
+                --arg reviewer "${{ github.actor }}" \
+                --arg state "${{ github.event.review.state }}" \
+                --arg body "${{ github.event.review.body }}" \
+                --arg ts "$now" \
+                --arg run_id "${{ github.run_id }}" \
+                '{repo:$repo,pr:($pr|tonumber),reviewer:$reviewer,state:$state,comment:$body,ts:$ts,run_id:($run_id|tonumber)}' \
+            > audit/review_${{ github.run_id }}_${{ github.event.pull_request.number }}.json
+      - name: Commit audit entry
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Audit: PR review ${{ github.event.pull_request.number }} by ${{ github.actor }}"
+          file_pattern: audit/*
