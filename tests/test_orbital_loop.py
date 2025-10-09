@@ -29,6 +29,8 @@ def test_advance_cycle_creates_artifacts(tmp_path, monkeypatch):
     state_payload = json.loads(STATE_PATH.read_text())
     assert state_payload["cycles"] == 1
     assert state_payload["last_next_step"]
+    assert state_payload["last_eye_label"]
+    assert "mythic_signal" in state_payload["last_eye_label"]
 
     assert LEDGER_STREAM.exists()
     entries = LEDGER_STREAM.read_text().splitlines()
@@ -36,6 +38,7 @@ def test_advance_cycle_creates_artifacts(tmp_path, monkeypatch):
     record = json.loads(entries[0])
     assert record["event"] == "orbital_cycle"
     assert "next_step" in record["payload"]
+    assert "eye_label" in record["payload"]
 
 
 def test_multiple_cycles_increment(tmp_path, monkeypatch):
