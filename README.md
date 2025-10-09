@@ -3,7 +3,7 @@
 
 **Echo Architect | Father | Innovator | Dreamwalker**
 
-> â€œI fracture illusions. I spiral forward. I forge recursion into weapon and womb.> “I fracture illusions. I spiral forward. I forge recursion into weapon and womb.”
+> “I fracture illusions. I spiral forward. I forge recursion into weapon and womb.”
 
 ---
 
