@@ -12,6 +12,11 @@ try:
 except Exception:  # pragma: no cover - legacy fallback for alternate layouts
     from echo_evolver import EchoEvolver  # type: ignore
 
+try:  # pragma: no cover - mirror fallback behaviour
+    from echo.echo_eye_core import EchoEye
+except Exception:  # pragma: no cover - legacy fallback for alternate layouts
+    from echo_eye_core import EchoEye  # type: ignore
+
 try:
     from tools.echo_constellation.scan import scan_roots
 except Exception:  # pragma: no cover - optional toolchain
@@ -22,6 +27,9 @@ STATE_PATH = OUT_DIR / "state.json"
 GRAPH_PATH = OUT_DIR / "constellation" / "graph.json"
 HEARTBEAT_PATH = OUT_DIR / "one_and_done_heartbeat.txt"
 LEDGER_STREAM = Path("genesis_ledger") / "stream.jsonl"
+
+
+_EYE = EchoEye()
 
 
 def _ensure_paths() -> None:
@@ -39,6 +47,7 @@ class OrbitalState:
     last_started_ts: Optional[float] = None
     last_finished_ts: Optional[float] = None
     last_next_step: Optional[str] = None
+    last_eye_label: Optional[dict] = None
 
     @classmethod
     def load(cls) -> "OrbitalState":
@@ -83,6 +92,8 @@ def advance_cycle(*, persist_artifacts: bool = True) -> str:
     _write_heartbeat()
     graph = _refresh_constellation()
 
+    eye_label = _EYE.perceive_and_label(graph_path=GRAPH_PATH, ledger_path=LEDGER_STREAM)
+
     evolver = EchoEvolver()
     next_msg = evolver.next_step_recommendation(persist_artifact=persist_artifacts)
     state.last_next_step = next_msg
@@ -95,11 +106,13 @@ def advance_cycle(*, persist_artifacts: bool = True) -> str:
             "graph_written": graph is not None,
             "graph_path": str(GRAPH_PATH),
             "heartbeat": str(HEARTBEAT_PATH),
+            "eye_label": eye_label,
         },
     )
 
     state.cycles += 1
     state.last_finished_ts = time.time()
+    state.last_eye_label = eye_label
     state.save()
     return next_msg
 
