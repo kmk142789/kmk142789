@@ -1,0 +1,86 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, rgba(76, 110, 245, 0.12), transparent 60%),
+    #0b1020;
+  color: #e8ecff;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(8px);
+  background-color: rgba(11, 16, 32, 0.9);
+  z-index: 5;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: rgba(232, 236, 255, 0.72);
+}
+
+.badge {
+  background: linear-gradient(135deg, #5d5fef, #9a6bff);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(93, 95, 239, 0.3);
+  max-width: 22rem;
+  text-align: right;
+  font-weight: 600;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.graph-pane {
+  flex: 2;
+  position: relative;
+}
+
+.details-pane {
+  flex: 1;
+  background: rgba(13, 18, 40, 0.9);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.placeholder {
+  text-align: center;
+  margin-top: 4rem;
+  color: rgba(232, 236, 255, 0.7);
+}
+
+.muted {
+  color: rgba(232, 236, 255, 0.6);
+  font-size: 0.875rem;
+}
+
+.details-pane ul {
+  list-style: none;
+  padding: 0;
+}
+
+.details-pane li {
+  padding: 0.25rem 0;
+}
+
+.details-pane h2,
+.details-pane h3 {
+  margin-top: 0;
+}

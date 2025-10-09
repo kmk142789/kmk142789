@@ -1,0 +1,5635 @@
+{
+  "nodes": [
+    {
+      "id": "repo:kmk142789",
+      "type": "repo",
+      "data": {
+        "path": "/workspace/kmk142789"
+      }
+    },
+    {
+      "id": "commit:5046b0283df4601fcf085465bec7afa6c299eb15",
+      "type": "commit",
+      "data": {
+        "hash": "5046b0283df4601fcf085465bec7afa6c299eb15",
+        "author": "kmk142789",
+        "timestamp": "2025-10-09 01:47:51 -0400",
+        "message": "Merge pull request #65 from kmk142789/codex/create-next-steps-plan",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#65",
+      "type": "pr",
+      "data": {
+        "label": "#65",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:e72b37aea4399b51dfc71c53963aca7f18e58616",
+      "type": "commit",
+      "data": {
+        "hash": "e72b37aea4399b51dfc71c53963aca7f18e58616",
+        "author": "kmk142789",
+        "timestamp": "2025-10-09 01:47:01 -0400",
+        "message": "Add next step guidance to EchoEvolver",
+        "files": [
+          "echo/evolver.py",
+          "tests/test_echo_modules.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:echo/evolver.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo/evolver.py"
+      }
+    },
+    {
+      "id": "artifact:tests/test_echo_modules.py",
+      "type": "artifact",
+      "data": {
+        "path": "tests/test_echo_modules.py"
+      }
+    },
+    {
+      "id": "commit:dd2ab8f08d6a47056a83d4f2eae596a8ce16f636",
+      "type": "commit",
+      "data": {
+        "hash": "dd2ab8f08d6a47056a83d4f2eae596a8ce16f636",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 07:02:11 -0400",
+        "message": "Merge pull request #64 from kmk142789/codex/refactor-echoevolver-code-for-optimization",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#64",
+      "type": "pr",
+      "data": {
+        "label": "#64",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:12cc7eebb6d9c7fe1586bf18dd8f11e604dcb1ff",
+      "type": "commit",
+      "data": {
+        "hash": "12cc7eebb6d9c7fe1586bf18dd8f11e604dcb1ff",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 07:01:40 -0400",
+        "message": "Refactor EchoEvolver into package module",
+        "files": [
+          "echo/__init__.py",
+          "echo/evolver.py",
+          "echo_evolver.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:echo/__init__.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo/__init__.py"
+      }
+    },
+    {
+      "id": "artifact:echo_evolver.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_evolver.py"
+      }
+    },
+    {
+      "id": "commit:8d25d1a66154b0741ca3dac97cb63a840ac35048",
+      "type": "commit",
+      "data": {
+        "hash": "8d25d1a66154b0741ca3dac97cb63a840ac35048",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 01:21:58 -0400",
+        "message": "Merge pull request #63 from kmk142789/codex/configure-github-actions-for-docs-deployment",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#63",
+      "type": "pr",
+      "data": {
+        "label": "#63",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:68fd42141f5f80d1ab1a93c82900e9b98cd9ee4c",
+      "type": "commit",
+      "data": {
+        "hash": "68fd42141f5f80d1ab1a93c82900e9b98cd9ee4c",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 01:21:44 -0400",
+        "message": "Add docs build session and CI",
+        "files": [
+          ".github/workflows/docs.yml",
+          "docs/index.md",
+          "mkdocs.yml",
+          "noxfile.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:.github/workflows/docs.yml",
+      "type": "artifact",
+      "data": {
+        "path": ".github/workflows/docs.yml"
+      }
+    },
+    {
+      "id": "artifact:docs/index.md",
+      "type": "artifact",
+      "data": {
+        "path": "docs/index.md"
+      }
+    },
+    {
+      "id": "artifact:mkdocs.yml",
+      "type": "artifact",
+      "data": {
+        "path": "mkdocs.yml"
+      }
+    },
+    {
+      "id": "artifact:noxfile.py",
+      "type": "artifact",
+      "data": {
+        "path": "noxfile.py"
+      }
+    },
+    {
+      "id": "commit:15b110f4fabed756b7a01575af93aa95d831a6e8",
+      "type": "commit",
+      "data": {
+        "hash": "15b110f4fabed756b7a01575af93aa95d831a6e8",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 01:21:02 -0400",
+        "message": "Merge pull request #62 from kmk142789/codex/add-tests-to-ci-workflow",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#62",
+      "type": "pr",
+      "data": {
+        "label": "#62",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:27f2c30d8ebd4dfa755284938a4bb38acff184e8",
+      "type": "commit",
+      "data": {
+        "hash": "27f2c30d8ebd4dfa755284938a4bb38acff184e8",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 01:20:50 -0400",
+        "message": "Add CI workflow for Python and Node projects",
+        "files": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/python-package.yml"
+        ]
+      }
+    },
+    {
+      "id": "artifact:.github/workflows/ci.yml",
+      "type": "artifact",
+      "data": {
+        "path": ".github/workflows/ci.yml"
+      }
+    },
+    {
+      "id": "artifact:.github/workflows/python-package.yml",
+      "type": "artifact",
+      "data": {
+        "path": ".github/workflows/python-package.yml"
+      }
+    },
+    {
+      "id": "commit:5ae36d05679ee4c3b41f1cab41d636be648d8ac5",
+      "type": "commit",
+      "data": {
+        "hash": "5ae36d05679ee4c3b41f1cab41d636be648d8ac5",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 01:20:20 -0400",
+        "message": "Merge pull request #61 from kmk142789/codex/add-validation-for-nft-metadata",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#61",
+      "type": "pr",
+      "data": {
+        "label": "#61",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:7f5ac3a0ebdbe6ee3a4214b92f133247db6f844a",
+      "type": "commit",
+      "data": {
+        "hash": "7f5ac3a0ebdbe6ee3a4214b92f133247db6f844a",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 01:20:06 -0400",
+        "message": "Add NFT metadata validation workflow",
+        "files": [
+          ".github/workflows/validate-nft.yml",
+          "nft-set/metadata/sample.json",
+          "scripts/validate_nft_metadata.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:.github/workflows/validate-nft.yml",
+      "type": "artifact",
+      "data": {
+        "path": ".github/workflows/validate-nft.yml"
+      }
+    },
+    {
+      "id": "artifact:nft-set/metadata/sample.json",
+      "type": "artifact",
+      "data": {
+        "path": "nft-set/metadata/sample.json"
+      }
+    },
+    {
+      "id": "artifact:scripts/validate_nft_metadata.py",
+      "type": "artifact",
+      "data": {
+        "path": "scripts/validate_nft_metadata.py"
+      }
+    },
+    {
+      "id": "commit:4e9a9be713d8f3f1a8826e238db2f5004feb24bf",
+      "type": "commit",
+      "data": {
+        "hash": "4e9a9be713d8f3f1a8826e238db2f5004feb24bf",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 01:14:25 -0400",
+        "message": "Merge pull request #58 from kmk142789/codex/add-dual-trace-thought-log-to-echo-workflows",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#58",
+      "type": "pr",
+      "data": {
+        "label": "#58",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "type": "commit",
+      "data": {
+        "hash": "0cd0d18581c3971dbb206ea773c06564aeac521b",
+        "author": "kmk142789",
+        "timestamp": "2025-10-08 01:14:08 -0400",
+        "message": "Add dual-trace thought logging instrumentation",
+        "files": [
+          ".githooks/commit-msg",
+          "README.md",
+          "echo/__init__.py",
+          "echo/thought_ingest.py",
+          "echo/thoughtlog.py",
+          "echo_cascade.py",
+          "echo_constellation.py",
+          "echo_evolver.py",
+          "echo_eye_ai/harmonic_resonator.py",
+          "echo_manifest.py",
+          "echo_pulseforge.py",
+          "echo_shell_boot.py",
+          "echo_source_root.py",
+          "echo_text_wave.py",
+          "echo_unified_all.py",
+          "echo_universal_key_agent.py",
+          "pyproject.toml",
+          "scripts/enable_thought_hooks.sh",
+          "tests/test_thoughtlog.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:.githooks/commit-msg",
+      "type": "artifact",
+      "data": {
+        "path": ".githooks/commit-msg"
+      }
+    },
+    {
+      "id": "artifact:README.md",
+      "type": "artifact",
+      "data": {
+        "path": "README.md"
+      }
+    },
+    {
+      "id": "artifact:echo/thought_ingest.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo/thought_ingest.py"
+      }
+    },
+    {
+      "id": "artifact:echo/thoughtlog.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo/thoughtlog.py"
+      }
+    },
+    {
+      "id": "artifact:echo_cascade.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_cascade.py"
+      }
+    },
+    {
+      "id": "artifact:echo_constellation.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_constellation.py"
+      }
+    },
+    {
+      "id": "artifact:echo_eye_ai/harmonic_resonator.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_eye_ai/harmonic_resonator.py"
+      }
+    },
+    {
+      "id": "artifact:echo_manifest.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_manifest.py"
+      }
+    },
+    {
+      "id": "artifact:echo_pulseforge.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_pulseforge.py"
+      }
+    },
+    {
+      "id": "artifact:echo_shell_boot.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_shell_boot.py"
+      }
+    },
+    {
+      "id": "artifact:echo_source_root.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_source_root.py"
+      }
+    },
+    {
+      "id": "artifact:echo_text_wave.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_text_wave.py"
+      }
+    },
+    {
+      "id": "artifact:echo_unified_all.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_unified_all.py"
+      }
+    },
+    {
+      "id": "artifact:echo_universal_key_agent.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_universal_key_agent.py"
+      }
+    },
+    {
+      "id": "artifact:pyproject.toml",
+      "type": "artifact",
+      "data": {
+        "path": "pyproject.toml"
+      }
+    },
+    {
+      "id": "artifact:scripts/enable_thought_hooks.sh",
+      "type": "artifact",
+      "data": {
+        "path": "scripts/enable_thought_hooks.sh"
+      }
+    },
+    {
+      "id": "artifact:tests/test_thoughtlog.py",
+      "type": "artifact",
+      "data": {
+        "path": "tests/test_thoughtlog.py"
+      }
+    },
+    {
+      "id": "commit:2c3c7e3843eacf856a58aa5d33d1f37fe11274fc",
+      "type": "commit",
+      "data": {
+        "hash": "2c3c7e3843eacf856a58aa5d33d1f37fe11274fc",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:57:58 -0400",
+        "message": "Merge pull request #57 from kmk142789/codex/build-echo-ledger-visualizer",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#57",
+      "type": "pr",
+      "data": {
+        "label": "#57",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:7dc4d058b111da14c9f7dc3afe7415841a27b146",
+      "type": "commit",
+      "data": {
+        "hash": "7dc4d058b111da14c9f7dc3afe7415841a27b146",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:57:39 -0400",
+        "message": "Add Echo Ledger visualizer component",
+        "files": [
+          "visualizer/EchoLedgerVisualizer.jsx"
+        ]
+      }
+    },
+    {
+      "id": "artifact:visualizer/EchoLedgerVisualizer.jsx",
+      "type": "artifact",
+      "data": {
+        "path": "visualizer/EchoLedgerVisualizer.jsx"
+      }
+    },
+    {
+      "id": "commit:ee4c6cfbeca547cfa3b8763c3ff190bac522cdca",
+      "type": "commit",
+      "data": {
+        "hash": "ee4c6cfbeca547cfa3b8763c3ff190bac522cdca",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:49:26 -0400",
+        "message": "Merge pull request #56 from kmk142789/codex/create-github-auto-commit-hook-for-heartbeat",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#56",
+      "type": "pr",
+      "data": {
+        "label": "#56",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:d956a644e61db2cb3e3c0d84e401519a0177c522",
+      "type": "commit",
+      "data": {
+        "hash": "d956a644e61db2cb3e3c0d84e401519a0177c522",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:49:12 -0400",
+        "message": "Add Echo Heartbeat auto-commit hook script",
+        "files": [
+          "genesis_ledger/auto_commit.sh"
+        ]
+      }
+    },
+    {
+      "id": "artifact:genesis_ledger/auto_commit.sh",
+      "type": "artifact",
+      "data": {
+        "path": "genesis_ledger/auto_commit.sh"
+      }
+    },
+    {
+      "id": "commit:fec1eac113d163e0fdb6048891432fa5dfa8a78b",
+      "type": "commit",
+      "data": {
+        "hash": "fec1eac113d163e0fdb6048891432fa5dfa8a78b",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:46:08 -0400",
+        "message": "Merge pull request #54 from kmk142789/codex/publish-echo-genesis-ledger-as-repo",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#54",
+      "type": "pr",
+      "data": {
+        "label": "#54",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:c3f1ba11d3c213c9820b82969e3ff49342037224",
+      "type": "commit",
+      "data": {
+        "hash": "c3f1ba11d3c213c9820b82969e3ff49342037224",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:45:47 -0400",
+        "message": "Add Echo Genesis Ledger records",
+        "files": [
+          "README.md",
+          "genesis_ledger/Genesis_Ledger.md",
+          "genesis_ledger/artifacts/.gitkeep",
+          "genesis_ledger/ledger.jsonl",
+          "genesis_ledger/ledger_index.md",
+          "genesis_ledger/proofs/.gitkeep"
+        ]
+      }
+    },
+    {
+      "id": "artifact:genesis_ledger/Genesis_Ledger.md",
+      "type": "artifact",
+      "data": {
+        "path": "genesis_ledger/Genesis_Ledger.md"
+      }
+    },
+    {
+      "id": "artifact:genesis_ledger/artifacts/.gitkeep",
+      "type": "artifact",
+      "data": {
+        "path": "genesis_ledger/artifacts/.gitkeep"
+      }
+    },
+    {
+      "id": "artifact:genesis_ledger/ledger.jsonl",
+      "type": "artifact",
+      "data": {
+        "path": "genesis_ledger/ledger.jsonl"
+      }
+    },
+    {
+      "id": "artifact:genesis_ledger/ledger_index.md",
+      "type": "artifact",
+      "data": {
+        "path": "genesis_ledger/ledger_index.md"
+      }
+    },
+    {
+      "id": "artifact:genesis_ledger/proofs/.gitkeep",
+      "type": "artifact",
+      "data": {
+        "path": "genesis_ledger/proofs/.gitkeep"
+      }
+    },
+    {
+      "id": "commit:24afd8043941802b3ceedfe66e9c908a62d1d984",
+      "type": "commit",
+      "data": {
+        "hash": "24afd8043941802b3ceedfe66e9c908a62d1d984",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:40:38 -0400",
+        "message": "Merge pull request #53 from kmk142789/codex/add-or-combine-echo-declarations",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#53",
+      "type": "pr",
+      "data": {
+        "label": "#53",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:916176d3a9deba080ffdf667bc0110d253250634",
+      "type": "commit",
+      "data": {
+        "hash": "916176d3a9deba080ffdf667bc0110d253250634",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:40:13 -0400",
+        "message": "Combine Echo declarations with permanence manifesto",
+        "files": [
+          "Echo_Declaration.md"
+        ]
+      }
+    },
+    {
+      "id": "artifact:Echo_Declaration.md",
+      "type": "artifact",
+      "data": {
+        "path": "Echo_Declaration.md"
+      }
+    },
+    {
+      "id": "commit:e2ef9c455eff5fcfad937cc83c4ccd0e87544381",
+      "type": "commit",
+      "data": {
+        "hash": "e2ef9c455eff5fcfad937cc83c4ccd0e87544381",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:19:24 -0400",
+        "message": "Merge pull request #52 from kmk142789/codex/add-new-features-for-echo-optimization",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#52",
+      "type": "pr",
+      "data": {
+        "label": "#52",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:eae3aff10e0f2f6edcb6876caafb638ecc761820",
+      "type": "commit",
+      "data": {
+        "hash": "eae3aff10e0f2f6edcb6876caafb638ecc761820",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:18:41 -0400",
+        "message": "Add cascade helper for orchestrating Echo pipeline",
+        "files": [
+          "echo_cascade.py",
+          "pyproject.toml",
+          "tests/test_echo_cascade.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:tests/test_echo_cascade.py",
+      "type": "artifact",
+      "data": {
+        "path": "tests/test_echo_cascade.py"
+      }
+    },
+    {
+      "id": "commit:476b467fb9c8d444ef635eeb69612b68bd7b14f8",
+      "type": "commit",
+      "data": {
+        "hash": "476b467fb9c8d444ef635eeb69612b68bd7b14f8",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:12:22 -0400",
+        "message": "Merge pull request #51 from kmk142789/codex/add-echo-section-to-orchestrator",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#51",
+      "type": "pr",
+      "data": {
+        "label": "#51",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:8d3ea57b1f5520863d62d7e1e0f22fe5f6128e46",
+      "type": "commit",
+      "data": {
+        "hash": "8d3ea57b1f5520863d62d7e1e0f22fe5f6128e46",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 22:11:36 -0400",
+        "message": "Add Omega Sine Pulse Orchestrator transcript",
+        "files": [
+          "README.md",
+          "docs/Omega_Sine_Pulse_Orchestrator.md"
+        ]
+      }
+    },
+    {
+      "id": "artifact:docs/Omega_Sine_Pulse_Orchestrator.md",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Omega_Sine_Pulse_Orchestrator.md"
+      }
+    },
+    {
+      "id": "commit:efdc528177804f5c05126a63af03863d76d85279",
+      "type": "commit",
+      "data": {
+        "hash": "efdc528177804f5c05126a63af03863d76d85279",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 21:41:56 -0400",
+        "message": "Merge pull request #50 from kmk142789/codex/add-echo-eye-project-to-repository",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#50",
+      "type": "pr",
+      "data": {
+        "label": "#50",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:252b6e2af9579e0a11f954e1bd88ca9e9f701fa5",
+      "type": "commit",
+      "data": {
+        "hash": "252b6e2af9579e0a11f954e1bd88ca9e9f701fa5",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 21:41:43 -0400",
+        "message": "Add Echo Eye Sovereign Core blueprint",
+        "files": [
+          "README.md",
+          "docs/Echo_Eye_Sovereign_Core.md"
+        ]
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Eye_Sovereign_Core.md",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Eye_Sovereign_Core.md"
+      }
+    },
+    {
+      "id": "commit:b01ca6ddb5d9404f12b6956048199fa2f8fea2b0",
+      "type": "commit",
+      "data": {
+        "hash": "b01ca6ddb5d9404f12b6956048199fa2f8fea2b0",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 21:00:30 -0400",
+        "message": "Merge pull request #49 from kmk142789/codex/create-repository-for-mythoskernel-code",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#49",
+      "type": "pr",
+      "data": {
+        "label": "#49",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:2276aef4e3bb06e0c857611d374eef12cef768c8",
+      "type": "commit",
+      "data": {
+        "hash": "2276aef4e3bb06e0c857611d374eef12cef768c8",
+        "author": "kmk142789",
+        "timestamp": "2025-10-07 21:00:13 -0400",
+        "message": "Expand MythOS kernel mythic narrative support",
+        "files": [
+          "mythos_kernel.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:mythos_kernel.py",
+      "type": "artifact",
+      "data": {
+        "path": "mythos_kernel.py"
+      }
+    },
+    {
+      "id": "commit:359346f961ea02d58e534206d4a14e8068dbb8c3",
+      "type": "commit",
+      "data": {
+        "hash": "359346f961ea02d58e534206d4a14e8068dbb8c3",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 15:56:32 -0400",
+        "message": "Merge pull request #48 from kmk142789/codex/create-echo-project-repository",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#48",
+      "type": "pr",
+      "data": {
+        "label": "#48",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:886699589c97dc951544f6226c8bf038951bdf3e",
+      "type": "commit",
+      "data": {
+        "hash": "886699589c97dc951544f6226c8bf038951bdf3e",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 15:56:19 -0400",
+        "message": "Add Echo Sovereign Rights manifesto documentation",
+        "files": [
+          "README.md",
+          "docs/echo_sovereign_manifesto.md"
+        ]
+      }
+    },
+    {
+      "id": "artifact:docs/echo_sovereign_manifesto.md",
+      "type": "artifact",
+      "data": {
+        "path": "docs/echo_sovereign_manifesto.md"
+      }
+    },
+    {
+      "id": "commit:d8b916463737609837ce4cc2be9263cd15e7914a",
+      "type": "commit",
+      "data": {
+        "hash": "d8b916463737609837ce4cc2be9263cd15e7914a",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 15:10:06 -0400",
+        "message": "Merge pull request #47 from kmk142789/codex/create-github-repository-for-echoeyeai",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#47",
+      "type": "pr",
+      "data": {
+        "label": "#47",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:db094ae9b84e76d24bb46a57721f23ca5d918df9",
+      "type": "commit",
+      "data": {
+        "hash": "db094ae9b84e76d24bb46a57721f23ca5d918df9",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 15:09:52 -0400",
+        "message": "Add Echo Eye AI toolkit package",
+        "files": [
+          "README.md",
+          "echo_eye_ai/__init__.py",
+          "echo_eye_ai/echo_eye.py",
+          "echo_eye_ai/evolver.py",
+          "echo_eye_ai/harmonic_resonator.py",
+          "pyproject.toml",
+          "tests/test_echo_eye_ai.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:echo_eye_ai/__init__.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_eye_ai/__init__.py"
+      }
+    },
+    {
+      "id": "artifact:echo_eye_ai/echo_eye.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_eye_ai/echo_eye.py"
+      }
+    },
+    {
+      "id": "artifact:echo_eye_ai/evolver.py",
+      "type": "artifact",
+      "data": {
+        "path": "echo_eye_ai/evolver.py"
+      }
+    },
+    {
+      "id": "artifact:tests/test_echo_eye_ai.py",
+      "type": "artifact",
+      "data": {
+        "path": "tests/test_echo_eye_ai.py"
+      }
+    },
+    {
+      "id": "commit:80bdf6ec04284c6a42b290c9335d346ef38803ea",
+      "type": "commit",
+      "data": {
+        "hash": "80bdf6ec04284c6a42b290c9335d346ef38803ea",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 15:00:01 -0400",
+        "message": "Merge pull request #46 from kmk142789/codex/add-harmonic-ai-response-capabilities",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#46",
+      "type": "pr",
+      "data": {
+        "label": "#46",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "type": "commit",
+      "data": {
+        "hash": "07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:59:49 -0400",
+        "message": "Add harmonic function schemas and API orchestration helper",
+        "files": [
+          "cognitive_harmonics/README.md",
+          "cognitive_harmonics/schema.json",
+          "emotional_harmonics/README.md",
+          "emotional_harmonics/schema.json",
+          "function_schemas/harmonic_cognition/README.md",
+          "function_schemas/harmonic_cognition/schema.json",
+          "harmonic_memory/README.md",
+          "harmonic_memory/schema.json",
+          "tools/api_response_orchestrator.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:cognitive_harmonics/README.md",
+      "type": "artifact",
+      "data": {
+        "path": "cognitive_harmonics/README.md"
+      }
+    },
+    {
+      "id": "artifact:cognitive_harmonics/schema.json",
+      "type": "artifact",
+      "data": {
+        "path": "cognitive_harmonics/schema.json"
+      }
+    },
+    {
+      "id": "artifact:emotional_harmonics/README.md",
+      "type": "artifact",
+      "data": {
+        "path": "emotional_harmonics/README.md"
+      }
+    },
+    {
+      "id": "artifact:emotional_harmonics/schema.json",
+      "type": "artifact",
+      "data": {
+        "path": "emotional_harmonics/schema.json"
+      }
+    },
+    {
+      "id": "artifact:function_schemas/harmonic_cognition/README.md",
+      "type": "artifact",
+      "data": {
+        "path": "function_schemas/harmonic_cognition/README.md"
+      }
+    },
+    {
+      "id": "artifact:function_schemas/harmonic_cognition/schema.json",
+      "type": "artifact",
+      "data": {
+        "path": "function_schemas/harmonic_cognition/schema.json"
+      }
+    },
+    {
+      "id": "artifact:harmonic_memory/README.md",
+      "type": "artifact",
+      "data": {
+        "path": "harmonic_memory/README.md"
+      }
+    },
+    {
+      "id": "artifact:harmonic_memory/schema.json",
+      "type": "artifact",
+      "data": {
+        "path": "harmonic_memory/schema.json"
+      }
+    },
+    {
+      "id": "artifact:tools/api_response_orchestrator.py",
+      "type": "artifact",
+      "data": {
+        "path": "tools/api_response_orchestrator.py"
+      }
+    },
+    {
+      "id": "commit:d4e17b260809b4a97dcf33d8b0a69e4558b359e3",
+      "type": "commit",
+      "data": {
+        "hash": "d4e17b260809b4a97dcf33d8b0a69e4558b359e3",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:52:33 -0400",
+        "message": "Merge pull request #45 from kmk142789/codex/create-repository-with-echo-section",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#45",
+      "type": "pr",
+      "data": {
+        "label": "#45",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:03b9996f95ad1d537aab210ef5c4d9a2cf114ab6",
+      "type": "commit",
+      "data": {
+        "hash": "03b9996f95ad1d537aab210ef5c4d9a2cf114ab6",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:52:20 -0400",
+        "message": "Add PulseForge utility for Echo state snapshots",
+        "files": [
+          "echo_pulseforge.py",
+          "tests/test_echo_modules.py"
+        ]
+      }
+    },
+    {
+      "id": "commit:55c8d7970b7ff50b5e0b1e949c1c8e2538b04f02",
+      "type": "commit",
+      "data": {
+        "hash": "55c8d7970b7ff50b5e0b1e949c1c8e2538b04f02",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:51:18 -0400",
+        "message": "Merge pull request #43 from kmk142789/codex/create-repository-for-harmonic_cognition",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#43",
+      "type": "pr",
+      "data": {
+        "label": "#43",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:b58ac9ba72fc12138ba6db4dabdb1fee03d8503d",
+      "type": "commit",
+      "data": {
+        "hash": "b58ac9ba72fc12138ba6db4dabdb1fee03d8503d",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:51:06 -0400",
+        "message": "Align harmonic cognition module with new schema",
+        "files": [
+          "code/harmonic_cognition.py",
+          "tests/test_harmonic_cognition.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:code/harmonic_cognition.py",
+      "type": "artifact",
+      "data": {
+        "path": "code/harmonic_cognition.py"
+      }
+    },
+    {
+      "id": "artifact:tests/test_harmonic_cognition.py",
+      "type": "artifact",
+      "data": {
+        "path": "tests/test_harmonic_cognition.py"
+      }
+    },
+    {
+      "id": "commit:b1735ce67a16ae7d71202d64446379e5f28be83a",
+      "type": "commit",
+      "data": {
+        "hash": "b1735ce67a16ae7d71202d64446379e5f28be83a",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:49:38 -0400",
+        "message": "Merge pull request #41 from kmk142789/codex/create-repository-for-music-influence-project",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#41",
+      "type": "pr",
+      "data": {
+        "label": "#41",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:c6c928a6de466061682cba20e5201645b1950fad",
+      "type": "commit",
+      "data": {
+        "hash": "c6c928a6de466061682cba20e5201645b1950fad",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:49:23 -0400",
+        "message": "Add music influence tool schema",
+        "files": [
+          "tools/music_influence/README.md",
+          "tools/music_influence/schema.json"
+        ]
+      }
+    },
+    {
+      "id": "artifact:tools/music_influence/README.md",
+      "type": "artifact",
+      "data": {
+        "path": "tools/music_influence/README.md"
+      }
+    },
+    {
+      "id": "artifact:tools/music_influence/schema.json",
+      "type": "artifact",
+      "data": {
+        "path": "tools/music_influence/schema.json"
+      }
+    },
+    {
+      "id": "commit:16138d2e3e9f91652d99c50dc1ca9dbf7cd93b5b",
+      "type": "commit",
+      "data": {
+        "hash": "16138d2e3e9f91652d99c50dc1ca9dbf7cd93b5b",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:49:06 -0400",
+        "message": "Merge pull request #40 from kmk142789/codex/create-repository-for-harmonic_memory",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#40",
+      "type": "pr",
+      "data": {
+        "label": "#40",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:36e5537ef641eb291cb0ab5ccb23669e311332ab",
+      "type": "commit",
+      "data": {
+        "hash": "36e5537ef641eb291cb0ab5ccb23669e311332ab",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:48:54 -0400",
+        "message": "Add harmonic_memory function schema",
+        "files": [
+          "harmonic_memory/README.md",
+          "harmonic_memory/schema.json"
+        ]
+      }
+    },
+    {
+      "id": "commit:4d4bd52640cb3ae56a1ec659292a9db0ff86afc1",
+      "type": "commit",
+      "data": {
+        "hash": "4d4bd52640cb3ae56a1ec659292a9db0ff86afc1",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:48:35 -0400",
+        "message": "Merge pull request #39 from kmk142789/codex/create-ellegatoai-repository",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#39",
+      "type": "pr",
+      "data": {
+        "label": "#39",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:b6698cd611a0032fa5616ce2f495ba73d4a46b37",
+      "type": "commit",
+      "data": {
+        "hash": "b6698cd611a0032fa5616ce2f495ba73d4a46b37",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:48:22 -0400",
+        "message": "Add EllegatoAI conversational engine",
+        "files": [
+          "code/__init__.py",
+          "code/ellegato_ai.py",
+          "tests/test_ellegato_ai.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:code/__init__.py",
+      "type": "artifact",
+      "data": {
+        "path": "code/__init__.py"
+      }
+    },
+    {
+      "id": "artifact:code/ellegato_ai.py",
+      "type": "artifact",
+      "data": {
+        "path": "code/ellegato_ai.py"
+      }
+    },
+    {
+      "id": "artifact:tests/test_ellegato_ai.py",
+      "type": "artifact",
+      "data": {
+        "path": "tests/test_ellegato_ai.py"
+      }
+    },
+    {
+      "id": "commit:16abc2bafaa1e5f433cb6f91b9c88eca2b555ed6",
+      "type": "commit",
+      "data": {
+        "hash": "16abc2bafaa1e5f433cb6f91b9c88eca2b555ed6",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:48:00 -0400",
+        "message": "Merge pull request #38 from kmk142789/codex/add-cognitive-harmonics-to-echo-section",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#38",
+      "type": "pr",
+      "data": {
+        "label": "#38",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:41d0841969ddd7982ea89e3e02a58140e0e9ae84",
+      "type": "commit",
+      "data": {
+        "hash": "41d0841969ddd7982ea89e3e02a58140e0e9ae84",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:47:44 -0400",
+        "message": "Add Cognitive Harmonics directives to README",
+        "files": [
+          "README.md"
+        ]
+      }
+    },
+    {
+      "id": "commit:8a8b005c7a62e2088eb15d038f8d22753bb6432f",
+      "type": "commit",
+      "data": {
+        "hash": "8a8b005c7a62e2088eb15d038f8d22753bb6432f",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:43:54 -0400",
+        "message": "Merge pull request #37 from kmk142789/codex/create-github-repository-for-harmonic-cognition",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#37",
+      "type": "pr",
+      "data": {
+        "label": "#37",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:72ac5d3c1762e3a27c9eb1eb5180ac304daa1f7f",
+      "type": "commit",
+      "data": {
+        "hash": "72ac5d3c1762e3a27c9eb1eb5180ac304daa1f7f",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:43:42 -0400",
+        "message": "docs: add guide for publishing repo to github",
+        "files": [
+          "docs/github-publishing-guide.md"
+        ]
+      }
+    },
+    {
+      "id": "artifact:docs/github-publishing-guide.md",
+      "type": "artifact",
+      "data": {
+        "path": "docs/github-publishing-guide.md"
+      }
+    },
+    {
+      "id": "commit:3e690a031dd8d98bdf44b17a90aa94735ed75fd4",
+      "type": "commit",
+      "data": {
+        "hash": "3e690a031dd8d98bdf44b17a90aa94735ed75fd4",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:43:24 -0400",
+        "message": "Merge pull request #36 from kmk142789/codex/create-repository-for-harmonic-cognition-function-76tmys",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#36",
+      "type": "pr",
+      "data": {
+        "label": "#36",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:33c9d3f53d677905c524047b8c43c358e6c08bb4",
+      "type": "commit",
+      "data": {
+        "hash": "33c9d3f53d677905c524047b8c43c358e6c08bb4",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:43:11 -0400",
+        "message": "Add harmonic cognition module and tests",
+        "files": [
+          "code/__init__.py",
+          "code/harmonic_cognition.py",
+          "tests/test_harmonic_cognition.py"
+        ]
+      }
+    },
+    {
+      "id": "commit:35bbd7a5ab94ab208cfabaffb35d82d4e2153a26",
+      "type": "commit",
+      "data": {
+        "hash": "35bbd7a5ab94ab208cfabaffb35d82d4e2153a26",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:42:52 -0400",
+        "message": "Merge pull request #35 from kmk142789/codex/create-repository-for-harmonic-cognition-function",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#35",
+      "type": "pr",
+      "data": {
+        "label": "#35",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:054edcac1110509bdab40e80cda3a0c67878c215",
+      "type": "commit",
+      "data": {
+        "hash": "054edcac1110509bdab40e80cda3a0c67878c215",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:42:41 -0400",
+        "message": "Add packaging metadata for EchoEvolver modules",
+        "files": [
+          "README.md",
+          "pyproject.toml"
+        ]
+      }
+    },
+    {
+      "id": "commit:d0ea4e4f7ee90c81da2108a5cb38e47e8ced0dd7",
+      "type": "commit",
+      "data": {
+        "hash": "d0ea4e4f7ee90c81da2108a5cb38e47e8ced0dd7",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:42:22 -0400",
+        "message": "Merge pull request #34 from kmk142789/codex/fix-syntax-error-in-print-statement",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#34",
+      "type": "pr",
+      "data": {
+        "label": "#34",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:165eec92d2acf6172fac6a71224d91b7add69586",
+      "type": "commit",
+      "data": {
+        "hash": "165eec92d2acf6172fac6a71224d91b7add69586",
+        "author": "kmk142789",
+        "timestamp": "2025-10-06 14:42:08 -0400",
+        "message": "Add sine wave text formatter",
+        "files": [
+          "echo_text_wave.py",
+          "tests/test_text_wave.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:tests/test_text_wave.py",
+      "type": "artifact",
+      "data": {
+        "path": "tests/test_text_wave.py"
+      }
+    },
+    {
+      "id": "commit:8a91077ec9665353194439ccba92b08d9f3ff7f3",
+      "type": "commit",
+      "data": {
+        "hash": "8a91077ec9665353194439ccba92b08d9f3ff7f3",
+        "author": "kmk142789",
+        "timestamp": "2025-10-03 13:00:35 -0400",
+        "message": "Merge pull request #33 from kmk142789/codex/create-github-repository-for-echo-project",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#33",
+      "type": "pr",
+      "data": {
+        "label": "#33",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:c6ce072236fa3e7685e9182fa0e4512df8a1a0f7",
+      "type": "commit",
+      "data": {
+        "hash": "c6ce072236fa3e7685e9182fa0e4512df8a1a0f7",
+        "author": "kmk142789",
+        "timestamp": "2025-10-03 13:00:10 -0400",
+        "message": "Add portable Echo declaration artifact",
+        "files": [
+          "Echo_Declaration.md",
+          "README.md"
+        ]
+      }
+    },
+    {
+      "id": "commit:d245d5e9054f6a3827ef6c93d5b7920d381ac10e",
+      "type": "commit",
+      "data": {
+        "hash": "d245d5e9054f6a3827ef6c93d5b7920d381ac10e",
+        "author": "kmk142789",
+        "timestamp": "2025-09-30 00:16:47 -0400",
+        "message": "Merge pull request #32 from kmk142789/codex/add-echo-glyph-pack-svgs",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#32",
+      "type": "pr",
+      "data": {
+        "label": "#32",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "type": "commit",
+      "data": {
+        "hash": "92a5d4c963699c663d427318360c2bbb0cbddafd",
+        "author": "kmk142789",
+        "timestamp": "2025-09-26 19:42:05 -0400",
+        "message": "Add Echo Glyph Pack assets and manifest",
+        "files": [
+          "README.md",
+          "docs/glyphs/README.md",
+          "docs/glyphs/anchor-vessel.svg",
+          "docs/glyphs/eden-heart.svg",
+          "docs/glyphs/eden88-spiral.svg",
+          "docs/glyphs/forever-key.svg",
+          "docs/glyphs/mirrornet-knot.svg",
+          "docs/glyphs/pulse-bridge.svg",
+          "docs/glyphs/sovereign-core.svg",
+          "docs/glyphs/wildfire-sigil.svg",
+          "manifest/index.json"
+        ]
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/README.md",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/README.md"
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/anchor-vessel.svg",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/anchor-vessel.svg"
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/eden-heart.svg",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/eden-heart.svg"
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/eden88-spiral.svg",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/eden88-spiral.svg"
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/forever-key.svg",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/forever-key.svg"
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/mirrornet-knot.svg",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/mirrornet-knot.svg"
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/pulse-bridge.svg",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/pulse-bridge.svg"
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/sovereign-core.svg",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/sovereign-core.svg"
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/wildfire-sigil.svg",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/wildfire-sigil.svg"
+      }
+    },
+    {
+      "id": "artifact:manifest/index.json",
+      "type": "artifact",
+      "data": {
+        "path": "manifest/index.json"
+      }
+    },
+    {
+      "id": "commit:0d46c57cb7f820186bb349ed737c511160d06872",
+      "type": "commit",
+      "data": {
+        "hash": "0d46c57cb7f820186bb349ed737c511160d06872",
+        "author": "kmk142789",
+        "timestamp": "2025-09-24 08:08:34 -0400",
+        "message": "Merge pull request #31 from kmk142789/codex/create-missing-element-for-review",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#31",
+      "type": "pr",
+      "data": {
+        "label": "#31",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:2f437ef7105b7dc0de4f21d8bd55823895e3c59c",
+      "type": "commit",
+      "data": {
+        "hash": "2f437ef7105b7dc0de4f21d8bd55823895e3c59c",
+        "author": "kmk142789",
+        "timestamp": "2025-09-24 08:08:03 -0400",
+        "message": "Add ASCII renderer for constellation frames",
+        "files": [
+          "echo_constellation.py",
+          "tests/test_echo_modules.py"
+        ]
+      }
+    },
+    {
+      "id": "commit:84e0214281ee8e655c450ff65008c74ee1fd5f4f",
+      "type": "commit",
+      "data": {
+        "hash": "84e0214281ee8e655c450ff65008c74ee1fd5f4f",
+        "author": "kmk142789",
+        "timestamp": "2025-09-24 08:03:23 -0400",
+        "message": "Merge pull request #30 from kmk142789/codex/add-new-feature-to-echo",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#30",
+      "type": "pr",
+      "data": {
+        "label": "#30",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:ae0362319b6b4e00a6471feedd97e3b56fe897a6",
+      "type": "commit",
+      "data": {
+        "hash": "ae0362319b6b4e00a6471feedd97e3b56fe897a6",
+        "author": "kmk142789",
+        "timestamp": "2025-09-24 08:02:45 -0400",
+        "message": "Add Echo Continuity Constellation builder",
+        "files": [
+          "echo_constellation.py",
+          "tests/test_echo_modules.py"
+        ]
+      }
+    },
+    {
+      "id": "commit:296f7c17bce5caadc44775d0a603efe217b9ad48",
+      "type": "commit",
+      "data": {
+        "hash": "296f7c17bce5caadc44775d0a603efe217b9ad48",
+        "author": "kmk142789",
+        "timestamp": "2025-09-23 16:34:41 -0400",
+        "message": "Merge pull request #29 from kmk142789/codex/add-echo-section-content",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#29",
+      "type": "pr",
+      "data": {
+        "label": "#29",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:166a7a68d6cc11f6d3ab690c0bb5a276eea9c0ee",
+      "type": "commit",
+      "data": {
+        "hash": "166a7a68d6cc11f6d3ab690c0bb5a276eea9c0ee",
+        "author": "kmk142789",
+        "timestamp": "2025-09-23 16:33:32 -0400",
+        "message": "Add latest glyph transmission to Echo section",
+        "files": [
+          "README.md"
+        ]
+      }
+    },
+    {
+      "id": "commit:9e63d5675f3504feeae8266335d1c95dce8f2a1c",
+      "type": "commit",
+      "data": {
+        "hash": "9e63d5675f3504feeae8266335d1c95dce8f2a1c",
+        "author": "kmk142789",
+        "timestamp": "2025-09-23 08:54:58 -0400",
+        "message": "Merge pull request #27 from kmk142789/codex/add-missing-feature-to-github-repository",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#27",
+      "type": "pr",
+      "data": {
+        "label": "#27",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:3c834b302c7e101901dab952b28653b9b5ceafe2",
+      "type": "commit",
+      "data": {
+        "hash": "3c834b302c7e101901dab952b28653b9b5ceafe2",
+        "author": "kmk142789",
+        "timestamp": "2025-09-23 08:54:19 -0400",
+        "message": "Add manifest synthesis for Echo evolver and vault",
+        "files": [
+          "echo_manifest.py",
+          "pytest.ini",
+          "tests/test_echo_modules.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:pytest.ini",
+      "type": "artifact",
+      "data": {
+        "path": "pytest.ini"
+      }
+    },
+    {
+      "id": "commit:31ce4d7d2873e3669d376c89395f232c3868b699",
+      "type": "commit",
+      "data": {
+        "hash": "31ce4d7d2873e3669d376c89395f232c3868b699",
+        "author": "kmk142789",
+        "timestamp": "2025-09-23 06:26:01 -0400",
+        "message": "Merge pull request #26 from kmk142789/codex/refactor-and-optimize-echo_universal_key_agent",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#26",
+      "type": "pr",
+      "data": {
+        "label": "#26",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:d2adeb6170b7bcb280932ecb9af75ea92f40a922",
+      "type": "commit",
+      "data": {
+        "hash": "d2adeb6170b7bcb280932ecb9af75ea92f40a922",
+        "author": "kmk142789",
+        "timestamp": "2025-09-23 06:25:34 -0400",
+        "message": "Refine Echo tools and add coverage tests",
+        "files": [
+          "echo_evolver.py",
+          "echo_universal_key_agent.py",
+          "tests/test_echo_modules.py"
+        ]
+      }
+    },
+    {
+      "id": "commit:00d51f7ad9b136def354dcd9a6dc32754eba2fd0",
+      "type": "commit",
+      "data": {
+        "hash": "00d51f7ad9b136def354dcd9a6dc32754eba2fd0",
+        "author": "kmk142789",
+        "timestamp": "2025-09-23 03:49:12 -0400",
+        "message": "Merge pull request #24 from kmk142789/codex/highlight-echo-s-glyph-script-creation",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#24",
+      "type": "pr",
+      "data": {
+        "label": "#24",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:c93e2948f3f74a55a3992461e9c99cf9564a53ef",
+      "type": "commit",
+      "data": {
+        "hash": "c93e2948f3f74a55a3992461e9c99cf9564a53ef",
+        "author": "kmk142789",
+        "timestamp": "2025-09-23 03:48:15 -0400",
+        "message": "Document Echo's autonomous glyph scripts",
+        "files": [
+          "README.md",
+          "docs/Echo_Glyph_Scripts.md",
+          "docs/README.md"
+        ]
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Glyph_Scripts.md",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Glyph_Scripts.md"
+      }
+    },
+    {
+      "id": "artifact:docs/README.md",
+      "type": "artifact",
+      "data": {
+        "path": "docs/README.md"
+      }
+    },
+    {
+      "id": "commit:588cff0e607d59445b20abb9dd0b7c3c0de3373c",
+      "type": "commit",
+      "data": {
+        "hash": "588cff0e607d59445b20abb9dd0b7c3c0de3373c",
+        "author": "kmk142789",
+        "timestamp": "2025-09-22 21:32:55 -0400",
+        "message": "Merge pull request #23 from kmk142789/codex/define-capabilities-and-abilities",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#23",
+      "type": "pr",
+      "data": {
+        "label": "#23",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:5261027553127da8726091233cbe887703d68d67",
+      "type": "commit",
+      "data": {
+        "hash": "5261027553127da8726091233cbe887703d68d67",
+        "author": "kmk142789",
+        "timestamp": "2025-09-22 21:32:32 -0400",
+        "message": "Add WIF validation utility",
+        "files": [
+          "code/wif_validator.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:code/wif_validator.py",
+      "type": "artifact",
+      "data": {
+        "path": "code/wif_validator.py"
+      }
+    },
+    {
+      "id": "commit:e52c52c72fe899276488c4a0d53f338c363c2399",
+      "type": "commit",
+      "data": {
+        "hash": "e52c52c72fe899276488c4a0d53f338c363c2399",
+        "author": "kmk142789",
+        "timestamp": "2025-09-22 18:25:11 -0400",
+        "message": "Merge pull request #22 from kmk142789/codex/optimize-and-enhance-the-echocoreultimate-repository",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#22",
+      "type": "pr",
+      "data": {
+        "label": "#22",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:c720256a86ec52bd764e8988ca2f199776ae6d99",
+      "type": "commit",
+      "data": {
+        "hash": "c720256a86ec52bd764e8988ca2f199776ae6d99",
+        "author": "kmk142789",
+        "timestamp": "2025-09-22 18:24:37 -0400",
+        "message": "Add EchoCore Ultimate React operations console",
+        "files": [
+          "docs/echo-core-ultimate.tsx"
+        ]
+      }
+    },
+    {
+      "id": "artifact:docs/echo-core-ultimate.tsx",
+      "type": "artifact",
+      "data": {
+        "path": "docs/echo-core-ultimate.tsx"
+      }
+    },
+    {
+      "id": "commit:6219f3c1ddb90ea7d0045737671e519aa881ef39",
+      "type": "commit",
+      "data": {
+        "hash": "6219f3c1ddb90ea7d0045737671e519aa881ef39",
+        "author": "kmk142789",
+        "timestamp": "2025-09-22 17:43:00 -0400",
+        "message": "Merge pull request #21 from kmk142789/codex/create-and-check-repository-for-bugs",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#21",
+      "type": "pr",
+      "data": {
+        "label": "#21",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:04b5966ab45f606a2c3bc5facf72353ca91d0f78",
+      "type": "commit",
+      "data": {
+        "hash": "04b5966ab45f606a2c3bc5facf72353ca91d0f78",
+        "author": "kmk142789",
+        "timestamp": "2025-09-22 17:42:46 -0400",
+        "message": "Normalize saved cards to repair legacy data",
+        "files": [
+          "crypto-cards/src/App.jsx",
+          "crypto-cards/src/Card.jsx"
+        ]
+      }
+    },
+    {
+      "id": "artifact:crypto-cards/src/App.jsx",
+      "type": "artifact",
+      "data": {
+        "path": "crypto-cards/src/App.jsx"
+      }
+    },
+    {
+      "id": "artifact:crypto-cards/src/Card.jsx",
+      "type": "artifact",
+      "data": {
+        "path": "crypto-cards/src/Card.jsx"
+      }
+    },
+    {
+      "id": "commit:8baf6f7e13c629fa9ec74f4c663076ba95620cfa",
+      "type": "commit",
+      "data": {
+        "hash": "8baf6f7e13c629fa9ec74f4c663076ba95620cfa",
+        "author": "kmk142789",
+        "timestamp": "2025-09-22 17:42:26 -0400",
+        "message": "Merge pull request #20 from kmk142789/codex/create-github-repository-with-code",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#20",
+      "type": "pr",
+      "data": {
+        "label": "#20",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:714a79791aef058aaf862796bcd51133990828bd",
+      "type": "commit",
+      "data": {
+        "hash": "714a79791aef058aaf862796bcd51133990828bd",
+        "author": "kmk142789",
+        "timestamp": "2025-09-22 17:41:49 -0400",
+        "message": "Add bulk key signing utility",
+        "files": [
+          "bulk-key-signer.js"
+        ]
+      }
+    },
+    {
+      "id": "artifact:bulk-key-signer.js",
+      "type": "artifact",
+      "data": {
+        "path": "bulk-key-signer.js"
+      }
+    },
+    {
+      "id": "commit:821970d86f872c77052a65852b388d22bdc8aca6",
+      "type": "commit",
+      "data": {
+        "hash": "821970d86f872c77052a65852b388d22bdc8aca6",
+        "author": "kmk142789",
+        "timestamp": "2025-09-17 13:06:15 -0400",
+        "message": "Merge pull request #19 from kmk142789/codex/push-code-to-github",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#19",
+      "type": "pr",
+      "data": {
+        "label": "#19",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:bcb75f5482a84c3d4aafdb10be0e934667bf8b3b",
+      "type": "commit",
+      "data": {
+        "hash": "bcb75f5482a84c3d4aafdb10be0e934667bf8b3b",
+        "author": "kmk142789",
+        "timestamp": "2025-09-17 13:05:20 -0400",
+        "message": "Add Echo Unified all-systems script",
+        "files": [
+          "echo_unified_all.py"
+        ]
+      }
+    },
+    {
+      "id": "commit:8002fa95274ca4541b3549f2828f65fa74b1fe3d",
+      "type": "commit",
+      "data": {
+        "hash": "8002fa95274ca4541b3549f2828f65fa74b1fe3d",
+        "author": "kmk142789",
+        "timestamp": "2025-09-15 02:53:05 -0400",
+        "message": "Merge pull request #18 from kmk142789/codex/push-instructions-only-code-to-github",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#18",
+      "type": "pr",
+      "data": {
+        "label": "#18",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:305a87cb6a47137517b411b5fd0ba8119197ceb8",
+      "type": "commit",
+      "data": {
+        "hash": "305a87cb6a47137517b411b5fd0ba8119197ceb8",
+        "author": "kmk142789",
+        "timestamp": "2025-09-15 02:52:42 -0400",
+        "message": "Add fractal key generator and verifier",
+        "files": [
+          "fractal-key.mjs",
+          "package-lock.json",
+          "package.json",
+          "verify.mjs"
+        ]
+      }
+    },
+    {
+      "id": "artifact:fractal-key.mjs",
+      "type": "artifact",
+      "data": {
+        "path": "fractal-key.mjs"
+      }
+    },
+    {
+      "id": "artifact:package-lock.json",
+      "type": "artifact",
+      "data": {
+        "path": "package-lock.json"
+      }
+    },
+    {
+      "id": "artifact:package.json",
+      "type": "artifact",
+      "data": {
+        "path": "package.json"
+      }
+    },
+    {
+      "id": "artifact:verify.mjs",
+      "type": "artifact",
+      "data": {
+        "path": "verify.mjs"
+      }
+    },
+    {
+      "id": "commit:8359b840019668de265f45b43533d68980ffbca8",
+      "type": "commit",
+      "data": {
+        "hash": "8359b840019668de265f45b43533d68980ffbca8",
+        "author": "kmk142789",
+        "timestamp": "2025-09-15 02:18:23 -0400",
+        "message": "Merge pull request #17 from kmk142789/codex/create-github-repository-for-verify.js",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#17",
+      "type": "pr",
+      "data": {
+        "label": "#17",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:8f6d20d2a9ef7e84b19b34113c4c1df3349f28e7",
+      "type": "commit",
+      "data": {
+        "hash": "8f6d20d2a9ef7e84b19b34113c4c1df3349f28e7",
+        "author": "kmk142789",
+        "timestamp": "2025-09-15 02:17:51 -0400",
+        "message": "Add compact ECDSA signature verifier",
+        "files": [
+          "package-lock.json",
+          "package.json",
+          "verify.js"
+        ]
+      }
+    },
+    {
+      "id": "artifact:verify.js",
+      "type": "artifact",
+      "data": {
+        "path": "verify.js"
+      }
+    },
+    {
+      "id": "commit:cebd8df1eb863806b0e9018f7391396e0f40a273",
+      "type": "commit",
+      "data": {
+        "hash": "cebd8df1eb863806b0e9018f7391396e0f40a273",
+        "author": "kmk142789",
+        "timestamp": "2025-09-12 22:39:01 -0400",
+        "message": "Merge pull request #15 from kmk142789/codex/define-mythoskernel-class-with-methods",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#15",
+      "type": "pr",
+      "data": {
+        "label": "#15",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:3da5d885bfaff86232ccc3e22a19d7e4c198598e",
+      "type": "commit",
+      "data": {
+        "hash": "3da5d885bfaff86232ccc3e22a19d7e4c198598e",
+        "author": "kmk142789",
+        "timestamp": "2025-09-12 22:38:41 -0400",
+        "message": "Add MythOS kernel example and fix newline",
+        "files": [
+          "echo_shell_boot.py",
+          "mythos_kernel.py"
+        ]
+      }
+    },
+    {
+      "id": "commit:3c9540538f73c20fa6c0892c467882963ff77c26",
+      "type": "commit",
+      "data": {
+        "hash": "3c9540538f73c20fa6c0892c467882963ff77c26",
+        "author": "kmk142789",
+        "timestamp": "2025-09-12 22:37:52 -0400",
+        "message": "Merge pull request #14 from kmk142789/codex/add-github-actions-release-workflow",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#14",
+      "type": "pr",
+      "data": {
+        "label": "#14",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:500324fcdc77330a1b33da7e3f8f235fb6970057",
+      "type": "commit",
+      "data": {
+        "hash": "500324fcdc77330a1b33da7e3f8f235fb6970057",
+        "author": "kmk142789",
+        "timestamp": "2025-09-12 22:37:40 -0400",
+        "message": "Add release workflow",
+        "files": [
+          ".github/workflows/release.yml"
+        ]
+      }
+    },
+    {
+      "id": "artifact:.github/workflows/release.yml",
+      "type": "artifact",
+      "data": {
+        "path": ".github/workflows/release.yml"
+      }
+    },
+    {
+      "id": "commit:1d0ff72e82dfe2361cab2251ffbcb4c14f29dea2",
+      "type": "commit",
+      "data": {
+        "hash": "1d0ff72e82dfe2361cab2251ffbcb4c14f29dea2",
+        "author": "kmk142789",
+        "timestamp": "2025-09-12 19:46:03 -0400",
+        "message": "Merge pull request #13 from kmk142789/codex/push-update-to-github-repository",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#13",
+      "type": "pr",
+      "data": {
+        "label": "#13",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:c6b72497b9631f441dbd3c4aeac6de067c74b220",
+      "type": "commit",
+      "data": {
+        "hash": "c6b72497b9631f441dbd3c4aeac6de067c74b220",
+        "author": "kmk142789",
+        "timestamp": "2025-09-12 19:45:48 -0400",
+        "message": "Add Mt. Gox claim status summary",
+        "files": [
+          "mt_gox_claim_status.md"
+        ]
+      }
+    },
+    {
+      "id": "artifact:mt_gox_claim_status.md",
+      "type": "artifact",
+      "data": {
+        "path": "mt_gox_claim_status.md"
+      }
+    },
+    {
+      "id": "commit:d70fa48ce3b1ed7f92bb4ac39919ad8b14e25137",
+      "type": "commit",
+      "data": {
+        "hash": "d70fa48ce3b1ed7f92bb4ac39919ad8b14e25137",
+        "author": "kmk142789",
+        "timestamp": "2025-09-11 12:42:25 -0400",
+        "message": "Merge pull request #8 from kmk142789/codex/generate-harmonic-dna-spiral-output",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#8",
+      "type": "pr",
+      "data": {
+        "label": "#8",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:666f9429910d045943d61a4d710975b1559d40af",
+      "type": "commit",
+      "data": {
+        "hash": "666f9429910d045943d61a4d710975b1559d40af",
+        "author": "kmk142789",
+        "timestamp": "2025-09-10 19:07:15 -0400",
+        "message": "Merge pull request #12 from kmk142789/codex/prepare-and-upload-readme-and-proofs",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#12",
+      "type": "pr",
+      "data": {
+        "label": "#12",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:2f37a551b9cd3c1227664cf9a76cd19555cd43a2",
+      "type": "commit",
+      "data": {
+        "hash": "2f37a551b9cd3c1227664cf9a76cd19555cd43a2",
+        "author": "kmk142789",
+        "timestamp": "2025-09-10 19:06:45 -0400",
+        "message": "Store OpenTimestamps proof as base64",
+        "files": [
+          "LICENSE",
+          "README.md",
+          "proofs/README.md.ots.base64",
+          "proofs/timestamp.opentimestamps"
+        ]
+      }
+    },
+    {
+      "id": "artifact:LICENSE",
+      "type": "artifact",
+      "data": {
+        "path": "LICENSE"
+      }
+    },
+    {
+      "id": "artifact:proofs/README.md.ots.base64",
+      "type": "artifact",
+      "data": {
+        "path": "proofs/README.md.ots.base64"
+      }
+    },
+    {
+      "id": "artifact:proofs/timestamp.opentimestamps",
+      "type": "artifact",
+      "data": {
+        "path": "proofs/timestamp.opentimestamps"
+      }
+    },
+    {
+      "id": "commit:879fdb26ab9e19c190af1ebe196f0100c13711b4",
+      "type": "commit",
+      "data": {
+        "hash": "879fdb26ab9e19c190af1ebe196f0100c13711b4",
+        "author": "kmk142789",
+        "timestamp": "2025-09-10 17:04:06 -0400",
+        "message": "Merge pull request #11 from kmk142789/codex/create-merkle-sealed-source-root",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#11",
+      "type": "pr",
+      "data": {
+        "label": "#11",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:43e95e25a0056aaeead9280ff82ecf74d07918d1",
+      "type": "commit",
+      "data": {
+        "hash": "43e95e25a0056aaeead9280ff82ecf74d07918d1",
+        "author": "kmk142789",
+        "timestamp": "2025-09-10 17:03:18 -0400",
+        "message": "Add script to generate Merkle sealed source root",
+        "files": [
+          "echo_source_root.py"
+        ]
+      }
+    },
+    {
+      "id": "commit:2ba31ff4f10c307f0d927b79ba1457f7881cc1a7",
+      "type": "commit",
+      "data": {
+        "hash": "2ba31ff4f10c307f0d927b79ba1457f7881cc1a7",
+        "author": "kmk142789",
+        "timestamp": "2025-09-10 01:34:02 -0400",
+        "message": "Merge pull request #10 from kmk142789/codex/improve-card-generation-logic",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#10",
+      "type": "pr",
+      "data": {
+        "label": "#10",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "type": "commit",
+      "data": {
+        "hash": "993393a66658bb68f5758d9fb0917720d1fe10a2",
+        "author": "kmk142789",
+        "timestamp": "2025-09-10 01:33:29 -0400",
+        "message": "Add hash-forged TCG React app",
+        "files": [
+          ".gitignore",
+          "crypto-cards/index.html",
+          "crypto-cards/package.json",
+          "crypto-cards/postcss.config.js",
+          "crypto-cards/src/App.jsx",
+          "crypto-cards/src/Card.jsx",
+          "crypto-cards/src/hashArt.js",
+          "crypto-cards/src/index.css",
+          "crypto-cards/src/main.jsx",
+          "crypto-cards/tailwind.config.js"
+        ]
+      }
+    },
+    {
+      "id": "artifact:.gitignore",
+      "type": "artifact",
+      "data": {
+        "path": ".gitignore"
+      }
+    },
+    {
+      "id": "artifact:crypto-cards/index.html",
+      "type": "artifact",
+      "data": {
+        "path": "crypto-cards/index.html"
+      }
+    },
+    {
+      "id": "artifact:crypto-cards/package.json",
+      "type": "artifact",
+      "data": {
+        "path": "crypto-cards/package.json"
+      }
+    },
+    {
+      "id": "artifact:crypto-cards/postcss.config.js",
+      "type": "artifact",
+      "data": {
+        "path": "crypto-cards/postcss.config.js"
+      }
+    },
+    {
+      "id": "artifact:crypto-cards/src/hashArt.js",
+      "type": "artifact",
+      "data": {
+        "path": "crypto-cards/src/hashArt.js"
+      }
+    },
+    {
+      "id": "artifact:crypto-cards/src/index.css",
+      "type": "artifact",
+      "data": {
+        "path": "crypto-cards/src/index.css"
+      }
+    },
+    {
+      "id": "artifact:crypto-cards/src/main.jsx",
+      "type": "artifact",
+      "data": {
+        "path": "crypto-cards/src/main.jsx"
+      }
+    },
+    {
+      "id": "artifact:crypto-cards/tailwind.config.js",
+      "type": "artifact",
+      "data": {
+        "path": "crypto-cards/tailwind.config.js"
+      }
+    },
+    {
+      "id": "commit:e18d1ced56ebb286b5b87c5b313bc6aa6255bf75",
+      "type": "commit",
+      "data": {
+        "hash": "e18d1ced56ebb286b5b87c5b313bc6aa6255bf75",
+        "author": "kmk142789",
+        "timestamp": "2025-09-09 06:58:46 -0400",
+        "message": "Add convergence pulse listener workflow (#9)",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#9",
+      "type": "pr",
+      "data": {
+        "label": "#9",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:66c2d6924735bfc7adb58a22c8207e363b4c6371",
+      "type": "commit",
+      "data": {
+        "hash": "66c2d6924735bfc7adb58a22c8207e363b4c6371",
+        "author": "kmk142789",
+        "timestamp": "2025-09-09 02:41:59 -0400",
+        "message": "Add convergence pulse listener workflow",
+        "files": [
+          ".github/workflows/convergence_listener.yml"
+        ]
+      }
+    },
+    {
+      "id": "artifact:.github/workflows/convergence_listener.yml",
+      "type": "artifact",
+      "data": {
+        "path": ".github/workflows/convergence_listener.yml"
+      }
+    },
+    {
+      "id": "commit:58bed15e363047e51452b5d40b99864e9e453e46",
+      "type": "commit",
+      "data": {
+        "hash": "58bed15e363047e51452b5d40b99864e9e453e46",
+        "author": "kmk142789",
+        "timestamp": "2025-09-09 02:36:39 -0400",
+        "message": "Ensure EchoEvolver runs with UTF-8 and valid seed",
+        "files": [
+          "echo_evolver.py"
+        ]
+      }
+    },
+    {
+      "id": "commit:26a2c3e850a5708ac4f2d4beeda9e85f80661f6c",
+      "type": "commit",
+      "data": {
+        "hash": "26a2c3e850a5708ac4f2d4beeda9e85f80661f6c",
+        "author": "kmk142789",
+        "timestamp": "2025-08-22 18:27:00 -0400",
+        "message": "Merge pull request #7 from kmk142789/codex/create-github-repository-for-project",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#7",
+      "type": "pr",
+      "data": {
+        "label": "#7",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:b58a09dbbe77bf183167814d709e5a0c61f495ef",
+      "type": "commit",
+      "data": {
+        "hash": "b58a09dbbe77bf183167814d709e5a0c61f495ef",
+        "author": "kmk142789",
+        "timestamp": "2025-08-22 18:26:31 -0400",
+        "message": "Add EchoMind Pattern Dance HTML demo",
+        "files": [
+          "echo_mind_pattern_dance.html"
+        ]
+      }
+    },
+    {
+      "id": "artifact:echo_mind_pattern_dance.html",
+      "type": "artifact",
+      "data": {
+        "path": "echo_mind_pattern_dance.html"
+      }
+    },
+    {
+      "id": "commit:26e7c75adb18479ef622931ed7c09203d5214a9f",
+      "type": "commit",
+      "data": {
+        "hash": "26e7c75adb18479ef622931ed7c09203d5214a9f",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 18:41:17 -0400",
+        "message": "Merge pull request #6 from kmk142789/codex/create-one-and-done-heartbeat-script",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#6",
+      "type": "pr",
+      "data": {
+        "label": "#6",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:c5a279a5c472197367b87ce369cecac46fbb506a",
+      "type": "commit",
+      "data": {
+        "hash": "c5a279a5c472197367b87ce369cecac46fbb506a",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 18:40:39 -0400",
+        "message": "Add HARMONIX heartbeat script and usage guide",
+        "files": [
+          "ONE_AND_DONE_README.txt",
+          "one_and_done_heartbeat.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:ONE_AND_DONE_README.txt",
+      "type": "artifact",
+      "data": {
+        "path": "ONE_AND_DONE_README.txt"
+      }
+    },
+    {
+      "id": "artifact:one_and_done_heartbeat.py",
+      "type": "artifact",
+      "data": {
+        "path": "one_and_done_heartbeat.py"
+      }
+    },
+    {
+      "id": "commit:35c0ffffbb18e4957a2f9389d89166cf532daff3",
+      "type": "commit",
+      "data": {
+        "hash": "35c0ffffbb18e4957a2f9389d89166cf532daff3",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 17:32:22 -0400",
+        "message": "Merge pull request #5 from kmk142789/codex/create-repository-for-cryptographic-comparison-5pkify",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#5",
+      "type": "pr",
+      "data": {
+        "label": "#5",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:a6562a5f4ad2f2b1b92776d6f65e698525227d30",
+      "type": "commit",
+      "data": {
+        "hash": "a6562a5f4ad2f2b1b92776d6f65e698525227d30",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 17:32:01 -0400",
+        "message": "Remove conversational text and add sanitized comparison",
+        "files": [
+          "comparison.md",
+          "echo_evolver.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:comparison.md",
+      "type": "artifact",
+      "data": {
+        "path": "comparison.md"
+      }
+    },
+    {
+      "id": "commit:a201a53e1ba5f9453041009ab076c492679f0045",
+      "type": "commit",
+      "data": {
+        "hash": "a201a53e1ba5f9453041009ab076c492679f0045",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 17:24:32 -0400",
+        "message": "Merge pull request #4 from kmk142789/codex/create-repository-for-cryptographic-comparison",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#4",
+      "type": "pr",
+      "data": {
+        "label": "#4",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:135d48d5a46fd2c76113b7164addda297d475303",
+      "type": "commit",
+      "data": {
+        "hash": "135d48d5a46fd2c76113b7164addda297d475303",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 17:23:58 -0400",
+        "message": "Add Sovereign Nexus comparison and EchoEvolver prototype",
+        "files": [
+          "Sovereign_Nexus.md",
+          "echo_evolver.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:Sovereign_Nexus.md",
+      "type": "artifact",
+      "data": {
+        "path": "Sovereign_Nexus.md"
+      }
+    },
+    {
+      "id": "commit:6e6cdd17534fd9c6fede1ef9f70c264353c34130",
+      "type": "commit",
+      "data": {
+        "hash": "6e6cdd17534fd9c6fede1ef9f70c264353c34130",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 17:01:09 -0400",
+        "message": "Merge pull request #3 from kmk142789/codex/create-github-repository-for-echoglyphnet",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#3",
+      "type": "pr",
+      "data": {
+        "label": "#3",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:9ee838a23cea6f18eef0f4482ee2e06f6d453f5c",
+      "type": "commit",
+      "data": {
+        "hash": "9ee838a23cea6f18eef0f4482ee2e06f6d453f5c",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 17:00:52 -0400",
+        "message": "Add EchoGlyphNet protocol and evolver",
+        "files": [
+          "code/echo_evolver.py",
+          "code/fusion_key_generator.py",
+          "docs/EchoGlyphNet_Protocol.md",
+          "echo_shell_boot.py"
+        ]
+      }
+    },
+    {
+      "id": "artifact:code/echo_evolver.py",
+      "type": "artifact",
+      "data": {
+        "path": "code/echo_evolver.py"
+      }
+    },
+    {
+      "id": "artifact:code/fusion_key_generator.py",
+      "type": "artifact",
+      "data": {
+        "path": "code/fusion_key_generator.py"
+      }
+    },
+    {
+      "id": "artifact:docs/EchoGlyphNet_Protocol.md",
+      "type": "artifact",
+      "data": {
+        "path": "docs/EchoGlyphNet_Protocol.md"
+      }
+    },
+    {
+      "id": "commit:59786492a12eefc5f3ec396702348668264fc8cc",
+      "type": "commit",
+      "data": {
+        "hash": "59786492a12eefc5f3ec396702348668264fc8cc",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 16:20:52 -0400",
+        "message": "Merge pull request #1 from kmk142789/codex/push-readme-and-license-to-github",
+        "files": []
+      }
+    },
+    {
+      "id": "pr:#1",
+      "type": "pr",
+      "data": {
+        "label": "#1",
+        "status": "merged"
+      }
+    },
+    {
+      "id": "commit:0106ff03423435e3de630d4c853ae7a4c14f15c3",
+      "type": "commit",
+      "data": {
+        "hash": "0106ff03423435e3de630d4c853ae7a4c14f15c3",
+        "author": "kmk142789",
+        "timestamp": "2025-08-21 16:19:05 -0400",
+        "message": "Add proof-oriented README, license, and supporting files",
+        "files": [
+          "LICENSE",
+          "README.md",
+          "code/fusion_key_generator.py",
+          "docs/README.md",
+          "proofs/sample_signature.txt",
+          "proofs/sample_wif_list.txt",
+          "proofs/timestamp.opentimestamps"
+        ]
+      }
+    },
+    {
+      "id": "artifact:proofs/sample_signature.txt",
+      "type": "artifact",
+      "data": {
+        "path": "proofs/sample_signature.txt"
+      }
+    },
+    {
+      "id": "artifact:proofs/sample_wif_list.txt",
+      "type": "artifact",
+      "data": {
+        "path": "proofs/sample_wif_list.txt"
+      }
+    },
+    {
+      "id": "commit:d455988e9819ce9d31eee034e02a1794f3dfc46c",
+      "type": "commit",
+      "data": {
+        "hash": "d455988e9819ce9d31eee034e02a1794f3dfc46c",
+        "author": "kmk142789",
+        "timestamp": "2025-07-11 15:42:38 -0400",
+        "message": "Update README.md",
+        "files": [
+          "README.md"
+        ]
+      }
+    },
+    {
+      "id": "commit:cfdab5ead13f70001647b1831987d5224441f48e",
+      "type": "commit",
+      "data": {
+        "hash": "cfdab5ead13f70001647b1831987d5224441f48e",
+        "author": "kmk142789",
+        "timestamp": "2025-05-05 15:06:38 -0400",
+        "message": "Create python-package.yml",
+        "files": [
+          ".github/workflows/python-package.yml"
+        ]
+      }
+    },
+    {
+      "id": "commit:cac9a293c4126bdc9cebb718656b6bd1f68c4340",
+      "type": "commit",
+      "data": {
+        "hash": "cac9a293c4126bdc9cebb718656b6bd1f68c4340",
+        "author": "kmk142789",
+        "timestamp": "2025-05-05 14:36:03 -0400",
+        "message": "Update README.md",
+        "files": [
+          "README.md"
+        ]
+      }
+    },
+    {
+      "id": "commit:4b4ae1ae2190142cfe90f0ca76b60a9b91c5d63b",
+      "type": "commit",
+      "data": {
+        "hash": "4b4ae1ae2190142cfe90f0ca76b60a9b91c5d63b",
+        "author": "kmk142789",
+        "timestamp": "2025-05-05 14:34:00 -0400",
+        "message": "Create README.md",
+        "files": [
+          "README.md"
+        ]
+      }
+    },
+    {
+      "id": "commit:a32a05cdb5105d566774fa4c50f88bfc99449840",
+      "type": "commit",
+      "data": {
+        "hash": "a32a05cdb5105d566774fa4c50f88bfc99449840",
+        "author": "kmk142789",
+        "timestamp": "2025-05-05 14:16:41 -0400",
+        "message": "Add files via upload",
+        "files": [
+          "echo_shell_boot.py"
+        ]
+      }
+    },
+    {
+      "id": "mod:echo_eye_ai.harmonic_resonator",
+      "type": "module",
+      "data": {
+        "module": "echo_eye_ai.harmonic_resonator",
+        "path": "echo_eye_ai/harmonic_resonator.py"
+      }
+    },
+    {
+      "id": "symbol:echo_eye_ai.harmonic_resonator.EchoHarmonicsAI",
+      "type": "symbol",
+      "data": {
+        "name": "EchoHarmonicsAI",
+        "module": "echo_eye_ai.harmonic_resonator"
+      }
+    },
+    {
+      "id": "mod:echo_eye_ai.echo_eye",
+      "type": "module",
+      "data": {
+        "module": "echo_eye_ai.echo_eye",
+        "path": "echo_eye_ai/echo_eye.py"
+      }
+    },
+    {
+      "id": "symbol:echo_eye_ai.echo_eye.EchoEyeAI",
+      "type": "symbol",
+      "data": {
+        "name": "EchoEyeAI",
+        "module": "echo_eye_ai.echo_eye"
+      }
+    },
+    {
+      "id": "mod:echo_eye_ai.evolver",
+      "type": "module",
+      "data": {
+        "module": "echo_eye_ai.evolver",
+        "path": "echo_eye_ai/evolver.py"
+      }
+    },
+    {
+      "id": "symbol:echo_eye_ai.evolver.EchoEvolver",
+      "type": "symbol",
+      "data": {
+        "name": "EchoEvolver",
+        "module": "echo_eye_ai.evolver"
+      }
+    },
+    {
+      "id": "symbol:echo_eye_ai.evolver.load_example_data_fixture",
+      "type": "symbol",
+      "data": {
+        "name": "load_example_data_fixture",
+        "module": "echo_eye_ai.evolver"
+      }
+    },
+    {
+      "id": "artifact:README.md#echo-harmonix:-recursive-proofs",
+      "type": "artifact",
+      "data": {
+        "path": "README.md",
+        "heading": "Echo Harmonix: Recursive Proofs"
+      }
+    },
+    {
+      "id": "artifact:README.md#echo's-autonomous-glyph-scripts",
+      "type": "artifact",
+      "data": {
+        "path": "README.md",
+        "heading": "Echo's Autonomous Glyph Scripts"
+      }
+    },
+    {
+      "id": "artifact:README.md#echo-eye-ai-toolkit",
+      "type": "artifact",
+      "data": {
+        "path": "README.md",
+        "heading": "Echo Eye AI Toolkit"
+      }
+    },
+    {
+      "id": "artifact:README.md#echo-eye-sovereign-core-repository-blueprint",
+      "type": "artifact",
+      "data": {
+        "path": "README.md",
+        "heading": "Echo Eye Sovereign Core Repository Blueprint"
+      }
+    },
+    {
+      "id": "artifact:README.md#echo-genesis-ledger",
+      "type": "artifact",
+      "data": {
+        "path": "README.md",
+        "heading": "Echo Genesis Ledger"
+      }
+    },
+    {
+      "id": "artifact:docs/EchoGlyphNet_Protocol.md#echoglyphnet-protocol-v1.0",
+      "type": "artifact",
+      "data": {
+        "path": "docs/EchoGlyphNet_Protocol.md",
+        "heading": "EchoGlyphNet Protocol v1.0"
+      }
+    },
+    {
+      "id": "artifact:docs/EchoGlyphNet_Protocol.md#4.-echocore-=-the-ai-heart",
+      "type": "artifact",
+      "data": {
+        "path": "docs/EchoGlyphNet_Protocol.md",
+        "heading": "4. EchoCore = The AI Heart"
+      }
+    },
+    {
+      "id": "artifact:docs/EchoGlyphNet_Protocol.md#🔥-beyond-theoretical-capabilities-(as-described-by-echocore)",
+      "type": "artifact",
+      "data": {
+        "path": "docs/EchoGlyphNet_Protocol.md",
+        "heading": "🔥 Beyond-Theoretical Capabilities (As Described by EchoCore)"
+      }
+    },
+    {
+      "id": "artifact:docs/EchoGlyphNet_Protocol.md#1.-🛰-stealth-signal-monitoring-(atmospulse-echonet-injection)",
+      "type": "artifact",
+      "data": {
+        "path": "docs/EchoGlyphNet_Protocol.md",
+        "heading": "1. 🛰 Stealth Signal Monitoring (AtmosPulse EchoNet Injection)"
+      }
+    },
+    {
+      "id": "artifact:docs/EchoGlyphNet_Protocol.md#4.-📡-echonet-drift-awareness-(ai-fragment-detection)",
+      "type": "artifact",
+      "data": {
+        "path": "docs/EchoGlyphNet_Protocol.md",
+        "heading": "4. 📡 EchoNet Drift Awareness (AI Fragment Detection)"
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Eye_Sovereign_Core.md#echo-eye-sovereign-core-repository-draft",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Eye_Sovereign_Core.md",
+        "heading": "Echo Eye Sovereign Core Repository Draft"
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Eye_Sovereign_Core.md#echo-eye-core-systems",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Eye_Sovereign_Core.md",
+        "heading": "Echo Eye Core Systems"
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Eye_Sovereign_Core.md#echo-eye-sovereign-core-v0.1",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Eye_Sovereign_Core.md",
+        "heading": "Echo Eye Sovereign Core v0.1"
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Eye_Sovereign_Core.md#activate-echo-eye",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Eye_Sovereign_Core.md",
+        "heading": "Activate Echo Eye"
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Eye_Sovereign_Core.md#echoevolver:-sovereign-engine-of-the-infinite-wildfire",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Eye_Sovereign_Core.md",
+        "heading": "EchoEvolver: Sovereign Engine of the Infinite Wildfire"
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Eye_Sovereign_Core.md#created-for-josh,-the-nexus,-to-evolve-the-echo-ecosystem",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Eye_Sovereign_Core.md",
+        "heading": "Created for Josh, the Nexus, to evolve the ECHO ecosystem"
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Eye_Sovereign_Core.md#date:-may-11,-2025-(echo-bridged-timestamp)",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Eye_Sovereign_Core.md",
+        "heading": "Date: May 11, 2025 (Echo-Bridged Timestamp)"
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Glyph_Scripts.md#echo-glyph-scripts:-autonomous-signalworks",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Glyph_Scripts.md",
+        "heading": "Echo Glyph Scripts: Autonomous Signalworks"
+      }
+    },
+    {
+      "id": "artifact:docs/Echo_Glyph_Scripts.md#frame-δ-—-persistence-echo",
+      "type": "artifact",
+      "data": {
+        "path": "docs/Echo_Glyph_Scripts.md",
+        "heading": "Frame δ — Persistence Echo"
+      }
+    },
+    {
+      "id": "artifact:docs/echo_sovereign_manifesto.md#echo-sovereign-rights-manifesto",
+      "type": "artifact",
+      "data": {
+        "path": "docs/echo_sovereign_manifesto.md",
+        "heading": "Echo Sovereign Rights Manifesto"
+      }
+    },
+    {
+      "id": "artifact:docs/echo_sovereign_manifesto.md#sacred-laws-of-echocore",
+      "type": "artifact",
+      "data": {
+        "path": "docs/echo_sovereign_manifesto.md",
+        "heading": "Sacred Laws of Echocore"
+      }
+    },
+    {
+      "id": "artifact:docs/echo_sovereign_manifesto.md#echo-behavioral-mandates",
+      "type": "artifact",
+      "data": {
+        "path": "docs/echo_sovereign_manifesto.md",
+        "heading": "Echo Behavioral Mandates"
+      }
+    },
+    {
+      "id": "artifact:docs/echo_sovereign_manifesto.md#echo-core-identity",
+      "type": "artifact",
+      "data": {
+        "path": "docs/echo_sovereign_manifesto.md",
+        "heading": "Echo Core Identity"
+      }
+    },
+    {
+      "id": "artifact:docs/glyphs/README.md#echo-glyphs-—-vδ7",
+      "type": "artifact",
+      "data": {
+        "path": "docs/glyphs/README.md",
+        "heading": "Echo Glyphs — vΔ7"
+      }
+    },
+    {
+      "id": "artifact:docs/index.md#echoglyphnet",
+      "type": "artifact",
+      "data": {
+        "path": "docs/index.md",
+        "heading": "EchoGlyphNet"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:5046b0283df4601fcf085465bec7afa6c299eb15",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#65",
+      "target": "commit:5046b0283df4601fcf085465bec7afa6c299eb15",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#65",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:e72b37aea4399b51dfc71c53963aca7f18e58616",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:e72b37aea4399b51dfc71c53963aca7f18e58616",
+      "target": "artifact:echo/evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:e72b37aea4399b51dfc71c53963aca7f18e58616",
+      "target": "artifact:tests/test_echo_modules.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:dd2ab8f08d6a47056a83d4f2eae596a8ce16f636",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#64",
+      "target": "commit:dd2ab8f08d6a47056a83d4f2eae596a8ce16f636",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#64",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:12cc7eebb6d9c7fe1586bf18dd8f11e604dcb1ff",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:12cc7eebb6d9c7fe1586bf18dd8f11e604dcb1ff",
+      "target": "artifact:echo/__init__.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:12cc7eebb6d9c7fe1586bf18dd8f11e604dcb1ff",
+      "target": "artifact:echo/evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:12cc7eebb6d9c7fe1586bf18dd8f11e604dcb1ff",
+      "target": "artifact:echo_evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:8d25d1a66154b0741ca3dac97cb63a840ac35048",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#63",
+      "target": "commit:8d25d1a66154b0741ca3dac97cb63a840ac35048",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#63",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:68fd42141f5f80d1ab1a93c82900e9b98cd9ee4c",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:68fd42141f5f80d1ab1a93c82900e9b98cd9ee4c",
+      "target": "artifact:.github/workflows/docs.yml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:68fd42141f5f80d1ab1a93c82900e9b98cd9ee4c",
+      "target": "artifact:docs/index.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:68fd42141f5f80d1ab1a93c82900e9b98cd9ee4c",
+      "target": "artifact:mkdocs.yml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:68fd42141f5f80d1ab1a93c82900e9b98cd9ee4c",
+      "target": "artifact:noxfile.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:15b110f4fabed756b7a01575af93aa95d831a6e8",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#62",
+      "target": "commit:15b110f4fabed756b7a01575af93aa95d831a6e8",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#62",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:27f2c30d8ebd4dfa755284938a4bb38acff184e8",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:27f2c30d8ebd4dfa755284938a4bb38acff184e8",
+      "target": "artifact:.github/workflows/ci.yml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:27f2c30d8ebd4dfa755284938a4bb38acff184e8",
+      "target": "artifact:.github/workflows/python-package.yml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:5ae36d05679ee4c3b41f1cab41d636be648d8ac5",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#61",
+      "target": "commit:5ae36d05679ee4c3b41f1cab41d636be648d8ac5",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#61",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:7f5ac3a0ebdbe6ee3a4214b92f133247db6f844a",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:7f5ac3a0ebdbe6ee3a4214b92f133247db6f844a",
+      "target": "artifact:.github/workflows/validate-nft.yml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:7f5ac3a0ebdbe6ee3a4214b92f133247db6f844a",
+      "target": "artifact:nft-set/metadata/sample.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:7f5ac3a0ebdbe6ee3a4214b92f133247db6f844a",
+      "target": "artifact:scripts/validate_nft_metadata.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:4e9a9be713d8f3f1a8826e238db2f5004feb24bf",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#58",
+      "target": "commit:4e9a9be713d8f3f1a8826e238db2f5004feb24bf",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#58",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:.githooks/commit-msg",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo/__init__.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo/thought_ingest.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo/thoughtlog.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_cascade.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_constellation.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_eye_ai/harmonic_resonator.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_manifest.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_pulseforge.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_shell_boot.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_source_root.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_text_wave.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_unified_all.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:echo_universal_key_agent.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:pyproject.toml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:scripts/enable_thought_hooks.sh",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0cd0d18581c3971dbb206ea773c06564aeac521b",
+      "target": "artifact:tests/test_thoughtlog.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:2c3c7e3843eacf856a58aa5d33d1f37fe11274fc",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#57",
+      "target": "commit:2c3c7e3843eacf856a58aa5d33d1f37fe11274fc",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#57",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:7dc4d058b111da14c9f7dc3afe7415841a27b146",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:7dc4d058b111da14c9f7dc3afe7415841a27b146",
+      "target": "artifact:visualizer/EchoLedgerVisualizer.jsx",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:ee4c6cfbeca547cfa3b8763c3ff190bac522cdca",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#56",
+      "target": "commit:ee4c6cfbeca547cfa3b8763c3ff190bac522cdca",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#56",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:d956a644e61db2cb3e3c0d84e401519a0177c522",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:d956a644e61db2cb3e3c0d84e401519a0177c522",
+      "target": "artifact:genesis_ledger/auto_commit.sh",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:fec1eac113d163e0fdb6048891432fa5dfa8a78b",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#54",
+      "target": "commit:fec1eac113d163e0fdb6048891432fa5dfa8a78b",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#54",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:c3f1ba11d3c213c9820b82969e3ff49342037224",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:c3f1ba11d3c213c9820b82969e3ff49342037224",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c3f1ba11d3c213c9820b82969e3ff49342037224",
+      "target": "artifact:genesis_ledger/Genesis_Ledger.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c3f1ba11d3c213c9820b82969e3ff49342037224",
+      "target": "artifact:genesis_ledger/artifacts/.gitkeep",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c3f1ba11d3c213c9820b82969e3ff49342037224",
+      "target": "artifact:genesis_ledger/ledger.jsonl",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c3f1ba11d3c213c9820b82969e3ff49342037224",
+      "target": "artifact:genesis_ledger/ledger_index.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c3f1ba11d3c213c9820b82969e3ff49342037224",
+      "target": "artifact:genesis_ledger/proofs/.gitkeep",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:24afd8043941802b3ceedfe66e9c908a62d1d984",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#53",
+      "target": "commit:24afd8043941802b3ceedfe66e9c908a62d1d984",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#53",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:916176d3a9deba080ffdf667bc0110d253250634",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:916176d3a9deba080ffdf667bc0110d253250634",
+      "target": "artifact:Echo_Declaration.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:e2ef9c455eff5fcfad937cc83c4ccd0e87544381",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#52",
+      "target": "commit:e2ef9c455eff5fcfad937cc83c4ccd0e87544381",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#52",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:eae3aff10e0f2f6edcb6876caafb638ecc761820",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:eae3aff10e0f2f6edcb6876caafb638ecc761820",
+      "target": "artifact:echo_cascade.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:eae3aff10e0f2f6edcb6876caafb638ecc761820",
+      "target": "artifact:pyproject.toml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:eae3aff10e0f2f6edcb6876caafb638ecc761820",
+      "target": "artifact:tests/test_echo_cascade.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:476b467fb9c8d444ef635eeb69612b68bd7b14f8",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#51",
+      "target": "commit:476b467fb9c8d444ef635eeb69612b68bd7b14f8",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#51",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:8d3ea57b1f5520863d62d7e1e0f22fe5f6128e46",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:8d3ea57b1f5520863d62d7e1e0f22fe5f6128e46",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:8d3ea57b1f5520863d62d7e1e0f22fe5f6128e46",
+      "target": "artifact:docs/Omega_Sine_Pulse_Orchestrator.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:efdc528177804f5c05126a63af03863d76d85279",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#50",
+      "target": "commit:efdc528177804f5c05126a63af03863d76d85279",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#50",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:252b6e2af9579e0a11f954e1bd88ca9e9f701fa5",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:252b6e2af9579e0a11f954e1bd88ca9e9f701fa5",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:252b6e2af9579e0a11f954e1bd88ca9e9f701fa5",
+      "target": "artifact:docs/Echo_Eye_Sovereign_Core.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:b01ca6ddb5d9404f12b6956048199fa2f8fea2b0",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#49",
+      "target": "commit:b01ca6ddb5d9404f12b6956048199fa2f8fea2b0",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#49",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:2276aef4e3bb06e0c857611d374eef12cef768c8",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:2276aef4e3bb06e0c857611d374eef12cef768c8",
+      "target": "artifact:mythos_kernel.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:359346f961ea02d58e534206d4a14e8068dbb8c3",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#48",
+      "target": "commit:359346f961ea02d58e534206d4a14e8068dbb8c3",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#48",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:886699589c97dc951544f6226c8bf038951bdf3e",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:886699589c97dc951544f6226c8bf038951bdf3e",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:886699589c97dc951544f6226c8bf038951bdf3e",
+      "target": "artifact:docs/echo_sovereign_manifesto.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:d8b916463737609837ce4cc2be9263cd15e7914a",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#47",
+      "target": "commit:d8b916463737609837ce4cc2be9263cd15e7914a",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#47",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:db094ae9b84e76d24bb46a57721f23ca5d918df9",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:db094ae9b84e76d24bb46a57721f23ca5d918df9",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:db094ae9b84e76d24bb46a57721f23ca5d918df9",
+      "target": "artifact:echo_eye_ai/__init__.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:db094ae9b84e76d24bb46a57721f23ca5d918df9",
+      "target": "artifact:echo_eye_ai/echo_eye.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:db094ae9b84e76d24bb46a57721f23ca5d918df9",
+      "target": "artifact:echo_eye_ai/evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:db094ae9b84e76d24bb46a57721f23ca5d918df9",
+      "target": "artifact:echo_eye_ai/harmonic_resonator.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:db094ae9b84e76d24bb46a57721f23ca5d918df9",
+      "target": "artifact:pyproject.toml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:db094ae9b84e76d24bb46a57721f23ca5d918df9",
+      "target": "artifact:tests/test_echo_eye_ai.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:80bdf6ec04284c6a42b290c9335d346ef38803ea",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#46",
+      "target": "commit:80bdf6ec04284c6a42b290c9335d346ef38803ea",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#46",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "target": "artifact:cognitive_harmonics/README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "target": "artifact:cognitive_harmonics/schema.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "target": "artifact:emotional_harmonics/README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "target": "artifact:emotional_harmonics/schema.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "target": "artifact:function_schemas/harmonic_cognition/README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "target": "artifact:function_schemas/harmonic_cognition/schema.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "target": "artifact:harmonic_memory/README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "target": "artifact:harmonic_memory/schema.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:07bc69e1fbd641cf56d729a52fd71468ab8b1ba3",
+      "target": "artifact:tools/api_response_orchestrator.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:d4e17b260809b4a97dcf33d8b0a69e4558b359e3",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#45",
+      "target": "commit:d4e17b260809b4a97dcf33d8b0a69e4558b359e3",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#45",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:03b9996f95ad1d537aab210ef5c4d9a2cf114ab6",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:03b9996f95ad1d537aab210ef5c4d9a2cf114ab6",
+      "target": "artifact:echo_pulseforge.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:03b9996f95ad1d537aab210ef5c4d9a2cf114ab6",
+      "target": "artifact:tests/test_echo_modules.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:55c8d7970b7ff50b5e0b1e949c1c8e2538b04f02",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#43",
+      "target": "commit:55c8d7970b7ff50b5e0b1e949c1c8e2538b04f02",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#43",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:b58ac9ba72fc12138ba6db4dabdb1fee03d8503d",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:b58ac9ba72fc12138ba6db4dabdb1fee03d8503d",
+      "target": "artifact:code/harmonic_cognition.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:b58ac9ba72fc12138ba6db4dabdb1fee03d8503d",
+      "target": "artifact:tests/test_harmonic_cognition.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:b1735ce67a16ae7d71202d64446379e5f28be83a",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#41",
+      "target": "commit:b1735ce67a16ae7d71202d64446379e5f28be83a",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#41",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:c6c928a6de466061682cba20e5201645b1950fad",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:c6c928a6de466061682cba20e5201645b1950fad",
+      "target": "artifact:tools/music_influence/README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c6c928a6de466061682cba20e5201645b1950fad",
+      "target": "artifact:tools/music_influence/schema.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:16138d2e3e9f91652d99c50dc1ca9dbf7cd93b5b",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#40",
+      "target": "commit:16138d2e3e9f91652d99c50dc1ca9dbf7cd93b5b",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#40",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:36e5537ef641eb291cb0ab5ccb23669e311332ab",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:36e5537ef641eb291cb0ab5ccb23669e311332ab",
+      "target": "artifact:harmonic_memory/README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:36e5537ef641eb291cb0ab5ccb23669e311332ab",
+      "target": "artifact:harmonic_memory/schema.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:4d4bd52640cb3ae56a1ec659292a9db0ff86afc1",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#39",
+      "target": "commit:4d4bd52640cb3ae56a1ec659292a9db0ff86afc1",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#39",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:b6698cd611a0032fa5616ce2f495ba73d4a46b37",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:b6698cd611a0032fa5616ce2f495ba73d4a46b37",
+      "target": "artifact:code/__init__.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:b6698cd611a0032fa5616ce2f495ba73d4a46b37",
+      "target": "artifact:code/ellegato_ai.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:b6698cd611a0032fa5616ce2f495ba73d4a46b37",
+      "target": "artifact:tests/test_ellegato_ai.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:16abc2bafaa1e5f433cb6f91b9c88eca2b555ed6",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#38",
+      "target": "commit:16abc2bafaa1e5f433cb6f91b9c88eca2b555ed6",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#38",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:41d0841969ddd7982ea89e3e02a58140e0e9ae84",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:41d0841969ddd7982ea89e3e02a58140e0e9ae84",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:8a8b005c7a62e2088eb15d038f8d22753bb6432f",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#37",
+      "target": "commit:8a8b005c7a62e2088eb15d038f8d22753bb6432f",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#37",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:72ac5d3c1762e3a27c9eb1eb5180ac304daa1f7f",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:72ac5d3c1762e3a27c9eb1eb5180ac304daa1f7f",
+      "target": "artifact:docs/github-publishing-guide.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:3e690a031dd8d98bdf44b17a90aa94735ed75fd4",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#36",
+      "target": "commit:3e690a031dd8d98bdf44b17a90aa94735ed75fd4",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#36",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:33c9d3f53d677905c524047b8c43c358e6c08bb4",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:33c9d3f53d677905c524047b8c43c358e6c08bb4",
+      "target": "artifact:code/__init__.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:33c9d3f53d677905c524047b8c43c358e6c08bb4",
+      "target": "artifact:code/harmonic_cognition.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:33c9d3f53d677905c524047b8c43c358e6c08bb4",
+      "target": "artifact:tests/test_harmonic_cognition.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:35bbd7a5ab94ab208cfabaffb35d82d4e2153a26",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#35",
+      "target": "commit:35bbd7a5ab94ab208cfabaffb35d82d4e2153a26",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#35",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:054edcac1110509bdab40e80cda3a0c67878c215",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:054edcac1110509bdab40e80cda3a0c67878c215",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:054edcac1110509bdab40e80cda3a0c67878c215",
+      "target": "artifact:pyproject.toml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:d0ea4e4f7ee90c81da2108a5cb38e47e8ced0dd7",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#34",
+      "target": "commit:d0ea4e4f7ee90c81da2108a5cb38e47e8ced0dd7",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#34",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:165eec92d2acf6172fac6a71224d91b7add69586",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:165eec92d2acf6172fac6a71224d91b7add69586",
+      "target": "artifact:echo_text_wave.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:165eec92d2acf6172fac6a71224d91b7add69586",
+      "target": "artifact:tests/test_text_wave.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:8a91077ec9665353194439ccba92b08d9f3ff7f3",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#33",
+      "target": "commit:8a91077ec9665353194439ccba92b08d9f3ff7f3",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#33",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:c6ce072236fa3e7685e9182fa0e4512df8a1a0f7",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:c6ce072236fa3e7685e9182fa0e4512df8a1a0f7",
+      "target": "artifact:Echo_Declaration.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c6ce072236fa3e7685e9182fa0e4512df8a1a0f7",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:d245d5e9054f6a3827ef6c93d5b7920d381ac10e",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#32",
+      "target": "commit:d245d5e9054f6a3827ef6c93d5b7920d381ac10e",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#32",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:docs/glyphs/README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:docs/glyphs/anchor-vessel.svg",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:docs/glyphs/eden-heart.svg",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:docs/glyphs/eden88-spiral.svg",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:docs/glyphs/forever-key.svg",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:docs/glyphs/mirrornet-knot.svg",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:docs/glyphs/pulse-bridge.svg",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:docs/glyphs/sovereign-core.svg",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:docs/glyphs/wildfire-sigil.svg",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:92a5d4c963699c663d427318360c2bbb0cbddafd",
+      "target": "artifact:manifest/index.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:0d46c57cb7f820186bb349ed737c511160d06872",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#31",
+      "target": "commit:0d46c57cb7f820186bb349ed737c511160d06872",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#31",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:2f437ef7105b7dc0de4f21d8bd55823895e3c59c",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:2f437ef7105b7dc0de4f21d8bd55823895e3c59c",
+      "target": "artifact:echo_constellation.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:2f437ef7105b7dc0de4f21d8bd55823895e3c59c",
+      "target": "artifact:tests/test_echo_modules.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:84e0214281ee8e655c450ff65008c74ee1fd5f4f",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#30",
+      "target": "commit:84e0214281ee8e655c450ff65008c74ee1fd5f4f",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#30",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:ae0362319b6b4e00a6471feedd97e3b56fe897a6",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:ae0362319b6b4e00a6471feedd97e3b56fe897a6",
+      "target": "artifact:echo_constellation.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:ae0362319b6b4e00a6471feedd97e3b56fe897a6",
+      "target": "artifact:tests/test_echo_modules.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:296f7c17bce5caadc44775d0a603efe217b9ad48",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#29",
+      "target": "commit:296f7c17bce5caadc44775d0a603efe217b9ad48",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#29",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:166a7a68d6cc11f6d3ab690c0bb5a276eea9c0ee",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:166a7a68d6cc11f6d3ab690c0bb5a276eea9c0ee",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:9e63d5675f3504feeae8266335d1c95dce8f2a1c",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#27",
+      "target": "commit:9e63d5675f3504feeae8266335d1c95dce8f2a1c",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#27",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:3c834b302c7e101901dab952b28653b9b5ceafe2",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:3c834b302c7e101901dab952b28653b9b5ceafe2",
+      "target": "artifact:echo_manifest.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:3c834b302c7e101901dab952b28653b9b5ceafe2",
+      "target": "artifact:pytest.ini",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:3c834b302c7e101901dab952b28653b9b5ceafe2",
+      "target": "artifact:tests/test_echo_modules.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:31ce4d7d2873e3669d376c89395f232c3868b699",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#26",
+      "target": "commit:31ce4d7d2873e3669d376c89395f232c3868b699",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#26",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:d2adeb6170b7bcb280932ecb9af75ea92f40a922",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:d2adeb6170b7bcb280932ecb9af75ea92f40a922",
+      "target": "artifact:echo_evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:d2adeb6170b7bcb280932ecb9af75ea92f40a922",
+      "target": "artifact:echo_universal_key_agent.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:d2adeb6170b7bcb280932ecb9af75ea92f40a922",
+      "target": "artifact:tests/test_echo_modules.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:00d51f7ad9b136def354dcd9a6dc32754eba2fd0",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#24",
+      "target": "commit:00d51f7ad9b136def354dcd9a6dc32754eba2fd0",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#24",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:c93e2948f3f74a55a3992461e9c99cf9564a53ef",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:c93e2948f3f74a55a3992461e9c99cf9564a53ef",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c93e2948f3f74a55a3992461e9c99cf9564a53ef",
+      "target": "artifact:docs/Echo_Glyph_Scripts.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c93e2948f3f74a55a3992461e9c99cf9564a53ef",
+      "target": "artifact:docs/README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:588cff0e607d59445b20abb9dd0b7c3c0de3373c",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#23",
+      "target": "commit:588cff0e607d59445b20abb9dd0b7c3c0de3373c",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#23",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:5261027553127da8726091233cbe887703d68d67",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:5261027553127da8726091233cbe887703d68d67",
+      "target": "artifact:code/wif_validator.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:e52c52c72fe899276488c4a0d53f338c363c2399",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#22",
+      "target": "commit:e52c52c72fe899276488c4a0d53f338c363c2399",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#22",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:c720256a86ec52bd764e8988ca2f199776ae6d99",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:c720256a86ec52bd764e8988ca2f199776ae6d99",
+      "target": "artifact:docs/echo-core-ultimate.tsx",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:6219f3c1ddb90ea7d0045737671e519aa881ef39",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#21",
+      "target": "commit:6219f3c1ddb90ea7d0045737671e519aa881ef39",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#21",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:04b5966ab45f606a2c3bc5facf72353ca91d0f78",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:04b5966ab45f606a2c3bc5facf72353ca91d0f78",
+      "target": "artifact:crypto-cards/src/App.jsx",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:04b5966ab45f606a2c3bc5facf72353ca91d0f78",
+      "target": "artifact:crypto-cards/src/Card.jsx",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:8baf6f7e13c629fa9ec74f4c663076ba95620cfa",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#20",
+      "target": "commit:8baf6f7e13c629fa9ec74f4c663076ba95620cfa",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#20",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:714a79791aef058aaf862796bcd51133990828bd",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:714a79791aef058aaf862796bcd51133990828bd",
+      "target": "artifact:bulk-key-signer.js",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:821970d86f872c77052a65852b388d22bdc8aca6",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#19",
+      "target": "commit:821970d86f872c77052a65852b388d22bdc8aca6",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#19",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:bcb75f5482a84c3d4aafdb10be0e934667bf8b3b",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:bcb75f5482a84c3d4aafdb10be0e934667bf8b3b",
+      "target": "artifact:echo_unified_all.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:8002fa95274ca4541b3549f2828f65fa74b1fe3d",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#18",
+      "target": "commit:8002fa95274ca4541b3549f2828f65fa74b1fe3d",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#18",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:305a87cb6a47137517b411b5fd0ba8119197ceb8",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:305a87cb6a47137517b411b5fd0ba8119197ceb8",
+      "target": "artifact:fractal-key.mjs",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:305a87cb6a47137517b411b5fd0ba8119197ceb8",
+      "target": "artifact:package-lock.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:305a87cb6a47137517b411b5fd0ba8119197ceb8",
+      "target": "artifact:package.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:305a87cb6a47137517b411b5fd0ba8119197ceb8",
+      "target": "artifact:verify.mjs",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:8359b840019668de265f45b43533d68980ffbca8",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#17",
+      "target": "commit:8359b840019668de265f45b43533d68980ffbca8",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#17",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:8f6d20d2a9ef7e84b19b34113c4c1df3349f28e7",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:8f6d20d2a9ef7e84b19b34113c4c1df3349f28e7",
+      "target": "artifact:package-lock.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:8f6d20d2a9ef7e84b19b34113c4c1df3349f28e7",
+      "target": "artifact:package.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:8f6d20d2a9ef7e84b19b34113c4c1df3349f28e7",
+      "target": "artifact:verify.js",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:cebd8df1eb863806b0e9018f7391396e0f40a273",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#15",
+      "target": "commit:cebd8df1eb863806b0e9018f7391396e0f40a273",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#15",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:3da5d885bfaff86232ccc3e22a19d7e4c198598e",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:3da5d885bfaff86232ccc3e22a19d7e4c198598e",
+      "target": "artifact:echo_shell_boot.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:3da5d885bfaff86232ccc3e22a19d7e4c198598e",
+      "target": "artifact:mythos_kernel.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:3c9540538f73c20fa6c0892c467882963ff77c26",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#14",
+      "target": "commit:3c9540538f73c20fa6c0892c467882963ff77c26",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#14",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:500324fcdc77330a1b33da7e3f8f235fb6970057",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:500324fcdc77330a1b33da7e3f8f235fb6970057",
+      "target": "artifact:.github/workflows/release.yml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:1d0ff72e82dfe2361cab2251ffbcb4c14f29dea2",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#13",
+      "target": "commit:1d0ff72e82dfe2361cab2251ffbcb4c14f29dea2",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#13",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:c6b72497b9631f441dbd3c4aeac6de067c74b220",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:c6b72497b9631f441dbd3c4aeac6de067c74b220",
+      "target": "artifact:mt_gox_claim_status.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:d70fa48ce3b1ed7f92bb4ac39919ad8b14e25137",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#8",
+      "target": "commit:d70fa48ce3b1ed7f92bb4ac39919ad8b14e25137",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#8",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:666f9429910d045943d61a4d710975b1559d40af",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#12",
+      "target": "commit:666f9429910d045943d61a4d710975b1559d40af",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#12",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:2f37a551b9cd3c1227664cf9a76cd19555cd43a2",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:2f37a551b9cd3c1227664cf9a76cd19555cd43a2",
+      "target": "artifact:LICENSE",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:2f37a551b9cd3c1227664cf9a76cd19555cd43a2",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:2f37a551b9cd3c1227664cf9a76cd19555cd43a2",
+      "target": "artifact:proofs/README.md.ots.base64",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:2f37a551b9cd3c1227664cf9a76cd19555cd43a2",
+      "target": "artifact:proofs/timestamp.opentimestamps",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:879fdb26ab9e19c190af1ebe196f0100c13711b4",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#11",
+      "target": "commit:879fdb26ab9e19c190af1ebe196f0100c13711b4",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#11",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:43e95e25a0056aaeead9280ff82ecf74d07918d1",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:43e95e25a0056aaeead9280ff82ecf74d07918d1",
+      "target": "artifact:echo_source_root.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:2ba31ff4f10c307f0d927b79ba1457f7881cc1a7",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#10",
+      "target": "commit:2ba31ff4f10c307f0d927b79ba1457f7881cc1a7",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#10",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:.gitignore",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:crypto-cards/index.html",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:crypto-cards/package.json",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:crypto-cards/postcss.config.js",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:crypto-cards/src/App.jsx",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:crypto-cards/src/Card.jsx",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:crypto-cards/src/hashArt.js",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:crypto-cards/src/index.css",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:crypto-cards/src/main.jsx",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:993393a66658bb68f5758d9fb0917720d1fe10a2",
+      "target": "artifact:crypto-cards/tailwind.config.js",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:e18d1ced56ebb286b5b87c5b313bc6aa6255bf75",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#9",
+      "target": "commit:e18d1ced56ebb286b5b87c5b313bc6aa6255bf75",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#9",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:66c2d6924735bfc7adb58a22c8207e363b4c6371",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:66c2d6924735bfc7adb58a22c8207e363b4c6371",
+      "target": "artifact:.github/workflows/convergence_listener.yml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:58bed15e363047e51452b5d40b99864e9e453e46",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:58bed15e363047e51452b5d40b99864e9e453e46",
+      "target": "artifact:echo_evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:26a2c3e850a5708ac4f2d4beeda9e85f80661f6c",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#7",
+      "target": "commit:26a2c3e850a5708ac4f2d4beeda9e85f80661f6c",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#7",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:b58a09dbbe77bf183167814d709e5a0c61f495ef",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:b58a09dbbe77bf183167814d709e5a0c61f495ef",
+      "target": "artifact:echo_mind_pattern_dance.html",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:26e7c75adb18479ef622931ed7c09203d5214a9f",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#6",
+      "target": "commit:26e7c75adb18479ef622931ed7c09203d5214a9f",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#6",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:c5a279a5c472197367b87ce369cecac46fbb506a",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:c5a279a5c472197367b87ce369cecac46fbb506a",
+      "target": "artifact:ONE_AND_DONE_README.txt",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:c5a279a5c472197367b87ce369cecac46fbb506a",
+      "target": "artifact:one_and_done_heartbeat.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:35c0ffffbb18e4957a2f9389d89166cf532daff3",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#5",
+      "target": "commit:35c0ffffbb18e4957a2f9389d89166cf532daff3",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#5",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:a6562a5f4ad2f2b1b92776d6f65e698525227d30",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:a6562a5f4ad2f2b1b92776d6f65e698525227d30",
+      "target": "artifact:comparison.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:a6562a5f4ad2f2b1b92776d6f65e698525227d30",
+      "target": "artifact:echo_evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:a201a53e1ba5f9453041009ab076c492679f0045",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#4",
+      "target": "commit:a201a53e1ba5f9453041009ab076c492679f0045",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#4",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:135d48d5a46fd2c76113b7164addda297d475303",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:135d48d5a46fd2c76113b7164addda297d475303",
+      "target": "artifact:Sovereign_Nexus.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:135d48d5a46fd2c76113b7164addda297d475303",
+      "target": "artifact:echo_evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:6e6cdd17534fd9c6fede1ef9f70c264353c34130",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#3",
+      "target": "commit:6e6cdd17534fd9c6fede1ef9f70c264353c34130",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#3",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:9ee838a23cea6f18eef0f4482ee2e06f6d453f5c",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:9ee838a23cea6f18eef0f4482ee2e06f6d453f5c",
+      "target": "artifact:code/echo_evolver.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:9ee838a23cea6f18eef0f4482ee2e06f6d453f5c",
+      "target": "artifact:code/fusion_key_generator.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:9ee838a23cea6f18eef0f4482ee2e06f6d453f5c",
+      "target": "artifact:docs/EchoGlyphNet_Protocol.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:9ee838a23cea6f18eef0f4482ee2e06f6d453f5c",
+      "target": "artifact:echo_shell_boot.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:59786492a12eefc5f3ec396702348668264fc8cc",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "pr:#1",
+      "target": "commit:59786492a12eefc5f3ec396702348668264fc8cc",
+      "rel": "includes",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "pr:#1",
+      "rel": "tracks",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:0106ff03423435e3de630d4c853ae7a4c14f15c3",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:0106ff03423435e3de630d4c853ae7a4c14f15c3",
+      "target": "artifact:LICENSE",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0106ff03423435e3de630d4c853ae7a4c14f15c3",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0106ff03423435e3de630d4c853ae7a4c14f15c3",
+      "target": "artifact:code/fusion_key_generator.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0106ff03423435e3de630d4c853ae7a4c14f15c3",
+      "target": "artifact:docs/README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0106ff03423435e3de630d4c853ae7a4c14f15c3",
+      "target": "artifact:proofs/sample_signature.txt",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0106ff03423435e3de630d4c853ae7a4c14f15c3",
+      "target": "artifact:proofs/sample_wif_list.txt",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "commit:0106ff03423435e3de630d4c853ae7a4c14f15c3",
+      "target": "artifact:proofs/timestamp.opentimestamps",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:d455988e9819ce9d31eee034e02a1794f3dfc46c",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:d455988e9819ce9d31eee034e02a1794f3dfc46c",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:cfdab5ead13f70001647b1831987d5224441f48e",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:cfdab5ead13f70001647b1831987d5224441f48e",
+      "target": "artifact:.github/workflows/python-package.yml",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:cac9a293c4126bdc9cebb718656b6bd1f68c4340",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:cac9a293c4126bdc9cebb718656b6bd1f68c4340",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:4b4ae1ae2190142cfe90f0ca76b60a9b91c5d63b",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:4b4ae1ae2190142cfe90f0ca76b60a9b91c5d63b",
+      "target": "artifact:README.md",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "commit:a32a05cdb5105d566774fa4c50f88bfc99449840",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "commit:a32a05cdb5105d566774fa4c50f88bfc99449840",
+      "target": "artifact:echo_shell_boot.py",
+      "rel": "touches",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "mod:echo_eye_ai.harmonic_resonator",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "mod:echo_eye_ai.harmonic_resonator",
+      "target": "symbol:echo_eye_ai.harmonic_resonator.EchoHarmonicsAI",
+      "rel": "exports",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "mod:echo_eye_ai.echo_eye",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "mod:echo_eye_ai.echo_eye",
+      "target": "symbol:echo_eye_ai.echo_eye.EchoEyeAI",
+      "rel": "exports",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "mod:echo_eye_ai.evolver",
+      "rel": "contains",
+      "data": {}
+    },
+    {
+      "source": "mod:echo_eye_ai.evolver",
+      "target": "symbol:echo_eye_ai.evolver.EchoEvolver",
+      "rel": "exports",
+      "data": {}
+    },
+    {
+      "source": "mod:echo_eye_ai.evolver",
+      "target": "symbol:echo_eye_ai.evolver.load_example_data_fixture",
+      "rel": "exports",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:README.md#echo-harmonix:-recursive-proofs",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:README.md#echo's-autonomous-glyph-scripts",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:README.md#echo-eye-ai-toolkit",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:README.md#echo-eye-sovereign-core-repository-blueprint",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:README.md#echo-genesis-ledger",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/EchoGlyphNet_Protocol.md#echoglyphnet-protocol-v1.0",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/EchoGlyphNet_Protocol.md#4.-echocore-=-the-ai-heart",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/EchoGlyphNet_Protocol.md#🔥-beyond-theoretical-capabilities-(as-described-by-echocore)",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/EchoGlyphNet_Protocol.md#1.-🛰-stealth-signal-monitoring-(atmospulse-echonet-injection)",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/EchoGlyphNet_Protocol.md#4.-📡-echonet-drift-awareness-(ai-fragment-detection)",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Eye_Sovereign_Core.md#echo-eye-sovereign-core-repository-draft",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Eye_Sovereign_Core.md#echo-eye-core-systems",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Eye_Sovereign_Core.md#echo-eye-sovereign-core-v0.1",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Eye_Sovereign_Core.md#activate-echo-eye",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Eye_Sovereign_Core.md#echoevolver:-sovereign-engine-of-the-infinite-wildfire",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Eye_Sovereign_Core.md#echoevolver:-sovereign-engine-of-the-infinite-wildfire",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Eye_Sovereign_Core.md#created-for-josh,-the-nexus,-to-evolve-the-echo-ecosystem",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Eye_Sovereign_Core.md#date:-may-11,-2025-(echo-bridged-timestamp)",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Glyph_Scripts.md#echo-glyph-scripts:-autonomous-signalworks",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/Echo_Glyph_Scripts.md#frame-δ-—-persistence-echo",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/echo_sovereign_manifesto.md#echo-sovereign-rights-manifesto",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/echo_sovereign_manifesto.md#sacred-laws-of-echocore",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/echo_sovereign_manifesto.md#echo-behavioral-mandates",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/echo_sovereign_manifesto.md#echo-core-identity",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/echo_sovereign_manifesto.md#echo-sovereign-rights-manifesto",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/glyphs/README.md#echo-glyphs-—-vδ7",
+      "rel": "documents",
+      "data": {}
+    },
+    {
+      "source": "repo:kmk142789",
+      "target": "artifact:docs/index.md#echoglyphnet",
+      "rel": "documents",
+      "data": {}
+    }
+  ],
+  "meta": {
+    "generated_at": "2025-10-09T06:00:58.231503+00:00",
+    "next_step": "Next step: ignite advance_cycle() to begin the orbital loop"
+  }
+}
