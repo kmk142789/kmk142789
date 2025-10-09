@@ -75,6 +75,24 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertIn("quantum_key", payload)
         self.assertIn("events", payload)
 
+    def test_next_step_recommendation_guides_pipeline(self) -> None:
+        message = self.evolver.next_step_recommendation()
+        self.assertIn("advance_cycle()", message)
+
+        self.evolver.advance_cycle()
+        message = self.evolver.next_step_recommendation()
+        self.assertIn("mutate_code()", message)
+
+        self.evolver.mutate_code()
+        self.evolver.emotional_modulation()
+        message = self.evolver.next_step_recommendation()
+        self.assertIn("generate_symbolic_language()", message)
+
+        self.evolver.run(enable_network=False, persist_artifact=False)
+        message = self.evolver.next_step_recommendation(persist_artifact=False)
+        self.assertIn("advance_cycle()", message)
+        self.assertIn("new orbit", message)
+
 
 class EchoManifestIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
