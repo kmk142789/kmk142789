@@ -114,8 +114,9 @@ Open issues for discussion or collaboration. Contact via GitHub or [x.com/kmk142
 This repository now exposes the simulation modules (`echo_evolver`, `echo_manifest`,
 `echo_constellation`, and `echo_universal_key_agent`) as an installable Python
 package. The [`pyproject.toml`](pyproject.toml) configuration enables
-standards-based builds and publishes a console entry point named
-`echo-evolver` that boots the mythogenic cycle driver showcased in the tests.
+standards-based builds and publishes console entry points named
+`echo-evolver` for the mythogenic cycle driver and `idea-processor` for the
+creative idea analysis toolkit introduced in this update.
 
 To install the package locally for development:
 
@@ -132,7 +133,15 @@ echo-evolver
 ```
 
 This will run the refined EchoEvolver engine with the same deterministic
-simulation steps exercised by the automated test suite.
+simulation steps exercised by the automated test suite.  To analyse creative
+prompts with the upgraded processor, run:
+
+```bash
+idea-processor "EchoEvolver weaves radiant glyphs across the satellite lattice"
+```
+
+Use ``--format json`` for machine-readable output or ``--seed`` to freeze the
+creativity score during automated runs.
 
 ---
 
