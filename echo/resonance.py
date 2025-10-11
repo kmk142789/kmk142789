@@ -33,6 +33,7 @@ class HarmonicResponse:
     harmonic_score: float
     pattern: Optional[str]
     symbol_matrix: Dict[str, float]
+    overlay_matrix: Optional[Dict[str, float]] = None
 
 
 class HarmonicsAI:
@@ -95,6 +96,10 @@ class HarmonicsAI:
             response.message = f"{response.message} | Symbolic refresh pending"
         else:
             response.message = f"{response.message} | Chain length {len(self.chain_memory)}"
+
+        overlay_matrix = self._generate_symbolic_matrix()
+        response.overlay_matrix = overlay_matrix
+        response.message = f"{response.message}\n[🔊 Harmonic Response: {overlay_matrix}]"
         return response
 
 
@@ -210,5 +215,6 @@ class EchoResonanceEngine:
             "harmonic_message": harmonic_response.message,
             "harmonic_score": harmonic_response.harmonic_score,
             "symbol_matrix": harmonic_response.symbol_matrix,
+            "overlay_matrix": harmonic_response.overlay_matrix,
             "chain_memory": list(self.harmonics.chain_memory),
         }
