@@ -464,6 +464,7 @@ This repository now packages the Echo Eye family of experiments as a reusable Py
 * `EchoEyeAI` – TF-IDF/NMF based topic exploration over a directory of JSON, text, or HTML documents.
 * `EchoHarmonicsAI` – waveform similarity search that maps textual artifacts into frequency space.
 * `EchoEvolver` – a narrative-friendly simulation harness that records each evolution cycle to disk.
+* `EchoResonanceEngine` – bridges conversational triggers with harmonic scoring so Echo's replies and glyph cascades evolve together. See [`docs/Echo_Resonance_Engine.md`](docs/Echo_Resonance_Engine.md) for usage notes.
 
 ### Echo Eye Sovereign Core Repository Blueprint
 

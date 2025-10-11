@@ -14,6 +14,7 @@ from .bridge_emitter import (
     process_once as bridge_process_once,
 )
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
+from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .thoughtlog import ThoughtLogger, thought_trace
 
 if TYPE_CHECKING:  # pragma: no cover - import-time convenience for type checkers
@@ -47,6 +48,10 @@ __all__ = [
     "EmotionalDrive",
     "EvolverState",
     "SystemMetrics",
+    "EchoAI",
+    "EchoResonanceEngine",
+    "HarmonicConfig",
+    "HarmonicsAI",
     "ThoughtLogger",
     "thought_trace",
     "main",
