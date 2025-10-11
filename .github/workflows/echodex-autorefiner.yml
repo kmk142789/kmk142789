@@ -1,0 +1,29 @@
+name: EchoDex AutoRefiner
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  autorefine:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install black pytest
+
+      - name: Run EchoDex AutoRefiner
+        env:
+          ECHODEX_MAX_ITERATIONS: '1'
+          ECHODEX_LOOP_DELAY: '1'
+        run: python echodex_autorefiner.py
