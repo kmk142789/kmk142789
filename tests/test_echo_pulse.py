@@ -82,3 +82,38 @@ def test_history_for_unknown_pulse_raises() -> None:
     engine = EchoPulseEngine()
     with pytest.raises(KeyError):
         engine.history_for("missing")
+
+
+def test_universal_advancement_report() -> None:
+    engine = EchoPulseEngine(anchor="Advancement Anchor")
+    engine.create_pulse("alpha", priority="critical", data={"cycle": 1})
+    engine.update_pulse("alpha", data={"cycle": 2})
+
+    engine.create_pulse("beta", priority="low")
+    engine.crystallize("beta")
+
+    engine.create_pulse("gamma", priority="medium")
+    engine.archive("gamma", reason="retired")
+
+    report_active = engine.universal_advancement()
+    report_all = engine.universal_advancement(include_archived=True)
+
+    assert report_active["anchor"] == "Advancement Anchor"
+    assert report_active["total_pulses"] == 2
+    assert report_active["advancement_score"] > 0
+    assert report_active["status_breakdown"]["active"] == 1
+    assert any(focus["pulse"] == "alpha" for focus in report_active["enhancement_focus"])
+
+    assert report_all["total_pulses"] == 3
+    assert report_all["status_breakdown"]["active"] == 1
+    assert report_all["status_breakdown"]["crystallized"] == 1
+    assert report_all["status_breakdown"]["archived"] == 1
+
+
+def test_universal_advancement_on_empty_engine() -> None:
+    engine = EchoPulseEngine()
+    report = engine.universal_advancement()
+
+    assert report["total_pulses"] == 0
+    assert report["advancement_score"] == 0.0
+    assert report["enhancement_focus"] == []

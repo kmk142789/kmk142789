@@ -226,6 +226,112 @@ class EchoPulseEngine:
             )
         return lines
 
+    def universal_advancement(
+        self,
+        *,
+        include_archived: bool = False,
+        focus_limit: int = 3,
+    ) -> Dict[str, object]:
+        """Generate a roadmap describing how pulses are advancing overall.
+
+        The user request for a "universal advancement and enhancement" feature
+        maps neatly onto an aggregated view that highlights progress trends and
+        recommended follow-up actions.  This helper analyses the active pulse
+        set (optionally including archives) and distils the result into a
+        compact dictionary that downstream tooling can render inside dashboards
+        or reports.
+
+        Parameters
+        ----------
+        include_archived:
+            Whether archived pulses should be considered for the assessment.
+        focus_limit:
+            Maximum number of enhancement recommendations to include.
+        """
+
+        pulses = self.pulses(include_archived=include_archived)
+        status_weights = {
+            "crystallized": 1.0,
+            "active": 0.7,
+            "dormant": 0.4,
+            "archived": 0.5,
+        }
+        priority_weights = {
+            "critical": 1.0,
+            "high": 0.85,
+            "medium": 0.65,
+            "low": 0.45,
+        }
+
+        if not pulses:
+            return {
+                "anchor": self.anchor,
+                "total_pulses": 0,
+                "advancement_score": 0.0,
+                "status_breakdown": {},
+                "priority_breakdown": {},
+                "enhancement_focus": [],
+                "recent_updates": [],
+            }
+
+        total_weight = 0.0
+        scored_pulses: List[tuple[Pulse, str, float, float, float]] = []
+        archived_names = set(self._archived) if include_archived else set()
+        for pulse in pulses:
+            effective_status = "archived" if pulse.name in archived_names else pulse.status
+            status_score = status_weights.get(effective_status, 0.55)
+            priority_score = priority_weights.get(pulse.priority, 0.6)
+            timeline_bonus = min(len(pulse.timeline) / 20.0, 0.1)
+            pulse_weight = 0.7 * status_score + 0.2 * priority_score + 0.1 * timeline_bonus
+            total_weight += pulse_weight
+            scored_pulses.append((pulse, effective_status, status_score, priority_score, pulse_weight))
+
+        advancement_score = round((total_weight / len(pulses)) * 100, 2)
+
+        focus_candidates = sorted(
+            scored_pulses,
+            key=lambda item: (item[2], -item[3]),
+        )
+
+        enhancement_focus: List[Dict[str, object]] = []
+        for pulse, effective_status, status_score, priority_score, _ in focus_candidates:
+            if len(enhancement_focus) >= focus_limit:
+                break
+            if status_score >= 0.95 and priority_score <= 0.6:
+                continue
+            if effective_status == "archived":
+                recommendation = "Review archived pulse for potential reactivation"
+            elif pulse.status != "crystallized":
+                recommendation = "Advance pulse toward crystallized state"
+            elif len(pulse.timeline) < 2:
+                recommendation = "Document additional progress to lock gains"
+            else:
+                recommendation = "Maintain resonance and monitor"
+            enhancement_focus.append(
+                {
+                    "pulse": pulse.name,
+                    "status": effective_status,
+                    "priority": pulse.priority,
+                    "recommendation": recommendation,
+                }
+            )
+
+        status_breakdown = Counter(
+            "archived" if pulse.name in archived_names else pulse.status for pulse in pulses
+        )
+        priority_breakdown = Counter(pulse.priority for pulse in pulses)
+
+        roadmap = {
+            "anchor": self.anchor,
+            "total_pulses": len(pulses),
+            "advancement_score": advancement_score,
+            "status_breakdown": dict(status_breakdown),
+            "priority_breakdown": dict(priority_breakdown),
+            "enhancement_focus": enhancement_focus,
+            "recent_updates": self.history(limit=3),
+        }
+        return roadmap
+
     def sync_snapshot(self) -> Dict[str, object]:
         """Return a deterministic snapshot of the active pulse state."""
 
