@@ -14,6 +14,7 @@ from .bridge_emitter import (
     process_once as bridge_process_once,
 )
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
+from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .thoughtlog import ThoughtLogger, thought_trace
 
@@ -52,6 +53,9 @@ __all__ = [
     "EchoResonanceEngine",
     "HarmonicConfig",
     "HarmonicsAI",
+    "EchoPulseEngine",
+    "Pulse",
+    "PulseEvent",
     "ThoughtLogger",
     "thought_trace",
     "main",
