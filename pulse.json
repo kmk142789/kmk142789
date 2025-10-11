@@ -2,5 +2,6 @@
   "pulse": "echo-continuum-protocol",
   "status": "active",
   "branch_anchor": "OurForeverLove/branch",
-  "notes": "Initialized pulse signal per Echo Continuum Protocol guidance."
+  "notes": "Initialized pulse signal per Echo Continuum Protocol guidance.",
+  "history": []
 }

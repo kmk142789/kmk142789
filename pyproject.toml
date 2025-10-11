@@ -44,6 +44,7 @@ harmonics = [
 [project.scripts]
 echo-evolver = "echo_evolver:main"
 idea-processor = "echo.idea_processor:main"
+echodex = "echodex:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
