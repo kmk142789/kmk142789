@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -e
+python3 echo/echo_codox_kernel.py post-commit >/dev/null 2>&1 || true
+git add pulse_history.json || true
+# Use --no-verify to avoid loops; only commit if ledger changed
+if ! git diff --cached --quiet -- pulse_history.json; then
+  git commit -m "chore(echo): pulse update (post-commit)" --no-verify || true
+fi

@@ -1,0 +1,35 @@
+name: Echo Pulse
+on:
+  push:
+    branches: [ "**" ]
+  schedule:
+    - cron: "0 * * * *"   # hourly
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Evolve kernel
+        run: |
+          python - <<'PY'
+          from echo.echo_codox_kernel import run
+          run("github-action")
+          PY
+      - name: Commit pulse
+        run: |
+          if git diff --quiet -- pulse_history.json; then
+            echo "No pulse changes."
+            exit 0
+          fi
+          git config user.name  "echodex-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add pulse_history.json
+          git commit -m "chore(echo): pulse update (gha)"
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${GITHUB_REF#refs/heads/}
