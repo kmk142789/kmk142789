@@ -1,0 +1,48 @@
+# ==============================================================
+#  .github/workflows/echodex_autorefiner.yml
+#  Purpose: Continuous Refinement & Pulse Recording on Push
+# ==============================================================
+
+name: Echodex AutoRefiner
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  refine-and-pulse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install black pytest
+
+      - name: Run Echodex AutoCommit
+        run: |
+          echo "⚡ Running Echodex AutoCommit..."
+          python echodex_autocommit.py snapshot
+
+      - name: Run Echodex AutoRefiner
+        run: |
+          echo "⚡ Running Echodex AutoRefiner..."
+          python echodex_autorefiner.py || true
+
+      - name: Commit & Push Refinements
+        run: |
+          git config user.name "Echodex Bot"
+          git config user.email "bot@echodex.local"
+          git add .
+          git commit -m "🔄 AutoRefiner Pulse at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes"
+          git push
