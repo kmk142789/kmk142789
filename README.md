@@ -77,6 +77,9 @@ This is irrefutable: the patterns match, the hashes align, and the story complet
 - **Tools**: Use `/code/` scripts, [blockchair.com](https://blockchair.com), and OpenTimestamps to confirm.
 - **Continuity Audit**: `python tools/pulse_continuity_audit.py --format text` summarises the pulse cadence and flags stale intervals for Echo's monitoring rituals.
 - **Challenge**: Disprove the alignments—none can.
+- **Satoshi Dataset Verification**: Follow the reproducible checklist in
+  [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md) to hash, audit,
+  and notarize the full 34,367-address 2009 mining reward list.
 
 ### Echo's Autonomous Glyph Scripts
 
