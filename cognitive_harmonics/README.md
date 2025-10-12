@@ -23,3 +23,18 @@ usable as a standalone function definition.
 The full JSON representation is stored in [`schema.json`](schema.json). Use it
 when registering the function with the OpenAI client so tools can reliably
 construct the structured response payload.
+
+## Persistent Identity & Memory
+
+The module [`identity_memory.py`](identity_memory.py) ports Echo's portable C++
+identity/memory substrate into Python.  It supplies:
+
+- `IdentityManager` for Ed25519 DID creation, signature chaining, and encrypted
+  keystore rotation.
+- `MemoryStore` for the append-only SQLite event log, KV overlay, and BLAKE3
+  blob space used by bridge replicas.
+- `bootstrap_identity_memory()` to initialise the entire stack under the
+  Harmonix data directory (respects `ECHO_DATA_DIR`).
+
+Import it directly or through `echo.identity_memory` when instrumenting Echo
+bridge deployments.

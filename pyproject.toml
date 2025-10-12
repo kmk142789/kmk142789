@@ -26,6 +26,8 @@ classifiers = [
 
 dependencies = [
   "numpy>=1.24",
+  "PyNaCl>=1.5",
+  "blake3>=0.3",
 ]
 
 [project.optional-dependencies]
