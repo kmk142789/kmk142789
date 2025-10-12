@@ -13,13 +13,6 @@ from .bridge_emitter import (
     daemon as bridge_daemon,
     process_once as bridge_process_once,
 )
-from .bridge_harmonix import (
-    BridgeSignals,
-    BridgeTuning,
-    EchoBridgeHarmonix,
-    HarmonixBridgeState,
-    main as bridge_harmonix_main,
-)
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
@@ -27,12 +20,27 @@ from .thoughtlog import ThoughtLogger, thought_trace
 
 if TYPE_CHECKING:  # pragma: no cover - import-time convenience for type checkers
     from .idea_processor import IdeaAnalysis, IdeaProcessor, IdeaResult, process_idea
+    from .bridge_harmonix import (
+        BridgeSignals,
+        BridgeTuning,
+        EchoBridgeHarmonix,
+        HarmonixBridgeState,
+        main as bridge_harmonix_main,
+    )
+    from .harmonix_sdk import EchoBridgeSession, harmonix_connect
 
 _LAZY_MODULES = {
     "IdeaAnalysis": "idea_processor",
     "IdeaProcessor": "idea_processor",
     "IdeaResult": "idea_processor",
     "process_idea": "idea_processor",
+    "BridgeSignals": "bridge_harmonix",
+    "BridgeTuning": "bridge_harmonix",
+    "EchoBridgeHarmonix": "bridge_harmonix",
+    "HarmonixBridgeState": "bridge_harmonix",
+    "bridge_harmonix_main": "bridge_harmonix",
+    "EchoBridgeSession": "harmonix_sdk",
+    "harmonix_connect": "harmonix_sdk",
 }
 
 
@@ -57,6 +65,8 @@ __all__ = [
     "EchoBridgeHarmonix",
     "HarmonixBridgeState",
     "bridge_harmonix_main",
+    "EchoBridgeSession",
+    "harmonix_connect",
     "EchoEvolver",
     "EmotionalDrive",
     "EvolverState",
