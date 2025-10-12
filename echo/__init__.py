@@ -5,6 +5,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
+from .aurora_chronicles import AuroraChronicleMoment, AuroraChronicles, forge_chronicle
 from .bridge_emitter import (
     BridgeConfig,
     BridgeEmitter,
@@ -54,6 +55,8 @@ def __getattr__(name: str) -> Any:  # pragma: no cover - thin forwarding shim
 
 
 __all__ = [
+    "AuroraChronicleMoment",
+    "AuroraChronicles",
     "BridgeConfig",
     "BridgeEmitter",
     "BridgeState",
@@ -81,6 +84,7 @@ __all__ = [
     "ThoughtLogger",
     "thought_trace",
     "main",
+    "forge_chronicle",
     "IdeaAnalysis",
     "IdeaProcessor",
     "IdeaResult",
