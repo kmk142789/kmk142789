@@ -43,6 +43,15 @@ _LAZY_MODULES = {
     "bridge_harmonix_main": "bridge_harmonix",
     "EchoBridgeSession": "harmonix_sdk",
     "harmonix_connect": "harmonix_sdk",
+    "IdentityDoc": "identity_memory",
+    "IdentityKeys": "identity_memory",
+    "IdentityManager": "identity_memory",
+    "IdentityMemoryBundle": "identity_memory",
+    "MemoryStore": "identity_memory",
+    "SignResult": "identity_memory",
+    "bootstrap_identity_memory": "identity_memory",
+    "data_dir": "identity_memory",
+    "identity_memory_data_dir": "identity_memory",
 }
 
 
@@ -93,4 +102,13 @@ __all__ = [
     "IdeaProcessor",
     "IdeaResult",
     "process_idea",
+    "IdentityDoc",
+    "IdentityKeys",
+    "IdentityManager",
+    "IdentityMemoryBundle",
+    "MemoryStore",
+    "SignResult",
+    "bootstrap_identity_memory",
+    "data_dir",
+    "identity_memory_data_dir",
 ]
