@@ -13,6 +13,13 @@ from .bridge_emitter import (
     daemon as bridge_daemon,
     process_once as bridge_process_once,
 )
+from .bridge_harmonix import (
+    BridgeSignals,
+    BridgeTuning,
+    EchoBridgeHarmonix,
+    HarmonixBridgeState,
+    main as bridge_harmonix_main,
+)
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
@@ -45,6 +52,11 @@ __all__ = [
     "MerkleBatch",
     "bridge_daemon",
     "bridge_process_once",
+    "BridgeSignals",
+    "BridgeTuning",
+    "EchoBridgeHarmonix",
+    "HarmonixBridgeState",
+    "bridge_harmonix_main",
     "EchoEvolver",
     "EmotionalDrive",
     "EvolverState",
