@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -26,6 +27,26 @@ struct EpochManifest {
     std::vector<uint8_t> sig;    // Ed25519 signature over canonical form
 };
 
+struct MetricSummary {
+    double total{0.0};
+    double minimum{0.0};
+    double maximum{0.0};
+    double average{0.0};
+    std::size_t samples{0};
+};
+
+struct LineageReport {
+    std::size_t epoch_count{};
+    bool is_linear{true};
+    bool signatures_valid{true};
+    std::vector<std::string> lineage_breaks;
+    std::vector<std::string> signature_failures;
+    std::optional<uint64_t> earliest_start_ms;
+    std::optional<uint64_t> latest_end_ms;
+    uint64_t total_duration_ms{};
+    std::map<std::string, MetricSummary> metrics;
+};
+
 // Continuum = epoch manager + lineage verification
 class Continuum {
 public:
@@ -46,6 +67,11 @@ public:
     // Accessors
     std::optional<EpochManifest> latest() const;
     std::vector<EpochManifest> history(std::size_t limit = 20) const;
+
+    // Summarize recent history continuity, metrics, and signature validity.
+    LineageReport analyze_lineage(
+        std::size_t limit = 0,
+        const std::vector<uint8_t>& pubkey_override = {}) const;
 
     // Verify signature & lineage of a manifest against local DID (or provided pk)
     static bool verify_manifest(const EpochManifest& manifest,
