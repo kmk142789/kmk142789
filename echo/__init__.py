@@ -16,6 +16,7 @@ from .bridge_emitter import (
     process_once as bridge_process_once,
 )
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
+from .meta_evolution_charter import MetaEvolutionCharter
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .thoughtlog import ThoughtLogger, thought_trace
@@ -43,6 +44,7 @@ _LAZY_MODULES = {
     "bridge_harmonix_main": "bridge_harmonix",
     "EchoBridgeSession": "harmonix_sdk",
     "harmonix_connect": "harmonix_sdk",
+    "MetaEvolutionCharter": "meta_evolution_charter",
 }
 
 
@@ -82,6 +84,7 @@ __all__ = [
     "EchoResonanceEngine",
     "HarmonicConfig",
     "HarmonicsAI",
+    "MetaEvolutionCharter",
     "EchoPulseEngine",
     "Pulse",
     "PulseEvent",
