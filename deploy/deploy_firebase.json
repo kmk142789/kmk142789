@@ -1,0 +1,12 @@
+{
+  "description": "Firebase hosting mirror for Echo reports",
+  "enabled_flag": "ECHO_FIREBASE_ENABLED",
+  "project": "${ECHO_FIREBASE_PROJECT:-echo-evolver}",
+  "site": "${ECHO_FIREBASE_SITE:-echo-evolver-app}",
+  "realtime_updates": true,
+  "artifacts": [
+    "memory/memory_store.json",
+    "ECHO_LOG.md"
+  ],
+  "deployment_notes": "Set ECHO_FIREBASE_ENABLED=1 to activate deployment hooks. When disabled, the configuration is inert."
+}

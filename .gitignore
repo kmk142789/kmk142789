@@ -2,6 +2,10 @@ node_modules
 npm-debug.log
 dist
 .DS_Store
+__pycache__/
+*.pyc
+genesis_ledger/thought_log/*.jsonl
+memory/memory_store.json.backup
 
 # EchoDex auto-refiner state
 .echodex_state.json

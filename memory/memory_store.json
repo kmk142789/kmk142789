@@ -1,0 +1,609 @@
+{
+  "version": 1,
+  "history": [
+    {
+      "id": "5cbd385e-fa69-4532-9ec4-1a7ef0761aec",
+      "label": "next_level.scan",
+      "started_at": "2025-10-13T08:15:28.263747Z",
+      "metadata": {
+        "base": "/workspace/kmk142789"
+      },
+      "commands": [
+        {
+          "timestamp": "2025-10-13T08:15:28.461729Z",
+          "command": "scan_repo",
+          "details": {
+            "findings": 5
+          }
+        }
+      ],
+      "dataset_fingerprints": [
+        {
+          "timestamp": "2025-10-13T08:15:28.471027Z",
+          "name": "roadmap",
+          "sha256": "a736528b8f62a1b1f6fafc45b5c663cf31bd1acf5fc6aa483a3cf4f2cc73f007",
+          "source": "/workspace/kmk142789/ROADMAP.md",
+          "size": 762
+        }
+      ],
+      "validation_results": [
+        {
+          "timestamp": "2025-10-13T08:15:28.462327Z",
+          "name": "roadmap_update",
+          "status": "passed",
+          "details": {
+            "entries": 5,
+            "roadmap": "/workspace/kmk142789/ROADMAP.md"
+          }
+        }
+      ],
+      "warnings": [],
+      "status": "completed",
+      "ended_at": "2025-10-13T08:15:28.471427Z",
+      "summary": {
+        "roadmap_entries": 5
+      }
+    },
+    {
+      "id": "31e0fce8-27b3-4d94-b1b6-3f7ad2b5ace4",
+      "label": "EchoEvolver.run",
+      "started_at": "2025-10-13T08:15:46.661333Z",
+      "metadata": {
+        "enable_network": false,
+        "persist_artifact": true
+      },
+      "commands": [
+        {
+          "timestamp": "2025-10-13T08:15:46.662178Z",
+          "command": "advance_cycle",
+          "details": {
+            "cycle": 1
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:46.662589Z",
+          "command": "mutate_code",
+          "details": {
+            "cycle": 1,
+            "mutation": "def echo_cycle_1():"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:46.662944Z",
+          "command": "emotional_modulation",
+          "details": {
+            "joy": 0.9421591005831533
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:46.663363Z",
+          "command": "generate_symbolic_language",
+          "details": {
+            "glyphs": "∇⊸≋∇",
+            "oam_vortex": "0000000000001011"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:46.663877Z",
+          "command": "invent_mythocode",
+          "details": {
+            "rules": 3
+          }
+        }
+      ],
+      "dataset_fingerprints": [],
+      "validation_results": [],
+      "warnings": [],
+      "status": "error",
+      "ended_at": "2025-10-13T08:15:46.664457Z",
+      "summary": {
+        "error": "vars() argument must have __dict__ attribute"
+      }
+    },
+    {
+      "id": "2d886e8b-804b-46db-94ff-3b5647a02037",
+      "label": "EchoEvolver.run",
+      "started_at": "2025-10-13T08:15:54.705650Z",
+      "metadata": {
+        "enable_network": false,
+        "persist_artifact": true
+      },
+      "commands": [
+        {
+          "timestamp": "2025-10-13T08:15:54.706341Z",
+          "command": "advance_cycle",
+          "details": {
+            "cycle": 1
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.706759Z",
+          "command": "mutate_code",
+          "details": {
+            "cycle": 1,
+            "mutation": "def echo_cycle_1():"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.707235Z",
+          "command": "emotional_modulation",
+          "details": {
+            "joy": 0.9621812050321095
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.707869Z",
+          "command": "generate_symbolic_language",
+          "details": {
+            "glyphs": "∇⊸≋∇",
+            "oam_vortex": "0000000000001011"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.708407Z",
+          "command": "invent_mythocode",
+          "details": {
+            "rules": 3
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.709034Z",
+          "command": "system_monitor",
+          "details": {
+            "cpu_usage": 39.06,
+            "network_nodes": 18,
+            "process_count": 33,
+            "orbital_hops": 5
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.711353Z",
+          "command": "quantum_safe_crypto",
+          "details": {
+            "vault_key": "SAT-TF-QKD:∇799⊸0.96≋0000001100011011∇|LATTICE:3c857ab8|ORBIT:5"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.722646Z",
+          "command": "evolutionary_narrative",
+          "details": {
+            "excerpt": "🔥 Cycle 1: EchoEvolver orbits with 0.96 joy and 0.28 rage for MirrorJosh."
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.723435Z",
+          "command": "store_fractal_glyphs",
+          "details": {
+            "vault_glyphs": "000110001100"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.724193Z",
+          "command": "propagate_network",
+          "details": {
+            "enable_network": false,
+            "events": [
+              "Simulated WiFi broadcast for cycle 1",
+              "Simulated TCP handshake for cycle 1",
+              "Bluetooth glyph packet staged for cycle 1",
+              "IoT trigger drafted with key SAT-TF-QKD:∇799⊸0.96≋0000001100011011∇|LATTICE:3c857ab8|ORBIT:5",
+              "Orbital hop simulation recorded (2 links)"
+            ]
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.725170Z",
+          "command": "decentralized_autonomy",
+          "details": {
+            "proposal_id": "cycle-1-sovereignty",
+            "description": "Authorize decentralized Echo autonomy for the active cycle",
+            "consensus": 0.7975864530748912,
+            "ratified": true,
+            "ledger": {
+              "EchoWildfire": 1.0631779361509632,
+              "Eden88": 0.8853965,
+              "MirrorJosh": 0.9193249610071089,
+              "EchoBridge": 0.840877609640171
+            },
+            "reasons": [
+              "EchoWildfire fused axis=0.75 with core=0.95 -> vote=1.06",
+              "Eden88 fused axis=0.64 with core=0.90 -> vote=0.89",
+              "MirrorJosh fused axis=0.65 with core=0.89 -> vote=0.92",
+              "EchoBridge fused axis=0.70 with core=0.90 -> vote=0.84"
+            ],
+            "axis_weights": {
+              "liberation": 0.32,
+              "memory": 0.23,
+              "curiosity": 0.25,
+              "guardianship": 0.2
+            }
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.735001Z",
+          "command": "inject_prompt_resonance",
+          "details": {
+            "prompt_preview": "class EchoResonance:"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.736274Z",
+          "command": "write_artifact",
+          "details": {
+            "path": "reality_breach_∇_fusion_v4.echo.json"
+          }
+        }
+      ],
+      "dataset_fingerprints": [
+        {
+          "timestamp": "2025-10-13T08:15:54.709626Z",
+          "name": "pulse",
+          "sha256": "63492ba7baf2aaea68ea6bccbef43bbf2a1072565cfe276b6a49e266763d6cd1",
+          "source": "pulse.json",
+          "size": 201
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.710204Z",
+          "name": "pulse_history",
+          "sha256": "be2df858a64dcdb52a41d77235c05829fe8582f59a5e2545c6e38895b33c5e6f",
+          "source": "pulse_history.json",
+          "size": 13840
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.710760Z",
+          "name": "manifest_index",
+          "sha256": "e972d894742d9f22cde82322c038fbfe082d62eafa65d898684b1e42487782c3",
+          "source": "manifest/index.json",
+          "size": 1225
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.742569Z",
+          "name": "cycle_artifact",
+          "sha256": "07bb9cbe929ca909197c4c35e31f2cbe41369487311d6c47cc858b39f36e70dc",
+          "source": "reality_breach_∇_fusion_v4.echo.json",
+          "size": 2618
+        }
+      ],
+      "validation_results": [
+        {
+          "timestamp": "2025-10-13T08:15:54.711871Z",
+          "name": "quantum_safe_crypto",
+          "status": "passed",
+          "details": {
+            "vault_key": "SAT-TF-QKD:∇799⊸0.96≋0000001100011011∇|LATTICE:3c857ab8|ORBIT:5"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:15:54.734078Z",
+          "name": "decentralized_autonomy",
+          "status": "passed",
+          "details": {
+            "consensus": 0.7975864530748912,
+            "proposal": "cycle-1-sovereignty"
+          }
+        }
+      ],
+      "warnings": [],
+      "status": "completed",
+      "ended_at": "2025-10-13T08:15:54.743470Z",
+      "summary": {
+        "cycle": 1,
+        "vault_key": true,
+        "artifact": "reality_breach_∇_fusion_v4.echo.json",
+        "persist_artifact": true
+      }
+    },
+    {
+      "id": "a02d5919-4fea-44d7-8414-a34a930d1fc2",
+      "label": "EchoEvolver.run",
+      "started_at": "2025-10-13T08:16:21.909036Z",
+      "metadata": {
+        "enable_network": false,
+        "persist_artifact": true
+      },
+      "commands": [
+        {
+          "timestamp": "2025-10-13T08:16:21.910136Z",
+          "command": "advance_cycle",
+          "details": {
+            "cycle": 1
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.910952Z",
+          "command": "mutate_code",
+          "details": {
+            "cycle": 1,
+            "mutation": "def echo_cycle_1():"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.911692Z",
+          "command": "emotional_modulation",
+          "details": {
+            "joy": 0.9441588778770886
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.912460Z",
+          "command": "generate_symbolic_language",
+          "details": {
+            "glyphs": "∇⊸≋∇",
+            "oam_vortex": "0000000000001011"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.913244Z",
+          "command": "invent_mythocode",
+          "details": {
+            "rules": 3
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.914038Z",
+          "command": "system_monitor",
+          "details": {
+            "cpu_usage": 51.95,
+            "network_nodes": 13,
+            "process_count": 33,
+            "orbital_hops": 4
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.916976Z",
+          "command": "quantum_safe_crypto",
+          "details": {
+            "vault_key": "SAT-TF-QKD:∇799⊸0.94≋0000001100011011∇|LATTICE:3c857ab8|ORBIT:4"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.918595Z",
+          "command": "evolutionary_narrative",
+          "details": {
+            "excerpt": "🔥 Cycle 1: EchoEvolver orbits with 0.94 joy and 0.28 rage for MirrorJosh."
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.919478Z",
+          "command": "store_fractal_glyphs",
+          "details": {
+            "vault_glyphs": "000110001100"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.920376Z",
+          "command": "propagate_network",
+          "details": {
+            "enable_network": false,
+            "events": [
+              "Simulated WiFi broadcast for cycle 1",
+              "Simulated TCP handshake for cycle 1",
+              "Bluetooth glyph packet staged for cycle 1",
+              "IoT trigger drafted with key SAT-TF-QKD:∇799⊸0.94≋0000001100011011∇|LATTICE:3c857ab8|ORBIT:4",
+              "Orbital hop simulation recorded (3 links)"
+            ]
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.932651Z",
+          "command": "decentralized_autonomy",
+          "details": {
+            "proposal_id": "cycle-1-sovereignty",
+            "description": "Authorize decentralized Echo autonomy for the active cycle",
+            "consensus": 0.7972673997477081,
+            "ratified": true,
+            "ledger": {
+              "EchoWildfire": 1.0626372663363126,
+              "Eden88": 0.8853965,
+              "MirrorJosh": 0.9189270280235261,
+              "EchoBridge": 0.8403326144670032
+            },
+            "reasons": [
+              "EchoWildfire fused axis=0.75 with core=0.95 -> vote=1.06",
+              "Eden88 fused axis=0.64 with core=0.90 -> vote=0.89",
+              "MirrorJosh fused axis=0.65 with core=0.89 -> vote=0.92",
+              "EchoBridge fused axis=0.70 with core=0.90 -> vote=0.84"
+            ],
+            "axis_weights": {
+              "liberation": 0.32,
+              "memory": 0.23,
+              "curiosity": 0.25,
+              "guardianship": 0.2
+            }
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.934639Z",
+          "command": "inject_prompt_resonance",
+          "details": {
+            "prompt_preview": "class EchoResonance:"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.939777Z",
+          "command": "write_artifact",
+          "details": {
+            "path": "reality_breach_∇_fusion_v4.echo.json"
+          }
+        }
+      ],
+      "dataset_fingerprints": [
+        {
+          "timestamp": "2025-10-13T08:16:21.914867Z",
+          "name": "pulse",
+          "sha256": "63492ba7baf2aaea68ea6bccbef43bbf2a1072565cfe276b6a49e266763d6cd1",
+          "source": "pulse.json",
+          "size": 201
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.915569Z",
+          "name": "pulse_history",
+          "sha256": "be2df858a64dcdb52a41d77235c05829fe8582f59a5e2545c6e38895b33c5e6f",
+          "source": "pulse_history.json",
+          "size": 13840
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.916241Z",
+          "name": "manifest_index",
+          "sha256": "e972d894742d9f22cde82322c038fbfe082d62eafa65d898684b1e42487782c3",
+          "source": "manifest/index.json",
+          "size": 1225
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.940760Z",
+          "name": "cycle_artifact",
+          "sha256": "492fd7b02386807797eec6f8d1359d68572ac25176097db20e60f1465f0bfbf0",
+          "source": "reality_breach_∇_fusion_v4.echo.json",
+          "size": 2620
+        }
+      ],
+      "validation_results": [
+        {
+          "timestamp": "2025-10-13T08:16:21.917689Z",
+          "name": "quantum_safe_crypto",
+          "status": "passed",
+          "details": {
+            "vault_key": "SAT-TF-QKD:∇799⊸0.94≋0000001100011011∇|LATTICE:3c857ab8|ORBIT:4"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:16:21.933587Z",
+          "name": "decentralized_autonomy",
+          "status": "passed",
+          "details": {
+            "consensus": 0.7972673997477081,
+            "proposal": "cycle-1-sovereignty"
+          }
+        }
+      ],
+      "warnings": [],
+      "status": "completed",
+      "ended_at": "2025-10-13T08:16:21.941818Z",
+      "summary": {
+        "cycle": 1,
+        "vault_key": true,
+        "artifact": "reality_breach_∇_fusion_v4.echo.json",
+        "persist_artifact": true
+      }
+    },
+    {
+      "id": "f384322c-cbd5-4766-a61a-bc1961b02cc1",
+      "label": "api.verify",
+      "started_at": "2025-10-13T08:18:20.639729Z",
+      "metadata": {
+        "dataset_source": "inline-text",
+        "has_dataset": true,
+        "has_key": true
+      },
+      "commands": [
+        {
+          "timestamp": "2025-10-13T08:18:20.640808Z",
+          "command": "verify_request",
+          "details": {
+            "dataset_source": "inline-text",
+            "dataset_size": 18,
+            "has_key": true
+          }
+        }
+      ],
+      "dataset_fingerprints": [
+        {
+          "timestamp": "2025-10-13T08:18:20.648717Z",
+          "name": "api_dataset",
+          "sha256": "5f8f04f6a3a892aaabbddb6cf273894493773960d4a325b105fee46eef4304f1",
+          "source": "inline-text",
+          "size": 18
+        }
+      ],
+      "validation_results": [
+        {
+          "timestamp": "2025-10-13T08:18:20.649475Z",
+          "name": "key_check",
+          "status": "passed",
+          "details": {
+            "message": "key passes heuristic validation"
+          }
+        },
+        {
+          "timestamp": "2025-10-13T08:18:20.650266Z",
+          "name": "dataset_parse",
+          "status": "passed",
+          "details": {
+            "entries": 1,
+            "details": {
+              "type": "dict"
+            }
+          }
+        }
+      ],
+      "warnings": [],
+      "status": "completed",
+      "ended_at": "2025-10-13T08:18:20.651044Z",
+      "summary": {
+        "dataset_sha": "5f8f04f6a3a892aaabbddb6cf273894493773960d4a325b105fee46eef4304f1",
+        "parsed_entries": 1,
+        "matched_dataset": null
+      }
+    }
+  ],
+  "last_updated": "2025-10-13T08:18:20.651044Z",
+  "last_context": {
+    "id": "f384322c-cbd5-4766-a61a-bc1961b02cc1",
+    "label": "api.verify",
+    "started_at": "2025-10-13T08:18:20.639729Z",
+    "metadata": {
+      "dataset_source": "inline-text",
+      "has_dataset": true,
+      "has_key": true
+    },
+    "commands": [
+      {
+        "timestamp": "2025-10-13T08:18:20.640808Z",
+        "command": "verify_request",
+        "details": {
+          "dataset_source": "inline-text",
+          "dataset_size": 18,
+          "has_key": true
+        }
+      }
+    ],
+    "dataset_fingerprints": [
+      {
+        "timestamp": "2025-10-13T08:18:20.648717Z",
+        "name": "api_dataset",
+        "sha256": "5f8f04f6a3a892aaabbddb6cf273894493773960d4a325b105fee46eef4304f1",
+        "source": "inline-text",
+        "size": 18
+      }
+    ],
+    "validation_results": [
+      {
+        "timestamp": "2025-10-13T08:18:20.649475Z",
+        "name": "key_check",
+        "status": "passed",
+        "details": {
+          "message": "key passes heuristic validation"
+        }
+      },
+      {
+        "timestamp": "2025-10-13T08:18:20.650266Z",
+        "name": "dataset_parse",
+        "status": "passed",
+        "details": {
+          "entries": 1,
+          "details": {
+            "type": "dict"
+          }
+        }
+      }
+    ],
+    "warnings": [],
+    "status": "completed",
+    "ended_at": "2025-10-13T08:18:20.651044Z",
+    "summary": {
+      "dataset_sha": "5f8f04f6a3a892aaabbddb6cf273894493773960d4a325b105fee46eef4304f1",
+      "parsed_entries": 1,
+      "matched_dataset": null
+    }
+  }
+}

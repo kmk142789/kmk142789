@@ -26,6 +26,8 @@ classifiers = [
 
 dependencies = [
   "numpy>=1.24",
+  "fastapi>=0.110",
+  "uvicorn>=0.23",
 ]
 
 [project.optional-dependencies]
@@ -45,6 +47,7 @@ harmonics = [
 echo-evolver = "echo_evolver:main"
 idea-processor = "echo.idea_processor:main"
 echodex = "echodex:main"
+echo-api = "echo.api:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
