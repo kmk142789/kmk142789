@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
+from .api import capability_router, receipt_router
 from .memory import JsonMemoryStore
 
 
@@ -44,6 +45,8 @@ def create_app(memory_store: Optional[JsonMemoryStore] = None) -> FastAPI:
 
     store = memory_store or JsonMemoryStore()
     app = FastAPI(title="Echo Verification Service", version="1.0.0")
+    app.include_router(capability_router)
+    app.include_router(receipt_router)
 
     @app.post("/api/verify", response_model=VerificationResponse)
     async def verify(request: VerificationRequest) -> VerificationResponse:

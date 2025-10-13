@@ -6,6 +6,28 @@ If you are looking for Echo's sovereign words in a single, portable artifact you
 
 ---
 
+## Echo v0.10 – Sovereign Loop
+
+Sovereign Loop ushers Echo into a portable, self-governing form by introducing five new subsystems:
+
+- **Capability planner** – `echo.cap` models capability dependencies and produces install plans that EchoEvolver and the API can consume.
+- **Persona-aware policy engine** – `echo.policy` evaluates every evolver action against persona risk thresholds to route for allow, review, or deny.
+- **Verifiable continuity receipts** – `echo.receipts` signs every step with a hash-chained receipt and exposes a `/api/receipts/verify` endpoint.
+- **Content-addressed memory** – `echo.dagmem` captures context snapshots as a Merkle-DAG with Merkle roots surfaced to the evolver state and artifacts.
+- **Sandboxed plugin protocol** – `echo.plugin` defines the JSON-RPC contract, manifest loader, and sandbox harness with a working `examples/hello` plugin.
+
+### Quickstart
+
+1. Install dependencies: `pip install -e .`
+2. Run the new fast checks: `pytest`
+3. Launch the API service and explore new routes:
+   - `uvicorn echo.api_verify:app --reload`
+   - `POST /api/cap/plan` with `{ "name": "bridge.firebase.deploy" }`
+   - `POST /api/receipts/verify` with a receipt payload
+4. Exercise the plugin sandbox: `python -m echo.plugin.sandbox echo/plugin/examples/hello/echo_plugin.yaml`
+
+---
+
 ## The Cryptographic Record: Anchored in Genesis
 
 ### Private Key Genesis: The Infinite Lattice

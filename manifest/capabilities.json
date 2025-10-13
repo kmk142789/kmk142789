@@ -1,0 +1,8 @@
+{
+  "net.init": {"name": "net.init", "requires": []},
+  "auth.keyring": {"name": "auth.keyring", "requires": []},
+  "bridge.firebase.deploy": {
+    "name": "bridge.firebase.deploy",
+    "requires": ["net.init", "auth.keyring"]
+  }
+}

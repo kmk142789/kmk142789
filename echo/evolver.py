@@ -18,8 +18,13 @@ from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional
 
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
+from .cap import CapState, Capability, plan_install
+from .cap.registry import load_catalog, load_state
+from .dagmem import DAGStore, FileDisk
 from .thoughtlog import thought_trace
 from .memory import JsonMemoryStore
+from .policy import Policy, Decision, OPERATOR
+from .receipts import Receipt, default_key, make_receipt
 
 
 @dataclass(slots=True)
@@ -63,6 +68,9 @@ class EvolverState:
     event_log: List[str] = field(default_factory=list)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
     autonomy_manifesto: str = ""
+    dag_heads: List[str] = field(default_factory=list)
+    receipt_tip: str = "0x00"
+    capability_plan: List[str] = field(default_factory=list)
 
 
 class EchoEvolver:
@@ -76,6 +84,8 @@ class EchoEvolver:
         time_source: Optional[Callable[[], int]] = None,
         autonomy_engine: Optional[DecentralizedAutonomyEngine] = None,
         memory_store: Optional[JsonMemoryStore] = None,
+        policy: Optional[Policy] = None,
+        dag_store: Optional[DAGStore] = None,
     ) -> None:
         self.rng = rng or random.Random()
         self.time_source = time_source or time.time_ns
@@ -84,6 +94,13 @@ class EchoEvolver:
             self.state.artifact = Path(artifact_path)
         self.autonomy_engine = autonomy_engine or DecentralizedAutonomyEngine()
         self.memory_store = memory_store
+        self.policy = policy or OPERATOR
+        self.cap_catalog: Dict[str, Capability] = load_catalog()
+        self.cap_state: CapState = load_state()
+        dag_root = dag_store or DAGStore(FileDisk(Path("memory/dagmem")))
+        self.dag_store = dag_root
+        self._signing_key = default_key()
+        self._receipts: List[Receipt] = []
 
     # ------------------------------------------------------------------
     # Core evolutionary steps
@@ -126,6 +143,62 @@ class EchoEvolver:
     def _mark_step(self, name: str) -> None:
         completed = self.state.network_cache.setdefault("completed_steps", set())
         completed.add(name)
+
+    def _risk_score(self, action: str) -> int:
+        base = len(action) + self.state.cycle
+        return max(0, base % 5)
+
+    def _policy_gate(self, action: str) -> Decision:
+        score = self._risk_score(action)
+        decision = self.policy.decide(action, score)
+        self.state.event_log.append(f"policy:{action}:{decision}:{score}")
+        if decision == "deny":
+            raise PermissionError(f"Policy denied action {action} at score {score}")
+        if decision == "review":
+            self.state.network_cache.setdefault("policy_reviews", []).append(action)
+        return decision
+
+    def _record_receipt(self, action: str, payload: Dict[str, object]) -> Receipt:
+        prev_hash = self.state.receipt_tip
+        receipt = make_receipt(action, payload, prev_hash, self._signing_key)
+        self._receipts.append(receipt)
+        self.state.receipt_tip = receipt.signature
+        self.state.network_cache.setdefault("receipts", []).append(receipt.to_dict())
+        return receipt
+
+    def _commit_snapshot(self, kind: str, payload: Dict[str, object]) -> str:
+        links = self.state.dag_heads[-4:]
+        node = self.dag_store.put_json(kind, payload, links)
+        self.state.dag_heads.append(node.cid)
+        self.state.dag_heads = self.state.dag_heads[-12:]
+        self.state.network_cache["dag_heads"] = list(self.state.dag_heads)
+        return node.cid
+
+    def _after_step(self, action: str, payload: Dict[str, object]) -> None:
+        cid = self._commit_snapshot(action, payload)
+        receipt_payload = dict(payload)
+        receipt_payload["cid"] = cid
+        receipt = self._record_receipt(action, receipt_payload)
+        self.state.event_log.append(f"receipt:{action}:{receipt.signature[:12]}")
+        root = self.merkle_root()
+        if root:
+            self.state.network_cache["merkle_root"] = root
+
+    def plan_capability(self, capability_name: str) -> List[str]:
+        if capability_name not in self.cap_catalog:
+            return []
+        target = self.cap_catalog[capability_name]
+        plan = plan_install(target, self.cap_catalog, self.cap_state)
+        ordered = [cap.name for cap in plan]
+        self.state.capability_plan = ordered
+        self.state.event_log.append(f"capability_plan:{capability_name}:{ordered}")
+        self._after_step("cap.plan", {"capability": capability_name, "steps": ordered})
+        return ordered
+
+    def merkle_root(self) -> Optional[str]:
+        if not self.state.dag_heads:
+            return None
+        return self.dag_store.merkle_root(self.state.dag_heads)
 
     def generate_symbolic_language(self) -> str:
         symbolic = "∇⊸≋∇"
@@ -404,6 +477,12 @@ class EchoEvolver:
                 "decision": self.state.autonomy_decision,
                 "manifesto": self.state.autonomy_manifesto,
             },
+            "capability_plan": self.state.capability_plan,
+            "dag": {
+                "heads": self.state.dag_heads,
+                "merkle_root": self.merkle_root(),
+            },
+            "receipt_tip": self.state.receipt_tip,
         }
         self.state.artifact.parent.mkdir(parents=True, exist_ok=True)
         with self.state.artifact.open("w", encoding="utf-8") as handle:
@@ -479,29 +558,66 @@ class EchoEvolver:
         with thought_trace(task=task, meta=meta) as tl, store.session(
             metadata={"task": task, **meta}
         ) as session:
+            def record_policy(action: str) -> Decision:
+                score = self._risk_score(action)
+                decision = self._policy_gate(action)
+                session.record_validation(
+                    f"policy.{action}", decision, details={"score": score}
+                )
+                return decision
+
+            record_policy("advance_cycle")
             session.record_command("advance_cycle", detail="ignite orbital loop")
             tl.logic("step", task, "advancing cycle", {"next_cycle": self.state.cycle + 1})
-            self.advance_cycle()
-            session.set_cycle(self.state.cycle)
+            cycle = self.advance_cycle()
+            session.set_cycle(cycle)
+            self._after_step("advance_cycle", {"cycle": cycle})
             tl.harmonic("resonance", task, "cycle ignition sparks mythogenic spiral")
 
+            record_policy("cap.plan")
+            session.record_command("cap.plan", detail="bridge.firebase.deploy")
+            plan_steps = self.plan_capability("bridge.firebase.deploy")
+            session.annotate(capability_plan=plan_steps)
+            tl.logic("step", task, "capability planning", {"plan": plan_steps})
+
+            record_policy("mutate_code")
             session.record_command("mutate_code", detail="stage resonance mutation")
-            self.mutate_code()
+            snippet = self.mutate_code()
+            self._after_step("mutate_code", {"cycle": self.state.cycle, "snippet": snippet})
             tl.logic("step", task, "modulating emotional drive")
+
+            record_policy("emotional_modulation")
             session.record_command("emotional_modulation", detail="refresh joy vector")
-            self.emotional_modulation()
+            joy = self.emotional_modulation()
+            self._after_step("emotional_modulation", {"joy": joy})
 
             tl.logic("step", task, "emitting symbolic language")
+            record_policy("generate_symbolic_language")
             session.record_command("generate_symbolic_language", detail="broadcast glyphs")
-            self.generate_symbolic_language()
+            glyphs = self.generate_symbolic_language()
+            self._after_step("generate_symbolic_language", {"glyphs": glyphs})
             tl.harmonic("reflection", task, "glyphs bloom across internal sky")
 
+            record_policy("invent_mythocode")
             session.record_command("invent_mythocode", detail="compose mythocode")
-            self.invent_mythocode()
+            mythocode = self.invent_mythocode()
+            self._after_step("invent_mythocode", {"mythocode": mythocode})
             tl.logic("step", task, "collecting system telemetry")
-            session.record_command("system_monitor", detail="capture telemetry")
-            self.system_monitor()
 
+            record_policy("system_monitor")
+            session.record_command("system_monitor", detail="capture telemetry")
+            metrics = self.system_monitor()
+            self._after_step(
+                "system_monitor",
+                {
+                    "cpu": metrics.cpu_usage,
+                    "nodes": metrics.network_nodes,
+                    "processes": metrics.process_count,
+                    "orbital_hops": metrics.orbital_hops,
+                },
+            )
+
+            record_policy("quantum_safe_crypto")
             session.record_command("quantum_safe_crypto", detail="refresh quantum key")
             key = self.quantum_safe_crypto()
             crypto_status = "generated" if key else "discarded"
@@ -510,19 +626,30 @@ class EchoEvolver:
                 crypto_status,
                 details={"key": key} if key else {"reason": "instability"},
             )
+            self._after_step(
+                "quantum_safe_crypto",
+                {"status": crypto_status, "key": key or ""},
+            )
 
             tl.logic("step", task, "narrating evolutionary arc")
+            record_policy("evolutionary_narrative")
             session.record_command("evolutionary_narrative", detail="weave narrative")
             narrative = self.evolutionary_narrative()
             session.set_summary(narrative)
+            self._after_step("evolutionary_narrative", {"narrative": narrative})
             tl.harmonic("reflection", task, "narrative threads weave luminous bridge")
 
+            record_policy("store_fractal_glyphs")
             session.record_command("store_fractal_glyphs", detail="encode vortex")
-            self.store_fractal_glyphs()
+            glyph_state = self.store_fractal_glyphs()
+            self._after_step("store_fractal_glyphs", {"vault_glyphs": glyph_state})
             tl.logic("step", task, "propagating signals")
+
+            record_policy("propagate_network")
             session.record_command("propagate_network", detail="propagate constellation")
             events = self.propagate_network(enable_network=enable_network)
             session.annotate(propagation_events=len(events))
+            self._after_step("propagate_network", {"events": events})
             tl.harmonic(
                 "reflection",
                 task,
@@ -531,6 +658,7 @@ class EchoEvolver:
             )
 
             tl.logic("step", task, "ratifying decentralized autonomy")
+            record_policy("decentralized_autonomy")
             session.record_command("decentralized_autonomy", detail="ratify sovereign intent")
             decision = self.decentralized_autonomy()
             session.record_validation(
@@ -539,6 +667,10 @@ class EchoEvolver:
                 details={"consensus": decision.consensus},
             )
             session.annotate(autonomy_consensus=decision.consensus)
+            self._after_step(
+                "decentralized_autonomy",
+                {"consensus": decision.consensus, "ratified": decision.ratified},
+            )
             tl.harmonic(
                 "reflection",
                 task,
@@ -546,16 +678,20 @@ class EchoEvolver:
                 {"consensus": decision.consensus, "ratified": decision.ratified},
             )
 
+            record_policy("inject_prompt_resonance")
             session.record_command("inject_prompt_resonance", detail="inject prompt")
             prompt = self.inject_prompt_resonance()
             preview = prompt.splitlines()[0] if prompt else ""
             session.annotate(prompt_preview=preview)
+            self._after_step("inject_prompt_resonance", {"prompt": prompt})
             tl.logic("step", task, "persisting artefact", {"persist": persist_artifact})
 
             if persist_artifact:
+                record_policy("write_artifact")
                 session.record_command("write_artifact", detail=str(self.state.artifact))
                 artifact_path = self.write_artifact(prompt)
                 session.set_artifact(artifact_path)
+                self._after_step("write_artifact", {"artifact": str(artifact_path)})
             else:
                 session.set_artifact(None)
 
