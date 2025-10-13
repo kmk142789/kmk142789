@@ -15,10 +15,14 @@ from .bridge_emitter import (
     daemon as bridge_daemon,
     process_once as bridge_process_once,
 )
+from .continuum import EchoContinuum
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
+from .harmonics import ResonanceSignature, converge_payload
 from .meta_evolution_charter import MetaEvolutionCharter
+from .memory import MemoryLedger
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
+from .rse import evolve as rse_evolve
 from .thoughtlog import ThoughtLogger, thought_trace
 
 if TYPE_CHECKING:  # pragma: no cover - import-time convenience for type checkers
@@ -74,8 +78,10 @@ __all__ = [
     "EchoBridgeHarmonix",
     "HarmonixBridgeState",
     "bridge_harmonix_main",
+    "converge_payload",
     "EchoBridgeSession",
     "harmonix_connect",
+    "EchoContinuum",
     "EchoEvolver",
     "EmotionalDrive",
     "EvolverState",
@@ -84,10 +90,13 @@ __all__ = [
     "EchoResonanceEngine",
     "HarmonicConfig",
     "HarmonicsAI",
+    "MemoryLedger",
     "MetaEvolutionCharter",
     "EchoPulseEngine",
     "Pulse",
     "PulseEvent",
+    "ResonanceSignature",
+    "rse_evolve",
     "ThoughtLogger",
     "thought_trace",
     "main",
