@@ -1,0 +1,24 @@
+name: Feature
+description: Request a new capability
+labels: ["enhancement"]
+body:
+  - type: input
+    id: context
+    attributes:
+      label: Context / Why
+      placeholder: "What value? Who depends on it?"
+    validations:
+      required: true
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track
+      options:
+        ["track:glyph-cloud", "track:continuum", "track:memory-store", "track:federated-pulse", "track:opencode", "track:wallets"]
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      placeholder: "Given/When/Then…"
