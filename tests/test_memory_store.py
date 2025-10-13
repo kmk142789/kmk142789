@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import pytest
+
 from echo.memory import JsonMemoryStore
 
 
@@ -33,3 +35,30 @@ def test_memory_store_records_cycle(tmp_path):
     log_text = log.read_text()
     assert "advance_cycle" in log_text
     assert "Dataset Fingerprints" in log_text
+
+
+def test_recent_executions_limit_and_metadata(tmp_path):
+    store = JsonMemoryStore(
+        storage_path=tmp_path / "memory.json", log_path=tmp_path / "log.md"
+    )
+
+    for cycle, group in [(1, "alpha"), (2, "beta"), (3, "alpha")]:
+        with store.session(metadata={"group": group}) as session:
+            session.set_cycle(cycle)
+            session.record_command("cycle", detail=str(cycle))
+
+    all_runs = store.recent_executions()
+    assert [ctx.cycle for ctx in all_runs] == [1, 2, 3]
+
+    alpha_runs = store.recent_executions(metadata_filter={"group": "alpha"})
+    assert [ctx.cycle for ctx in alpha_runs] == [1, 3]
+
+    latest_run = store.recent_executions(limit=1)
+    assert len(latest_run) == 1
+    assert latest_run[0].cycle == 3
+
+    empty = store.recent_executions(limit=0)
+    assert empty == []
+
+    with pytest.raises(ValueError):
+        store.recent_executions(limit=-1)
