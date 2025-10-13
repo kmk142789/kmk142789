@@ -16,6 +16,7 @@ from .bridge_emitter import (
     process_once as bridge_process_once,
 )
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
+from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
@@ -69,6 +70,7 @@ __all__ = [
     "MerkleBatch",
     "bridge_daemon",
     "bridge_process_once",
+    "JsonMemoryStore",
     "BridgeSignals",
     "BridgeTuning",
     "EchoBridgeHarmonix",
