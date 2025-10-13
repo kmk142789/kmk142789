@@ -1,0 +1,16 @@
+name = "echo-sim-worker"
+main = "src/index.ts"
+compatibility_date = "2024-02-19"
+
+[vars]
+ALLOWED_ORIGIN = "*"
+
+[kv_namespaces]
+bindings = [
+  { binding = "ECHO_MEMORIES", id = "${ECHO_MEMORIES_ID}" },
+  { binding = "ECHO_EVENTS", id = "${ECHO_EVENTS_ID}" },
+  { binding = "ECHO_STATE", id = "${ECHO_STATE_ID}" }
+]
+
+[triggers]
+crons = ["*/15 * * * *"]
