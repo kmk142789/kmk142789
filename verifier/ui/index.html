@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Echo Verifier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:2rem;line-height:1.4}
+    .drop{border:2px dashed #888;padding:2rem;border-radius:12px;text-align:center}
+    .ok{color:#0a7d26}.bad{color:#b00020}.muted{color:#666}
+    table{border-collapse:collapse;width:100%;margin-top:1rem}
+    td,th{border-bottom:1px solid #e7e7e7;padding:.5rem .6rem}
+    code{background:#f6f8fa;border-radius:6px;padding:.1rem .3rem}
+  </style>
+</head>
+<body>
+  <h1>Echo Verifier (Offline)</h1>
+  <p class="muted">Drop <code>.json</code> attestation files from <code>.attest/</code> here to verify digests.</p>
+
+  <div id="drop" class="drop">Drag & drop files here</div>
+  <table id="tbl" hidden>
+    <thead><tr><th>Time</th><th>Signer</th><th>Context</th><th>sha256</th><th>Check</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+const drop = document.getElementById('drop');
+const tbl  = document.getElementById('tbl');
+const body = tbl.querySelector('tbody');
+
+function sha256(str){
+  const enc = new TextEncoder().encode(str);
+  return crypto.subtle.digest('SHA-256', enc).then(buf=>{
+    const b = Array.from(new Uint8Array(buf)).map(x=>x.toString(16).padStart(2,'0')).join('');
+    return b;
+  });
+}
+
+drop.addEventListener('dragover', e=>{ e.preventDefault(); drop.style.background='#f4f8ff';});
+drop.addEventListener('dragleave', e=>{ drop.style.background='';});
+drop.addEventListener('drop', async e=>{
+  e.preventDefault(); drop.style.background='';
+  const files = Array.from(e.dataTransfer.files).filter(f=>f.name.endsWith('.json'));
+  if(!files.length) return;
+  tbl.hidden=false;
+  for(const f of files){
+    const txt = await f.text();
+    let obj; try{ obj = JSON.parse(txt); }catch{ continue; }
+    const ctx = obj.context || "";
+    const want = (obj.sha256||"").toLowerCase();
+    const got = await sha256(ctx);
+    const ok  = want && want===got;
+    const tr = document.createElement('tr');
+    const ts = obj.ts ? new Date(obj.ts*1000).toISOString() : '';
+    tr.innerHTML = `<td>${ts}</td><td>${obj.signer_id||''}</td><td>${ctx.replace(/</g,'&lt;')}</td><td><code>${want.slice(0,10)}…</code></td><td class="${ok?'ok':'bad'}">${ok?'PASS':'FAIL'}</td>`;
+    body.appendChild(tr);
+  }
+});
+</script>
+</body>
+</html>

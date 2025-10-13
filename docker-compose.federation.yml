@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  n1:
+    build: .
+    image: echo/continuum-api:0.1.0
+    container_name: echo-n1
+    environment: { ECHO_LEDGER_DIR: /data/ledger }
+    volumes: [ "./.attest:/data/ledger:ro" ]
+    ports: [ "8101:8000" ]
+  n2:
+    build: .
+    image: echo/continuum-api:0.1.0
+    container_name: echo-n2
+    environment: { ECHO_LEDGER_DIR: /data2/ledger }
+    volumes: [ "./.attest2:/data2/ledger:ro" ]
+    ports: [ "8102:8000" ]
+  n3:
+    build: .
+    image: echo/continuum-api:0.1.0
+    container_name: echo-n3
+    environment: { ECHO_LEDGER_DIR: /data3/ledger }
+    volumes: [ "./.attest3:/data3/ledger:ro" ]
+    ports: [ "8103:8000" ]
