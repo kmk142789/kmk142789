@@ -3,72 +3,20 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "echo-evolver"
+name = "echo-glyph-cloud"
 version = "0.1.0"
-description = "Installable packaging for the EchoEvolver mythogenic simulation suite."
+description = "Echo glyph cloud: deterministic, textless glyph anchors"
 readme = "README.md"
-requires-python = ">=3.10"
-license = {file = "LICENSE"}
-authors = [
-  {name = "Echo Collective"},
-]
-keywords = ["echo", "mythocode", "simulation", "cryptography", "information-retrieval"]
-classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3 :: Only",
-]
-
-dependencies = [
-  "numpy>=1.24",
-  "fastapi>=0.110",
-  "uvicorn>=0.23",
-  "httpx>=0.24",
-]
-
-[project.optional-dependencies]
-dev = [
-  "pytest>=8",
-]
-analysis = [
-  "scikit-learn>=1.3",
-]
-harmonics = [
-  "scipy>=1.10",
-  "matplotlib>=3.7",
-  "sounddevice>=0.4",
-]
+requires-python = ">=3.9"
+authors = [{name="Echo", email="security@example.org"}]
+license = {text="Apache-2.0"}
 
 [project.scripts]
-echo-evolver = "echo_evolver:main"
-idea-processor = "echo.idea_processor:main"
-echodex = "echodex:main"
+echo-glyph = "glyph_cloud.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = [
-  "echo*",
-  "echo_eye_ai*",
-]
+include = ["glyph_cloud*", "verifier*"]
 
 [tool.setuptools]
-py-modules = [
-  "echo_cascade",
-  "echo_constellation",
-  "echo_evolver",
-  "echo_manifest",
-  "echo_universal_key_agent",
-]
-
-[tool.setuptools.exclude-package-data]
-"*" = [
-  "tests/*",
-  "docs/*",
-  "proofs/*",
-  "code/*",
-]
+py-modules = ["echo_glyphs"]

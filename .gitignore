@@ -1,7 +1,11 @@
+__pycache__/
+*.pyc
+.env
+.attest/
+dist/
+site/
+glyphs_out/
 node_modules
 npm-debug.log
-dist
 .DS_Store
-
-# EchoDex auto-refiner state
 .echodex_state.json

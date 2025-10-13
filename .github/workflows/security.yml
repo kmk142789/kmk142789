@@ -1,0 +1,21 @@
+name: Security Scan
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install tools
+        run: |
+          pip install bandit==1.7.9
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks_$(uname -s)_$(uname -m).tar.gz \
+            | tar -xz && sudo mv gitleaks /usr/local/bin/
+      - name: Bandit (Python)
+        run: bandit -q -r . || true
+      - name: Gitleaks
+        run: gitleaks detect --no-banner --redact --verbose || true
