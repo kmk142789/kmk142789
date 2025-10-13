@@ -1,0 +1,36 @@
+name: Deploy Echo Sim Worker
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'echo-sim/worker/**'
+      - '.github/workflows/worker.yml'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: echo-sim/worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Wrangler
+        run: npm install --global wrangler
+
+      - name: Publish Worker
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          ECHO_MEMORIES_ID: ${{ secrets.CF_ECHO_MEMORIES_ID }}
+          ECHO_EVENTS_ID: ${{ secrets.CF_ECHO_EVENTS_ID }}
+          ECHO_STATE_ID: ${{ secrets.CF_ECHO_STATE_ID }}
+        run: wrangler publish --var ALLOWED_ORIGIN=${{ secrets.ECHO_FRONTEND_ORIGIN || '*' }}
