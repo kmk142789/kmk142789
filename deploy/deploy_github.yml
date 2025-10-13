@@ -1,0 +1,45 @@
+name: Echo Deploy
+
+on:
+  push:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+env:
+  ECHO_DEPLOY_ENABLE: ${{ secrets.ECHO_DEPLOY_ENABLE || '0' }}
+
+jobs:
+  deploy:
+    if: ${{ env.ECHO_DEPLOY_ENABLE != '0' && env.ECHO_DEPLOY_ENABLE != 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+
+      - name: Run Echo verification report
+        env:
+          ECHO_DEPLOY_ENABLE: ${{ env.ECHO_DEPLOY_ENABLE }}
+        run: |
+          python -m echo.api --self-test
+
+      - name: Collect memory artifacts
+        run: |
+          mkdir -p out/deploy
+          cp memory/memory_store.json out/deploy/memory_store.json
+          cp ECHO_LOG.md out/deploy/ECHO_LOG.md
+
+      - name: Upload deployment artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: echo-memory
+          path: out/deploy
