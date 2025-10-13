@@ -544,3 +544,12 @@ Artifacts:
 
 When the loop completes a pass it prints the next `EchoEvolver` recommendation, making the creative flow observable, tamper-evident, and easy to stitch into your auto-commit rituals.
 
+## Quickstart
+```bash
+make setup
+make glyph
+make attest
+make run-api
+# open http://localhost:8000/health
+```
+

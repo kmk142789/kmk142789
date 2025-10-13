@@ -1,0 +1,21 @@
+name: Release Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag"
+        required: true
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python3 -m pip install requests
+          python3 .github/tools/release_notes.py "${{ github.event.inputs.tag }}" > RELEASE_NOTES.md
+      - uses: EndBug/add-and-commit@v9
+        with:
+          add: "RELEASE_NOTES.md"
+          message: "chore: update RELEASE_NOTES.md for ${{ github.event.inputs.tag }}"

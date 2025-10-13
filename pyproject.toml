@@ -54,6 +54,9 @@ where = ["."]
 include = [
   "echo*",
   "echo_eye_ai*",
+  "glyph_cloud*",
+  "federated_pulse*",
+  "api*",
 ]
 
 [tool.setuptools]
