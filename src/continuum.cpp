@@ -260,5 +260,77 @@ bool Continuum::verify_manifest(const EpochManifest& manifest,
     return ed25519_verify(pubkey, message, manifest.sig);
 }
 
+LineageReport Continuum::analyze_lineage(
+    std::size_t limit, const std::vector<uint8_t>& pubkey_override) const {
+    LineageReport report;
+    const auto manifests = history(limit);
+    if (manifests.empty()) {
+        return report;
+    }
+
+    report.epoch_count = manifests.size();
+    report.earliest_start_ms = manifests.front().start_ms;
+    report.latest_end_ms = manifests.back().end_ms;
+
+    const auto& verification_key = pubkey_override.empty() ? id_.doc().public_key
+                                                          : pubkey_override;
+    const bool have_verification_key = !verification_key.empty();
+    if (!have_verification_key) {
+        report.signatures_valid = false;
+    }
+
+    const EpochManifest* previous = nullptr;
+    for (const auto& manifest : manifests) {
+        if (!report.earliest_start_ms ||
+            manifest.start_ms < *report.earliest_start_ms) {
+            report.earliest_start_ms = manifest.start_ms;
+        }
+        if (!report.latest_end_ms || manifest.end_ms > *report.latest_end_ms) {
+            report.latest_end_ms = manifest.end_ms;
+        }
+
+        if (previous) {
+            if (manifest.parent_id != previous->epoch_id) {
+                report.is_linear = false;
+                report.lineage_breaks.push_back(previous->epoch_id + "->" +
+                                               manifest.epoch_id);
+            }
+        } else if (!manifest.parent_id.empty()) {
+            report.is_linear = false;
+            report.lineage_breaks.push_back("genesis->" + manifest.epoch_id);
+        }
+
+        if (have_verification_key) {
+            if (!verify_manifest(manifest, verification_key)) {
+                report.signatures_valid = false;
+                report.signature_failures.push_back(manifest.epoch_id);
+            }
+        }
+
+        if (manifest.end_ms >= manifest.start_ms) {
+            report.total_duration_ms += manifest.end_ms - manifest.start_ms;
+        }
+
+        for (const auto& [metric_key, metric_value] : manifest.metrics) {
+            auto& summary = report.metrics[metric_key];
+            summary.samples += 1;
+            summary.total += metric_value;
+            if (summary.samples == 1) {
+                summary.minimum = metric_value;
+                summary.maximum = metric_value;
+            } else {
+                summary.minimum = std::min(summary.minimum, metric_value);
+                summary.maximum = std::max(summary.maximum, metric_value);
+            }
+            summary.average =
+                summary.total / static_cast<double>(summary.samples);
+        }
+
+        previous = &manifest;
+    }
+
+    return report;
+}
+
 }  // namespace echo
 
