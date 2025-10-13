@@ -1,0 +1,44 @@
+name: Pause Bots (Emergency)
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why pause?"
+        required: true
+        default: "safety-pause"
+
+jobs:
+  pause:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Display context
+        run: |
+          echo "Pausing bots and CI triggers. Reason: ${{ github.event.inputs.reason }}"
+
+      - name: Disable Actions for this repo (admin token required)
+        env:
+          GH_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
+        run: |
+          # Requires a repo-admin scoped token in GH_ADMIN_TOKEN
+          gh api -X PUT repos/${{ github.repository }}/actions/permissions -f enabled=false || true
+
+      - name: Cancel running workflows
+        env:
+          GH_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
+        run: |
+          gh run list --limit 100 --json databaseId,status,url | jq -r '.[] | select(.status=="in_progress" or .status=="queued") | .databaseId' \
+            | xargs -I{} gh run cancel {}
+          echo "Requested cancel of in-flight runs."
+
+      - name: Lock PRs with bot labels (soft quarantine)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
+        run: |
+          gh pr list --search "label:bot label:automation state:open" --json number | jq -r '.[].number' \
+            | xargs -I{} gh pr lock {} --reason "resolved"
+          echo "Locked open bot PRs."

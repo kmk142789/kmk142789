@@ -1,0 +1,38 @@
+name: Release Train
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build artifacts
+        run: |
+          mkdir -p dist
+          # Example: package glyph CLI or verifier kit if present
+          tar -czf dist/verifier-kit.tgz verifier || true
+          echo "Artifacts built."
+
+      - name: Generate SBOM (cyclonedx for Python if present)
+        run: |
+          pipx install cyclonedx-bom || pip install cyclonedx-bom
+          if [ -f requirements.txt ]; then cyclonedx-py -j -o dist/sbom.json || true; fi
+
+      - name: Generate provenance (SLSA generator — placeholder)
+        run: |
+          echo '{ "provenance": "placeholder v1" }' > dist/provenance.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
