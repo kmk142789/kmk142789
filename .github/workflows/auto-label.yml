@@ -1,0 +1,14 @@
+name: Auto Label by Path
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}

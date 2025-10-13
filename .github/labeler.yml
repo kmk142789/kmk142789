@@ -1,0 +1,18 @@
+track:glyph-cloud:
+  - "glyph_cloud/**"
+  - "docs/glyph-cloud.md"
+track:continuum:
+  - "api/**"
+  - "verifier/**"
+  - "docs/continuum.md"
+track:memory-store:
+  - "telemetry/**"
+  - ".attest/**"
+  - "docs/verifier.md"
+track:federated-pulse:
+  - "federated_pulse/**"
+track:opencode:
+  - ".github/**"
+  - "GOVERNANCE.md"
+track:wallets:
+  - "wallet_attest/**"
