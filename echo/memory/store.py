@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 
 @dataclass(slots=True)
@@ -22,6 +22,23 @@ class ExecutionContext:
     cycle: Optional[int] = None
     artifact: Optional[str] = None
     summary: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, Any]) -> "ExecutionContext":
+        """Rehydrate an :class:`ExecutionContext` from serialized data."""
+
+        return cls(
+            timestamp=str(payload.get("timestamp", "")),
+            commands=[dict(entry) for entry in payload.get("commands", [])],
+            dataset_fingerprints={
+                name: dict(meta) for name, meta in payload.get("dataset_fingerprints", {}).items()
+            },
+            validations=[dict(entry) for entry in payload.get("validations", [])],
+            metadata=dict(payload.get("metadata", {})),
+            cycle=payload.get("cycle"),
+            artifact=payload.get("artifact"),
+            summary=payload.get("summary"),
+        )
 
 
 class JsonMemoryStore:
@@ -65,6 +82,49 @@ class JsonMemoryStore:
 
         for name, path in self.core_datasets.items():
             session.fingerprint_dataset(name, path)
+
+    def recent_executions(
+        self,
+        *,
+        limit: Optional[int] = None,
+        metadata_filter: Optional[Mapping[str, Any]] = None,
+    ) -> List[ExecutionContext]:
+        """Return the most recent execution contexts, optionally filtered.
+
+        Args:
+            limit: Maximum number of executions to return. ``None`` returns all
+                available executions, while ``0`` returns an empty list. Values
+                below zero raise :class:`ValueError`.
+            metadata_filter: Optional mapping of metadata keys and values that
+                must match for an execution to be included in the result.
+
+        Returns:
+            A list of :class:`ExecutionContext` instances in chronological
+            order, truncated to the requested ``limit`` if provided.
+        """
+
+        if limit is not None and limit < 0:
+            raise ValueError("limit must be non-negative")
+
+        payload = self._load()
+        executions = [
+            ExecutionContext.from_dict(entry)
+            for entry in payload.get("executions", [])
+        ]
+
+        if metadata_filter:
+            def matches(context: ExecutionContext) -> bool:
+                return all(context.metadata.get(key) == value for key, value in metadata_filter.items())
+
+            executions = [context for context in executions if matches(context)]
+
+        if limit == 0:
+            return []
+
+        if limit is not None:
+            executions = executions[-limit:]
+
+        return executions
 
     # ------------------------------------------------------------------
     # Internal helpers
