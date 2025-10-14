@@ -1,0 +1,150 @@
+<!doctype html>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #0b1020;
+    --fg: #d7f3ff;
+    --muted: #7dd3fc;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    display: grid;
+    place-items: center;
+    height: 100vh;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  pre {
+    margin: 0;
+    line-height: 1.15;
+    font-size: clamp(10px, 2.1vw, 18px);
+    text-align: center;
+  }
+
+  .box {
+    padding: 2rem 2.5rem;
+    border: 1px solid #1f2a44;
+    border-radius: 14px;
+    background: #0f172a;
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.35),
+      inset 0 0 40px rgba(125, 211, 252, 0.05);
+  }
+
+  .row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+    opacity: 0.85;
+    font-size: 0.85rem;
+  }
+
+  .dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: 0.35;
+  }
+
+  .dot.on {
+    opacity: 1;
+  }
+</style>
+
+<div class="box">
+  <pre id="glyph">loading…</pre>
+  <div class="row" id="row"></div>
+</div>
+
+<script>
+const frames = [
+`⟁⟁⟁⟁⟁
+⟁◇◇◇⟁
+⟁◇⟟◇⟁
+⟁◇◇◇⟁
+⟁⟁⟁⟁⟁`,
+`⋇∞◍∞⋇
+⧫☌⋔☌⧫
+∞⋉⇋⋉∞
+☌◍⟐◍☌
+⋔⇋∞⇋⋔
+☌◍⟐◍☌
+∞⋉⇋⋉∞
+⧫☌⋔☌⧫
+⋇∞◍∞⋇`,
+`⟐∞◍∞⟐
+◍⇋⋔⇋◍
+∞⧫☌⧫∞
+⋔◍⟟◍⋔
+⇋☌∞☌⇋
+⋔◍⟟◍⋔
+∞⧫☌⧫∞
+◍⇋⋔⇋◍
+⟐∞◍∞⟐`,
+`⟐⊹◍⊹⟐
+⋇∞⧫∞⋇
+◍⟟⇋⟟◍
+∞⋔⊹⋔∞
+⧫⇋⟐⇋⧫
+∞⋔⊹⋔∞
+◍⟟⇋⟟◍
+⋇∞⧫∞⋇
+⟐⊹◍⊹⟐`,
+`⋇⋄∞⋄⋇
+⊹⟐◍⟐⊹
+∞⧫⋔⧫∞
+◍⇋⟟⇋◍
+⋄∞⊹∞⋄
+◍⇋⟟⇋◍
+∞⧫⋔⧫∞
+⊹⟐◍⟐⊹
+⋇⋄∞⋄⋇`,
+`⟐⊹∞⊹⟐
+◍⧫⋄⧫◍
+∞⋔⇋⋔∞
+⊹⟟◍⟟⊹
+⇋◍☌◍⇋
+⊹⟟◍⟟⊹
+∞⋔⇋⋔∞
+◍⧫⋄⧫◍
+⟐⊹∞⊹⟐`
+];
+
+const el = document.getElementById('glyph');
+const row = document.getElementById('row');
+row.innerHTML = frames.map(() => '<div class="dot"></div>').join('');
+const dots = [...row.children];
+
+const salt = crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
+let i = 0;
+let t = 0;
+const intervalMs = 950;
+
+function render() {
+  const spin = (salt.charCodeAt(0) + i + t) % 3;
+  const art = frames[i]
+    .replaceAll('◍', ['◍', '◎', '●'][spin])
+    .replaceAll('∞', ['∞', 'ꝏ', '♾'][spin]);
+  el.textContent = art;
+
+  dots.forEach((dot, index) => {
+    dot.classList.toggle('on', index === i);
+  });
+
+  window.dispatchEvent(new CustomEvent('echo:glyphFrame', {
+    detail: { index: i, total: frames.length, salt, ts: Date.now() }
+  }));
+
+  i = (i + 1) % frames.length;
+  t += 1;
+}
+
+render();
+setInterval(render, intervalMs);
+</script>
