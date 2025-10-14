@@ -29,17 +29,20 @@ request an aggregated snapshot via command-line flags.
 from __future__ import annotations
 
 import argparse
+import ast
 import cmd
 import shlex
 import textwrap
 import json
 from dataclasses import dataclass, field
+from getpass import getpass
 from typing import Dict, Iterable, List, Optional, Sequence
 
 from .bridge_emitter import BridgeEmitter
 from .evolver import EchoEvolver, EvolverState
 from .memory import JsonMemoryStore
 from .pulse import EchoPulseEngine, Pulse
+from .vault import Vault, VaultPolicy, open_vault
 
 
 def _coerce_value(value: str) -> object:
@@ -187,6 +190,8 @@ class EchoNexusPortal(cmd.Cmd):
         self.pulse_engine = EchoPulseEngine()
         self.bridge = BridgeEmitter()
         self._last_state: Optional[EvolverState] = None
+        self._vault: Optional[Vault] = None
+        self._vault_path: Optional[str] = None
 
         self._cycle_parser = argparse.ArgumentParser(prog="cycle", add_help=False)
         self._cycle_parser.add_argument("--network", dest="network", action="store_true")
@@ -194,6 +199,121 @@ class EchoNexusPortal(cmd.Cmd):
         self._cycle_parser.add_argument("--persist", dest="persist", action="store_true")
         self._cycle_parser.add_argument("--no-persist", dest="persist", action="store_false")
         self._cycle_parser.set_defaults(network=self.network_enabled, persist=self.persist_artifact)
+
+    # ------------------------------------------------------------------
+    # Vault integration
+    # ------------------------------------------------------------------
+    def default(self, line: str) -> None:
+        if line.startswith("vault."):
+            try:
+                self._handle_vault_command(line)
+            except Exception as exc:  # pragma: no cover - interactive feedback
+                print(f"vault error: {exc}")
+            return
+        super().default(line)
+
+    def _handle_vault_command(self, expression: str) -> None:
+        try:
+            parsed = ast.parse(expression, mode="eval")
+        except SyntaxError as exc:
+            raise ValueError("invalid vault command") from exc
+        if not isinstance(parsed.body, ast.Call):
+            raise ValueError("vault commands must be function calls")
+        func = parsed.body.func
+        if not (
+            isinstance(func, ast.Attribute)
+            and isinstance(func.value, ast.Name)
+            and func.value.id == "vault"
+        ):
+            raise ValueError("unsupported vault command")
+        command = func.attr
+        args = [self._vault_eval(arg) for arg in parsed.body.args]
+        kwargs = {kw.arg: self._vault_eval(kw.value) for kw in parsed.body.keywords}
+        handler = getattr(self, f"_vault_{command}", None)
+        if handler is None:
+            raise ValueError(f"unknown vault command: {command}")
+        handler(*args, **kwargs)
+
+    def _vault_eval(self, node: ast.AST):
+        if isinstance(node, ast.Constant):
+            return node.value
+        if isinstance(node, ast.List):
+            return [self._vault_eval(item) for item in node.elts]
+        if isinstance(node, ast.Dict):
+            return {
+                self._vault_eval(key): self._vault_eval(value)
+                for key, value in zip(node.keys, node.values)
+            }
+        raise ValueError("unsupported literal in vault command")
+
+    def _close_vault(self) -> None:
+        if self._vault is not None:
+            self._vault.close()
+            self._vault = None
+            self._vault_path = None
+
+    def _vault_open(self, path: str) -> None:
+        passphrase = getpass("Vault passphrase: ")
+        self._close_vault()
+        self._vault = open_vault(path, passphrase)
+        self._vault_path = path
+        print(f"vault ready → {path}")
+
+    def _require_vault(self) -> Vault:
+        if self._vault is None:
+            raise RuntimeError("vault.open(path) must be called first")
+        return self._vault
+
+    def _vault_import(
+        self,
+        label: str,
+        key: str,
+        fmt: str,
+        tags: Optional[List[str]] = None,
+        policy: Optional[Dict[str, object]] = None,
+    ) -> None:
+        vault = self._require_vault()
+        tag_list = list(tags) if tags else []
+        policy_obj = VaultPolicy(**policy) if policy else VaultPolicy()
+        record = vault.import_key(
+            label=label,
+            key=key,
+            fmt=fmt,
+            tags=tag_list,
+            policy=policy_obj,
+        )
+        print(
+            f"vault import → id={record.id} label={record.label} tags={','.join(record.tags)}"
+        )
+
+    def _vault_find(self, q: Optional[str] = None, tags: Optional[List[str]] = None) -> None:
+        vault = self._require_vault()
+        records = vault.find(q=q, tags=list(tags) if tags else None)
+        for record in records:
+            print(
+                f"vault record → {record.id} label={record.label} uses={record.use_count}"
+            )
+
+    def _vault_sign(self, record_id: str, payload_hex: str, repeat: int = 1) -> None:
+        vault = self._require_vault()
+        if repeat < 1:
+            raise ValueError("repeat must be >= 1")
+        payload = bytes.fromhex(payload_hex)
+        for _ in range(repeat):
+            result = vault.sign(record_id, payload, rand_nonce=True)
+            record = result["record"]
+            print(
+                f"vault sign → sig={result['sig'][:16]}… uses={record.use_count} ts={result['ts']:.0f}"
+            )
+
+    def _vault_policy(self, record_id: str, set: Optional[Dict[str, object]] = None) -> None:  # noqa: A002 - match command syntax
+        vault = self._require_vault()
+        policy_obj = VaultPolicy(**(set or {}))
+        record = vault.set_policy(record_id, policy_obj)
+        print(
+            "vault policy → "
+            f"uses={record.policy.max_sign_uses} cooldown={record.policy.cooldown_s}"
+        )
 
     # ------------------------------------------------------------------
     # Cycle control
@@ -484,6 +604,7 @@ class EchoNexusPortal(cmd.Cmd):
         """Exit the portal."""
 
         _ = arg
+        self._close_vault()
         print("Echo Nexus Portal closing. 🜂")
         return True
 
