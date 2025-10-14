@@ -29,6 +29,8 @@ dependencies = [
   "fastapi>=0.110",
   "uvicorn>=0.23",
   "httpx>=0.24",
+  "python-dotenv>=1.0",
+  "PyYAML>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -54,6 +56,7 @@ where = ["."]
 include = [
   "echo*",
   "echo_eye_ai*",
+  "echo_meta_agent*",
 ]
 
 [tool.setuptools]
@@ -72,3 +75,9 @@ py-modules = [
   "proofs/*",
   "code/*",
 ]
+
+[project.entry-points."echo_meta_agent.plugins"]
+template = "echo_meta_agent.adapters.template_adapter:PLUGIN"
+aladdin = "echo_meta_agent.adapters.aladdin_adapter:PLUGIN"
+langgraph = "echo_meta_agent.adapters.langgraph_adapter:PLUGIN"
+nanintel = "echo_meta_agent.adapters.nanintel_adapter:PLUGIN"
