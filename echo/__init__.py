@@ -15,6 +15,7 @@ from .bridge_emitter import (
     daemon as bridge_daemon,
     process_once as bridge_process_once,
 )
+from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
@@ -66,10 +67,13 @@ __all__ = [
     "BridgeConfig",
     "BridgeEmitter",
     "BridgeState",
+    "EchoNexusPortal",
     "DecentralizedAutonomyEngine",
     "MerkleBatch",
     "bridge_daemon",
     "bridge_process_once",
+    "PortalSnapshot",
+    "launch_portal",
     "JsonMemoryStore",
     "BridgeSignals",
     "BridgeTuning",
