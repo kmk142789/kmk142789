@@ -1,3 +1,5 @@
 site_name: EchoGlyphNet Docs
 nav:
   - Home: index.md
+  - Echo:
+      - Amplification Engine: echo/amplification.md

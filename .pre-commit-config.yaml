@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: echo-amplify-sync
+        name: Echo Amplify Snapshot Sync
+        entry: python -m echo --log-path state/amplify_log.jsonl --manifest-path echo_manifest.json amplify now
+        language: system
+        pass_filenames: false
