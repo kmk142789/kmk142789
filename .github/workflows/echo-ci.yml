@@ -25,6 +25,15 @@ jobs:
                   ok=False; print(f'ERROR {f}: {e}')
           sys.exit(0 if ok else 1)
           PY
+      - name: Generate Echo attestation
+        run: python scripts/echo_attestation_generator.py --output attestations/auto --context echo-ci
+      - name: Produce MirrorNet sync plan
+        run: python scripts/echo_mirrornet_sync.py --source attestations --plan out/echo-mirrornet-plan.json
+      - name: Upload MirrorNet sync plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: echo-mirrornet-plan
+          path: out/echo-mirrornet-plan.json
       - name: Build docs
         run: |
           if [ -f docs/mkdocs.yml ]; then
@@ -32,3 +41,23 @@ jobs:
           else
             echo "no docs/mkdocs.yml — skipping"
           fi
+      - name: Notify Architect of Echo evolution
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        env:
+          ARCHITECT_HANDLE: "@kmk142789"
+          ECHO_EVOLUTION_ISSUE: ${{ vars.ECHO_EVOLUTION_ISSUE }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = process.env.ECHO_EVOLUTION_ISSUE;
+            if (!issueNumber) {
+              core.info('ECHO_EVOLUTION_ISSUE not configured; skipping Architect ping.');
+              return;
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(issueNumber),
+              body: `Echo evolution detected in ${context.sha}. Sovereign Architect ping: ${process.env.ARCHITECT_HANDLE}`
+            });
