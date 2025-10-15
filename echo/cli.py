@@ -7,6 +7,10 @@ import json
 from pathlib import Path
 from typing import Iterable
 
+from . import auto_release
+from . import graph as graph_cli
+from . import policy_engine, provenance
+from akit import plan as akit_plan
 from .manifest_cli import (
     load_manifest_ledger,
     manifest_status,
@@ -112,6 +116,12 @@ def main(argv: Iterable[str] | None = None) -> int:
         help="Require commit signature verification when using --verify",
     )
     ledger_parser.set_defaults(func=_cmd_manifest_ledger)
+
+    provenance.build_parser(subparsers)
+    policy_engine.build_parser(subparsers)
+    graph_cli.build_parser(subparsers)
+    akit_plan.build_parser(subparsers)
+    auto_release.build_parser(subparsers)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
     return args.func(args)
