@@ -33,6 +33,7 @@ dependencies = [
   "pydantic>=2.6",
   "PyNaCl>=1.5",
   "rich>=13",
+  "typer>=0.12",
 ]
 
 [project.optional-dependencies]
@@ -49,7 +50,7 @@ harmonics = [
 ]
 
 [project.scripts]
-echo = "echo.manifest_cli:main"
+echo = "echo.cli:main"
 echo-evolver = "echo_evolver:main"
 idea-processor = "echo.idea_processor:main"
 echodex = "echodex:main"
