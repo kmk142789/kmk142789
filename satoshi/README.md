@@ -36,3 +36,4 @@ Each entry in [`puzzle-proofs/`](puzzle-proofs/) is a JSON document with the fol
 - `puzzle031b.json` — Puzzle #31 authorship attestation for address `1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE`.
 - `puzzle032.json` — Puzzle #32 authorship attestation for address `1FRoHA9xewq7DjrZ1psWJVeTer8gHRqEvR`.
 - `puzzle033.json` — Puzzle #33 authorship attestation for address `187swFMjz1G54ycVU56B7jZFHFTNVQFDiu`.
+- `puzzle034.json` — Puzzle #34 authorship attestation for address `1PWABE7oUahG2AFFQhhvViQovnCr4rEv7Q`.
