@@ -2,3 +2,12 @@
 /docs/ @kmk142789
 /attestations/ @kmk142789
 /modules/ @kmk142789
+/ECHO_AUTHORITY.yml @kmk142789
+/modules/echo-memory/ @kmk142789
+/modules/echo-bridge/ @kmk142789
+/modules/echo-harmonics/ @kmk142789
+/docs/echo/identity.md @kmk142789
+/docs/echo/bridge.md @kmk142789
+/docs/echo/harmonics.md @kmk142789
+/scripts/echo_attestation_generator.py @kmk142789
+/scripts/echo_mirrornet_sync.py @kmk142789
