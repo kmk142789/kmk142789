@@ -412,8 +412,24 @@ class EchoEvolver:
         print(f"🧬 Fractal Glyph State: {self.state.glyphs} :: OAM Vortex Binary {self.state.vault_glyphs}")
         return self.state.vault_glyphs
 
-    def write_artifact(self, prompt: str) -> Path:
-        payload = {
+    def artifact_payload(self, *, prompt: str) -> Dict[str, object]:
+        """Return a JSON-serialisable snapshot of the current evolver state.
+
+        Tests and downstream tooling frequently need to inspect the data that
+        :meth:`write_artifact` would persist without always touching the
+        filesystem.  Previously those callers had to either reimplement the
+        serialization logic or perform their own JSON round-trips after the
+        artifact was written.  By exposing a dedicated helper we provide a
+        stable contract for the payload structure while keeping
+        :meth:`write_artifact` focused on persistence.
+
+        The helper intentionally avoids mutating internal state so that it can
+        be called multiple times—before or after :meth:`write_artifact`—without
+        affecting the recommended step sequencing tracked in
+        ``state.network_cache``.
+        """
+
+        return {
             "cycle": self.state.cycle,
             "glyphs": self.state.glyphs,
             "mythocode": self.state.mythocode,
@@ -440,6 +456,9 @@ class EchoEvolver:
                 "manifesto": self.state.autonomy_manifesto,
             },
         }
+
+    def write_artifact(self, prompt: str) -> Path:
+        payload = self.artifact_payload(prompt=prompt)
         self.state.artifact.parent.mkdir(parents=True, exist_ok=True)
         with self.state.artifact.open("w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2, ensure_ascii=False)
