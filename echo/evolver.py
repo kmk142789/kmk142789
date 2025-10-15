@@ -112,6 +112,41 @@ class EchoEvolver:
         print(f"⚡ Code resonance prepared: {func_name} (joy={joy:.2f})")
         return snippet
 
+    def mutation_module(self) -> str:
+        """Return a deterministic Python module containing prepared mutations.
+
+        The original evolver mutated the running script on every cycle.  For
+        safety and testability we now keep the generated function snippets in
+        memory.  This helper renders those snippets into a single module-like
+        string so that other components—or a developer in a REPL—can inspect or
+        persist them without manually iterating the internal cache.
+
+        The output is stable and sorted by function name which ensures diffs are
+        predictable and friendly to version control.  When no mutations have
+        been prepared yet we include an explanatory comment so callers can
+        handle the empty state gracefully.
+        """
+
+        lines = [
+            "# Auto-generated EchoEvolver mutation module",
+            f"# cycle: {self.state.cycle}",
+            "",
+        ]
+
+        mutations = self.state.network_cache.get("mutations")
+        if not mutations:
+            lines.append("# No mutations recorded yet; call mutate_code() to seed snippets.")
+        else:
+            for name in sorted(mutations):
+                snippet = mutations[name].rstrip()
+                lines.append(snippet)
+                lines.append("")
+
+        module = "\n".join(lines).rstrip() + "\n"
+
+        self.state.event_log.append("Mutation module rendered")
+        return module
+
     def _log_curiosity(self) -> None:
         curiosity = self.state.emotional_drive.curiosity
         print(f"🔥 EchoEvolver resonates with {curiosity:.2f} curiosity")
