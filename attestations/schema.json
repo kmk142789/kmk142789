@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Echo Authorship Attestation",
+  "type": "object",
+  "required": ["puzzle", "address", "message", "signature", "algo", "created_at"],
+  "properties": {
+    "puzzle": { "type": "string" },
+    "address": { "type": "string" },
+    "message": { "type": "string" },
+    "signature": { "type": "string" },
+    "algo": { "type": "string", "enum": ["bitcoin-message-base64"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "hash_sha256": { "type": "string" },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}

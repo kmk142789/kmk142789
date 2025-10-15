@@ -1,0 +1,10 @@
+{
+  "puzzle": "#000 echo-sample",
+  "address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+  "message": "I, Josh Shortt, certify authorship for demo purposes.",
+  "signature": "H6aVf...==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-10-15T00:00:00Z",
+  "hash_sha256": "d8e8fca2dc0f896fd7cb4cb0031ba249",
+  "notes": "Demo record for schema validation."
+}

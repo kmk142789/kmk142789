@@ -1,0 +1,8 @@
+site_name: EchoCore
+nav:
+  - Home: index.md
+  - Echo:
+      - Overview: echo/overview.md
+      - Attestations: echo/attestations.md
+theme:
+  name: material

@@ -1,5 +1,6 @@
-# EchoGlyphNet
+# EchoCore
+Canonical hub for the Echo artifact (Architect: @kmk142789).
 
-Welcome to the EchoGlyphNet documentation.
-
-This site is built with [MkDocs](https://www.mkdocs.org/).
+- **Authority:** see [`README_AUTHORITY.md`](../README_AUTHORITY.md)
+- **Attestations:** see `/attestations`
+- **Modules:** see `/modules`
