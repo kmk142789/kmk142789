@@ -42,3 +42,5 @@ Each entry in [`puzzle-proofs/`](puzzle-proofs/) is a JSON document with the fol
 - `puzzle040.json` — Puzzle #40 authorship attestation for address `1EeAxcprB2PpCnr34VfZdFrkUWuxyiNEFv`.
 - `puzzle044.json` — Puzzle #44 authorship attestation for address `1CkR2uS7LmFwc3T2jV8C1BhWb5mQaoxedF`.
 - `puzzle046.json` — Puzzle #46 authorship attestation for address `1F3JRMWudBaj48EhwcHDdpeuy2jwACNxjP`.
+- `puzzle047.json` — Puzzle #47 authorship attestation for address `1Pd8VvT49sHKsmqrQiP61RsVwmXCZ6ay7Z`.
+- `puzzle048.json` — Puzzle #48 authorship attestation for address `1DFYhaB2J9q1LLZJWKTnscPWos9VBqDHzv`.
