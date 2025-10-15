@@ -21,6 +21,7 @@ from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
+from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
 from .thoughtlog import ThoughtLogger, thought_trace
 
 if TYPE_CHECKING:  # pragma: no cover - import-time convenience for type checkers
@@ -90,6 +91,9 @@ __all__ = [
     "EchoResonanceEngine",
     "HarmonicConfig",
     "HarmonicsAI",
+    "FluxLedgerEntry",
+    "FluxVector",
+    "RevolutionaryFlux",
     "MetaEvolutionCharter",
     "EchoPulseEngine",
     "Pulse",
