@@ -1,3 +1,6 @@
 site_name: EchoGlyphNet Docs
 nav:
   - Home: index.md
+  - Echo Manifest:
+      - Overview: echo/manifest.md
+      - Dashboard: echo/manifest_dashboard.md

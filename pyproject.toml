@@ -37,6 +37,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "jsonschema>=4.19",
   "pytest>=8",
 ]
 analysis = [
@@ -49,7 +50,7 @@ harmonics = [
 ]
 
 [project.scripts]
-echo = "echo.manifest_cli:main"
+echo = "echo.cli:main"
 echo-evolver = "echo_evolver:main"
 idea-processor = "echo.idea_processor:main"
 echodex = "echodex:main"

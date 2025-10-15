@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.systems/schema/echo_manifest.json",
+  "title": "Echo Manifest",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "engines",
+    "states",
+    "kits",
+    "artifacts",
+    "ci",
+    "meta"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "engines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "path",
+          "kind",
+          "status",
+          "entrypoints",
+          "tests"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "entrypoints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tests": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "states": {
+      "type": "object",
+      "required": [
+        "cycle",
+        "resonance",
+        "amplification",
+        "snapshots"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "cycle": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resonance": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "amplification": {
+          "type": "number"
+        },
+        "snapshots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "engine",
+              "status",
+              "tests"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "engine": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "tests": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "kits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "path",
+          "api",
+          "capabilities"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "api": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "path",
+          "content_hash"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "content_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12}$"
+          }
+        }
+      }
+    },
+    "ci": {
+      "type": "object",
+      "required": [
+        "integration"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "integration": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": [
+        "commit_sha",
+        "branch",
+        "author"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "commit_sha": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: echo-manifest-update
+        name: echo manifest update
+        entry: python tools/echo_manifest.py update
+        language: system
+        pass_filenames: false
