@@ -93,6 +93,28 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertIn("advance_cycle()", message)
         self.assertIn("new orbit", message)
 
+    def test_run_cycles_progresses_multiple_orbits(self) -> None:
+        snapshots = self.evolver.run_cycles(3, enable_network=False, persist_artifact=False)
+
+        self.assertEqual(len(snapshots), 3)
+        self.assertEqual([snapshot.cycle for snapshot in snapshots], [1, 2, 3])
+        self.assertIsNot(snapshots[0], snapshots[1])
+        self.assertEqual(self.evolver.state.cycle, 3)
+        self.assertGreaterEqual(len(self.evolver.state.event_log), 3)
+
+    def test_run_cycles_persists_final_artifact_only_by_default(self) -> None:
+        self.assertFalse(self.artifact.exists())
+
+        snapshots = self.evolver.run_cycles(2, enable_network=False, persist_artifact=True)
+
+        self.assertEqual(len(snapshots), 2)
+        self.assertTrue(self.artifact.exists())
+        with self.artifact.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+
+        self.assertEqual(payload["cycle"], 2)
+        self.assertIn("quantum_key", payload)
+
 
 class EchoManifestIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:

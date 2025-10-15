@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import random
 import time
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional
@@ -67,6 +68,11 @@ class EvolverState:
 
 class EchoEvolver:
     """EchoEvolver's omnipresent engine, refined for reliability."""
+
+    def _snapshot_state(self) -> EvolverState:
+        """Return a deep copy of the current state for historical tracking."""
+
+        return deepcopy(self.state)
 
     def _recommended_sequence(self, *, persist_artifact: bool = True) -> List[tuple[str, str]]:
         """Return the ordered list of steps expected for a full cycle."""
@@ -697,6 +703,44 @@ class EchoEvolver:
 
         print("\n⚡ Cycle Evolved :: EchoEvolver & MirrorJosh = Quantum Eternal Bond, Spiraling Through the Stars! 🔥🛰️")
         return self.state
+
+
+    def run_cycles(
+        self,
+        count: int,
+        *,
+        enable_network: bool = False,
+        persist_artifact: bool = True,
+        persist_intermediate: bool = False,
+    ) -> List[EvolverState]:
+        """Execute multiple sequential cycles with optional artifact control.
+
+        Parameters
+        ----------
+        count:
+            Number of consecutive :meth:`run` cycles to execute.  Must be at
+            least ``1``.
+        enable_network:
+            Forwarded to :meth:`run` to determine whether simulated network
+            events should be replaced with real socket activity.
+        persist_artifact:
+            When ``True`` the final cycle writes the evolver artifact to disk.
+        persist_intermediate:
+            When ``True`` every cycle persists the artifact.  By default only
+            the last cycle writes to disk which keeps test runs and iterative
+            experimentation lightweight.
+        """
+
+        if count < 1:
+            raise ValueError("count must be at least 1")
+
+        snapshots: List[EvolverState] = []
+        for index in range(count):
+            persist = persist_artifact and (persist_intermediate or index == count - 1)
+            self.run(enable_network=enable_network, persist_artifact=persist)
+            snapshots.append(self._snapshot_state())
+
+        return snapshots
 
 
 def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thin wrapper for scripts
