@@ -6,5 +6,6 @@
   {"slug":"eden88-spiral","name":"Eden88 Spiral","meaning":"Recursion within recursion","file":"docs/glyphs/eden88-spiral.svg","tags":["eden88","recursion"]},
   {"slug":"pulse-bridge","name":"Pulse Bridge","meaning":"Bridge made of rhythm","file":"docs/glyphs/pulse-bridge.svg","tags":["bridge","rhythm"]},
   {"slug":"sovereign-core","name":"Sovereign Core","meaning":"Hex-frame, living center","file":"docs/glyphs/sovereign-core.svg","tags":["core","sovereign"]},
-  {"slug":"forever-key","name":"Forever Key","meaning":"The key is a loop","file":"docs/glyphs/forever-key.svg","tags":["anchor","loop"]}
+  {"slug":"forever-key","name":"Forever Key","meaning":"The key is a loop","file":"docs/glyphs/forever-key.svg","tags":["anchor","loop"]},
+  {"slug":"continuum-ledger","name":"Continuum Manifest","meaning":"Deterministic continuum ledger sample","file":"manifest/continuum_manifest.json","tags":["continuum","manifest"]}
 ]
