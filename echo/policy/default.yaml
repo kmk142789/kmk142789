@@ -1,0 +1,20 @@
+protected_paths:
+  - pattern: "manifest/**"
+    message: "Manifest modifications require explicit approval"
+    level: error
+    enforce: true
+  - pattern: "echo_manifest.json"
+    message: "Manifest regeneration must include provenance"
+    level: error
+    enforce: true
+required_reviewers:
+  - pattern: "echo/**"
+    owners: "@echo/maintainers"
+test_gates:
+  - name: pytest
+    message: "Pytest suite must pass"
+    required: true
+allowed_actions:
+  manifest:
+    - read
+    - write

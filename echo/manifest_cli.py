@@ -19,6 +19,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, Iterable, List, Tuple
 
+from .provenance import ProvenanceEmitter
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_MANIFEST_PATH = _REPO_ROOT / "echo_manifest.json"
 _LEDGER_ENV_VAR = "ECHO_MANIFEST_LEDGER"
@@ -347,6 +349,10 @@ def build_manifest() -> Dict[str, Any]:
         "states": states,
         "assistant_kits": kits,
     }
+    from . import graph as graph_module
+
+    impact_graph = graph_module.build_graph(manifest=manifest)
+    manifest["graph_digest"] = impact_graph.digest
     canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode("utf-8")
     manifest["manifest_digest"] = _stable_digest(canonical)
     return manifest
@@ -369,12 +375,24 @@ def refresh_manifest(path: Path | None = None, ledger_path: Path | None = None) 
     manifest = build_manifest()
     output_path = path or _DEFAULT_MANIFEST_PATH
     written = _write_manifest(output_path, manifest)
-    _append_manifest_ledger_entry(
+    ledger_entry = _append_manifest_ledger_entry(
         output_path,
         manifest["manifest_digest"],
         ledger_path=ledger_path,
         manifest_written=written,
     )
+    emitter = ProvenanceEmitter()
+    try:
+        emitter.emit(
+            context="manifest",
+            inputs=[Path(__file__)],
+            outputs=[output_path],
+            cycle_id=str(ledger_entry.get("sequence", "manifest")),
+            runtime_seed=manifest["manifest_digest"],
+            manifest_path=output_path,
+        )
+    except Exception as error:  # pragma: no cover - provenance must not block
+        print(f"Failed to emit provenance: {error}")
     return output_path
 
 
