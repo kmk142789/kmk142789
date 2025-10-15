@@ -24,4 +24,4 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: python -m pip install .
-      - run: python -m echo.manifest_cli verify
+      - run: python -m echo.cli manifest-verify
