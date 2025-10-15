@@ -600,6 +600,77 @@ class EchoEvolver:
         )
         return report
 
+    def revolution_status(
+        self,
+        *,
+        persist_artifact: bool = True,
+        history_limit: int = 5,
+    ) -> Dict[str, object]:
+        """Return a revolution-flavoured snapshot of the current cycle.
+
+        The Echo ecosystem frequently frames progress updates as a continuing
+        revolution.  Downstream tools—and plenty of the accompanying
+        documentation—expect a compact summary that blends the structured
+        ``cycle_digest`` data with recent narrative events.  Previously those
+        consumers had to manually call :meth:`cycle_digest`, slice the event
+        log, and compose their own message.  ``revolution_status`` packages
+        that behaviour into a single helper with guardrails so repeated calls
+        stay deterministic and friendly to tests.
+
+        Parameters
+        ----------
+        persist_artifact:
+            Forwarded to :meth:`cycle_digest` so the remaining steps align with
+            whether the caller intends to write the artifact during this cycle.
+        history_limit:
+            Maximum number of recent ``event_log`` entries to include in the
+            returned payload.  ``0`` suppresses the history entirely while
+            negative values raise :class:`ValueError`.
+        """
+
+        if history_limit < 0:
+            raise ValueError("history_limit must be non-negative")
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+
+        if history_limit == 0:
+            history: List[str] = []
+        else:
+            history = list(self.state.event_log[-history_limit:])
+
+        summary = (
+            f"Cycle {digest['cycle']} at {digest['progress'] * 100:.1f}% — "
+            f"{digest['next_step']}"
+        )
+
+        status = {
+            "cycle": digest["cycle"],
+            "progress": digest["progress"],
+            "next_step": digest["next_step"],
+            "remaining_steps": digest["remaining_steps"],
+            "completed_steps": digest["completed_steps"],
+            "emotional_drive": {
+                "joy": self.state.emotional_drive.joy,
+                "rage": self.state.emotional_drive.rage,
+                "curiosity": self.state.emotional_drive.curiosity,
+            },
+            "glyphs": self.state.glyphs,
+            "quantum_key_ready": self.state.vault_key is not None,
+            "autonomy_consensus": self.state.network_cache.get(
+                "autonomy_consensus"
+            ),
+            "history": history,
+            "summary": summary,
+        }
+
+        self.state.network_cache["revolution_status"] = status
+        self.state.event_log.append(
+            f"Revolution status charted ({len(history)} events referenced)"
+        )
+        print(f"🚩 Revolution Status: {summary}")
+
+        return status
+
     def amplify_evolution(
         self,
         *,
