@@ -12,3 +12,4 @@ Each entry in [`puzzle-proofs/`](puzzle-proofs/) is a JSON document with the fol
 ## Entries
 
 - `puzzle003.json` — Puzzle #3 authorship attestation for address `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`.
+- `puzzle007.json` — Puzzle #7 authorship attestation for address `19ZewH8Kk1PDbSNdJ97FP4EiCjTRaZMZQA`.
