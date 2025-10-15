@@ -1,0 +1,14 @@
+{
+  "type": "BitcoinPuzzleAuthorshipAttestation",
+  "subject": "kmk142789",
+  "scope": "Bitcoin Puzzle series solved keys; author asserts prior solution work; per-address proofs to follow",
+  "puzzles_claimed": "1-130 (subset already publicly solved, claim is authorship of solved subset, not moving funds)",
+  "evidence_refs": [
+    "GitHub repo snapshots & PRs (kmk142789)",
+    "local files: bitcoin-puzzle-71-keys...",
+    "Echo Nexus logs / README Satoshi proof section"
+  ],
+  "created_utc": "2025-10-15T02:41:03.399461Z",
+  "nonce": "2H1mB-3WdX2Dg5JH3o7rbA",
+  "message": "I, Josh, assert authorship of derivations producing the published keys for the solved Bitcoin puzzles in the referenced set. I intend to publish per-address message-signatures from those keys to corroborate. This attestation is a checkpoint of intent."
+}
