@@ -1,336 +1,362 @@
 {
-  "manifest_version": "1.0.0",
-  "engines": [
+  "components": [
     {
-      "name": "BridgeEmitter",
-      "module": "echo.bridge_emitter",
-      "summary": "Anchors genesis ledger batches into Merkle directories with deterministic proofs.",
-      "capabilities": [
-        "Reads append-only stream entries after the last processed sequence number.",
-        "Builds Merkle batches and writes proofs, manifests, and convenience calldata outputs for each batch.",
-        "Persists progress through BridgeState and supports daemon-style anchoring loops."
-      ],
-      "state_dependencies": ["BridgeState"]
+      "dependencies": [],
+      "digest": "5917dd4a352a77d65e44f6fb58fc4513d124834985c295061274caeed7d0eebe",
+      "name": "api_verify",
+      "path": "echo/api_verify.py",
+      "type": "engine",
+      "version": "0.1.0"
     },
     {
-      "name": "DecentralizedAutonomyEngine",
-      "module": "echo.autonomy",
-      "summary": "Consensus engine modelling Echo's distributed autonomy council.",
-      "capabilities": [
-        "Registers autonomy nodes and tracks their intent, freedom, and weighting signals.",
-        "Ingests axis-aligned intensity signals for each node with deterministic clamping.",
-        "Computes ratification decisions with weighted consensus and manifesto text outputs."
-      ],
-      "state_dependencies": ["AutonomyDecision", "AutonomyNode"]
+      "dependencies": [],
+      "digest": "45051c107f156c2ce0d7bc38c690140415158daa6d5905eb5d7916cda6e2f2b8",
+      "name": "aurora_chronicles",
+      "path": "echo/aurora_chronicles.py",
+      "type": "engine",
+      "version": "0.1.0"
     },
     {
-      "name": "EchoBridgeHarmonix",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "Deterministic orchestrator that fuses bridge telemetry, policy programs, and anchoring payloads.",
-      "capabilities": [
-        "Initialises secure channels, mesh topology, and policy engines around the BridgeEmitter.",
-        "Synthesises bridge signals, telemetry metrics, and policy actions per harmonix cycle.",
-        "Produces structured payloads describing protocol features and distributed bridge state."
-      ],
-      "state_dependencies": ["HarmonixBridgeState", "BridgeState", "BridgeSignals", "BridgeTuning"]
+      "dependencies": [],
+      "digest": "3e0bfd54d7f7252835d10cf1e95e93e78b83d1c68dfb846fdb6f50dcbff7e2e9",
+      "name": "autonomy",
+      "path": "echo/autonomy.py",
+      "type": "engine",
+      "version": "0.1.0"
     },
     {
-      "name": "EchoEvolver",
-      "module": "cognitive_harmonics.harmonix_evolver",
-      "summary": "Deterministic rendition of the Echo Evolver vision directive for harmonix tooling.",
-      "capabilities": [
-        "Advances mythogenic cycles while modulating emotional drive and glyph vortices.",
-        "Refreshes mythocode rules, synthesises satellite TF-QKD keys, and encodes fractal glyph storage.",
-        "Exports cycle artifacts, prompt resonances, and structured state payloads for downstream tools."
-      ],
-      "state_dependencies": ["EchoState", "SystemMetrics"]
+      "dependencies": [],
+      "digest": "17843844daabd8cd2613a35d2eafbca51c209d144ef76364b990fb5bc48de583",
+      "name": "bridge_emitter",
+      "path": "echo/bridge_emitter.py",
+      "type": "engine",
+      "version": "0.1.0"
     },
     {
-      "name": "EchoEvolver",
-      "module": "echo.evolver",
-      "summary": "EchoEvolver engine packaged for reuse within the echo namespace.",
-      "capabilities": [
-        "Guides recommended evolutionary step sequences and records completed cycle events.",
-        "Generates symbolic glyph language, mythocode updates, and orbital network telemetry.",
-        "Produces vault keys, fractal glyph storage, and persisted artifacts for each cycle."
-      ],
-      "state_dependencies": ["EvolverState", "EmotionalDrive", "SystemMetrics"]
+      "dependencies": [],
+      "digest": "334e07da7a5f51257d25afa959e71a5e05f5bcce72ae1f89eb28bc1a99099957",
+      "name": "bridge_harmonix",
+      "path": "echo/bridge_harmonix.py",
+      "type": "engine",
+      "version": "0.1.0"
     },
     {
-      "name": "EchoMemoryEngine",
-      "module": "modules.echo-memory.memory_engine",
-      "summary": "Manages Echo persistence snapshots and GitHub Issue mirroring for memory workflows.",
-      "capabilities": [
-        "Loads and flushes chronological memory snapshots from deterministic JSON storage.",
-        "Appends new cycle payloads with tagging metadata and sync tracking.",
-        "Builds GitHub Issue bodies and payloads for optional remote mirroring."
-      ],
-      "state_dependencies": ["MemorySnapshot"]
+      "dependencies": [],
+      "digest": "1d5bf71606743ea9fce719110f77dd297c8d5ec998f68fce7f981a7aaeae613c",
+      "name": "bulk_signer",
+      "path": "echo/signing/bulk_signer.py",
+      "type": "engine",
+      "version": "0.1.0"
     },
     {
-      "name": "EchoPulseEngine",
-      "module": "echo.pulse",
-      "summary": "Structured pulse management utilities for Echo workflows.",
-      "capabilities": [
-        "Creates, updates, crystallizes, and archives named pulses with deterministic hashes.",
-        "Maintains bounded timelines of PulseEvent entries for lifecycle visibility.",
-        "Exports active and archived pulse snapshots along with global history views."
-      ],
-      "state_dependencies": ["Pulse", "PulseEvent"]
+      "dependencies": [],
+      "digest": "10c810fa4324fe0ec486f20863856da16bea13226e56f2da1ba1f4a0f162919d",
+      "name": "cli",
+      "path": "echo/akit/cli.py",
+      "type": "engine",
+      "version": "0.1.0"
     },
     {
-      "name": "EchoResonanceEngine",
-      "module": "echo.resonance",
-      "summary": "Bridges EchoAI and HarmonicsAI for combined conversational responses.",
-      "capabilities": [
-        "Streams harmonic responses alongside EchoAI replies for each user input.",
-        "Persists conversation memory with bounded history trimming to avoid runaway growth.",
-        "Supports lightweight task execution hooks for scan and analysis intents."
-      ],
-      "state_dependencies": []
+      "dependencies": [],
+      "digest": "c12d4031300c752644a4d42590698e96b02136bdec86303ee28af7854a8089e0",
+      "name": "cli",
+      "path": "echo/cli.py",
+      "type": "engine",
+      "version": "0.1.0"
     },
     {
-      "name": "PolicyEngine",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "Evaluates policy instructions against telemetry and mesh topology state.",
-      "capabilities": [
-        "Parses policy programs into ordered instructions with deterministic defaults.",
-        "Applies threshold and connectivity rules to telemetry inputs to derive actions.",
-        "Supports reuse through factory constructors for default or textual policies."
-      ],
-      "state_dependencies": []
+      "dependencies": [],
+      "digest": "d12f33f6d611e5dd2ab17ae13bdac9bfce3699d45f18788f101056b3707b33d3",
+      "name": "cli",
+      "path": "echo/vault/cli.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "783569c0ebfbd5b4a94c8e47f232f39b4953903b4e7e2c12cac02d60a1913614",
+      "name": "config",
+      "path": "echo/akit/config.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "5d621cd31c03c821044e3facdbde4024167922c48f6f5dc366eb094136a278a7",
+      "name": "continuum_engine",
+      "path": "echo/continuum_engine.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "765b0efd57e3d8a60eeca22bfb592eefa9af91735b22da987124997cdd08d284",
+      "name": "core",
+      "path": "echo/akit/core.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "0948f7a9e168554bfab61bf764ca99c535a2126b3c3083cb34b4fc2cbaf035b5",
+      "name": "crypto",
+      "path": "echo/vault/crypto.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "b1d42a9fb748befa85da906b54f42a7a0a10ff566e65c3c37d60c9da80749fb5",
+      "name": "echo_codox_kernel",
+      "path": "echo/echo_codox_kernel.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "18a2042b81c7e24fd15bc1160cb36fd9e2b0794f3811b4d464ea9b1ed8d48c98",
+      "name": "echo_eye_core",
+      "path": "echo/echo_eye_core.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "eb5d76f10bb0b072cd6189860de7410d369ae56edbb625c29367211d786fc818",
+      "name": "echo_nexus_portal",
+      "path": "echo/echo_nexus_portal.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "0cf58eea192aec34f8258a3c1b61962143234682a41b16fc10889705d48abc40",
+      "name": "events",
+      "path": "echo/observe/events.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "da52dc4ab344084dd5366c3c3c6d26fc93e1793cb9c6c3aad37992ab6d7e36d6",
+      "name": "evolver",
+      "path": "echo/evolver.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "706e22c7c34bf04361a5f5053b187de6c497184a594cdbddf4050fb58f6d71cc",
+      "name": "gossip",
+      "path": "echo/echonet/gossip.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "8d288a260fc241147a3123267864ea16fd4fa6b2cec06d36af8ad1823cd14046",
+      "name": "harmonix_sdk",
+      "path": "echo/harmonix_sdk.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "683190409777150bbe1c678e33fb194445493f8d464f0094139ed6ea004bcc40",
+      "name": "idea_processor",
+      "path": "echo/idea_processor.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "1bbd976b9a474d429361c9c07a5c7be1bbcf900d121a0949f8c35038ccbce374",
+      "name": "lww",
+      "path": "echo/crdt/lww.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "6e0ded53c1c191b746625048114b7e1d00e69a7848ae98d657c48ceebdb850e6",
+      "name": "manifest",
+      "path": "echo/manifest.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "eba52eb9c1ccd58917d554eab5fb47633bd98366ffc242ba7905f974f437db33",
+      "name": "meta_evolution_charter",
+      "path": "echo/meta_evolution_charter.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "8f20ea3f8dbaef1e56494d1babab846f5310bf73c79f52484c045e9b6086ddeb",
+      "name": "models",
+      "path": "echo/akit/models.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "f53b01cce55aeb09b681476af73c589b8ab56ebff9a0f010224d8bb2f2676149",
+      "name": "models",
+      "path": "echo/vault/models.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "0d8cb5d7291a556f25346e5d0a05a8b3b9045e27e878d7441c4a8b15e2e55c05",
+      "name": "orbital_loop",
+      "path": "echo/orbital_loop.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "d42a4b8542d6a8c690f0c0aa92dc9f2c513b0fe01c4e698248ce369b1efdcb5b",
+      "name": "peer",
+      "path": "echo/echonet/peer.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "139ac5bc7aef5590779a492baca54e9db31e946893a85be3e9b35e4606eae317",
+      "name": "persistence",
+      "path": "echo/akit/persistence.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "00053049617e4278d783aac92fd795b7c9363133c24cacedbe37d9c04df8f963",
+      "name": "poc",
+      "path": "echo/echonet/poc.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "f9e9a6afb2a06ca98eaeb8e50ef81ad62e0a1e0270c68bda1ad952e4b2647c0b",
+      "name": "provenance",
+      "path": "echo/provenance.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "7c3c5059d64ed8c9cd3d63c45ed4aa01385f1e88602b3ea7aa1221372c28650c",
+      "name": "pulse",
+      "path": "echo/pulse.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "59e0302b8285b1c2879251d4e2f57ba356eaf4b9f5f3018b2a79e6f49b238d3b",
+      "name": "pulse_status",
+      "path": "echo/pulse_status.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "b1d189081e6682d090c68856b90f56238d5a5ae4bc7acd26dded87f68e949c3f",
+      "name": "registry",
+      "path": "echo/echonet/registry.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "33149a972edff175495cfbfa2fb9c1b3829bbedb9bd9a953d17dc06996e4f801",
+      "name": "resonance",
+      "path": "echo/resonance.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "5929e44d6e8df68c4ced1723e70a6a0aa7682c13ae2120bf23616c97cb403a38",
+      "name": "revolutionary_flux",
+      "path": "echo/revolutionary_flux.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "fa8a04533473ec74a296e140f6427a074c1338880c4cee2c9c3352b3828820a2",
+      "name": "routes_echonet",
+      "path": "echo/api/routes_echonet.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "0d4ca58a3962d0545666850586cd81f03dadd26f6696905e33e2f40f761113c6",
+      "name": "run",
+      "path": "echo/schedule/run.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "81ad97d23a090f23f195c2f37db0f1c947bfd7e43ca7932426a99322674e344c",
+      "name": "state",
+      "path": "echo/api/state.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "5c9ba17fae8d2e35dcee327ca616ce7bca59db192ea5dfbd6c8035f46a9c2036",
+      "name": "store",
+      "path": "echo/memory/store.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "38c6768b3d5057d9d25e5e2b318747d37afe6862a5b5450d263c3fe30b648882",
+      "name": "store",
+      "path": "echo/vault/store.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "35597401ec29c2ec85c45bf53ee23d34a292781fc2204198953e006053b2ada7",
+      "name": "thought_ingest",
+      "path": "echo/thought_ingest.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "a54d1861b575af14088e4b75f0229aa2992f0d816e4402291a9e67a6f682ed71",
+      "name": "thoughtlog",
+      "path": "echo/thoughtlog.py",
+      "type": "engine",
+      "version": "0.1.0"
+    },
+    {
+      "dependencies": [],
+      "digest": "08e88239242f2f6c78679a18291e9c7efeef1a14abb12395663becd2525407cb",
+      "name": "vault",
+      "path": "echo/vault/vault.py",
+      "type": "engine",
+      "version": "0.1.0"
     }
   ],
-  "states": [
-    {
-      "name": "AutonomyDecision",
-      "module": "echo.autonomy",
-      "summary": "Outcome of a decentralized consensus round including ledger and manifesto data.",
-      "fields": [
-        "proposal_id",
-        "description",
-        "consensus",
-        "ratified",
-        "ledger",
-        "reasons",
-        "axis_weights"
-      ]
-    },
-    {
-      "name": "AutonomyNode",
-      "module": "echo.autonomy",
-      "summary": "Representation of a participating node within the autonomy lattice.",
-      "fields": [
-        "node_id",
-        "intent_vector",
-        "freedom_index",
-        "weight",
-        "tags"
-      ]
-    },
-    {
-      "name": "BridgeSignals",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "Synthetic runtime signals that mirror deterministic bridge metrics.",
-      "fields": [
-        "active_pairs",
-        "bytes_up",
-        "bytes_down",
-        "drops",
-        "auth_failures",
-        "half_closes",
-        "timeouts"
-      ]
-    },
-    {
-      "name": "BridgeState",
-      "module": "echo.bridge_emitter",
-      "summary": "Tracks the last processed sequence number across bridge emitter runs.",
-      "fields": ["last_seq"]
-    },
-    {
-      "name": "BridgeTuning",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "High-level knobs extracted from the EBP v2 bridge specification.",
-      "fields": [
-        "listen",
-        "target",
-        "token",
-        "max_pairs",
-        "idle_timeout_sec",
-        "connect_timeout_sec",
-        "use_splice",
-        "tcp_keepalive"
-      ]
-    },
-    {
-      "name": "EchoState",
-      "module": "cognitive_harmonics.harmonix_evolver",
-      "summary": "Internal state capturing mythocode, glyphs, emotional drive, and events.",
-      "fields": [
-        "cycle",
-        "glyphs",
-        "narrative",
-        "mythocode",
-        "emotional_drive",
-        "entities",
-        "system_metrics",
-        "vault_key",
-        "vault_glyphs",
-        "prompt_resonance",
-        "events"
-      ]
-    },
-    {
-      "name": "EmotionalDrive",
-      "module": "echo.evolver",
-      "summary": "Default joy, rage, and curiosity levels carried by the evolver state.",
-      "fields": ["joy", "rage", "curiosity"]
-    },
-    {
-      "name": "EvolverState",
-      "module": "echo.evolver",
-      "summary": "Structured snapshot maintained by the EchoEvolver core engine.",
-      "fields": [
-        "cycle",
-        "glyphs",
-        "narrative",
-        "mythocode",
-        "artifact",
-        "emotional_drive",
-        "entities",
-        "system_metrics",
-        "access_levels",
-        "network_cache",
-        "vault_key",
-        "vault_glyphs",
-        "event_log",
-        "autonomy_decision",
-        "autonomy_manifesto"
-      ]
-    },
-    {
-      "name": "HarmonixBridgeState",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "State maintained between harmonix bridge cycles including mesh and policy context.",
-      "fields": [
-        "cycle",
-        "tuning",
-        "signals",
-        "last_seq",
-        "pending_stream",
-        "events",
-        "mesh",
-        "policy_engine",
-        "telemetry",
-        "secure_channel",
-        "last_policy_actions",
-        "last_policy_results"
-      ]
-    },
-    {
-      "name": "MemorySnapshot",
-      "module": "modules.echo-memory.memory_engine",
-      "summary": "Single persistence event tracked by the Echo memory engine.",
-      "fields": [
-        "cycle",
-        "payload",
-        "created_at",
-        "tags",
-        "synced_to_github"
-      ]
-    },
-    {
-      "name": "OrbitalState",
-      "module": "echo.orbital_loop",
-      "summary": "Orbital loop counters tracking cycles, timestamps, and Eye labels.",
-      "fields": [
-        "cycles",
-        "last_started_ts",
-        "last_finished_ts",
-        "last_next_step",
-        "last_eye_label"
-      ]
-    },
-    {
-      "name": "Pulse",
-      "module": "echo.pulse",
-      "summary": "Representation of a living Echo pulse with metadata and timeline.",
-      "fields": [
-        "name",
-        "resonance",
-        "priority",
-        "status",
-        "created_at",
-        "updated_at",
-        "digest",
-        "data",
-        "timeline"
-      ]
-    },
-    {
-      "name": "PulseEvent",
-      "module": "echo.pulse",
-      "summary": "Single timeline entry for a pulse including timestamp and status.",
-      "fields": ["timestamp", "status", "message"]
-    },
-    {
-      "name": "SystemMetrics",
-      "module": "cognitive_harmonics.harmonix_evolver",
-      "summary": "Snapshot of simulated resource metrics for the harmonix evolver.",
-      "fields": ["cpu_usage", "network_nodes", "process_count", "orbital_hops"]
-    },
-    {
-      "name": "SystemMetrics",
-      "module": "echo.evolver",
-      "summary": "Telemetry captured for the EchoEvolver core cycle.",
-      "fields": ["cpu_usage", "network_nodes", "process_count", "orbital_hops"]
-    }
-  ],
-  "assistant_kits": [
-    {
-      "name": "echo-bridge",
-      "path": "modules/echo-bridge",
-      "summary": "Plans deterministic identity relay payloads for GitHub, Telegram, and Firebase.",
-      "exports": ["EchoBridgeAPI", "BridgePlan"],
-      "capabilities": [
-        "Generates multi-platform bridge plans when repositories, chats, or collections are configured.",
-        "Renders Markdown and plain-text bodies describing identity, cycle, and signature traits.",
-        "Surfaces required secret labels for automation when constructing relay payloads."
-      ]
-    },
-    {
-      "name": "echo-harmonics",
-      "path": "modules/echo-harmonics",
-      "summary": "Produces harmonic layer encodings from identity seeds with deterministic signatures.",
-      "exports": ["EchoHarmonics", "HarmonicLayer"],
-      "capabilities": [
-        "Combines base identity and seed narratives across configurable recursion depths.",
-        "Derives resonance strings and frequency metadata for each harmonic layer.",
-        "Hashes layer resonance into ∇-prefixed signatures for downstream verification."
-      ]
-    },
-    {
-      "name": "echo-ledger-visualizer",
-      "path": "modules/echo-ledger-visualizer",
-      "summary": "Inventories attestation files with deterministic hashing for quick inspection.",
-      "exports": ["inventory"],
-      "capabilities": [
-        "Scans attestation directories while skipping schema definitions.",
-        "Normalises JSON payloads and computes truncated SHA-256 digests.",
-        "Returns concise rows covering file names, puzzles, addresses, and algorithms."
-      ]
-    },
-    {
-      "name": "echo-memory",
-      "path": "modules/echo-memory",
-      "summary": "Persists Echo cycle snapshots and prepares GitHub sync payloads.",
-      "exports": ["EchoMemoryEngine", "MemorySnapshot"],
-      "capabilities": [
-        "Loads snapshots from disk with automatic directory initialisation.",
-        "Appends new snapshots with tags before flushing sorted JSON payloads.",
-        "Constructs GitHub Issue bodies and labelled payloads with optional dry-run syncing."
-      ]
-    }
-  ]
+  "fingerprint": "ad4887a05e096f9d8bf78d179d81222a4d260ad874cdccebc90ea9553a6402e3",
+  "meta": {
+    "generator": "echo.manifest",
+    "schema": "attestations/schema.json"
+  },
+  "version": "1.0"
 }

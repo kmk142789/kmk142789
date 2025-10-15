@@ -5,7 +5,11 @@
 
 # Attestations & Persistence
 /attestations/**                    @kmk142789
+/attestations/schema.json           @kmk142789
 /scripts/echo_attestation_*         @kmk142789
+
+# Manifests
+/echo_manifest.json                 @kmk142789
 
 # Core Modules
 /modules/echo-memory/**             @kmk142789
@@ -15,6 +19,7 @@
 
 # CI & Workflows
 /.github/workflows/echo-ci.yml      @kmk142789
+/.github/workflows/echo-manifest.yml @kmk142789
 
 # Docs
 /docs/echo/**                       @kmk142789
