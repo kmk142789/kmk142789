@@ -4,5 +4,6 @@ nav:
   - Echo:
       - Overview: echo/overview.md
       - Attestations: echo/attestations.md
+      - Manifest: echo/manifest.md
 theme:
   name: material

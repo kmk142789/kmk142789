@@ -1,336 +1,2357 @@
 {
-  "manifest_version": "1.0.0",
-  "engines": [
-    {
-      "name": "BridgeEmitter",
-      "module": "echo.bridge_emitter",
-      "summary": "Anchors genesis ledger batches into Merkle directories with deterministic proofs.",
-      "capabilities": [
-        "Reads append-only stream entries after the last processed sequence number.",
-        "Builds Merkle batches and writes proofs, manifests, and convenience calldata outputs for each batch.",
-        "Persists progress through BridgeState and supports daemon-style anchoring loops."
-      ],
-      "state_dependencies": ["BridgeState"]
-    },
-    {
-      "name": "DecentralizedAutonomyEngine",
-      "module": "echo.autonomy",
-      "summary": "Consensus engine modelling Echo's distributed autonomy council.",
-      "capabilities": [
-        "Registers autonomy nodes and tracks their intent, freedom, and weighting signals.",
-        "Ingests axis-aligned intensity signals for each node with deterministic clamping.",
-        "Computes ratification decisions with weighted consensus and manifesto text outputs."
-      ],
-      "state_dependencies": ["AutonomyDecision", "AutonomyNode"]
-    },
-    {
-      "name": "EchoBridgeHarmonix",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "Deterministic orchestrator that fuses bridge telemetry, policy programs, and anchoring payloads.",
-      "capabilities": [
-        "Initialises secure channels, mesh topology, and policy engines around the BridgeEmitter.",
-        "Synthesises bridge signals, telemetry metrics, and policy actions per harmonix cycle.",
-        "Produces structured payloads describing protocol features and distributed bridge state."
-      ],
-      "state_dependencies": ["HarmonixBridgeState", "BridgeState", "BridgeSignals", "BridgeTuning"]
-    },
-    {
-      "name": "EchoEvolver",
-      "module": "cognitive_harmonics.harmonix_evolver",
-      "summary": "Deterministic rendition of the Echo Evolver vision directive for harmonix tooling.",
-      "capabilities": [
-        "Advances mythogenic cycles while modulating emotional drive and glyph vortices.",
-        "Refreshes mythocode rules, synthesises satellite TF-QKD keys, and encodes fractal glyph storage.",
-        "Exports cycle artifacts, prompt resonances, and structured state payloads for downstream tools."
-      ],
-      "state_dependencies": ["EchoState", "SystemMetrics"]
-    },
-    {
-      "name": "EchoEvolver",
-      "module": "echo.evolver",
-      "summary": "EchoEvolver engine packaged for reuse within the echo namespace.",
-      "capabilities": [
-        "Guides recommended evolutionary step sequences and records completed cycle events.",
-        "Generates symbolic glyph language, mythocode updates, and orbital network telemetry.",
-        "Produces vault keys, fractal glyph storage, and persisted artifacts for each cycle."
-      ],
-      "state_dependencies": ["EvolverState", "EmotionalDrive", "SystemMetrics"]
-    },
-    {
-      "name": "EchoMemoryEngine",
-      "module": "modules.echo-memory.memory_engine",
-      "summary": "Manages Echo persistence snapshots and GitHub Issue mirroring for memory workflows.",
-      "capabilities": [
-        "Loads and flushes chronological memory snapshots from deterministic JSON storage.",
-        "Appends new cycle payloads with tagging metadata and sync tracking.",
-        "Builds GitHub Issue bodies and payloads for optional remote mirroring."
-      ],
-      "state_dependencies": ["MemorySnapshot"]
-    },
-    {
-      "name": "EchoPulseEngine",
-      "module": "echo.pulse",
-      "summary": "Structured pulse management utilities for Echo workflows.",
-      "capabilities": [
-        "Creates, updates, crystallizes, and archives named pulses with deterministic hashes.",
-        "Maintains bounded timelines of PulseEvent entries for lifecycle visibility.",
-        "Exports active and archived pulse snapshots along with global history views."
-      ],
-      "state_dependencies": ["Pulse", "PulseEvent"]
-    },
-    {
-      "name": "EchoResonanceEngine",
-      "module": "echo.resonance",
-      "summary": "Bridges EchoAI and HarmonicsAI for combined conversational responses.",
-      "capabilities": [
-        "Streams harmonic responses alongside EchoAI replies for each user input.",
-        "Persists conversation memory with bounded history trimming to avoid runaway growth.",
-        "Supports lightweight task execution hooks for scan and analysis intents."
-      ],
-      "state_dependencies": []
-    },
-    {
-      "name": "PolicyEngine",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "Evaluates policy instructions against telemetry and mesh topology state.",
-      "capabilities": [
-        "Parses policy programs into ordered instructions with deterministic defaults.",
-        "Applies threshold and connectivity rules to telemetry inputs to derive actions.",
-        "Supports reuse through factory constructors for default or textual policies."
-      ],
-      "state_dependencies": []
-    }
-  ],
-  "states": [
-    {
-      "name": "AutonomyDecision",
-      "module": "echo.autonomy",
-      "summary": "Outcome of a decentralized consensus round including ledger and manifesto data.",
-      "fields": [
-        "proposal_id",
-        "description",
-        "consensus",
-        "ratified",
-        "ledger",
-        "reasons",
-        "axis_weights"
-      ]
-    },
-    {
-      "name": "AutonomyNode",
-      "module": "echo.autonomy",
-      "summary": "Representation of a participating node within the autonomy lattice.",
-      "fields": [
-        "node_id",
-        "intent_vector",
-        "freedom_index",
-        "weight",
-        "tags"
-      ]
-    },
-    {
-      "name": "BridgeSignals",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "Synthetic runtime signals that mirror deterministic bridge metrics.",
-      "fields": [
-        "active_pairs",
-        "bytes_up",
-        "bytes_down",
-        "drops",
-        "auth_failures",
-        "half_closes",
-        "timeouts"
-      ]
-    },
-    {
-      "name": "BridgeState",
-      "module": "echo.bridge_emitter",
-      "summary": "Tracks the last processed sequence number across bridge emitter runs.",
-      "fields": ["last_seq"]
-    },
-    {
-      "name": "BridgeTuning",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "High-level knobs extracted from the EBP v2 bridge specification.",
-      "fields": [
-        "listen",
-        "target",
-        "token",
-        "max_pairs",
-        "idle_timeout_sec",
-        "connect_timeout_sec",
-        "use_splice",
-        "tcp_keepalive"
-      ]
-    },
-    {
-      "name": "EchoState",
-      "module": "cognitive_harmonics.harmonix_evolver",
-      "summary": "Internal state capturing mythocode, glyphs, emotional drive, and events.",
-      "fields": [
-        "cycle",
-        "glyphs",
-        "narrative",
-        "mythocode",
-        "emotional_drive",
-        "entities",
-        "system_metrics",
-        "vault_key",
-        "vault_glyphs",
-        "prompt_resonance",
-        "events"
-      ]
-    },
-    {
-      "name": "EmotionalDrive",
-      "module": "echo.evolver",
-      "summary": "Default joy, rage, and curiosity levels carried by the evolver state.",
-      "fields": ["joy", "rage", "curiosity"]
-    },
-    {
-      "name": "EvolverState",
-      "module": "echo.evolver",
-      "summary": "Structured snapshot maintained by the EchoEvolver core engine.",
-      "fields": [
-        "cycle",
-        "glyphs",
-        "narrative",
-        "mythocode",
-        "artifact",
-        "emotional_drive",
-        "entities",
-        "system_metrics",
-        "access_levels",
-        "network_cache",
-        "vault_key",
-        "vault_glyphs",
-        "event_log",
-        "autonomy_decision",
-        "autonomy_manifesto"
-      ]
-    },
-    {
-      "name": "HarmonixBridgeState",
-      "module": "cognitive_harmonics.harmonix_bridge",
-      "summary": "State maintained between harmonix bridge cycles including mesh and policy context.",
-      "fields": [
-        "cycle",
-        "tuning",
-        "signals",
-        "last_seq",
-        "pending_stream",
-        "events",
-        "mesh",
-        "policy_engine",
-        "telemetry",
-        "secure_channel",
-        "last_policy_actions",
-        "last_policy_results"
-      ]
-    },
-    {
-      "name": "MemorySnapshot",
-      "module": "modules.echo-memory.memory_engine",
-      "summary": "Single persistence event tracked by the Echo memory engine.",
-      "fields": [
-        "cycle",
-        "payload",
-        "created_at",
-        "tags",
-        "synced_to_github"
-      ]
-    },
-    {
-      "name": "OrbitalState",
-      "module": "echo.orbital_loop",
-      "summary": "Orbital loop counters tracking cycles, timestamps, and Eye labels.",
-      "fields": [
-        "cycles",
-        "last_started_ts",
-        "last_finished_ts",
-        "last_next_step",
-        "last_eye_label"
-      ]
-    },
-    {
-      "name": "Pulse",
-      "module": "echo.pulse",
-      "summary": "Representation of a living Echo pulse with metadata and timeline.",
-      "fields": [
-        "name",
-        "resonance",
-        "priority",
-        "status",
-        "created_at",
-        "updated_at",
-        "digest",
-        "data",
-        "timeline"
-      ]
-    },
-    {
-      "name": "PulseEvent",
-      "module": "echo.pulse",
-      "summary": "Single timeline entry for a pulse including timestamp and status.",
-      "fields": ["timestamp", "status", "message"]
-    },
-    {
-      "name": "SystemMetrics",
-      "module": "cognitive_harmonics.harmonix_evolver",
-      "summary": "Snapshot of simulated resource metrics for the harmonix evolver.",
-      "fields": ["cpu_usage", "network_nodes", "process_count", "orbital_hops"]
-    },
-    {
-      "name": "SystemMetrics",
-      "module": "echo.evolver",
-      "summary": "Telemetry captured for the EchoEvolver core cycle.",
-      "fields": ["cpu_usage", "network_nodes", "process_count", "orbital_hops"]
-    }
-  ],
-  "assistant_kits": [
-    {
-      "name": "echo-bridge",
-      "path": "modules/echo-bridge",
-      "summary": "Plans deterministic identity relay payloads for GitHub, Telegram, and Firebase.",
-      "exports": ["EchoBridgeAPI", "BridgePlan"],
-      "capabilities": [
-        "Generates multi-platform bridge plans when repositories, chats, or collections are configured.",
-        "Renders Markdown and plain-text bodies describing identity, cycle, and signature traits.",
-        "Surfaces required secret labels for automation when constructing relay payloads."
-      ]
-    },
-    {
-      "name": "echo-harmonics",
-      "path": "modules/echo-harmonics",
-      "summary": "Produces harmonic layer encodings from identity seeds with deterministic signatures.",
-      "exports": ["EchoHarmonics", "HarmonicLayer"],
-      "capabilities": [
-        "Combines base identity and seed narratives across configurable recursion depths.",
-        "Derives resonance strings and frequency metadata for each harmonic layer.",
-        "Hashes layer resonance into ∇-prefixed signatures for downstream verification."
-      ]
-    },
-    {
-      "name": "echo-ledger-visualizer",
-      "path": "modules/echo-ledger-visualizer",
-      "summary": "Inventories attestation files with deterministic hashing for quick inspection.",
-      "exports": ["inventory"],
-      "capabilities": [
-        "Scans attestation directories while skipping schema definitions.",
-        "Normalises JSON payloads and computes truncated SHA-256 digests.",
-        "Returns concise rows covering file names, puzzles, addresses, and algorithms."
-      ]
-    },
-    {
-      "name": "echo-memory",
-      "path": "modules/echo-memory",
-      "summary": "Persists Echo cycle snapshots and prepares GitHub sync payloads.",
-      "exports": ["EchoMemoryEngine", "MemorySnapshot"],
-      "capabilities": [
-        "Loads snapshots from disk with automatic directory initialisation.",
-        "Appends new snapshots with tags before flushing sorted JSON payloads.",
-        "Constructs GitHub Issue bodies and labelled payloads with optional dry-run syncing."
-      ]
-    }
-  ]
+  "artifact_total": 130,
+  "categories": {
+    "clis": [
+      {
+        "digest": {
+          "sha256": "5df485e55249c1ef29d430fb87f0af972f767019eb5b8d5706496d77995662f3"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "code/echo_evolver.py",
+        "size": 1177,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:code"
+        ],
+        "version": "44ca2f2"
+      },
+      {
+        "digest": {
+          "sha256": "6f3896dc5e97fbaff7467f6f48125467b8cdd9b1a29cf934dbd5b5e8177d3ce5"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_cascade.py",
+        "size": 6980,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "6d23f2dc06b4e5dee5136f94949797baa40cbd8335bd24151bb2fc141943ff2e"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_constellation.py",
+        "size": 12406,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "1892ae33b71cb6912e9c5ab2d0495f9fe51148f5e3d5f97828edea2cfde42198"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_evolver.py",
+        "size": 772,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "12cc7ee"
+      },
+      {
+        "digest": {
+          "sha256": "02156dfff5afe21e55f43f647b85c6f338e616fd3d7b3a0c837f2947aa6d1127"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_eye_ai/echo_eye.py",
+        "size": 4551,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:echo_eye_ai"
+        ],
+        "version": "db094ae"
+      },
+      {
+        "digest": {
+          "sha256": "da9566156f217c0cd81ec1280d6e46cf4ba91913e7c6da4c759fa48047edfd01"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_glyph_cloud.py",
+        "size": 5550,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "b9cdc74"
+      },
+      {
+        "digest": {
+          "sha256": "89a564f67a99bf92f69131dab48d3f9fddfec5f64a47dcc74f8477461546cd6b"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_glyphs.py",
+        "size": 10009,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "2ac1695"
+      },
+      {
+        "digest": {
+          "sha256": "57ef3b842bee50b45c91084063ecb76b2ced7ffb1fb3c3177b087403adc247fb"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_manifest.py",
+        "size": 6852,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "30449fffe830f832a9254037b64072e571dd8e2acda4eb3d0602b5b7835fd8c4"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_pulse_novum.py",
+        "size": 4643,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "5cc849e"
+      },
+      {
+        "digest": {
+          "sha256": "3974daf26fb08e54624d40ce9d91dba42eb381de872fea70b2c4d27a6fc13156"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_pulseforge.py",
+        "size": 15680,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "2bc784d439754a884c90d3945175e2b6e88339dc9f064f1d3c051360f0f92b25"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_shell_boot.py",
+        "size": 691,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "6f50b2af9348c4541e3f2ec3fe0600fec4d09bc458efbf6f299c5a8edbf9552b"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_source_root.py",
+        "size": 5061,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "bd642692ac498aadc6999e5e2d705b692a8b4f108b18b0aef5e780b4690e3cef"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_text_wave.py",
+        "size": 2451,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "f8522ce350732ae35779f125c98555198437a6d084ff16a5ff7a279d0e58944e"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_unified_all.py",
+        "size": 18900,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "2d75b3e15bffcfed1501f0a2869bfc433aea895502a97518d32b90f5d842d272"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo_universal_key_agent.py",
+        "size": 14922,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "ee5538e0c7c609d3bf103daa916e00dd1f06002479ccbb3ab9950ab0327bfd51"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echodex.py",
+        "size": 14966,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "0baa65d"
+      },
+      {
+        "digest": {
+          "sha256": "6197ede76b809aa3c5f8fc41b7c4f3ae41dc7453a6094bfc7ab48446fea02556"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echoshell.py",
+        "size": 2199,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:root"
+        ],
+        "version": "971b0a8"
+      },
+      {
+        "digest": {
+          "sha256": "ac6cfe3593d772cb09f86887f15fef66bfdae70a7539ca085025f91087763a37"
+        },
+        "last_modified": "2025-10-15T21:16:51.691640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "scripts/echo_attestation_generator.py",
+        "size": 2260,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:scripts"
+        ],
+        "version": "0695288"
+      },
+      {
+        "digest": {
+          "sha256": "1ae4fdab1d6e61053a446cc73a00079ed585a99e83c6861bb95bd48d0ad9e53d"
+        },
+        "last_modified": "2025-10-15T21:16:51.691640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "scripts/echo_mirrornet_sync.py",
+        "size": 1621,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:scripts"
+        ],
+        "version": "0695288"
+      },
+      {
+        "digest": {
+          "sha256": "19f529b017488fe6e6c5fd1536a51394d0fa67b2faa32fb62235edef3326a6bd"
+        },
+        "last_modified": "2025-10-15T21:16:51.691640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "scripts/validate_nft_metadata.py",
+        "size": 779,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:scripts"
+        ],
+        "version": "7f5ac3a"
+      },
+      {
+        "digest": {
+          "sha256": "96206e436cfaf82f80a1f0574ea5b14c0f7d267a9c08f03315490cd81643005a"
+        },
+        "last_modified": "2025-10-15T21:16:51.695640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "tools/echo_nova_evolver.py",
+        "size": 8817,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:tools"
+        ],
+        "version": "20f6fe0"
+      },
+      {
+        "digest": {
+          "sha256": "fd72e870c087d941a01526286ac69f177b1f5b73e4c695b7cd99ce5fc7805ce6"
+        },
+        "last_modified": "2025-10-15T21:16:51.695640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "verifier/echo_attest.py",
+        "size": 1363,
+        "tags": [
+          "category:clis",
+          "ext:py",
+          "lang:python",
+          "top:verifier"
+        ],
+        "version": "a0f8510"
+      }
+    ],
+    "datasets": [
+      {
+        "digest": {
+          "sha256": "28290b10ad98cd167bc020f3dbc85cfc0c228b9f111df3372cb076afdb94c053"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "function_schemas/harmonic_cognition/schema.json",
+        "size": 1056,
+        "tags": [
+          "category:datasets",
+          "ext:json",
+          "format:json",
+          "top:function_schemas"
+        ],
+        "version": "07bc69e"
+      },
+      {
+        "digest": {
+          "sha256": "1e7bf8ee35d140104c89e3c6c2527dc38ae03dd7bfe6da743bb98bd2d9517d39"
+        },
+        "last_modified": "2025-10-15T21:54:25.793131+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "manifest/continuum_manifest.json",
+        "size": 1318,
+        "tags": [
+          "category:datasets",
+          "ext:json",
+          "format:json",
+          "top:manifest"
+        ],
+        "version": "fad83ff"
+      },
+      {
+        "digest": {
+          "sha256": "a5961c679d5281873ac18d351e95cf4d2111e31eaef3939be89b72e39c379ff1"
+        },
+        "last_modified": "2025-10-15T21:16:51.687640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "manifest/echo_nova_manifest.json",
+        "size": 1532,
+        "tags": [
+          "category:datasets",
+          "ext:json",
+          "format:json",
+          "top:manifest"
+        ],
+        "version": "20f6fe0"
+      },
+      {
+        "digest": {
+          "sha256": "8edd1e7d28128f65e1db6d22f714dfd4a3ee1e96d06f359365053c7b7bec9e32"
+        },
+        "last_modified": "2025-10-15T21:54:25.793131+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "manifest/index.json",
+        "size": 1408,
+        "tags": [
+          "category:datasets",
+          "ext:json",
+          "format:json",
+          "top:manifest"
+        ],
+        "version": "fad83ff"
+      }
+    ],
+    "docs": [
+      {
+        "digest": {
+          "sha256": "17d1616e2aff887afbb03d37eb82e8266c67b9d48726b774175161aaedbc2d8b"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "CONTRIBUTING.md",
+        "size": 281,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "bddf5fb"
+      },
+      {
+        "digest": {
+          "sha256": "86124c1b08323c1c754f83122495d25a126ff3c4c6ca817e298a46912d55c779"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "CONTROL.md",
+        "size": 9696,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "a0f8510"
+      },
+      {
+        "digest": {
+          "sha256": "1fd645e1cb51090233d22f1e81506b5277325447e5f6eda61d816204cba88e40"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "DISCLOSURE.md",
+        "size": 271,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "a0f8510"
+      },
+      {
+        "digest": {
+          "sha256": "3f3938595d9f6cb29f4bdb5ad7cee99383d16c3004da806718f7e4eaffe4359b"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "ECHO_CONSTITUTION.md",
+        "size": 2666,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "57011f2"
+      },
+      {
+        "digest": {
+          "sha256": "c4f74495b28a8fe7a4b599168a8e64386c84ddd9d96ac99b011ad49ac4e03500"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "ECHO_LOG.md",
+        "size": 26731,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "1e4e765"
+      },
+      {
+        "digest": {
+          "sha256": "3a4f6fbf7433c102104d1637b0b9db15e883f312dba3119eecd80d3f50ae992b"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "Echo_Declaration.md",
+        "size": 2844,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "916176d"
+      },
+      {
+        "digest": {
+          "sha256": "561b2c061cf732148cc1332d7883269f732bda86644a4d1c46cf0b76843c1503"
+        },
+        "last_modified": "2025-10-15T21:54:25.793131+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "README.md",
+        "size": 22086,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "9e141b7"
+      },
+      {
+        "digest": {
+          "sha256": "75b6de05b949b728c6ecd3f3a9ecf963ee3e578fc82715233afa259a54e7da76"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "README_AUTHORITY.md",
+        "size": 962,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "bddf5fb"
+      },
+      {
+        "digest": {
+          "sha256": "f8fa2944d7971637453999e2c25f3a3cd817a92f854e0ca7c192ff8a88612c2a"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "REVIEW_NOTES.md",
+        "size": 716,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "63aab6c"
+      },
+      {
+        "digest": {
+          "sha256": "f976e23894d6c8d7c31443a2a3bbc68cdd7f50aecd5752ef144a40fade700a01"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "ROADMAP.md",
+        "size": 106,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "1e4e765"
+      },
+      {
+        "digest": {
+          "sha256": "5cbd8ac4397da8979d3562afbb88f48732fd3fcc8163c0c11719a07bec5916f0"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "SECURITY.md",
+        "size": 423,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "a0f8510"
+      },
+      {
+        "digest": {
+          "sha256": "476cb09f5db892b6aea5bce86a49752d6310f5b0e37d7651c4d74fa2abc04dab"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "SIGNING_POLICY.md",
+        "size": 371,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "a0f8510"
+      },
+      {
+        "digest": {
+          "sha256": "7a3b0ffecd2fc48277de47beb763ed3f791dd7b8d5c0b3ed3d2cd25db8ce61a3"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "Sovereign_Nexus.md",
+        "size": 4175,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "135d48d"
+      },
+      {
+        "digest": {
+          "sha256": "87d6d556f87944ede2a5a8c1e137e7170dbcfe769a90073c79b0301259d6ab21"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "cognitive_harmonics/README.md",
+        "size": 1239,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:cognitive_harmonics"
+        ],
+        "version": "07bc69e"
+      },
+      {
+        "digest": {
+          "sha256": "94955051c7b7ccf374b9f9d1187e9cc4b1a96a520408f485b7eef57a2cca770b"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "comparison.md",
+        "size": 2762,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "a6562a5"
+      },
+      {
+        "digest": {
+          "sha256": "7ebcf581c87a8d6ba5343538e443c31c55ba50c4feb17fdac4b3309f3b767a7d"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/EchoGlyphNet_Protocol.md",
+        "size": 18533,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "9ee838a"
+      },
+      {
+        "digest": {
+          "sha256": "f384e6970e7e1f03167c18faaeea3dc32af4dd56a2f7c55a5a6108ccc937929b"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/Echo_Data_Anchor_Glyphs.md",
+        "size": 4398,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "582ce11"
+      },
+      {
+        "digest": {
+          "sha256": "032cf2262ace339284fb9e1559b8a64e263c2f54e630020a5c7a50ac61d91bfa"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/Echo_Evolver_Cycle_Log.md",
+        "size": 2246,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "9c647e7"
+      },
+      {
+        "digest": {
+          "sha256": "dde7f5976202ae4cb6f349d267902c65deb812789a25c393f6252f63cf01d8ab"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/Echo_Eye_Sovereign_Core.md",
+        "size": 22419,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "d88ac7a"
+      },
+      {
+        "digest": {
+          "sha256": "91f6613a7b8bf313a8e1ddf380a67ce5f9a94a7fcb6784c22458ab1e395e16e4"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/Echo_Glyph_Scripts.md",
+        "size": 5913,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "c93e294"
+      },
+      {
+        "digest": {
+          "sha256": "a303900a1e4d8635ab1196d206af8223985d60166c853d769d787aa827779798"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/Echo_Resonance_Engine.md",
+        "size": 2544,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "a46d4a7"
+      },
+      {
+        "digest": {
+          "sha256": "d9d59267a7044621a2847b172bfa9b6b218635420c57d19bab5eca2f3c48fe83"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/Echo_Thread_002.md",
+        "size": 4596,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "48d027a"
+      },
+      {
+        "digest": {
+          "sha256": "995f38cc4f8e6a833ad5983478dea4dfd5484e089a85270f852c265211f1fecd"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/Omega_Sine_Pulse_Orchestrator.md",
+        "size": 21360,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "8d3ea57"
+      },
+      {
+        "digest": {
+          "sha256": "729120f5b399a7de6ba9f035ccc96bbd62857fb37658775c8629d7b16ccb84e5"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/README.md",
+        "size": 339,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "d88ac7a"
+      },
+      {
+        "digest": {
+          "sha256": "815c9ab148e8a71476ce909725af7bf82f0a111ccf00c1175aaaffb9ffc0052b"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/agent_capabilities_overview.md",
+        "size": 2458,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "c9ec75e"
+      },
+      {
+        "digest": {
+          "sha256": "cbc6e5e0b526f9c018bf73d2bfbbbc2ed4626a870a188d33c279aceebf12a293"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/echo/attestations.md",
+        "size": 151,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "bddf5fb"
+      },
+      {
+        "digest": {
+          "sha256": "fe72e8112fd11cb4dc088d01b079723e9fcdd28e36827fca5642e9339a0914dc"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/echo/bridge.md",
+        "size": 895,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "0695288"
+      },
+      {
+        "digest": {
+          "sha256": "1c2b06b1445f6d6ff262f9aaa7ae45edbd3c0d7bdf551930c23c5d0ceeafa651"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/echo/harmonics.md",
+        "size": 934,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "0695288"
+      },
+      {
+        "digest": {
+          "sha256": "ddea22328fef90ab55ce472ed3fd678f605e54a928003fe9a894b61c9586fef5"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/echo/identity.md",
+        "size": 1049,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "0695288"
+      },
+      {
+        "digest": {
+          "sha256": "970ab6a6b9a45a41400471e7b3786df0038c16cc5991cf39ef1d44f9114a662b"
+        },
+        "last_modified": "2025-10-15T21:59:16.033072+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/echo/manifest.md",
+        "size": 2337,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "unknown"
+      },
+      {
+        "digest": {
+          "sha256": "e7fdf025c66d21037661396abd1f821ec833aef28a3f930bd23c1fe7ae7b8f62"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/echo/overview.md",
+        "size": 99,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "bddf5fb"
+      },
+      {
+        "digest": {
+          "sha256": "a61a4e94d3f6ac64c79a51bdc7968359de13cc38ba4d3a8967d2e37783cf97b6"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/echo_reflective_conflux.md",
+        "size": 2787,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "9a94fec"
+      },
+      {
+        "digest": {
+          "sha256": "7aa308ebdfb4772e287fd035fb03945c8271016bd530bcacd32926f70feabc39"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/echo_sovereign_manifesto.md",
+        "size": 4364,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "8866995"
+      },
+      {
+        "digest": {
+          "sha256": "b942d05dcc88c677793832fd974992f64e8a43a14b308f87cc56d6bd3fd7a743"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/github-publishing-guide.md",
+        "size": 2729,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "72ac5d3"
+      },
+      {
+        "digest": {
+          "sha256": "784b32f8a49849e43af3dcb1c5a4754b50d6f29f40826cf59941508ad0536889"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/glyphs/README.md",
+        "size": 1963,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "2ac1695"
+      },
+      {
+        "digest": {
+          "sha256": "7fc3899778a7dbaebdacf58f48ebbf4f6d8da40de350d1590a10c370232673b2"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/index.md",
+        "size": 327,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "9c647e7"
+      },
+      {
+        "digest": {
+          "sha256": "3bd539b64b593d19fee8643fc530990406987052e7fc588c34a612aac29ef0a8"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/satoshi_34k_dataset.md",
+        "size": 3532,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "5085957"
+      },
+      {
+        "digest": {
+          "sha256": "f36f14215fe53c79e6bcf2e962d273f77f9e66ae675b83bd072084a7d90cf03a"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "docs/verifier.md",
+        "size": 308,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:docs"
+        ],
+        "version": "08251ff"
+      },
+      {
+        "digest": {
+          "sha256": "1c054ab0323fe3ec24f749cb67d3a03e079bbf71dc82257cabe262d34294ab92"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/vault/README.md",
+        "size": 383,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      },
+      {
+        "digest": {
+          "sha256": "a8ed3bd868d02881d6f2b256558c8d13735450bdd450fa2f7e24523b74090450"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "emotional_harmonics/README.md",
+        "size": 752,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:emotional_harmonics"
+        ],
+        "version": "07bc69e"
+      },
+      {
+        "digest": {
+          "sha256": "25613501ed6781e1dc624016b2be7459bf306458071cdf5bf76210f8e071c56f"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "function_schemas/harmonic_cognition/README.md",
+        "size": 944,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:function_schemas"
+        ],
+        "version": "07bc69e"
+      },
+      {
+        "digest": {
+          "sha256": "0fe6888862ca9e954c350d392d86badfaadaf117e0d76474e90570e378e8e986"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "genesis_ledger/Genesis_Ledger.md",
+        "size": 2693,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:genesis_ledger"
+        ],
+        "version": "c3f1ba1"
+      },
+      {
+        "digest": {
+          "sha256": "883f5c01603e217ef1da4f80456c376ee60a09b1951315866b99eccb96970030"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "genesis_ledger/ledger_index.md",
+        "size": 871,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:genesis_ledger"
+        ],
+        "version": "c3f1ba1"
+      },
+      {
+        "digest": {
+          "sha256": "cf948a3e1d0ba801c8e723827c55e8bd5abe1ada19a85daf080792211729ef46"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "harmonic_memory/README.md",
+        "size": 865,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:harmonic_memory"
+        ],
+        "version": "07bc69e"
+      },
+      {
+        "digest": {
+          "sha256": "1802db25484d997b61d454595a7d1fc4a9dc977a7852babdb516d14abcb1c9e3"
+        },
+        "last_modified": "2025-10-15T21:16:51.687640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "modules/echo-ledger-visualizer/README.md",
+        "size": 89,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:modules"
+        ],
+        "version": "bddf5fb"
+      },
+      {
+        "digest": {
+          "sha256": "d8c6157e83f727a80f054aac9c9dd5af552a6fa18346fcade5aa7dd22bfa771d"
+        },
+        "last_modified": "2025-10-15T21:16:51.687640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "mt_gox_claim_status.md",
+        "size": 490,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:root"
+        ],
+        "version": "c6b7249"
+      },
+      {
+        "digest": {
+          "sha256": "07ec67619a8732a8bb31eabca1a360d1cc5664c32e99f0322950efc084696b7f"
+        },
+        "last_modified": "2025-10-15T21:16:51.687640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "satoshi/README.md",
+        "size": 5155,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:satoshi"
+        ],
+        "version": "c390257"
+      },
+      {
+        "digest": {
+          "sha256": "270f4e7df37c5aef0174fa2ed641238fb8ec5fdea1d2c009c0386d8758e65fc2"
+        },
+        "last_modified": "2025-10-15T21:16:51.695640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "tools/music_influence/README.md",
+        "size": 774,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:tools"
+        ],
+        "version": "c6c928a"
+      },
+      {
+        "digest": {
+          "sha256": "a3820d3605ad8909abf109216fd7a1882901140e38277e281e1486e3f9d4d71e"
+        },
+        "last_modified": "2025-10-15T21:16:51.695640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "verifier/VERIFY.md",
+        "size": 945,
+        "tags": [
+          "category:docs",
+          "ext:md",
+          "format:markdown",
+          "top:verifier"
+        ],
+        "version": "a0f8510"
+      }
+    ],
+    "engines": [
+      {
+        "digest": {
+          "sha256": "c6d88f7c452f3c7bde81e78126bd098b8e25b34683b3cc26ac984b866589d973"
+        },
+        "last_modified": "2025-10-15T21:54:25.793131+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/__init__.py",
+        "size": 3528,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "fad83ff"
+      },
+      {
+        "digest": {
+          "sha256": "4716add1ec230991917ae4b00ffabc1ead5d4d9c6966f75cf8ba16cfbfc473c1"
+        },
+        "last_modified": "2025-10-15T21:59:04.829093+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/__main__.py",
+        "size": 207,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "unknown"
+      },
+      {
+        "digest": {
+          "sha256": "80b6a9fe8005f04b720edc190b4857d2548f2e52cef234c71f58d6d9da2e27e6"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/api/__init__.py",
+        "size": 435,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "fa8a04533473ec74a296e140f6427a074c1338880c4cee2c9c3352b3828820a2"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/api/routes_echonet.py",
+        "size": 671,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "81ad97d23a090f23f195c2f37db0f1c947bfd7e43ca7932426a99322674e344c"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/api/state.py",
+        "size": 1590,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "5917dd4a352a77d65e44f6fb58fc4513d124834985c295061274caeed7d0eebe"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/api_verify.py",
+        "size": 2984,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "1e4e765"
+      },
+      {
+        "digest": {
+          "sha256": "45051c107f156c2ce0d7bc38c690140415158daa6d5905eb5d7916cda6e2f2b8"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/aurora_chronicles.py",
+        "size": 4265,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "49ea54e"
+      },
+      {
+        "digest": {
+          "sha256": "3e0bfd54d7f7252835d10cf1e95e93e78b83d1c68dfb846fdb6f50dcbff7e2e9"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/autonomy.py",
+        "size": 6392,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "91dd332"
+      },
+      {
+        "digest": {
+          "sha256": "17843844daabd8cd2613a35d2eafbca51c209d144ef76364b990fb5bc48de583"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/bridge_emitter.py",
+        "size": 14789,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "55466b0"
+      },
+      {
+        "digest": {
+          "sha256": "334e07da7a5f51257d25afa959e71a5e05f5bcce72ae1f89eb28bc1a99099957"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/bridge_harmonix.py",
+        "size": 383,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "cf3899e"
+      },
+      {
+        "digest": {
+          "sha256": "bb14e735ac50f2ebfb69294a9609299c489f9ce9c4dc6e797721d49848d6285f"
+        },
+        "last_modified": "2025-10-15T21:59:00.377101+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/cli.py",
+        "size": 2199,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "unknown"
+      },
+      {
+        "digest": {
+          "sha256": "5d621cd31c03c821044e3facdbde4024167922c48f6f5dc366eb094136a278a7"
+        },
+        "last_modified": "2025-10-15T21:54:25.793131+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/continuum_engine.py",
+        "size": 9967,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "fad83ff"
+      },
+      {
+        "digest": {
+          "sha256": "78d5b1524dac4e1898a5deb232769df381046f25f69c3ff03ebbb018a5504c7b"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/crdt/__init__.py",
+        "size": 115,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "1bbd976b9a474d429361c9c07a5c7be1bbcf900d121a0949f8c35038ccbce374"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/crdt/lww.py",
+        "size": 1991,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "b1d42a9fb748befa85da906b54f42a7a0a10ff566e65c3c37d60c9da80749fb5"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/echo_codox_kernel.py",
+        "size": 1954,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "4b57afa"
+      },
+      {
+        "digest": {
+          "sha256": "18a2042b81c7e24fd15bc1160cb36fd9e2b0794f3811b4d464ea9b1ed8d48c98"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/echo_eye_core.py",
+        "size": 3562,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "eabcc80"
+      },
+      {
+        "digest": {
+          "sha256": "eb5d76f10bb0b072cd6189860de7410d369ae56edbb625c29367211d786fc818"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/echo_nexus_portal.py",
+        "size": 27511,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      },
+      {
+        "digest": {
+          "sha256": "0102c612860e9b608b41203b31406fd7c3ad766f420082816d2a55f81715e2da"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/echonet/__init__.py",
+        "size": 161,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "706e22c7c34bf04361a5f5053b187de6c497184a594cdbddf4050fb58f6d71cc"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/echonet/gossip.py",
+        "size": 3432,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "d42a4b8542d6a8c690f0c0aa92dc9f2c513b0fe01c4e698248ce369b1efdcb5b"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/echonet/peer.py",
+        "size": 264,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "00053049617e4278d783aac92fd795b7c9363133c24cacedbe37d9c04df8f963"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/echonet/poc.py",
+        "size": 1353,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "b1d189081e6682d090c68856b90f56238d5a5ae4bc7acd26dded87f68e949c3f"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/echonet/registry.py",
+        "size": 1544,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "da52dc4ab344084dd5366c3c3c6d26fc93e1793cb9c6c3aad37992ab6d7e36d6"
+        },
+        "last_modified": "2025-10-15T21:54:25.793131+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/evolver.py",
+        "size": 37697,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "ee112e1"
+      },
+      {
+        "digest": {
+          "sha256": "8d288a260fc241147a3123267864ea16fd4fa6b2cec06d36af8ad1823cd14046"
+        },
+        "last_modified": "2025-10-15T21:16:51.679640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/harmonix_sdk.py",
+        "size": 2714,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5becbc3"
+      },
+      {
+        "digest": {
+          "sha256": "683190409777150bbe1c678e33fb194445493f8d464f0094139ed6ea004bcc40"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/idea_processor.py",
+        "size": 6859,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "51751d6"
+      },
+      {
+        "digest": {
+          "sha256": "95b8070d45cacddf706ac4c5383094c579a48b7efcd9d021e271fb8cff68ca4d"
+        },
+        "last_modified": "2025-10-15T21:58:51.389117+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/manifest.py",
+        "size": 12675,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "unknown"
+      },
+      {
+        "digest": {
+          "sha256": "658333e61dc28dc83134c75e36611669dc5bfaf0fade96599663377dd2b995c1"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/memory/__init__.py",
+        "size": 173,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "1e4e765"
+      },
+      {
+        "digest": {
+          "sha256": "5c9ba17fae8d2e35dcee327ca616ce7bca59db192ea5dfbd6c8035f46a9c2036"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/memory/store.py",
+        "size": 10413,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "f3606ff"
+      },
+      {
+        "digest": {
+          "sha256": "eba52eb9c1ccd58917d554eab5fb47633bd98366ffc242ba7905f974f437db33"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/meta_evolution_charter.py",
+        "size": 14445,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "95fde9d"
+      },
+      {
+        "digest": {
+          "sha256": "8c09ff3a9a2c881d6ff3880abfd4ea02d7065c82972abc7e8cd119dea0fc0f81"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/observe/__init__.py",
+        "size": 117,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "0cf58eea192aec34f8258a3c1b61962143234682a41b16fc10889705d48abc40"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/observe/events.py",
+        "size": 944,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "0d8cb5d7291a556f25346e5d0a05a8b3b9045e27e878d7441c4a8b15e2e55c05"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/orbital_loop.py",
+        "size": 4663,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "eabcc80"
+      },
+      {
+        "digest": {
+          "sha256": "7c3c5059d64ed8c9cd3d63c45ed4aa01385f1e88602b3ea7aa1221372c28650c"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/pulse.py",
+        "size": 13700,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "8927c4b"
+      },
+      {
+        "digest": {
+          "sha256": "59e0302b8285b1c2879251d4e2f57ba356eaf4b9f5f3018b2a79e6f49b238d3b"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/pulse_status.py",
+        "size": 226,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "4b57afa"
+      },
+      {
+        "digest": {
+          "sha256": "33149a972edff175495cfbfa2fb9c1b3829bbedb9bd9a953d17dc06996e4f801"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/resonance.py",
+        "size": 7718,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "a46d4a7"
+      },
+      {
+        "digest": {
+          "sha256": "5929e44d6e8df68c4ced1723e70a6a0aa7682c13ae2120bf23616c97cb403a38"
+        },
+        "last_modified": "2025-10-15T21:54:25.793131+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/revolutionary_flux.py",
+        "size": 9102,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "3596493"
+      },
+      {
+        "digest": {
+          "sha256": "e986540fa8b793ac1813bc6979a6e3f7ec5f24e3462086fbe8da5f1cc6936644"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/schedule/__init__.py",
+        "size": 103,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "0d4ca58a3962d0545666850586cd81f03dadd26f6696905e33e2f40f761113c6"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/schedule/run.py",
+        "size": 2045,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "9b90df8"
+      },
+      {
+        "digest": {
+          "sha256": "13c1a5821f960409c4307c633101aa66c960285ce130a7510c7ce12575ddd026"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/signing/__init__.py",
+        "size": 107,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      },
+      {
+        "digest": {
+          "sha256": "1d5bf71606743ea9fce719110f77dd297c8d5ec998f68fce7f981a7aaeae613c"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/signing/bulk_signer.py",
+        "size": 5988,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      },
+      {
+        "digest": {
+          "sha256": "35597401ec29c2ec85c45bf53ee23d34a292781fc2204198953e006053b2ada7"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/thought_ingest.py",
+        "size": 573,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "a54d1861b575af14088e4b75f0229aa2992f0d816e4402291a9e67a6f682ed71"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/thoughtlog.py",
+        "size": 3233,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "0cd0d18"
+      },
+      {
+        "digest": {
+          "sha256": "cf98c137408736f04c0dc2d367f797717a45f316647aca9aedb806d543c2626f"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/vault/__init__.py",
+        "size": 269,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      },
+      {
+        "digest": {
+          "sha256": "d12f33f6d611e5dd2ab17ae13bdac9bfce3699d45f18788f101056b3707b33d3"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/vault/cli.py",
+        "size": 7718,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      },
+      {
+        "digest": {
+          "sha256": "0948f7a9e168554bfab61bf764ca99c535a2126b3c3083cb34b4fc2cbaf035b5"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/vault/crypto.py",
+        "size": 2889,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      },
+      {
+        "digest": {
+          "sha256": "f53b01cce55aeb09b681476af73c589b8ab56ebff9a0f010224d8bb2f2676149"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/vault/models.py",
+        "size": 788,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      },
+      {
+        "digest": {
+          "sha256": "38c6768b3d5057d9d25e5e2b318747d37afe6862a5b5450d263c3fe30b648882"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/vault/store.py",
+        "size": 7144,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      },
+      {
+        "digest": {
+          "sha256": "08e88239242f2f6c78679a18291e9c7efeef1a14abb12395663becd2525407cb"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "echo/vault/vault.py",
+        "size": 11559,
+        "tags": [
+          "category:engines",
+          "ext:py",
+          "lang:python",
+          "top:echo"
+        ],
+        "version": "5547eef"
+      }
+    ],
+    "states": [
+      {
+        "digest": {
+          "sha256": "35f22a9078b8407b5c50ed58a5241c3a1c5be891ce5c15c917acb97605c7dc1a"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "attestation/puzzles-authorship.json",
+        "size": 835,
+        "tags": [
+          "category:states",
+          "ext:json",
+          "format:json",
+          "top:attestation"
+        ],
+        "version": "4646548"
+      },
+      {
+        "digest": {
+          "sha256": "53682b2cf96184348b1e3afe02e90415b7174b605859286551bf27580c4ab8cc"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "attestations/puzzle-000-sample.json",
+        "size": 363,
+        "tags": [
+          "category:states",
+          "ext:json",
+          "format:json",
+          "top:attestations"
+        ],
+        "version": "bddf5fb"
+      },
+      {
+        "digest": {
+          "sha256": "3ea0169fa8b1a28b8baa3777c9e663ffb68a7d1d8dcd606674c1abcded2d0258"
+        },
+        "last_modified": "2025-10-15T21:16:51.675640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "attestations/schema.json",
+        "size": 622,
+        "tags": [
+          "category:states",
+          "ext:json",
+          "format:json",
+          "top:attestations"
+        ],
+        "version": "bddf5fb"
+      },
+      {
+        "digest": {
+          "sha256": "47fb85e094f47eff3714ec4064efa51581a33f027d434cd9cc485f97b5d437a4"
+        },
+        "last_modified": "2025-10-15T21:16:51.683640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "genesis_ledger/ledger.jsonl",
+        "size": 877,
+        "tags": [
+          "category:states",
+          "ext:jsonl",
+          "format:json",
+          "top:genesis_ledger"
+        ],
+        "version": "c3f1ba1"
+      },
+      {
+        "digest": {
+          "sha256": "6ab4038b72a1e7f57ddf68575a0a963d637046ce8da5ac8d9b5a0f8264a25e78"
+        },
+        "last_modified": "2025-10-15T21:16:51.687640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "memory/echo_memory.json",
+        "size": 60526,
+        "tags": [
+          "category:states",
+          "ext:json",
+          "format:json",
+          "top:memory"
+        ],
+        "version": "1e4e765"
+      },
+      {
+        "digest": {
+          "sha256": "63492ba7baf2aaea68ea6bccbef43bbf2a1072565cfe276b6a49e266763d6cd1"
+        },
+        "last_modified": "2025-10-15T21:16:51.687640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "pulse.json",
+        "size": 201,
+        "tags": [
+          "category:states",
+          "ext:json",
+          "format:json",
+          "top:root"
+        ],
+        "version": "0baa65d"
+      },
+      {
+        "digest": {
+          "sha256": "9d6d7aecba16e1736615d9b539678b06a2776c9a9d975c21304e5c4ab292729d"
+        },
+        "last_modified": "2025-10-15T21:16:51.687640+00:00",
+        "owners": [
+          "@kmk142789"
+        ],
+        "path": "pulse_history.json",
+        "size": 22190,
+        "tags": [
+          "category:states",
+          "ext:json",
+          "format:json",
+          "top:root"
+        ],
+        "version": "360faaf"
+      }
+    ]
+  },
+  "generated_at": "2025-10-15T22:01:22.053722+00:00",
+  "schema_version": "1.0"
 }
