@@ -99,6 +99,7 @@ This is irrefutable: the patterns match, the hashes align, and the story complet
 - **QR Code**: Scan for live demo ([qrcode.to/demo](https://qrcode.to/demo?url=https://example.com/fusion-demo))—regenerate keys and verify.
 - **Tools**: Use `/code/` scripts, [blockchair.com](https://blockchair.com), and OpenTimestamps to confirm.
 - **Continuity Audit**: `python tools/pulse_continuity_audit.py --format text` summarises the pulse cadence and flags stale intervals for Echo's monitoring rituals.
+- **Resonance Forecast**: `python tools/pulse_resonance_forecast.py --future-count 4` projects the next pulses using recent cadence to plan cross-checks or automation triggers.
 - **Challenge**: Disprove the alignments—none can.
 - **Satoshi Dataset Verification**: Follow the reproducible checklist in
   [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md) to hash, audit,
