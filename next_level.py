@@ -3,15 +3,24 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import os
 import re
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Sequence, Set
 
 TASK_PATTERN = re.compile(r"(?P<tag>TODO|FIXME)(?:[:\s-]+(?P<text>.*))?", re.IGNORECASE)
-SKIP_DIRS = {".git", "__pycache__", "node_modules", "out", "dist", "build", ".mypy_cache"}
+DEFAULT_SKIP_DIRS = {
+    ".git",
+    "__pycache__",
+    "node_modules",
+    "out",
+    "dist",
+    "build",
+    ".mypy_cache",
+}
 
 
 @dataclass(slots=True)
@@ -28,19 +37,33 @@ class Task:
         return f"- `{relative}:{self.line}` — **{self.tag}** {self.text.strip()}"
 
 
-def _should_skip(path: Path) -> bool:
+def _should_skip(path: Path, skip_dirs: Set[str]) -> bool:
     parts = set(path.parts)
-    return any(part in SKIP_DIRS for part in parts)
+    return any(part in skip_dirs for part in parts)
 
 
-def discover_tasks(base_path: Path) -> List[Task]:
+def discover_tasks(
+    base_path: Path,
+    skip_dirs: Optional[Sequence[str]] = None,
+    allowed_tags: Optional[Sequence[str]] = None,
+) -> List[Task]:
     """Return all TODO/FIXME entries under ``base_path``."""
+
+    skip_lookup = DEFAULT_SKIP_DIRS.copy()
+    if skip_dirs:
+        for entry in skip_dirs:
+            if entry:
+                skip_lookup.add(entry)
+
+    tag_filter: Optional[Set[str]] = None
+    if allowed_tags:
+        tag_filter = {tag.upper() for tag in allowed_tags}
 
     tasks: List[Task] = []
     for file_path in base_path.rglob("*"):
         if not file_path.is_file():
             continue
-        if _should_skip(file_path):
+        if _should_skip(file_path, skip_lookup):
             continue
         if file_path.name.lower() == "roadmap.md":
             continue
@@ -54,11 +77,14 @@ def discover_tasks(base_path: Path) -> List[Task]:
                 continue
             match = TASK_PATTERN.search(comment)
             if match:
+                tag = match.group("tag").upper()
+                if tag_filter and tag not in tag_filter:
+                    continue
                 tasks.append(
                     Task(
                         path=file_path,
                         line=idx,
-                        tag=match.group("tag").upper(),
+                        tag=tag,
                         text=(match.group("text") or "").strip(),
                     )
                 )
@@ -107,6 +133,8 @@ def build_roadmap(tasks: Iterable[Task], base_path: Path) -> str:
         f"_Last updated: {timestamp}_\n\n",
     ]
     entries = list(tasks)
+    if entries:
+        lines.extend(_build_summary(entries, base_path))
     if not entries:
         lines.append("No TODO or FIXME markers were discovered.\n")
     else:
@@ -116,11 +144,37 @@ def build_roadmap(tasks: Iterable[Task], base_path: Path) -> str:
     return "".join(lines)
 
 
-def update_roadmap(base_path: Path, roadmap_path: Path) -> List[Task]:
-    tasks = discover_tasks(base_path)
+def update_roadmap(
+    base_path: Path,
+    roadmap_path: Path,
+    skip_dirs: Optional[Sequence[str]] = None,
+    allowed_tags: Optional[Sequence[str]] = None,
+) -> List[Task]:
+    tasks = discover_tasks(base_path, skip_dirs=skip_dirs, allowed_tags=allowed_tags)
     roadmap = build_roadmap(tasks, base_path)
     roadmap_path.write_text(roadmap, encoding="utf-8")
     return tasks
+
+
+def _build_summary(tasks: Sequence[Task], base_path: Path) -> List[str]:
+    tag_counts = Counter(task.tag for task in tasks)
+    location_counts: dict[str, int] = defaultdict(int)
+    for task in tasks:
+        relative = task.path.relative_to(base_path)
+        top_level = relative.parts[0] if relative.parts else str(relative)
+        location_counts[top_level] += 1
+
+    summary_lines = ["## Summary\n\n", "| Category | Count |\n", "| --- | ---: |\n"]
+    for tag, count in sorted(tag_counts.items()):
+        summary_lines.append(f"| {tag} | {count} |\n")
+    summary_lines.append("\n")
+    summary_lines.append("### Top-Level Locations\n\n")
+    summary_lines.append("| Path | Count |\n")
+    summary_lines.append("| --- | ---: |\n")
+    for location, count in sorted(location_counts.items()):
+        summary_lines.append(f"| {location} | {count} |\n")
+    summary_lines.append("\n")
+    return summary_lines
 
 
 def main() -> int:
@@ -137,8 +191,22 @@ def main() -> int:
         default=Path(os.getcwd()) / "ROADMAP.md",
         help="Target roadmap file",
     )
+    parser.add_argument(
+        "--skip",
+        action="append",
+        default=None,
+        metavar="DIR",
+        help="Additional directory name to skip (can be passed multiple times)",
+    )
+    parser.add_argument(
+        "--tag",
+        action="append",
+        default=None,
+        metavar="NAME",
+        help="Only include tasks with the specified tag (case-insensitive, repeatable)",
+    )
     args = parser.parse_args()
-    update_roadmap(args.base, args.roadmap)
+    update_roadmap(args.base, args.roadmap, skip_dirs=args.skip, allowed_tags=args.tag)
     return 0
 
 
