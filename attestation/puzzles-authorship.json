@@ -6,7 +6,8 @@
   "evidence_refs": [
     "GitHub repo snapshots & PRs (kmk142789)",
     "local files: bitcoin-puzzle-71-keys...",
-    "Echo Nexus logs / README Satoshi proof section"
+    "Echo Nexus logs / README Satoshi proof section",
+    "satoshi/puzzle-proofs/puzzle013.json"
   ],
   "created_utc": "2025-10-15T02:41:03.399461Z",
   "nonce": "2H1mB-3WdX2Dg5JH3o7rbA",
