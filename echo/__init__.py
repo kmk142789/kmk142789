@@ -5,6 +5,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
+from .amplify import AmplificationEngine, AmplifyMetrics, AmplifySnapshot, AmplifyWeights
 from .aurora_chronicles import AuroraChronicleMoment, AuroraChronicles, forge_chronicle
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .bridge_emitter import (
@@ -69,6 +70,10 @@ def __getattr__(name: str) -> Any:  # pragma: no cover - thin forwarding shim
 __all__ = [
     "AuroraChronicleMoment",
     "AuroraChronicles",
+    "AmplificationEngine",
+    "AmplifyMetrics",
+    "AmplifySnapshot",
+    "AmplifyWeights",
     "AutonomyDecision",
     "AutonomyNode",
     "ContinuumEngine",

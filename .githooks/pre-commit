@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+PYTHON=${PYTHON:-python}
+
+if ! command -v "$PYTHON" >/dev/null 2>&1; then
+  exit 0
+fi
+
+$PYTHON -m echo.manifest_cli amplify now >/dev/null
+$PYTHON -m echo.manifest_cli manifest refresh >/dev/null

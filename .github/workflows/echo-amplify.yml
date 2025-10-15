@@ -1,0 +1,25 @@
+name: Echo Amplify
+
+on:
+  pull_request:
+
+jobs:
+  amplify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+      - name: Run unit tests
+        run: pytest -q
+      - name: Amplify gate enforcement
+        env:
+          AMPLIFY_MIN: ${{ secrets.AMPLIFY_MIN }}
+        run: |
+          THRESH=${AMPLIFY_MIN:-70}
+          python -m echo.manifest_cli amplify gate --min "$THRESH"

@@ -94,7 +94,7 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertIn("new orbit", message)
 
     def test_run_cycles_progresses_multiple_orbits(self) -> None:
-        snapshots = self.evolver.run_cycles(3, enable_network=False, persist_artifact=False)
+        snapshots = self.evolver.run_cycles(3, enable_network=False, persist_artifacts=False)
 
         self.assertEqual(len(snapshots), 3)
         self.assertEqual([snapshot.cycle for snapshot in snapshots], [1, 2, 3])
@@ -105,7 +105,7 @@ class EchoEvolverTests(unittest.TestCase):
     def test_run_cycles_persists_final_artifact_only_by_default(self) -> None:
         self.assertFalse(self.artifact.exists())
 
-        snapshots = self.evolver.run_cycles(2, enable_network=False, persist_artifact=True)
+        snapshots = self.evolver.run_cycles(2, enable_network=False, persist_artifacts=True)
 
         self.assertEqual(len(snapshots), 2)
         self.assertTrue(self.artifact.exists())

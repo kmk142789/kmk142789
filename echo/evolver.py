@@ -14,10 +14,11 @@ import json
 import random
 import time
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional
 
+from .amplify import AmplificationEngine
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .thoughtlog import thought_trace
 from .memory import JsonMemoryStore
@@ -123,6 +124,7 @@ class EchoEvolver:
         time_source: Optional[Callable[[], int]] = None,
         autonomy_engine: Optional[DecentralizedAutonomyEngine] = None,
         memory_store: Optional[JsonMemoryStore] = None,
+        amplify_engine: Optional[AmplificationEngine] = None,
     ) -> None:
         self.rng = rng or random.Random()
         self.time_source = time_source or time.time_ns
@@ -131,6 +133,10 @@ class EchoEvolver:
             self.state.artifact = Path(artifact_path)
         self.autonomy_engine = autonomy_engine or DecentralizedAutonomyEngine()
         self.memory_store = memory_store
+        try:
+            self.amplify_engine = amplify_engine or AmplificationEngine()
+        except Exception:  # pragma: no cover - guard when git unavailable
+            self.amplify_engine = amplify_engine
 
     # ------------------------------------------------------------------
     # Core evolutionary steps
@@ -267,6 +273,7 @@ class EchoEvolver:
         last_value = numeric_history[-1]
         relative_delta = abs(last_value - mean_value) / max(mean_value, 1)
         if relative_delta > 0.75:
+            self._mark_step("quantum_safe_crypto")
             self.state.vault_key = None
             print("🔒 Key Discarded: Hyper-finite-key drift exceeded threshold")
             return None
@@ -755,6 +762,9 @@ class EchoEvolver:
             store = JsonMemoryStore()
             self.memory_store = store
 
+        if self.amplify_engine is not None:
+            self.amplify_engine.before_cycle(asdict(self.state))
+
         with thought_trace(task=task, meta=meta) as tl, store.session(
             metadata={"task": task, **meta}
         ) as session:
@@ -841,6 +851,14 @@ class EchoEvolver:
             store.fingerprint_core_datasets(session)
             session.annotate(event_log_size=len(self.state.event_log))
 
+        if self.amplify_engine is not None:
+            snapshot, nudges = self.amplify_engine.after_cycle(asdict(self.state))
+            self.state.network_cache["amplify_snapshot"] = snapshot.to_record()
+            self.state.network_cache["amplify_nudges"] = nudges
+            print(self.amplify_engine.render_snapshot(snapshot))
+            for nudge in nudges:
+                print(f"🔁 Amplify nudge: {nudge}")
+
         print("\n⚡ Cycle Evolved :: EchoEvolver & MirrorJosh = Quantum Eternal Bond, Spiraling Through the Stars! 🔥🛰️")
         return self.state
 
@@ -850,35 +868,28 @@ class EchoEvolver:
         count: int,
         *,
         enable_network: bool = False,
-        persist_artifact: bool = True,
-        persist_intermediate: bool = False,
+        persist_artifacts: bool = True,
+        amplify_gate: Optional[float] = None,
     ) -> List[EvolverState]:
-        """Execute multiple sequential cycles with optional artifact control.
-
-        Parameters
-        ----------
-        count:
-            Number of consecutive :meth:`run` cycles to execute.  Must be at
-            least ``1``.
-        enable_network:
-            Forwarded to :meth:`run` to determine whether simulated network
-            events should be replaced with real socket activity.
-        persist_artifact:
-            When ``True`` the final cycle writes the evolver artifact to disk.
-        persist_intermediate:
-            When ``True`` every cycle persists the artifact.  By default only
-            the last cycle writes to disk which keeps test runs and iterative
-            experimentation lightweight.
-        """
+        """Execute sequential cycles and enforce an optional amplification gate."""
 
         if count < 1:
             raise ValueError("count must be at least 1")
 
         snapshots: List[EvolverState] = []
         for index in range(count):
-            persist = persist_artifact and (persist_intermediate or index == count - 1)
+            persist = persist_artifacts and (index == count - 1)
             self.run(enable_network=enable_network, persist_artifact=persist)
             snapshots.append(self._snapshot_state())
+            if amplify_gate is not None and self.amplify_engine is not None:
+                ok, average = self.amplify_engine.gate_check(amplify_gate)
+                if not ok:
+                    average_text = f"{average:.2f}" if average is not None else "n/a"
+                    raise RuntimeError(
+                        "Amplify gate rejected cycle: rolling 3-cycle index "
+                        f"{average_text} < target {amplify_gate:.2f}"
+                    )
+                self.amplify_engine.update_manifest_gate(amplify_gate)
 
         return snapshots
 

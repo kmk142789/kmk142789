@@ -1,4 +1,9 @@
 {
+  "amplification": {
+    "gate": null,
+    "latest": null,
+    "rolling_avg": null
+  },
   "assistant_kits": [
     {
       "digest": "97c6f0a0289f1e470bc4b80e9040214c7eb22f74cf35ae97383aae84a3add527",
@@ -147,7 +152,7 @@
         "write_artifact"
       ],
       "qualname": "EchoEvolver",
-      "source_digest": "ad51e08fc0c52e48229102b48b10ad3ef3e014c8c3090e5183f10120bc4ac872",
+      "source_digest": "b760fec95ef83dd46e8f5f35976915647d919bc22b564978ebefd98dda4f1d1f",
       "summary": "EchoEvolver's omnipresent engine, refined for reliability."
     },
     {
@@ -214,7 +219,7 @@
     }
   ],
   "format": "echo.manifest/v2",
-  "manifest_digest": "c547adf71165c8003fff29e40e23d8a8aaaa163333b0cdc5540508a7a2e34495",
+  "manifest_digest": "b64c8ba409ad444a0caedc9ad56d70c1c37428653f1a5e530dc9a1c818ca5753",
   "states": [
     {
       "dataclass": true,

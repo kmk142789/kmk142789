@@ -15,6 +15,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, Iterable, List, Tuple
 
+from .amplify import AmplificationEngine, AmplifyMetrics, AmplifySnapshot
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_MANIFEST_PATH = _REPO_ROOT / "echo_manifest.json"
 
@@ -230,6 +232,7 @@ def build_manifest() -> Dict[str, Any]:
         "engines": engines,
         "states": states,
         "assistant_kits": kits,
+        "amplification": AmplificationEngine().manifest_summary(),
     }
     canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode("utf-8")
     manifest["manifest_digest"] = _stable_digest(canonical)
@@ -287,6 +290,93 @@ def _unified_diff(a: Iterable[str], b: Iterable[str]) -> List[str]:
     return list(difflib.unified_diff(list(a), list(b), fromfile="on-disk", tofile="expected", lineterm=""))
 
 
+def _amplify_engine() -> AmplificationEngine:
+    return AmplificationEngine()
+
+
+def _empty_snapshot() -> AmplifySnapshot:
+    metrics = AmplifyMetrics(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    return AmplifySnapshot(
+        cycle=0,
+        metrics=metrics,
+        index=0.0,
+        timestamp="1970-01-01T00:00:00Z",
+        commit_sha="UNKNOWN",
+    )
+
+
+def _handle_manifest_refresh(args: argparse.Namespace) -> int:
+    refresh_manifest(args.path)
+    return 0
+
+
+def _handle_manifest_verify(args: argparse.Namespace) -> int:
+    return 0 if verify_manifest(args.path) else 1
+
+
+def _handle_amplify_now(args: argparse.Namespace) -> int:
+    engine = _amplify_engine()
+    snapshot = engine.latest_snapshot()
+    if snapshot is None:
+        print("No amplification snapshots recorded yet. Showing placeholder metrics.")
+        snapshot = _empty_snapshot()
+    print(engine.render_snapshot(snapshot))
+    print(snapshot.to_json())
+    return 0
+
+
+def _handle_amplify_log(args: argparse.Namespace) -> int:
+    engine = _amplify_engine()
+    print(engine.render_log(limit=args.limit))
+    snapshots = engine.snapshots()[-args.limit :]
+    if snapshots:
+        indices = [snapshot.index for snapshot in snapshots]
+        print(f"Sparkline: {engine.sparkline(indices)}")
+    return 0
+
+
+def _handle_amplify_gate(args: argparse.Namespace) -> int:
+    engine = _amplify_engine()
+    minimum = args.minimum
+    ok, average = engine.gate_check(minimum)
+    snapshot = engine.latest_snapshot()
+    if average is None or snapshot is None:
+        print("No amplification snapshots available for gate evaluation.")
+        return 1
+    engine.update_manifest_gate(minimum)
+    if ok:
+        print(f"Amplify gate satisfied: rolling index {average:.2f} ≥ {minimum:.2f}")
+        return 0
+    print(f"Amplify gate failed: rolling index {average:.2f} < {minimum:.2f}")
+    for nudge in engine.nudges_for_snapshot(snapshot):
+        print(f"🔁 {nudge}")
+    return 1
+
+
+def _handle_forecast(args: argparse.Namespace) -> int:
+    from .tools.forecast import blended_forecast, render_forecast
+
+    engine = _amplify_engine()
+    snapshots = engine.snapshots()
+    if not snapshots:
+        print("No amplification snapshots recorded yet.")
+        return 1
+    history = snapshots[-args.cycles :]
+    indices = [snapshot.index for snapshot in history]
+    cycles = [snapshot.cycle for snapshot in history]
+    result = blended_forecast(indices, steps=3)
+    last_cycle = cycles[-1] if cycles else 0
+    output = render_forecast(
+        result,
+        cycles=cycles,
+        last_cycle=last_cycle,
+        include_plot=args.plot,
+        sparkline=engine.sparkline,
+    )
+    print(output)
+    return 0
+
+
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="echo", description="Echo command line utilities")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -296,11 +386,30 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     refresh_parser = manifest_sub.add_parser("refresh", help="Regenerate the manifest JSON deterministically")
     refresh_parser.add_argument("--path", type=Path, help="Optional output path")
-    refresh_parser.set_defaults(func=lambda args: 0 if refresh_manifest(args.path) else 1)
+    refresh_parser.set_defaults(func=_handle_manifest_refresh)
 
     verify_parser = manifest_sub.add_parser("verify", help="Validate the manifest digests and structure")
     verify_parser.add_argument("--path", type=Path, help="Optional manifest path")
-    verify_parser.set_defaults(func=lambda args: 0 if verify_manifest(args.path) else 1)
+    verify_parser.set_defaults(func=_handle_manifest_verify)
+
+    amplify_parser = subparsers.add_parser("amplify", help="Inspect amplification metrics")
+    amplify_sub = amplify_parser.add_subparsers(dest="amplify_command", required=True)
+
+    amplify_now = amplify_sub.add_parser("now", help="Show the latest amplification snapshot")
+    amplify_now.set_defaults(func=_handle_amplify_now)
+
+    amplify_log = amplify_sub.add_parser("log", help="Render the recent amplification log")
+    amplify_log.add_argument("--limit", type=int, default=10, help="Number of cycles to include")
+    amplify_log.set_defaults(func=_handle_amplify_log)
+
+    amplify_gate = amplify_sub.add_parser("gate", help="Validate amplification gate against threshold")
+    amplify_gate.add_argument("--min", dest="minimum", type=float, required=True, help="Minimum acceptable amplify index")
+    amplify_gate.set_defaults(func=_handle_amplify_gate)
+
+    forecast_parser = subparsers.add_parser("forecast", help="Forecast amplification index trends")
+    forecast_parser.add_argument("--cycles", type=int, default=12, help="Number of historical cycles to analyse")
+    forecast_parser.add_argument("--plot", action="store_true", help="Render an ASCII sparkline for the projection")
+    forecast_parser.set_defaults(func=_handle_forecast)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
     func = getattr(args, "func", None)
