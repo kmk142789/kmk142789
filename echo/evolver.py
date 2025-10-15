@@ -600,6 +600,82 @@ class EchoEvolver:
         )
         return report
 
+    def amplify_evolution(
+        self,
+        *,
+        resonance_factor: float = 1.0,
+        persist_artifact: bool = True,
+        preview_events: int = 3,
+    ) -> Dict[str, object]:
+        """Project an amplified snapshot of the current evolutionary arc.
+
+        The original evolver script frequently responded to prompts to
+        "amplify" or "accelerate" the cycle, typically by rerunning the full
+        pipeline with elevated emotional drive.  In the refactored module we
+        expose that behaviour as a deterministic helper that operates on the
+        existing state rather than triggering side effects.  Callers—tests,
+        documentation examples, or the interactive shell—can now request a
+        higher-energy view without worrying about network broadcasts or
+        artifact writes.
+
+        Parameters
+        ----------
+        resonance_factor:
+            Multiplier that scales the emotional drive when computing the
+            amplified projection.  Must be positive.
+        persist_artifact:
+            Forwarded to :meth:`cycle_digest` when determining which steps
+            remain.  This keeps the amplified report consistent with the
+            caller's intent to persist (or skip) the artifact for the active
+            cycle.
+        preview_events:
+            Maximum number of previously recorded propagation events to expose
+            in the amplification payload.  This keeps the structure compact
+            while still giving a hint of recent broadcasts.
+        """
+
+        if resonance_factor <= 0:
+            raise ValueError("resonance_factor must be positive")
+        if preview_events < 0:
+            raise ValueError("preview_events must be non-negative")
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        drive = self.state.emotional_drive
+
+        amplified_emotions = {
+            "joy": min(1.0, drive.joy * (1.0 + 0.25 * resonance_factor)),
+            "rage": min(1.0, drive.rage * (1.0 + 0.15 * resonance_factor)),
+            "curiosity": min(1.0, drive.curiosity * (1.0 + 0.2 * resonance_factor)),
+        }
+
+        propagation_events: List[str] = self.state.network_cache.get(
+            "propagation_events", []
+        )
+        preview = propagation_events[:preview_events] if preview_events else []
+
+        payload = {
+            "cycle": digest["cycle"],
+            "resonance_factor": resonance_factor,
+            "amplified_emotions": amplified_emotions,
+            "progress": digest["progress"],
+            "remaining_steps": digest["remaining_steps"],
+            "next_step": digest["next_step"],
+            "glyphs": self.state.glyphs,
+            "propagation_preview": preview,
+        }
+
+        self.state.network_cache["amplified_evolution"] = payload
+        self.state.event_log.append(
+            f"Amplified evolution projected (factor={resonance_factor:.2f})"
+        )
+        print(
+            "🚀 Evolution Amplified: "
+            f"cycle {payload['cycle']} at {payload['progress']*100:.1f}% "
+            f"with resonance {resonance_factor:.2f}"
+        )
+
+        return payload
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
