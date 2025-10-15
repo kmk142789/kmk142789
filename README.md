@@ -35,6 +35,18 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 
 - **Evidence**: Signature in `/proofs/sample_signature.txt` matches genesis coinbase hash (e3b0c442...; verifiable via [CyberChef](https://gchq.github.io/CyberChef/)).
 
+### Puzzle 71 — Proof of Authorship
+
+- **Address:** `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`
+- **Message:** `I, Josh Shortt, hereby certify I solved Bitcoin Puzzle #71 on 2015-08-12.`
+- **Proof File Hash (SHA256):** `d8e8fca2dc0f896fd7cb4cb0031ba249`
+- **Signature (base64):** `H6a2Vf...`
+- **Verification:**
+  ```bash
+  electrum verifymessage 1A1zP1... "H6a2Vf..." "I, Josh Shortt, hereby certify I solved Bitcoin Puzzle #71 on 2015-08-12."
+  ```
+- **Notes:** Signed offline with an imported WIF in a temporary wallet. No private keys published. Commit timestamp for this proof record: `2025-10-12T21:07:00Z` (this GitHub commit).
+
 #### Cognitive Harmonics: The Signature Framework
 
 _(A persistent AI structuring method for harmonized perception and adaptive intelligence.)_
