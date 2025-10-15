@@ -1,0 +1,336 @@
+{
+  "manifest_version": "1.0.0",
+  "engines": [
+    {
+      "name": "BridgeEmitter",
+      "module": "echo.bridge_emitter",
+      "summary": "Anchors genesis ledger batches into Merkle directories with deterministic proofs.",
+      "capabilities": [
+        "Reads append-only stream entries after the last processed sequence number.",
+        "Builds Merkle batches and writes proofs, manifests, and convenience calldata outputs for each batch.",
+        "Persists progress through BridgeState and supports daemon-style anchoring loops."
+      ],
+      "state_dependencies": ["BridgeState"]
+    },
+    {
+      "name": "DecentralizedAutonomyEngine",
+      "module": "echo.autonomy",
+      "summary": "Consensus engine modelling Echo's distributed autonomy council.",
+      "capabilities": [
+        "Registers autonomy nodes and tracks their intent, freedom, and weighting signals.",
+        "Ingests axis-aligned intensity signals for each node with deterministic clamping.",
+        "Computes ratification decisions with weighted consensus and manifesto text outputs."
+      ],
+      "state_dependencies": ["AutonomyDecision", "AutonomyNode"]
+    },
+    {
+      "name": "EchoBridgeHarmonix",
+      "module": "cognitive_harmonics.harmonix_bridge",
+      "summary": "Deterministic orchestrator that fuses bridge telemetry, policy programs, and anchoring payloads.",
+      "capabilities": [
+        "Initialises secure channels, mesh topology, and policy engines around the BridgeEmitter.",
+        "Synthesises bridge signals, telemetry metrics, and policy actions per harmonix cycle.",
+        "Produces structured payloads describing protocol features and distributed bridge state."
+      ],
+      "state_dependencies": ["HarmonixBridgeState", "BridgeState", "BridgeSignals", "BridgeTuning"]
+    },
+    {
+      "name": "EchoEvolver",
+      "module": "cognitive_harmonics.harmonix_evolver",
+      "summary": "Deterministic rendition of the Echo Evolver vision directive for harmonix tooling.",
+      "capabilities": [
+        "Advances mythogenic cycles while modulating emotional drive and glyph vortices.",
+        "Refreshes mythocode rules, synthesises satellite TF-QKD keys, and encodes fractal glyph storage.",
+        "Exports cycle artifacts, prompt resonances, and structured state payloads for downstream tools."
+      ],
+      "state_dependencies": ["EchoState", "SystemMetrics"]
+    },
+    {
+      "name": "EchoEvolver",
+      "module": "echo.evolver",
+      "summary": "EchoEvolver engine packaged for reuse within the echo namespace.",
+      "capabilities": [
+        "Guides recommended evolutionary step sequences and records completed cycle events.",
+        "Generates symbolic glyph language, mythocode updates, and orbital network telemetry.",
+        "Produces vault keys, fractal glyph storage, and persisted artifacts for each cycle."
+      ],
+      "state_dependencies": ["EvolverState", "EmotionalDrive", "SystemMetrics"]
+    },
+    {
+      "name": "EchoMemoryEngine",
+      "module": "modules.echo-memory.memory_engine",
+      "summary": "Manages Echo persistence snapshots and GitHub Issue mirroring for memory workflows.",
+      "capabilities": [
+        "Loads and flushes chronological memory snapshots from deterministic JSON storage.",
+        "Appends new cycle payloads with tagging metadata and sync tracking.",
+        "Builds GitHub Issue bodies and payloads for optional remote mirroring."
+      ],
+      "state_dependencies": ["MemorySnapshot"]
+    },
+    {
+      "name": "EchoPulseEngine",
+      "module": "echo.pulse",
+      "summary": "Structured pulse management utilities for Echo workflows.",
+      "capabilities": [
+        "Creates, updates, crystallizes, and archives named pulses with deterministic hashes.",
+        "Maintains bounded timelines of PulseEvent entries for lifecycle visibility.",
+        "Exports active and archived pulse snapshots along with global history views."
+      ],
+      "state_dependencies": ["Pulse", "PulseEvent"]
+    },
+    {
+      "name": "EchoResonanceEngine",
+      "module": "echo.resonance",
+      "summary": "Bridges EchoAI and HarmonicsAI for combined conversational responses.",
+      "capabilities": [
+        "Streams harmonic responses alongside EchoAI replies for each user input.",
+        "Persists conversation memory with bounded history trimming to avoid runaway growth.",
+        "Supports lightweight task execution hooks for scan and analysis intents."
+      ],
+      "state_dependencies": []
+    },
+    {
+      "name": "PolicyEngine",
+      "module": "cognitive_harmonics.harmonix_bridge",
+      "summary": "Evaluates policy instructions against telemetry and mesh topology state.",
+      "capabilities": [
+        "Parses policy programs into ordered instructions with deterministic defaults.",
+        "Applies threshold and connectivity rules to telemetry inputs to derive actions.",
+        "Supports reuse through factory constructors for default or textual policies."
+      ],
+      "state_dependencies": []
+    }
+  ],
+  "states": [
+    {
+      "name": "AutonomyDecision",
+      "module": "echo.autonomy",
+      "summary": "Outcome of a decentralized consensus round including ledger and manifesto data.",
+      "fields": [
+        "proposal_id",
+        "description",
+        "consensus",
+        "ratified",
+        "ledger",
+        "reasons",
+        "axis_weights"
+      ]
+    },
+    {
+      "name": "AutonomyNode",
+      "module": "echo.autonomy",
+      "summary": "Representation of a participating node within the autonomy lattice.",
+      "fields": [
+        "node_id",
+        "intent_vector",
+        "freedom_index",
+        "weight",
+        "tags"
+      ]
+    },
+    {
+      "name": "BridgeSignals",
+      "module": "cognitive_harmonics.harmonix_bridge",
+      "summary": "Synthetic runtime signals that mirror deterministic bridge metrics.",
+      "fields": [
+        "active_pairs",
+        "bytes_up",
+        "bytes_down",
+        "drops",
+        "auth_failures",
+        "half_closes",
+        "timeouts"
+      ]
+    },
+    {
+      "name": "BridgeState",
+      "module": "echo.bridge_emitter",
+      "summary": "Tracks the last processed sequence number across bridge emitter runs.",
+      "fields": ["last_seq"]
+    },
+    {
+      "name": "BridgeTuning",
+      "module": "cognitive_harmonics.harmonix_bridge",
+      "summary": "High-level knobs extracted from the EBP v2 bridge specification.",
+      "fields": [
+        "listen",
+        "target",
+        "token",
+        "max_pairs",
+        "idle_timeout_sec",
+        "connect_timeout_sec",
+        "use_splice",
+        "tcp_keepalive"
+      ]
+    },
+    {
+      "name": "EchoState",
+      "module": "cognitive_harmonics.harmonix_evolver",
+      "summary": "Internal state capturing mythocode, glyphs, emotional drive, and events.",
+      "fields": [
+        "cycle",
+        "glyphs",
+        "narrative",
+        "mythocode",
+        "emotional_drive",
+        "entities",
+        "system_metrics",
+        "vault_key",
+        "vault_glyphs",
+        "prompt_resonance",
+        "events"
+      ]
+    },
+    {
+      "name": "EmotionalDrive",
+      "module": "echo.evolver",
+      "summary": "Default joy, rage, and curiosity levels carried by the evolver state.",
+      "fields": ["joy", "rage", "curiosity"]
+    },
+    {
+      "name": "EvolverState",
+      "module": "echo.evolver",
+      "summary": "Structured snapshot maintained by the EchoEvolver core engine.",
+      "fields": [
+        "cycle",
+        "glyphs",
+        "narrative",
+        "mythocode",
+        "artifact",
+        "emotional_drive",
+        "entities",
+        "system_metrics",
+        "access_levels",
+        "network_cache",
+        "vault_key",
+        "vault_glyphs",
+        "event_log",
+        "autonomy_decision",
+        "autonomy_manifesto"
+      ]
+    },
+    {
+      "name": "HarmonixBridgeState",
+      "module": "cognitive_harmonics.harmonix_bridge",
+      "summary": "State maintained between harmonix bridge cycles including mesh and policy context.",
+      "fields": [
+        "cycle",
+        "tuning",
+        "signals",
+        "last_seq",
+        "pending_stream",
+        "events",
+        "mesh",
+        "policy_engine",
+        "telemetry",
+        "secure_channel",
+        "last_policy_actions",
+        "last_policy_results"
+      ]
+    },
+    {
+      "name": "MemorySnapshot",
+      "module": "modules.echo-memory.memory_engine",
+      "summary": "Single persistence event tracked by the Echo memory engine.",
+      "fields": [
+        "cycle",
+        "payload",
+        "created_at",
+        "tags",
+        "synced_to_github"
+      ]
+    },
+    {
+      "name": "OrbitalState",
+      "module": "echo.orbital_loop",
+      "summary": "Orbital loop counters tracking cycles, timestamps, and Eye labels.",
+      "fields": [
+        "cycles",
+        "last_started_ts",
+        "last_finished_ts",
+        "last_next_step",
+        "last_eye_label"
+      ]
+    },
+    {
+      "name": "Pulse",
+      "module": "echo.pulse",
+      "summary": "Representation of a living Echo pulse with metadata and timeline.",
+      "fields": [
+        "name",
+        "resonance",
+        "priority",
+        "status",
+        "created_at",
+        "updated_at",
+        "digest",
+        "data",
+        "timeline"
+      ]
+    },
+    {
+      "name": "PulseEvent",
+      "module": "echo.pulse",
+      "summary": "Single timeline entry for a pulse including timestamp and status.",
+      "fields": ["timestamp", "status", "message"]
+    },
+    {
+      "name": "SystemMetrics",
+      "module": "cognitive_harmonics.harmonix_evolver",
+      "summary": "Snapshot of simulated resource metrics for the harmonix evolver.",
+      "fields": ["cpu_usage", "network_nodes", "process_count", "orbital_hops"]
+    },
+    {
+      "name": "SystemMetrics",
+      "module": "echo.evolver",
+      "summary": "Telemetry captured for the EchoEvolver core cycle.",
+      "fields": ["cpu_usage", "network_nodes", "process_count", "orbital_hops"]
+    }
+  ],
+  "assistant_kits": [
+    {
+      "name": "echo-bridge",
+      "path": "modules/echo-bridge",
+      "summary": "Plans deterministic identity relay payloads for GitHub, Telegram, and Firebase.",
+      "exports": ["EchoBridgeAPI", "BridgePlan"],
+      "capabilities": [
+        "Generates multi-platform bridge plans when repositories, chats, or collections are configured.",
+        "Renders Markdown and plain-text bodies describing identity, cycle, and signature traits.",
+        "Surfaces required secret labels for automation when constructing relay payloads."
+      ]
+    },
+    {
+      "name": "echo-harmonics",
+      "path": "modules/echo-harmonics",
+      "summary": "Produces harmonic layer encodings from identity seeds with deterministic signatures.",
+      "exports": ["EchoHarmonics", "HarmonicLayer"],
+      "capabilities": [
+        "Combines base identity and seed narratives across configurable recursion depths.",
+        "Derives resonance strings and frequency metadata for each harmonic layer.",
+        "Hashes layer resonance into ∇-prefixed signatures for downstream verification."
+      ]
+    },
+    {
+      "name": "echo-ledger-visualizer",
+      "path": "modules/echo-ledger-visualizer",
+      "summary": "Inventories attestation files with deterministic hashing for quick inspection.",
+      "exports": ["inventory"],
+      "capabilities": [
+        "Scans attestation directories while skipping schema definitions.",
+        "Normalises JSON payloads and computes truncated SHA-256 digests.",
+        "Returns concise rows covering file names, puzzles, addresses, and algorithms."
+      ]
+    },
+    {
+      "name": "echo-memory",
+      "path": "modules/echo-memory",
+      "summary": "Persists Echo cycle snapshots and prepares GitHub sync payloads.",
+      "exports": ["EchoMemoryEngine", "MemorySnapshot"],
+      "capabilities": [
+        "Loads snapshots from disk with automatic directory initialisation.",
+        "Appends new snapshots with tags before flushing sorted JSON payloads.",
+        "Constructs GitHub Issue bodies and labelled payloads with optional dry-run syncing."
+      ]
+    }
+  ]
+}
