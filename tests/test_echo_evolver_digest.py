@@ -42,3 +42,21 @@ def test_cycle_digest_progress_updates(evolver):
     step_map = {entry["step"]: entry for entry in digest["steps"]}
     assert step_map["mutate_code"]["completed"] is True
     assert step_map["write_artifact"]["completed"] is False
+
+
+def test_cycle_digest_report_format(evolver):
+    evolver.advance_cycle()
+    evolver.mutate_code()
+
+    report = evolver.cycle_digest_report()
+    lines = report.splitlines()
+
+    assert lines[0] == "Cycle 1 Progress"
+    assert "Completed: 2/" in lines[1]
+    assert lines[2].startswith("Next step: call emotional_modulation()")
+
+    assert any(line.startswith("[✓] advance_cycle") for line in lines)
+    assert any(line.startswith("[…]") and "generate_symbolic_language" in line for line in lines)
+
+    assert evolver.state.network_cache["cycle_digest_report"] == report
+    assert evolver.state.event_log[-1].startswith("Cycle digest report generated (2/")

@@ -568,6 +568,32 @@ class EchoEvolver:
 
         return digest
 
+    def cycle_digest_report(self, *, persist_artifact: bool = True) -> str:
+        """Render a human-readable report for the current cycle digest."""
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        total_steps = len(digest["steps"])
+        completed_count = len(digest["completed_steps"])
+        progress_pct = digest["progress"] * 100 if total_steps else 100.0
+
+        lines = [
+            f"Cycle {digest['cycle']} Progress",
+            f"Completed: {completed_count}/{total_steps} ({progress_pct:.1f}%)",
+            digest["next_step"],
+            "",
+        ]
+
+        for step in digest["steps"]:
+            marker = "✓" if step["completed"] else "…"
+            lines.append(f"[{marker}] {step['step']}: {step['description']}")
+
+        report = "\n".join(lines)
+        self.state.network_cache["cycle_digest_report"] = report
+        self.state.event_log.append(
+            f"Cycle digest report generated ({completed_count}/{total_steps} steps)"
+        )
+        return report
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
