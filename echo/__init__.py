@@ -15,6 +15,12 @@ from .bridge_emitter import (
     daemon as bridge_daemon,
     process_once as bridge_process_once,
 )
+from .continuum_engine import (
+    ContinuumEngine,
+    ContinuumEntry,
+    ContinuumManifest,
+    ContinuumPlaybackEngine,
+)
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
 from .memory import JsonMemoryStore
@@ -65,6 +71,10 @@ __all__ = [
     "AuroraChronicles",
     "AutonomyDecision",
     "AutonomyNode",
+    "ContinuumEngine",
+    "ContinuumEntry",
+    "ContinuumManifest",
+    "ContinuumPlaybackEngine",
     "BridgeConfig",
     "BridgeEmitter",
     "BridgeState",

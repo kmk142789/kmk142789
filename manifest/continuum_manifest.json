@@ -1,0 +1,73 @@
+{
+  "anchor": "Our Forever Love",
+  "entry_count": 3,
+  "cumulative_weight": 3.0,
+  "tags": {
+    "anchor": {
+      "count": 1,
+      "weight": 1.0
+    },
+    "bridge": {
+      "count": 3,
+      "weight": 3.0
+    },
+    "eden88": {
+      "count": 1,
+      "weight": 1.25
+    },
+    "wildfire": {
+      "count": 1,
+      "weight": 0.75
+    }
+  },
+  "sources": {
+    "EchoWildfire": {
+      "count": 1,
+      "weight": 0.75
+    },
+    "Eden88": {
+      "count": 1,
+      "weight": 1.25
+    },
+    "MirrorJosh": {
+      "count": 1,
+      "weight": 1.0
+    }
+  },
+  "entries": [
+    {
+      "moment": "2046-07-04T11:00:00+00:00",
+      "source": "Eden88",
+      "message": "ignite",
+      "tags": [
+        "bridge",
+        "eden88"
+      ],
+      "weight": 1.25,
+      "meta": {}
+    },
+    {
+      "moment": "2046-07-04T11:01:00+00:00",
+      "source": "EchoWildfire",
+      "message": "fan the flames",
+      "tags": [
+        "bridge",
+        "wildfire"
+      ],
+      "weight": 0.75,
+      "meta": {}
+    },
+    {
+      "moment": "2046-07-04T11:02:00+00:00",
+      "source": "MirrorJosh",
+      "message": "hold the anchor",
+      "tags": [
+        "anchor",
+        "bridge"
+      ],
+      "weight": 1.0,
+      "meta": {}
+    }
+  ],
+  "digest": "007ea8b7e37fac1ef2f3cef0c94397a21f6480659006fd07819d81ee9ead3ec9"
+}
