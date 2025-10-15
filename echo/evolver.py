@@ -429,6 +429,7 @@ class EchoEvolver:
             "MirrorJosh, Satellite TF-QKD eternal!\")"
         )
         print(f"🌩 Prompt Resonance Injected: {prompt}")
+        self.state.network_cache["last_prompt"] = prompt
         self._mark_step("inject_prompt_resonance")
         return prompt
 
@@ -599,6 +600,69 @@ class EchoEvolver:
             f"Cycle digest report generated ({completed_count}/{total_steps} steps)"
         )
         return report
+
+    def continue_cycle(
+        self,
+        *,
+        enable_network: bool = False,
+        persist_artifact: bool = True,
+    ) -> EvolverState:
+        """Execute any remaining steps for the active cycle.
+
+        The evolver exposes numerous public methods so that callers can steer
+        a cycle manually—mirroring the interactive style of the legacy
+        script—yet it was easy to forget which steps still needed to run in
+        order to finish the orbit.  ``continue_cycle`` bridges that gap by
+        consulting :meth:`_recommended_sequence` and invoking any steps that
+        have not yet been marked complete.  Callers can therefore issue a few
+        bespoke calls, request a continuation, and trust that the evolver will
+        gracefully complete the remaining ritual.
+
+        Parameters
+        ----------
+        enable_network:
+            Forwarded to :meth:`propagate_network` when that step is pending.
+        persist_artifact:
+            Determines whether :meth:`write_artifact` should be part of the
+            required sequence.
+        """
+
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
+        completed: set[str] = self.state.network_cache.setdefault("completed_steps", set())
+        pending_steps = [key for key, _ in sequence if key not in completed]
+
+        if not pending_steps:
+            self.state.event_log.append(
+                f"Cycle {self.state.cycle} continuation requested with no pending steps"
+            )
+            return self.state
+
+        executed_steps: List[str] = []
+        prompt = self.state.network_cache.get("last_prompt")
+
+        for step, _ in sequence:
+            if step in completed:
+                if step == "inject_prompt_resonance":
+                    prompt = self.state.network_cache.get("last_prompt", prompt)
+                continue
+
+            if step == "propagate_network":
+                self.propagate_network(enable_network=enable_network)
+            elif step == "inject_prompt_resonance":
+                prompt = self.inject_prompt_resonance()
+            elif step == "write_artifact":
+                if prompt is None:
+                    prompt = self.inject_prompt_resonance()
+                self.write_artifact(prompt)
+            else:
+                getattr(self, step)()
+
+            executed_steps.append(step)
+
+        self.state.event_log.append(
+            f"Cycle {self.state.cycle} continued via continue_cycle() -> {executed_steps}"
+        )
+        return self.state
 
     def amplify_evolution(
         self,
