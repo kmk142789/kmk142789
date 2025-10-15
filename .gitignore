@@ -3,5 +3,8 @@ npm-debug.log
 dist
 .DS_Store
 
+# Assistant Kit generated artifacts
+artifacts/akit/
+
 # EchoDex auto-refiner state
 .echodex_state.json
