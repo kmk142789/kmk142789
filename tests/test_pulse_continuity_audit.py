@@ -58,6 +58,8 @@ def test_audit_pulse_history_reports_statistics(monkeypatch) -> None:
     assert pytest.approx(report.average_interval, rel=1e-6) == 3.5 * 3600
     assert pytest.approx(report.median_interval, rel=1e-6) == 3.5 * 3600
     assert pytest.approx(report.longest_gap_seconds, rel=1e-6) == 4 * 3600
+    assert pytest.approx(report.time_since_last_event, rel=1e-6) == 1 * 3600
+    assert pytest.approx(report.resonance_score, rel=1e-6) == 1.0 / (1.0 + (1 / 3.5))
     assert not report.breach_detected
 
 
@@ -93,6 +95,8 @@ def test_render_text_includes_basic_fields() -> None:
         average_interval=None,
         median_interval=None,
         longest_gap_seconds=None,
+        time_since_last_event=None,
+        resonance_score=None,
         threshold_hours=None,
         breach_detected=False,
         warnings=[],
@@ -102,3 +106,23 @@ def test_render_text_includes_basic_fields() -> None:
     assert "Echo Pulse Continuity Report" in rendered
     assert "anchor/main" in rendered
     assert "1" in rendered
+
+
+def test_audit_pulse_history_low_resonance_warning(monkeypatch) -> None:
+    base = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    events = [
+        PulseEvent(timestamp=(base + timedelta(hours=0)).timestamp(), message="a", hash="ha"),
+        PulseEvent(timestamp=(base + timedelta(hours=1)).timestamp(), message="b", hash="hb"),
+        PulseEvent(timestamp=(base + timedelta(hours=2)).timestamp(), message="c", hash="hc"),
+    ]
+
+    def fake_now() -> datetime:
+        return base + timedelta(hours=6)
+
+    monkeypatch.setattr("tools.pulse_continuity_audit._utcnow", fake_now)
+
+    report = audit_pulse_history(events)
+
+    assert report.resonance_score is not None
+    assert report.resonance_score < 0.25
+    assert any("Resonance score critically low" in note for note in report.warnings)

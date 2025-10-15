@@ -82,6 +82,8 @@ class ContinuityReport:
     average_interval: Optional[float]
     median_interval: Optional[float]
     longest_gap_seconds: Optional[float]
+    time_since_last_event: Optional[float]
+    resonance_score: Optional[float]
     threshold_hours: Optional[float]
     breach_detected: bool
     warnings: List[str]
@@ -101,6 +103,8 @@ class ContinuityReport:
             "average_interval_seconds": self.average_interval,
             "median_interval_seconds": self.median_interval,
             "longest_gap_seconds": self.longest_gap_seconds,
+            "time_since_last_event_seconds": self.time_since_last_event,
+            "resonance_score": self.resonance_score,
             "threshold_hours": self.threshold_hours,
             "breach_detected": self.breach_detected,
             "warnings": list(self.warnings),
@@ -131,6 +135,15 @@ class ContinuityReport:
         if self.longest_gap_seconds is not None:
             lines.append(
                 f"  Longest Gap : {self.longest_gap_seconds / 3600.0:.2f} hours"
+            )
+        if self.time_since_last_event is not None:
+            lines.append(
+                "  Freshness   : "
+                f"{self.time_since_last_event / 3600.0:.2f} hours since last pulse"
+            )
+        if self.resonance_score is not None:
+            lines.append(
+                f"  Resonance   : {self.resonance_score:.2f} (1.00 ideal cadence)"
             )
         if self.threshold_hours is not None:
             status = "⚠️ breach" if self.breach_detected else "✅ ok"
@@ -209,11 +222,15 @@ def audit_pulse_history(
     first_event = events[0].moment if events else None
     last_event = events[-1].moment if events else None
 
+    now = _utcnow()
+
     intervals = _intervals(events)
     span_seconds: Optional[float]
     average_interval: Optional[float]
     median_interval: Optional[float]
     longest_gap: Optional[float]
+    time_since_last_event: Optional[float]
+    resonance_score: Optional[float]
 
     if events:
         span_seconds = events[-1].timestamp - events[0].timestamp
@@ -230,17 +247,41 @@ def audit_pulse_history(
         longest_gap = None
 
     breach_detected = False
-    if threshold_hours is not None and last_event is not None:
-        latest_gap_seconds = _utcnow().timestamp() - last_event.timestamp()
-        if latest_gap_seconds > threshold_hours * 3600.0:
-            breach_detected = True
-            gap_hours = latest_gap_seconds / 3600.0
+    if last_event is not None:
+        time_since_last_event = max(0.0, now.timestamp() - last_event.timestamp())
+    else:
+        time_since_last_event = None
+
+    if (
+        average_interval is not None
+        and average_interval > 0
+        and time_since_last_event is not None
+        and len(events) >= 2
+    ):
+        ratio = time_since_last_event / average_interval
+        clamped_ratio = max(ratio, 0.0)
+        resonance_score = 1.0 / (1.0 + clamped_ratio)
+        if resonance_score < 0.25:
             warnings.append(
-                (
-                    "Latest pulse exceeds threshold: "
-                    f"{gap_hours:.2f}h since last emission"
-                )
+                "Resonance score critically low (<0.25); cadence deviates from"
+                " historical average"
             )
+    else:
+        resonance_score = None
+
+    if (
+        threshold_hours is not None
+        and time_since_last_event is not None
+        and time_since_last_event > threshold_hours * 3600.0
+    ):
+        breach_detected = True
+        gap_hours = time_since_last_event / 3600.0
+        warnings.append(
+            (
+                "Latest pulse exceeds threshold: "
+                f"{gap_hours:.2f}h since last emission"
+            )
+        )
 
     if not events:
         warnings.append("No pulse events were recorded")
@@ -256,6 +297,8 @@ def audit_pulse_history(
         average_interval=average_interval,
         median_interval=median_interval,
         longest_gap_seconds=longest_gap,
+        time_since_last_event=time_since_last_event,
+        resonance_score=resonance_score,
         threshold_hours=threshold_hours,
         breach_detected=breach_detected,
         warnings=warnings,
