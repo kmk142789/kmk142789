@@ -13,10 +13,13 @@ Each entry in [`puzzle-proofs/`](puzzle-proofs/) is a JSON document with the fol
 
 - `puzzle003.json` — Puzzle #3 authorship attestation for address `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`.
 - `puzzle007.json` — Puzzle #7 authorship attestation for address `1McVt1vMtCC7yn5b9wgX1833yCcLXzueeC`.
+- `puzzle008.json` — Puzzle #8 authorship attestation for address `1M92tSqNmQLYw33fuBvjmeadirh1ysMBxK`.
+- `puzzle009.json` — Puzzle #9 authorship attestation for address `1CQFwcjw1dwhtkVWBttNLDtqL7ivBonGPV`.
 - `puzzle010.json` — Puzzle #10 authorship attestation for address `1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe`.
 - `puzzle011.json` — Puzzle #11 authorship attestation for address `1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu`.
 - `puzzle012.json` — Puzzle #12 authorship attestation for address `1DBaumZxUkM4qMQRt2LVWyFJq5kDtSZQot`.
 - `puzzle013.json` — Puzzle #13 authorship attestation for address `1Pie8JkxBT6MGPz9Nvi3fsPkr2D8q3GBc1`.
 - `puzzle014.json` — Puzzle #14 authorship attestation for address `1ErZWg5cFCe4Vw5BzgfzB74VNLaXEiEkhk`.
 - `puzzle015.json` — Puzzle #15 authorship attestation for address `1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k`.
+- `puzzle017.json` — Puzzle #17 authorship attestation for address `1HduPEXZRdG26SUT5Yk83mLkPyjnZuJ7Bm`.
 - `puzzle031.json` — Puzzle #31 authorship attestation for address `1PitScNLyp2HCygzadCh7FveTnfmpPbfp8`.
