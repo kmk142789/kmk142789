@@ -53,6 +53,7 @@ echo-evolver = "echo_evolver:main"
 idea-processor = "echo.idea_processor:main"
 echodex = "echodex:main"
 echo-vault = "echo.vault.cli:vault_cli"
+echo-ak = "echo.akit.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

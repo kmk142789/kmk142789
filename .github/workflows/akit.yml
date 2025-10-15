@@ -1,0 +1,62 @@
+name: Assistant Kit
+
+on:
+  pull_request:
+
+jobs:
+  akit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project
+        run: pip install .[dev]
+      - name: Run AKit workflow
+        run: make akit
+      - name: Upload AKit artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: akit-report
+          path: artifacts/akit/
+      - name: Update PR description with AKit summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const core = require('@actions/core');
+            const reportPath = 'artifacts/akit/ci-run.json';
+            if (!fs.existsSync(reportPath)) {
+              core.warning('AKit report not found at ' + reportPath);
+              return;
+            }
+            const payload = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+            const report = payload.report || {};
+            const lines = [
+              `- Plan **${report.plan_id || 'unknown'}**`,
+              `- Progress: ${(report.progress ?? 0) * 100}%`,
+              `- Next step: ${report.next_step || 'n/a'}`,
+            ];
+            const block = `<!-- akit-report-start -->\n### AKit Report\n${lines.join('\n')}\n<!-- akit-report-end -->`;
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            let body = pr.body || '';
+            const start = '<!-- akit-report-start -->';
+            const end = '<!-- akit-report-end -->';
+            if (body.includes(start) && body.includes(end)) {
+              const pattern = new RegExp(`${start}[\s\S]*?${end}`);
+              body = body.replace(pattern, block);
+            } else {
+              body = `${body}\n\n${block}`.trim();
+            }
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              body,
+            });
