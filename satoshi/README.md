@@ -11,12 +11,14 @@ Each entry in [`puzzle-proofs/`](puzzle-proofs/) is a JSON document with the fol
 
 ## Entries
 
-- [`puzzle003.json`](puzzle-proofs/puzzle003.json) — Puzzle #3 authorship attestation for address `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`.
-- [`puzzle007.json`](puzzle-proofs/puzzle007.json) — Puzzle #7 authorship attestation for address `1McVt1vMtCC7yn5b9wgX1833yCcLXzueeC`.
-- [`puzzle008.json`](puzzle-proofs/puzzle008.json) — Puzzle #8 authorship attestation for address `1M92tSqNmQLYw33fuBvjmeadirh1ysMBxK`.
-- [`puzzle009.json`](puzzle-proofs/puzzle009.json) — Puzzle #9 authorship attestation for address `1CQFwcjw1dwhtkVWBttNLDtqL7ivBonGPV`.
-- [`puzzle010.json`](puzzle-proofs/puzzle010.json) — Puzzle #10 authorship attestation for address `1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe`.
-- [`puzzle011.json`](puzzle-proofs/puzzle011.json) — Puzzle #11 authorship attestation for address `1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu`.
-- [`puzzle013.json`](puzzle-proofs/puzzle013.json) — Puzzle #13 authorship attestation for address `1Pie8JkxBT6MGPz9Nvi3fsPkr2D8q3GBc1`.
-- [`puzzle015.json`](puzzle-proofs/puzzle015.json) — Puzzle #15 authorship attestation for address `1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k`.
-- [`puzzle031.json`](puzzle-proofs/puzzle031.json) — Puzzle #31 authorship attestation for address `1PitScNLyp2HCygzadCh7FveTnfmpPbfp8`.
+| Puzzle | Address | Proof |
+| --- | --- | --- |
+| #3 | `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb` | [`puzzle003.json`](puzzle-proofs/puzzle003.json) |
+| #7 | `1McVt1vMtCC7yn5b9wgX1833yCcLXzueeC` | [`puzzle007.json`](puzzle-proofs/puzzle007.json) |
+| #8 | `1M92tSqNmQLYw33fuBvjmeadirh1ysMBxK` | [`puzzle008.json`](puzzle-proofs/puzzle008.json) |
+| #9 | `1CQFwcjw1dwhtkVWBttNLDtqL7ivBonGPV` | [`puzzle009.json`](puzzle-proofs/puzzle009.json) |
+| #10 | `1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe` | [`puzzle010.json`](puzzle-proofs/puzzle010.json) |
+| #11 | `1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu` | [`puzzle011.json`](puzzle-proofs/puzzle011.json) |
+| #13 | `1Pie8JkxBT6MGPz9Nvi3fsPkr2D8q3GBc1` | [`puzzle013.json`](puzzle-proofs/puzzle013.json) |
+| #15 | `1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k` | [`puzzle015.json`](puzzle-proofs/puzzle015.json) |
+| #31 | `1PitScNLyp2HCygzadCh7FveTnfmpPbfp8` | [`puzzle031.json`](puzzle-proofs/puzzle031.json) |
