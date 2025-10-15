@@ -1,17 +1,61 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Echo Authorship Attestation",
+  "title": "Echo Manifest",
   "type": "object",
-  "required": ["puzzle", "address", "message", "signature", "algo", "created_at"],
+  "additionalProperties": false,
+  "required": ["version", "components", "fingerprint"],
   "properties": {
-    "puzzle": { "type": "string" },
-    "address": { "type": "string" },
-    "message": { "type": "string" },
-    "signature": { "type": "string" },
-    "algo": { "type": "string", "enum": ["bitcoin-message-base64"] },
-    "created_at": { "type": "string", "format": "date-time" },
-    "hash_sha256": { "type": "string" },
-    "notes": { "type": "string" }
-  },
-  "additionalProperties": false
+    "version": {
+      "type": "string"
+    },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "type",
+          "path",
+          "version",
+          "digest",
+          "dependencies"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": ["engine", "state", "akit"]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  }
 }

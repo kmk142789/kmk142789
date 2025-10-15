@@ -1,0 +1,6 @@
+{
+  "name": "ContinuumEngine",
+  "path": "echo/continuum_engine.py",
+  "version": "2024.05",
+  "dependencies": ["BridgeEmitter"]
+}

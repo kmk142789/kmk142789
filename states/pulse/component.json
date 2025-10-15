@@ -1,0 +1,6 @@
+{
+  "name": "PulseTimeline",
+  "path": "pulse.json",
+  "version": "2024.05",
+  "dependencies": ["ContinuumEngine"]
+}

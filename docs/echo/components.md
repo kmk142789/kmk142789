@@ -1,12 +1,3 @@
-# Echo Overview
-EchoCore centralizes governance, attestations, and modules for the Echo ecosystem.
-
-## Source of Truth
-
-The Echo manifest enumerates every engine, state snapshot, and auxiliary kit.
-The table below is generated with `python scripts/manifest_table.py` to stay in
-lockstep with `echo_manifest.json`.
-
 | Name | Type | Path | Version | Digest | Dependencies |
 | --- | --- | --- | --- | --- | --- |
 | ManifestInsights | akit | scripts/manifest_table.py | 2024.05 | 7b44fdbea0b09d989fbc4be734ebdd47491d2c66120e182c391f247758e9ee36 | BridgeEmitter, ContinuumEngine |

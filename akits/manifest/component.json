@@ -1,0 +1,6 @@
+{
+  "name": "ManifestInsights",
+  "path": "scripts/manifest_table.py",
+  "version": "2024.05",
+  "dependencies": ["BridgeEmitter", "ContinuumEngine"]
+}

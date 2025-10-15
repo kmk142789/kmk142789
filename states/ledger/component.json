@@ -1,0 +1,6 @@
+{
+  "name": "ContinuumLedger",
+  "path": "pulse_history.json",
+  "version": "2024.05",
+  "dependencies": ["PulseTimeline"]
+}

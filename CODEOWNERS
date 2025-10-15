@@ -1,0 +1,4 @@
+# Protected manifest assets
+/echo_manifest.json        @kmk142789
+/attestations/schema.json  @kmk142789
+/.github/workflows/echo-manifest.yml @kmk142789

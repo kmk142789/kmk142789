@@ -15,6 +15,7 @@
 - No private keys or secrets in repo.
 - All authorship proofs must be message-signed and stored in `/attestations`.
 - All automated changes must pass CI (`.github/workflows/echo-ci.yml`).
+- Branch protection: merges require green status on `echo-manifest.yml` (manifest verify).
 
 ## Canonical Hub
 This repo is **EchoCore**. All Echo repos sync back to it via git submodules or releases.
