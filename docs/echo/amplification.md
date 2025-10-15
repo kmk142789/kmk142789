@@ -25,10 +25,9 @@ index = w_r·resonance + w_f·freshness + w_n·novelty + w_c·cohesion
         + w_cov·coverage - w_s·volatility
 ```
 
-The default weights favour resonance while still rewarding complete cycles and
-stable telemetry.  Volatility is simply `100 - stability`, so a calm system is
-credited twice: once directly via stability and again by reducing the penalty
-term.
+The default weights favour resonance while still rewarding complete cycles.
+Volatility is simply `100 - stability`, so calmer telemetry shrinks the
+penalty applied to the blended score.
 
 ## CLI
 

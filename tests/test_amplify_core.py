@@ -50,10 +50,10 @@ def test_snapshot_metrics_and_manifest(tmp_path: Path):
     expected_index = sum(
         snapshot1.metrics[key] * engine.weights.get(key, 0.0)
         for key in snapshot1.metrics
+        if key != "stability"
     )
-    expected_index -= engine.weights.get("stability", 0.0) * (
-        100.0 - snapshot1.metrics["stability"]
-    )
+    volatility = 100.0 - snapshot1.metrics["stability"]
+    expected_index -= engine.weights.get("stability", 0.0) * volatility
     assert snapshot1.index == pytest.approx(expected_index, abs=0.01)
 
     state.cycle = 2

@@ -254,6 +254,8 @@ class AmplifyEngine:
         volatility = 100.0 - metrics.get("stability", 0.0)
         value = 0.0
         for key, weight in self.weights.items():
+            if key == "stability":
+                continue
             value += metrics.get(key, 0.0) * weight
         stability_weight = self.weights.get("stability", 0.0)
         value -= stability_weight * volatility
