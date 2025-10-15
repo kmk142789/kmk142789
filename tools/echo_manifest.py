@@ -85,9 +85,11 @@ class EchoManifestGenerator:
     """Encapsulates manifest discovery logic."""
 
     root: Path
+    exclude_artifacts: tuple[Path, ...] = ()
 
     def __post_init__(self) -> None:
         self.root = self.root.resolve()
+        self._excluded_artifacts = {path.resolve() for path in self.exclude_artifacts}
 
     @property
     def tests_root(self) -> Path:
@@ -189,6 +191,8 @@ class EchoManifestGenerator:
                     continue
                 if path.name == DEFAULT_MANIFEST_PATH:
                     continue
+                if path.resolve() in self._excluded_artifacts:
+                    continue
                 rel = path.relative_to(self.root)
                 if rel in seen:
                     continue
@@ -261,13 +265,11 @@ class EchoManifestGenerator:
         manifest = self.snapshot()
         if previous is not None:
             manifest_without_generated_at = json.loads(json.dumps(manifest, sort_keys=True))
-            manifest_without_generated_at.pop("meta", None)
-            previous_clone = previous.copy()
+            manifest_without_generated_at.pop("generated_at", None)
+            previous_clone = json.loads(json.dumps(previous, sort_keys=True))
             previous_clone.pop("generated_at", None)
-            previous_clone.pop("meta", None)
             if manifest_without_generated_at == previous_clone:
                 manifest["generated_at"] = previous.get("generated_at", generated_at or _utc_now())
-                manifest["meta"] = previous.get("meta", manifest["meta"])
                 return manifest
         manifest["generated_at"] = generated_at or _utc_now()
         return manifest
@@ -314,7 +316,7 @@ def _validate_schema(manifest: dict, schema: dict) -> None:
 
 
 def generate_manifest(root: Path, manifest_path: Path, *, reuse_timestamp: bool = False) -> dict:
-    generator = EchoManifestGenerator(root)
+    generator = EchoManifestGenerator(root, exclude_artifacts=(manifest_path,))
     previous = None
     if reuse_timestamp and manifest_path.exists():
         previous = _load_json(manifest_path)
@@ -330,25 +332,25 @@ def validate_manifest(root: Path, manifest_path: Path, schema_path: Path) -> Non
     manifest = _load_json(manifest_path)
     schema = _load_schema(schema_path)
     _validate_schema(manifest, schema)
-    generator = EchoManifestGenerator(root)
+    generator = EchoManifestGenerator(root, exclude_artifacts=(manifest_path,))
     expected = generator.build(previous=manifest)
     comparable_new = json.loads(json.dumps(expected, sort_keys=True))
-    comparable_old = manifest.copy()
+    comparable_old = json.loads(json.dumps(manifest, sort_keys=True))
     comparable_old.pop("generated_at", None)
-    comparable_old.pop("meta", None)
     comparable_new.pop("generated_at", None)
-    comparable_new.pop("meta", None)
     if comparable_new != comparable_old:
         raise ValueError("Manifest is stale. Run `echo manifest update` and commit.")
 
 
 def update_manifest(root: Path, manifest_path: Path, schema_path: Path) -> dict:
     previous = manifest_path.exists() and _load_json(manifest_path) or None
-    generator = EchoManifestGenerator(root)
+    generator = EchoManifestGenerator(root, exclude_artifacts=(manifest_path,))
     manifest = generator.build(previous=previous)
+    default_manifest_path = (root / DEFAULT_MANIFEST_PATH).resolve()
     if previous is None or json.dumps(manifest, sort_keys=True) != json.dumps(previous, sort_keys=True):
         _dump_json(manifest, manifest_path)
-    _sync_docs_manifest(root, manifest)
+    if manifest_path == default_manifest_path:
+        _sync_docs_manifest(root, manifest)
     validate_manifest(root, manifest_path, schema_path)
     return manifest
 

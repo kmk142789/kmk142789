@@ -68,3 +68,21 @@ def test_empty_repository(tmp_path: Path) -> None:
         "amplification": 0,
         "snapshots": [],
     }
+
+
+def test_meta_changes_refresh_timestamp(tmp_path: Path) -> None:
+    generator = EchoManifestGenerator(tmp_path)
+    manifest = generator.build(generated_at="2024-01-01T00:00:00Z")
+
+    repeat = generator.build(previous=manifest)
+    assert repeat["generated_at"] == "2024-01-01T00:00:00Z"
+
+    generator._meta = lambda: {  # type: ignore[attr-defined]
+        "commit_sha": "deadbeef",
+        "branch": "main",
+        "author": "tester",
+    }
+    refreshed = generator.build(previous=manifest)
+
+    assert refreshed["meta"]["commit_sha"] == "deadbeef"
+    assert refreshed["generated_at"] != manifest["generated_at"]

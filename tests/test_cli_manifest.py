@@ -119,3 +119,75 @@ def test_echo_cli_update_and_stale_detection(tmp_path: Path) -> None:
     )
     assert validate_result.returncode != 0
     assert "stale" in validate_result.stderr.lower()
+
+
+def test_validate_detects_meta_staleness(tmp_path: Path) -> None:
+    _prepare_repo(tmp_path)
+    schema_path = tmp_path / "schema" / "echo_manifest.schema.json"
+    manifest_path = tmp_path / "echo_manifest.json"
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "echo.cli",
+            "manifest",
+            "update",
+            "--root",
+            str(tmp_path),
+            "--schema",
+            str(schema_path),
+        ],
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    original = json.loads(manifest_path.read_text(encoding="utf-8"))
+    original["meta"]["commit_sha"] = "outdated"
+    manifest_path.write_text(json.dumps(original), encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "tools.echo_manifest",
+            "validate",
+            "--root",
+            str(tmp_path),
+            "--manifest",
+            str(manifest_path),
+            "--schema",
+            str(schema_path),
+        ],
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    assert result.returncode != 0
+    assert "stale" in result.stderr.lower()
+
+
+def test_update_with_custom_manifest_does_not_sync_docs(tmp_path: Path) -> None:
+    _prepare_repo(tmp_path)
+    schema_path = tmp_path / "schema" / "echo_manifest.schema.json"
+    docs_manifest = tmp_path / "docs" / "echo_manifest.json"
+    docs_manifest.parent.mkdir(parents=True, exist_ok=True)
+    docs_manifest.write_text("{}", encoding="utf-8")
+
+    custom_manifest = tmp_path / "custom_manifest.json"
+    result = _run_cli(
+        "update",
+        "--root",
+        str(tmp_path),
+        "--manifest",
+        str(custom_manifest),
+        "--schema",
+        str(schema_path),
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(docs_manifest.read_text(encoding="utf-8")) == {}
