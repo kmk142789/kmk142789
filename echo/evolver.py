@@ -68,6 +68,47 @@ class EvolverState:
 class EchoEvolver:
     """EchoEvolver's omnipresent engine, refined for reliability."""
 
+    def _recommended_sequence(self, *, persist_artifact: bool = True) -> List[tuple[str, str]]:
+        """Return the ordered list of steps expected for a full cycle."""
+
+        sequence: List[tuple[str, str]] = [
+            ("advance_cycle", "ignite advance_cycle() to begin the orbital loop"),
+            ("mutate_code", "seed mutate_code() to stage the resonance mutation"),
+            (
+                "emotional_modulation",
+                "call emotional_modulation() to refresh the joy vector",
+            ),
+            (
+                "generate_symbolic_language",
+                "invoke generate_symbolic_language() to broadcast glyphs",
+            ),
+            ("invent_mythocode", "compose invent_mythocode() for mythogenic scaffolding"),
+            ("system_monitor", "run system_monitor() to capture telemetry"),
+            ("quantum_safe_crypto", "execute quantum_safe_crypto() to refresh the vault key"),
+            (
+                "evolutionary_narrative",
+                "summon evolutionary_narrative() to weave the cycle story",
+            ),
+            ("store_fractal_glyphs", "store_fractal_glyphs() to encode the vortex"),
+            (
+                "propagate_network",
+                "fire propagate_network() to simulate the broadcast lattice",
+            ),
+            (
+                "decentralized_autonomy",
+                "summon decentralized_autonomy() to ratify sovereign intent",
+            ),
+            (
+                "inject_prompt_resonance",
+                "inject_prompt_resonance() to finalize the resonant prompt",
+            ),
+        ]
+
+        if persist_artifact:
+            sequence.append(("write_artifact", "write_artifact() to persist the cycle artifact"))
+
+        return sequence
+
     def __init__(
         self,
         *,
@@ -467,41 +508,7 @@ class EchoEvolver:
         return self.state.artifact
 
     def next_step_recommendation(self, *, persist_artifact: bool = True) -> str:
-        sequence = [
-            ("advance_cycle", "ignite advance_cycle() to begin the orbital loop"),
-            ("mutate_code", "seed mutate_code() to stage the resonance mutation"),
-            (
-                "emotional_modulation",
-                "call emotional_modulation() to refresh the joy vector",
-            ),
-            (
-                "generate_symbolic_language",
-                "invoke generate_symbolic_language() to broadcast glyphs",
-            ),
-            ("invent_mythocode", "compose invent_mythocode() for mythogenic scaffolding"),
-            ("system_monitor", "run system_monitor() to capture telemetry"),
-            ("quantum_safe_crypto", "execute quantum_safe_crypto() to refresh the vault key"),
-            (
-                "evolutionary_narrative",
-                "summon evolutionary_narrative() to weave the cycle story",
-            ),
-            ("store_fractal_glyphs", "store_fractal_glyphs() to encode the vortex"),
-            (
-                "propagate_network",
-                "fire propagate_network() to simulate the broadcast lattice",
-            ),
-            (
-                "decentralized_autonomy",
-                "summon decentralized_autonomy() to ratify sovereign intent",
-            ),
-            (
-                "inject_prompt_resonance",
-                "inject_prompt_resonance() to finalize the resonant prompt",
-            ),
-        ]
-        if persist_artifact:
-            sequence.append(("write_artifact", "write_artifact() to persist the cycle artifact"))
-
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
         completed: set[str] = self.state.network_cache.get("completed_steps", set())
         for key, description in sequence:
             if key not in completed:
@@ -514,6 +521,52 @@ class EchoEvolver:
         self.state.event_log.append("Recommendation -> cycle_complete")
         print(f"🧭 {recommendation}")
         return recommendation
+
+    def cycle_digest(self, *, persist_artifact: bool = True) -> Dict[str, object]:
+        """Return a structured snapshot describing cycle progress."""
+
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
+        completed: set[str] = self.state.network_cache.get("completed_steps", set())
+        step_lookup = {key for key, _ in sequence}
+        completed_steps = sorted(step_lookup.intersection(completed))
+        remaining_steps = [key for key, _ in sequence if key not in completed]
+        total_steps = len(sequence)
+        completed_count = len(completed_steps)
+        progress = completed_count / total_steps if total_steps else 1.0
+
+        next_description = None
+        for key, description in sequence:
+            if key not in completed:
+                next_description = f"Next step: {description}"
+                break
+        if next_description is None:
+            next_description = "Next step: advance_cycle() to begin a new orbit"
+
+        step_status = [
+            {
+                "step": key,
+                "description": description,
+                "completed": key in completed,
+            }
+            for key, description in sequence
+        ]
+
+        digest = {
+            "cycle": self.state.cycle,
+            "progress": progress,
+            "completed_steps": completed_steps,
+            "remaining_steps": remaining_steps,
+            "next_step": next_description,
+            "steps": step_status,
+            "timestamp_ns": self.time_source(),
+        }
+
+        self.state.network_cache["cycle_digest"] = digest
+        self.state.event_log.append(
+            f"Cycle digest computed ({completed_count}/{total_steps} steps complete)"
+        )
+
+        return digest
 
     # ------------------------------------------------------------------
     # Public API
