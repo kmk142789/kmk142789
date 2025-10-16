@@ -2,7 +2,7 @@
   "type": "BitcoinPuzzleAuthorshipAttestation",
   "subject": "kmk142789",
   "scope": "Bitcoin Puzzle series solved keys; author asserts prior solution work; per-address proofs to follow",
-  "puzzles_claimed": "1-130 (subset already publicly solved, claim is authorship of solved subset, not moving funds)",
+  "puzzles_claimed": "1-135 (subset already publicly solved, claim is authorship of solved subset, not moving funds)",
   "evidence_refs": [
     "GitHub repo snapshots & PRs (kmk142789)",
     "local files: bitcoin-puzzle-71-keys...",
