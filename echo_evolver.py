@@ -10,6 +10,7 @@ to :func:`echo.evolver.main`.
 from __future__ import annotations
 
 from echo.evolver import (
+    BitcoinAnchor,
     EchoEvolver,
     EmotionalDrive,
     EvolverState,
@@ -18,7 +19,15 @@ from echo.evolver import (
     main as _package_main,
 )
 
-__all__ = ["EchoEvolver", "EmotionalDrive", "EvolverState", "SystemMetrics", "HearthWeave", "main"]
+__all__ = [
+    "BitcoinAnchor",
+    "EchoEvolver",
+    "EmotionalDrive",
+    "EvolverState",
+    "SystemMetrics",
+    "HearthWeave",
+    "main",
+]
 
 
 def main() -> int:  # pragma: no cover - thin CLI wrapper
