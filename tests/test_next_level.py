@@ -66,3 +66,17 @@ def test_discover_tasks_in_html_comments(tmp_path):
     assert tasks[0].tag == "TODO"
     assert tasks[0].text == "align portal"
     assert tasks[0].line == 2
+
+
+def test_discover_tasks_in_docstrings(tmp_path):
+    source = tmp_path / "module.py"
+    source.write_text(
+        """def calibrate():\n    \"\"\"\n    TODO harmonize resonance\n    \"\"\"\n    pass\n""",
+        encoding="utf-8",
+    )
+
+    tasks = discover_tasks(tmp_path)
+    assert len(tasks) == 1
+    assert tasks[0].tag == "TODO"
+    assert tasks[0].text == "harmonize resonance"
+    assert tasks[0].line == 3
