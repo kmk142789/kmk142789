@@ -1,0 +1,13 @@
+[
+  {
+    "mirror_id": "mirror_reflection_seed",
+    "source_commit": "0000000",
+    "emergent_signal": "bootstrap: ledger initialized for autonomous forks",
+    "new_feature_proposed": "auto_fork_propagation",
+    "wish_integration": "(pending first fork)",
+    "status": "seed",
+    "plan_signature": "",
+    "reflections": [],
+    "created_at": "2025-10-16T00:00:00Z"
+  }
+]
