@@ -575,10 +575,16 @@ class EchoEvolver:
 
         return digest
 
-    def cycle_digest_report(self, *, persist_artifact: bool = True) -> str:
+    def cycle_digest_report(
+        self,
+        *,
+        persist_artifact: bool = True,
+        digest: Optional[Dict[str, object]] = None,
+    ) -> str:
         """Render a human-readable report for the current cycle digest."""
 
-        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        if digest is None:
+            digest = self.cycle_digest(persist_artifact=persist_artifact)
         total_steps = len(digest["steps"])
         completed_count = len(digest["completed_steps"])
         progress_pct = digest["progress"] * 100 if total_steps else 100.0
@@ -663,6 +669,58 @@ class EchoEvolver:
             f"Cycle {self.state.cycle} continued via continue_cycle() -> {executed_steps}"
         )
         return self.state
+
+    def continue_evolution(
+        self,
+        *,
+        enable_network: bool = False,
+        persist_artifact: bool = True,
+        include_report: bool = True,
+    ) -> Dict[str, object]:
+        """Finish the active cycle and return a structured progress snapshot."""
+
+        completed: set[str] = self.state.network_cache.setdefault("completed_steps", set())
+
+        if "advance_cycle" not in completed:
+            self.advance_cycle()
+
+        state = self.continue_cycle(
+            enable_network=enable_network, persist_artifact=persist_artifact
+        )
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+
+        payload: Dict[str, object] = {
+            "state": state,
+            "digest": digest,
+        }
+
+        record: Dict[str, object] = {
+            "cycle": digest["cycle"],
+            "progress": digest["progress"],
+            "remaining_steps": digest["remaining_steps"],
+            "next_step": digest["next_step"],
+        }
+
+        if include_report:
+            report = self.cycle_digest_report(
+                persist_artifact=persist_artifact, digest=digest
+            )
+            payload["report"] = report
+            record["report"] = report
+
+        self.state.network_cache["continue_evolution"] = record
+        self.state.event_log.append(
+            "Cycle {cycle} continued via continue_evolution()".format(
+                cycle=self.state.cycle
+            )
+        )
+        print(
+            "🔁 Evolution continued: cycle "
+            f"{digest['cycle']} at {digest['progress'] * 100:.1f}% complete"
+        )
+
+        return payload
 
     def amplify_evolution(
         self,

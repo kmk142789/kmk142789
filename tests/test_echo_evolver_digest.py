@@ -60,3 +60,15 @@ def test_cycle_digest_report_format(evolver):
 
     assert evolver.state.network_cache["cycle_digest_report"] == report
     assert evolver.state.event_log[-1].startswith("Cycle digest report generated (2/")
+
+
+def test_cycle_digest_report_can_reuse_digest(evolver):
+    evolver.advance_cycle()
+    evolver.mutate_code()
+    digest = evolver.cycle_digest()
+
+    report = evolver.cycle_digest_report(digest=digest)
+
+    assert report.startswith("Cycle 1 Progress")
+    assert evolver.state.network_cache["cycle_digest"] == digest
+    assert evolver.state.network_cache["cycle_digest_report"] == report
