@@ -23,6 +23,7 @@ from .continuum_engine import (
 )
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
+from .lighthouse import BroadcastResult, Sanctuary, broadcast_the_lighthouse, compile_to_starchart
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
@@ -86,6 +87,10 @@ __all__ = [
     "PortalSnapshot",
     "launch_portal",
     "JsonMemoryStore",
+    "BroadcastResult",
+    "Sanctuary",
+    "broadcast_the_lighthouse",
+    "compile_to_starchart",
     "BridgeSignals",
     "BridgeTuning",
     "EchoBridgeHarmonix",
