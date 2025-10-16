@@ -23,6 +23,29 @@ from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngin
 from .thoughtlog import thought_trace
 from .memory import JsonMemoryStore
 
+_GLYPH_RING: Tuple[str, ...] = (
+    "🠐",
+    "🠑",
+    "🠒",
+    "🠓",
+    "🠔",
+    "🠕",
+    "🠖",
+    "🠗",
+    "🠘",
+    "🠙",
+    "🠚",
+    "🠛",
+    "🠜",
+    "🠝",
+    "🠞",
+    "🠟",
+    "⧻",
+    "⨴",
+    "⨀",
+    "⨺",
+)
+
 
 @dataclass(slots=True)
 class EmotionalDrive:
@@ -239,6 +262,36 @@ class EchoEvolver:
         self._mark_step("generate_symbolic_language")
         print(f"🌌 Glyphs Injected: {symbolic} (OAM Vortex: {oam_vortex})")
         return symbolic
+
+    def glyph_matrix(self, width: int = 20, height: Optional[int] = None) -> List[List[str]]:
+        """Return a deterministic glyph matrix using the canonical glyph ring.
+
+        The legacy evolver emitted large hard-coded matrices which made the
+        output difficult to inspect and test.  This helper recreates that
+        behavior procedurally: callers can request any rectangular size and the
+        glyphs will wrap around the :data:`_GLYPH_RING` sequence.  The rendered
+        matrix is cached for later introspection and recorded in the event log
+        for reproducibility.
+        """
+
+        if width <= 0:
+            raise ValueError("width must be positive")
+        if height is None:
+            height = width
+        if height <= 0:
+            raise ValueError("height must be positive")
+
+        matrix: List[List[str]] = []
+        glyph_count = len(_GLYPH_RING)
+        for row in range(height):
+            start = row % glyph_count
+            row_glyphs = [_GLYPH_RING[(start + column) % glyph_count] for column in range(width)]
+            matrix.append(row_glyphs)
+
+        self.state.network_cache["glyph_matrix"] = matrix
+        self.state.event_log.append(f"Glyph matrix rendered ({height}x{width})")
+        self._mark_step("glyph_matrix")
+        return matrix
 
     def invent_mythocode(self) -> List[str]:
         joy = self.state.emotional_drive.joy
