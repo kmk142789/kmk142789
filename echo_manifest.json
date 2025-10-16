@@ -1135,5 +1135,11 @@
       ],
       "version": "81ad97d23a09"
     }
+  ],
+  "shards": [
+    {
+      "txid": "e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114",
+      "path": "vault/shards/e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114.bin"
+    }
   ]
 }

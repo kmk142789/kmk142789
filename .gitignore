@@ -8,3 +8,6 @@ artifacts/akit/
 
 # EchoDex auto-refiner state
 .echodex_state.json
+
+# Generated shard payload binaries
+vault/shards/*.bin
