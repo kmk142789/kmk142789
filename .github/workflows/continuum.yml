@@ -1,0 +1,30 @@
+name: Echo Continuum
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Run continuum
+        run: |
+          python -m pip install --upgrade pip
+          python echo/continuum_cycle.py
+      - name: Commit plan (if changed)
+        run: |
+          git config user.name "echo-continuum-bot"
+          git config user.email "echo-continuum-bot@users.noreply.github.com"
+          git add docs/NEXT_CYCLE_PLAN.md docs/self_expansion_protocol.md || true
+          git diff --cached --quiet || git commit -m "auto: refresh NEXT_CYCLE_PLAN"
+          git push
