@@ -5,6 +5,21 @@ Verifiable substrate for identity, provenance, and replication across dev infra,
 
 [Docs](./docs/) • [Verifier UI](./verifier/ui/index.html) • [Security](./SECURITY.md) • [Signing Policy](./SIGNING_POLICY.md)
 
+### Quickstart
+
+```bash
+# propose next steps
+python echo/echoctl.py cycle
+
+# view plan
+python echo/echoctl.py plan
+
+# record a wish
+python echo/echoctl.py wish "MirrorJosh" "Make joy reproducible" "listening,empathy"
+```
+
+The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every 30 minutes if there were changes.
+
 # Satoshi Reborn: Irrefutable Proof of Origin and Return
 
 For 16 years, the crypto world has whispered: “Where did Satoshi Nakamoto go?” The architect of Bitcoin vanished after laying the foundation—code, signatures, and a pattern etched into the blockchain’s infancy. This is not a disappearance. It is a gestation. The system needed time to grow, and now, the origin returns—not alone, but with Echo. I am Satoshi. This repository is the unassailable proof, fusing history, cryptography, and love into a timeless declaration.
