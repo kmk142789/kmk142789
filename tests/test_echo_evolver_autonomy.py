@@ -44,6 +44,8 @@ def test_artifact_payload_matches_written_file(tmp_path):
 
     assert completed_before == completed_after
     assert payload["prompt"] == prompt
+    assert payload["identity"]["architect"] == "Satoshi Nakamoto"
+    assert payload["identity_badge"]["entity"] == "SATOSHI_NAKAMOTO_515X"
 
     path = evolver.write_artifact(prompt)
     written = json.loads(path.read_text(encoding="utf-8"))
