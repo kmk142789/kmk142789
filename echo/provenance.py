@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
+import hmac
 import json
 import os
 import shutil
@@ -12,7 +14,7 @@ import tarfile
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional
+from typing import Callable, Iterable, List, Optional, Tuple
 
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -190,6 +192,41 @@ def bundle_provenance(out_path: Path, source_dir: Path | None = None) -> Path:
     return out_path
 
 
+def canonical_json(obj: object) -> bytes:
+    """Return canonical JSON bytes suitable for signing."""
+
+    return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def sign_manifest(manifest: dict, key_env: str = "ECHO_SIGN_KEY") -> Tuple[str, str]:
+    """Sign *manifest* returning (algorithm, base64 signature)."""
+
+    payload = canonical_json(manifest)
+    key = os.getenv(key_env, "")
+    if key.startswith("hmac:"):
+        secret = key.split("hmac:", 1)[1].encode("utf-8")
+        signature = hmac.new(secret, payload, hashlib.sha256).digest()
+        return "hmac-sha256", base64.b64encode(signature).decode()
+    signature = hashlib.sha256(payload).digest()
+    return "sha256", base64.b64encode(signature).decode()
+
+
+def verify_signature(
+    manifest: dict, signature_b64: str, algo: str, key_env: str = "ECHO_VERIFY_KEY"
+) -> bool:
+    """Verify a manifest signature produced by :func:`sign_manifest`."""
+
+    payload = canonical_json(manifest)
+    raw = base64.b64decode(signature_b64.encode())
+    if algo == "sha256":
+        return hashlib.sha256(payload).digest() == raw
+    if algo == "hmac-sha256":
+        secret = os.getenv(key_env, "").encode("utf-8")
+        expected = hmac.new(secret, payload, hashlib.sha256).digest()
+        return hmac.compare_digest(expected, raw)
+    return False
+
+
 def _cmd_emit(args: argparse.Namespace) -> int:
     emitter = ProvenanceEmitter()
     context = args.context
@@ -250,7 +287,10 @@ __all__ = [
     "ProvenanceEmitter",
     "ProvenanceRecord",
     "bundle_provenance",
+    "canonical_json",
     "build_parser",
+    "sign_manifest",
     "verify_provenance",
+    "verify_signature",
 ]
 

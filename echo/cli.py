@@ -1,56 +1,57 @@
-"""Legacy compatibility CLI for the Echo project.
-
-The primary command entry point for the ``echo`` console script now lives in
-``echo.manifest_cli``.  This shim keeps the old module importable while
-delegating to the new implementation.  It exposes a reduced set of commands
-that mirror the previous behaviour but rely on the modern manifest helpers.
-"""
-
 from __future__ import annotations
 
-import argparse
+import json
 from pathlib import Path
-from typing import Iterable
 
-from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
+import typer
 
+from .manifest import MANIFEST_PATH, verify_manifest, write_manifest
+from .provenance import sign_manifest, verify_signature
 
-def _cmd_refresh(args: argparse.Namespace) -> int:
-    refresh_manifest(args.path)
-    return 0
-
-
-def _cmd_show(args: argparse.Namespace) -> int:
-    show_manifest(args.path)
-    return 0
+app = typer.Typer(add_completion=False, help="Echo CLI")
 
 
-def _cmd_verify(args: argparse.Namespace) -> int:
-    return 0 if verify_manifest(args.path) else 1
+@app.command("manifest-refresh")
+def manifest_refresh(path: str = typer.Option(str(MANIFEST_PATH), "--path", "-p")) -> None:
+    write_manifest(Path(path))
+    typer.echo(f"wrote manifest -> {path}")
 
 
-def main(argv: Iterable[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        prog="echo",
-        description="Echo compatibility CLI (delegates to echo.manifest_cli)",
-    )
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    refresh_parser = subparsers.add_parser("manifest-refresh", help="Refresh manifest")
-    refresh_parser.add_argument("--path", type=Path, help="Optional manifest path")
-    refresh_parser.set_defaults(func=_cmd_refresh)
-
-    show_parser = subparsers.add_parser("manifest-show", help="Show manifest summary")
-    show_parser.add_argument("--path", type=Path, help="Optional manifest path")
-    show_parser.set_defaults(func=_cmd_show)
-
-    verify_parser = subparsers.add_parser("manifest-verify", help="Verify manifest digest")
-    verify_parser.add_argument("--path", type=Path, help="Optional manifest path")
-    verify_parser.set_defaults(func=_cmd_verify)
-
-    args = parser.parse_args(list(argv) if argv is not None else None)
-    return args.func(args)
+@app.command("manifest-verify")
+def manifest_verify(path: str = typer.Option(str(MANIFEST_PATH), "--path", "-p")) -> None:
+    ok = verify_manifest(Path(path))
+    if not ok:
+        typer.echo("Manifest drift detected. Run `echo manifest-refresh`.", err=True)
+        raise typer.Exit(code=1)
+    typer.echo("Manifest verified.")
 
 
-if __name__ == "__main__":  # pragma: no cover - script entry
-    raise SystemExit(main())
+@app.command("manifest-sign")
+def manifest_sign(path: str = typer.Option(str(MANIFEST_PATH), "--path", "-p")) -> None:
+    manifest = json.loads(Path(path).read_text(encoding="utf-8"))
+    algo, signature = sign_manifest(manifest)
+    out_path = Path(path).with_suffix(".sig")
+    out_path.write_text(json.dumps({"algo": algo, "signature": signature}, indent=2) + "\n")
+    typer.echo(f"signature ({algo}) -> {out_path}")
+
+
+@app.command("manifest-verify-signature")
+def manifest_verify_signature(
+    path: str = typer.Option(str(MANIFEST_PATH), "--path", "-p"),
+    sig_path: str = typer.Option(str(MANIFEST_PATH.with_suffix(".sig")), "--sig", "-s"),
+) -> None:
+    manifest = json.loads(Path(path).read_text(encoding="utf-8"))
+    meta = json.loads(Path(sig_path).read_text(encoding="utf-8"))
+    ok = verify_signature(manifest, meta["signature"], meta["algo"])
+    if not ok:
+        typer.echo("Signature verification FAILED", err=True)
+        raise typer.Exit(code=2)
+    typer.echo("Signature OK")
+
+
+def main() -> None:
+    app()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()
