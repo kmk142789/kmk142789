@@ -237,14 +237,21 @@ class Pattern:
 
 
 PATTERNS: List[Pattern] = [
-    Pattern("hex64_private_like", re.compile(r"\b([0-9a-fA-F]{64})\b")),
-    Pattern("wif_like", re.compile(r"\b([LK][1-9A-HJ-NP-Za-km-z]{50,51})\b")),
+    Pattern("hex64_private_like", re.compile(r"\b(?:0x)?([0-9a-fA-F]{64})\b")),
+    Pattern("wif_like", re.compile(r"\b([5LK][1-9A-HJ-NP-Za-km-z]{50,51})\b")),
     Pattern("base64_long", re.compile(r"\b([A-Za-z0-9+/]{40,}={0,2})\b")),
+    Pattern("ethereum_address_like", re.compile(r"\b0x[0-9a-fA-F]{40}\b")),
     Pattern("pem_private", re.compile(r"-----BEGIN (?:EC|RSA|DSA|PRIVATE) KEY-----")),
     Pattern("aws_access_key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
     Pattern("google_api_key", re.compile(r"\bAIza[0-9A-Za-z\-_]{35}\b")),
     Pattern("ssh_rsa_private", re.compile(r"-----BEGIN OPENSSH PRIVATE KEY-----")),
 ]
+
+
+BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+BASE58_INDEX = {char: index for index, char in enumerate(BASE58_ALPHABET)}
+BASE58_SECRET_BYTES = {32, 64}
+BASE58_RE = re.compile(r"\b[1-9A-HJ-NP-Za-km-z]{43,90}\b")
 
 
 @dataclass
@@ -306,6 +313,51 @@ def looks_like_secret_base64(candidate: str) -> bool:
     return len(set(candidate)) >= 10
 
 
+def decode_base58(value: str) -> Optional[bytes]:
+    try:
+        num = 0
+        for char in value:
+            num = num * 58 + BASE58_INDEX[char]
+    except KeyError:
+        return None
+
+    if num == 0:
+        payload = b""
+    else:
+        length = (num.bit_length() + 7) // 8
+        payload = num.to_bytes(length, "big")
+
+    leading_zeros = 0
+    for char in value:
+        if char == "1":
+            leading_zeros += 1
+        else:
+            break
+    if leading_zeros:
+        payload = b"\x00" * leading_zeros + payload
+    return payload
+
+
+def looks_like_base58_secret(candidate: str) -> bool:
+    if len(candidate) < 43 or len(candidate) > 90:
+        return False
+    if len(set(candidate)) < 10:
+        return False
+    payload = decode_base58(candidate)
+    if payload is None:
+        return False
+    return len(payload) in BASE58_SECRET_BYTES
+
+
+def detect_base58_sequences(text: str) -> List[tuple[int, int]]:
+    sequences: List[tuple[int, int]] = []
+    for match in BASE58_RE.finditer(text):
+        candidate = match.group(0)
+        if looks_like_base58_secret(candidate):
+            sequences.append((match.start(), match.end()))
+    return sequences
+
+
 def detect_bip39_sequences(text: str) -> List[tuple[int, int]]:
     sequences: List[tuple[int, int]] = []
     current: List[tuple[int, int]] = []
@@ -343,6 +395,11 @@ def generate_findings(path: Path, text: str) -> Iterator[Finding]:
         lineno = text.count("\n", 0, start) + 1
         excerpt = redact(text[max(0, start - 80): min(len(text), end + 80)])
         yield Finding(str(path), "mnemonic_like", lineno, excerpt)
+
+    for start, end in detect_base58_sequences(text):
+        lineno = text.count("\n", 0, start) + 1
+        excerpt = redact(text[max(0, start - 80): min(len(text), end + 80)])
+        yield Finding(str(path), "base58_secret_like", lineno, excerpt)
 
 
 def scan(root: Path, max_size: int) -> List[Finding]:
