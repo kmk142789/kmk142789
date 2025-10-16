@@ -136,6 +136,8 @@ def _extract_comment(line: str) -> Optional[str]:
         return stripped[2:]
     if stripped.startswith("#"):
         return stripped[1:]
+    if stripped.startswith("--") and not stripped.startswith("---"):
+        return stripped[2:]
 
     in_single = False
     in_double = False
@@ -158,6 +160,16 @@ def _extract_comment(line: str) -> Optional[str]:
                 return line[index + 2 :]
             if next_char == "*":
                 return line[index + 2 :]
+        elif char == "-" and not in_single and not in_double:
+            next_char = line[index + 1 : index + 2]
+            if next_char == "-":
+                third_char = line[index + 2 : index + 3]
+                if third_char != "-":
+                    prev_char = line[index - 1 : index] if index else ""
+                    if prev_char in {"<", "!"}:
+                        index += 1
+                        continue
+                    return line[index + 2 :]
         index += 1
     return None
 

@@ -80,3 +80,19 @@ def test_discover_tasks_in_docstrings(tmp_path):
     assert tasks[0].tag == "TODO"
     assert tasks[0].text == "harmonize resonance"
     assert tasks[0].line == 3
+
+
+def test_discover_tasks_in_sql_line_comments(tmp_path):
+    source = tmp_path / "schema.sql"
+    source.write_text(
+        """SELECT 1; -- TODO annotate query
+UPDATE core SET active = 1 -- FIXME tighten constraint
+""",
+        encoding="utf-8",
+    )
+
+    tasks = discover_tasks(tmp_path)
+    assert len(tasks) == 2
+    assert {task.tag for task in tasks} == {"TODO", "FIXME"}
+    assert any(task.text == "annotate query" and task.line == 1 for task in tasks)
+    assert any(task.text == "tighten constraint" and task.line == 2 for task in tasks)
