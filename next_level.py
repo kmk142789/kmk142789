@@ -20,6 +20,12 @@ DEFAULT_SKIP_DIRS = {
     "dist",
     "build",
     ".mypy_cache",
+    ".pytest_cache",
+    ".venv",
+    "venv",
+    "env",
+    ".tox",
+    ".nox",
 }
 
 
