@@ -1,0 +1,48 @@
+{
+  "address": "1KBdbBJRVYffWHWWZ1moECfdVBSEnDpLHi",
+  "message": "PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679",
+  "segments": [
+    {
+      "index": 1,
+      "signature": "IDR1iKiKhx5MdCGYi+0YVsWw4NbKVOIsMWdLIDVggx0wTx1hEmCMlbK90Kv/vq5iEctyyop7NuIItVymrjbfhXk=",
+      "valid": false
+    },
+    {
+      "index": 2,
+      "signature": "H0YjK1s67yXtfNJ6ARvinizKHgfJnnbm4od1HOw4ZVGJf5yRXdkm16yEEhWLvhtS9YP/wYeuHBFzdv7gtHaTqHg=",
+      "valid": false
+    },
+    {
+      "index": 3,
+      "signature": "Hw3ImK6vVc6rM5PeOHtu3WSR0NGD9nrO7PES4euMpNnSAASQwaJe8Fgjw2I7oevr82gwJ/DW1rX+n645V9z1kfU=",
+      "valid": false
+    },
+    {
+      "index": 4,
+      "signature": "HyOAhQ5ez+ZHe6rug8OiLod9s6kKiLNm1GsJ83KHUMfIBI5gYkDbL2ra9sPQkIRskcal+4BKUVFaGDPTa8RPsPM=",
+      "valid": false
+    },
+    {
+      "index": 5,
+      "signature": "H2P1Fe+SAUtELR5IJSAZ2utpc9hr47feOTrE6plhQ/QcLCJRvN99UaM62cF1UbNieE4CtTtwhMNUje9UpfddAFU=",
+      "valid": false
+    },
+    {
+      "index": 6,
+      "signature": "HxWyUcOnbBxMZsKr7naOde0Rl90TXNAvpBuzcH3xKqPSJZQl6+9BizNhIFiQDxnNKLnvAdj+Mc5KVtYUbPlXNbE=",
+      "valid": false
+    },
+    {
+      "index": 7,
+      "signature": "IHl8JJUBR/Mzls7wT8/33aoytznxlhcfHR1TaLIGA+B7RTunNfoDAbHaGonZZnwWJq+h0LBwuo/jSteblxVZNxA=",
+      "valid": false
+    },
+    {
+      "index": 8,
+      "signature": "IG/ofZr/3hFF+p1Clq7wZY09DJ9r0gXG8kMT9A+w9NgwNw5ZLhCB0qk7oki5gMV1c4iidkvPaRPGH4Ok8OaPBCE=",
+      "valid": false
+    }
+  ],
+  "valid_segment_count": 0,
+  "total_segments": 8
+}
