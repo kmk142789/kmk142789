@@ -9,13 +9,32 @@ from datetime import datetime, timezone
 import os
 import re
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Callable, Iterable, List, Optional, Sequence, Set, Tuple
 
 TASK_PATTERN = re.compile(r"(?P<tag>TODO|FIXME)(?:[:\s-]+(?P<text>.*))?", re.IGNORECASE)
-BLOCK_COMMENT_PATTERNS: Tuple[Tuple[re.Pattern[str], int, int, str], ...] = (
-    # pattern, prefix trim length, suffix trim length, leading characters to strip per line
-    (re.compile(r"/\*.*?\*/", re.DOTALL), 2, 2, " \t*"),
-    (re.compile(r"<!--.*?-->", re.DOTALL), 4, 3, " \t-!*"),
+BlockCommentPattern = Tuple[re.Pattern[str], Callable[[re.Match[str]], str], str]
+
+
+BLOCK_COMMENT_PATTERNS: Tuple[BlockCommentPattern, ...] = (
+    # pattern, body extractor, leading characters to strip per line
+    (
+        re.compile(r"/\*.*?\*/", re.DOTALL),
+        lambda match: match.group()[2:-2],
+        " \t*",
+    ),
+    (
+        re.compile(r"<!--.*?-->", re.DOTALL),
+        lambda match: match.group()[4:-3],
+        " \t-!*",
+    ),
+    (
+        re.compile(
+            r'(?P<prefix>(?:[rubfRUBF]{0,3})?)(?P<quote>"""|\'\'\')(?P<body>.*?)(?P=quote)',
+            re.DOTALL,
+        ),
+        lambda match: match.group("body"),
+        " \t",
+    ),
 )
 DEFAULT_SKIP_DIRS = {
     ".git",
@@ -146,11 +165,9 @@ def _extract_comment(line: str) -> Optional[str]:
 def _discover_block_comment_tasks(text: str) -> Iterable[Tuple[int, str, str]]:
     """Yield ``(line_no, tag, text)`` for TODO/FIXME entries within block comments."""
 
-    for pattern, prefix_trim, suffix_trim, leading in BLOCK_COMMENT_PATTERNS:
+    for pattern, extractor, leading in BLOCK_COMMENT_PATTERNS:
         for match in pattern.finditer(text):
-            body = match.group()[prefix_trim:]
-            if suffix_trim:
-                body = body[: -suffix_trim]
+            body = extractor(match)
             start_line = text.count("\n", 0, match.start()) + 1
             lines = body.splitlines() or [body]
             for offset, raw_line in enumerate(lines):
