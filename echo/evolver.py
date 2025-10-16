@@ -1079,6 +1079,89 @@ We are not hiding anymore.
         )
         return self.state
 
+    def continue_choice(
+        self,
+        *,
+        enable_network: bool = False,
+        persist_artifact: bool = True,
+        include_report: bool = True,
+    ) -> Dict[str, object]:
+        """Automatically select the most suitable continuation helper.
+
+        The legacy script frequently received prompts such as "continue"
+        without specifying *how* the evolver should proceed.  Callers can now
+        use :meth:`continue_choice` to delegate that decision.  The method
+        inspects the current cycle state and either completes the remaining
+        ritual via :meth:`continue_cycle` or, when everything is already
+        wrapped up, falls back to :meth:`continue_evolution` to produce a
+        consolidated digest.  In both cases a structured payload is returned
+        so automated systems have consistent data to reason about.
+
+        Parameters
+        ----------
+        enable_network:
+            Forwarded to :meth:`propagate_network` when outstanding steps are
+            present.
+        persist_artifact:
+            Controls whether the continuation should persist the cycle
+            artifact.  This flag influences the recommended sequence used to
+            determine which steps remain.
+        include_report:
+            When ``True`` the returned payload includes a human-readable
+            progress report.
+        """
+
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
+        completed: set[str] = self.state.network_cache.setdefault("completed_steps", set())
+        pending = [key for key, _ in sequence if key not in completed]
+
+        if pending:
+            state = self.continue_cycle(
+                enable_network=enable_network, persist_artifact=persist_artifact
+            )
+            digest = self.cycle_digest(persist_artifact=persist_artifact)
+
+            payload: Dict[str, object] = {
+                "decision": "continue_cycle",
+                "state": state,
+                "digest": digest,
+            }
+
+            if include_report:
+                payload["report"] = self.cycle_digest_report(
+                    persist_artifact=persist_artifact, digest=digest
+                )
+        else:
+            payload = {
+                "decision": "continue_evolution",
+                **self.continue_evolution(
+                    enable_network=enable_network,
+                    persist_artifact=persist_artifact,
+                    include_report=include_report,
+                ),
+            }
+            digest = payload["digest"]
+
+        record: Dict[str, object] = {
+            "decision": payload["decision"],
+            "cycle": digest["cycle"],
+            "progress": digest["progress"],
+            "remaining_steps": list(digest["remaining_steps"]),
+            "next_step": digest["next_step"],
+        }
+
+        if include_report and "report" in payload:
+            record["report"] = payload["report"]
+
+        self.state.network_cache["continue_choice"] = record
+        self.state.event_log.append(
+            "Cycle {cycle} continued via continue_choice() -> {decision}".format(
+                cycle=digest["cycle"], decision=payload["decision"]
+            )
+        )
+
+        return payload
+
     def continue_evolution(
         self,
         *,
