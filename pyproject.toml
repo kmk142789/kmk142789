@@ -49,7 +49,7 @@ harmonics = [
 ]
 
 [project.scripts]
-echo = "echo.manifest_cli:main"
+echo = "echo.cli:main"
 echo-evolver = "echo_evolver:main"
 idea-processor = "echo.idea_processor:main"
 echodex = "echodex:main"
