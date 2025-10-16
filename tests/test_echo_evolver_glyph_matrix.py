@@ -1,5 +1,7 @@
 """Tests for the procedural glyph matrix helper."""
 
+import pytest
+
 from echo.evolver import EchoEvolver
 
 
@@ -57,6 +59,38 @@ def test_glyph_matrix_supports_rectangular_dimensions():
 
     assert matrix == _expected_matrix(6, 3)
     assert evolver.state.network_cache["glyph_matrix"] == matrix
+
+
+def test_glyph_font_svg_renders_full_ring_and_logs_event():
+    evolver = EchoEvolver()
+
+    svg = evolver.glyph_font_svg()
+
+    assert svg.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+    assert svg.count("<glyph ") == len(EXPECTED_RING)
+    assert "<font id=\"EchoGlyphFont\"" in svg
+    assert evolver.state.network_cache["glyph_font_svg"] == svg
+    assert evolver.state.event_log[-1] == "Glyph font SVG generated (20 glyphs)"
+
+
+def test_glyph_font_svg_accepts_custom_parameters():
+    evolver = EchoEvolver()
+
+    svg = evolver.glyph_font_svg(["A", "B"], font_id="CustomFont", units_per_em=512)
+
+    assert svg.count("<glyph ") == 2
+    assert "<font id=\"CustomFont\"" in svg
+    assert "units-per-em=\"512\"" in svg
+
+
+def test_glyph_font_svg_validates_inputs():
+    evolver = EchoEvolver()
+
+    with pytest.raises(ValueError):
+        evolver.glyph_font_svg([])
+
+    with pytest.raises(ValueError):
+        evolver.glyph_font_svg(font_id="   ")
 
 
 def test_glyph_matrix_rejects_invalid_dimensions():

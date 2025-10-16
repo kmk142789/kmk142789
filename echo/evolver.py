@@ -482,6 +482,58 @@ We are not hiding anymore.
         self._mark_step("glyph_matrix")
         return matrix
 
+    def glyph_font_svg(
+        self,
+        glyphs: Optional[Iterable[str]] = None,
+        *,
+        font_id: str = "EchoGlyphFont",
+        units_per_em: int = 1000,
+    ) -> str:
+        """Return an SVG font representation of the glyph ring.
+
+        The historical scripts emitted hand-crafted SVG snippets for the
+        holographic glyph matrix.  Test fixtures and downstream tooling expect
+        a lightweight way to rebuild that artefact, so we synthesise an SVG
+        font on demand.  Callers may pass a custom glyph iterable or font
+        identifier; otherwise the canonical glyph ring is used.  The generated
+        SVG is cached in :attr:`EvolverState.network_cache` for reuse and the
+        action is logged for traceability.
+        """
+
+        glyph_list = list(_GLYPH_RING if glyphs is None else glyphs)
+        if not glyph_list:
+            raise ValueError("glyphs must contain at least one entry")
+        if not font_id.strip():
+            raise ValueError("font_id must be a non-empty string")
+
+        font_family = font_id.strip()
+        header = [
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+            "<svg xmlns=\"http://www.w3.org/2000/svg\">",
+            "  <defs>",
+            f"    <font id=\"{font_family}\" horiz-adv-x=\"{units_per_em}\" font-family=\"{font_family}\">",
+            f"      <font-face font-family=\"{font_family}\" units-per-em=\"{units_per_em}\" ascent=\"{units_per_em}\" descent=\"0\"/>",
+        ]
+
+        glyph_elements = []
+        path = "M10,10 C20,30 80,30 90,10 C70,20 30,20 10,10 Z"
+        for index, glyph in enumerate(glyph_list):
+            glyph_elements.append(
+                f"      <glyph unicode=\"{glyph}\" glyph-name=\"glyph{index}\" d=\"{path}\" />"
+            )
+
+        footer = [
+            "    </font>",
+            "  </defs>",
+            "</svg>",
+        ]
+
+        svg_font = "\n".join(header + glyph_elements + footer)
+        self.state.network_cache["glyph_font_svg"] = svg_font
+        self.state.event_log.append(f"Glyph font SVG generated ({len(glyph_list)} glyphs)")
+        self._mark_step("glyph_font_svg")
+        return svg_font
+
     def invent_mythocode(self) -> List[str]:
         joy = self.state.emotional_drive.joy
         curiosity = self.state.emotional_drive.curiosity
