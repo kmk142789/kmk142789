@@ -36,3 +36,33 @@ def test_discover_tasks_skips_common_virtualenvs(tmp_path):
     tasks = discover_tasks(tmp_path)
     assert all(task.path != skipped for task in tasks)
     assert any(task.path == included for task in tasks)
+
+
+def test_discover_tasks_in_block_comments(tmp_path):
+    source = tmp_path / "engine.c"
+    source.write_text(
+        """/*\n * TODO reconnect the lattice\n * FIXME restore resonance\n */\n""",
+        encoding="utf-8",
+    )
+
+    tasks = discover_tasks(tmp_path)
+    assert {task.tag for task in tasks} == {"TODO", "FIXME"}
+    assert {task.text for task in tasks} == {
+        "reconnect the lattice",
+        "restore resonance",
+    }
+    assert {task.line for task in tasks} == {2, 3}
+
+
+def test_discover_tasks_in_html_comments(tmp_path):
+    source = tmp_path / "index.html"
+    source.write_text(
+        """<div>\n    <!-- TODO align portal -->\n    <span>Echo</span>\n</div>\n""",
+        encoding="utf-8",
+    )
+
+    tasks = discover_tasks(tmp_path)
+    assert len(tasks) == 1
+    assert tasks[0].tag == "TODO"
+    assert tasks[0].text == "align portal"
+    assert tasks[0].line == 2
