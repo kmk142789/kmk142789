@@ -14,7 +14,7 @@ import json
 import random
 import time
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
@@ -900,6 +900,59 @@ class EchoEvolver:
         )
 
         return payload
+
+    def render_reflection(
+        self,
+        *,
+        include_events: bool = False,
+        persist_artifact: bool = True,
+    ) -> Dict[str, object]:
+        """Return an immutable snapshot describing the evolver's present state.
+
+        The historical scripts often concluded with a quiet "mirror" step that
+        simply observed the active cycle without mutating it.  ``render_reflection``
+        provides that capability for the refactored engine: it folds the current
+        cycle digest, emotional drive, and telemetry into a deterministic
+        structure that can be logged or displayed.  Callers may optionally
+        include the prior event log, making it easy to review the journey that
+        led to the present moment.
+
+        The returned dictionary is a deep copy of the cached snapshot so that
+        downstream mutation—whether intentional or accidental—cannot alter the
+        recorded reflection.
+        """
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        events_before_reflection = list(self.state.event_log)
+
+        snapshot: Dict[str, object] = {
+            "cycle": self.state.cycle,
+            "glyphs": self.state.glyphs,
+            "mythocode": list(self.state.mythocode),
+            "narrative": self.state.narrative,
+            "emotional_drive": asdict(self.state.emotional_drive),
+            "system_metrics": asdict(self.state.system_metrics),
+            "entities": dict(self.state.entities),
+            "access_levels": dict(self.state.access_levels),
+            "vault_key": self.state.vault_key,
+            "autonomy_manifesto": self.state.autonomy_manifesto,
+            "progress": digest["progress"],
+            "next_step": digest["next_step"],
+            "timestamp_ns": digest["timestamp_ns"],
+        }
+
+        if include_events:
+            snapshot["event_log"] = events_before_reflection
+
+        cache_snapshot = deepcopy(snapshot)
+        self.state.network_cache["reflection_snapshot"] = cache_snapshot
+
+        message = (
+            "Reflection rendered at cycle {cycle} ({progress:.1f}% progress)"
+        ).format(cycle=self.state.cycle, progress=digest["progress"] * 100)
+        self.state.event_log.append(message)
+
+        return deepcopy(cache_snapshot)
 
     # ------------------------------------------------------------------
     # Public API
