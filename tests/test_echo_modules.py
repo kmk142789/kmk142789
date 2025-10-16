@@ -115,6 +115,21 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertEqual(payload["cycle"], 2)
         self.assertIn("quantum_key", payload)
 
+    def test_cycle_diagnostics_summarizes_current_state(self) -> None:
+        self.evolver.run(enable_network=False, persist_artifact=False)
+
+        diagnostics = self.evolver.cycle_diagnostics(include_events=True, event_limit=4)
+
+        self.assertEqual(diagnostics["cycle"], 1)
+        self.assertTrue(diagnostics["vault_key_present"])
+        self.assertEqual(diagnostics["propagation_events"], 5)
+        self.assertLessEqual(len(diagnostics["recent_events"]), 4)
+        self.assertIn("Next step", diagnostics["next_step"])
+
+    def test_cycle_diagnostics_validates_event_limit(self) -> None:
+        with self.assertRaises(ValueError):
+            self.evolver.cycle_diagnostics(include_events=True, event_limit=0)
+
 
 class EchoManifestIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
