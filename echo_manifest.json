@@ -58,7 +58,7 @@
     },
     {
       "dependencies": [],
-      "digest": "c12d4031300c752644a4d42590698e96b02136bdec86303ee28af7854a8089e0",
+      "digest": "0584497436b087fb946b37723764cd7aaccd85207a3da3754326ff616916f4bd",
       "name": "cli",
       "path": "echo/cli.py",
       "type": "engine",
@@ -353,7 +353,7 @@
       "version": "0.1.0"
     }
   ],
-  "fingerprint": "ad4887a05e096f9d8bf78d179d81222a4d260ad874cdccebc90ea9553a6402e3",
+  "fingerprint": "4781f940328f30d907d2c92a5dda1625b94e4ddf377eff8630614b0dcfd96de8",
   "meta": {
     "generator": "echo.manifest",
     "schema": "attestations/schema.json"
