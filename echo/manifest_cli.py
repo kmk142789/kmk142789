@@ -33,6 +33,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Mapping, Sequence
 
+from .amplify import AmplifyEngine
+
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST_NAME = "echo_manifest.json"
@@ -358,6 +360,7 @@ def build_manifest(repo_root: Path | None = None) -> Dict[str, Any]:
         "clis": [entry.to_dict() for entry in _discover_clis(root, codeowners)],
         "datasets": [entry.to_dict() for entry in _discover_datasets(root, codeowners)],
         "docs": [entry.to_dict() for entry in _discover_docs(root, codeowners)],
+        "amplify": AmplifyEngine(repo_root=root).summary(),
     }
     return manifest
 
@@ -398,6 +401,34 @@ def _tabulate_category(category: str, entries: Sequence[Mapping[str, Any]]) -> s
     return header + "\n".join(lines) + "\n"
 
 
+def _render_amplify_section(summary: Mapping[str, Any]) -> str:
+    gate = summary.get("gate", {})
+    latest = summary.get("latest")
+    lines = ["## amplify"]
+    if not latest:
+        lines.append("Latest: n/a")
+    else:
+        metrics = latest.get("metrics", {})
+        index = metrics.get("index", "n/a")
+        timestamp = latest.get("timestamp", "n/a")
+        cycle = latest.get("cycle", "n/a")
+        lines.append(f"Latest Index: {index}")
+        lines.append(f"Cycle: {cycle} | Timestamp: {timestamp}")
+        for name in ("resonance", "freshness_half_life", "novelty_delta", "cohesion", "coverage", "volatility"):
+            value = metrics.get(name, "n/a")
+            lines.append(f"  - {name.replace('_', ' ').title()}: {value}")
+    rolling = summary.get("rolling_3")
+    lines.append(f"Rolling-3 Index: {rolling if rolling is not None else 'n/a'}")
+    lines.append(
+        "Gate: floor={floor} status={status} current={current}".format(
+            floor=gate.get("floor", "n/a"),
+            status=gate.get("status", "unknown"),
+            current=gate.get("current", "n/a"),
+        )
+    )
+    return "\n".join(lines) + "\n"
+
+
 def show_manifest(
     manifest_path: Path | None = None,
     *,
@@ -412,6 +443,10 @@ def show_manifest(
     for category in ("engines", "states", "clis", "datasets", "docs"):
         section = _tabulate_category(category, manifest.get(category, []))
         print(section.rstrip())
+        print()
+    amplify_section = manifest.get("amplify")
+    if isinstance(amplify_section, Mapping):
+        print(_render_amplify_section(amplify_section).rstrip())
         print()
     print(_canonical_json(manifest), end="")
     return manifest
@@ -471,6 +506,56 @@ def _append_summary(line: str) -> None:
         handle.write(f"{line}\n")
 
 
+def _cmd_amplify_now(_args: argparse.Namespace) -> int:
+    engine = AmplifyEngine()
+    record = engine.measure_and_record()
+    metrics = record.metrics.to_dict()
+    print(f"Amplify Index: {metrics['index']:.2f}")
+    for name in ("resonance", "freshness_half_life", "novelty_delta", "cohesion", "coverage", "volatility"):
+        print(f"  {name.replace('_', ' ').title():<22}: {metrics[name]:5.2f}")
+    sparkline = engine.sparkline()
+    if sparkline:
+        print(f"Sparkline: {sparkline}")
+    print()
+    print(json.dumps(record.to_dict(), sort_keys=True, indent=2))
+    return 0
+
+
+def _cmd_amplify_log(args: argparse.Namespace) -> int:
+    engine = AmplifyEngine()
+    records = engine.tail(args.count)
+    if not records:
+        print("No amplification history recorded yet.")
+        return 0
+    for record in records:
+        metrics = record.metrics.to_dict()
+        cycle = record.cycle if record.cycle is not None else "-"
+        print(
+            f"{record.timestamp:>12.2f} | cycle {cycle!s:<4} | index {metrics['index']:.2f}"
+        )
+    print(f"Sparkline: {engine.sparkline(args.count)}")
+    print()
+    print(json.dumps([record.to_dict() for record in records], sort_keys=True, indent=2))
+    return 0
+
+
+def _cmd_amplify_gate(args: argparse.Namespace) -> int:
+    engine = AmplifyEngine()
+    ok, index = engine.ensure_gate(args.min)
+    if ok:
+        message = f"✅ Amplify gate satisfied: {index:.2f} ≥ {args.min:.2f}"
+        print(message)
+        _append_summary(message)
+        return 0
+    if index is None:
+        message = "❌ Amplify gate failed: no amplification data available."
+    else:
+        message = f"❌ Amplify gate failed: {index:.2f} < {args.min:.2f}"
+    print(message)
+    _append_summary(message)
+    return 1
+
+
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="echo", description="Echo manifest utilities")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -491,6 +576,20 @@ def main(argv: Iterable[str] | None = None) -> int:
     verify_parser = manifest_sub.add_parser("verify", help="Validate manifest digests")
     verify_parser.add_argument("--path", type=Path, help="Optional manifest path")
     verify_parser.set_defaults(func=lambda args: 0 if verify_manifest(args.path) else 1)
+
+    amplify_parser = subparsers.add_parser("amplify", help="Amplification metrics")
+    amplify_sub = amplify_parser.add_subparsers(dest="subcommand", required=True)
+
+    amplify_now = amplify_sub.add_parser("now", help="Compute and log amplification metrics")
+    amplify_now.set_defaults(func=_cmd_amplify_now)
+
+    amplify_log = amplify_sub.add_parser("log", help="Show amplification history")
+    amplify_log.add_argument("--count", type=int, default=5, help="Number of entries to display")
+    amplify_log.set_defaults(func=_cmd_amplify_log)
+
+    amplify_gate = amplify_sub.add_parser("gate", help="Verify amplification gate")
+    amplify_gate.add_argument("--min", type=float, default=70.0, help="Minimum acceptable Amplify Index")
+    amplify_gate.set_defaults(func=_cmd_amplify_gate)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
     result = getattr(args, "func", None)

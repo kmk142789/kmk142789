@@ -1,22 +1,31 @@
 {
+  "amplify": {
+    "gate": {
+      "current": null,
+      "floor": 70.0,
+      "status": "unknown"
+    },
+    "latest": null,
+    "rolling_3": null
+  },
   "clis": [
     {
       "category": "cli",
-      "digest": "b46dec22247ac334c1c7c87aa29c153a46bd2270810050c2e7b48a101b5cb6a8",
-      "last_modified": "2025-10-15T19:01:31-04:00",
+      "digest": "e184030edec9c1b15e50c38906f5f95f4ca3efca4be9ac2d833f8499788f179d",
+      "last_modified": "2025-10-15T20:06:10-04:00",
       "name": "echo",
       "owners": [
         "@kmk142789"
       ],
       "path": "echo/manifest_cli.py",
-      "size": 17893,
+      "size": 21889,
       "tags": [
         "cli",
         "echo",
         "py",
         "python"
       ],
-      "version": "b46dec22247a"
+      "version": "e184030edec9"
     },
     {
       "category": "cli",
@@ -384,6 +393,23 @@
     },
     {
       "category": "doc",
+      "digest": "96c0245b5b9d3fce29a3b38d4afce42273073c1ddb7b1daea086e98de1ac122f",
+      "last_modified": null,
+      "name": "amplification",
+      "owners": [
+        "@kmk142789"
+      ],
+      "path": "docs/echo/amplification.md",
+      "size": 2489,
+      "tags": [
+        "docs",
+        "echo",
+        "md"
+      ],
+      "version": "96c0245b5b9d"
+    },
+    {
+      "category": "doc",
       "digest": "cbc6e5e0b526f9c018bf73d2bfbbbc2ed4626a870a188d33c279aceebf12a293",
       "last_modified": "2025-10-15T15:44:55-04:00",
       "name": "attestations",
@@ -517,7 +543,7 @@
     {
       "category": "doc",
       "digest": "64dc051ce61e053ff8e695c71970a22a4d52e7e0fdf4fe6cba28fb1f4a8596a1",
-      "last_modified": null,
+      "last_modified": "2025-10-15T20:06:10-04:00",
       "name": "manifest",
       "owners": [
         "@kmk142789"
@@ -582,6 +608,24 @@
     }
   ],
   "engines": [
+    {
+      "category": "engine",
+      "digest": "5de6578b16888b7461c14e7e8b216feadb26489e0fff07d31911f28a84618e02",
+      "last_modified": null,
+      "name": "AmplifyEngine",
+      "owners": [
+        "@kmk142789"
+      ],
+      "path": "echo/amplify.py",
+      "size": 11948,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "5de6578b1688"
+    },
     {
       "category": "engine",
       "digest": "5d621cd31c03c821044e3facdbde4024167922c48f6f5dc366eb094136a278a7",
@@ -835,21 +879,21 @@
     },
     {
       "category": "state",
-      "digest": "da52dc4ab344084dd5366c3c3c6d26fc93e1793cb9c6c3aad37992ab6d7e36d6",
+      "digest": "68f09ace88221e0032aec600c3c4d795dde6161a8a82d53557a4ba9a9c0f52fb",
       "last_modified": "2025-10-15T17:31:14-04:00",
       "name": "EvolverState",
       "owners": [
         "@kmk142789"
       ],
       "path": "echo/evolver.py",
-      "size": 37697,
+      "size": 38972,
       "tags": [
         "echo",
         "py",
         "python",
         "state"
       ],
-      "version": "da52dc4ab344"
+      "version": "68f09ace8822"
     },
     {
       "category": "state",

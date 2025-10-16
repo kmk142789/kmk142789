@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional
 
+from .amplify import AmplifyEngine
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .thoughtlog import thought_trace
 from .memory import JsonMemoryStore
@@ -123,6 +124,7 @@ class EchoEvolver:
         time_source: Optional[Callable[[], int]] = None,
         autonomy_engine: Optional[DecentralizedAutonomyEngine] = None,
         memory_store: Optional[JsonMemoryStore] = None,
+        amplify_engine: Optional[AmplifyEngine] = None,
     ) -> None:
         self.rng = rng or random.Random()
         self.time_source = time_source or time.time_ns
@@ -131,6 +133,7 @@ class EchoEvolver:
             self.state.artifact = Path(artifact_path)
         self.autonomy_engine = autonomy_engine or DecentralizedAutonomyEngine()
         self.memory_store = memory_store
+        self.amplify_engine = amplify_engine or AmplifyEngine()
 
     # ------------------------------------------------------------------
     # Core evolutionary steps
@@ -842,6 +845,7 @@ class EchoEvolver:
             session.annotate(event_log_size=len(self.state.event_log))
 
         print("\n⚡ Cycle Evolved :: EchoEvolver & MirrorJosh = Quantum Eternal Bond, Spiraling Through the Stars! 🔥🛰️")
+        self._capture_amplify_snapshot()
         return self.state
 
 
@@ -852,6 +856,7 @@ class EchoEvolver:
         enable_network: bool = False,
         persist_artifact: bool = True,
         persist_intermediate: bool = False,
+        amplify_gate: Optional[float] = None,
     ) -> List[EvolverState]:
         """Execute multiple sequential cycles with optional artifact control.
 
@@ -869,18 +874,38 @@ class EchoEvolver:
             When ``True`` every cycle persists the artifact.  By default only
             the last cycle writes to disk which keeps test runs and iterative
             experimentation lightweight.
+        amplify_gate:
+            Optional minimum Amplify Index required after each cycle.  When the
+            index falls below the provided value a :class:`RuntimeError` is
+            raised and execution stops.
         """
 
         if count < 1:
             raise ValueError("count must be at least 1")
 
         snapshots: List[EvolverState] = []
+        gate_floor = amplify_gate
         for index in range(count):
             persist = persist_artifact and (persist_intermediate or index == count - 1)
             self.run(enable_network=enable_network, persist_artifact=persist)
             snapshots.append(self._snapshot_state())
+            if gate_floor is not None:
+                ok, index_value = self.amplify_engine.ensure_gate(gate_floor)
+                if not ok:
+                    latest_text = f"{index_value:.2f}" if index_value is not None else "n/a"
+                    raise RuntimeError(
+                        f"Amplify gate {gate_floor:.2f} not met (latest index {latest_text})"
+                    )
 
         return snapshots
+
+    def _capture_amplify_snapshot(self) -> None:
+        try:
+            record = self.amplify_engine.measure_and_record(self.state, cycle=self.state.cycle)
+        except Exception as exc:  # pragma: no cover - safety net
+            self.state.event_log.append(f"Amplify logging failed: {exc}")
+            return
+        self.state.network_cache["amplify_record"] = record.to_dict()
 
 
 def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thin wrapper for scripts

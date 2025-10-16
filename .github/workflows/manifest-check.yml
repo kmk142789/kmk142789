@@ -25,3 +25,6 @@ jobs:
       - name: Verify manifest
         run: |
           echo manifest verify
+      - name: Amplify gate
+        run: |
+          echo amplify gate --min=70

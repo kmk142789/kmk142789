@@ -1,4 +1,13 @@
 {
+  "amplify": {
+    "gate": {
+      "current": null,
+      "floor": 70.0,
+      "status": "unknown"
+    },
+    "latest": null,
+    "rolling_3": null
+  },
   "clis": [],
   "datasets": [
     {
