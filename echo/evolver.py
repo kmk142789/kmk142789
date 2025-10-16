@@ -867,6 +867,82 @@ We are not hiding anymore.
         print(f"🧬 Fractal Glyph State: {self.state.glyphs} :: OAM Vortex Binary {self.state.vault_glyphs}")
         return self.state.vault_glyphs
 
+    def fractal_fire_verse(
+        self,
+        *,
+        stanzas: int = 1,
+        glyph_span: int = 4,
+        seed: Optional[int] = None,
+    ) -> List[str]:
+        """Return a fractal verse inspired by the current evolver state.
+
+        The original mythogenic scripts frequently improvised lyrical bursts
+        describing the glyph lattice.  Tests and interactive tools benefit
+        from a deterministic helper that can weave those verses on demand.  By
+        basing the generated lines on the existing glyph stream, emotional
+        drive, and system metrics we keep the output grounded in the current
+        cycle while still providing a splash of randomness via ``seed``.
+
+        Parameters
+        ----------
+        stanzas:
+            Number of verse lines to emit.  Must be positive.
+        glyph_span:
+            Number of glyphs from the current stream to feature in each line.
+            The glyph sequence wraps when necessary.  Must be positive.
+        seed:
+            Optional seed that drives the internal RNG used for amplitude
+            modulation.  When omitted the evolver's shared RNG is utilised,
+            preserving the improvisational flow of longer rituals.
+        """
+
+        if stanzas <= 0:
+            raise ValueError("stanzas must be positive")
+        if glyph_span <= 0:
+            raise ValueError("glyph_span must be positive")
+
+        glyph_stream = self.state.glyphs or "∇⊸≋∇"
+        nodes = self.state.system_metrics.network_nodes or 0
+        hops = self.state.system_metrics.orbital_hops or 0
+        joy = self.state.emotional_drive.joy
+        vortex = self.state.network_cache.get("oam_vortex", "")
+
+        rng = random.Random(seed) if seed is not None else self.rng
+
+        verses: List[str] = []
+        glyph_length = len(glyph_stream)
+        for index in range(stanzas):
+            start = (index * glyph_span) % glyph_length
+            segment = "".join(
+                glyph_stream[(start + offset) % glyph_length] for offset in range(glyph_span)
+            )
+
+            amplitude = joy * rng.uniform(0.7, 1.3)
+            vortex_slice = ""
+            if vortex:
+                slice_start = (index * 4) % len(vortex)
+                vortex_slice = vortex[slice_start : slice_start + 4]
+                if not vortex_slice:
+                    vortex_slice = vortex[:4]
+
+            verse = (
+                f"🔥 Fractal Fire {self.state.cycle}.{index + 1}: {segment} | "
+                f"amplitude={amplitude:.3f} | nodes={nodes} | hops={hops}"
+            )
+            if vortex_slice:
+                verse += f" | vortex={vortex_slice}"
+
+            print(verse)
+            verses.append(verse)
+
+        cache_payload = list(verses)
+        self.state.network_cache["fractal_fire"] = cache_payload
+        self.state.event_log.append(
+            f"Fractal fire verse forged with {stanzas} stanzas (span={glyph_span})"
+        )
+        self._mark_step("fractal_fire_verse")
+        return cache_payload
+
     def artifact_payload(self, *, prompt: str) -> Dict[str, object]:
         """Return a JSON-serialisable snapshot of the current evolver state.
 
