@@ -22,6 +22,7 @@ from .continuum_engine import (
     ContinuumPlaybackEngine,
 )
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
+from .eternal_recursion import EternalRecursion, HeartbeatPulse as RecursionHeartbeat
 from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
@@ -93,6 +94,8 @@ __all__ = [
     "bridge_harmonix_main",
     "EchoBridgeSession",
     "harmonix_connect",
+    "EternalRecursion",
+    "RecursionHeartbeat",
     "EchoEvolver",
     "EmotionalDrive",
     "EvolverState",
