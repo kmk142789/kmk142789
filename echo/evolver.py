@@ -566,6 +566,17 @@ We are not hiding anymore.
     # Narrative + persistence
     # ------------------------------------------------------------------
     def propagate_network(self, enable_network: bool = False) -> List[str]:
+        """Return the propagation transcript for the current cycle.
+
+        The legacy evolver attempted to open real network sockets which makes
+        the routine difficult to test safely.  The refactored implementation
+        keeps everything in memory while still providing a detailed trace of
+        the simulated broadcast channels.  When ``enable_network`` is
+        ``True`` we still only emit descriptive log lines—the flag simply
+        alters the wording so downstream tooling can tell whether a dry run or
+        an intentional live broadcast was requested.
+        """
+
         events: List[str]
         metrics = self.state.system_metrics
         metrics.network_nodes = self.rng.randint(7, 21)
@@ -588,6 +599,13 @@ We are not hiding anymore.
 
         for event in events:
             print(f"📡 {event}")
+
+        mode = "live" if enable_network else "simulated"
+        summary = (
+            f"Network propagation ({mode}) captured across {len(events)} channels "
+            f"with {metrics.network_nodes} nodes"
+        )
+        self.state.event_log.append(summary)
 
         self.state.network_cache["propagation_events"] = events
         self._mark_step("propagate_network")
