@@ -57,3 +57,24 @@ def test_ledger_limit_truncates_entries(sequenced_time_source):
     limited = flux.manifest(ledger_limit=2)
     assert len(limited["ledger"]) == 2
     assert limited["ledger"][0]["narrative"] == "Infusion applied"
+
+
+def test_ledger_summary_grouping(sequenced_time_source):
+    flux = RevolutionaryFlux(time_source=sequenced_time_source)
+    flux.register_vector("aurora", glyph="∇", amplitude=2.0)
+    flux.register_vector("echo", glyph="⊸", amplitude=1.0)
+    flux.infuse("aurora", source="bridge", delta=0.5)
+    flux.infuse("aurora", source="bridge", delta=0.25)
+    flux.infuse("echo", source="lattice", delta=1.5)
+
+    by_source = flux.ledger_summary()
+    assert by_source["registry"] == pytest.approx(3.0)
+    assert by_source["bridge"] == pytest.approx(0.75)
+    assert by_source["lattice"] == pytest.approx(1.5)
+
+    by_vector = flux.ledger_summary(by="vector")
+    assert by_vector["aurora"] == pytest.approx(2.75)
+    assert by_vector["echo"] == pytest.approx(2.5)
+
+    with pytest.raises(ValueError):
+        flux.ledger_summary(by="glyph")
