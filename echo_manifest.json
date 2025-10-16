@@ -1,4 +1,26 @@
 {
+  "amplification": {
+    "gate": {
+      "thresholds": {
+        "cohesion": 50.0,
+        "coverage": 65.0,
+        "freshness_half_life": 55.0,
+        "novelty_delta": 50.0,
+        "resonance": 60.0,
+        "stability": 60.0
+      },
+      "weights": {
+        "cohesion": 0.16,
+        "coverage": 0.14,
+        "freshness": 0.16,
+        "novelty": 0.18,
+        "resonance": 0.24,
+        "volatility": 0.12
+      }
+    },
+    "latest": 71.05,
+    "rolling_avg": 71.05
+  },
   "clis": [
     {
       "category": "cli",

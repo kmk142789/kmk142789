@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+python -m echo.cli amplify now --manifest echo_manifest.json --log-path state/amplify_log.jsonl >/dev/null
+
+if command -v git >/dev/null 2>&1; then
+  git add state/amplify_log.jsonl echo_manifest.json >/dev/null 2>&1 || true
+fi
