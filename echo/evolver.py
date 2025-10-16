@@ -16,8 +16,9 @@ import time
 from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
+from .amplify import AmplificationEngine, AmplifyGateError, AmplifySnapshot
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .thoughtlog import thought_trace
 from .memory import JsonMemoryStore
@@ -122,6 +123,7 @@ class EchoEvolver:
         rng: Optional[random.Random] = None,
         time_source: Optional[Callable[[], int]] = None,
         autonomy_engine: Optional[DecentralizedAutonomyEngine] = None,
+        amplifier: Optional[AmplificationEngine] = None,
         memory_store: Optional[JsonMemoryStore] = None,
     ) -> None:
         self.rng = rng or random.Random()
@@ -131,6 +133,7 @@ class EchoEvolver:
             self.state.artifact = Path(artifact_path)
         self.autonomy_engine = autonomy_engine or DecentralizedAutonomyEngine()
         self.memory_store = memory_store
+        self.amplifier = amplifier
 
     # ------------------------------------------------------------------
     # Core evolutionary steps
@@ -268,6 +271,7 @@ class EchoEvolver:
         relative_delta = abs(last_value - mean_value) / max(mean_value, 1)
         if relative_delta > 0.75:
             self.state.vault_key = None
+            self._mark_step("quantum_safe_crypto")
             print("🔒 Key Discarded: Hyper-finite-key drift exceeded threshold")
             return None
 
@@ -420,6 +424,7 @@ class EchoEvolver:
         )
         self._mark_step("decentralized_autonomy")
         return decision
+
 
     def inject_prompt_resonance(self) -> str:
         prompt = (
@@ -852,33 +857,53 @@ class EchoEvolver:
         enable_network: bool = False,
         persist_artifact: bool = True,
         persist_intermediate: bool = False,
+        amplify_gate: Optional[float] = None,
     ) -> List[EvolverState]:
-        """Execute multiple sequential cycles with optional artifact control.
-
-        Parameters
-        ----------
-        count:
-            Number of consecutive :meth:`run` cycles to execute.  Must be at
-            least ``1``.
-        enable_network:
-            Forwarded to :meth:`run` to determine whether simulated network
-            events should be replaced with real socket activity.
-        persist_artifact:
-            When ``True`` the final cycle writes the evolver artifact to disk.
-        persist_intermediate:
-            When ``True`` every cycle persists the artifact.  By default only
-            the last cycle writes to disk which keeps test runs and iterative
-            experimentation lightweight.
-        """
+        """Execute multiple sequential cycles with optional amplification gate."""
 
         if count < 1:
             raise ValueError("count must be at least 1")
 
+        full_sequence = self._recommended_sequence(persist_artifact=True)
         snapshots: List[EvolverState] = []
+
         for index in range(count):
             persist = persist_artifact and (persist_intermediate or index == count - 1)
-            self.run(enable_network=enable_network, persist_artifact=persist)
+            sequence = full_sequence if persist else full_sequence[:-1]
+            expected_steps = len(sequence)
+
+            if self.amplifier is not None:
+                self.amplifier.before_cycle(self.state, expected_steps=expected_steps)
+
+            prompt = self.state.network_cache.get("last_prompt")
+            for step, _ in sequence:
+                if step == "propagate_network":
+                    self.propagate_network(enable_network=enable_network)
+                elif step == "write_artifact":
+                    if persist:
+                        if prompt is None:
+                            prompt = self.inject_prompt_resonance()
+                        self.write_artifact(prompt)
+                else:
+                    result = getattr(self, step)()
+                    if step == "inject_prompt_resonance":
+                        prompt = result
+
+            if self.amplifier is not None:
+                snapshot, nudges = self.amplifier.after_cycle(
+                    self.state, expected_steps=expected_steps
+                )
+                for message in nudges:
+                    print(f"🔔 Amplify nudge: {message}")
+
             snapshots.append(self._snapshot_state())
+
+        if amplify_gate is not None:
+            if self.amplifier is None:
+                raise AmplifyGateError(
+                    "Amplify gate requested but no amplification engine configured"
+                )
+            self.amplifier.require_gate(minimum=amplify_gate)
 
         return snapshots
 

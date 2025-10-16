@@ -1,0 +1,32 @@
+name: Echo Amplify
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  amplify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Run tests
+        run: pytest
+
+      - name: Amplify gate
+        env:
+          AMPLIFY_MIN: ${{ secrets.AMPLIFY_MIN }}
+        run: |
+          MIN=${AMPLIFY_MIN:-70}
+          python -m echo.cli amplify gate --manifest echo_manifest.json --log-path state/amplify_log.jsonl --min "$MIN"
