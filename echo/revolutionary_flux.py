@@ -245,6 +245,31 @@ class RevolutionaryFlux:
             "ledger": [entry.to_dict() for entry in ledger_entries],
         }
 
+    def ledger_summary(self, *, by: str = "source") -> Dict[str, float]:
+        """Aggregate ledger deltas grouped by ``source`` or ``vector``.
+
+        The ledger often captures many small infusions from different
+        collaborators.  ``ledger_summary`` helps callers understand the
+        cumulative resonance from each contributor or vector without
+        manually iterating over the ledger entries.
+
+        Parameters
+        ----------
+        by:
+            ``"source"`` (default) groups by the ledger entry ``source``
+            while ``"vector"`` groups by the vector name.  Any other value
+            raises :class:`ValueError` to guard against silent mistakes.
+        """
+
+        if by not in {"source", "vector"}:
+            raise ValueError("ledger_summary can only group by 'source' or 'vector'")
+
+        summary: Dict[str, float] = {}
+        for entry in self._ledger:
+            key = entry.source if by == "source" else entry.vector
+            summary[key] = summary.get(key, 0.0) + entry.delta
+        return summary
+
     def ledger(self) -> List[FluxLedgerEntry]:
         """Return a copy of the ledger entries."""
 
