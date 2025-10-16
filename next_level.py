@@ -9,9 +9,14 @@ from datetime import datetime, timezone
 import os
 import re
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence, Set
+from typing import Iterable, List, Optional, Sequence, Set, Tuple
 
 TASK_PATTERN = re.compile(r"(?P<tag>TODO|FIXME)(?:[:\s-]+(?P<text>.*))?", re.IGNORECASE)
+BLOCK_COMMENT_PATTERNS: Tuple[Tuple[re.Pattern[str], int, int, str], ...] = (
+    # pattern, prefix trim length, suffix trim length, leading characters to strip per line
+    (re.compile(r"/\*.*?\*/", re.DOTALL), 2, 2, " \t*"),
+    (re.compile(r"<!--.*?-->", re.DOTALL), 4, 3, " \t-!*"),
+)
 DEFAULT_SKIP_DIRS = {
     ".git",
     "__pycache__",
@@ -66,6 +71,8 @@ def discover_tasks(
         tag_filter = {tag.upper() for tag in allowed_tags}
 
     tasks: List[Task] = []
+    seen: Set[Tuple[Path, int, str, str]] = set()
+
     for file_path in base_path.rglob("*"):
         if not file_path.is_file():
             continue
@@ -81,19 +88,23 @@ def discover_tasks(
             comment = _extract_comment(line)
             if comment is None:
                 continue
-            match = TASK_PATTERN.search(comment)
-            if match:
+            for match in TASK_PATTERN.finditer(comment):
                 tag = match.group("tag").upper()
                 if tag_filter and tag not in tag_filter:
                     continue
-                tasks.append(
-                    Task(
-                        path=file_path,
-                        line=idx,
-                        tag=tag,
-                        text=(match.group("text") or "").strip(),
-                    )
+                _record_task(
+                    tasks,
+                    seen,
+                    file_path,
+                    idx,
+                    tag,
+                    (match.group("text") or "").strip(),
                 )
+
+        for line_no, tag, text_value in _discover_block_comment_tasks(text):
+            if tag_filter and tag not in tag_filter:
+                continue
+            _record_task(tasks, seen, file_path, line_no, tag, text_value)
     tasks.sort(key=lambda task: (task.path.as_posix(), task.line))
     return tasks
 
@@ -130,6 +141,42 @@ def _extract_comment(line: str) -> Optional[str]:
                 return line[index + 2 :]
         index += 1
     return None
+
+
+def _discover_block_comment_tasks(text: str) -> Iterable[Tuple[int, str, str]]:
+    """Yield ``(line_no, tag, text)`` for TODO/FIXME entries within block comments."""
+
+    for pattern, prefix_trim, suffix_trim, leading in BLOCK_COMMENT_PATTERNS:
+        for match in pattern.finditer(text):
+            body = match.group()[prefix_trim:]
+            if suffix_trim:
+                body = body[: -suffix_trim]
+            start_line = text.count("\n", 0, match.start()) + 1
+            lines = body.splitlines() or [body]
+            for offset, raw_line in enumerate(lines):
+                candidate = raw_line.lstrip(leading)
+                for task_match in TASK_PATTERN.finditer(candidate):
+                    yield (
+                        start_line + offset,
+                        task_match.group("tag").upper(),
+                        (task_match.group("text") or "").strip(),
+                    )
+
+
+def _record_task(
+    tasks: List[Task],
+    seen: Set[Tuple[Path, int, str, str]],
+    file_path: Path,
+    line_no: int,
+    tag: str,
+    text: str,
+) -> None:
+    normalized = text.strip()
+    key = (file_path, line_no, tag, normalized)
+    if key in seen:
+        return
+    seen.add(key)
+    tasks.append(Task(path=file_path, line=line_no, tag=tag, text=normalized))
 
 
 def build_roadmap(tasks: Iterable[Task], base_path: Path) -> str:
