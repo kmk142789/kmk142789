@@ -7,11 +7,15 @@ import json
 from echo.auto_release import bump_version, determine_bump, prepare_release
 
 
+def _states(cycle: int) -> dict:
+    return {"cycle": cycle, "resonance": 1.0, "amplification": 1.0, "snapshots": []}
+
+
 def test_determine_bump_major_minor_patch():
-    previous = {"engines": [{"name": "A"}], "states": [{"name": "S"}], "assistant_kits": []}
-    current = {"engines": [{"name": "B"}], "states": [{"name": "S"}], "assistant_kits": []}
+    previous = {"engines": [{"name": "A"}], "states": _states(1), "kits": []}
+    current = {"engines": [{"name": "B"}], "states": _states(1), "kits": []}
     assert determine_bump(previous, current) == "major"
-    current_minor = {"engines": [{"name": "A"}], "states": [{"name": "T"}], "assistant_kits": []}
+    current_minor = {"engines": [{"name": "A"}], "states": _states(2), "kits": []}
     assert determine_bump(previous, current_minor) == "minor"
     assert bump_version("1.2.3", "minor") == "1.3.0"
 
@@ -19,13 +23,13 @@ def test_determine_bump_major_minor_patch():
 def test_prepare_release_creates_sbom(tmp_path):
     previous = {
         "engines": [{"name": "A"}],
-        "states": [{"name": "S"}],
-        "assistant_kits": [],
+        "states": _states(1),
+        "kits": [],
     }
     current = {
         "engines": [{"name": "A"}, {"name": "B"}],
-        "states": [{"name": "S"}],
-        "assistant_kits": [],
+        "states": _states(1),
+        "kits": [{"name": "kit"}],
     }
     prev_path = tmp_path / "prev.json"
     curr_path = tmp_path / "curr.json"

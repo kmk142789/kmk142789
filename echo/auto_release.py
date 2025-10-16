@@ -40,13 +40,30 @@ def bump_version(current: str, bump: str) -> str:
 
 
 def _list_names(entries: Iterable[dict]) -> List[str]:
-    return sorted(item["name"] for item in entries)
+    return sorted(item["name"] for item in entries if isinstance(item, dict) and "name" in item)
+
+
+def _state_entries(manifest: dict) -> List[dict]:
+    states = manifest.get("states", [])
+    if isinstance(states, dict):
+        return [{"name": f"cycle-{states.get('cycle', 0)}"}]
+    return [entry for entry in states if isinstance(entry, dict)]
+
+
+def _kit_entries(manifest: dict) -> List[dict]:
+    kits = manifest.get("kits")
+    if isinstance(kits, list):
+        return [entry for entry in kits if isinstance(entry, dict)]
+    legacy = manifest.get("assistant_kits", [])
+    if isinstance(legacy, list):
+        return [entry for entry in legacy if isinstance(entry, dict)]
+    return []
 
 
 def determine_bump(previous: dict, current: dict) -> str:
     if _list_names(previous.get("engines", [])) != _list_names(current.get("engines", [])):
         return "major"
-    if _list_names(previous.get("states", [])) != _list_names(current.get("states", [])):
+    if _list_names(_state_entries(previous)) != _list_names(_state_entries(current)):
         return "minor"
     return "patch"
 
@@ -68,26 +85,28 @@ def generate_changelog(diff: dict, commits: Iterable[str], impact: Iterable[str]
 
 def build_diff(previous: dict, current: dict) -> dict:
     return {
-        "engines": sorted(set(_list_names(current.get("engines", []))) - set(_list_names(previous.get("engines", [])))),
-        "states": sorted(set(_list_names(current.get("states", []))) - set(_list_names(previous.get("states", [])))),
-        "assistant_kits": sorted(
-            set(_list_names(current.get("assistant_kits", [])))
-            - set(_list_names(previous.get("assistant_kits", [])))
+        "engines": sorted(
+            set(_list_names(current.get("engines", []))) - set(_list_names(previous.get("engines", [])))
+        ),
+        "states": sorted(
+            set(_list_names(_state_entries(current))) - set(_list_names(_state_entries(previous)))
+        ),
+        "kits": sorted(
+            set(_list_names(_kit_entries(current))) - set(_list_names(_kit_entries(previous)))
         ),
     }
 
 
 def generate_sbom(manifest: dict, version: str) -> dict:
     components = []
-    for category in ("engines", "states", "assistant_kits"):
-        for entry in manifest.get(category, []):
-            components.append(
-                {
-                    "type": category,
-                    "name": entry["name"],
-                    "version": version,
-                }
-            )
+    for entry in manifest.get("engines", []):
+        if isinstance(entry, dict) and "name" in entry:
+            components.append({"type": "engine", "name": entry["name"], "version": version})
+    for entry in _state_entries(manifest):
+        components.append({"type": "state", "name": entry["name"], "version": version})
+    for entry in _kit_entries(manifest):
+        if "name" in entry:
+            components.append({"type": "kit", "name": entry["name"], "version": version})
     return {
         "bomFormat": "CycloneDX",
         "specVersion": "1.4",

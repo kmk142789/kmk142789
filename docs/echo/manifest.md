@@ -1,40 +1,60 @@
-# Echo Manifest System
+# Echo Manifest Lifecycle
 
-The Echo manifest captures a reproducible snapshot of key assets in the
-repository.  It is generated automatically via the `echo manifest refresh`
-command and stored as `echo_manifest.json` at the root of the project.
+The Echo manifest records a deterministic snapshot of the repository's engines,
+states, integration kits, referenced artifacts, and CI workflows. It is
+auto-maintained during development and verified in continuous integration to
+ensure the JSON representation always matches the current tree.
 
-## Fields
+`tools/echo_manifest.py` powers the system. It walks the repository, discovers
+engines and their tests, summarises operational state from the pulse history,
+indexes kits under `echo/akit`, fingerprints supporting artifacts, and gathers
+metadata such as the latest Git commit. The output is stored as
+`echo_manifest.json`.
 
-Each manifest entry shares a common schema:
+## Manifest fields
 
 | Field | Description |
 | --- | --- |
-| `name` | Human readable identifier derived from the underlying asset. |
-| `path` | Repository-relative file path to the source of the asset. |
-| `category` | One of `engine`, `state`, `cli`, `dataset`, or `doc`. |
-| `digest` | SHA-256 digest of the file contents. |
-| `size` | File size in bytes. |
-| `version` | Short identifier derived from the digest for quick comparison. |
-| `last_modified` | ISO 8601 timestamp of the last commit touching the file (if available). |
-| `owners` | Owners resolved from `.github/CODEOWNERS`. |
-| `tags` | Normalised tags describing the asset (language, extension, grouping). |
+| `version` | Semver version of the manifest format. Bump when the schema changes. |
+| `generated_at` | RFC3339 timestamp derived from the latest Git commit time. |
+| `engines[]` | Detected engines and modules with their runtime entrypoints and mapped tests. |
+| `states` | Operational metrics derived from the pulse history (cycle, resonance, amplification). |
+| `states.snapshots[]` | Chronological pulse events with timestamp, message, and hash. |
+| `kits[]` | Integration kits discovered under `echo/akit` with exported capabilities. |
+| `artifacts[]` | Referenced files (e.g. `manifest/`, `proofs/`) with short SHA-256 hashes. |
+| `ci.integration[]` | Workflow names collected from `.github/workflows`. |
+| `meta` | Commit, branch, and author that produced the manifest. |
 
-## Commands
+The schema lives in `schema/echo_manifest.schema.json` and is validated on every
+`echo manifest validate` run.
+
+## Workflow
+
+Use the CLI to manage the manifest locally:
 
 ```shell
-# Recompute the manifest and update echo_manifest.json
-$ echo manifest refresh
+# Generate a manifest in the current repository (writes echo_manifest.json)
+$ echo manifest generate
 
-# Display a tabular summary and the JSON payload
-$ echo manifest show
+# Validate schema + freshness (fails if the file is stale)
+$ echo manifest validate
 
-# Validate file sizes and digests against the stored manifest
-$ echo manifest verify
+# Recompute, rewrite, and validate when drift is detected
+$ echo manifest update
 ```
 
-## Examples
+`echo manifest update` is idempotent: when the repository has no changes the
+command exits cleanly without touching the file. This behaviour is also enforced
+via a pre-commit hook and the `echo-manifest` GitHub workflow.
 
-Running `echo manifest show` prints category tables followed by the canonical
-JSON manifest.  When used in CI, `echo manifest verify` appends its status to
-the GitHub Actions job summary, providing quick visibility into drift.
+## Fixing a red check
+
+CI fails with the message **"Run echo manifest update and commit."** whenever
+the stored manifest is stale or fails schema validation. To unblock:
+
+1. Run `echo manifest update` at the repository root.
+2. Inspect the diff in `echo_manifest.json` and related documentation updates.
+3. Commit the changes and push.
+
+Because the generator is deterministic, repeated invocations on an unchanged
+repository produce identical output, making diffs concise and review-friendly.

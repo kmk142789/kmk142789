@@ -69,11 +69,36 @@ def build_graph(manifest: Optional[dict] = None, manifest_path: Path | None = No
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     nodes: Dict[str, dict] = {"manifest": {"type": "root"}}
     edges: Set[Tuple[str, str]] = set()
-    for category in ("engines", "states", "assistant_kits"):
-        for entry in manifest.get(category, []):
-            node_id = f"{category}:{entry['name']}"
-            nodes[node_id] = entry
-            edges.add(("manifest", node_id))
+
+    def _add_node(category: str, entry: dict) -> None:
+        node_id = f"{category}:{entry['name']}"
+        nodes[node_id] = entry
+        edges.add(("manifest", node_id))
+
+    for entry in manifest.get("engines", []):
+        if isinstance(entry, dict) and "name" in entry:
+            _add_node("engines", entry)
+
+    kits = manifest.get("kits") or manifest.get("assistant_kits") or []
+    for entry in kits:
+        if isinstance(entry, dict) and "name" in entry:
+            _add_node("kits", entry)
+
+    states = manifest.get("states")
+    if isinstance(states, dict):
+        state_entry = {
+            "name": f"cycle-{states.get('cycle', 0)}",
+            "path": "states",
+            "module_spec": "states",
+            "cycle": states.get("cycle"),
+            "resonance": states.get("resonance"),
+            "amplification": states.get("amplification"),
+        }
+        _add_node("states", state_entry)
+    elif isinstance(states, list):  # legacy support
+        for entry in states:
+            if isinstance(entry, dict) and "name" in entry:
+                _add_node("states", entry)
     digest = _canonical_digest(edges)
     return ImpactGraph(nodes=nodes, edges=edges, digest=digest)
 

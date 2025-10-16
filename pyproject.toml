@@ -33,6 +33,7 @@ dependencies = [
   "pydantic>=2.6",
   "PyNaCl>=1.5",
   "rich>=13",
+  "jsonschema>=4.21",
 ]
 
 [project.optional-dependencies]

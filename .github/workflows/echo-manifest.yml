@@ -1,0 +1,27 @@
+name: echo-manifest
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install project with dev extras
+        run: pip install -e .[dev]
+
+      - name: Validate echo manifest
+        run: |
+          python tools/echo_manifest.py validate || \
+          (echo 'Run echo manifest update and commit.' >&2 && exit 1)
