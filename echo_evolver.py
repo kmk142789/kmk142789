@@ -13,11 +13,12 @@ from echo.evolver import (
     EchoEvolver,
     EmotionalDrive,
     EvolverState,
+    HearthWeave,
     SystemMetrics,
     main as _package_main,
 )
 
-__all__ = ["EchoEvolver", "EmotionalDrive", "EvolverState", "SystemMetrics", "main"]
+__all__ = ["EchoEvolver", "EmotionalDrive", "EvolverState", "SystemMetrics", "HearthWeave", "main"]
 
 
 def main() -> int:  # pragma: no cover - thin CLI wrapper

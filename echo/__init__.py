@@ -22,7 +22,14 @@ from .continuum_engine import (
     ContinuumPlaybackEngine,
 )
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
-from .evolver import EchoEvolver, EmotionalDrive, EvolverState, SystemMetrics, main
+from .evolver import (
+    EchoEvolver,
+    EmotionalDrive,
+    EvolverState,
+    HearthWeave,
+    SystemMetrics,
+    main,
+)
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
@@ -97,6 +104,7 @@ __all__ = [
     "EmotionalDrive",
     "EvolverState",
     "SystemMetrics",
+    "HearthWeave",
     "EchoAI",
     "EchoResonanceEngine",
     "HarmonicConfig",
