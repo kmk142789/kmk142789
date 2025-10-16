@@ -10,6 +10,7 @@ script path.  The :mod:`echo_evolver` script now simply delegates to the
 
 from __future__ import annotations
 
+import argparse
 import json
 import random
 import time
@@ -1225,9 +1226,36 @@ class EchoEvolver:
 
 
 def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thin wrapper for scripts
-    _ = argv  # Currently unused; preserved for forwards compatibility.
+    parser = argparse.ArgumentParser(
+        description="Run a single EchoEvolver cycle with optional network propagation."
+    )
+    parser.add_argument(
+        "--enable-network",
+        action="store_true",
+        help="Allow the propagation step to perform real network activity.",
+    )
+    persist_group = parser.add_mutually_exclusive_group()
+    persist_group.add_argument(
+        "--persist-artifact",
+        dest="persist_artifact",
+        action="store_true",
+        help="Persist the generated cycle artifact to disk (default).",
+    )
+    persist_group.add_argument(
+        "--no-persist-artifact",
+        dest="persist_artifact",
+        action="store_false",
+        help="Skip writing the cycle artifact to disk for the run.",
+    )
+    parser.set_defaults(persist_artifact=True)
+
+    args = parser.parse_args(list(argv) if argv is not None else None)
+
     evolver = EchoEvolver()
-    evolver.run()
+    evolver.run(
+        enable_network=args.enable_network,
+        persist_artifact=args.persist_artifact,
+    )
     return 0
 
 
