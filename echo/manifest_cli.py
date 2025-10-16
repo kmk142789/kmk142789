@@ -1,616 +1,505 @@
-"""Command line utilities for maintaining the Echo manifest."""
+"""Auto-maintained manifest system for the Echo repository.
+
+This module implements the ``echo manifest`` CLI described in the
+architecture brief.  It discovers engines, states, CLIs, datasets and docs
+within the repository, records deterministic metadata for each entry and
+persists the canonical manifest JSON at the repository root.
+
+The implementation favours deterministic behaviour to support golden-file
+testing and automated verification:
+
+* Discovery routines only inspect files under the provided repository root.
+* Content digests are computed with SHA-256.
+* Timestamps are derived from ``git log`` so they are stable across checkouts.
+* Serialisation uses ``json.dumps`` with ``sort_keys=True`` to ensure
+  canonical ordering.
+
+Tests exercise the core helpers using synthetic repositories created under a
+temporary directory.  The public helpers accept an optional ``repo_root``
+argument so that the tests can operate on those fixtures without touching the
+real repository.
+"""
 
 from __future__ import annotations
 
 import argparse
 import ast
 import hashlib
-import importlib
-import importlib.util
-import inspect
 import json
 import os
-import shutil
+import shlex
 import subprocess
-import sys
-from dataclasses import fields, is_dataclass
-from datetime import datetime, timezone
+from dataclasses import dataclass, field
 from pathlib import Path
-from types import ModuleType
-from typing import Any, Dict, Iterable, List, Tuple
-
-from .provenance import ProvenanceEmitter
-
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-_DEFAULT_MANIFEST_PATH = _REPO_ROOT / "echo_manifest.json"
-_LEDGER_ENV_VAR = "ECHO_MANIFEST_LEDGER"
+from typing import Any, Dict, Iterable, Iterator, List, Mapping, Sequence
 
 
-def _ledger_path_override() -> Path | None:
-    override = os.environ.get(_LEDGER_ENV_VAR)
-    return Path(override).resolve() if override else None
+REPO_ROOT = Path(__file__).resolve().parent.parent
+MANIFEST_NAME = "echo_manifest.json"
+@dataclass(frozen=True)
+class ManifestEntry:
+    """Serializable record describing a repository asset."""
 
-_ENGINE_SPECS: Tuple[str, ...] = (
-    "echo.bridge_emitter:BridgeEmitter",
-    "echo.autonomy:DecentralizedAutonomyEngine",
-    "cognitive_harmonics.harmonix_bridge:EchoBridgeHarmonix",
-    "cognitive_harmonics.harmonix_evolver:EchoEvolver",
-    "echo.evolver:EchoEvolver",
-    "modules.echo-memory.memory_engine:EchoMemoryEngine",
-    "echo.pulse:EchoPulseEngine",
-    "echo.resonance:EchoResonanceEngine",
-    "cognitive_harmonics.harmonix_bridge:PolicyEngine",
-)
+    name: str
+    path: str
+    category: str
+    digest: str
+    size: int
+    version: str
+    last_modified: str | None
+    owners: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
 
-_STATE_SPECS: Tuple[str, ...] = (
-    "echo.autonomy:AutonomyDecision",
-    "echo.autonomy:AutonomyNode",
-    "cognitive_harmonics.harmonix_bridge:BridgeSignals",
-    "echo.bridge_emitter:BridgeState",
-    "cognitive_harmonics.harmonix_bridge:BridgeTuning",
-    "cognitive_harmonics.harmonix_evolver:EchoState",
-    "echo.evolver:EmotionalDrive",
-    "echo.evolver:EvolverState",
-    "cognitive_harmonics.harmonix_bridge:HarmonixBridgeState",
-    "modules.echo-memory.memory_engine:MemorySnapshot",
-    "echo.orbital_loop:OrbitalState",
-    "echo.pulse:Pulse",
-    "echo.pulse:PulseEvent",
-    "cognitive_harmonics.harmonix_evolver:SystemMetrics",
-    "echo.evolver:SystemMetrics",
-)
-
-_ASSISTANT_KIT_PATHS: Tuple[str, ...] = (
-    "modules/echo-bridge",
-    "modules/echo-harmonics",
-    "modules/echo-ledger-visualizer",
-    "modules/echo-memory",
-)
+    def to_dict(self) -> Dict[str, Any]:
+        owners = list(dict.fromkeys(self.owners))
+        tags = sorted(dict.fromkeys(self.tags))
+        return {
+            "name": self.name,
+            "path": self.path,
+            "category": self.category,
+            "digest": self.digest,
+            "size": self.size,
+            "version": self.version,
+            "last_modified": self.last_modified,
+            "owners": owners,
+            "tags": tags,
+        }
 
 
-class ManifestError(RuntimeError):
-    """Raised when the manifest cannot be constructed."""
+def _sha256_file(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(8192), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
 
 
-def _default_ledger_path() -> Path:
-    override = _ledger_path_override()
-    return override if override is not None else _REPO_ROOT / "ledger" / "manifest_history.jsonl"
-
-
-def _ensure_ledger_directory(path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-
-def _current_commit_hash() -> str:
+def _git_last_modified(repo_root: Path, path: Path) -> str | None:
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=_REPO_ROOT,
+            [
+                "git",
+                "log",
+                "-1",
+                "--format=%cI",
+                "--",
+                str(path.relative_to(repo_root)),
+            ],
+            cwd=repo_root,
             check=True,
             capture_output=True,
             text=True,
         )
     except (subprocess.CalledProcessError, OSError):
-        return "UNKNOWN"
-    return result.stdout.strip() or "UNKNOWN"
+        return None
+    value = result.stdout.strip()
+    return value or None
 
 
-def _ledger_payload(entry: Dict[str, Any]) -> bytes:
-    payload = {key: value for key, value in entry.items() if key != "ledger_seal"}
-    return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-
-
-def _load_manifest_ledger(path: Path | None = None) -> List[Dict[str, Any]]:
-    ledger_path = path or _default_ledger_path()
-    if not ledger_path.exists():
+def _load_codeowners(codeowners_path: Path) -> List[tuple[str, List[str]]]:
+    if not codeowners_path.exists():
         return []
-    entries: List[Dict[str, Any]] = []
-    with ledger_path.open("r", encoding="utf-8") as handle:
-        for index, line in enumerate(handle, 1):
-            text = line.strip()
-            if not text:
-                continue
-            try:
-                payload = json.loads(text)
-            except json.JSONDecodeError as exc:  # pragma: no cover - defensive
-                raise ManifestError(
-                    f"Invalid ledger entry at line {index} in {ledger_path}: {exc}"
-                ) from exc
-            entries.append(payload)
+    entries: List[tuple[str, List[str]]] = []
+    for raw_line in codeowners_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = shlex.split(line)
+        if len(parts) < 2:
+            continue
+        pattern, owners = parts[0], parts[1:]
+        entries.append((pattern, owners))
     return entries
 
 
-def _append_manifest_ledger_entry(
-    manifest_path: Path,
-    manifest_digest: str,
-    ledger_path: Path | None = None,
-    manifest_written: bool | None = None,
-) -> Dict[str, Any]:
-    ledger_file = ledger_path or _default_ledger_path()
-    _ensure_ledger_directory(ledger_file)
-    existing_entries = _load_manifest_ledger(ledger_file)
-    previous_seal = existing_entries[-1].get("ledger_seal") if existing_entries else None
-    try:
-        manifest_reference = str(manifest_path.relative_to(_REPO_ROOT))
-    except ValueError:
-        manifest_reference = str(manifest_path)
-    entry: Dict[str, Any] = {
-        "sequence": len(existing_entries) + 1,
-        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "manifest_path": manifest_reference,
-        "manifest_digest": manifest_digest,
-        "commit": _current_commit_hash(),
-        "ledger_prev": previous_seal,
+def _owners_for_path(path: Path, patterns: Sequence[tuple[str, List[str]]]) -> List[str]:
+    if not patterns:
+        return []
+    relative = path.as_posix()
+    matched: List[str] = []
+    for pattern, owners in patterns:
+        check = pattern.lstrip("/")
+        if Path(relative).match(check):
+            matched = owners
+        elif pattern == "*":
+            matched = owners
+    return matched
+
+
+def _python_files(repo_root: Path) -> Iterator[Path]:
+    include_prefixes = {
+        repo_root / "echo",
+        repo_root / "cognitive_harmonics",
+        repo_root / "modules",
     }
-    if manifest_written is not None:
-        entry["manifest_written"] = manifest_written
-    entry["ledger_seal"] = hashlib.sha256(_ledger_payload(entry)).hexdigest()
-    with ledger_file.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(entry, sort_keys=True) + "\n")
-    return entry
+    for prefix in include_prefixes:
+        if not prefix.exists():
+            continue
+        yield from prefix.rglob("*.py")
 
 
-def _verify_commit_signature(commit_hash: str) -> bool | None:
-    if not commit_hash or commit_hash == "UNKNOWN":
-        return None
-    if shutil.which("gpg") is None:
-        return None
+def _extract_classes(path: Path) -> List[tuple[str, List[str]]]:
     try:
-        subprocess.run(
-            ["git", "verify-commit", commit_hash],
-            cwd=_REPO_ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except subprocess.CalledProcessError:
-        return False
-    except OSError:  # pragma: no cover - platform specific
-        return None
-    return True
+        module = ast.parse(path.read_text(encoding="utf-8"))
+    except SyntaxError:
+        return []
+    entries: List[tuple[str, List[str]]] = []
+    for node in module.body:
+        if isinstance(node, ast.ClassDef):
+            decorators: List[str] = []
+            for decorator in node.decorator_list:
+                if isinstance(decorator, ast.Name):
+                    decorators.append(decorator.id)
+                elif isinstance(decorator, ast.Attribute):
+                    decorators.append(decorator.attr)
+            entries.append((node.name, decorators))
+    return entries
 
 
-def _stable_digest(payload: bytes) -> str:
-    return hashlib.sha256(payload).hexdigest()
+def _tags_for_path(path: Path, base_tags: Iterable[str]) -> List[str]:
+    tags = list(base_tags)
+    suffix = path.suffix.lower()
+    if suffix:
+        tags.append(suffix.lstrip("."))
+    if "echo" in path.parts:
+        tags.append("echo")
+    return tags
 
 
-def _canonical_manifest_bytes(payload: Dict[str, Any]) -> bytes:
-    manifest_body = dict(payload)
-    manifest_body.pop("manifest_digest", None)
-    return json.dumps(manifest_body, sort_keys=True, separators=(",", ":")).encode(
-        "utf-8"
-    )
+def _discover_engines(repo_root: Path, codeowners: Sequence[tuple[str, List[str]]]) -> List[ManifestEntry]:
+    entries: List[ManifestEntry] = []
+    for file_path in _python_files(repo_root):
+        classes = _extract_classes(file_path)
+        if not classes:
+            continue
+        for class_name, _decorators in classes:
+            if not class_name.endswith("Engine"):
+                continue
+            digest = _sha256_file(file_path)
+            relative = file_path.relative_to(repo_root)
+            stat = file_path.stat()
+            entry = ManifestEntry(
+                name=class_name,
+                path=relative.as_posix(),
+                category="engine",
+                digest=digest,
+                size=stat.st_size,
+                version=digest[:12],
+                last_modified=_git_last_modified(repo_root, file_path),
+                owners=_owners_for_path(relative, codeowners),
+                tags=_tags_for_path(relative, ["python", "engine"]),
+            )
+            entries.append(entry)
+    entries.sort(key=lambda item: (item.name, item.path))
+    return entries
 
 
-def _load_module(module_path: str) -> ModuleType:
-    """Import a module, falling back to manual loading for dashed paths."""
+def _discover_states(repo_root: Path, codeowners: Sequence[tuple[str, List[str]]]) -> List[ManifestEntry]:
+    entries: List[ManifestEntry] = []
+    for file_path in _python_files(repo_root):
+        classes = _extract_classes(file_path)
+        if not classes:
+            continue
+        for class_name, decorators in classes:
+            if not class_name.endswith("State") and "dataclass" not in decorators:
+                continue
+            digest = _sha256_file(file_path)
+            relative = file_path.relative_to(repo_root)
+            stat = file_path.stat()
+            entry = ManifestEntry(
+                name=class_name,
+                path=relative.as_posix(),
+                category="state",
+                digest=digest,
+                size=stat.st_size,
+                version=digest[:12],
+                last_modified=_git_last_modified(repo_root, file_path),
+                owners=_owners_for_path(relative, codeowners),
+                tags=_tags_for_path(relative, ["python", "state"]),
+            )
+            entries.append(entry)
+    entries.sort(key=lambda item: (item.name, item.path))
+    return entries
 
+
+def _load_pyproject(repo_root: Path) -> Mapping[str, Any]:
+    pyproject = repo_root / "pyproject.toml"
+    if not pyproject.exists():
+        return {}
     try:
-        return importlib.import_module(module_path)
-    except ModuleNotFoundError:
-        pass
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover - Python <3.11 fallback
+        import tomli as tomllib  # type: ignore
+    try:
+        return tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError:
+        return {}
 
-    relative = Path(*module_path.split("."))
-    candidates = [
-        _REPO_ROOT / (str(relative) + ".py"),
-        _REPO_ROOT / relative / "__init__.py",
-    ]
+
+def _resolve_module_path(repo_root: Path, module: str) -> Path | None:
+    module_path = Path(*module.split("."))
+    candidates = [repo_root / (str(module_path) + ".py"), repo_root / module_path / "__init__.py"]
     for candidate in candidates:
         if candidate.exists():
-            module_name = module_path.replace("-", "_")
-            spec = importlib.util.spec_from_file_location(module_name, candidate)
-            if spec is None or spec.loader is None:
-                raise ManifestError(f"Unable to load module specification for {module_path}")
-            module = importlib.util.module_from_spec(spec)
-            loader = spec.loader
-            assert loader is not None
-            loader.exec_module(module)
-            return module
-    raise ManifestError(f"Unable to locate module {module_path}")
+            return candidate
+    return None
 
 
-def _resolve_object(spec: str) -> Tuple[Any, str]:
-    """Return the object referenced by ``spec`` and the module spec string."""
-
-    if ":" not in spec:
-        raise ManifestError(f"Invalid spec {spec!r}")
-    module_path, attr_path = spec.split(":", 1)
-    module = _load_module(module_path)
-    obj: Any = module
-    for part in attr_path.split("."):
-        obj = getattr(obj, part)
-    return obj, module_path
-
-
-def _docstring_summary(doc: str) -> str:
-    paragraphs = [chunk.strip() for chunk in doc.split("\n\n") if chunk.strip()]
-    return paragraphs[0] if paragraphs else ""
-
-
-def _public_methods(obj: Any) -> List[str]:
-    methods: List[str] = []
-    for name, member in inspect.getmembers(obj, inspect.isfunction):
-        qualname = getattr(member, "__qualname__", "")
-        if not qualname.startswith(getattr(obj, "__qualname__", "")):
+def _discover_clis(repo_root: Path, codeowners: Sequence[tuple[str, List[str]]]) -> List[ManifestEntry]:
+    config = _load_pyproject(repo_root)
+    scripts = (
+        config.get("project", {})
+        .get("scripts", {})
+        if isinstance(config.get("project"), Mapping)
+        else {}
+    )
+    entries: List[ManifestEntry] = []
+    for name, target in sorted(scripts.items()):
+        if not isinstance(target, str):
             continue
-        if name.startswith("_"):
+        module = target.split(":", 1)[0]
+        file_path = _resolve_module_path(repo_root, module)
+        if file_path is None:
             continue
-        methods.append(name)
-    return sorted(dict.fromkeys(methods))
+        digest = _sha256_file(file_path)
+        relative = file_path.relative_to(repo_root)
+        stat = file_path.stat()
+        entry = ManifestEntry(
+            name=name,
+            path=relative.as_posix(),
+            category="cli",
+            digest=digest,
+            size=stat.st_size,
+            version=digest[:12],
+            last_modified=_git_last_modified(repo_root, file_path),
+            owners=_owners_for_path(relative, codeowners),
+            tags=_tags_for_path(relative, ["python", "cli"]),
+        )
+        entries.append(entry)
+    entries.sort(key=lambda item: (item.name, item.path))
+    return entries
 
 
-def _source_digest(obj: Any) -> str:
-    try:
-        source = inspect.getsource(obj)
-    except (OSError, TypeError):
-        source = ""
-    return _stable_digest(source.encode("utf-8"))
+DATASET_DIRECTORIES = (
+    "datasets",
+    "data",
+    "docs/data",
+    "federated_pulse",
+    "genesis_ledger",
+    "ledger",
+    "manifest",
+)
+
+DATASET_EXTENSIONS = {".json", ".jsonl", ".ndjson", ".csv", ".tsv", ".parquet", ".txt"}
 
 
-def _build_engine_entry(spec: str) -> Dict[str, Any]:
-    obj, module_spec = _resolve_object(spec)
-    doc = inspect.getdoc(obj) or ""
-    entry = {
-        "name": getattr(obj, "__name__", str(obj)),
-        "module": getattr(obj, "__module__", module_spec.replace("-", "_")),
-        "module_spec": module_spec,
-        "qualname": getattr(obj, "__qualname__", getattr(obj, "__name__", "")),
-        "summary": _docstring_summary(doc),
-        "doc_digest": _stable_digest(doc.encode("utf-8")),
-        "source_digest": _source_digest(obj),
-        "public_methods": _public_methods(obj),
-    }
-    return entry
-
-
-def _build_state_entry(spec: str) -> Dict[str, Any]:
-    obj, module_spec = _resolve_object(spec)
-    doc = inspect.getdoc(obj) or ""
-    is_data = is_dataclass(obj)
-    field_names: List[str] = []
-    if is_data:
-        field_names = [field.name for field in fields(obj)]
-    entry = {
-        "name": getattr(obj, "__name__", str(obj)),
-        "module": getattr(obj, "__module__", module_spec.replace("-", "_")),
-        "module_spec": module_spec,
-        "dataclass": is_data,
-        "fields": field_names,
-        "field_count": len(field_names),
-        "summary": _docstring_summary(doc),
-        "doc_digest": _stable_digest(doc.encode("utf-8")),
-        "source_digest": _source_digest(obj),
-    }
-    return entry
-
-
-def _digest_directory(path: Path) -> Tuple[str, int]:
-    hasher = hashlib.sha256()
-    count = 0
-    for item in sorted(path.rglob("*")):
-        if item.is_dir():
+def _discover_datasets(repo_root: Path, codeowners: Sequence[tuple[str, List[str]]]) -> List[ManifestEntry]:
+    entries: List[ManifestEntry] = []
+    for directory in DATASET_DIRECTORIES:
+        base = repo_root / directory
+        if not base.exists():
             continue
-        if item.name.endswith((".pyc", ".pyo")) or item.name == "__pycache__":
-            continue
-        count += 1
-        relative = item.relative_to(path)
-        hasher.update(str(relative.as_posix()).encode("utf-8"))
-        hasher.update(item.read_bytes())
-    return hasher.hexdigest(), count
+        for file_path in base.rglob("*"):
+            if not file_path.is_file() or file_path.suffix.lower() not in DATASET_EXTENSIONS:
+                continue
+            digest = _sha256_file(file_path)
+            relative = file_path.relative_to(repo_root)
+            stat = file_path.stat()
+            entry = ManifestEntry(
+                name=relative.stem,
+                path=relative.as_posix(),
+                category="dataset",
+                digest=digest,
+                size=stat.st_size,
+                version=digest[:12],
+                last_modified=_git_last_modified(repo_root, file_path),
+                owners=_owners_for_path(relative, codeowners),
+                tags=_tags_for_path(relative, ["dataset"]),
+            )
+            entries.append(entry)
+    entries.sort(key=lambda item: (item.name, item.path))
+    return entries
 
 
-def _parse_module_docstring(path: Path) -> Tuple[str, List[str]]:
-    if not path.exists():
-        return "", []
-    module = ast.parse(path.read_text(encoding="utf-8"))
-    doc = ast.get_docstring(module) or ""
-    exports: List[str] = []
-    for node in module.body:
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == "__all__":
-                    if isinstance(node.value, (ast.List, ast.Tuple)):
-                        exports = [
-                            elt.value
-                            for elt in node.value.elts
-                            if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
-                        ]
-    return doc, exports
+def _discover_docs(repo_root: Path, codeowners: Sequence[tuple[str, List[str]]]) -> List[ManifestEntry]:
+    docs_root = repo_root / "docs"
+    entries: List[ManifestEntry] = []
+    if not docs_root.exists():
+        return entries
+    for file_path in docs_root.rglob("*.md"):
+        digest = _sha256_file(file_path)
+        relative = file_path.relative_to(repo_root)
+        stat = file_path.stat()
+        entry = ManifestEntry(
+            name=relative.stem,
+            path=relative.as_posix(),
+            category="doc",
+            digest=digest,
+            size=stat.st_size,
+            version=digest[:12],
+            last_modified=_git_last_modified(repo_root, file_path),
+            owners=_owners_for_path(relative, codeowners),
+            tags=_tags_for_path(relative, ["docs"]),
+        )
+        entries.append(entry)
+    entries.sort(key=lambda item: (item.name, item.path))
+    return entries
 
 
-def _build_assistant_entry(path_str: str) -> Dict[str, Any]:
-    path = (_REPO_ROOT / path_str).resolve()
-    if not path.exists():
-        raise ManifestError(f"Assistant kit directory {path_str} does not exist")
-    digest, file_count = _digest_directory(path)
-    init_path = path / "__init__.py"
-    doc, exports = _parse_module_docstring(init_path)
-    entry = {
-        "name": path.name,
-        "path": path_str,
-        "summary": _docstring_summary(doc),
-        "doc_digest": _stable_digest(doc.encode("utf-8")),
-        "exports": exports,
-        "file_count": file_count,
-        "digest": digest,
-    }
-    return entry
+def build_manifest(repo_root: Path | None = None) -> Dict[str, Any]:
+    """Collect metadata for the repository and return the manifest payload."""
 
-
-def build_manifest() -> Dict[str, Any]:
-    """Construct the canonical manifest dictionary."""
-
-    engines = sorted((_build_engine_entry(spec) for spec in _ENGINE_SPECS), key=lambda item: (item["name"], item["module_spec"]))
-    states = sorted((_build_state_entry(spec) for spec in _STATE_SPECS), key=lambda item: (item["name"], item["module_spec"]))
-    kits = sorted((_build_assistant_entry(path) for path in _ASSISTANT_KIT_PATHS), key=lambda item: item["name"])
+    root = repo_root or REPO_ROOT
+    codeowners = _load_codeowners(root / ".github" / "CODEOWNERS")
     manifest = {
-        "format": "echo.manifest/v2",
-        "engines": engines,
-        "states": states,
-        "assistant_kits": kits,
+        "schema": "echo.manifest/auto-v1",
+        "engines": [entry.to_dict() for entry in _discover_engines(root, codeowners)],
+        "states": [entry.to_dict() for entry in _discover_states(root, codeowners)],
+        "clis": [entry.to_dict() for entry in _discover_clis(root, codeowners)],
+        "datasets": [entry.to_dict() for entry in _discover_datasets(root, codeowners)],
+        "docs": [entry.to_dict() for entry in _discover_docs(root, codeowners)],
     }
-    from . import graph as graph_module
-
-    impact_graph = graph_module.build_graph(manifest=manifest)
-    manifest["graph_digest"] = impact_graph.digest
-    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    manifest["manifest_digest"] = _stable_digest(canonical)
     return manifest
 
 
-def _write_manifest(path: Path, manifest: Dict[str, Any]) -> bool:
-    text = json.dumps(manifest, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
-    current = path.read_text(encoding="utf-8") if path.exists() else None
-    if current == text:
+def _canonical_json(data: Mapping[str, Any]) -> str:
+    return json.dumps(data, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
+
+
+def refresh_manifest(
+    manifest_path: Path | None = None,
+    *,
+    repo_root: Path | None = None,
+) -> Path:
+    root = repo_root or REPO_ROOT
+    path = manifest_path or (root / MANIFEST_NAME)
+    manifest = build_manifest(repo_root=root)
+    text = _canonical_json(manifest)
+    if path.exists() and path.read_text(encoding="utf-8") == text:
         print(f"Manifest already up to date at {path}")
-        return False
+        return path
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
     print(f"Manifest written to {path}")
-    return True
+    return path
 
 
-def refresh_manifest(path: Path | None = None, ledger_path: Path | None = None) -> Path:
-    """Rebuild the manifest JSON file and append a ledger entry."""
-
-    manifest = build_manifest()
-    output_path = path or _DEFAULT_MANIFEST_PATH
-    written = _write_manifest(output_path, manifest)
-    ledger_entry = _append_manifest_ledger_entry(
-        output_path,
-        manifest["manifest_digest"],
-        ledger_path=ledger_path,
-        manifest_written=written,
-    )
-    emitter = ProvenanceEmitter()
-    try:
-        emitter.emit(
-            context="manifest",
-            inputs=[Path(__file__)],
-            outputs=[output_path],
-            cycle_id=str(ledger_entry.get("sequence", "manifest")),
-            runtime_seed=manifest["manifest_digest"],
-            manifest_path=output_path,
-        )
-    except Exception as error:  # pragma: no cover - provenance must not block
-        print(f"Failed to emit provenance: {error}")
-    return output_path
-
-
-def verify_manifest(path: Path | None = None) -> bool:
-    """Validate that the manifest matches the current repository state."""
-
-    expected = build_manifest()
-    manifest_path = path or _DEFAULT_MANIFEST_PATH
-    if not manifest_path.exists():
-        print(f"Manifest missing at {manifest_path}")
-        return False
-    try:
-        on_disk = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:  # pragma: no cover - defensive
-        print(f"Failed to parse manifest {manifest_path}: {exc}")
-        return False
-    if on_disk != expected:
-        on_disk_text = json.dumps(on_disk, indent=2, sort_keys=True, ensure_ascii=False).splitlines()
-        expected_text = json.dumps(expected, indent=2, sort_keys=True, ensure_ascii=False).splitlines()
-        diff = "\n".join(
-            line for line in _unified_diff(on_disk_text, expected_text)
-        )
-        print("Manifest drift detected. Run 'echo manifest refresh' to update.")
-        if diff:
-            print(diff)
-        return False
-    return True
-
-
-def load_manifest_ledger(path: Path | None = None) -> List[Dict[str, Any]]:
-    """Return all manifest ledger entries."""
-
-    return _load_manifest_ledger(path)
-
-
-def manifest_status(
-    manifest_path: Path | None = None,
-    ledger_path: Path | None = None,
-) -> Dict[str, Any]:
-    """Return status information comparing the manifest to the ledger."""
-
-    manifest_file = manifest_path or _DEFAULT_MANIFEST_PATH
-    ledger_file = ledger_path or _default_ledger_path()
-    entries = load_manifest_ledger(ledger_file)
-    manifest_exists = manifest_file.exists()
-    manifest_digest = None
-    manifest_payload: Dict[str, Any] | None = None
-    if manifest_exists:
-        try:
-            manifest_payload = json.loads(manifest_file.read_text(encoding="utf-8"))
-            canonical = _canonical_manifest_bytes(manifest_payload)
-            manifest_digest = hashlib.sha256(canonical).hexdigest()
-        except json.JSONDecodeError:
-            manifest_exists = False
-    latest_entry = entries[-1] if entries else None
-    ledger_match = bool(
-        manifest_exists
-        and latest_entry is not None
-        and latest_entry.get("manifest_digest") == manifest_digest
-    )
-    return {
-        "manifest_path": manifest_file,
-        "ledger_path": ledger_file,
-        "ledger_entries": len(entries),
-        "manifest_exists": manifest_exists,
-        "manifest_digest": manifest_digest,
-        "manifest_payload": manifest_payload,
-        "latest_entry": latest_entry,
-        "ledger_match": ledger_match,
-    }
-
-
-def verify_manifest_ledger(
-    manifest_path: Path | None = None,
-    ledger_path: Path | None = None,
-    *,
-    require_gpg: bool = False,
-) -> bool:
-    """Validate that the manifest ledger is an append-only seal of the manifest."""
-
-    status = manifest_status(manifest_path, ledger_path)
-    ledger_file = status["ledger_path"]
-    entries = load_manifest_ledger(ledger_file)
+def _tabulate_category(category: str, entries: Sequence[Mapping[str, Any]]) -> str:
     if not entries:
-        print(f"Manifest ledger missing at {ledger_file}")
+        return f"## {category}\n(no entries)\n"
+    header = f"## {category}\nName                 Path                                      Version     Size\n"
+    lines = []
+    for entry in entries:
+        name = entry["name"]
+        path = entry["path"]
+        version = entry["version"]
+        size = entry["size"]
+        lines.append(f"{name:<20} {path:<42} {version:<10} {size:>8}")
+    return header + "\n".join(lines) + "\n"
+
+
+def show_manifest(
+    manifest_path: Path | None = None,
+    *,
+    repo_root: Path | None = None,
+) -> Dict[str, Any]:
+    root = repo_root or REPO_ROOT
+    path = manifest_path or (root / MANIFEST_NAME)
+    if path.exists():
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    else:
+        manifest = build_manifest(repo_root=root)
+    for category in ("engines", "states", "clis", "datasets", "docs"):
+        section = _tabulate_category(category, manifest.get(category, []))
+        print(section.rstrip())
+        print()
+    print(_canonical_json(manifest), end="")
+    return manifest
+
+
+def verify_manifest(
+    manifest_path: Path | None = None,
+    *,
+    repo_root: Path | None = None,
+) -> bool:
+    root = repo_root or REPO_ROOT
+    path = manifest_path or (root / MANIFEST_NAME)
+    if not path.exists():
+        print(f"Manifest missing at {path}")
+        _append_summary("❌ Manifest verification failed: missing manifest file.")
+        return False
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        print(f"Failed to parse manifest {path}: {exc}")
+        _append_summary("❌ Manifest verification failed: invalid JSON.")
         return False
 
-    expected_prev = None
-    for index, entry in enumerate(entries, 1):
-        if entry.get("sequence") != index:
-            print(
-                f"Ledger sequence mismatch at entry {index}:"
-                f" expected {index}, found {entry.get('sequence')}"
-            )
-            return False
-        payload_hash = hashlib.sha256(_ledger_payload(entry)).hexdigest()
-        if entry.get("ledger_seal") != payload_hash:
-            print(f"Ledger seal mismatch at entry {index}")
-            return False
-        if entry.get("ledger_prev") != expected_prev:
-            print(f"Ledger chain break detected at entry {index}")
-            return False
-        expected_prev = payload_hash
-
-    if not status["manifest_exists"] or status["manifest_digest"] is None:
-        print(f"Manifest missing or unreadable at {status['manifest_path']}")
-        return False
-    latest_entry = status["latest_entry"] or {}
-    if latest_entry.get("manifest_digest") != status["manifest_digest"]:
-        print("Ledger digest does not match current manifest")
-        return False
-
-    commit_hash = latest_entry.get("commit", "")
-    gpg_result = _verify_commit_signature(str(commit_hash))
-    if require_gpg and gpg_result is not True:
-        print("GPG verification required but failed or unavailable")
-        return False
-    if gpg_result is False:
-        print("Warning: Commit signature verification failed")
-        return True
-    return True
+    ok = True
+    for category in ("engines", "states", "clis", "datasets", "docs"):
+        for entry in payload.get(category, []):
+            entry_path = root / entry["path"]
+            if not entry_path.exists():
+                print(f"Missing file for {category} entry: {entry['path']}")
+                ok = False
+                continue
+            digest = _sha256_file(entry_path)
+            if digest != entry.get("digest"):
+                print(
+                    f"Digest mismatch for {entry['path']}: expected {entry.get('digest')}, got {digest}"
+                )
+                ok = False
+                continue
+            size = entry_path.stat().st_size
+            if size != entry.get("size"):
+                print(
+                    f"Size mismatch for {entry['path']}: expected {entry.get('size')}, got {size}"
+                )
+                ok = False
+    summary = "✅ Manifest verification passed." if ok else "❌ Manifest verification failed."
+    _append_summary(summary)
+    if ok:
+        print("Manifest verified successfully")
+    return ok
 
 
-def _unified_diff(a: Iterable[str], b: Iterable[str]) -> List[str]:
-    import difflib
-
-    return list(difflib.unified_diff(list(a), list(b), fromfile="on-disk", tofile="expected", lineterm=""))
+def _append_summary(line: str) -> None:
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_path:
+        return
+    with open(summary_path, "a", encoding="utf-8") as handle:
+        handle.write(f"{line}\n")
 
 
 def main(argv: Iterable[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="echo", description="Echo command line utilities")
+    parser = argparse.ArgumentParser(prog="echo", description="Echo manifest utilities")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    manifest_parser = subparsers.add_parser("manifest", help="Maintain the Echo manifest")
-    manifest_sub = manifest_parser.add_subparsers(dest="manifest_command", required=True)
+    manifest_parser = subparsers.add_parser("manifest", help="Manage the Echo manifest")
+    manifest_sub = manifest_parser.add_subparsers(dest="subcommand", required=True)
 
-    refresh_parser = manifest_sub.add_parser("refresh", help="Regenerate the manifest JSON deterministically")
-    refresh_parser.add_argument("--path", type=Path, help="Optional output path")
-    refresh_parser.add_argument("--ledger", type=Path, help="Optional ledger path")
+    refresh_parser = manifest_sub.add_parser("refresh", help="Recompute manifest metadata")
+    refresh_parser.add_argument("--path", type=Path, help="Optional manifest output path")
     refresh_parser.set_defaults(
-        func=lambda args: 0
-        if refresh_manifest(args.path, ledger_path=args.ledger)
-        else 1
+        func=lambda args: refresh_manifest(args.path) or 0,
     )
 
-    verify_parser = manifest_sub.add_parser("verify", help="Validate the manifest digests and structure")
+    show_parser = manifest_sub.add_parser("show", help="Display manifest summary and JSON")
+    show_parser.add_argument("--path", type=Path, help="Optional manifest path")
+    show_parser.set_defaults(func=lambda args: 0 if show_manifest(args.path) else 0)
+
+    verify_parser = manifest_sub.add_parser("verify", help="Validate manifest digests")
     verify_parser.add_argument("--path", type=Path, help="Optional manifest path")
     verify_parser.set_defaults(func=lambda args: 0 if verify_manifest(args.path) else 1)
 
-    status_parser = manifest_sub.add_parser("status", help="Show manifest and ledger status")
-    status_parser.add_argument("--path", type=Path, help="Optional manifest path")
-    status_parser.add_argument("--ledger", type=Path, help="Optional ledger path")
-
-    def _status_cmd(args: argparse.Namespace) -> int:
-        info = manifest_status(args.path, args.ledger)
-        latest = info["latest_entry"]
-        print(f"Manifest: {info['manifest_path']}")
-        print(f"Ledger:   {info['ledger_path']}")
-        print(f"Ledger entries: {info['ledger_entries']}")
-        if latest:
-            print(f"Latest digest: {latest['manifest_digest']}")
-            print(f"Latest commit: {latest['commit']}")
-            print(f"Ledger seal:  {latest['ledger_seal']}")
-        else:
-            print("Ledger empty")
-        if info["ledger_match"]:
-            print("Manifest digest matches latest ledger entry")
-            return 0
-        print("Manifest digest does not match ledger entry")
-        return 1
-
-    status_parser.set_defaults(func=_status_cmd)
-
-    ledger_parser = manifest_sub.add_parser("ledger", help="Inspect the manifest ledger history")
-    ledger_parser.add_argument("--path", type=Path, help="Optional manifest path")
-    ledger_parser.add_argument("--ledger", type=Path, help="Optional ledger path")
-    ledger_parser.add_argument(
-        "--limit",
-        type=int,
-        default=10,
-        help="Number of entries to display (0 for all)",
-    )
-    ledger_parser.add_argument(
-        "--verify",
-        action="store_true",
-        help="Verify ledger hash chain and manifest seal",
-    )
-    ledger_parser.add_argument(
-        "--require-gpg",
-        action="store_true",
-        help="Require commit signature verification when using --verify",
-    )
-
-    def _ledger_cmd(args: argparse.Namespace) -> int:
-        entries = load_manifest_ledger(args.ledger)
-        to_show = entries if args.limit == 0 else entries[-args.limit :]
-        for entry in to_show:
-            print(json.dumps(entry, sort_keys=True))
-        if not entries:
-            return 0
-        if args.verify:
-            ok = verify_manifest_ledger(
-                manifest_path=args.path,
-                ledger_path=args.ledger,
-                require_gpg=args.require_gpg,
-            )
-            return 0 if ok else 1
-        return 0
-
-    ledger_parser.set_defaults(func=_ledger_cmd)
-
     args = parser.parse_args(list(argv) if argv is not None else None)
-    func = getattr(args, "func", None)
-    if func is None:  # pragma: no cover - argparse should enforce
+    result = getattr(args, "func", None)
+    if result is None:
         parser.print_help()
         return 1
-    return func(args)
+    value = result(args)
+    return int(value) if isinstance(value, int) else 0
 
 
-if __name__ == "__main__":  # pragma: no cover - script entry point
-    sys.exit(main())
+if __name__ == "__main__":  # pragma: no cover - script entry
+    raise SystemExit(main())

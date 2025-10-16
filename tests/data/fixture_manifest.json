@@ -1,0 +1,99 @@
+{
+  "clis": [],
+  "datasets": [
+    {
+      "category": "dataset",
+      "digest": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "last_modified": null,
+      "name": "sample",
+      "owners": [
+        "@all"
+      ],
+      "path": "datasets/sample.json",
+      "size": 3,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "ca3d163bab05"
+    }
+  ],
+  "docs": [
+    {
+      "category": "doc",
+      "digest": "d4f53589d96222e397015600100977d41021eab02c34c5d61f6bad8e145f863b",
+      "last_modified": null,
+      "name": "manifest",
+      "owners": [
+        "@all"
+      ],
+      "path": "docs/echo/manifest.md",
+      "size": 11,
+      "tags": [
+        "docs",
+        "echo",
+        "md"
+      ],
+      "version": "d4f53589d962"
+    }
+  ],
+  "engines": [
+    {
+      "category": "engine",
+      "digest": "29229066bcda27c95525437e0e945c37061f81f0e1e71e0a4e2b9b7fad0bb7ea",
+      "last_modified": null,
+      "name": "SampleEngine",
+      "owners": [
+        "@all"
+      ],
+      "path": "echo/engine_module.py",
+      "size": 60,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "29229066bcda"
+    }
+  ],
+  "schema": "echo.manifest/auto-v1",
+  "states": [
+    {
+      "category": "state",
+      "digest": "29229066bcda27c95525437e0e945c37061f81f0e1e71e0a4e2b9b7fad0bb7ea",
+      "last_modified": null,
+      "name": "AnotherState",
+      "owners": [
+        "@all"
+      ],
+      "path": "echo/engine_module.py",
+      "size": 60,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "29229066bcda"
+    },
+    {
+      "category": "state",
+      "digest": "f790f310bf810e7862b9108e19a8c4eaab0cb86411546aff4e78d66964648280",
+      "last_modified": null,
+      "name": "DataState",
+      "owners": [
+        "@all"
+      ],
+      "path": "echo/state_module.py",
+      "size": 79,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "f790f310bf81"
+    }
+  ]
+}
