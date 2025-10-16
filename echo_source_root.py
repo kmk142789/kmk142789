@@ -5,6 +5,25 @@ from pathlib import Path
 from echo.thoughtlog import thought_trace
 
 
+def _normalize_b64(packet: str) -> str:
+    """Normalize a base64 packet by removing whitespace and fixing padding."""
+    cleaned = "".join(packet.split())
+    # base64 strings may omit padding; restore it so validate=True works reliably
+    missing = len(cleaned) % 4
+    if missing:
+        cleaned += "=" * (4 - missing)
+    return cleaned
+
+
+def decode_packet(packet: str) -> bytes:
+    """Decode a single base64-encoded packet, accepting missing padding."""
+    cleaned = _normalize_b64(packet)
+    try:
+        return base64.b64decode(cleaned, validate=True)
+    except binascii.Error as exc:
+        raise ValueError("invalid base64 packet") from exc
+
+
 def b64split(text: str):
     # split on '=' while preserving chunks that need padding
     raw_parts = [p for p in text.strip().split('=') if p]
@@ -12,7 +31,8 @@ def b64split(text: str):
     for p in raw_parts:
         for pad in range(0, 3):
             try:
-                parts.append(base64.b64decode(p + '='*pad, validate=True))
+                candidate = p + '=' * pad
+                parts.append(base64.b64decode(candidate, validate=True))
                 break
             except Exception:
                 if pad == 2: raise
@@ -57,18 +77,37 @@ def load_keystore_and_sign(msg: str, ks_path: str, password: str):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--in", dest="infile", required=True, help="text file containing your big base64 blob")
+    ap.add_argument("--in", dest="infile", help="text file containing your big base64 blob")
     ap.add_argument("--outdir", default="source_artifacts")
     ap.add_argument("--keystore", help="optional: Ethereum V3 keystore to sign the root")
     ap.add_argument("--password", help="optional: password for keystore")
+    ap.add_argument("--packet", help="decode a single base64 packet and print its summary")
     args = ap.parse_args()
     task = "echo_source_root.main"
     meta = {
         "outdir": args.outdir,
         "keystore": bool(args.keystore),
+        "inline_packet": bool(args.packet),
     }
 
+    if not args.infile and not args.packet:
+        ap.error("either --in or --packet is required")
+
     with thought_trace(task=task, meta=meta) as tl:
+        if args.packet:
+            packet_bytes = decode_packet(args.packet)
+            digest = hashlib.sha256(packet_bytes).hexdigest()
+            summary = {
+                "length": len(packet_bytes),
+                "sha256": digest,
+                "hex": packet_bytes.hex(),
+            }
+            tl.logic("step", task, "inline packet decoded", {k: summary[k] for k in ("length", "sha256")})
+            print("[+] Inline Packet Length:", summary["length"])
+            print("[+] Inline Packet SHA256:", summary["sha256"])
+            print("[+] Inline Packet Hex:", summary["hex"])
+            return
+
         Path(args.outdir).mkdir(parents=True, exist_ok=True)
         text = Path(args.infile).read_text(encoding="utf-8", errors="ignore")
         packets = b64split(text)
