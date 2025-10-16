@@ -33,6 +33,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Mapping, Sequence
 
+from .amplify import AmplificationEngine
+from .evolver import EchoEvolver
+from .tools import forecast as forecast_tools
+
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST_NAME = "echo_manifest.json"
@@ -471,6 +475,130 @@ def _append_summary(line: str) -> None:
         handle.write(f"{line}\n")
 
 
+def _resolve_root(args: argparse.Namespace) -> Path:
+    root = getattr(args, "root", None)
+    return Path(root).resolve() if root is not None else REPO_ROOT
+
+
+def _load_amplify_engine(args: argparse.Namespace) -> AmplificationEngine:
+    return AmplificationEngine(repo_root=_resolve_root(args))
+
+
+def _badge_for_index(value: float) -> str:
+    if value >= 85:
+        return "🔥"
+    if value >= 70:
+        return "✨"
+    if value >= 55:
+        return "⚙️"
+    return "⚠️"
+
+
+def _cmd_amplify_now(args: argparse.Namespace) -> int:
+    engine = _load_amplify_engine(args)
+    snapshot = engine.latest()
+    if snapshot is None:
+        fallback = EchoEvolver(repo_root=_resolve_root(args))
+        total_steps = len(fallback._recommended_sequence())
+        snapshot = engine.ensure_snapshot(
+            fallback.state,
+            cycle_start=None,
+            total_steps=total_steps,
+            persist=True,
+        )
+
+    print(f"Amplify Index: {snapshot.index:.2f}")
+    order = [
+        "resonance",
+        "freshness_half_life",
+        "novelty_delta",
+        "cohesion",
+        "coverage",
+        "stability",
+        "volatility",
+    ]
+    for name in order:
+        if name not in snapshot.metrics:
+            continue
+        value = snapshot.metrics[name]
+        label = name.replace("_", " ").title()
+        print(f"  {label:<20}: {value:.3f}")
+
+    payload = snapshot.to_json()
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    print(f"Digest: {digest}")
+    print(payload)
+
+    if getattr(args, "update_manifest", False):
+        engine.update_manifest(snapshot, gate=getattr(args, "gate", None))
+        print("Manifest amplification section updated.")
+    return 0
+
+
+def _cmd_amplify_log(args: argparse.Namespace) -> int:
+    engine = _load_amplify_engine(args)
+    history = list(engine.history)
+    if not history:
+        print("No amplification snapshots recorded yet.")
+        return 0
+
+    limit = args.limit
+    if limit is not None:
+        history = history[-limit:]
+
+    print("Cycle  Index   Δ    Badge  Timestamp")
+    print("----- ------ ---- ------ ------------------------")
+    previous = None
+    for snapshot in history:
+        delta = 0.0 if previous is None else snapshot.index - previous.index
+        badge = _badge_for_index(snapshot.index)
+        print(
+            f"{snapshot.cycle:5d} {snapshot.index:6.2f} {delta:+.2f}  {badge:>4}  {snapshot.timestamp}"
+        )
+        previous = snapshot
+    return 0
+
+
+def _cmd_amplify_gate(args: argparse.Namespace) -> int:
+    engine = _load_amplify_engine(args)
+    snapshot = engine.latest()
+    if snapshot is None:
+        print("No amplification snapshot available; run a cycle first.")
+        return 1
+
+    threshold = args.minimum
+    if threshold is None:
+        env_value = os.environ.get("AMPLIFY_MIN")
+        threshold = float(env_value) if env_value else 0.0
+
+    print(f"Latest index {snapshot.index:.2f}; required minimum {threshold:.2f}.")
+    if snapshot.index >= threshold:
+        print("✅ Amplify gate satisfied.")
+        return 0
+
+    nudges = engine.generate_nudges(snapshot.metrics)
+    if nudges:
+        print("Suggested actions:")
+        for message in nudges:
+            print(f" - {message}")
+    print("❌ Amplify gate not met.")
+    return 1
+
+
+def _cmd_forecast(args: argparse.Namespace) -> int:
+    engine = _load_amplify_engine(args)
+    history = list(engine.history)
+    if args.cycles:
+        history = history[-args.cycles :]
+    indices = [snapshot.index for snapshot in history]
+    result = forecast_tools.blend_forecast(indices, horizon=3)
+    table = forecast_tools.format_forecast_table(result)
+    print(table)
+    if args.plot:
+        print()
+        print(forecast_tools.ascii_sparkline(result.projection))
+    return 0
+
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="echo", description="Echo manifest utilities")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -491,6 +619,45 @@ def main(argv: Iterable[str] | None = None) -> int:
     verify_parser = manifest_sub.add_parser("verify", help="Validate manifest digests")
     verify_parser.add_argument("--path", type=Path, help="Optional manifest path")
     verify_parser.set_defaults(func=lambda args: 0 if verify_manifest(args.path) else 1)
+
+    amplify_parent = argparse.ArgumentParser(add_help=False)
+    amplify_parent.add_argument("--root", type=Path, help="Optional repository root")
+
+    amplify_parser = subparsers.add_parser(
+        "amplify", parents=[amplify_parent], help="Amplification engine utilities"
+    )
+    amplify_sub = amplify_parser.add_subparsers(dest="amplify_command", required=True)
+
+    amplify_now = amplify_sub.add_parser(
+        "now", help="Show latest amplification snapshot", parents=[amplify_parent]
+    )
+    amplify_now.add_argument("--update-manifest", action="store_true", help="Refresh manifest")
+    amplify_now.add_argument("--gate", type=float, help="Optional gate target for manifest")
+    amplify_now.set_defaults(func=_cmd_amplify_now)
+
+    amplify_log = amplify_sub.add_parser(
+        "log", help="Display recent amplification cycles", parents=[amplify_parent]
+    )
+    amplify_log.add_argument("--limit", type=int, help="Limit number of log entries")
+    amplify_log.set_defaults(func=_cmd_amplify_log)
+
+    amplify_gate = amplify_sub.add_parser(
+        "gate", help="Verify amplification gate threshold", parents=[amplify_parent]
+    )
+    amplify_gate.add_argument(
+        "--min",
+        dest="minimum",
+        type=float,
+        help="Minimum acceptable amplify index (fallback to AMPLIFY_MIN env)",
+    )
+    amplify_gate.set_defaults(func=_cmd_amplify_gate)
+
+    forecast_parser = subparsers.add_parser(
+        "forecast", parents=[amplify_parent], help="Project amplification trend"
+    )
+    forecast_parser.add_argument("--cycles", type=int, help="Number of historical cycles to use")
+    forecast_parser.add_argument("--plot", action="store_true", help="Render ASCII sparkline")
+    forecast_parser.set_defaults(func=_cmd_forecast)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
     result = getattr(args, "func", None)

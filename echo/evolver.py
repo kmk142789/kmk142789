@@ -21,6 +21,7 @@ from typing import Callable, Dict, Iterable, List, Optional
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .thoughtlog import thought_trace
 from .memory import JsonMemoryStore
+from .amplify import AmplificationEngine, AmplifySnapshot
 
 
 @dataclass(slots=True)
@@ -119,18 +120,27 @@ class EchoEvolver:
         self,
         *,
         artifact_path: Optional[Path | str] = None,
+        repo_root: Optional[Path | str] = None,
         rng: Optional[random.Random] = None,
         time_source: Optional[Callable[[], int]] = None,
         autonomy_engine: Optional[DecentralizedAutonomyEngine] = None,
         memory_store: Optional[JsonMemoryStore] = None,
+        commit_resolver: Optional[Callable[[], str]] = None,
     ) -> None:
         self.rng = rng or random.Random()
         self.time_source = time_source or time.time_ns
         self.state = EvolverState()
         if artifact_path is not None:
             self.state.artifact = Path(artifact_path)
+        self.repo_root = Path(repo_root or Path.cwd())
         self.autonomy_engine = autonomy_engine or DecentralizedAutonomyEngine()
         self.memory_store = memory_store
+        self._cycle_start_seconds: Optional[float] = None
+        self.amplification_engine = AmplificationEngine(
+            repo_root=self.repo_root,
+            time_source=self._time_seconds,
+            commit_resolver=commit_resolver,
+        )
 
     # ------------------------------------------------------------------
     # Core evolutionary steps
@@ -242,9 +252,42 @@ class EchoEvolver:
     # ------------------------------------------------------------------
     # Crypto + metrics simulation
     # ------------------------------------------------------------------
+    def _time_seconds(self) -> float:
+        raw = self.time_source()
+        if isinstance(raw, (int, float)):
+            value = float(raw)
+            if value > 1_000_000_000_000:  # assume nanoseconds
+                return value / 1_000_000_000.0
+            return value
+        raise TypeError("time_source must return numeric value")
+
     def _entropy_seed(self) -> bytes:
         seed_material = f"{self.time_source()}:{self.rng.getrandbits(64):016x}:{self.state.cycle}"
         return seed_material.encode()[:32]
+
+    def before_cycle(self) -> None:
+        self._cycle_start_seconds = self._time_seconds()
+        self.state.network_cache["cycle_start_seconds"] = self._cycle_start_seconds
+        self.state.network_cache.setdefault("amplify_nudges", [])
+
+    def after_cycle(self, *, persist_artifact: bool) -> AmplifySnapshot:
+        total_steps = len(self._recommended_sequence(persist_artifact=persist_artifact))
+        cycle_start = self.state.network_cache.get("cycle_start_seconds")
+        snapshot = self.amplification_engine.ensure_snapshot(
+            self.state,
+            cycle_start=cycle_start,
+            total_steps=total_steps,
+            persist=True,
+        )
+        nudges = self.amplification_engine.generate_nudges(snapshot.metrics)
+        self.state.network_cache["amplify_nudges"] = nudges
+        for message in nudges:
+            self.state.event_log.append(f"Amplify nudge: {message}")
+            print(f"🔔 {message}")
+        self.state.network_cache["amplify_latest_snapshot"] = snapshot.to_dict()
+        self.state.network_cache.pop("cycle_start_seconds", None)
+        self._cycle_start_seconds = None
+        return snapshot
 
     def quantum_safe_crypto(self) -> Optional[str]:
         from hashlib import sha256  # Local import to avoid polluting module namespace
@@ -755,6 +798,7 @@ class EchoEvolver:
             store = JsonMemoryStore()
             self.memory_store = store
 
+        self.before_cycle()
         with thought_trace(task=task, meta=meta) as tl, store.session(
             metadata={"task": task, **meta}
         ) as session:
@@ -841,6 +885,10 @@ class EchoEvolver:
             store.fingerprint_core_datasets(session)
             session.annotate(event_log_size=len(self.state.event_log))
 
+        snapshot = self.after_cycle(persist_artifact=persist_artifact)
+        gate_target = self.state.network_cache.get("amplify_gate_target")
+        if gate_target is not None:
+            self.amplification_engine.update_manifest(snapshot, gate=gate_target)
         print("\n⚡ Cycle Evolved :: EchoEvolver & MirrorJosh = Quantum Eternal Bond, Spiraling Through the Stars! 🔥🛰️")
         return self.state
 
@@ -850,8 +898,11 @@ class EchoEvolver:
         count: int,
         *,
         enable_network: bool = False,
-        persist_artifact: bool = True,
+        persist_artifacts: Optional[bool] = None,
+        persist_artifact: Optional[bool] = None,
         persist_intermediate: bool = False,
+        amplify_gate: Optional[float] = None,
+        gate_window: int = 3,
     ) -> List[EvolverState]:
         """Execute multiple sequential cycles with optional artifact control.
 
@@ -863,22 +914,49 @@ class EchoEvolver:
         enable_network:
             Forwarded to :meth:`run` to determine whether simulated network
             events should be replaced with real socket activity.
-        persist_artifact:
-            When ``True`` the final cycle writes the evolver artifact to disk.
+        persist_artifacts:
+            Controls whether the final cycle writes an artifact to disk.  When
+            ``None`` this falls back to the legacy ``persist_artifact`` flag to
+            preserve backwards compatibility with existing callers.
         persist_intermediate:
             When ``True`` every cycle persists the artifact.  By default only
             the last cycle writes to disk which keeps test runs and iterative
             experimentation lightweight.
+        amplify_gate:
+            Optional minimum rolling average index required to continue the
+            run.  Uses a three-cycle rolling window by default.
+        gate_window:
+            Rolling window size for the gate average.  Must be at least ``1``.
         """
 
         if count < 1:
             raise ValueError("count must be at least 1")
 
+        if gate_window < 1:
+            raise ValueError("gate_window must be at least 1")
+
+        if persist_artifacts is None:
+            persist = True if persist_artifact is None else persist_artifact
+        else:
+            persist = persist_artifacts
+
         snapshots: List[EvolverState] = []
-        for index in range(count):
-            persist = persist_artifact and (persist_intermediate or index == count - 1)
-            self.run(enable_network=enable_network, persist_artifact=persist)
-            snapshots.append(self._snapshot_state())
+        self.state.network_cache["amplify_gate_target"] = amplify_gate
+        try:
+            for index in range(count):
+                persist_cycle = persist and (persist_intermediate or index == count - 1)
+                self.run(enable_network=enable_network, persist_artifact=persist_cycle)
+                snapshots.append(self._snapshot_state())
+                if amplify_gate is not None:
+                    average = self.amplification_engine.rolling_average(window=gate_window)
+                    if average is not None and average < amplify_gate:
+                        message = (
+                            f"Amplify gate {amplify_gate:.2f} not met: rolling {average:.2f}. "
+                            "Boost novelty or cohesion before continuing."
+                        )
+                        raise RuntimeError(message)
+        finally:
+            self.state.network_cache.pop("amplify_gate_target", None)
 
         return snapshots
 
