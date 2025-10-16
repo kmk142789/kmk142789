@@ -51,6 +51,25 @@ Validated entries: 34367
 All validated entries match their derived P2PKH addresses.
 ```
 
+### Exporting a watch-only wallet template
+
+After validation you can generate a Bitcoin Core `importmulti` template that
+aggregates every verified address into a single watch-only wallet definition.
+This preserves the published public keys for provenance while keeping the
+workflow strictly attestation-only:
+
+```bash
+python tools/verify_satoshi_34k_dataset.py \
+  --export-importmulti out/satoshi-34k-import.json \
+  --label-prefix satoshi-2009 \
+  --timestamp 1231469665
+```
+
+The exported JSON can be passed directly to `bitcoin-cli importmulti` on an
+air-gapped machine or reviewed before import. Each entry is labeled using the
+chosen prefix (zero-padded for sorting), marked `watchonly`, and annotated with
+the corresponding uncompressed public key for later attestation work.
+
 ## Publication Checklist for Echo DEX
 
 To incorporate this dataset into the broader Echo evidence chain:

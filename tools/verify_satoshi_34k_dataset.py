@@ -27,9 +27,11 @@ import argparse
 import dataclasses
 import hashlib
 import html
+import json
 import re
 import sys
 import urllib.request
+from pathlib import Path
 from typing import Iterable, List, Sequence, Tuple
 
 
@@ -47,6 +49,21 @@ class DatasetEntry:
     address: str
 
 
+def parse_timestamp_option(raw: str) -> str | int:
+    lowered = raw.strip().lower()
+    if lowered == "now":
+        return "now"
+    try:
+        value = int(lowered, 10)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            "Timestamp must be 'now' or an integer UNIX epoch."
+        ) from exc
+    if value < 0:
+        raise argparse.ArgumentTypeError("Timestamp must be non-negative.")
+    return value
+
+
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -61,6 +78,26 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         default=None,
         help="Only validate the first N entries (useful for smoke tests).",
     )
+    parser.add_argument(
+        "--export-importmulti",
+        metavar="PATH",
+        help=(
+            "Write a Bitcoin Core importmulti template containing the validated "
+            "addresses. Each entry is marked watch-only and annotated with the "
+            "published public key."
+        ),
+    )
+    parser.add_argument(
+        "--label-prefix",
+        default="satoshi-34k",
+        help="Label prefix to apply when exporting an importmulti template.",
+    )
+    parser.add_argument(
+        "--timestamp",
+        default=parse_timestamp_option("now"),
+        type=parse_timestamp_option,
+        help="Timestamp for importmulti entries ('now' or a UNIX epoch integer).",
+    )
     return parser.parse_args(argv)
 
 
@@ -72,8 +109,6 @@ def read_source(source: str) -> bytes:
 
 
 def pathlib_path(path: str):
-    from pathlib import Path
-
     return Path(path)
 
 
@@ -129,6 +164,36 @@ def sha256_digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def export_importmulti(
+    entries: Sequence[DatasetEntry],
+    destination: str | Path,
+    *,
+    label_prefix: str = "satoshi-34k",
+    timestamp: str | int = "now",
+) -> Path:
+    path = Path(destination)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    total = len(entries)
+    if total == 0:
+        payload: List[dict] = []
+    else:
+        width = max(4, len(str(total)))
+        payload = []
+        for idx, entry in enumerate(entries, 1):
+            label = f"{label_prefix}-{idx:0{width}d}"
+            payload.append(
+                {
+                    "scriptPubKey": {"address": entry.address},
+                    "watchonly": True,
+                    "timestamp": timestamp,
+                    "label": label,
+                    "pubkeys": [entry.public_key_hex],
+                }
+            )
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
 def main(argv: Sequence[str]) -> int:
     args = parse_arguments(argv)
     raw_html = read_source(args.source)
@@ -155,6 +220,18 @@ def main(argv: Sequence[str]) -> int:
         return 1
 
     print("All validated entries match their derived P2PKH addresses.")
+    if args.export_importmulti:
+        if args.limit is not None and validated_count < len(entries):
+            export_entries = entries[:validated_count]
+        else:
+            export_entries = entries
+        export_path = export_importmulti(
+            export_entries,
+            args.export_importmulti,
+            label_prefix=args.label_prefix,
+            timestamp=args.timestamp,
+        )
+        print(f"Wrote Bitcoin Core importmulti template to {export_path}")
     return 0
 
 
