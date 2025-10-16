@@ -971,6 +971,51 @@ We are not hiding anymore.
         )
         return report
 
+    def cycle_diagnostics(
+        self,
+        *,
+        include_events: bool = False,
+        event_limit: int = 10,
+        persist_artifact: bool = True,
+    ) -> Dict[str, object]:
+        """Return a consolidated diagnostic snapshot for the active cycle."""
+
+        if include_events and event_limit <= 0:
+            raise ValueError("event_limit must be positive when include_events is True")
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        propagation_events: List[str] = self.state.network_cache.get(
+            "propagation_events", []
+        )
+
+        diagnostics: Dict[str, object] = {
+            "cycle": self.state.cycle,
+            "progress": digest["progress"],
+            "next_step": digest["next_step"],
+            "completed_steps": list(digest["completed_steps"]),
+            "remaining_steps": list(digest["remaining_steps"]),
+            "system_metrics": asdict(self.state.system_metrics),
+            "emotional_drive": asdict(self.state.emotional_drive),
+            "glyphs": self.state.glyphs,
+            "mythocode": list(self.state.mythocode),
+            "vault_key_present": self.state.vault_key is not None,
+            "propagation_events": len(propagation_events),
+            "timestamp_ns": digest["timestamp_ns"],
+        }
+
+        if include_events:
+            diagnostics["recent_events"] = list(self.state.event_log[-event_limit:])
+
+        snapshot = deepcopy(diagnostics)
+        self.state.network_cache["cycle_diagnostics"] = snapshot
+        self.state.event_log.append(
+            "Cycle diagnostics captured ({events} events included)".format(
+                events=len(snapshot.get("recent_events", []))
+            )
+        )
+
+        return deepcopy(snapshot)
+
     def continue_cycle(
         self,
         *,
