@@ -725,6 +725,21 @@ class EchoEvolver:
         print(f"🧭 {recommendation}")
         return recommendation
 
+    def pending_steps(self, *, persist_artifact: bool = True) -> List[str]:
+        """Return the identifiers of steps that have not yet run this cycle."""
+
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
+        completed: set[str] = self.state.network_cache.get("completed_steps", set())
+        pending = [key for key, _ in sequence if key not in completed]
+
+        self.state.network_cache["pending_steps"] = list(pending)
+        message = (
+            "Pending steps evaluated ({remaining} remaining; persist_artifact={persist})"
+        ).format(remaining=len(pending), persist=persist_artifact)
+        self.state.event_log.append(message)
+
+        return list(pending)
+
     def cycle_digest(self, *, persist_artifact: bool = True) -> Dict[str, object]:
         """Return a structured snapshot describing cycle progress."""
 
