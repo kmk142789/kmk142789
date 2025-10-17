@@ -30,6 +30,7 @@ from .evolver import (
     SystemMetrics,
     main,
 )
+from .impossible_realities import ImpossibleEvent, ImpossibleRealityEngine
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
@@ -86,6 +87,8 @@ __all__ = [
     "BridgeEmitter",
     "BridgeState",
     "EchoNexusPortal",
+    "ImpossibleEvent",
+    "ImpossibleRealityEngine",
     "DecentralizedAutonomyEngine",
     "MerkleBatch",
     "bridge_daemon",
