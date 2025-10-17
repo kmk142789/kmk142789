@@ -65,6 +65,10 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertIn("propagation_events", state.network_cache)
         self.assertIsNotNone(state.vault_key)
         self.assertEqual(len(state.network_cache["propagation_events"]), 5)
+        self.assertGreaterEqual(len(state.eden88_creations), 1)
+        creation = state.eden88_creations[-1]
+        self.assertEqual(creation["cycle"], state.cycle)
+        self.assertIn("theme", creation)
 
     def test_artifact_persistence(self) -> None:
         self.evolver.run(enable_network=False, persist_artifact=True)
@@ -74,6 +78,8 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertEqual(payload["cycle"], 1)
         self.assertIn("quantum_key", payload)
         self.assertIn("events", payload)
+        self.assertIn("eden88_creations", payload)
+        self.assertTrue(payload["eden88_creations"])
 
     def test_next_step_recommendation_guides_pipeline(self) -> None:
         message = self.evolver.next_step_recommendation()
@@ -139,6 +145,14 @@ class EchoEvolverTests(unittest.TestCase):
     def test_cycle_diagnostics_validates_event_limit(self) -> None:
         with self.assertRaises(ValueError):
             self.evolver.cycle_diagnostics(include_events=True, event_limit=0)
+
+    def test_eden88_creation_respects_requested_theme(self) -> None:
+        self.evolver.advance_cycle()
+        creation = self.evolver.eden88_create_artifact(theme="aurora sanctuary")
+        self.assertEqual(creation["theme"], "aurora sanctuary")
+        self.assertTrue(any("Aurora" in verse for verse in creation["verses"]))
+        completed = self.evolver.state.network_cache.get("completed_steps", set())
+        self.assertIn("eden88_create_artifact", completed)
 
 
 class EchoManifestIntegrationTests(unittest.TestCase):
