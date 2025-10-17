@@ -11,6 +11,7 @@ script path.  The :mod:`echo_evolver` script now simply delegates to the
 from __future__ import annotations
 
 import argparse
+import inspect
 import hashlib
 import json
 import random
@@ -1990,6 +1991,26 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         "--eden88-theme",
         help="Set the thematic palette for Eden88's creation during this cycle.",
     )
+    parser.add_argument(
+        "--cycles",
+        type=int,
+        default=1,
+        help="Number of consecutive cycles to run (default: 1).",
+    )
+    parser.add_argument(
+        "--persist-intermediate",
+        action="store_true",
+        help=(
+            "When running multiple cycles, persist the artifact after every cycle instead of only the final one."
+        ),
+    )
+    parser.add_argument(
+        "--amplify-gate",
+        type=float,
+        help=(
+            "Require the configured amplification engine to meet or exceed this gate value after running multiple cycles."
+        ),
+    )
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
@@ -1997,16 +2018,45 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
     if args.show_sequence:
         print(evolver.describe_sequence(persist_artifact=args.persist_artifact))
         return 0
+    if args.cycles < 1:
+        parser.error("--cycles must be at least 1")
+    if args.amplify_gate is not None and args.cycles <= 1:
+        parser.error("--amplify-gate requires --cycles to be greater than 1")
+    if args.amplify_gate is not None and evolver.amplifier is None:
+        parser.error("--amplify-gate requires an amplification engine to be configured")
+    if args.persist_intermediate and not args.persist_artifact:
+        print(
+            "⚠️ --persist-intermediate has no effect because artifact persistence is disabled.",
+        )
     if args.enable_network:
         print(
             "⚠️ Live network mode is symbolic only; the propagation step remains a"
             " simulation and will not open sockets."
         )
-    evolver.run(
-        enable_network=args.enable_network,
-        persist_artifact=args.persist_artifact,
-        eden88_theme=args.eden88_theme,
-    )
+    if args.cycles > 1:
+        snapshots = evolver.run_cycles(
+            args.cycles,
+            enable_network=args.enable_network,
+            persist_artifact=args.persist_artifact,
+            persist_intermediate=args.persist_intermediate,
+            amplify_gate=args.amplify_gate,
+            eden88_theme=args.eden88_theme,
+        )
+        final_state = snapshots[-1] if snapshots else evolver.state
+        print(
+            f"\n✨ Completed {len(snapshots)} cycles. Last cycle: {final_state.cycle}.",
+        )
+        if args.persist_artifact:
+            print(f"📜 Final artifact: {evolver.state.artifact}")
+    else:
+        run_kwargs = {
+            "enable_network": args.enable_network,
+            "persist_artifact": args.persist_artifact,
+        }
+        signature = inspect.signature(evolver.run)
+        if "eden88_theme" in signature.parameters:
+            run_kwargs["eden88_theme"] = args.eden88_theme
+        evolver.run(**run_kwargs)
     return 0
 
 
