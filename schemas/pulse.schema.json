@@ -1,0 +1,61 @@
+{
+  "properties": {
+    "key_id": {
+      "description": "Identifier of the signing key",
+      "title": "Key Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "merge",
+        "fix",
+        "doc",
+        "schema"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "proof_id": {
+      "minLength": 4,
+      "title": "Proof Id",
+      "type": "string"
+    },
+    "ref": {
+      "description": "Git commit SHA or reference",
+      "title": "Ref",
+      "type": "string"
+    },
+    "repo": {
+      "description": "Repository in owner/name format",
+      "title": "Repo",
+      "type": "string"
+    },
+    "signature": {
+      "description": "Deterministic secp256k1 signature",
+      "title": "Signature",
+      "type": "string"
+    },
+    "summary": {
+      "maxLength": 200,
+      "title": "Summary",
+      "type": "string"
+    },
+    "timestamp": {
+      "format": "date-time",
+      "title": "Timestamp",
+      "type": "string"
+    }
+  },
+  "required": [
+    "repo",
+    "ref",
+    "kind",
+    "summary",
+    "proof_id",
+    "timestamp",
+    "signature",
+    "key_id"
+  ],
+  "title": "PulseMessage",
+  "type": "object"
+}

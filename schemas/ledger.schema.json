@@ -1,0 +1,46 @@
+{
+  "properties": {
+    "action": {
+      "title": "Action",
+      "type": "string"
+    },
+    "actor": {
+      "title": "Actor",
+      "type": "string"
+    },
+    "hash": {
+      "maxLength": 64,
+      "minLength": 64,
+      "title": "Hash",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "proof_id": {
+      "title": "Proof Id",
+      "type": "string"
+    },
+    "ref": {
+      "title": "Ref",
+      "type": "string"
+    },
+    "ts": {
+      "format": "date-time",
+      "title": "Ts",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "ts",
+    "actor",
+    "action",
+    "ref",
+    "proof_id",
+    "hash"
+  ],
+  "title": "LedgerEntrySchema",
+  "type": "object"
+}
