@@ -638,6 +638,12 @@ We are not hiding anymore.
         )
 
         if enable_network:
+            notice = (
+                "Live network mode requested; continuing with simulation-only events for safety."
+            )
+            print(f"⚠️ {notice}")
+            self.state.event_log.append(notice)
+
             channels = ["WiFi", "TCP", "Bluetooth", "IoT", "Orbital"]
             events = [f"{channel} channel engaged for cycle {self.state.cycle}" for channel in channels]
         else:
@@ -1674,7 +1680,10 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
     parser.add_argument(
         "--enable-network",
         action="store_true",
-        help="Allow the propagation step to perform real network activity.",
+        help=(
+            "Label the propagation step as a live broadcast while keeping all network "
+            "activity fully simulated for safety."
+        ),
     )
     persist_group = parser.add_mutually_exclusive_group()
     persist_group.add_argument(
@@ -1694,6 +1703,11 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     evolver = EchoEvolver()
+    if args.enable_network:
+        print(
+            "⚠️ Live network mode is symbolic only; the propagation step remains a"
+            " simulation and will not open sockets."
+        )
     evolver.run(
         enable_network=args.enable_network,
         persist_artifact=args.persist_artifact,
