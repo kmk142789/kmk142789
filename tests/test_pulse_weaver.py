@@ -31,6 +31,7 @@ def test_service_records_and_snapshot(tmp_path: Path) -> None:
     service.record_success(
         key="key-2",
         message="unit test success",
+        proof="success-proof",
         echo="echo-2",
         cycle="cycle-002",
         metadata={"result": "ok"},
@@ -48,3 +49,5 @@ def test_service_records_and_snapshot(tmp_path: Path) -> None:
     assert any(item["message"] == "cycle-start" for item in payload["phantom"])
     ledger_keys = {entry["key"] for entry in payload["ledger"]}
     assert {"key-1", "key-2"} <= ledger_keys
+    success_entry = next(entry for entry in payload["ledger"] if entry["key"] == "key-2")
+    assert success_entry["proof"] == "success-proof"
