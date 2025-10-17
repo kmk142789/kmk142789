@@ -10,14 +10,17 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import datetime
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Mapping
 
 from pulse_weaver.cli import register_subcommand as register_pulse_weaver
 
 from .amplify import AmplificationEngine, AmplifyState
 from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
 from .tools.forecast import project_indices, sparkline
+from echo.atlas.temporal_ledger import TemporalLedger
+from echo.pulseweaver import PulseBus, WatchdogConfig, build_pulse_bus, build_watchdog
 
 
 EXPECTED_STEPS = 13
@@ -154,6 +157,94 @@ def _cmd_forecast(args: argparse.Namespace) -> int:
     return 0
 
 
+def _load_signing_key(path: Path) -> Mapping[str, str]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if "private_key" not in data or "key_id" not in data:
+        raise ValueError("key file must contain 'private_key' and 'key_id'")
+    return {"private_key": str(data["private_key"]), "key_id": str(data["key_id"]), "public_key": data.get("public_key")}
+
+
+def _cmd_pulse_watch(args: argparse.Namespace) -> int:
+    watchdog = build_watchdog()
+    failures = watchdog.detect_failures()
+    if not failures:
+        print("No failure events detected.")
+        return 0
+    event = failures[-1]
+    reason = args.reason or str(event.get("reason", "auto"))
+    config = WatchdogConfig(
+        dry_run_only=args.dry_run,
+        max_attempts=args.max_attempts,
+        cooldown_seconds=args.cooldown_sec,
+    )
+    report = watchdog.run_cycle(event, reason=reason, config=config)
+    print(f"Watchdog run for {reason}: {'success' if report.succeeded else 'failure'}")
+    if report.proof_path:
+        print(f"Proof: {report.proof_path}")
+    return 0 if report.succeeded else 1
+
+
+def _cmd_pulse_emit(args: argparse.Namespace) -> int:
+    state_dir = args.state or Path("state")
+    signing_key: Mapping[str, str] | None = None
+    if args.key_file:
+        signing_key = _load_signing_key(args.key_file)
+    elif args.private_key and args.key_id:
+        signing_key = {"private_key": args.private_key, "key_id": args.key_id}
+    bus = build_pulse_bus(state_dir)
+    if signing_key:
+        bus = PulseBus(
+            state_dir=state_dir,
+            signing_key=signing_key,
+            known_keys_path=state_dir / "pulses/keys.json",
+        )
+        if args.public_key and "public_key" in signing_key:
+            bus.register_key(signing_key["key_id"], signing_key["public_key"])
+    outbox_entry = bus.emit(
+        args.repo,
+        args.ref,
+        kind=args.kind,
+        summary=args.summary,
+        proof_id=args.proof,
+        destinations=args.dest or [],
+    )
+    print(json.dumps(outbox_entry.envelope.model_dump(), indent=2, sort_keys=True))
+    print(f"Saved to {outbox_entry.path}")
+    return 0
+
+
+def _cmd_ledger_snapshot(args: argparse.Namespace) -> int:
+    ledger = TemporalLedger(state_dir=args.state or Path("state"))
+    since = datetime.fromisoformat(args.since) if args.since else None
+    limit = args.limit
+    if args.format == "md":
+        content = ledger.as_markdown(since=since, limit=limit)
+        suffix = ".md"
+    elif args.format == "svg":
+        content = ledger.as_svg(since=since, limit=limit)
+        suffix = ".svg"
+    else:  # pragma: no cover - defensive branch
+        raise ValueError("Unsupported format")
+    output_dir = args.out or Path("artifacts")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    path = output_dir / f"ledger_snapshot{suffix}"
+    path.write_text(content, encoding="utf-8")
+    print(f"Snapshot written to {path}")
+    return 0
+
+
+def _cmd_ledger_tail(args: argparse.Namespace) -> int:
+    ledger = TemporalLedger(state_dir=args.state or Path("state"))
+    since = datetime.fromisoformat(args.since) if args.since else None
+    entries = list(ledger.iter_entries(since=since, limit=args.limit))
+    if not entries:
+        print("No ledger entries available.")
+        return 0
+    for entry in entries:
+        print(f"{entry.ts.isoformat()} | {entry.actor} | {entry.action} | {entry.ref} | {entry.hash[:8]}")
+    return 0
+
+
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="echo",
@@ -221,6 +312,47 @@ def main(argv: Iterable[str] | None = None) -> int:
     forecast_parser.add_argument("--cycles", type=int, default=12)
     forecast_parser.add_argument("--plot", action="store_true")
     forecast_parser.set_defaults(func=_cmd_forecast)
+
+    pulse_parser = subparsers.add_parser("pulse", help="Pulse Weaver utilities")
+    pulse_sub = pulse_parser.add_subparsers(dest="pulse_command", required=True)
+
+    pulse_watch = pulse_sub.add_parser("watch", help="Run a watchdog remediation cycle")
+    pulse_watch.add_argument("--reason", help="Override remediation reason")
+    pulse_watch.add_argument("--dry-run", action="store_true", help="Dry-run only")
+    pulse_watch.add_argument("--max-attempts", type=int, default=1)
+    pulse_watch.add_argument("--cooldown-sec", type=int, default=0)
+    pulse_watch.set_defaults(func=_cmd_pulse_watch)
+
+    pulse_emit = pulse_sub.add_parser("emit", help="Emit a signed pulse event")
+    pulse_emit.add_argument("repo")
+    pulse_emit.add_argument("ref")
+    pulse_emit.add_argument("--kind", required=True, choices=["merge", "fix", "doc", "schema"])
+    pulse_emit.add_argument("--summary", required=True)
+    pulse_emit.add_argument("--proof", required=True, help="Proof identifier")
+    pulse_emit.add_argument("--state", type=Path, help="Override state directory")
+    pulse_emit.add_argument("--key-file", type=Path, help="JSON file with signing key")
+    pulse_emit.add_argument("--private-key", help="Hex encoded private key")
+    pulse_emit.add_argument("--key-id", help="Identifier for the signing key")
+    pulse_emit.add_argument("--public-key", help="Register public key when emitting")
+    pulse_emit.add_argument("--dest", action="append", help="Optional webhook destinations")
+    pulse_emit.set_defaults(func=_cmd_pulse_emit)
+
+    ledger_parser = subparsers.add_parser("ledger", help="Temporal ledger commands")
+    ledger_sub = ledger_parser.add_subparsers(dest="ledger_command", required=True)
+
+    ledger_snapshot = ledger_sub.add_parser("snapshot", help="Export a ledger snapshot")
+    ledger_snapshot.add_argument("--format", choices=["md", "svg"], default="md")
+    ledger_snapshot.add_argument("--out", type=Path, help="Output directory")
+    ledger_snapshot.add_argument("--state", type=Path, help="Override state directory")
+    ledger_snapshot.add_argument("--since", help="ISO timestamp filter")
+    ledger_snapshot.add_argument("--limit", type=int, default=50)
+    ledger_snapshot.set_defaults(func=_cmd_ledger_snapshot)
+
+    ledger_tail = ledger_sub.add_parser("tail", help="Print recent ledger entries")
+    ledger_tail.add_argument("--state", type=Path, help="Override state directory")
+    ledger_tail.add_argument("--since", help="ISO timestamp filter")
+    ledger_tail.add_argument("--limit", type=int, default=10)
+    ledger_tail.set_defaults(func=_cmd_ledger_tail)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
     return args.func(args)
