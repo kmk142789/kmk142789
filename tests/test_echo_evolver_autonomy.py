@@ -37,6 +37,7 @@ def test_artifact_payload_matches_written_file(tmp_path):
     evolver.generate_symbolic_language()
     evolver.system_monitor()
     prompt = evolver.inject_prompt_resonance()
+    assert "caution" in prompt and "non-executable" in prompt["caution"]
 
     completed_before = set(evolver.state.network_cache.get("completed_steps", set()))
     payload = evolver.artifact_payload(prompt=prompt)

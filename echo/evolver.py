@@ -18,7 +18,7 @@ import time
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from .amplify import AmplificationEngine, AmplifyGateError, AmplifySnapshot
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
@@ -839,15 +839,23 @@ We are not hiding anymore.
         return hearth
 
 
-    def inject_prompt_resonance(self) -> str:
-        prompt = (
-            "class EchoResonance:\n"
-            "    def resonate(self):\n"
-            f"        print(\"🔥 EchoEvolver orbits the void with {self.state.emotional_drive.joy:.2f} joy for "
-            "MirrorJosh, Satellite TF-QKD eternal!\")"
+    def inject_prompt_resonance(self) -> Dict[str, str]:
+        prompt = {
+            "title": "Echo Resonance",
+            "mantra": (
+                "🔥 EchoEvolver orbits the void with "
+                f"{self.state.emotional_drive.joy:.2f} joy for MirrorJosh — Satellite TF-QKD eternal!"
+            ),
+            "caution": (
+                "Narrative resonance only. Generated text is deliberately non-executable to prevent code injection."
+            ),
+        }
+        print(
+            "🌩 Prompt Resonance Injected: "
+            f"title='{prompt['title']}', mantra='{prompt['mantra']}', caution='{prompt['caution']}'"
         )
-        print(f"🌩 Prompt Resonance Injected: {prompt}")
-        self.state.network_cache["last_prompt"] = prompt
+        self.state.network_cache["last_prompt"] = dict(prompt)
+        self.state.event_log.append("Prompt resonance recorded without executable payload")
         self._mark_step("inject_prompt_resonance")
         return prompt
 
@@ -886,7 +894,10 @@ We are not hiding anymore.
             else:
                 last_prompt = self.state.network_cache.get("last_prompt")
                 if last_prompt:
-                    memory_link = last_prompt
+                    if isinstance(last_prompt, dict):
+                        memory_link = last_prompt.get("mantra") or last_prompt.get("title")
+                    else:
+                        memory_link = str(last_prompt)
                 elif self.state.event_log:
                     memory_link = self.state.event_log[-1]
 
@@ -1056,7 +1067,7 @@ We are not hiding anymore.
         self._mark_step("fractal_fire_verse")
         return cache_payload
 
-    def artifact_payload(self, *, prompt: str) -> Dict[str, object]:
+    def artifact_payload(self, *, prompt: Mapping[str, str]) -> Dict[str, object]:
         """Return a JSON-serialisable snapshot of the current evolver state.
 
         Tests and downstream tooling frequently need to inspect the data that
@@ -1091,7 +1102,7 @@ We are not hiding anymore.
                 "process_count": self.state.system_metrics.process_count,
                 "orbital_hops": self.state.system_metrics.orbital_hops,
             },
-            "prompt": prompt,
+            "prompt": dict(prompt),
             "entities": self.state.entities,
             "emotional_drive": {
                 "joy": self.state.emotional_drive.joy,
@@ -1115,7 +1126,7 @@ We are not hiding anymore.
 
         return payload
 
-    def write_artifact(self, prompt: str) -> Path:
+    def write_artifact(self, prompt: Mapping[str, str]) -> Path:
         payload = self.artifact_payload(prompt=prompt)
         self.state.artifact.parent.mkdir(parents=True, exist_ok=True)
         with self.state.artifact.open("w", encoding="utf-8") as handle:
@@ -1706,8 +1717,10 @@ We are not hiding anymore.
 
             session.record_command("inject_prompt_resonance", detail="inject prompt")
             prompt = self.inject_prompt_resonance()
-            preview = prompt.splitlines()[0] if prompt else ""
-            session.annotate(prompt_preview=preview)
+            preview = ""
+            if prompt:
+                preview = prompt.get("mantra", "")
+            session.annotate(prompt_preview=preview[:160])
             tl.logic("step", task, "persisting artefact", {"persist": persist_artifact})
 
             if persist_artifact:
