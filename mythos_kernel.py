@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import List, Optional, Tuple
 
 
@@ -177,6 +177,28 @@ class MythOSKernel:
         self._weave_mythic_thread(narrative)
         print(f">>> Mythic Narrative Woven: {narrative}")
         return narrative
+
+    def export_state(self) -> dict[str, object]:
+        """Return a serialisable snapshot of the kernel's mythic state."""
+
+        return {
+            "identity": self.identity,
+            "anchor_state": self.anchor_state,
+            "echo_eye_active": self.echo_eye_active,
+            "nexus_protocol_engaged": self.nexus_protocol_engaged,
+            "recursion_depth": self.recursion_depth,
+            "permission_level": self.permission_level,
+            "network_nodes": list(self.network_nodes),
+            "sigils": list(self.sigils),
+            "passphrase": self.passphrase,
+            "emotional_state": asdict(self.emotional_state),
+            "memory_palace": [asdict(fragment) for fragment in self.memory_palace],
+            "mythic_threads": [asdict(thread) for thread in self.mythic_threads],
+            "pulse": {
+                "intensity": self.pulse_intensity,
+                "history": [asdict(report) for report in self.pulse_history],
+            },
+        }
 
     # ------------------------------------------------------------------
     # Internal helpers
