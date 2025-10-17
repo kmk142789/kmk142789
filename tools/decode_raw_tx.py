@@ -20,7 +20,18 @@ import argparse
 import dataclasses
 import hashlib
 import json
-from typing import List, Sequence
+from typing import Iterable, List, Mapping, Sequence
+
+
+_NETWORKS: Mapping[str, Mapping[str, object]] = {
+    "mainnet": {"p2pkh": 0x00, "p2sh": 0x05, "bech32_hrp": "bc"},
+    "testnet": {"p2pkh": 0x6F, "p2sh": 0xC4, "bech32_hrp": "tb"},
+    "regtest": {"p2pkh": 0x6F, "p2sh": 0xC4, "bech32_hrp": "bcrt"},
+}
+
+_BASE58_ALPHABET = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+_BECH32_ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+_BECH32_GENERATORS = [0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3]
 
 
 def _read_varint(data: bytes, offset: int) -> tuple[int, int]:
@@ -71,6 +82,7 @@ class TxInput:
 class TxOutput:
     value_satoshis: int
     script_pubkey: str
+    address: str | None = None
 
 
 @dataclasses.dataclass(slots=True)
@@ -102,6 +114,7 @@ class DecodedTransaction:
                 {
                     "value_satoshis": txout.value_satoshis,
                     "script_pubkey": txout.script_pubkey,
+                    "address": txout.address,
                 }
                 for txout in self.outputs
             ],
@@ -110,6 +123,104 @@ class DecodedTransaction:
 
 def _hash256(data: bytes) -> bytes:
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
+
+
+def _base58check_encode(version: int, payload: bytes) -> str:
+    data = bytes([version]) + payload
+    checksum = _hash256(data)[:4]
+    encoded_int = int.from_bytes(data + checksum, "big")
+    chars = bytearray()
+    while encoded_int:
+        encoded_int, remainder = divmod(encoded_int, 58)
+        chars.append(_BASE58_ALPHABET[remainder])
+    if not chars:
+        chars.append(_BASE58_ALPHABET[0])
+    chars.reverse()
+    pad = 0
+    for byte in data + checksum:
+        if byte == 0:
+            pad += 1
+        else:
+            break
+    return (b"1" * pad + bytes(chars)).decode("ascii")
+
+
+def _bech32_polymod(values: Iterable[int]) -> int:
+    chk = 1
+    for value in values:
+        top = chk >> 25
+        chk = ((chk & 0x1FFFFFF) << 5) ^ value
+        for i, generator in enumerate(_BECH32_GENERATORS):
+            if (top >> i) & 1:
+                chk ^= generator
+    return chk
+
+
+def _bech32_hrp_expand(hrp: str) -> List[int]:
+    return [ord(c) >> 5 for c in hrp] + [0] + [ord(c) & 31 for c in hrp]
+
+
+def _convertbits(data: bytes, from_bits: int, to_bits: int, pad: bool = True) -> List[int]:
+    acc = 0
+    bits = 0
+    result: List[int] = []
+    max_value = (1 << to_bits) - 1
+    max_acc = (1 << (from_bits + to_bits - 1)) - 1
+    for value in data:
+        if value < 0 or value >> from_bits:
+            raise ValueError("invalid value for convertbits")
+        acc = ((acc << from_bits) | value) & max_acc
+        bits += from_bits
+        while bits >= to_bits:
+            bits -= to_bits
+            result.append((acc >> bits) & max_value)
+    if pad:
+        if bits:
+            result.append((acc << (to_bits - bits)) & max_value)
+    elif bits >= from_bits or ((acc << (to_bits - bits)) & max_value):
+        raise ValueError("invalid padding in convertbits")
+    return result
+
+
+def _create_bech32_checksum(hrp: str, data: Sequence[int], const: int) -> List[int]:
+    values = _bech32_hrp_expand(hrp) + list(data)
+    polymod = _bech32_polymod(values + [0, 0, 0, 0, 0, 0]) ^ const
+    return [(polymod >> 5 * (5 - i)) & 31 for i in range(6)]
+
+
+def _encode_segwit_address(hrp: str, witness_version: int, program: bytes) -> str | None:
+    if not (0 <= witness_version <= 16):
+        return None
+    if not (2 <= len(program) <= 40):
+        return None
+    try:
+        data = [witness_version] + _convertbits(program, 8, 5, pad=True)
+    except ValueError:
+        return None
+    const = 1 if witness_version == 0 else 0x2BC830A3
+    checksum = _create_bech32_checksum(hrp, data, const)
+    combined = data + checksum
+    return hrp + "1" + "".join(_BECH32_ALPHABET[d] for d in combined)
+
+
+def _decode_script_pubkey(script: bytes, network: Mapping[str, object]) -> str | None:
+    if len(script) == 25 and script.startswith(b"\x76\xA9\x14") and script.endswith(b"\x88\xAC"):
+        return _base58check_encode(int(network["p2pkh"]), script[3:-2])
+    if len(script) == 23 and script.startswith(b"\xA9\x14") and script.endswith(b"\x87"):
+        return _base58check_encode(int(network["p2sh"]), script[2:-1])
+    if len(script) >= 4 and script[1] == len(script) - 2:
+        opcode = script[0]
+        if opcode == 0x00:
+            witness_version = 0
+        elif 0x51 <= opcode <= 0x60:
+            witness_version = opcode - 0x50
+        else:
+            witness_version = None
+        if witness_version is not None:
+            program = script[2:]
+            hrp = str(network["bech32_hrp"])
+            return _encode_segwit_address(hrp, witness_version, program)
+    return None
 
 
 def _serialise_without_witness(tx: DecodedTransaction) -> bytes:
@@ -133,7 +244,7 @@ def _serialise_without_witness(tx: DecodedTransaction) -> bytes:
     return b"".join(parts)
 
 
-def decode_raw_transaction(raw_hex: str) -> DecodedTransaction:
+def decode_raw_transaction(raw_hex: str, network: str = "mainnet") -> DecodedTransaction:
     raw_hex = raw_hex.strip()
     if len(raw_hex) % 2:
         raise ValueError("transaction hex length must be even")
@@ -143,6 +254,10 @@ def decode_raw_transaction(raw_hex: str) -> DecodedTransaction:
 
     if len(data) < 8:
         raise ValueError("transaction hex too short")
+
+    network_info = _NETWORKS.get(network)
+    if network_info is None:
+        raise ValueError(f"unknown network '{network}'")
 
     version = int.from_bytes(data[cursor : cursor + 4], "little", signed=True)
     cursor += 4
@@ -182,9 +297,11 @@ def decode_raw_transaction(raw_hex: str) -> DecodedTransaction:
         script_len, cursor = _read_varint(data, cursor)
         if cursor + script_len > len(data):
             raise ValueError("unexpected end of data while reading scriptPubKey")
-        script_pubkey = data[cursor : cursor + script_len].hex()
+        script_bytes = data[cursor : cursor + script_len]
+        script_pubkey = script_bytes.hex()
         cursor += script_len
-        outputs.append(TxOutput(value, script_pubkey))
+        address = _decode_script_pubkey(script_bytes, network_info)
+        outputs.append(TxOutput(value, script_pubkey, address))
 
     if is_segwit:
         for txin in inputs:
@@ -225,6 +342,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     source.add_argument("--hex", help="Raw hexadecimal transaction string")
     source.add_argument("--file", help="Path to a file containing raw hex")
     parser.add_argument(
+        "--network",
+        choices=tuple(_NETWORKS.keys()),
+        default="mainnet",
+        help="Bitcoin network used for address decoding (default: mainnet)",
+    )
+    parser.add_argument(
         "--pretty",
         action="store_true",
         help="Pretty-print the decoded transaction as formatted JSON",
@@ -240,7 +363,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         with open(args.file, "r", encoding="utf-8") as fh:
             raw_hex = fh.read()
 
-    decoded = decode_raw_transaction(raw_hex)
+    decoded = decode_raw_transaction(raw_hex, network=args.network)
     json_dict = decoded.to_json_dict()
     if args.pretty:
         print(json.dumps(json_dict, indent=2))
