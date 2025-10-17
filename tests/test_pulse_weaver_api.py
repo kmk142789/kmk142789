@@ -21,3 +21,4 @@ def test_api_snapshot_returns_payload(tmp_path) -> None:
     assert payload["schema"] == "pulse.weaver/snapshot-v1"
     assert payload["summary"]["total"] == 1
     assert payload["ledger"][0]["key"] == "api"
+    assert "Pulse Weaver Rhyme" in payload["rhyme"]

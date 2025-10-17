@@ -38,6 +38,8 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
             print("Phantom threads:")
             for thread, count in summary["phantom_threads"].items():
                 print(f"  - {thread}: {count}")
+        print()
+        print(snapshot.get("rhyme", ""))
     return 0
 
 

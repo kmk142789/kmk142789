@@ -16,6 +16,7 @@ def test_cli_snapshot_json(tmp_path: Path, capsys) -> None:
 
     captured = capsys.readouterr()
     assert "pulse.weaver/snapshot-v1" in captured.out
+    assert "Pulse Weaver Rhyme" in captured.out
 
 
 def test_cli_record_success(tmp_path: Path, capsys) -> None:
