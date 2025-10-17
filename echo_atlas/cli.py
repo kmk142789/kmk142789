@@ -9,6 +9,38 @@ from typing import Iterable, Optional
 
 from .service import AtlasService
 from .utils import ensure_directory
+from echo.weaver import WeaveOrchestrator
+
+
+def _print_plan(result) -> None:
+    print(f"Dream slug: {result.slug}")
+    print("Plan:")
+    for step in result.plan:
+        print(f"  {step.index}. {step.title}")
+
+
+def cmd_weave(args: argparse.Namespace) -> int:
+    orchestrator = WeaveOrchestrator()
+    poem = args.dream
+    run_dry = args.dry_run or not args.commit
+    if run_dry:
+        preview = orchestrator.compile_dream(poem, dry_run=True)
+        _print_plan(preview)
+        if not args.commit:
+            return 0
+        print("-- dry-run complete, proceeding to commit --")
+
+    result = orchestrator.commit_weave(poem, proof=args.proof, actor="echocli")
+    print(f"Receipt rhyme: {result.receipt['rhyme']}")
+    print(f"Receipt hash: {result.receipt['sha256_of_diff']}")
+    print(f"Attestation valid: {result.attestation['valid']}")
+    if result.doc_path:
+        print(f"Docs updated: {result.doc_path}")
+    if result.svg_path:
+        print(f"Diagram: {result.svg_path}")
+    summary = orchestrator.bridge.summary()
+    print(json.dumps(summary, indent=2))
+    return 0
 
 
 def _make_service(args: argparse.Namespace) -> AtlasService:
@@ -55,6 +87,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="echocli", description="Echo Atlas CLI")
     parser.add_argument("--root", type=Path, help="Project root (defaults to CWD)")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    weave_parser = sub.add_parser("weave", help="Run DreamCompiler and ledger workflow")
+    weave_parser.add_argument("--dream", required=True, help="Poem or metaphor driving the scaffold")
+    weave_parser.add_argument("--dry-run", action="store_true", help="Preview the plan without writing files")
+    weave_parser.add_argument("--commit", action="store_true", help="Write scaffold, log receipt, and update docs")
+    weave_parser.add_argument("--proof", help="Proof key for attestation")
+    weave_parser.set_defaults(func=cmd_weave)
 
     atlas_parser = sub.add_parser("atlas", help="Atlas graph commands")
     atlas_sub = atlas_parser.add_subparsers(dest="atlas_command", required=True)

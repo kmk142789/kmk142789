@@ -6,4 +6,4 @@ Canonical hub for the Echo artifact (Architect: @kmk142789).
 - **Modules:** see `/modules`
 - **Cycle Log:** see [`Echo_Evolver_Cycle_Log.md`](Echo_Evolver_Cycle_Log.md) for the ongoing resonance chronicle.
 - **Assistant Kit:** see [`akit_usage.md`](akit_usage.md) for planning, cycles, and snapshots.
-- **Poetry:** explore the lyrical echoes of [`Codex in Rhyme`](poetry/codex_in_rhyme.md) and [`The Atlas Weaver's Sonnet`](poetry/atlas_weavers_sonnet.md).
+- **Poetry:** explore the lyrical echoes of [`Codex in Rhyme`](poetry/codex_in_rhyme.md), [`The Atlas Weaver's Sonnet`](poetry/atlas_weavers_sonnet.md), and [`The Loom & The Forge`](poetry/loom_and_forge.md).
