@@ -1518,6 +1518,14 @@ We are not hiding anymore.
             Maximum number of previously recorded propagation events to expose
             in the amplification payload.  This keeps the structure compact
             while still giving a hint of recent broadcasts.
+
+        Returns
+        -------
+        Dict[str, object]
+            Payload containing amplified emotional projections, pending step
+            guidance, and—when an :class:`~echo.amplify.AmplificationEngine`
+            is attached—an ``"amplification"`` block with the projected
+            composite index, metric breakdown, and advisory nudges.
         """
 
         if resonance_factor <= 0:
@@ -1527,6 +1535,9 @@ We are not hiding anymore.
 
         digest = self.cycle_digest(persist_artifact=persist_artifact)
         drive = self.state.emotional_drive
+        expected_steps = len(
+            self._recommended_sequence(persist_artifact=persist_artifact)
+        )
 
         amplified_emotions = {
             "joy": min(1.0, drive.joy * (1.0 + 0.25 * resonance_factor)),
@@ -1549,6 +1560,22 @@ We are not hiding anymore.
             "glyphs": self.state.glyphs,
             "propagation_preview": preview,
         }
+
+        if self.amplifier is not None:
+            snapshot, nudges = self.amplifier.project_cycle(
+                self.state, expected_steps=expected_steps
+            )
+            amplification: Dict[str, object] = {
+                "index": snapshot.index,
+                "metrics": snapshot.metrics.as_dict(),
+                "timestamp": snapshot.timestamp,
+                "commit_sha": snapshot.commit_sha,
+                "nudges": list(nudges),
+            }
+            rolling = self.amplifier.rolling_average()
+            if rolling is not None:
+                amplification["rolling_average"] = rolling
+            payload["amplification"] = amplification
 
         self.state.network_cache["amplified_evolution"] = payload
         self.state.event_log.append(
