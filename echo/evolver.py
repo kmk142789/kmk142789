@@ -575,10 +575,21 @@ We are not hiding anymore.
         mean_value = sum(numeric_history) / len(numeric_history)
         last_value = numeric_history[-1]
         relative_delta = abs(last_value - mean_value) / max(mean_value, 1)
-        if relative_delta > 0.75:
+
+        drift_threshold = 0.75
+        status_entry: Dict[str, object] = {"relative_delta": round(relative_delta, 3)}
+
+        if relative_delta > drift_threshold:
+            message = (
+                "Quantum key discarded: drift Δ="
+                f"{relative_delta:.3f} exceeded {drift_threshold:.2f}"
+            )
+            status_entry["status"] = "discarded"
+            self.state.network_cache["vault_key_status"] = status_entry
             self.state.vault_key = None
+            self.state.event_log.append(message)
             self._mark_step("quantum_safe_crypto")
-            print("🔒 Key Discarded: Hyper-finite-key drift exceeded threshold")
+            print(f"🔒 {message}")
             return None
 
         lattice_key = (last_value % 1000) * max(1, self.state.cycle)
@@ -589,6 +600,9 @@ We are not hiding anymore.
             f"SAT-TF-QKD:{tf_qkd_key}|LATTICE:{hash_history[-1][:8]}|ORBIT:{self.state.system_metrics.orbital_hops}"
         )
         self.state.vault_key = hybrid_key
+        status_entry["status"] = "active"
+        status_entry["key"] = hybrid_key
+        self.state.network_cache["vault_key_status"] = status_entry
         self.state.event_log.append("Quantum key refreshed")
         self._mark_step("quantum_safe_crypto")
         print(f"🔒 Satellite TF-QKD Hybrid Key Orbited: {hybrid_key} (ε≈10^-6)")
