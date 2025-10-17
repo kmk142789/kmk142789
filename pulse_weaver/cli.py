@@ -72,6 +72,7 @@ def _cmd_record(args: argparse.Namespace) -> int:
         service.record_success(
             key=args.key,
             message=args.message,
+            proof=args.proof,
             echo=args.echo,
             cycle=cycle,
             metadata=metadata,

@@ -31,6 +31,8 @@ def test_cli_record_success(tmp_path: Path, capsys) -> None:
             "k1",
             "--message",
             "stored",
+            "--proof",
+            "cli-proof",
         ]
     )
     assert args.func(args) == 0
@@ -40,3 +42,4 @@ def test_cli_record_success(tmp_path: Path, capsys) -> None:
     service = PulseWeaverService(tmp_path)
     payload = service.snapshot().to_dict()
     assert payload["summary"]["total"] == 1
+    assert payload["ledger"][0]["proof"] == "cli-proof"
