@@ -188,6 +188,15 @@ if (!blob) {
     const header = sig[0];
     const { rec: recGuess } = parseHeader(header);
     const rs = sig.slice(1); // R||S (64 bytes), compact
+    let sigCompactHex;
+    let sigDerHex;
+    try {
+      const sigObj = secp.Signature.fromCompact(toHex(rs));
+      sigCompactHex = sigObj.toCompactHex();
+      sigDerHex = sigObj.toDERHex();
+    } catch {
+      continue; // skip malformed signature chunks
+    }
 
     // We’ll try a few recovery ids just in case the header mapping is funky
     const recCandidates = uniq([recGuess, 0, 1, 2, 3]).filter((r) => r >= 0 && r <= 3);
@@ -199,10 +208,10 @@ if (!blob) {
         if (found) break;
         for (const rec of recCandidates) {
           try {
-            // noble-secp256k1 expects hex strings for sig & pub when using string forms
-            const pubHex = await secp.recoverPublicKey(d, toHex(rs), rec, true); // compressed
-            // verify signature (returns boolean or throws on bad inputs)
-            const ok = await secp.verify(toHex(rs), d, pubHex);
+            const point = secp.Point.fromSignature(d, sigDerHex, rec);
+            const pubBytes = point.toRawBytes(true);
+            const pubHex = Buffer.from(pubBytes).toString("hex");
+            const ok = await secp.verify(sigDerHex, d, pubBytes);
             if (!ok) continue;
 
             const eth = ethFromAnyPub(pubHex);
@@ -229,6 +238,8 @@ if (!blob) {
               digest: name,
               message: msg,
               signatureBase64: b64,
+              signatureCompactHex: sigCompactHex,
+              signatureDerHex: sigDerHex,
               publicKeyCompressedHex: pubHex,
               ethereum: eth,
               bitcoin: { p2pkh: btcP2PKH, p2wpkh: btcBech32 || null, hrp },
