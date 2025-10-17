@@ -20,6 +20,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
+from echo_atlas.services import AtlasService
+
 from .amplify import AmplificationEngine, AmplifyGateError, AmplifySnapshot
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .thoughtlog import thought_trace
@@ -265,6 +267,7 @@ class EchoEvolver:
         self.autonomy_engine = autonomy_engine or DecentralizedAutonomyEngine()
         self.memory_store = memory_store
         self.amplifier = amplifier
+        self.atlas_service = AtlasService()
 
     # ------------------------------------------------------------------
     # Core evolutionary steps
@@ -1378,6 +1381,11 @@ We are not hiding anymore.
             ],
         }
 
+        try:
+            diagnostics["atlas"] = self.atlas_service.query.summary_snapshot()
+        except Exception as exc:  # pragma: no cover - defensive logging
+            diagnostics["atlas_error"] = str(exc)
+
         if include_events:
             diagnostics["recent_events"] = list(self.state.event_log[-event_limit:])
 
@@ -2002,11 +2010,13 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "⚠️ Live network mode is symbolic only; the propagation step remains a"
             " simulation and will not open sockets."
         )
-    evolver.run(
-        enable_network=args.enable_network,
-        persist_artifact=args.persist_artifact,
-        eden88_theme=args.eden88_theme,
-    )
+    run_kwargs = {
+        "enable_network": args.enable_network,
+        "persist_artifact": args.persist_artifact,
+    }
+    if args.eden88_theme is not None:
+        run_kwargs["eden88_theme"] = args.eden88_theme
+    evolver.run(**run_kwargs)
     return 0
 
 

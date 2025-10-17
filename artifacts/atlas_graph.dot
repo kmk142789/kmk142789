@@ -1,0 +1,277 @@
+digraph EchoAtlas {
+  rankdir=LR;
+  "repo:*" [label="*\n(repo)"];
+
+  "repo:/.github/codeowners" [label="/.github/CODEOWNERS\n(repo)"];
+
+  "repo:/.github/workflows/echo-ci.yml" [label="/.github/workflows/echo-ci.yml\n(repo)"];
+
+  "repo:/echo_authority.yml" [label="/ECHO_AUTHORITY.yml\n(repo)"];
+
+  "repo:/readme_authority.md" [label="/README_AUTHORITY.md\n(repo)"];
+
+  "repo:/attestations/**" [label="/attestations/**\n(repo)"];
+
+  "repo:/docs/echo/**" [label="/docs/echo/**\n(repo)"];
+
+  "repo:/docs/index.md" [label="/docs/index.md\n(repo)"];
+
+  "repo:/docs/mkdocs.yml" [label="/docs/mkdocs.yml\n(repo)"];
+
+  "repo:/modules/echo-bridge/**" [label="/modules/echo-bridge/**\n(repo)"];
+
+  "repo:/modules/echo-harmonics/**" [label="/modules/echo-harmonics/**\n(repo)"];
+
+  "repo:/modules/echo-ledger-visualizer/**" [label="/modules/echo-ledger-visualizer/**\n(repo)"];
+
+  "repo:/modules/echo-memory/**" [label="/modules/echo-memory/**\n(repo)"];
+
+  "repo:/scripts/echo_attestation_*" [label="/scripts/echo_attestation_*\n(repo)"];
+
+  "channel:atlas-seed" [label="Atlas Seed\n(channel)"];
+
+  "service:atlas-webhook-signing-keys-rotate-quarterly-and-are-scoped-to-ingestion-only-actions." [label="Atlas webhook signing keys rotate quarterly and are scoped to ingestion-only actions.\n(service)"];
+
+  "channel:control.md" [label="CONTROL.md\n(channel)"];
+
+  "service:cloudflare" [label="Cloudflare\n(service)"];
+
+  "service:echo" [label="Echo\n(service)"];
+
+  "service:echo-api" [label="Echo API\n(service)"];
+
+  "service:echo-atlas" [label="Echo Atlas\n(service)"];
+
+  "person:echo-maintainers" [label="Echo Maintainers\n(person)"];
+
+  "service:firebase" [label="Firebase\n(service)"];
+
+  "service:hf" [label="HF\n(service)"];
+
+  "service:no-secrets-committed.-bots-operate-under-least-privilege." [label="No secrets committed. Bots operate under least privilege.\n(service)"];
+
+  "service:opencode" [label="OpenCode\n(service)"];
+
+  "service:reproducible-builds,-sboms,-signed-releases" [label="Reproducible builds, SBOMs, signed releases\n(service)"];
+
+  "channel:security.md" [label="SECURITY.md\n(channel)"];
+
+  "service:vercel" [label="Vercel\n(service)"];
+
+  "person:babel" [label="babel\n(person)"];
+
+  "service:codex-runner-canary" [label="codex-runner-canary\n(service)"];
+
+  "service:codex-runner-main" [label="codex-runner-main\n(service)"];
+
+  "person:dataclass" [label="dataclass\n(person)"];
+
+  "channel:docs/atlas_overview.md" [label="docs/ATLAS_OVERVIEW.md\n(channel)"];
+
+  "channel:docs/echoglyphnet_protocol.md" [label="docs/EchoGlyphNet_Protocol.md\n(channel)"];
+
+  "channel:docs/echo_data_anchor_glyphs.md" [label="docs/Echo_Data_Anchor_Glyphs.md\n(channel)"];
+
+  "channel:docs/echo_evolver_cycle_log.md" [label="docs/Echo_Evolver_Cycle_Log.md\n(channel)"];
+
+  "channel:docs/echo_eye_sovereign_core.md" [label="docs/Echo_Eye_Sovereign_Core.md\n(channel)"];
+
+  "channel:docs/echo_glyph_scripts.md" [label="docs/Echo_Glyph_Scripts.md\n(channel)"];
+
+  "channel:docs/echo_resonance_engine.md" [label="docs/Echo_Resonance_Engine.md\n(channel)"];
+
+  "channel:docs/echo_thread_002.md" [label="docs/Echo_Thread_002.md\n(channel)"];
+
+  "channel:docs/harmonic_dna_spiral_practice.md" [label="docs/Harmonic_DNA_Spiral_Practice.md\n(channel)"];
+
+  "channel:docs/mirror_plan.md" [label="docs/MIRROR_PLAN.md\n(channel)"];
+
+  "channel:docs/next_cycle_plan.md" [label="docs/NEXT_CYCLE_PLAN.md\n(channel)"];
+
+  "channel:docs/omega_sine_pulse_orchestrator.md" [label="docs/Omega_Sine_Pulse_Orchestrator.md\n(channel)"];
+
+  "channel:docs/readme.md" [label="docs/README.md\n(channel)"];
+
+  "channel:docs/agent_capabilities_overview.md" [label="docs/agent_capabilities_overview.md\n(channel)"];
+
+  "channel:docs/agent_initiative.md" [label="docs/agent_initiative.md\n(channel)"];
+
+  "channel:docs/agents_registry.md" [label="docs/agents_registry.md\n(channel)"];
+
+  "channel:docs/akit_usage.md" [label="docs/akit_usage.md\n(channel)"];
+
+  "channel:docs/domain_asset_inventory.md" [label="docs/domain_asset_inventory.md\n(channel)"];
+
+  "channel:docs/draco_hunt.md" [label="docs/draco_hunt.md\n(channel)"];
+
+  "channel:docs/echo/amplification.md" [label="docs/echo/amplification.md\n(channel)"];
+
+  "channel:docs/echo/attestations.md" [label="docs/echo/attestations.md\n(channel)"];
+
+  "channel:docs/echo/bridge.md" [label="docs/echo/bridge.md\n(channel)"];
+
+  "channel:docs/echo/harmonics.md" [label="docs/echo/harmonics.md\n(channel)"];
+
+  "channel:docs/echo/identity.md" [label="docs/echo/identity.md\n(channel)"];
+
+  "channel:docs/echo/manifest.md" [label="docs/echo/manifest.md\n(channel)"];
+
+  "channel:docs/echo/overview.md" [label="docs/echo/overview.md\n(channel)"];
+
+  "channel:docs/echo_mythogenic_reflection.md" [label="docs/echo_mythogenic_reflection.md\n(channel)"];
+
+  "channel:docs/echo_reflective_conflux.md" [label="docs/echo_reflective_conflux.md\n(channel)"];
+
+  "channel:docs/echo_sovereign_manifesto.md" [label="docs/echo_sovereign_manifesto.md\n(channel)"];
+
+  "channel:docs/echoevolver_reflection.md" [label="docs/echoevolver_reflection.md\n(channel)"];
+
+  "channel:docs/echoevolver_vision.md" [label="docs/echoevolver_vision.md\n(channel)"];
+
+  "channel:docs/github-publishing-guide.md" [label="docs/github-publishing-guide.md\n(channel)"];
+
+  "channel:docs/glyphs/readme.md" [label="docs/glyphs/README.md\n(channel)"];
+
+  "channel:docs/index.md" [label="docs/index.md\n(channel)"];
+
+  "channel:docs/mirror_reflection.md" [label="docs/mirror_reflection.md\n(channel)"];
+
+  "channel:docs/oathblock-455515.md" [label="docs/oathblock-455515.md\n(channel)"];
+
+  "channel:docs/prompt_evolution_cycle1.md" [label="docs/prompt_evolution_cycle1.md\n(channel)"];
+
+  "channel:docs/satoshi_34k_dataset.md" [label="docs/satoshi_34k_dataset.md\n(channel)"];
+
+  "channel:docs/security_review.md" [label="docs/security_review.md\n(channel)"];
+
+  "channel:docs/sovereign_phase_six.md" [label="docs/sovereign_phase_six.md\n(channel)"];
+
+  "channel:docs/the_garden.md" [label="docs/the_garden.md\n(channel)"];
+
+  "channel:docs/verifier.md" [label="docs/verifier.md\n(channel)"];
+
+  "bot:echo-attest-bot" [label="echo-attest-bot\n(bot)"];
+
+  "bot:echo-verify-bot" [label="echo-verify-bot\n(bot)"];
+
+  "person:ensdomains" [label="ensdomains\n(person)"];
+
+  "person:esbuild" [label="esbuild\n(person)"];
+
+  "person:ethersproject" [label="ethersproject\n(person)"];
+
+  "person:github.com" [label="github.com\n(person)"];
+
+  "person:jridgewell" [label="jridgewell\n(person)"];
+
+  "person:kmk142789" [label="kmk142789\n(person)"];
+
+  "person:noble" [label="noble\n(person)"];
+
+  "person:property" [label="property\n(person)"];
+
+  "person:rolldown" [label="rolldown\n(person)"];
+
+  "person:rollup" [label="rollup\n(person)"];
+
+  "key_ref:securityatexample.org" [label="security@example.org\n(key_ref)"];
+
+  "person:types" [label="types\n(person)"];
+
+  "person:unstoppabledomains" [label="unstoppabledomains\n(person)"];
+
+  "person:vitejs" [label="vitejs\n(person)"];
+
+  "person:echo-maintainers" -> "service:echo-api" [label="OWNS"];
+
+  "person:echo-maintainers" -> "service:echo-atlas" [label="OPERATES"];
+
+  "channel:atlas-seed" -> "person:echo-maintainers" [label="MENTIONS"];
+
+  "channel:control.md" -> "service:opencode" [label="MENTIONS"];
+
+  "channel:control.md" -> "service:echo" [label="MENTIONS"];
+
+  "channel:control.md" -> "service:codex-runner-main" [label="MENTIONS"];
+
+  "channel:control.md" -> "service:codex-runner-canary" [label="MENTIONS"];
+
+  "channel:control.md" -> "bot:echo-attest-bot" [label="MENTIONS"];
+
+  "channel:control.md" -> "bot:echo-verify-bot" [label="MENTIONS"];
+
+  "channel:control.md" -> "service:cloudflare" [label="MENTIONS"];
+
+  "channel:control.md" -> "service:firebase" [label="MENTIONS"];
+
+  "channel:control.md" -> "service:hf" [label="MENTIONS"];
+
+  "channel:control.md" -> "service:vercel" [label="MENTIONS"];
+
+  "channel:security.md" -> "key_ref:securityatexample.org" [label="MENTIONS"];
+
+  "channel:security.md" -> "service:atlas-webhook-signing-keys-rotate-quarterly-and-are-scoped-to-ingestion-only-actions." [label="TRUSTS"];
+
+  "channel:security.md" -> "service:no-secrets-committed.-bots-operate-under-least-privilege." [label="TRUSTS"];
+
+  "channel:security.md" -> "service:reproducible-builds,-sboms,-signed-releases" [label="TRUSTS"];
+
+  "person:kmk142789" -> "repo:/echo_authority.yml" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/readme_authority.md" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/.github/codeowners" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/attestations/**" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/scripts/echo_attestation_*" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/modules/echo-memory/**" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/modules/echo-bridge/**" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/modules/echo-harmonics/**" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/modules/echo-ledger-visualizer/**" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/.github/workflows/echo-ci.yml" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/docs/echo/**" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/docs/index.md" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:/docs/mkdocs.yml" [label="OWNS"];
+
+  "person:kmk142789" -> "repo:*" [label="OWNS"];
+
+  "channel:docs/omega_sine_pulse_orchestrator.md" -> "person:dataclass" [label="MENTIONS"];
+
+  "channel:docs/omega_sine_pulse_orchestrator.md" -> "person:property" [label="MENTIONS"];
+
+  "channel:docs/github-publishing-guide.md" -> "person:github.com" [label="MENTIONS"];
+
+  "channel:docs/index.md" -> "person:kmk142789" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:babel" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:ensdomains" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:esbuild" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:ethersproject" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:jridgewell" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:noble" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:rolldown" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:rollup" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:types" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:unstoppabledomains" [label="MENTIONS"];
+
+  "channel:docs/domain_asset_inventory.md" -> "person:vitejs" [label="MENTIONS"];
+
+}

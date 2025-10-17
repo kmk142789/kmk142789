@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.dev/schemas/atlas.schema.json",
+  "title": "Echo Atlas Graph",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nodes", "edges"],
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "entity_type"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "entity_type": {
+            "type": "string",
+            "enum": ["person", "bot", "service", "repo", "key_ref", "channel"]
+          },
+          "attributes": {"type": "object"},
+          "created_at": {"type": ["string", "null"], "format": "date-time"},
+          "updated_at": {"type": ["string", "null"], "format": "date-time"}
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "target", "relation"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string"},
+          "source": {"type": "string"},
+          "target": {"type": "string"},
+          "relation": {
+            "type": "string",
+            "enum": [
+              "CONNECTS_TO",
+              "OWNS",
+              "OPERATES",
+              "DEPLOYS",
+              "TRUSTS",
+              "MENTIONS"
+            ]
+          },
+          "attributes": {"type": "object"},
+          "created_at": {"type": ["string", "null"], "format": "date-time"},
+          "updated_at": {"type": ["string", "null"], "format": "date-time"}
+        }
+      }
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "entity_id", "entity_type", "change_type", "created_at"],
+        "properties": {
+          "id": {"type": "string"},
+          "entity_id": {"type": "string"},
+          "entity_type": {"type": "string"},
+          "change_type": {"type": "string"},
+          "payload": {"type": "object"},
+          "created_at": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  }
+}

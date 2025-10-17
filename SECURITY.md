@@ -10,3 +10,4 @@ Please report vulnerabilities to security@example.org. We acknowledge within 48h
 ## Expectations
 - Reproducible builds, SBOMs, signed releases
 - No secrets committed. Bots operate under least privilege.
+- Atlas webhook signing keys rotate quarterly and are scoped to ingestion-only actions.
