@@ -17,9 +17,13 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
-from coincurve import PublicKey
+_SECP256K1_P = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+_SECP256K1_N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+_SECP256K1_GX = 55066263022277343669578718895168534326250603453777594175500187360389116729240
+_SECP256K1_GY = 32670510020758816978083085130507043184471273380659243275938904335757337482424
+_SECP256K1_G = (_SECP256K1_GX, _SECP256K1_GY)
 
 
 @dataclass
@@ -70,8 +74,95 @@ def b58encode(data: bytes) -> bytes:
     return bytes(reversed(encoded))
 
 
-def pubkey_to_p2pkh_address(pubkey: PublicKey, compressed: bool) -> str:
-    pub_bytes = pubkey.format(compressed)
+def _inverse_mod(value: int, modulus: int) -> int:
+    return pow(value, -1, modulus)
+
+
+def _point_add(
+    point_a: Optional[tuple[int, int]], point_b: Optional[tuple[int, int]]
+) -> Optional[tuple[int, int]]:
+    if point_a is None:
+        return point_b
+    if point_b is None:
+        return point_a
+    if point_a[0] == point_b[0] and (point_a[1] + point_b[1]) % _SECP256K1_P == 0:
+        return None
+    if point_a == point_b:
+        slope = (3 * point_a[0] * point_a[0]) * _inverse_mod(2 * point_a[1], _SECP256K1_P)
+    else:
+        slope = (point_b[1] - point_a[1]) * _inverse_mod(point_b[0] - point_a[0], _SECP256K1_P)
+    slope %= _SECP256K1_P
+    x_r = (slope * slope - point_a[0] - point_b[0]) % _SECP256K1_P
+    y_r = (slope * (point_a[0] - x_r) - point_a[1]) % _SECP256K1_P
+    return x_r, y_r
+
+
+def _point_neg(point: Optional[tuple[int, int]]) -> Optional[tuple[int, int]]:
+    if point is None:
+        return None
+    return point[0], (-point[1]) % _SECP256K1_P
+
+
+def _point_sub(
+    point_a: Optional[tuple[int, int]], point_b: Optional[tuple[int, int]]
+) -> Optional[tuple[int, int]]:
+    return _point_add(point_a, _point_neg(point_b))
+
+
+def _scalar_multiply(k: int, point: tuple[int, int]) -> Optional[tuple[int, int]]:
+    result: Optional[tuple[int, int]] = None
+    addend: Optional[tuple[int, int]] = point
+    while k:
+        if k & 1:
+            result = _point_add(result, addend)
+        addend = _point_add(addend, addend)
+        k >>= 1
+    return result
+
+
+def _lift_x(x: int, odd: int) -> Optional[tuple[int, int]]:
+    if x >= _SECP256K1_P:
+        return None
+    alpha = (pow(x, 3, _SECP256K1_P) + 7) % _SECP256K1_P
+    beta = pow(alpha, (_SECP256K1_P + 1) // 4, _SECP256K1_P)
+    if (beta & 1) != (odd & 1):
+        beta = (-beta) % _SECP256K1_P
+    return x, beta
+
+
+def _recover_public_key(
+    recid: int, digest: bytes, r: int, s: int
+) -> Optional[tuple[int, int]]:
+    if not (0 <= recid <= 3):
+        return None
+    if not (1 <= r < _SECP256K1_N and 1 <= s < _SECP256K1_N):
+        return None
+    x = r + (recid >> 1) * _SECP256K1_N
+    R = _lift_x(x, recid & 1)
+    if R is None:
+        return None
+    if _scalar_multiply(_SECP256K1_N, R) is not None:
+        return None
+    e = int.from_bytes(digest, "big") % _SECP256K1_N
+    r_inv = _inverse_mod(r, _SECP256K1_N)
+    sR = _scalar_multiply(s % _SECP256K1_N, R)
+    eG = _scalar_multiply(e, _SECP256K1_G)
+    pre_q = _point_sub(sR, eG)
+    if pre_q is None:
+        return None
+    return _scalar_multiply(r_inv % _SECP256K1_N, pre_q)
+
+
+def _point_to_bytes(point: tuple[int, int], compressed: bool) -> bytes:
+    x, y = point
+    if compressed:
+        prefix = 0x03 if y & 1 else 0x02
+        return bytes([prefix]) + x.to_bytes(32, "big")
+    return b"\x04" + x.to_bytes(32, "big") + y.to_bytes(32, "big")
+
+
+def pubkey_to_p2pkh_address(pubkey: tuple[int, int], compressed: bool) -> str:
+    pub_bytes = _point_to_bytes(pubkey, compressed)
     sha = hashlib.sha256(pub_bytes).digest()
     ripe = hashlib.new("ripemd160", sha).digest()
     versioned = b"\x00" + ripe
@@ -105,9 +196,12 @@ def verify_segments(address: str, message: str, signature: str) -> List[Signatur
             if recid >= 4:
                 compressed = True
                 recid -= 4
-            recoverable = bytes([recid]) + raw[1:]
-            pub = PublicKey.from_signature_and_digest(recoverable, digest)
-            derived_address = pubkey_to_p2pkh_address(pub, compressed)
+            r = int.from_bytes(raw[1:33], "big")
+            s = int.from_bytes(raw[33:], "big")
+            pub_point = _recover_public_key(recid, digest, r, s)
+            if pub_point is None:
+                raise ValueError("could not recover public key")
+            derived_address = pubkey_to_p2pkh_address(pub_point, compressed)
             valid = derived_address == address
         except Exception:
             valid = False
