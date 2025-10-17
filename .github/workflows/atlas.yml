@@ -1,0 +1,32 @@
+name: Echo Atlas
+
+on:
+  pull_request:
+    paths:
+      - 'echo_atlas/**'
+      - 'schemas/atlas.schema.json'
+      - 'tests/test_atlas_*'
+      - 'docs/ATLAS_OVERVIEW.md'
+      - '.github/workflows/atlas.yml'
+      - 'pyproject.toml'
+      - '.env.example'
+
+jobs:
+  atlas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -e .[dev]
+      - name: Run Atlas tests
+        run: pytest tests/test_atlas_schema.py tests/test_atlas_importers.py tests/test_atlas_cli.py tests/test_atlas_visualization.py
+      - name: Build Atlas artifacts
+        run: echocli atlas sync
+      - name: Upload SVG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-graph
+          path: artifacts/atlas_graph.svg

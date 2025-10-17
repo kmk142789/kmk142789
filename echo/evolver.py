@@ -1379,6 +1379,15 @@ We are not hiding anymore.
             ],
         }
 
+        try:
+            from echo_atlas.integration import latest_report_summary
+
+            atlas_summary = latest_report_summary(Path.cwd())
+            if atlas_summary:
+                diagnostics["atlas_summary"] = atlas_summary
+        except Exception:  # pragma: no cover - atlas integration is best-effort
+            pass
+
         if include_events:
             diagnostics["recent_events"] = list(self.state.event_log[-event_limit:])
 

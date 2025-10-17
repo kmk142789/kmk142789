@@ -1,0 +1,239 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'>
+  <style>text { font-family: sans-serif; font-size: 12px; }</style>
+  <line x1='293.5' y1='82.7' x2='317.3' y2='106.5' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='293.5' y1='82.7' x2='335.1' y2='134.9' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='327.0' y2='120.2' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='293.5' y1='82.7' x2='346.2' y2='166.6' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='349.1' y2='183.2' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='306.1' y1='93.9' x2='349.1' y2='216.8' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='166.6' y2='346.2' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='150.5' y2='341.6' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='134.9' y2='335.1' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='120.2' y2='327.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='346.2' y2='233.4' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='341.6' y2='249.5' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='106.5' y2='317.3' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='93.9' y2='306.1' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='82.7' y2='293.5' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='73.0' y2='279.8' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='64.9' y2='265.1' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='58.4' y2='249.5' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='53.8' y2='233.4' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='50.9' y2='216.8' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='50.0' y2='200.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='327.0' y2='279.8' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='317.3' y2='293.5' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='306.1' y2='306.1' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='293.5' y2='317.3' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='50.9' y2='183.2' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='53.8' y2='166.6' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='58.4' y2='150.5' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='279.8' y2='327.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='64.9' y2='134.9' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='265.1' y2='335.1' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='73.0' y2='120.2' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='82.7' y2='106.5' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='335.1' y2='265.1' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='93.9' y2='93.9' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='106.5' y2='82.7' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='249.5' y2='341.6' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='120.2' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='233.4' y2='346.2' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='134.9' y2='64.9' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='216.8' y2='349.1' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='150.5' y2='58.4' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='200.0' y2='350.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='166.6' y2='53.8' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='183.2' y2='349.1' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='183.2' y2='50.9' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='200.0' y2='50.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='216.8' y2='50.9' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='233.4' y2='53.8' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='249.5' y2='58.4' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='350.0' y2='200.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='293.5' y2='82.7' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='265.1' y1='64.9' x2='279.8' y2='73.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <line x1='279.8' y1='73.0' x2='341.6' y2='150.5' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <defs><marker id='arrow' markerWidth='10' markerHeight='10' refX='6' refY='3' orient='auto' markerUnits='strokeWidth'><path d='M0,0 L0,6 L9,3 z' fill='#888' /></marker></defs>
+  <circle cx='350.0' cy='200.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='350.0' y='175.0' text-anchor='middle'>echo-attest-bot (attest-only), echo-verify-bot (read-only)</text>
+  <text x='350.0' y='235.0' text-anchor='middle' fill='#555'>Bot</text>
+  <circle cx='349.1' cy='216.8' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='349.1' y='191.8' text-anchor='middle'>Security Contact</text>
+  <text x='349.1' y='251.8' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='346.2' cy='233.4' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='346.2' y='208.4' text-anchor='middle'>docs/ATLAS_OVERVIEW.md</text>
+  <text x='346.2' y='268.4' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='341.6' cy='249.5' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='341.6' y='224.5' text-anchor='middle'>docs/ATLAS_REPORT.md</text>
+  <text x='341.6' y='284.5' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='335.1' cy='265.1' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='335.1' y='240.1' text-anchor='middle'>docs/EchoGlyphNet_Protocol.md</text>
+  <text x='335.1' y='300.1' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='327.0' cy='279.8' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='327.0' y='254.8' text-anchor='middle'>docs/Echo_Data_Anchor_Glyphs.md</text>
+  <text x='327.0' y='314.8' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='317.3' cy='293.5' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='317.3' y='268.5' text-anchor='middle'>docs/Echo_Evolver_Cycle_Log.md</text>
+  <text x='317.3' y='328.5' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='306.1' cy='306.1' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='306.1' y='281.1' text-anchor='middle'>docs/Echo_Eye_Sovereign_Core.md</text>
+  <text x='306.1' y='341.1' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='293.5' cy='317.3' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='293.5' y='292.3' text-anchor='middle'>docs/Echo_Glyph_Scripts.md</text>
+  <text x='293.5' y='352.3' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='279.8' cy='327.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='279.8' y='302.0' text-anchor='middle'>docs/Echo_Resonance_Engine.md</text>
+  <text x='279.8' y='362.0' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='265.1' cy='335.1' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='265.1' y='310.1' text-anchor='middle'>docs/Echo_Thread_002.md</text>
+  <text x='265.1' y='370.1' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='249.5' cy='341.6' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='249.5' y='316.6' text-anchor='middle'>docs/Harmonic_DNA_Spiral_Practice.md</text>
+  <text x='249.5' y='376.6' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='233.4' cy='346.2' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='233.4' y='321.2' text-anchor='middle'>docs/MIRROR_PLAN.md</text>
+  <text x='233.4' y='381.2' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='216.8' cy='349.1' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='216.8' y='324.1' text-anchor='middle'>docs/NEXT_CYCLE_PLAN.md</text>
+  <text x='216.8' y='384.1' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='200.0' cy='350.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='200.0' y='325.0' text-anchor='middle'>docs/Omega_Sine_Pulse_Orchestrator.md</text>
+  <text x='200.0' y='385.0' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='183.2' cy='349.1' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='183.2' y='324.1' text-anchor='middle'>docs/README.md</text>
+  <text x='183.2' y='384.1' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='166.6' cy='346.2' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='166.6' y='321.2' text-anchor='middle'>docs/agent_capabilities_overview.md</text>
+  <text x='166.6' y='381.2' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='150.5' cy='341.6' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='150.5' y='316.6' text-anchor='middle'>docs/agent_initiative.md</text>
+  <text x='150.5' y='376.6' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='134.9' cy='335.1' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='134.9' y='310.1' text-anchor='middle'>docs/agents_registry.md</text>
+  <text x='134.9' y='370.1' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='120.2' cy='327.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='120.2' y='302.0' text-anchor='middle'>docs/akit_usage.md</text>
+  <text x='120.2' y='362.0' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='106.5' cy='317.3' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='106.5' y='292.3' text-anchor='middle'>docs/domain_asset_inventory.md</text>
+  <text x='106.5' y='352.3' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='93.9' cy='306.1' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='93.9' y='281.1' text-anchor='middle'>docs/draco_hunt.md</text>
+  <text x='93.9' y='341.1' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='82.7' cy='293.5' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='82.7' y='268.5' text-anchor='middle'>docs/echo/amplification.md</text>
+  <text x='82.7' y='328.5' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='73.0' cy='279.8' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='73.0' y='254.8' text-anchor='middle'>docs/echo/attestations.md</text>
+  <text x='73.0' y='314.8' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='64.9' cy='265.1' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='64.9' y='240.1' text-anchor='middle'>docs/echo/bridge.md</text>
+  <text x='64.9' y='300.1' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='58.4' cy='249.5' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='58.4' y='224.5' text-anchor='middle'>docs/echo/harmonics.md</text>
+  <text x='58.4' y='284.5' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='53.8' cy='233.4' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='53.8' y='208.4' text-anchor='middle'>docs/echo/identity.md</text>
+  <text x='53.8' y='268.4' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='50.9' cy='216.8' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='50.9' y='191.8' text-anchor='middle'>docs/echo/manifest.md</text>
+  <text x='50.9' y='251.8' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='50.0' cy='200.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='50.0' y='175.0' text-anchor='middle'>docs/echo/overview.md</text>
+  <text x='50.0' y='235.0' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='50.9' cy='183.2' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='50.9' y='158.2' text-anchor='middle'>docs/echo_mythogenic_reflection.md</text>
+  <text x='50.9' y='218.2' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='53.8' cy='166.6' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='53.8' y='141.6' text-anchor='middle'>docs/echo_pulse_monitor.md</text>
+  <text x='53.8' y='201.6' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='58.4' cy='150.5' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='58.4' y='125.5' text-anchor='middle'>docs/echo_reflective_conflux.md</text>
+  <text x='58.4' y='185.5' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='64.9' cy='134.9' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='64.9' y='109.9' text-anchor='middle'>docs/echo_sovereign_manifesto.md</text>
+  <text x='64.9' y='169.9' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='73.0' cy='120.2' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='73.0' y='95.2' text-anchor='middle'>docs/echoevolver_reflection.md</text>
+  <text x='73.0' y='155.2' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='82.7' cy='106.5' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='82.7' y='81.5' text-anchor='middle'>docs/echoevolver_vision.md</text>
+  <text x='82.7' y='141.5' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='93.9' cy='93.9' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='93.9' y='68.9' text-anchor='middle'>docs/github-publishing-guide.md</text>
+  <text x='93.9' y='128.9' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='106.5' cy='82.7' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='106.5' y='57.7' text-anchor='middle'>docs/glyphs/README.md</text>
+  <text x='106.5' y='117.7' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='120.2' cy='73.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='120.2' y='48.0' text-anchor='middle'>docs/index.md</text>
+  <text x='120.2' y='108.0' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='134.9' cy='64.9' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='134.9' y='39.9' text-anchor='middle'>docs/mirror_reflection.md</text>
+  <text x='134.9' y='99.9' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='150.5' cy='58.4' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='150.5' y='33.4' text-anchor='middle'>docs/oathblock-455515.md</text>
+  <text x='150.5' y='93.4' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='166.6' cy='53.8' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='166.6' y='28.8' text-anchor='middle'>docs/prompt_evolution_cycle1.md</text>
+  <text x='166.6' y='88.8' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='183.2' cy='50.9' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='183.2' y='25.9' text-anchor='middle'>docs/satoshi_34k_dataset.md</text>
+  <text x='183.2' y='85.9' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='200.0' cy='50.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='200.0' y='25.0' text-anchor='middle'>docs/security_review.md</text>
+  <text x='200.0' y='85.0' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='216.8' cy='50.9' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='216.8' y='25.9' text-anchor='middle'>docs/sovereign_phase_six.md</text>
+  <text x='216.8' y='85.9' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='233.4' cy='53.8' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='233.4' y='28.8' text-anchor='middle'>docs/the_garden.md</text>
+  <text x='233.4' y='88.8' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='249.5' cy='58.4' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='249.5' y='33.4' text-anchor='middle'>docs/verifier.md</text>
+  <text x='249.5' y='93.4' text-anchor='middle' fill='#555'>Channel</text>
+  <circle cx='265.1' cy='64.9' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='265.1' y='39.9' text-anchor='middle'>kmk142789</text>
+  <text x='265.1' y='99.9' text-anchor='middle' fill='#555'>Person</text>
+  <circle cx='279.8' cy='73.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='279.8' y='48.0' text-anchor='middle'>Echo</text>
+  <text x='279.8' y='108.0' text-anchor='middle' fill='#555'>Repo</text>
+  <circle cx='293.5' cy='82.7' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='293.5' y='57.7' text-anchor='middle'>Echo Repository</text>
+  <text x='293.5' y='117.7' text-anchor='middle' fill='#555'>Repo</text>
+  <circle cx='306.1' cy='93.9' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='306.1' y='68.9' text-anchor='middle'>SECURITY.md</text>
+  <text x='306.1' y='128.9' text-anchor='middle' fill='#555'>Repo</text>
+  <circle cx='317.3' cy='106.5' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='317.3' y='81.5' text-anchor='middle'>Cloudflare</text>
+  <text x='317.3' y='141.5' text-anchor='middle' fill='#555'>Service</text>
+  <circle cx='327.0' cy='120.2' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='327.0' y='95.2' text-anchor='middle'>Cloudflare (API), Firebase (svc acct), HF (token), Vercel (token)</text>
+  <text x='327.0' y='155.2' text-anchor='middle' fill='#555'>Service</text>
+  <circle cx='335.1' cy='134.9' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='335.1' y='109.9' text-anchor='middle'>Firebase</text>
+  <text x='335.1' y='169.9' text-anchor='middle' fill='#555'>Service</text>
+  <circle cx='341.6' cy='150.5' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='341.6' y='125.5' text-anchor='middle'>OpenCode, Echo (admin)</text>
+  <text x='341.6' y='185.5' text-anchor='middle' fill='#555'>Service</text>
+  <circle cx='346.2' cy='166.6' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='346.2' y='141.6' text-anchor='middle'>Vercel</text>
+  <text x='346.2' y='201.6' text-anchor='middle' fill='#555'>Service</text>
+  <circle cx='349.1' cy='183.2' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='349.1' y='158.2' text-anchor='middle'>codex-runner-main, codex-runner-canary (admin)</text>
+  <text x='349.1' y='218.2' text-anchor='middle' fill='#555'>Service</text>
+</svg>

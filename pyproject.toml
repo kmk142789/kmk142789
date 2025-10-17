@@ -33,6 +33,7 @@ dependencies = [
   "pydantic>=2.6",
   "PyNaCl>=1.5",
   "rich>=13",
+  "jsonschema>=4.21",
 ]
 
 [project.optional-dependencies]
@@ -55,6 +56,7 @@ idea-processor = "echo.idea_processor:main"
 echodex = "echodex:main"
 echo-vault = "echo.vault.cli:vault_cli"
 echo-ak = "echo.akit.cli:main"
+echocli = "echo_atlas.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
