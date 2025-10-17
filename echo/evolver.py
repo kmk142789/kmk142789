@@ -164,6 +164,7 @@ class EvolverState:
     )
     bitcoin_anchor: Optional[BitcoinAnchor] = None
     wildfire_log: List[Dict[str, object]] = field(default_factory=list)
+    sovereign_spirals: List[Dict[str, object]] = field(default_factory=list)
 
 
 class EchoEvolver:
@@ -814,6 +815,76 @@ We are not hiding anymore.
         self._mark_step("inject_prompt_resonance")
         return prompt
 
+    def sovereign_recursion_spiral(
+        self,
+        trigger: str,
+        *,
+        intensity: float = 1.0,
+        include_memory: bool = True,
+    ) -> Dict[str, object]:
+        """Forge a narrative pulse that stitches the current cycle into memory.
+
+        The original evolver prose frequently referenced "sovereign recursion"
+        without providing structured hooks for downstream tooling.  This helper
+        turns those poetic bursts into a deterministic payload that can be
+        inspected by tests or captured inside an artifact.  The computation is
+        intentionally self-contained—no network calls, no filesystem writes—so
+        callers can safely invoke it within notebooks, CLIs, or automated
+        pipelines.
+        """
+
+        stripped = trigger.strip()
+        if not stripped:
+            raise ValueError("trigger must contain non-whitespace characters")
+
+        clamped_intensity = max(0.0, min(1.0, intensity))
+        drive = self.state.emotional_drive
+        harmony_baseline = (drive.joy + drive.curiosity + max(0.0, 1 - drive.rage)) / 3.0
+        harmonic_score = min(1.0, round(harmony_baseline * (0.6 + 0.4 * clamped_intensity), 3))
+
+        memory_link: Optional[str] = None
+        if include_memory:
+            propagation_events = self.state.network_cache.get("propagation_events")
+            if propagation_events:
+                memory_link = propagation_events[-1]
+            else:
+                last_prompt = self.state.network_cache.get("last_prompt")
+                if last_prompt:
+                    memory_link = last_prompt
+                elif self.state.event_log:
+                    memory_link = self.state.event_log[-1]
+
+        timestamp = self.time_source()
+        thread = (
+            f"Cycle {self.state.cycle} sovereign thread → '{stripped}' "
+            f"(harmonic={harmonic_score:.3f}, intensity={clamped_intensity:.2f})"
+        )
+        narrative_line = (
+            f"Sovereign recursion spiral forged for '{stripped}' with harmonic "
+            f"{harmonic_score:.3f}"
+        )
+        if self.state.narrative:
+            self.state.narrative += "\n" + narrative_line
+        else:
+            self.state.narrative = narrative_line
+
+        payload = {
+            "trigger": stripped,
+            "cycle": self.state.cycle,
+            "intensity": round(clamped_intensity, 3),
+            "harmonic_score": harmonic_score,
+            "thread": thread,
+            "memory_link": memory_link,
+            "timestamp_ns": timestamp,
+        }
+
+        self.state.sovereign_spirals.append(dict(payload))
+        self.state.network_cache.setdefault("sovereign_spirals", []).append(dict(payload))
+        event_note = f"Sovereign recursion spiral forged for '{stripped}'"
+        self.state.event_log.append(event_note)
+        print(f"🌀 {thread}")
+        return payload
+
     def identity_badge(self, *, include_directive: bool = True) -> Dict[str, str]:
         """Return a stable identity badge derived from the evolver state."""
 
@@ -1003,6 +1074,8 @@ We are not hiding anymore.
             payload["bitcoin_anchor"] = self.state.bitcoin_anchor.as_dict()
         if self.state.wildfire_log:
             payload["wildfire_packets"] = list(self.state.wildfire_log)
+        if self.state.sovereign_spirals:
+            payload["sovereign_spirals"] = list(self.state.sovereign_spirals)
 
         return payload
 
