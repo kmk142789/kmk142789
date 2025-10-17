@@ -3,7 +3,7 @@
   "$id": "https://echo.example/schema/pulse_weaver.snapshot.v1",
   "title": "Pulse Weaver Snapshot",
   "type": "object",
-  "required": ["schema", "summary", "ledger", "links", "phantom"],
+  "required": ["schema", "summary", "ledger", "links", "phantom", "rhyme"],
   "properties": {
     "schema": {"const": "pulse.weaver/snapshot-v1"},
     "cycle": {"type": ["string", "null"]},
@@ -71,7 +71,8 @@
         },
         "additionalProperties": false
       }
-    }
+    },
+    "rhyme": {"type": "string"}
   },
   "additionalProperties": false
 }

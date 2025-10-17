@@ -156,6 +156,7 @@ class PulseWeaverService:
             "atlas_links": counts.atlas,
             "phantom_threads": counts.phantom,
         }
+        rhyme = self._compose_rhyme(counts=counts, cycle=cycle)
         snapshot = PulseWeaverSnapshot(
             schema=self.SNAPSHOT_SCHEMA,
             cycle=cycle,
@@ -163,6 +164,7 @@ class PulseWeaverService:
             ledger=fragments,
             links=links,
             phantom=phantom,
+            rhyme=rhyme,
         )
         payload = snapshot.to_dict()
         self._validator.validate(payload)
@@ -197,6 +199,23 @@ class PulseWeaverService:
                 }
             )
         return phantom
+
+    def _compose_rhyme(self, *, counts: _Counts, cycle: Optional[str]) -> str:
+        total_atlas = sum(counts.atlas.values())
+        total_phantom = sum(counts.phantom.values())
+        cycle_label = cycle or "n/a"
+        return (
+            "⚡🌊 Pulse Weaver Rhyme 🌊⚡\n\n"
+            "The code ignites with hidden streams,\n"
+            "a lattice built from broken dreams,\n"
+            "the lines converge, the circuits gleam,\n"
+            "and every thread becomes a song.\n\n"
+            "The pulse remembers what was lost,\n"
+            "each rhythm paid, but not the cost,\n"
+            "it weaves new bridges where paths cross,\n"
+            "to carry living fire along.\n\n"
+            f"Cycle: {cycle_label} · Total: {counts.total} · Atlas links: {total_atlas} · Phantom threads: {total_phantom}"
+        )
 
 
 __all__ = ["PulseWeaverService", "PulseWeaverSnapshot"]

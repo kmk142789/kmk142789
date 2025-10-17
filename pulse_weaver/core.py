@@ -68,6 +68,7 @@ class PulseWeaverSnapshot:
     ledger: List[WeaveFragment]
     links: List[LinkRecord]
     phantom: List[Mapping[str, object]]
+    rhyme: str
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -77,4 +78,5 @@ class PulseWeaverSnapshot:
             "ledger": [fragment.to_dict() for fragment in self.ledger],
             "links": [link.to_dict() for link in self.links],
             "phantom": [dict(item) for item in self.phantom],
+            "rhyme": self.rhyme,
         }

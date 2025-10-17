@@ -51,3 +51,5 @@ def test_service_records_and_snapshot(tmp_path: Path) -> None:
     assert {"key-1", "key-2"} <= ledger_keys
     success_entry = next(entry for entry in payload["ledger"] if entry["key"] == "key-2")
     assert success_entry["proof"] == "success-proof"
+    assert "Pulse Weaver Rhyme" in payload["rhyme"]
+    assert "Total: 2" in payload["rhyme"]
