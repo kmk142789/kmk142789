@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { agentLoop } from './lib/agent.js';
 import { initializeMemory } from './lib/memory.js';
 import { initLLM } from './lib/llm.js';
+import { PHANTOMBOT_MODE } from './lib/modes.js';
 
 dotenv.config();
 
@@ -16,6 +17,10 @@ const PORT = process.env.PORT || 3000;
 
 app.get('/', (_req, res) => {
   res.send('🧠 Grimoire-1 Universal Agent running...');
+});
+
+app.get('/modes/phantombot', (_req, res) => {
+  res.json(PHANTOMBOT_MODE);
 });
 
 app.post('/tick', async (req, res) => {
