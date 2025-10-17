@@ -326,12 +326,20 @@ class AmplificationEngine:
             # No-op hook retained for symmetry; reserved for future use.
             pass
 
-    def after_cycle(self, state: object, *, expected_steps: int) -> Tuple[AmplifySnapshot, List[str]]:
+    def project_cycle(
+        self, state: object, *, expected_steps: int
+    ) -> Tuple[AmplifySnapshot, List[str]]:
+        """Return a projected snapshot without mutating persistent artefacts."""
+
         history = self.load_history()
         previous = history[-1] if history else None
         amplify_state = AmplifyState.from_evolver(state, expected_steps=expected_steps)
         snapshot = self.build_snapshot(amplify_state, previous=previous)
         nudges = self._generate_nudges(snapshot.metrics)
+        return snapshot, nudges
+
+    def after_cycle(self, state: object, *, expected_steps: int) -> Tuple[AmplifySnapshot, List[str]]:
+        snapshot, nudges = self.project_cycle(state, expected_steps=expected_steps)
         self.persist_snapshot(snapshot)
         self.update_manifest(snapshot)
         return snapshot, nudges
