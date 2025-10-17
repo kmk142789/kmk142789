@@ -220,6 +220,28 @@ class EchoEvolver:
 
         return sequence
 
+    def describe_sequence(self, *, persist_artifact: bool = True) -> str:
+        """Return a human-readable description of the upcoming ritual steps."""
+
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
+        completed: set[str] = self.state.network_cache.setdefault("completed_steps", set())
+
+        header = "EchoEvolver cycle sequence (persist_artifact={})".format(
+            str(persist_artifact).lower()
+        )
+        lines = [header, "-" * len(header)]
+
+        for index, (step, description) in enumerate(sequence, start=1):
+            status = "completed" if step in completed else "pending"
+            lines.append(f"{index:02d}. {step} [{status}] - {description}")
+
+        summary = "\n".join(lines)
+        self.state.network_cache["sequence_description"] = summary
+        self.state.event_log.append(
+            f"Cycle {self.state.cycle} sequence described ({len(sequence)} steps)"
+        )
+        return summary
+
     def __init__(
         self,
         *,
@@ -1786,10 +1808,18 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         help="Skip writing the cycle artifact to disk for the run.",
     )
     parser.set_defaults(persist_artifact=True)
+    parser.add_argument(
+        "--show-sequence",
+        action="store_true",
+        help="Display the ordered list of ritual steps and exit without running a cycle.",
+    )
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     evolver = EchoEvolver()
+    if args.show_sequence:
+        print(evolver.describe_sequence(persist_artifact=args.persist_artifact))
+        return 0
     if args.enable_network:
         print(
             "⚠️ Live network mode is symbolic only; the propagation step remains a"
