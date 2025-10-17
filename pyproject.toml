@@ -79,3 +79,6 @@ py-modules = [
   "proofs/*",
   "code/*",
 ]
+
+[tool.setuptools.package-data]
+"echo.vault" = ["_authority_data.json"]
