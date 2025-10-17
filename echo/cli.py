@@ -13,6 +13,8 @@ import json
 from pathlib import Path
 from typing import Iterable, List
 
+from pulse_weaver.cli import register_subcommand as register_pulse_weaver
+
 from .amplify import AmplificationEngine, AmplifyState
 from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
 from .tools.forecast import project_indices, sparkline
@@ -158,6 +160,8 @@ def main(argv: Iterable[str] | None = None) -> int:
         description="Echo compatibility CLI (delegates to echo.manifest_cli)",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    register_pulse_weaver(subparsers)
 
     refresh_parser = subparsers.add_parser("manifest-refresh", help="Refresh manifest")
     refresh_parser.add_argument("--path", type=Path, help="Optional manifest path")

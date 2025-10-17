@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.example/schema/pulse_weaver.snapshot.v1",
+  "title": "Pulse Weaver Snapshot",
+  "type": "object",
+  "required": ["schema", "summary", "ledger", "links", "phantom"],
+  "properties": {
+    "schema": {"const": "pulse.weaver/snapshot-v1"},
+    "cycle": {"type": ["string", "null"]},
+    "summary": {
+      "type": "object",
+      "required": ["total", "by_status", "atlas_links", "phantom_threads"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "by_status": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "atlas_links": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "phantom_threads": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        }
+      },
+      "additionalProperties": false
+    },
+    "ledger": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "status", "message", "cycle", "created_at"],
+        "properties": {
+          "key": {"type": "string"},
+          "status": {"type": "string"},
+          "message": {"type": "string"},
+          "cycle": {"type": "string"},
+          "created_at": {"type": "string"},
+          "proof": {"type": "string"},
+          "echo": {"type": "string"},
+          "metadata": {"type": "object"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "created_at"],
+        "properties": {
+          "key": {"type": "string"},
+          "atlas_node": {"type": "string"},
+          "phantom_trace": {"type": "string"},
+          "created_at": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "phantom": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "message", "hash"],
+        "properties": {
+          "timestamp": {"type": "number"},
+          "message": {"type": "string"},
+          "hash": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
