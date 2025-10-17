@@ -19,6 +19,10 @@
     "@unstoppabledomains/resolution": "^9.3.3",
     "bech32": "^2.0.0",
     "bs58check": "^4.0.0",
-    "noble-secp256k1": "^1.2.14"
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "noble-secp256k1": "^1.2.14",
+    "node-fetch": "^3.3.2"
   }
 }
