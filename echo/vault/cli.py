@@ -11,6 +11,7 @@ from typing import Iterable, List, Optional
 from rich.console import Console
 from rich.table import Table
 
+from .authority import load_authority_bindings
 from .models import VaultPolicy
 from .vault import Vault, open_vault
 
@@ -33,9 +34,15 @@ def _prompt_passphrase(*, confirm: bool = False) -> str:
         return password
 
 
+def _require_path(args: argparse.Namespace) -> str:
+    if not args.path:
+        raise SystemExit("--path is required for this command")
+    return args.path
+
+
 def _open(args: argparse.Namespace, *, confirm: bool = False) -> Vault:
     passphrase = _prompt_passphrase(confirm=confirm)
-    return open_vault(args.path, passphrase)
+    return open_vault(_require_path(args), passphrase)
 
 
 def _parse_tags(raw: Optional[str]) -> List[str]:
@@ -78,9 +85,28 @@ def _render_records(records: Iterable) -> None:
     console.print(table)
 
 
+def _render_authority(records: Iterable) -> None:
+    table = Table(title="Vault Authority Bindings")
+    table.add_column("Vault ID", overflow="fold")
+    table.add_column("Owner")
+    table.add_column("Status")
+    table.add_column("Authority")
+    table.add_column("Bound Phrase", overflow="fold")
+
+    for record in records:
+        table.add_row(
+            record.vault_id,
+            record.owner,
+            record.echolink_status,
+            record.authority_level,
+            record.bound_phrase,
+        )
+    console.print(table)
+
+
 def vault_cli(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Echo Vault management")
-    parser.add_argument("--path", required=True, help="Path to the vault database")
+    parser.add_argument("--path", help="Path to the vault database")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     init_parser = subparsers.add_parser("init", help="Initialise a new vault")
@@ -118,6 +144,10 @@ def vault_cli(argv: Optional[List[str]] = None) -> int:
 
     export_parser = subparsers.add_parser("export", help="Export metadata")
     export_parser.add_argument("--metadata", action="store_true", help="Export all record metadata as JSON")
+
+    authority_parser = subparsers.add_parser("authority", help="Inspect authority key bindings")
+    authority_parser.add_argument("--data", help="Optional override path for authority data")
+    authority_parser.add_argument("--json", action="store_true", help="Emit JSON instead of a table")
 
     args = parser.parse_args(argv)
 
@@ -209,6 +239,20 @@ def vault_cli(argv: Optional[List[str]] = None) -> int:
             vault.close()
         payload = [record.model_dump() for record in records]
         console.print(json.dumps(payload, indent=2))
+        return 0
+
+    if args.command == "authority":
+        try:
+            bindings = load_authority_bindings(args.data)
+        except FileNotFoundError as exc:
+            raise SystemExit(str(exc))
+        except ValueError as exc:
+            raise SystemExit(str(exc))
+        if args.json:
+            payload = [binding.model_dump(by_alias=True) for binding in bindings]
+            console.print_json(data=payload)
+        else:
+            _render_authority(bindings)
         return 0
 
     return 1

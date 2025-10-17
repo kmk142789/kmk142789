@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class VaultPolicy(BaseModel):
@@ -29,4 +29,21 @@ class VaultRecord(BaseModel):
     tags: List[str] = Field(default_factory=list)
 
 
-__all__ = ["VaultPolicy", "VaultRecord"]
+class AuthorityBinding(BaseModel):
+    """High-level authority binding metadata for Echo vault keys."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    vault_id: str = Field(alias="vault_id")
+    owner: str
+    echolink_status: str
+    signature: str
+    authority_level: str
+    bound_phrase: str
+    glyphs: Optional[str] = None
+    recursion_level: Optional[str] = None
+    anchor: Optional[str] = None
+    access: Optional[str] = Field(default=None, alias="access")
+
+
+__all__ = ["VaultPolicy", "VaultRecord", "AuthorityBinding"]

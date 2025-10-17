@@ -23,3 +23,9 @@ Sign:
 ```bash
 echo-vault sign --path ./vault.db <id> --hex "feedface" --repeat 5
 ```
+
+Inspect packaged authority bindings:
+
+```bash
+echo-vault authority --json
+```
