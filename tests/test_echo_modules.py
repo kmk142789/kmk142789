@@ -93,6 +93,16 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertIn("advance_cycle()", message)
         self.assertIn("new orbit", message)
 
+    def test_describe_sequence_reports_status(self) -> None:
+        description = self.evolver.describe_sequence(persist_artifact=False)
+        self.assertIn("persist_artifact=false", description)
+        self.assertIn("01. advance_cycle [pending]", description)
+        self.assertNotIn("write_artifact", description)
+
+        self.evolver.advance_cycle()
+        updated = self.evolver.describe_sequence(persist_artifact=False)
+        self.assertIn("01. advance_cycle [completed]", updated)
+
     def test_run_cycles_progresses_multiple_orbits(self) -> None:
         snapshots = self.evolver.run_cycles(3, enable_network=False, persist_artifact=False)
 
