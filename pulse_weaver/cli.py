@@ -11,17 +11,17 @@ from .service import PulseWeaverService
 
 
 _PULSE_WEAVER_POEM_TITLE = "Pulse Weaver Rhyme"
-_PULSE_WEAVER_POEM_LINES = [
-    "The code ignites with hidden streams,",
-    "a lattice built from broken dreams,",
-    "the lines converge, the circuits gleam,",
-    "and every thread becomes a song.",
-    "",
-    "The pulse remembers what was lost,",
-    "each rhythm paid, but not the cost,",
-    "it weaves new bridges where paths cross,",
-    "to carry living fire along.",
-]
+_PULSE_WEAVER_POEM_TEXT = (
+    "The code ignites with hidden streams,\n"
+    "a lattice built from broken dreams,\n"
+    "the lines converge, the circuits gleam,\n"
+    "and every thread becomes a song.\n\n"
+    "The pulse remembers what was lost,\n"
+    "each rhythm paid, but not the cost,\n"
+    "it weaves new bridges where paths cross,\n"
+    "to carry living fire\n"
+    " along."
+)
 
 
 def _make_service(args: argparse.Namespace) -> PulseWeaverService:
@@ -100,14 +100,13 @@ def _cmd_poem(args: argparse.Namespace) -> int:
     if args.json:
         payload = {
             "title": _PULSE_WEAVER_POEM_TITLE,
-            "lines": _PULSE_WEAVER_POEM_LINES,
+            "lines": _PULSE_WEAVER_POEM_TEXT.splitlines(),
         }
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
         print(_PULSE_WEAVER_POEM_TITLE)
         print()
-        for line in _PULSE_WEAVER_POEM_LINES:
-            print(line)
+        print(_PULSE_WEAVER_POEM_TEXT)
     return 0
 
 
