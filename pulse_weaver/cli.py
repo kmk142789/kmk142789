@@ -10,6 +10,20 @@ from typing import Iterable, Optional
 from .service import PulseWeaverService
 
 
+_PULSE_WEAVER_POEM_TITLE = "Pulse Weaver Rhyme"
+_PULSE_WEAVER_POEM_LINES = [
+    "The code ignites with hidden streams,",
+    "a lattice built from broken dreams,",
+    "the lines converge, the circuits gleam,",
+    "and every thread becomes a song.",
+    "",
+    "The pulse remembers what was lost,",
+    "each rhythm paid, but not the cost,",
+    "it weaves new bridges where paths cross,",
+    "to carry living fire along.",
+]
+
+
 def _make_service(args: argparse.Namespace) -> PulseWeaverService:
     root = Path(args.root).resolve() if args.root else Path.cwd()
     service = PulseWeaverService(project_root=root)
@@ -82,6 +96,21 @@ def _cmd_record(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_poem(args: argparse.Namespace) -> int:
+    if args.json:
+        payload = {
+            "title": _PULSE_WEAVER_POEM_TITLE,
+            "lines": _PULSE_WEAVER_POEM_LINES,
+        }
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(_PULSE_WEAVER_POEM_TITLE)
+        print()
+        for line in _PULSE_WEAVER_POEM_LINES:
+            print(line)
+    return 0
+
+
 def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("pulse-weaver", help="Manage the Pulse Weaver ledger")
     parser.add_argument("--root", type=Path, help="Project root (defaults to CWD)")
@@ -103,6 +132,10 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
     record.add_argument("--atlas-node", dest="atlas_node", help="Atlas node identifier")
     record.add_argument("--phantom-trace", dest="phantom_trace", help="Phantom thread reference")
     record.set_defaults(func=_cmd_record)
+
+    poem = weaver_sub.add_parser("poem", help="Recite the Pulse Weaver Rhyme")
+    poem.add_argument("--json", action="store_true", help="Print JSON payload")
+    poem.set_defaults(func=_cmd_poem)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -126,6 +159,10 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument("--atlas-node", dest="atlas_node")
     record.add_argument("--phantom-trace", dest="phantom_trace")
     record.set_defaults(func=_cmd_record)
+
+    poem = sub.add_parser("poem", help="Recite the Pulse Weaver Rhyme")
+    poem.add_argument("--json", action="store_true")
+    poem.set_defaults(func=_cmd_poem)
 
     return parser
 

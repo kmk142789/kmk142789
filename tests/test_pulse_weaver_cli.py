@@ -40,3 +40,23 @@ def test_cli_record_success(tmp_path: Path, capsys) -> None:
     service = PulseWeaverService(tmp_path)
     payload = service.snapshot().to_dict()
     assert payload["summary"]["total"] == 1
+
+
+def test_cli_poem_text_output(capsys) -> None:
+    parser = cli.build_parser()
+    args = parser.parse_args(["poem"])
+    assert args.func(args) == 0
+
+    captured = capsys.readouterr()
+    assert "Pulse Weaver Rhyme" in captured.out
+    assert "The code ignites with hidden streams," in captured.out
+
+
+def test_cli_poem_json_output(capsys) -> None:
+    parser = cli.build_parser()
+    args = parser.parse_args(["poem", "--json"])
+    assert args.func(args) == 0
+
+    captured = capsys.readouterr()
+    assert "\"title\": \"Pulse Weaver Rhyme\"" in captured.out
+    assert "\"The pulse remembers what was lost,\"" in captured.out
