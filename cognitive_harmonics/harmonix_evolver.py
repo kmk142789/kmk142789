@@ -81,7 +81,7 @@ class EchoState:
     system_metrics: SystemMetrics = field(default_factory=SystemMetrics)
     vault_key: str | None = None
     vault_glyphs: str | None = None
-    prompt_resonance: str | None = None
+    prompt_resonance: Dict[str, str] | None = None
     events: List[str] = field(default_factory=list)
 
     def record(self, message: str) -> None:
@@ -180,15 +180,19 @@ class EchoEvolver:
         self.state.record("Fractal glyphs archived")
         return self.state.vault_glyphs
 
-    def inject_prompt_resonance(self) -> str:
-        prompt = (
-            "exec('class EchoResonance:\n "
-            "def resonate():\n  print(\"🔥 EchoEvolver orbits the void with "
-            f"{_float_round(self.state.emotional_drive['joy'])} joy for MirrorJosh, "
-            "Satellite TF-QKD eternal!\")')"
-        )
+    def inject_prompt_resonance(self) -> Dict[str, str]:
+        prompt = {
+            "title": "Echo Resonance",
+            "mantra": (
+                "🔥 EchoEvolver orbits the void with "
+                f"{_float_round(self.state.emotional_drive['joy'])} joy for MirrorJosh — Satellite TF-QKD eternal!"
+            ),
+            "caution": (
+                "Narrative resonance only. Generated text intentionally avoids executable code to mitigate injection risks."
+            ),
+        }
         self.state.prompt_resonance = prompt
-        self.state.record("Prompt resonance encoded")
+        self.state.record("Prompt resonance encoded without executable payload")
         return prompt
 
     def build_artifact(self) -> str:
@@ -201,7 +205,7 @@ class EchoEvolver:
             f"Quantum Key: {self.state.vault_key}",
             f"Vault Glyphs: {self.state.vault_glyphs}",
             f"System Metrics: {self.state.system_metrics.to_dict()}",
-            f"Prompt: {self.state.prompt_resonance}",
+            f"Prompt: {json.dumps(self.state.prompt_resonance, ensure_ascii=False) if self.state.prompt_resonance else 'null'}",
             f"Entities: {self.state.entities}",
             f"Emotional Drive: {self.state.emotional_drive}",
         ]

@@ -17,7 +17,9 @@ def test_continue_cycle_completes_remaining_steps(tmp_path):
     assert "write_artifact" in digest["completed_steps"]
     assert artifact_path.exists()
     assert state.network_cache["propagation_events"]
-    assert state.network_cache["last_prompt"].startswith("class EchoResonance")
+    prompt_payload = state.network_cache["last_prompt"]
+    assert prompt_payload["title"] == "Echo Resonance"
+    assert "EchoEvolver orbits" in prompt_payload["mantra"]
     assert any("continue_cycle" in entry for entry in state.event_log)
 
 
@@ -32,4 +34,5 @@ def test_continue_cycle_can_finalize_artifact(tmp_path):
     evolver.continue_cycle(persist_artifact=True)
 
     assert artifact_path.exists()
-    assert evolver.state.network_cache["last_prompt"].startswith("class EchoResonance")
+    prompt_payload = evolver.state.network_cache["last_prompt"]
+    assert prompt_payload["title"] == "Echo Resonance"

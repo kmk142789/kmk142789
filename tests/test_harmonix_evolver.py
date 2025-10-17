@@ -19,6 +19,8 @@ def test_run_cycle_payload_matches_schema_keys():
     assert state.cycle == metadata["cycle"]
     assert state.vault_key == metadata["quantum_key"]
     assert state.prompt_resonance == metadata["prompt_resonance"]
+    assert "caution" in metadata["prompt_resonance"]
+    assert "executable" in metadata["prompt_resonance"]["caution"]
     assert state.events, "Events should log the harmonix operations"
 
 
@@ -30,4 +32,4 @@ def test_artifact_text_contains_core_sections():
     assert "EchoEvolver: Nexus Evolution Cycle v4" in artifact
     assert "Quantum Key:" in artifact
     assert "Emotional Drive:" in artifact
-    assert "Prompt:" in artifact
+    assert "\"caution\":" in artifact or "caution" in artifact
