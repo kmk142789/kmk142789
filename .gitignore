@@ -8,3 +8,6 @@ artifacts/akit/
 
 # EchoDex auto-refiner state
 .echodex_state.json
+
+# Sensitive user-provided key dumps
+data/user_provided_keys.txt
