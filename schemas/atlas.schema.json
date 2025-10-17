@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.dev/schemas/atlas.schema.json",
+  "title": "Echo Atlas Graph",
+  "type": "object",
+  "required": ["nodes", "edges", "generated_at"],
+  "properties": {
+    "generated_at": {"type": "string", "format": "date-time"},
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "entity_type"],
+        "properties": {
+          "id": {"type": "string", "minLength": 4},
+          "name": {"type": "string", "minLength": 1},
+          "entity_type": {
+            "type": "string",
+            "enum": ["Person", "Bot", "Service", "Repo", "KeyRef", "Channel"]
+          },
+          "metadata": {"type": "object"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "target", "relation"],
+        "properties": {
+          "id": {"type": "string", "minLength": 4},
+          "source": {"type": "string", "minLength": 4},
+          "target": {"type": "string", "minLength": 4},
+          "relation": {
+            "type": "string",
+            "enum": [
+              "CONNECTS_TO",
+              "OWNS",
+              "OPERATES",
+              "DEPLOYS",
+              "TRUSTS",
+              "MENTIONS"
+            ]
+          },
+          "metadata": {"type": "object"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "change_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "change_type", "entity_id"],
+        "properties": {
+          "timestamp": {"type": "string", "format": "date-time"},
+          "change_type": {"type": "string"},
+          "entity_type": {"type": "string"},
+          "entity_id": {"type": "string"},
+          "payload": {"type": ["object", "null"]}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

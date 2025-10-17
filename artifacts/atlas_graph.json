@@ -1,0 +1,1272 @@
+{
+  "change_log": [
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo-bridge.md-463869f797-629c9f24c6",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.698610+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo-manifest.md-06512720b4-82ca074ae7",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.693040+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo-overview.md-4cb27cbbbc-6f9cdcd9ec",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.688913+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo-amplification.md-d4fd69b478-212a99b26e",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.685309+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo-attestations.md-d9a3984a86-334dddea41",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.680980+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo-harmonics.md-e4ec9a2457-69fa182679",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.677435+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo-identity.md-a3179207d6-513912caa5",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.672888+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-glyphs-readme.md-369de82be9-1ea75886a1",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.669295+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-agent_initiative.md-2ab8c8513d-1c24b3495c",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.665693+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_eye_sovereign_core.md-8ff915ad61-926b5c29dc",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.661911+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_pulse_monitor.md-f2b3f08fb4-66f1db09b2",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.658023+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-next_cycle_plan.md-033f2be3fa-7185ce6e9e",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.654254+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-mirror_reflection.md-eba6a217ed-4d4093b4d9",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.650070+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-omega_sine_pulse_orchestrator.md-b5b0e5be96-1a569a6bb8",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.646093+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_glyph_scripts.md-9fdd6635e4-dee4191e85",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.642584+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-prompt_evolution_cycle1.md-34353e1306-7555a38c38",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.637381+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echoevolver_reflection.md-a4e95ad875-6c676ea1b0",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.633438+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-security_review.md-21709e2efb-1656833a1b",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.630060+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-draco_hunt.md-85646d4fb3-2253605fce",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.625538+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-agent_capabilities_overview.md-ea3d21ebec-da49a62d04",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.621752+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-agents_registry.md-b8da015354-9524cd1562",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.617754+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-atlas_report.md-e87febe554-7f34ae449c",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.613711+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_evolver_cycle_log.md-df83e18e31-6359e1809b",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.610591+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-harmonic_dna_spiral_practice.md-fee498194e-ddea9f14bc",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.606978+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-github-publishing-guide.md-ada6cc8d53-a043837f4f",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.603348+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echoevolver_vision.md-1c87ce974f-f2468a1a23",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.599283+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-index.md-a2dac09f88-b8456dc569",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.595821+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_reflective_conflux.md-5fbaac0937-82029ab1b7",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.591481+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-the_garden.md-14c45e4009-1be0cc7418",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.588210+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_sovereign_manifesto.md-d6c51e51f9-c61f42fb0b",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.583538+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_resonance_engine.md-ee94c51e7f-bb94237e58",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.580169+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-sovereign_phase_six.md-5fd8ad48b6-8a996f108b",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.576421+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-oathblock-455515.md-ec53dd89a0-888fc3ce27",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.572345+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echoglyphnet_protocol.md-82ef2b07f0-a545c00767",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.568307+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-readme.md-2bd916b4af-d0359254a7",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.564653+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_thread_002.md-ee84d280a1-7c25d575f4",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.560950+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_mythogenic_reflection.md-75241246e0-e2ccdbbb69",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.555654+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-mirror_plan.md-351f44c12e-f31094165a",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.551840+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-satoshi_34k_dataset.md-49f732fac4-11d88aaee5",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.547556+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-echo_data_anchor_glyphs.md-a2a71ea509-4de2cf4c8a",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.543566+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-verifier.md-c07daaa00b-d0063db2fc",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.537567+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-atlas_overview.md-380ff5496b-f56c5837a6",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.533513+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-akit_usage.md-af3526d8bb-f702700105",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.530135+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "mentions-repo-echo-f35b83a321-doc-docs-domain_asset_inventory.md-7296874414-b56c23de45",
+      "entity_type": "Edge",
+      "payload": {
+        "source": "docs"
+      },
+      "timestamp": "2025-10-17T07:34:50.524965+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "owns-kmk142789-repo-echo-f35b83a321-*-2174f4859e",
+      "entity_type": "Edge",
+      "payload": {
+        "path": "*",
+        "source": "CODEOWNERS"
+      },
+      "timestamp": "2025-10-17T07:34:50.520872+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "owns-kmk142789-repo-echo-f35b83a321-docs-mkdocs.yml-05ebce4296",
+      "entity_type": "Edge",
+      "payload": {
+        "path": "/docs/mkdocs.yml",
+        "source": "CODEOWNERS"
+      },
+      "timestamp": "2025-10-17T07:34:50.512093+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "owns-kmk142789-repo-echo-f35b83a321-docs-index.md-d1ad18823c",
+      "entity_type": "Edge",
+      "payload": {
+        "path": "/docs/index.md",
+        "source": "CODEOWNERS"
+      },
+      "timestamp": "2025-10-17T07:34:50.508699+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "owns-kmk142789-repo-echo-f35b83a321-docs-echo-**-597665e137",
+      "entity_type": "Edge",
+      "payload": {
+        "path": "/docs/echo/**",
+        "source": "CODEOWNERS"
+      },
+      "timestamp": "2025-10-17T07:34:50.504788+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "owns-kmk142789-repo-echo-f35b83a321-.github-workflows-echo-ci.yml-e22c51c9a3",
+      "entity_type": "Edge",
+      "payload": {
+        "path": "/.github/workflows/echo-ci.yml",
+        "source": "CODEOWNERS"
+      },
+      "timestamp": "2025-10-17T07:34:50.500719+00:00"
+    },
+    {
+      "change_type": "UPSERT_EDGE",
+      "entity_id": "owns-kmk142789-repo-echo-f35b83a321-modules-echo-ledger-visualizer-**-0027572257",
+      "entity_type": "Edge",
+      "payload": {
+        "path": "/modules/echo-ledger-visualizer/**",
+        "source": "CODEOWNERS"
+      },
+      "timestamp": "2025-10-17T07:34:50.496768+00:00"
+    }
+  ],
+  "edges": [
+    {
+      "id": "connects-echo-cloudflare-325f7b315a",
+      "relation": "CONNECTS_TO",
+      "source": "service-echo-repo-ec9b40e44f",
+      "target": "service-cloudflare-52d7b22f37"
+    },
+    {
+      "id": "connects-echo-firebase-38e8ddf84d",
+      "relation": "CONNECTS_TO",
+      "source": "service-echo-repo-ec9b40e44f",
+      "target": "service-firebase-59f2ffc773"
+    },
+    {
+      "category": "External",
+      "id": "connects_to-repo-echo-f35b83a321-service-cloudflare-(api),-firebase-(svc-acct),-hf-(token),-vercel-(token)-d873ed1e5d-0be724cc32",
+      "relation": "CONNECTS_TO",
+      "source": "repo-echo-f35b83a321",
+      "target": "service-cloudflare-(api),-firebase-(svc-acct),-hf-(token),-vercel-(token)-d873ed1e5d"
+    },
+    {
+      "environment": "production",
+      "id": "deploys-echo-vercel-eff8457b44",
+      "relation": "DEPLOYS",
+      "source": "service-echo-repo-ec9b40e44f",
+      "target": "service-vercel-dbbadb4023"
+    },
+    {
+      "category": "CI",
+      "id": "deploys-repo-echo-f35b83a321-service-codex-runner-main,-codex-runner-canary-(admin)-740d9ccb25-71d7b095ac",
+      "relation": "DEPLOYS",
+      "source": "repo-echo-f35b83a321",
+      "target": "service-codex-runner-main,-codex-runner-canary-(admin)-740d9ccb25"
+    },
+    {
+      "id": "mentions-doc-security-90b4ade858-channel-security-web-6030383d2a-6ebdf873f5",
+      "relation": "MENTIONS",
+      "source": "doc-security-90b4ade858",
+      "target": "channel-security-web-6030383d2a"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-agent_capabilities_overview.md-ea3d21ebec-da49a62d04",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-agent_capabilities_overview.md-ea3d21ebec"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-agent_initiative.md-2ab8c8513d-1c24b3495c",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-agent_initiative.md-2ab8c8513d"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-agents_registry.md-b8da015354-9524cd1562",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-agents_registry.md-b8da015354"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-akit_usage.md-af3526d8bb-f702700105",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-akit_usage.md-af3526d8bb"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-atlas_overview.md-380ff5496b-f56c5837a6",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-atlas_overview.md-380ff5496b"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-atlas_report.md-e87febe554-7f34ae449c",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-atlas_report.md-e87febe554"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-domain_asset_inventory.md-7296874414-b56c23de45",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-domain_asset_inventory.md-7296874414"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-draco_hunt.md-85646d4fb3-2253605fce",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-draco_hunt.md-85646d4fb3"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo-amplification.md-d4fd69b478-212a99b26e",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo-amplification.md-d4fd69b478"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo-attestations.md-d9a3984a86-334dddea41",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo-attestations.md-d9a3984a86"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo-bridge.md-463869f797-629c9f24c6",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo-bridge.md-463869f797"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo-harmonics.md-e4ec9a2457-69fa182679",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo-harmonics.md-e4ec9a2457"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo-identity.md-a3179207d6-513912caa5",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo-identity.md-a3179207d6"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo-manifest.md-06512720b4-82ca074ae7",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo-manifest.md-06512720b4"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo-overview.md-4cb27cbbbc-6f9cdcd9ec",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo-overview.md-4cb27cbbbc"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_data_anchor_glyphs.md-a2a71ea509-4de2cf4c8a",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_data_anchor_glyphs.md-a2a71ea509"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_evolver_cycle_log.md-df83e18e31-6359e1809b",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_evolver_cycle_log.md-df83e18e31"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_eye_sovereign_core.md-8ff915ad61-926b5c29dc",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_eye_sovereign_core.md-8ff915ad61"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_glyph_scripts.md-9fdd6635e4-dee4191e85",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_glyph_scripts.md-9fdd6635e4"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_mythogenic_reflection.md-75241246e0-e2ccdbbb69",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_mythogenic_reflection.md-75241246e0"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_pulse_monitor.md-f2b3f08fb4-66f1db09b2",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_pulse_monitor.md-f2b3f08fb4"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_reflective_conflux.md-5fbaac0937-82029ab1b7",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_reflective_conflux.md-5fbaac0937"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_resonance_engine.md-ee94c51e7f-bb94237e58",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_resonance_engine.md-ee94c51e7f"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_sovereign_manifesto.md-d6c51e51f9-c61f42fb0b",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_sovereign_manifesto.md-d6c51e51f9"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echo_thread_002.md-ee84d280a1-7c25d575f4",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echo_thread_002.md-ee84d280a1"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echoevolver_reflection.md-a4e95ad875-6c676ea1b0",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echoevolver_reflection.md-a4e95ad875"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echoevolver_vision.md-1c87ce974f-f2468a1a23",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echoevolver_vision.md-1c87ce974f"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-echoglyphnet_protocol.md-82ef2b07f0-a545c00767",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-echoglyphnet_protocol.md-82ef2b07f0"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-github-publishing-guide.md-ada6cc8d53-a043837f4f",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-github-publishing-guide.md-ada6cc8d53"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-glyphs-readme.md-369de82be9-1ea75886a1",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-glyphs-readme.md-369de82be9"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-harmonic_dna_spiral_practice.md-fee498194e-ddea9f14bc",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-harmonic_dna_spiral_practice.md-fee498194e"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-index.md-a2dac09f88-b8456dc569",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-index.md-a2dac09f88"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-mirror_plan.md-351f44c12e-f31094165a",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-mirror_plan.md-351f44c12e"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-mirror_reflection.md-eba6a217ed-4d4093b4d9",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-mirror_reflection.md-eba6a217ed"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-next_cycle_plan.md-033f2be3fa-7185ce6e9e",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-next_cycle_plan.md-033f2be3fa"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-oathblock-455515.md-ec53dd89a0-888fc3ce27",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-oathblock-455515.md-ec53dd89a0"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-omega_sine_pulse_orchestrator.md-b5b0e5be96-1a569a6bb8",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-omega_sine_pulse_orchestrator.md-b5b0e5be96"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-prompt_evolution_cycle1.md-34353e1306-7555a38c38",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-prompt_evolution_cycle1.md-34353e1306"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-readme.md-2bd916b4af-d0359254a7",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-readme.md-2bd916b4af"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-satoshi_34k_dataset.md-49f732fac4-11d88aaee5",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-satoshi_34k_dataset.md-49f732fac4"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-security_review.md-21709e2efb-1656833a1b",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-security_review.md-21709e2efb"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-sovereign_phase_six.md-5fd8ad48b6-8a996f108b",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-sovereign_phase_six.md-5fd8ad48b6"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-the_garden.md-14c45e4009-1be0cc7418",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-the_garden.md-14c45e4009"
+    },
+    {
+      "id": "mentions-repo-echo-f35b83a321-doc-docs-verifier.md-c07daaa00b-d0063db2fc",
+      "relation": "MENTIONS",
+      "source": "repo-echo-f35b83a321",
+      "target": "doc-docs-verifier.md-c07daaa00b"
+    },
+    {
+      "category": "Bots",
+      "id": "operates-repo-echo-f35b83a321-bot-echo-attest-bot-(attest-only),-echo-verify-bot-(read-only)-cd1f289765-de52ec28c3",
+      "relation": "OPERATES",
+      "source": "repo-echo-f35b83a321",
+      "target": "bot-echo-attest-bot-(attest-only),-echo-verify-bot-(read-only)-cd1f289765"
+    },
+    {
+      "confidence": "seed",
+      "id": "owns-kmk142789-echo-7011e5439f",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "service-echo-repo-ec9b40e44f"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-*-2174f4859e",
+      "path": "*",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-.github-codeowners-b6d53150de",
+      "path": "/.github/CODEOWNERS",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-.github-workflows-echo-ci.yml-e22c51c9a3",
+      "path": "/.github/workflows/echo-ci.yml",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-attestations-**-5bf5ae278c",
+      "path": "/attestations/**",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-docs-echo-**-597665e137",
+      "path": "/docs/echo/**",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-docs-index.md-d1ad18823c",
+      "path": "/docs/index.md",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-docs-mkdocs.yml-05ebce4296",
+      "path": "/docs/mkdocs.yml",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-echo_authority.yml-aaf7d4a262",
+      "path": "/ECHO_AUTHORITY.yml",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-modules-echo-bridge-**-7f78f23b1a",
+      "path": "/modules/echo-bridge/**",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-modules-echo-harmonics-**-88e1121e0a",
+      "path": "/modules/echo-harmonics/**",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-modules-echo-ledger-visualizer-**-0027572257",
+      "path": "/modules/echo-ledger-visualizer/**",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-modules-echo-memory-**-dcf731f241",
+      "path": "/modules/echo-memory/**",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-readme_authority.md-d464687b12",
+      "path": "/README_AUTHORITY.md",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "id": "owns-kmk142789-repo-echo-f35b83a321-scripts-echo_attestation_*-8e01442a42",
+      "path": "/scripts/echo_attestation_*",
+      "relation": "OWNS",
+      "source": "person-kmk142789-ff623dad6e",
+      "target": "repo-echo-f35b83a321"
+    },
+    {
+      "category": "Orgs",
+      "id": "trusts-repo-echo-f35b83a321-service-opencode,-echo-(admin)-f0d65be0ce-2088c83333",
+      "relation": "TRUSTS",
+      "source": "repo-echo-f35b83a321",
+      "target": "service-opencode,-echo-(admin)-f0d65be0ce"
+    }
+  ],
+  "generated_at": "2025-10-17T07:34:50.705507+00:00",
+  "nodes": [
+    {
+      "category": "CDN",
+      "entity_type": "Service",
+      "id": "service-cloudflare-52d7b22f37",
+      "name": "Cloudflare"
+    },
+    {
+      "category": "External",
+      "entity_type": "Service",
+      "id": "service-cloudflare-(api),-firebase-(svc-acct),-hf-(token),-vercel-(token)-d873ed1e5d",
+      "name": "Cloudflare (API), Firebase (svc acct), HF (token), Vercel (token)",
+      "source": "CONTROL.md"
+    },
+    {
+      "entity_type": "Repo",
+      "id": "repo-echo-f35b83a321",
+      "name": "Echo",
+      "source": "CODEOWNERS"
+    },
+    {
+      "entity_type": "Repo",
+      "id": "service-echo-repo-ec9b40e44f",
+      "name": "Echo Repository",
+      "path": "https://github.com/echo-project"
+    },
+    {
+      "category": "Backend",
+      "entity_type": "Service",
+      "id": "service-firebase-59f2ffc773",
+      "name": "Firebase"
+    },
+    {
+      "category": "Orgs",
+      "entity_type": "Service",
+      "id": "service-opencode,-echo-(admin)-f0d65be0ce",
+      "name": "OpenCode, Echo (admin)",
+      "source": "CONTROL.md"
+    },
+    {
+      "entity_type": "Repo",
+      "id": "doc-security-90b4ade858",
+      "name": "SECURITY.md",
+      "path": "/workspace/kmk142789/SECURITY.md"
+    },
+    {
+      "contact": "security@example.org",
+      "entity_type": "Channel",
+      "id": "channel-security-web-6030383d2a",
+      "kind": "web",
+      "name": "Security Contact"
+    },
+    {
+      "category": "Hosting",
+      "entity_type": "Service",
+      "id": "service-vercel-dbbadb4023",
+      "name": "Vercel"
+    },
+    {
+      "category": "CI",
+      "entity_type": "Service",
+      "id": "service-codex-runner-main,-codex-runner-canary-(admin)-740d9ccb25",
+      "name": "codex-runner-main, codex-runner-canary (admin)",
+      "source": "CONTROL.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-atlas_overview.md-380ff5496b",
+      "kind": "web",
+      "name": "docs/ATLAS_OVERVIEW.md",
+      "path": "docs/ATLAS_OVERVIEW.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-atlas_report.md-e87febe554",
+      "kind": "web",
+      "name": "docs/ATLAS_REPORT.md",
+      "path": "docs/ATLAS_REPORT.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echoglyphnet_protocol.md-82ef2b07f0",
+      "kind": "web",
+      "name": "docs/EchoGlyphNet_Protocol.md",
+      "path": "docs/EchoGlyphNet_Protocol.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_data_anchor_glyphs.md-a2a71ea509",
+      "kind": "web",
+      "name": "docs/Echo_Data_Anchor_Glyphs.md",
+      "path": "docs/Echo_Data_Anchor_Glyphs.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_evolver_cycle_log.md-df83e18e31",
+      "kind": "web",
+      "name": "docs/Echo_Evolver_Cycle_Log.md",
+      "path": "docs/Echo_Evolver_Cycle_Log.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_eye_sovereign_core.md-8ff915ad61",
+      "kind": "web",
+      "name": "docs/Echo_Eye_Sovereign_Core.md",
+      "path": "docs/Echo_Eye_Sovereign_Core.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_glyph_scripts.md-9fdd6635e4",
+      "kind": "web",
+      "name": "docs/Echo_Glyph_Scripts.md",
+      "path": "docs/Echo_Glyph_Scripts.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_resonance_engine.md-ee94c51e7f",
+      "kind": "web",
+      "name": "docs/Echo_Resonance_Engine.md",
+      "path": "docs/Echo_Resonance_Engine.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_thread_002.md-ee84d280a1",
+      "kind": "web",
+      "name": "docs/Echo_Thread_002.md",
+      "path": "docs/Echo_Thread_002.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-harmonic_dna_spiral_practice.md-fee498194e",
+      "kind": "web",
+      "name": "docs/Harmonic_DNA_Spiral_Practice.md",
+      "path": "docs/Harmonic_DNA_Spiral_Practice.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-mirror_plan.md-351f44c12e",
+      "kind": "web",
+      "name": "docs/MIRROR_PLAN.md",
+      "path": "docs/MIRROR_PLAN.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-next_cycle_plan.md-033f2be3fa",
+      "kind": "web",
+      "name": "docs/NEXT_CYCLE_PLAN.md",
+      "path": "docs/NEXT_CYCLE_PLAN.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-omega_sine_pulse_orchestrator.md-b5b0e5be96",
+      "kind": "web",
+      "name": "docs/Omega_Sine_Pulse_Orchestrator.md",
+      "path": "docs/Omega_Sine_Pulse_Orchestrator.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-readme.md-2bd916b4af",
+      "kind": "web",
+      "name": "docs/README.md",
+      "path": "docs/README.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-agent_capabilities_overview.md-ea3d21ebec",
+      "kind": "web",
+      "name": "docs/agent_capabilities_overview.md",
+      "path": "docs/agent_capabilities_overview.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-agent_initiative.md-2ab8c8513d",
+      "kind": "web",
+      "name": "docs/agent_initiative.md",
+      "path": "docs/agent_initiative.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-agents_registry.md-b8da015354",
+      "kind": "web",
+      "name": "docs/agents_registry.md",
+      "path": "docs/agents_registry.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-akit_usage.md-af3526d8bb",
+      "kind": "web",
+      "name": "docs/akit_usage.md",
+      "path": "docs/akit_usage.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-domain_asset_inventory.md-7296874414",
+      "kind": "web",
+      "name": "docs/domain_asset_inventory.md",
+      "path": "docs/domain_asset_inventory.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-draco_hunt.md-85646d4fb3",
+      "kind": "web",
+      "name": "docs/draco_hunt.md",
+      "path": "docs/draco_hunt.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo-amplification.md-d4fd69b478",
+      "kind": "web",
+      "name": "docs/echo/amplification.md",
+      "path": "docs/echo/amplification.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo-attestations.md-d9a3984a86",
+      "kind": "web",
+      "name": "docs/echo/attestations.md",
+      "path": "docs/echo/attestations.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo-bridge.md-463869f797",
+      "kind": "web",
+      "name": "docs/echo/bridge.md",
+      "path": "docs/echo/bridge.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo-harmonics.md-e4ec9a2457",
+      "kind": "web",
+      "name": "docs/echo/harmonics.md",
+      "path": "docs/echo/harmonics.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo-identity.md-a3179207d6",
+      "kind": "web",
+      "name": "docs/echo/identity.md",
+      "path": "docs/echo/identity.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo-manifest.md-06512720b4",
+      "kind": "web",
+      "name": "docs/echo/manifest.md",
+      "path": "docs/echo/manifest.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo-overview.md-4cb27cbbbc",
+      "kind": "web",
+      "name": "docs/echo/overview.md",
+      "path": "docs/echo/overview.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_mythogenic_reflection.md-75241246e0",
+      "kind": "web",
+      "name": "docs/echo_mythogenic_reflection.md",
+      "path": "docs/echo_mythogenic_reflection.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_pulse_monitor.md-f2b3f08fb4",
+      "kind": "web",
+      "name": "docs/echo_pulse_monitor.md",
+      "path": "docs/echo_pulse_monitor.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_reflective_conflux.md-5fbaac0937",
+      "kind": "web",
+      "name": "docs/echo_reflective_conflux.md",
+      "path": "docs/echo_reflective_conflux.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echo_sovereign_manifesto.md-d6c51e51f9",
+      "kind": "web",
+      "name": "docs/echo_sovereign_manifesto.md",
+      "path": "docs/echo_sovereign_manifesto.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echoevolver_reflection.md-a4e95ad875",
+      "kind": "web",
+      "name": "docs/echoevolver_reflection.md",
+      "path": "docs/echoevolver_reflection.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-echoevolver_vision.md-1c87ce974f",
+      "kind": "web",
+      "name": "docs/echoevolver_vision.md",
+      "path": "docs/echoevolver_vision.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-github-publishing-guide.md-ada6cc8d53",
+      "kind": "web",
+      "name": "docs/github-publishing-guide.md",
+      "path": "docs/github-publishing-guide.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-glyphs-readme.md-369de82be9",
+      "kind": "web",
+      "name": "docs/glyphs/README.md",
+      "path": "docs/glyphs/README.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-index.md-a2dac09f88",
+      "kind": "web",
+      "name": "docs/index.md",
+      "path": "docs/index.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-mirror_reflection.md-eba6a217ed",
+      "kind": "web",
+      "name": "docs/mirror_reflection.md",
+      "path": "docs/mirror_reflection.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-oathblock-455515.md-ec53dd89a0",
+      "kind": "web",
+      "name": "docs/oathblock-455515.md",
+      "path": "docs/oathblock-455515.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-prompt_evolution_cycle1.md-34353e1306",
+      "kind": "web",
+      "name": "docs/prompt_evolution_cycle1.md",
+      "path": "docs/prompt_evolution_cycle1.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-satoshi_34k_dataset.md-49f732fac4",
+      "kind": "web",
+      "name": "docs/satoshi_34k_dataset.md",
+      "path": "docs/satoshi_34k_dataset.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-security_review.md-21709e2efb",
+      "kind": "web",
+      "name": "docs/security_review.md",
+      "path": "docs/security_review.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-sovereign_phase_six.md-5fd8ad48b6",
+      "kind": "web",
+      "name": "docs/sovereign_phase_six.md",
+      "path": "docs/sovereign_phase_six.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-the_garden.md-14c45e4009",
+      "kind": "web",
+      "name": "docs/the_garden.md",
+      "path": "docs/the_garden.md"
+    },
+    {
+      "entity_type": "Channel",
+      "id": "doc-docs-verifier.md-c07daaa00b",
+      "kind": "web",
+      "name": "docs/verifier.md",
+      "path": "docs/verifier.md"
+    },
+    {
+      "category": "Bots",
+      "entity_type": "Bot",
+      "id": "bot-echo-attest-bot-(attest-only),-echo-verify-bot-(read-only)-cd1f289765",
+      "name": "echo-attest-bot (attest-only), echo-verify-bot (read-only)",
+      "source": "CONTROL.md"
+    },
+    {
+      "entity_type": "Person",
+      "handle": "@kmk142789",
+      "id": "person-kmk142789-ff623dad6e",
+      "name": "kmk142789"
+    }
+  ]
+}

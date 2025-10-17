@@ -5,6 +5,9 @@ dist
 
 # Assistant Kit generated artifacts
 artifacts/akit/
+data/atlas.db
+artifacts/*.png
+**/__pycache__/
 
 # EchoDex auto-refiner state
 .echodex_state.json
