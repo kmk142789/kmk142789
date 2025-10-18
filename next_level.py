@@ -76,8 +76,13 @@ def discover_tasks(
     base_path: Path,
     skip_dirs: Optional[Sequence[str]] = None,
     allowed_tags: Optional[Sequence[str]] = None,
+    max_file_size: Optional[int] = None,
 ) -> List[Task]:
-    """Return all TODO/FIXME entries under ``base_path``."""
+    """Return all TODO/FIXME entries under ``base_path``.
+
+    When ``max_file_size`` is provided, files larger than the threshold (in bytes)
+    are skipped to avoid expensive scans of large artifacts.
+    """
 
     skip_lookup = DEFAULT_SKIP_DIRS.copy()
     if skip_dirs:
@@ -97,6 +102,12 @@ def discover_tasks(
             continue
         if _should_skip(file_path, skip_lookup):
             continue
+        if max_file_size is not None and max_file_size >= 0:
+            try:
+                if file_path.stat().st_size > max_file_size:
+                    continue
+            except OSError:
+                continue
         if file_path.name.lower() == "roadmap.md":
             continue
         try:
@@ -231,8 +242,14 @@ def update_roadmap(
     roadmap_path: Path,
     skip_dirs: Optional[Sequence[str]] = None,
     allowed_tags: Optional[Sequence[str]] = None,
+    max_file_size: Optional[int] = None,
 ) -> List[Task]:
-    tasks = discover_tasks(base_path, skip_dirs=skip_dirs, allowed_tags=allowed_tags)
+    tasks = discover_tasks(
+        base_path,
+        skip_dirs=skip_dirs,
+        allowed_tags=allowed_tags,
+        max_file_size=max_file_size,
+    )
     roadmap = build_roadmap(tasks, base_path)
     roadmap_path.write_text(roadmap, encoding="utf-8")
     return tasks
@@ -287,8 +304,22 @@ def main() -> int:
         metavar="NAME",
         help="Only include tasks with the specified tag (case-insensitive, repeatable)",
     )
+    parser.add_argument(
+        "--max-bytes",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Skip files larger than N bytes when scanning",
+    )
     args = parser.parse_args()
-    update_roadmap(args.base, args.roadmap, skip_dirs=args.skip, allowed_tags=args.tag)
+    max_bytes = args.max_bytes if args.max_bytes and args.max_bytes > 0 else None
+    update_roadmap(
+        args.base,
+        args.roadmap,
+        skip_dirs=args.skip,
+        allowed_tags=args.tag,
+        max_file_size=max_bytes,
+    )
     return 0
 
 
