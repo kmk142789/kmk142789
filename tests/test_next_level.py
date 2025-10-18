@@ -96,3 +96,22 @@ UPDATE core SET active = 1 -- FIXME tighten constraint
     assert {task.tag for task in tasks} == {"TODO", "FIXME"}
     assert any(task.text == "annotate query" and task.line == 1 for task in tasks)
     assert any(task.text == "tighten constraint" and task.line == 2 for task in tasks)
+
+
+def test_discover_tasks_respects_max_file_size(tmp_path):
+    large = tmp_path / "large.py"
+    large_payload = "# TODO expansive refactor\n" + ("x" * 2048)
+    large.write_text(large_payload, encoding="utf-8")
+
+    included = tmp_path / "included.py"
+    included.write_text("# TODO keep me\n", encoding="utf-8")
+
+    small_limit = len(large_payload) - 1
+    tasks = discover_tasks(tmp_path, max_file_size=small_limit)
+    assert all(task.path != large for task in tasks)
+    assert any(task.path == included for task in tasks)
+
+    generous_limit = len(large_payload) + 10
+    tasks_with_large = discover_tasks(tmp_path, max_file_size=generous_limit)
+    assert any(task.path == large for task in tasks_with_large)
+    assert any(task.path == included for task in tasks_with_large)
