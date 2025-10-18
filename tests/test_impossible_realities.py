@@ -31,3 +31,22 @@ def test_manifest_batches_multiple_phenomena():
 def test_engine_requires_anchor_values():
     with pytest.raises(ValueError):
         ImpossibleRealityEngine([])
+
+
+def test_invoke_allows_named_contextual_events():
+    engine = ImpossibleRealityEngine([Fraction(2, 5), 0.5, Decimal("1.41421")])
+
+    event = engine.invoke(
+        "mirror sunrise",
+        name="Impossible Invocation",
+        context=["orbital mesh", "quantum braid"],
+        seed="satellite-phase",
+    )
+
+    assert "Impossible Invocation" in event.description
+    assert "mirror sunrise" in event.description
+    assert 0.0 < float(event.probability) < 1.0
+
+    report = event.evidence_report()
+    assert "Context[1]: orbital mesh" in report
+    assert "Context[2]: quantum braid" in report

@@ -58,17 +58,28 @@ class ImpossibleRealityEngine:
         numerator = signature % (denominator - 1) + 1
         return Fraction(numerator, denominator)
 
-    def _evidence(self, phenomenon: str, signature: str) -> Tuple[str, ...]:
+    def _evidence(
+        self,
+        phenomenon: str,
+        signature: str,
+        *,
+        context: Sequence[str] | None = None,
+    ) -> Tuple[str, ...]:
         golden_ratio = Fraction.from_float((1 + sqrt(5)) / 2).limit_denominator(1_000_000)
         sqrt_two = Fraction.from_float(sqrt(2)).limit_denominator(1_000_000)
         anchor_sum = sum(float(anchor) for anchor in self._anchors)
         anchor_trace = ", ".join(f"{float(anchor):.9f}" for anchor in self._anchors[:3])
-        return (
+        details = [
             f"Phenomenon: {phenomenon} (hash fragment {signature[:10]})",
             f"Anchor sum = {anchor_sum:.9f} :: trace[{anchor_trace}]",
             f"Golden ratio encoded as {golden_ratio.numerator}/{golden_ratio.denominator}",
             f"Sqrt(2) rational echo {sqrt_two.numerator}/{sqrt_two.denominator}",
-        )
+        ]
+        if context:
+            for index, entry in enumerate(context, 1):
+                if entry:
+                    details.append(f"Context[{index}]: {entry}")
+        return tuple(details)
 
     def conjure(self, phenomenon: str) -> ImpossibleEvent:
         signature_hex = sha256(phenomenon.encode("utf-8")).hexdigest()
@@ -84,6 +95,46 @@ class ImpossibleRealityEngine:
 
     def manifest(self, phenomena: Sequence[str]) -> List[ImpossibleEvent]:
         return [self.conjure(item) for item in phenomena]
+
+    def invoke(
+        self,
+        phenomenon: str,
+        *,
+        name: str | None = None,
+        context: Sequence[str] | None = None,
+        seed: str | None = None,
+    ) -> ImpossibleEvent:
+        """Conjure an impossible event with optional narrative guidance.
+
+        Parameters
+        ----------
+        phenomenon:
+            The underlying observation to encode into the invocation.
+        name:
+            An optional human-facing label woven into the event description.
+        context:
+            Additional evidence items that should be embedded in the
+            :class:`ImpossibleEvent` trail.
+        seed:
+            Optional deterministic salt that alters the resulting signature
+            without changing the phenomenon itself.  Useful for deriving
+            multiple invocations that share the same phenomenon but differ in
+            their narrative framing.
+        """
+
+        payload = phenomenon if seed is None else f"{phenomenon}::{seed}"
+        signature_hex = sha256(payload.encode("utf-8")).hexdigest()
+        signature_int = int(signature_hex, 16)
+        probability = self._probability(signature_int)
+        timestamp = datetime.now(timezone.utc)
+
+        label = name or phenomenon
+        description = (
+            f"Invocation '{label}' confirmed from phenomenon '{phenomenon}' "
+            f"[{signature_hex[:8]}]"
+        )
+        evidence = self._evidence(phenomenon, signature_hex, context=context)
+        return ImpossibleEvent(description, evidence, probability, timestamp)
 
 
 __all__ = ["ImpossibleEvent", "ImpossibleRealityEngine"]
