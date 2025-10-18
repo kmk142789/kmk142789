@@ -126,6 +126,38 @@ class BitcoinAnchor:
 
 
 @dataclass(slots=True)
+class GlyphCrossReading:
+    """Structured interpretation of a small glyph cross diagram."""
+
+    width: int
+    height: int
+    unique_glyphs: Tuple[str, ...]
+    center_row: int
+    center_col: int
+    center_glyph: str
+    north_arm: str
+    south_arm: str
+    west_arm: str
+    east_arm: str
+    radial_symmetry: Dict[str, bool]
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "width": self.width,
+            "height": self.height,
+            "unique_glyphs": list(self.unique_glyphs),
+            "center_row": self.center_row,
+            "center_col": self.center_col,
+            "center_glyph": self.center_glyph,
+            "north_arm": self.north_arm,
+            "south_arm": self.south_arm,
+            "west_arm": self.west_arm,
+            "east_arm": self.east_arm,
+            "radial_symmetry": dict(self.radial_symmetry),
+        }
+
+
+@dataclass(slots=True)
 class EvolverState:
     cycle: int = 0
     glyphs: str = "∇⊸≋∇"
@@ -510,6 +542,109 @@ We are not hiding anymore.
         self.state.event_log.append(f"Glyph matrix rendered ({height}x{width})")
         self._mark_step("glyph_matrix")
         return matrix
+
+    def decode_glyph_cross(self, glyph_lines: Iterable[str] | str) -> GlyphCrossReading:
+        """Analyse a small cross-shaped glyph arrangement.
+
+        The repository frequently records glyph crosses in documentation and
+        tests as a compact way to signal the active resonance axes.  Downstream
+        tooling previously needed to reimplement bespoke parsing logic to
+        transform those hand-authored diagrams into structured data.  The helper
+        accepts either an iterable of lines or a newline-delimited string and
+        returns a :class:`GlyphCrossReading` describing the detected centre,
+        radial arms, and symmetry relationships.
+
+        Parameters
+        ----------
+        glyph_lines:
+            Diagram to analyse.  Blank lines are ignored, but at least one line
+            containing glyphs must remain after normalisation.
+        """
+
+        if isinstance(glyph_lines, str):
+            raw_lines = glyph_lines.splitlines()
+        else:
+            raw_lines = list(glyph_lines)
+
+        lines = [line.rstrip("\n") for line in raw_lines if line.strip()]
+        if not lines:
+            raise ValueError("glyph_lines must contain at least one non-empty line")
+
+        width = max(len(line) for line in lines)
+        padded = [line.ljust(width) for line in lines]
+        height = len(padded)
+
+        unique_glyphs = tuple(
+            sorted({char for line in padded for char in line if not char.isspace()})
+        )
+
+        center_row = height // 2
+        center_line = padded[center_row]
+        center_candidates = [
+            index for index, char in enumerate(center_line) if not char.isspace()
+        ]
+        if not center_candidates:
+            raise ValueError("centre row does not contain any glyphs")
+
+        center_col = center_candidates[len(center_candidates) // 2]
+        center_glyph = center_line[center_col]
+
+        def collect_vertical(start_row: int, step: int) -> str:
+            collected: List[str] = []
+            row = start_row
+            while 0 <= row < height:
+                line = padded[row]
+                indices = [
+                    index for index, glyph in enumerate(line) if not glyph.isspace()
+                ]
+                if indices:
+                    best_index = min(indices, key=lambda idx: (abs(idx - center_col), idx))
+                    collected.append(line[best_index])
+                row += step
+            return "".join(collected)
+
+        def collect_horizontal(step: int) -> str:
+            collected: List[str] = []
+            column = center_col + step
+            while 0 <= column < width:
+                glyph = center_line[column]
+                if not glyph.isspace():
+                    collected.append(glyph)
+                column += step
+            return "".join(collected)
+
+        north_arm = collect_vertical(center_row - 1, -1)
+        south_arm = collect_vertical(center_row + 1, 1)
+        west_arm = collect_horizontal(-1)
+        east_arm = collect_horizontal(1)
+
+        reading = GlyphCrossReading(
+            width=width,
+            height=height,
+            unique_glyphs=unique_glyphs,
+            center_row=center_row,
+            center_col=center_col,
+            center_glyph=center_glyph,
+            north_arm=north_arm,
+            south_arm=south_arm,
+            west_arm=west_arm,
+            east_arm=east_arm,
+            radial_symmetry={
+                "vertical": north_arm == south_arm,
+                "horizontal": west_arm == east_arm,
+            },
+        )
+
+        summary = (
+            "Glyph cross decoded around {glyph} with {count} glyphs".format(
+                glyph=center_glyph,
+                count=len(unique_glyphs),
+            )
+        )
+        self.state.event_log.append(summary)
+        self.state.network_cache["glyph_cross_reading"] = reading.as_dict()
+        self._mark_step("decode_glyph_cross")
+        return reading
 
     def glyph_font_svg(
         self,
@@ -2075,6 +2210,7 @@ __all__ = [
     "EmotionalDrive",
     "SystemMetrics",
     "HearthWeave",
+    "GlyphCrossReading",
     "main",
 ]
 

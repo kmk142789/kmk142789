@@ -14,6 +14,7 @@ from echo.evolver import (
     EchoEvolver,
     EmotionalDrive,
     EvolverState,
+    GlyphCrossReading,
     HearthWeave,
     SystemMetrics,
     main as _package_main,
@@ -26,6 +27,7 @@ __all__ = [
     "EvolverState",
     "SystemMetrics",
     "HearthWeave",
+    "GlyphCrossReading",
     "main",
 ]
 
