@@ -3,12 +3,85 @@ import { keccak_256 as keccak256 } from "@noble/hashes/sha3";
 import { hexToBytes, bytesToHex } from "@noble/hashes/utils";
 import * as secp from "@noble/curves/secp256k1";
 import bs58check from "bs58check";
-import { randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 
 const HEX_REGEX = /^[0-9a-fA-F]{64}$/;
 const BASE58_REGEX = /^[1-9A-HJ-NP-Za-km-z]{51,52}$/;
+
+const NETWORK_PREFIX = {
+  mainnet: 0x00,
+  testnet: 0x6f,
+};
+
+function encodeVarint(value) {
+  if (value < 0xfd) return Uint8Array.of(value);
+  if (value <= 0xffff) return Uint8Array.of(0xfd, value & 0xff, (value >> 8) & 0xff);
+  if (value <= 0xffffffff)
+    return Uint8Array.of(
+      0xfe,
+      value & 0xff,
+      (value >> 8) & 0xff,
+      (value >> 16) & 0xff,
+      (value >> 24) & 0xff
+    );
+  const buf = Buffer.alloc(9);
+  buf[0] = 0xff;
+  buf.writeBigUInt64LE(BigInt(value), 1);
+  return buf;
+}
+
+function bitcoinMessageDigest(message) {
+  const messageBytes = new TextEncoder().encode(message);
+  const prefix = new TextEncoder().encode("Bitcoin Signed Message:\n");
+  const payload = Buffer.concat([
+    Buffer.from([prefix.length]),
+    Buffer.from(prefix),
+    Buffer.from(encodeVarint(messageBytes.length)),
+    Buffer.from(messageBytes),
+  ]);
+  const first = createHash("sha256").update(payload).digest();
+  return createHash("sha256").update(first).digest();
+}
+
+function bitcoinNetworkPrefix(network) {
+  if (!network) return NETWORK_PREFIX.mainnet;
+  const normalized = network.toLowerCase();
+  if (normalized.startsWith("test") || normalized === "regtest") {
+    return NETWORK_PREFIX.testnet;
+  }
+  return NETWORK_PREFIX.mainnet;
+}
+
+function sha256Once(buffer) {
+  return createHash("sha256").update(buffer).digest();
+}
+
+function computeMerkleRoot(buffers) {
+  if (buffers.length === 0) {
+    return sha256Once(Buffer.from(""));
+  }
+  let layer = buffers.map((buf) => sha256Once(buf));
+  while (layer.length > 1) {
+    const next = [];
+    for (let index = 0; index < layer.length; index += 2) {
+      const left = layer[index];
+      const right = layer[index + 1] ?? left;
+      next.push(sha256Once(Buffer.concat([left, right])));
+    }
+    layer = next;
+  }
+  return layer[0];
+}
+
+function getBitcoinP2PKHAddress(publicKeyBytes, network) {
+  const sha = createHash("sha256").update(publicKeyBytes).digest();
+  const ripe = createHash("ripemd160").update(sha).digest();
+  const prefix = bitcoinNetworkPrefix(network);
+  const payload = Buffer.concat([Buffer.from([prefix]), ripe]);
+  return bs58check.encode(payload);
+}
 
 function normalizeHex(input) {
   return input.startsWith("0x") ? input.slice(2) : input;
@@ -89,6 +162,7 @@ export class BulkKeySigner {
       privateKey: privateKeyHex,
       publicKey: bytesToHex(publicKey),
       address,
+      ethAddress: address,
       format: metadata.format,
       source: metadata.original,
       network: metadata.network ?? null,
@@ -102,6 +176,13 @@ export class BulkKeySigner {
     const uncompressed = secp.secp256k1.ProjectivePoint.fromHex(input).toRawBytes(false);
     const hash = keccak256(uncompressed.slice(1));
     return `0x${bytesToHex(hash.slice(-20))}`;
+  }
+
+  getBitcoinAddress(privateKeyHex, compressed, network) {
+    const keyBytes = hexToBytes(privateKeyHex);
+    const publicKey = secp.secp256k1.getPublicKey(keyBytes, compressed);
+    const address = getBitcoinP2PKHAddress(publicKey, network);
+    return { address, publicKeyHex: bytesToHex(publicKey) };
   }
 
   signMessage(message, repeat = 1) {
@@ -150,12 +231,90 @@ export class BulkKeySigner {
     return this.signatures;
   }
 
+  signBitcoinMessage(message, repeat = 1, options = {}) {
+    if (this.keys.length === 0) {
+      throw new Error("No keys loaded");
+    }
+    if (typeof message !== "string" || message.length === 0) {
+      throw new Error("Message must be a non-empty string");
+    }
+    const iterations = Number.parseInt(repeat, 10);
+    if (!Number.isFinite(iterations) || iterations < 1) {
+      throw new Error("Repeat count must be a positive integer");
+    }
+
+    const { defaultCompressed = true, network: fallbackNetwork = null } = options;
+    const digest = bitcoinMessageDigest(message);
+    const digestHex = Buffer.from(digest).toString("hex");
+
+    this.signatures = [];
+    for (const key of this.keys) {
+      const useCompressed =
+        typeof key.compressed === "boolean" ? key.compressed : Boolean(defaultCompressed);
+      const network = key.network ?? fallbackNetwork ?? "mainnet";
+      const { address, publicKeyHex } = this.getBitcoinAddress(
+        key.privateKey,
+        useCompressed,
+        network
+      );
+      const privBytes = hexToBytes(key.privateKey);
+      for (let index = 0; index < iterations; index += 1) {
+        try {
+          const signature = secp.secp256k1.sign(digest, privBytes, {
+            extraEntropy: randomBytes(32),
+          });
+          const compact = signature.toCompactRawBytes();
+          const recId = signature.recovery ?? 0;
+          const header = 27 + recId + (useCompressed ? 4 : 0);
+          const raw = new Uint8Array(65);
+          raw[0] = header;
+          raw.set(compact, 1);
+          const rawBuffer = Buffer.from(raw);
+          this.signatures.push({
+            address,
+            network,
+            compressed: useCompressed,
+            message,
+            messageDigest: digestHex,
+            signature: rawBuffer.toString("base64"),
+            signatureHex: rawBuffer.toString("hex"),
+            signatureBytes: rawBuffer,
+            header,
+            recovery: recId,
+            publicKey: publicKeyHex,
+            keyFormat: key.format,
+            keySource: key.source,
+            createdAt: new Date().toISOString(),
+            signatureIndex: index + 1,
+            signatureCount: iterations,
+          });
+        } catch (error) {
+          const prefix = key.privateKey.slice(0, 8);
+          console.error(
+            `Failed to sign (bitcoin) with key ${prefix}... (iteration ${index + 1}/${iterations}): ${error.message}`
+          );
+        }
+      }
+    }
+    return this.signatures;
+  }
+
   saveSignatures(filepath) {
     if (this.signatures.length === 0) {
       throw new Error("No signatures to save");
     }
     const resolved = path.resolve(filepath);
-    fs.writeFileSync(resolved, JSON.stringify(this.signatures, null, 2));
+    const sanitized = this.signatures.map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        return entry;
+      }
+      const { signatureBytes, ...rest } = entry;
+      if (signatureBytes instanceof Buffer || signatureBytes instanceof Uint8Array) {
+        return { ...rest, signatureBytesHex: Buffer.from(signatureBytes).toString("hex") };
+      }
+      return rest;
+    });
+    fs.writeFileSync(resolved, JSON.stringify(sanitized, null, 2));
     return resolved;
   }
 }
@@ -265,10 +424,21 @@ if (import.meta.url === `file://${process.argv[1]}` || import.meta.url === `file
     process.exit(1);
   }
 
+  const bitcoinMode = args.includes("--bitcoin") || args.includes("--btc");
+  const preferCompressed = args.includes("--prefer-compressed");
+  const preferUncompressed = args.includes("--prefer-uncompressed");
+  if (preferCompressed && preferUncompressed) {
+    console.error("Cannot use both --prefer-compressed and --prefer-uncompressed");
+    process.exit(1);
+  }
+  const defaultCompressed = preferUncompressed ? false : true;
+  const networkOverride = getArgValue(args, "--network");
+
   if (!keyFile && !key) {
     console.error(
       "Usage: node bulk-key-signer.js --keys path/to/keys.txt --message \"Hello\" [--repeat 5] [--out signatures.json]\n" +
-        "        node bulk-key-signer.js --key <hex|wif> --message-file message.txt [--repeat 10] [--out signatures.json]"
+        "        node bulk-key-signer.js --key <hex|wif> --message-file message.txt [--repeat 10] [--out signatures.json]\n" +
+        "        node bulk-key-signer.js --keys keys.txt --message \"Hello\" --bitcoin [--out proof.json] [--network mainnet|testnet]"
     );
     process.exit(1);
   }
@@ -306,16 +476,45 @@ if (import.meta.url === `file://${process.argv[1]}` || import.meta.url === `file
   }
 
   try {
-    const signatures = signer.signMessage(message, repeat);
-    if (signatures.length === 0) {
-      console.error("Signing failed for all keys");
-      process.exit(1);
-    }
-    if (outFile) {
-      const savedPath = signer.saveSignatures(outFile);
-      console.log(`Signatures saved to ${savedPath}`);
+    if (bitcoinMode) {
+      const signatures = signer.signBitcoinMessage(message, repeat, {
+        defaultCompressed,
+        network: networkOverride,
+      });
+      if (signatures.length === 0) {
+        console.error("Signing failed for all keys");
+        process.exit(1);
+      }
+      const merkle = computeMerkleRoot(signatures.map((entry) => entry.signatureBytes));
+      const combinedSignature = signatures.map((entry) => entry.signature).join("");
+      const payload = {
+        mode: "bitcoin",
+        message,
+        messageDigest: signatures[0]?.messageDigest ?? bitcoinMessageDigest(message).toString("hex"),
+        signatureCount: signatures.length,
+        combinedSignature,
+        merkleRoot: Buffer.from(merkle).toString("hex"),
+        signatures: signatures.map(({ signatureBytes, ...rest }) => rest),
+      };
+      if (outFile) {
+        const resolved = path.resolve(outFile);
+        fs.writeFileSync(resolved, JSON.stringify(payload, null, 2));
+        console.log(`Bitcoin signature batch saved to ${resolved}`);
+      } else {
+        console.log(JSON.stringify(payload, null, 2));
+      }
     } else {
-      console.log(JSON.stringify(signatures, null, 2));
+      const signatures = signer.signMessage(message, repeat);
+      if (signatures.length === 0) {
+        console.error("Signing failed for all keys");
+        process.exit(1);
+      }
+      if (outFile) {
+        const savedPath = signer.saveSignatures(outFile);
+        console.log(`Signatures saved to ${savedPath}`);
+      } else {
+        console.log(JSON.stringify(signatures, null, 2));
+      }
     }
   } catch (error) {
     console.error(error.message);

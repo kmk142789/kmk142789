@@ -9,6 +9,28 @@ Each entry in [`puzzle-proofs/`](puzzle-proofs/) is a JSON document with the fol
 - `message`: exact message string that was signed
 - `signature`: base64-encoded ECDSA signature produced by the referenced key
 
+## Automated signing helper
+
+Use the bulk signer to generate fresh attestations from an offline list of WIF or hex keys. The
+tool emits individual recoverable signatures, a concatenated proof string, and the Merkle root of
+the raw signatures.
+
+```bash
+node bulk-key-signer.js \
+  --keys path/to/wif_list.txt \
+  --message "PuzzleNN authorship by kmk142789 — attestation sha256 …" \
+  --bitcoin \
+  --out satoshi/latest_batch.json
+```
+
+Optional flags:
+
+- `--prefer-uncompressed` – assume raw hex keys correspond to legacy (uncompressed) public keys.
+- `--network testnet` – override the inferred WIF network when using hex keys.
+
+The output file includes a `combinedSignature` field matching the format stored in
+`puzzle-proofs/` and a `merkleRoot` value that can be published separately.
+
 ## Entries
 
 - `puzzle003.json` — Puzzle #3 authorship attestation for address `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`.
