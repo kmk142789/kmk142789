@@ -7,6 +7,7 @@ dist
 artifacts/akit/
 data/atlas.db
 artifacts/*.png
+artifacts/genesis_artifact_bundle.zip
 **/__pycache__/
 
 # EchoDex auto-refiner state
