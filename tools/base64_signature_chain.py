@@ -5,16 +5,44 @@ This module provides a small command line interface that can be used to
 sanity-check a blob composed of multiple base64-encoded signatures that have
 been appended together by repeatedly signing previous outputs, as described in
 wallet message workflows.
+
+Recent sovereignty attestation rituals began asking for more than the raw
+signature fragments: operators also wanted a concise address that could be used
+to reference the exact bundle they had verified.  Rather than forcing every
+caller to re-implement the checksum-heavy encoding by hand we expose a helper
+that derives a Base58Check identifier directly from the validated fragments.
 """
 
 from __future__ import annotations
 
 import argparse
 import base64
+import binascii
+import hashlib
 import json
 import sys
 from dataclasses import dataclass, field
 from typing import Iterable, Sequence
+
+
+_BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+
+def _base58check_encode(payload: bytes) -> str:
+    """Return the Base58Check encoding for *payload* without external deps."""
+
+    checksum = hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4]
+    data = payload + checksum
+
+    integer = int.from_bytes(data, "big")
+    encoded: list[str] = []
+    while integer:
+        integer, remainder = divmod(integer, 58)
+        encoded.append(_BASE58_ALPHABET[remainder])
+    encoded_str = "".join(reversed(encoded)) or "1"
+
+    leading_zeroes = len(data) - len(data.lstrip(b"\x00"))
+    return "1" * leading_zeroes + encoded_str
 
 
 class SignatureFormatError(ValueError):
@@ -69,7 +97,7 @@ class SignatureChain:
         """Return a JSON-serialisable description of the chain."""
 
         lengths = [len(entry.strip()) for entry in self.entries]
-        return {
+        description = {
             "entry_count": len(self.entries),
             "length_min": min(lengths) if lengths else 0,
             "length_max": max(lengths) if lengths else 0,
@@ -77,10 +105,56 @@ class SignatureChain:
             "blob_char_count": len(self.blob),
         }
 
+        try:
+            description["attestation_address"] = self.attestation_address()
+        except (SignatureFormatError, ValueError):
+            description["attestation_address"] = None
+
+        return description
+
     @classmethod
     def from_blob(cls, blob: str) -> "SignatureChain":
         entries = [chunk for chunk in blob.split() if chunk]
         return cls(entries=entries)
+
+    def attestation_address(self, *, version: int = 0) -> str:
+        """Return a Base58Check address that fingerprints the signature set.
+
+        Each fragment is decoded and concatenated prior to hashing.  The final
+        digest mirrors the classic Bitcoin address derivation by applying
+        SHA-256 followed by RIPEMD-160 before Base58Check encoding.
+
+        Parameters
+        ----------
+        version:
+            Optional version byte to prepend before computing the checksum.
+
+        Raises
+        ------
+        ValueError
+            If the chain does not contain any signature fragments.
+        SignatureFormatError
+            If an entry fails to decode as base64 despite prior validation.
+        """
+
+        if not self.entries:
+            raise ValueError("Cannot derive attestation address from an empty chain.")
+
+        decoded_fragments: list[bytes] = []
+        for idx, entry in enumerate(self.entries, start=1):
+            token = entry.strip()
+            try:
+                decoded_fragments.append(base64.b64decode(token, validate=True))
+            except (binascii.Error, ValueError) as exc:  # noqa: PERF203 - explicit clarity
+                raise SignatureFormatError(
+                    f"Entry {idx} is not valid base64: {exc}"
+                ) from exc
+
+        concatenated = b"".join(decoded_fragments)
+        sha_digest = hashlib.sha256(concatenated).digest()
+        ripemd160 = hashlib.new("ripemd160", sha_digest).digest()
+        version_byte = bytes([version & 0xFF])
+        return _base58check_encode(version_byte + ripemd160)
 
 
 def _read_blob(args: argparse.Namespace) -> str:
@@ -139,6 +213,8 @@ def main(argv: Iterable[str] | None = None) -> int:
             )
             print("Individual lengths:", ", ".join(map(str, description["lengths"])))
             print("Combined blob characters:", description["blob_char_count"])
+            if description["attestation_address"]:
+                print("Attestation address:", description["attestation_address"])
             print("Next message to sign (concatenated blob):")
             print(chain.blob)
     return 0
