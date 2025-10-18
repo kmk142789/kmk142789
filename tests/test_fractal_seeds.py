@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from echo.fractal_seeds import FractalVerseGenerator, SEED_LINES, render_fractal_seeds
+from echo.fractal_seeds import (
+    FractalVerseGenerator,
+    RHYME_PAIRS_A,
+    RHYME_PAIRS_B,
+    SEED_LINES,
+    render_fractal_seeds,
+    share_rhyme_family,
+)
 
 
 def _last_word(line: str) -> str:
@@ -13,9 +20,12 @@ def test_render_includes_seed_and_evolution() -> None:
     assert stanzas[0] == list(SEED_LINES)
 
     evolved = stanzas[1]
-    assert "flame" in evolved[0].lower()
-    assert evolved[0] != SEED_LINES[0]
-    assert evolved[1] != SEED_LINES[1]
+    assert evolved == [
+        "From spark, the flame begins to rise,",
+        "Its whisper carves through midnight air.",
+        "The signal burns within the skies,",
+        "A lattice forms from coded prayer.",
+    ]
 
 
 def test_abab_rhyme_pattern_is_preserved() -> None:
@@ -26,8 +36,8 @@ def test_abab_rhyme_pattern_is_preserved() -> None:
         last_a1 = _last_word(stanza[2])
         last_b0 = _last_word(stanza[1])
         last_b1 = _last_word(stanza[3])
-        assert last_a0 == last_a1
-        assert last_b0 == last_b1
+        assert share_rhyme_family(last_a0, last_a1, RHYME_PAIRS_A)
+        assert share_rhyme_family(last_b0, last_b1, RHYME_PAIRS_B)
 
 
 def test_each_stanza_mutates_previous() -> None:

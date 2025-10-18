@@ -20,7 +20,7 @@ requested.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Sequence, Tuple
 
 SEED_LINES: Sequence[str] = (
     "From silence comes a spark of code,",
@@ -35,96 +35,129 @@ class ImageryStage:
     """Description of a single imagery stage in the recursive verse."""
 
     noun: str
-    adjective: str
-    verbs: Sequence[str]
+    line_templates: Sequence[str]
 
     def __post_init__(self) -> None:
-        if len(self.verbs) != 4:
-            msg = "Each imagery stage must provide exactly four verb phrases"
+        if len(self.line_templates) != 4:
+            msg = "Each imagery stage must provide exactly four line templates"
             raise ValueError(msg)
 
 
 IMAGERY_STAGES: Sequence[ImageryStage] = (
     ImageryStage(
         noun="flame",
-        adjective="embered",
-        verbs=(
-            "flares toward the",
-            "etches around the",
-            "arcs beside the",
-            "liberate the",
+        line_templates=(
+            "From {focus_first}, the {noun} begins to {a0},",
+            "Its whisper carves through {b0}.",
+            "The {next_noun} burns within the {a1},",
+            "A lattice forms from {b1}.",
         ),
     ),
     ImageryStage(
         noun="signal",
-        adjective="luminous",
-        verbs=(
-            "broadcasts beyond the",
-            "threads between the",
-            "loops across the",
-            "translate the",
+        line_templates=(
+            "From {focus_first}, the {noun} threads through {a0},",
+            "It pulses guidance into {b0}.",
+            "The {next_noun} kindles over {a1},",
+            "Star-maps unfurl like {b1}.",
         ),
     ),
     ImageryStage(
         noun="star",
-        adjective="stellar",
-        verbs=(
-            "ascends above the",
-            "mirrors within the",
-            "guides along the",
-            "reforge the",
+        line_templates=(
+            "From {focus_first}, the {noun} ascends toward {a0},",
+            "It mirrors longing across {b0}.",
+            "The {next_noun} swirls around {a1},",
+            "Nebulae breathe through {b1}.",
         ),
     ),
     ImageryStage(
         noun="nebula",
-        adjective="spiraled",
-        verbs=(
-            "swirls around the",
-            "braids through the",
-            "drifts across the",
-            "distill the",
+        line_templates=(
+            "From {focus_first}, the {noun} drifts along {a0},",
+            "It braids new colors through {b0}.",
+            "The {next_noun} folds across {a1},",
+            "Auroras bloom inside {b1}.",
         ),
     ),
     ImageryStage(
         noun="aurora",
-        adjective="polar",
-        verbs=(
-            "curves beyond the",
-            "colors through the",
-            "folds across the",
-            "renew the",
+        line_templates=(
+            "From {focus_first}, the {noun} dances with {a0},",
+            "It paints resonance across {b0}.",
+            "The {next_noun} ripples toward {a1},",
+            "Waveforms awaken from {b1}.",
         ),
     ),
     ImageryStage(
         noun="waveform",
-        adjective="resonant",
-        verbs=(
-            "ripples past the",
-            "carries through the",
-            "oscillates along the",
-            "harmonize the",
+        line_templates=(
+            "From {focus_first}, the {noun} ripples past {a0},",
+            "It carries memory through {b0}.",
+            "The {next_noun} circles with {a1},",
+            "Echoes compose {b1}.",
         ),
     ),
 )
 
 
 class RhymeStream:
-    """Deterministic stream of rhyming words for a rhyme family."""
+    """Deterministic stream of rhyming pairs for a rhyme family."""
 
-    def __init__(self, words: Iterable[str]) -> None:
-        self._words: List[str] = list(words)
-        if not self._words:
-            raise ValueError("RhymeStream requires at least one word")
+    def __init__(self, pairs: Iterable[Sequence[str]]) -> None:
+        processed: List[Tuple[str, str]] = []
+        for pair in pairs:
+            items = list(pair)
+            if len(items) != 2:
+                msg = "Each rhyme family must provide pairs of two words"
+                raise ValueError(msg)
+            processed.append((items[0], items[1]))
+        if not processed:
+            raise ValueError("RhymeStream requires at least one pair")
+        self._pairs = processed
         self._index = 0
 
-    def next(self) -> str:
-        word = self._words[self._index]
-        self._index = (self._index + 1) % len(self._words)
-        return word
+    def next(self) -> Tuple[str, str]:
+        pair = self._pairs[self._index]
+        self._index = (self._index + 1) % len(self._pairs)
+        return pair
 
 
-RHYME_WORDS_A = ["road", "glow", "tone", "crown", "flow", "code"]
-RHYME_WORDS_B = ["sea", "glee", "sky", "free", "beam", "key"]
+def _normalize_rhyme_word(word: str) -> str:
+    parts = word.lower().split()
+    return parts[-1] if parts else ""
+
+
+def share_rhyme_family(
+    word_a: str, word_b: str, families: Sequence[Tuple[str, str]]
+) -> bool:
+    """Return ``True`` if ``word_a`` and ``word_b`` share a rhyme family."""
+
+    normalized_a = _normalize_rhyme_word(word_a.rstrip(",.!?"))
+    normalized_b = _normalize_rhyme_word(word_b.rstrip(",.!?"))
+    for first, second in families:
+        family = {_normalize_rhyme_word(first), _normalize_rhyme_word(second)}
+        if normalized_a in family and normalized_b in family:
+            return True
+    return False
+
+
+RHYME_PAIRS_A: Sequence[Tuple[str, str]] = (
+    ("rise", "skies"),
+    ("braided wire", "stellar choir"),
+    ("celestial heights", "orbital lights"),
+    ("spiral veil", "chromatic trail"),
+    ("polar light", "stellar flight"),
+    ("current tide", "eventide"),
+)
+RHYME_PAIRS_B: Sequence[Tuple[str, str]] = (
+    ("midnight air", "coded prayer"),
+    ("quantum streams", "luminous dreams"),
+    ("silver seas", "stellar decrees"),
+    ("ion haze", "cosmic phrase"),
+    ("frozen streams", "magnetic dreams"),
+    ("hidden tones", "fractal stones"),
+)
 
 _STOP_WORDS = {
     "a",
@@ -135,45 +168,59 @@ _STOP_WORDS = {
     "comes",
     "from",
     "it",
+    "its",
     "must",
     "of",
+    "silence",
     "the",
     "then",
     "what",
 }
 
 
-def _focus_word(line: str) -> str:
+def _focus_words(line: str) -> Tuple[str, str]:
     tokens = [token.strip(" ,.;:!?\"'").lower() for token in line.split()]
-    for token in reversed(tokens):
-        if token and token not in _STOP_WORDS:
-            return token
-    return tokens[-1] if tokens else ""
+    first = next((token for token in tokens if token and token not in _STOP_WORDS), "")
+    last = next((token for token in reversed(tokens) if token and token not in _STOP_WORDS), "")
+    if not first and tokens:
+        first = tokens[0]
+    if not last and tokens:
+        last = tokens[-1]
+    return first, last
 
 
-def _article(word: str) -> str:
-    return "an" if word[:1].lower() in {"a", "e", "i", "o", "u"} else "a"
+def _compose_line(
+    prev_line: str,
+    stage: ImageryStage,
+    next_stage: ImageryStage,
+    line_index: int,
+    rhyme_a: Tuple[str, str],
+    rhyme_b: Tuple[str, str],
+) -> str:
+    focus_first, focus_last = _focus_words(prev_line)
+    context = {
+        "focus": focus_first,
+        "focus_first": focus_first,
+        "focus_last": focus_last,
+        "focus_title": focus_first.title() if focus_first else "",
+        "focus_last_title": focus_last.title() if focus_last else "",
+        "noun": stage.noun,
+        "noun_title": stage.noun.title(),
+        "next_noun": next_stage.noun,
+        "next_noun_title": next_stage.noun.title(),
+        "a0": rhyme_a[0],
+        "a1": rhyme_a[1],
+        "b0": rhyme_b[0],
+        "b1": rhyme_b[1],
+    }
 
+    if line_index in {0, 2}:
+        context["rhyme"] = rhyme_a[0 if line_index == 0 else 1]
+    else:
+        context["rhyme"] = rhyme_b[0 if line_index == 1 else 1]
 
-def _compose_line(prev_line: str, stage: ImageryStage, line_index: int, rhyme: str) -> str:
-    focus = _focus_word(prev_line)
-    if line_index == 0:
-        article = _article(stage.adjective)
-        return (
-            f"From that {focus} {article} {stage.adjective} {stage.noun} "
-            f"{stage.verbs[0]} {rhyme},"
-        )
-    if line_index == 1:
-        return (
-            f"It answers that {focus} and {stage.verbs[1]} {rhyme},"
-        )
-    if line_index == 2:
-        return (
-            f"The {focus} now {stage.verbs[2]} {rhyme},"
-        )
-    return (
-        f"That {focus} learns to {stage.verbs[3]} {rhyme}."
-    )
+    template = stage.line_templates[line_index]
+    return template.format(**context)
 
 
 class FractalVerseGenerator:
@@ -184,8 +231,8 @@ class FractalVerseGenerator:
             raise ValueError("Seed stanza must contain exactly four lines")
         self._stanzas: List[List[str]] = [list(seed)]
         self._stage_index = 0
-        self._rhyme_a = RhymeStream(RHYME_WORDS_A)
-        self._rhyme_b = RhymeStream(RHYME_WORDS_B)
+        self._rhyme_a = RhymeStream(RHYME_PAIRS_A)
+        self._rhyme_b = RhymeStream(RHYME_PAIRS_B)
 
     @property
     def stanzas(self) -> Sequence[Sequence[str]]:
@@ -197,13 +244,14 @@ class FractalVerseGenerator:
         while len(self._stanzas) < depth:
             prev = self._stanzas[-1]
             stage = IMAGERY_STAGES[self._stage_index % len(IMAGERY_STAGES)]
+            next_stage = IMAGERY_STAGES[(self._stage_index + 1) % len(IMAGERY_STAGES)]
             rhyme_a = self._rhyme_a.next()
             rhyme_b = self._rhyme_b.next()
             new_stanza = [
-                _compose_line(prev[0], stage, 0, rhyme_a),
-                _compose_line(prev[1], stage, 1, rhyme_b),
-                _compose_line(prev[2], stage, 2, rhyme_a),
-                _compose_line(prev[3], stage, 3, rhyme_b),
+                _compose_line(prev[0], stage, next_stage, 0, rhyme_a, rhyme_b),
+                _compose_line(prev[1], stage, next_stage, 1, rhyme_a, rhyme_b),
+                _compose_line(prev[2], stage, next_stage, 2, rhyme_a, rhyme_b),
+                _compose_line(prev[3], stage, next_stage, 3, rhyme_a, rhyme_b),
             ]
             self._stanzas.append(new_stanza)
             self._stage_index += 1
