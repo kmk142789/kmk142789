@@ -33,9 +33,15 @@ class SignatureCheckResult:
     index: int
     signature: str
     valid: bool
+    derived_address: Optional[str] = None
 
     def to_dict(self) -> dict[str, object]:
-        return {"index": self.index, "signature": self.signature, "valid": self.valid}
+        return {
+            "index": self.index,
+            "signature": self.signature,
+            "valid": self.valid,
+            "derived_address": self.derived_address,
+        }
 
 
 BASE64_SEGMENT_PATTERN = re.compile(r"[A-Za-z0-9+/]+={0,2}")
@@ -184,6 +190,7 @@ def verify_segments(address: str, message: str, signature: str) -> List[Signatur
 
     results: List[SignatureCheckResult] = []
     for idx, segment in enumerate(iter_signature_segments(signature), start=1):
+        derived_address: Optional[str] = None
         try:
             raw = base64.b64decode(segment)
             if len(raw) != 65:
@@ -205,7 +212,7 @@ def verify_segments(address: str, message: str, signature: str) -> List[Signatur
             valid = derived_address == address
         except Exception:
             valid = False
-        results.append(SignatureCheckResult(idx, segment, valid))
+        results.append(SignatureCheckResult(idx, segment, valid, derived_address))
     return results
 
 

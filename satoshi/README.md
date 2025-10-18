@@ -31,6 +31,21 @@ Optional flags:
 The output file includes a `combinedSignature` field matching the format stored in
 `puzzle-proofs/` and a `merkleRoot` value that can be published separately.
 
+## Inspecting stacked signatures
+
+Use `report_puzzle_signature_wallets.py` to expand the concatenated Base64 signature chains
+stored in `puzzle-proofs/` and view the derived wallet addresses for each fragment.
+
+```bash
+python satoshi/report_puzzle_signature_wallets.py --pretty
+```
+
+By default the script scans `satoshi/puzzle-proofs/` and prints a JSON report that includes
+every recovered address, the validity of each segment against the declared puzzle address,
+and a global list of unique wallets observed across the entire dataset. Point `--root` at a
+different directory to analyse an alternate collection of proofs, or use `--output` to save
+the report to disk.
+
 ## Entries
 
 - `puzzle003.json` — Puzzle #3 authorship attestation for address `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`.
