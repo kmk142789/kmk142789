@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from .aurora_chronicles import AuroraChronicleMoment, AuroraChronicles, forge_chronicle
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
+from .creative_compass import CreativePrompt, list_prompt_lines, render_prompt, spin_compass
 from .bridge_emitter import (
     BridgeConfig,
     BridgeEmitter,
@@ -80,6 +81,7 @@ __all__ = [
     "AuroraChronicles",
     "AutonomyDecision",
     "AutonomyNode",
+    "CreativePrompt",
     "ContinuumEngine",
     "ContinuumEntry",
     "ContinuumManifest",
@@ -94,8 +96,10 @@ __all__ = [
     "MerkleBatch",
     "bridge_daemon",
     "bridge_process_once",
+    "list_prompt_lines",
     "PortalSnapshot",
     "launch_portal",
+    "render_prompt",
     "JsonMemoryStore",
     "BridgeSignals",
     "BridgeTuning",
@@ -117,6 +121,7 @@ __all__ = [
     "FluxLedgerEntry",
     "FluxVector",
     "RevolutionaryFlux",
+    "spin_compass",
     "MetaEvolutionCharter",
     "EchoPulseEngine",
     "Pulse",
