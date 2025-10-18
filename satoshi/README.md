@@ -9,6 +9,30 @@ Each entry in [`puzzle-proofs/`](puzzle-proofs/) is a JSON document with the fol
 - `message`: exact message string that was signed
 - `signature`: base64-encoded ECDSA signature produced by the referenced key
 
+## Automated verification
+
+Run `python satoshi/build_verification_summary.py` to regenerate an automated
+[`verification-summary.md`](verification-summary.md) table that checks every
+signature segment with the secp256k1 verification routine from
+[`verifier/verify_puzzle_signature.py`](../verifier/verify_puzzle_signature.py).
+The current report shows `0` valid segments for each published proof, meaning
+that none of the supplied signatures can be reproduced from the advertised
+Bitcoin addresses when using the canonical Bitcoin signed message format.
+
+## Signing proofs with a WIF
+
+If you control a private key for one of the listed addresses you can generate
+a fresh, canonical signature for the stored message by running:
+
+```
+python satoshi/sign_puzzle_proof.py satoshi/puzzle-proofs/puzzle003.json --wif-file /path/to/wif.txt --update
+```
+
+The helper validates that the provided WIF belongs to the proof's address,
+produces a standard Bitcoin `signmessage` signature, prints the base64 payload
+to STDOUT, and (when `--update` is supplied) rewrites the JSON record with the
+new signature string.
+
 ## Entries
 
 - `puzzle003.json` — Puzzle #3 authorship attestation for address `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`.
