@@ -6,6 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
+from echo.bridge.router import create_router as create_bridge_router
 from echo_atlas.api import create_router as create_atlas_router
 from echo_atlas.service import AtlasService
 from pulse_weaver.api import create_router as create_pulse_weaver_router
@@ -19,6 +20,7 @@ from echo.pulseweaver.api import create_router as create_pulse_router
 
 app = FastAPI(title="Echo")
 app.include_router(echonet_router)
+app.include_router(create_bridge_router())
 
 _atlas_service = AtlasService(Path.cwd())
 _atlas_service.ensure_ready()
