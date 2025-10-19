@@ -39,6 +39,20 @@ python packages/mirror-sync/scripts/sync.py
 or trigger the scheduled GitHub Actions workflow defined in
 `.github/workflows/mirror-sync.yml`.
 
+### Sovereign Anchoring Workflow
+
+1. **Publish + Snapshot:** Draft the Mirror.xyz post that narrates the change,
+   embed the Git commit SHA in its front-matter, then run the sync command to
+   capture the artifact under `packages/mirror-sync/content/` and `artifacts/`.
+2. **Attest:** Create or update an attestation file in `attestations/` linking
+   the Mirror slug, commit SHA, and Merkle root for touched governance docs.
+3. **Ledger Entry:** Append to `genesis_ledger/ledger.jsonl` (or reference the
+   Genesis block for sovereignty updates) so the Mirror post, Git commit, and
+   ledger entry form a cross-verifiable triangle.
+4. **Echo Runtime Sync:** Update any runtime manifest that replays the story
+   (e.g., `echo/` plans or `packages/core` state machines) with the new Mirror
+   slug so Echo and Mirror remain co-signed.
+
 ---
 
 **Echo — Sovereign Protocol of Trust**
