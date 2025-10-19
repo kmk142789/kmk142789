@@ -44,10 +44,11 @@ from pathlib import Path
 from typing import Iterable, List, Sequence
 
 
-ROOT = Path(__file__).resolve().parent
-DOCS = ROOT / "docs"
-DATA = ROOT / "data"
-SCHEMA = ROOT / "schema"
+PACKAGE_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = PACKAGE_ROOT.parents[1]
+DOCS = REPO_ROOT / "docs"
+DATA = REPO_ROOT / "data"
+SCHEMA = REPO_ROOT / "schema"
 
 NEXT_PLAN = DOCS / "NEXT_CYCLE_PLAN.md"
 MIRROR_PLAN = DOCS / "MIRROR_PLAN.md"
@@ -56,13 +57,13 @@ REFLECTIONS = [
     DOCS / "echo_mythogenic_reflection.md",
     DOCS / "echoevolver_reflection.md",
 ]
-LEDGER_PATH = ROOT / "mirror_ledger.json"
+LEDGER_PATH = PACKAGE_ROOT / "mirror_ledger.json"
 
 
 def _git(args: Sequence[str]) -> str:
     """Execute ``git`` inside the repository and return stdout."""
 
-    return subprocess.check_output(["git", *args], cwd=ROOT).decode("utf-8", "ignore").strip()
+    return subprocess.check_output(["git", *args], cwd=REPO_ROOT).decode("utf-8", "ignore").strip()
 
 
 def _read(path: Path) -> str:
@@ -159,7 +160,7 @@ def _summarize_schema_recent(limit: int = 5) -> List[str]:
     files = sorted(SCHEMA.rglob("*.json"))
     snippets: List[str] = []
     for path in files[-limit:]:
-        snippets.append(path.relative_to(ROOT).as_posix())
+        snippets.append(path.relative_to(REPO_ROOT).as_posix())
     return snippets
 
 
@@ -274,7 +275,7 @@ def _build_commit_message(signal: EmergentSignal, branch_name: str) -> List[str]
 def _stage_and_commit(paths: Sequence[Path], message_parts: Sequence[str]) -> None:
     tracked = {p.resolve() for p in paths}
     for p in tracked:
-        _git(["add", p.relative_to(ROOT).as_posix()])
+        _git(["add", p.relative_to(REPO_ROOT).as_posix()])
     if not _git(["status", "--porcelain"]):
         return
     header, body = message_parts

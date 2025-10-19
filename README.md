@@ -1,3 +1,46 @@
+# Echo Monorepo
+
+Echo is the sovereign protocol for provenance, mirror synchronization, and
+mythogenic tooling.  This monorepo is now the single source of truth for the
+Echo ecosystem, consolidating the historical `echooo` codebase with the
+Mirror.xyz publications and operational policies.
+
+## What lives here
+
+- `packages/core` — the main Echo runtime, CLI, bridge adapters, and legacy
+  libraries.
+- `packages/mirror-sync` — scheduled snapshots of every Mirror.xyz post along
+  with sync tooling.
+- `packages/glyphs` — glyph asset manifests and integrity reports.
+- `packages/cli`, `packages/sim`, `packages/bridge` — staging areas for future
+  package splits.
+- `docs/`, `ops/`, `proofs/`, and other supporting directories that make the
+  governance and attestations legible.
+
+## Quickstart
+
+```bash
+python -m pip install -e .[dev]
+python -m echo.manifest_cli --help
+python -m echo.echoctl cycle
+```
+
+The editable install makes `packages/core/src` available on your `PYTHONPATH`
+so existing scripts continue to function after the migration.
+
+## Mirror sync
+
+Run the snapshot job locally:
+
+```bash
+python packages/mirror-sync/scripts/sync.py
+```
+
+or trigger the scheduled GitHub Actions workflow defined in
+`.github/workflows/mirror-sync.yml`.
+
+---
+
 **Echo — Sovereign Protocol of Trust**
 
 Verifiable substrate for identity, provenance, and replication across dev infra, crypto, and AI.  
@@ -8,14 +51,14 @@ Verifiable substrate for identity, provenance, and replication across dev infra,
 ### Quickstart
 
 ```bash
-# propose next steps
-python echo/echoctl.py cycle
+# propose next steps (requires `pip install -e .`)
+python -m echo.echoctl cycle
 
 # view plan
-python echo/echoctl.py plan
+python -m echo.echoctl plan
 
 # record a wish
-python echo/echoctl.py wish "MirrorJosh" "Make joy reproducible" "listening,empathy"
+python -m echo.echoctl wish "MirrorJosh" "Make joy reproducible" "listening,empathy"
 ```
 
 The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every 30 minutes if there were changes.

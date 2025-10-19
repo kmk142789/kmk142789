@@ -58,8 +58,11 @@ echo-vault = "echo.vault.cli:vault_cli"
 echo-ak = "echo.akit.cli:main"
 echocli = "echo_atlas.cli:main"
 
+[tool.setuptools.package-dir]
+"" = "packages/core/src"
+
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["packages/core/src"]
 include = [
   "echo*",
   "echo_eye_ai*",

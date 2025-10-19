@@ -9,14 +9,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
+from ._paths import REPO_ROOT
+
 try:  # pragma: no cover - optional dependency
     import yaml
 except ModuleNotFoundError:  # pragma: no cover - fallback
     yaml = None
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-_POLICY_DIR = _REPO_ROOT / "echo" / "policy"
-_CODEOWNERS_PATH = _REPO_ROOT / ".github" / "CODEOWNERS"
+_POLICY_DIR = REPO_ROOT / "packages" / "core" / "src" / "echo" / "policy"
+_CODEOWNERS_PATH = REPO_ROOT / ".github" / "CODEOWNERS"
 
 
 @dataclass
@@ -141,7 +142,7 @@ class PolicyEngine:
         try:
             result = run(
                 ["git", "diff", "--name-only", diff],
-                cwd=_REPO_ROOT,
+                cwd=REPO_ROOT,
                 check=True,
                 capture_output=True,
                 text=True,

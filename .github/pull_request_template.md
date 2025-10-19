@@ -1,11 +1,16 @@
 ## Summary
-- What changed & why
+- What changed?
+- Why are we doing this now?
 
-## Echo Links
-- Module(s): `modules/<name>`
-- Attestation: `attestations/<id>.json`
+## Packages touched
+- [ ] `packages/core`
+- [ ] `packages/cli`
+- [ ] `packages/glyphs`
+- [ ] `packages/sim`
+- [ ] `packages/bridge`
+- [ ] `packages/mirror-sync`
 
 ## Validation
-- [ ] CI green
-- [ ] Attestation schema valid
+- [ ] Monorepo CI is green
+- [ ] Mirror sync dry-run (if applicable)
 - [ ] No secrets added

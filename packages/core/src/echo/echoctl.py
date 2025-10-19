@@ -3,25 +3,38 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List
 
-ROOT = Path(__file__).resolve().parents[1]
+try:  # pragma: no cover - executed when run as module
+    from ._paths import DATA_ROOT, DOCS_ROOT
+except ImportError:  # pragma: no cover - executed when run as script
+    _PATHS_SPEC = importlib.util.spec_from_file_location(
+        "echo._paths", (Path(__file__).resolve().parent / "_paths.py")
+    )
+    if _PATHS_SPEC is None or _PATHS_SPEC.loader is None:
+        raise
+    _PATHS = importlib.util.module_from_spec(_PATHS_SPEC)
+    _PATHS_SPEC.loader.exec_module(_PATHS)  # type: ignore[attr-defined]
+    DATA_ROOT = _PATHS.DATA_ROOT  # type: ignore[attr-defined]
+    DOCS_ROOT = _PATHS.DOCS_ROOT  # type: ignore[attr-defined]
+
+ROOT = DATA_ROOT.parent  # preserved for legacy sys.path injection
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-DATA = ROOT / "data"
-DOCS = ROOT / "docs"
-WISH = DATA / "wish_manifest.json"
-PLAN = DOCS / "NEXT_CYCLE_PLAN.md"
+WISH = DATA_ROOT / "wish_manifest.json"
+PLAN = DOCS_ROOT / "NEXT_CYCLE_PLAN.md"
+DOCS = DOCS_ROOT
 
 
 def load_manifest() -> dict:
     """Load the wish manifest, creating a seed file if missing."""
     if not WISH.exists():
-        DATA.mkdir(parents=True, exist_ok=True)
+        DATA_ROOT.mkdir(parents=True, exist_ok=True)
         WISH.write_text('{"version":"1.0.0","wishes":[]}', encoding="utf-8")
     return json.loads(WISH.read_text(encoding="utf-8"))
 

@@ -7,8 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List
 
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
+from .._paths import REPO_ROOT
 ARTIFACT_DIR = REPO_ROOT / "artifacts" / "akit"
 STATE_FILE = ARTIFACT_DIR / "state.json"
 REPORT_FILE = ARTIFACT_DIR / "report.json"
@@ -21,6 +20,7 @@ ALLOWED_PREFIXES = (
     REPO_ROOT / "artifacts",
     REPO_ROOT / "docs",
     REPO_ROOT / "echo",
+    REPO_ROOT / "packages" / "core" / "src" / "echo",
     REPO_ROOT / "modules",
 )
 
