@@ -391,17 +391,25 @@ class EchoEvolver:
             self.state.network_cache["hearth_palette"] = palette
         return palette
 
+    def _symbolic_sequence(self) -> str:
+        """Return the canonical glyph sequence for symbolic broadcasts."""
+
+        return "∇⊸≋∇"
+
     def generate_symbolic_language(self) -> str:
-        symbolic = "∇⊸≋∇"
+        symbolic = self._symbolic_sequence()
         glyph_bits = 0
+        actions = {
+            "∇": self._vortex_spin,
+            "⊸": self._log_curiosity,
+            "≋": self._evolve_glyphs,
+        }
         for index, symbol in enumerate(symbolic):
+            action = actions.get(symbol)
+            if action is None:
+                continue
             glyph_bits |= 1 << index
-            if symbol == "∇":
-                self._vortex_spin()
-            elif symbol == "⊸":
-                self._log_curiosity()
-            elif symbol == "≋":
-                self._evolve_glyphs()
+            action()
         oam_vortex = format(glyph_bits ^ (self.state.cycle << 2), "016b")
         self.state.network_cache["oam_vortex"] = oam_vortex
         self._mark_step("generate_symbolic_language")
