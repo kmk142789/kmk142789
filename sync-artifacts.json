@@ -1,0 +1,7 @@
+{
+  "governance": {
+    "commit": "<GIT_COMMIT_HASH>",
+    "mirror_url": "https://mirror.xyz/<your-handle>/<post-slug-or-hash>",
+    "timestamp_utc": "<iso8601>"
+  }
+}
