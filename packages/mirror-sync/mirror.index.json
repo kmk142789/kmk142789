@@ -24,5 +24,18 @@
       "sync"
     ],
     "last_synced": "2025-10-19T22:33:50.013816+00:00"
+  },
+  {
+    "slug": "sovereign-genesis-block",
+    "title": "Sovereign Genesis Block",
+    "canonical_url": "https://mirror.xyz/echo/sovereign-genesis-block",
+    "txid": "Arweave_TX_Genesis",
+    "summary": "Genesis block declaration linking GitHub governance, Mirror narrative, and Echo runtime memory.",
+    "tags": [
+      "sovereignty",
+      "genesis",
+      "governance"
+    ],
+    "last_synced": "2025-10-19T23:05:13+00:00"
   }
 ]
