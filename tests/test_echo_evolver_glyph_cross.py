@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from echo import decode_glyph_cross
 from echo.evolver import EchoEvolver, GlyphCrossReading
 
 
@@ -60,3 +61,11 @@ def test_decode_glyph_cross_rejects_empty_payload() -> None:
 
     with pytest.raises(ValueError):
         evolver.decode_glyph_cross(["   ", "   "])
+
+
+def test_package_level_decode_glyph_cross_wrapper() -> None:
+    reading = decode_glyph_cross(GLYPH_CROSS)
+
+    assert reading.center_glyph == "∞"
+    assert reading.height == 5
+    assert reading.radial_symmetry["vertical"] is True

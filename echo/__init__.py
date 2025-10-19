@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Iterable
 
 from .aurora_chronicles import AuroraChronicleMoment, AuroraChronicles, forge_chronicle
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
@@ -76,6 +76,22 @@ def __getattr__(name: str) -> Any:  # pragma: no cover - thin forwarding shim
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
+def decode_glyph_cross(glyph_lines: Iterable[str] | str) -> GlyphCrossReading:
+    """Return a :class:`GlyphCrossReading` for ``glyph_lines``.
+
+    The helper instantiates :class:`echo.evolver.EchoEvolver` on demand and
+    delegates to its :meth:`decode_glyph_cross` parser.  Keeping the
+    convenience wrapper at the package root mirrors the Creative Compass
+    helpers so that quick experiments (including documentation snippets and the
+    diagnostic command in ``tests/test_echo_evolver_glyph_cross.py``) can
+    access the glyph analysis tools without constructing an evolver instance
+    manually.
+    """
+
+    evolver = EchoEvolver()
+    return evolver.decode_glyph_cross(glyph_lines)
+
+
 __all__ = [
     "AuroraChronicleMoment",
     "AuroraChronicles",
@@ -134,4 +150,5 @@ __all__ = [
     "IdeaProcessor",
     "IdeaResult",
     "process_idea",
+    "decode_glyph_cross",
 ]
