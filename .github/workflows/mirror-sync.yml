@@ -1,0 +1,28 @@
+name: Mirror Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run sync script
+        run: |
+          bash packages/mirror-sync/scripts/sync.sh
+      - name: Commit snapshots if changed
+        run: |
+          git config user.name "echo-bot"
+          git config user.email "actions@github"
+          git add packages/mirror-sync
+          git diff --cached --quiet || git commit -m "chore(mirror): snapshot updates"
+      - name: Push
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git push

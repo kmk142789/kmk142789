@@ -15,3 +15,6 @@ artifacts/genesis_artifact_bundle.zip
 
 # Sensitive user-provided key dumps
 data/user_provided_keys.txt
+
+# Packaging artifacts
+*.egg-info/

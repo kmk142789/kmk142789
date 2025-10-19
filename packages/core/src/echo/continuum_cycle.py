@@ -10,11 +10,12 @@ import json, re, subprocess
 from pathlib import Path
 from datetime import datetime
 
-ROOT = Path(__file__).resolve().parents[1]
-DOCS = ROOT / "docs"
-ECHO = ROOT / "echo"
-SCHEMA = ROOT / "schema"
-DATA = ROOT / "data"
+from ._paths import DATA_ROOT, DOCS_ROOT, REPO_ROOT, SCHEMA_ROOT
+
+ROOT = REPO_ROOT
+DOCS = DOCS_ROOT
+SCHEMA = SCHEMA_ROOT
+DATA = DATA_ROOT
 
 REGISTRY = DOCS / "self_expansion_protocol.md"
 REFLECTIONS = [

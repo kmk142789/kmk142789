@@ -33,8 +33,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Mapping, Sequence
 
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
+from ._paths import MANIFEST_ROOT, REPO_ROOT
 MANIFEST_NAME = "echo_manifest.json"
 @dataclass(frozen=True)
 class ManifestEntry:

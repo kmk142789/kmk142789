@@ -14,9 +14,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional
 
+from ._paths import REPO_ROOT
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-_DEFAULT_OUTPUT_DIR = _REPO_ROOT / "artifacts" / "provenance"
+_DEFAULT_OUTPUT_DIR = REPO_ROOT / "artifacts" / "provenance"
 
 
 def _now() -> datetime:
@@ -27,7 +27,7 @@ def _git(*args: str) -> str:
     try:
         result = subprocess.run(
             ["git", *args],
-            cwd=_REPO_ROOT,
+            cwd=REPO_ROOT,
             check=True,
             capture_output=True,
             text=True,
@@ -107,7 +107,7 @@ class ProvenanceEmitter:
     ) -> Path:
         start = self.clock().isoformat().replace("+00:00", "Z")
         manifest_digest = None
-        manifest_file = manifest_path or (_REPO_ROOT / "echo_manifest.json")
+        manifest_file = manifest_path or (REPO_ROOT / "echo_manifest.json")
         if manifest_file.exists():
             manifest_digest = _sha256_bytes(
                 json.dumps(

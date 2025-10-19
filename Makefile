@@ -6,13 +6,13 @@ akit:
 	python -m echo.akit.cli --dry-run --cycles 1 --output artifacts/akit/ci-run.json
 
 cycle:
-	python echo/echoctl.py cycle
+python -m echo.echoctl cycle
 
 plan:
-	python echo/echoctl.py plan
+python -m echo.echoctl plan
 
 wish:
-	python echo/echoctl.py wish "$(W)" "$(D)" "$(C)"
+python -m echo.echoctl wish "$(W)" "$(D)" "$(C)"
 
 test:
 	pytest -q

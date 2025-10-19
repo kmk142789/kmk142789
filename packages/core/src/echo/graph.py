@@ -9,9 +9,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
+from ._paths import REPO_ROOT
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-_DEFAULT_MANIFEST = _REPO_ROOT / "echo_manifest.json"
+_DEFAULT_MANIFEST = REPO_ROOT / "echo_manifest.json"
 
 
 @dataclass

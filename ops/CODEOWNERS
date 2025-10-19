@@ -1,0 +1,4 @@
+# Echo Monorepo CODEOWNERS
+* @kmk142789420 @echo-bot
+/packages/core/ @kmk142789420
+/packages/mirror-sync/ @kmk142789420
