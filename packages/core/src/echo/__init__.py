@@ -39,6 +39,7 @@ from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
 from .self_sustaining_loop import DecisionResult, ProgressResult, SelfSustainingLoop
+from .sync import CloudSyncCoordinator, DirectorySyncTransport, SyncReport, SyncTransport
 from .thoughtlog import ThoughtLogger, thought_trace
 from .wish_insights import summarize_wishes
 
@@ -143,6 +144,10 @@ __all__ = [
     "FluxVector",
     "RevolutionaryFlux",
     "spin_compass",
+    "CloudSyncCoordinator",
+    "DirectorySyncTransport",
+    "SyncReport",
+    "SyncTransport",
     "MetaEvolutionCharter",
     "EchoPulseEngine",
     "Pulse",

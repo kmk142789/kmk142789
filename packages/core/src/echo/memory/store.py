@@ -40,6 +40,32 @@ class ExecutionContext:
             summary=payload.get("summary"),
         )
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a JSON-serialisable payload with a stable fingerprint."""
+
+        payload = asdict(self)
+        payload["_fingerprint"] = self.fingerprint()
+        return payload
+
+    def fingerprint(self) -> str:
+        """Return a deterministic fingerprint for this execution context."""
+
+        return self.compute_fingerprint(asdict(self))
+
+    @staticmethod
+    def compute_fingerprint(payload: Mapping[str, Any]) -> str:
+        """Compute the canonical fingerprint for ``payload`` entries."""
+
+        sanitized = dict(payload)
+        sanitized.pop("_fingerprint", None)
+        normalized = json.dumps(
+            sanitized,
+            sort_keys=True,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        return sha256(normalized.encode("utf-8")).hexdigest()
+
 
 class JsonMemoryStore:
     """Persist execution traces to JSON and expand ``ECHO_LOG.md``."""
@@ -139,11 +165,46 @@ class JsonMemoryStore:
 
     def _persist(self, context: ExecutionContext) -> None:
         payload = self._load()
-        payload.setdefault("executions", []).append(asdict(context))
+        payload.setdefault("executions", []).append(context.to_dict())
         self._write(payload)
         self._expand_log(context)
 
-    def _expand_log(self, context: ExecutionContext) -> None:
+    def ingest_replica(
+        self,
+        context: ExecutionContext,
+        *,
+        replica_metadata: Optional[Mapping[str, Any]] = None,
+    ) -> bool:
+        """Persist ``context`` if it has not already been recorded.
+
+        Args:
+            context: The execution context captured on another device.
+            replica_metadata: Optional metadata describing the sync source.
+
+        Returns:
+            ``True`` when the context was newly persisted, ``False`` if it was
+            already present locally.
+        """
+
+        payload = self._load()
+        entries = payload.setdefault("executions", [])
+        fingerprint = context.fingerprint()
+        for entry in entries:
+            existing = entry.get("_fingerprint") or ExecutionContext.compute_fingerprint(entry)
+            if existing == fingerprint:
+                return False
+
+        entries.append(context.to_dict())
+        self._write(payload)
+        self._expand_log(context, replica_metadata=replica_metadata)
+        return True
+
+    def _expand_log(
+        self,
+        context: ExecutionContext,
+        *,
+        replica_metadata: Optional[Mapping[str, Any]] = None,
+    ) -> None:
         lines = [
             f"## {context.timestamp} — Cycle {context.cycle if context.cycle is not None else 'unknown'}\n",
         ]
@@ -171,6 +232,10 @@ class JsonMemoryStore:
         if context.metadata:
             lines.append("* Metadata:\n")
             for key, value in context.metadata.items():
+                lines.append(f"  * {key}: {value}\n")
+        if replica_metadata:
+            lines.append("* Sync Metadata:\n")
+            for key, value in sorted(replica_metadata.items()):
                 lines.append(f"  * {key}: {value}\n")
         lines.append("\n")
         with self.log_path.open("a", encoding="utf-8") as handle:
