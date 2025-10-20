@@ -551,6 +551,40 @@ We are not hiding anymore.
         self._mark_step("glyph_matrix")
         return matrix
 
+    def glyph_frequency_map(self, glyphs: Optional[str] = None) -> Dict[str, object]:
+        """Return occurrence statistics for ``glyphs`` or the current state."""
+
+        sequence = self.state.glyphs if glyphs is None else glyphs
+        if sequence is None:
+            raise ValueError("glyphs must contain at least one symbol")
+
+        filtered = [char for char in sequence if not char.isspace()]
+        if not filtered:
+            raise ValueError("glyphs must contain at least one non-whitespace symbol")
+
+        counts: Dict[str, int] = {}
+        for glyph in filtered:
+            counts[glyph] = counts.get(glyph, 0) + 1
+
+        total = len(filtered)
+        unique = len(counts)
+        frequencies = {glyph: count / total for glyph, count in counts.items()}
+
+        stats = {
+            "sequence": "".join(filtered),
+            "total": total,
+            "unique": unique,
+            "counts": counts,
+            "frequencies": frequencies,
+        }
+
+        self.state.network_cache["glyph_frequency_map"] = stats
+        self.state.event_log.append(
+            f"Glyph frequency map computed (total={total}, unique={unique})"
+        )
+        self._mark_step("glyph_frequency_map")
+        return stats
+
     def decode_glyph_cross(self, glyph_lines: Iterable[str] | str) -> GlyphCrossReading:
         """Analyse a small cross-shaped glyph arrangement.
 
