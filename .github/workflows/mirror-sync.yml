@@ -1,28 +1,40 @@
-name: Mirror Sync
+name: Mirror Sync Drafts
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: "0 */6 * * *"
 
 jobs:
-  sync:
+  prepare-drafts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Run sync script
+          python-version: '3.11'
+
+      - name: Install dependencies
         run: |
-          bash packages/mirror-sync/scripts/sync.sh
-      - name: Commit snapshots if changed
+          python -m pip install --upgrade pip
+          pip install -e "packages/mirror-sync"
+          python -m playwright install chromium
+
+      - name: Prepare Mirror drafts
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: 0
+          MIRROR_SYNC_SKIP_BROWSER: "1"
         run: |
-          git config user.name "echo-bot"
-          git config user.email "actions@github"
-          git add packages/mirror-sync
-          git diff --cached --quiet || git commit -m "chore(mirror): snapshot updates"
-      - name: Push
-        if: github.ref == 'refs/heads/main'
-        run: |
-          git push
+          mkdir -p out/mirror_drafts
+          python -m mirror_sync
+
+      - name: Upload draft HTML artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirror-drafts
+          path: out/mirror_drafts
+          if-no-files-found: warn
