@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mirror-sync"
+version = "0.1.0"
+dependencies = ["playwright>=1.47.0", "markdown>=3.6", "pyyaml>=6.0", "jinja2>=3.1"]
+
+[tool.setuptools]
+packages = ["mirror_sync"]
+
+[tool.setuptools.package-dir]
+"" = "."

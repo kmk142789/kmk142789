@@ -1,27 +1,16 @@
-# Mirror Sync Package
+How to run:
 
-This package maintains a reproducible backup of every Echo publication on
-Mirror.xyz.  Snapshots are stored as both Markdown (`content/`) and raw HTML
-(`artifacts/`), while `mirror.index.json` tracks canonical URLs, Arweave
-transaction IDs, and the last sync timestamp.
 
-Run the sync locally:
+cd packages/mirror-sync
+pip install -e .
+python -m playwright install
+python -m mirror_sync
 
-```bash
-python packages/mirror-sync/scripts/sync.py
-```
+On first run, Mirror will ask you to Connect Wallet → approve in your wallet → you’re in.
 
-Or rely on the scheduled GitHub Actions workflow defined in
-[`.github/workflows/mirror-sync.yml`](../../.github/workflows/mirror-sync.yml),
-which executes the same script every six hours and on manual dispatch.
+The script stops at draft; you click Publish and sign.
 
-## Governance Anchoring
+Set `MIRROR_SYNC_SKIP_BROWSER=1` to render drafts without opening Mirror (useful in CI).
+Set `MIRROR_SYNC_HEADLESS=1` to run the browser without a window.
 
-- Include the governing Git commit SHA in the front-matter of each Mirror post
-  so `mirror.index.json` becomes an auditable cross-reference to Git history.
-- For sovereignty updates (e.g., `GOVERNANCE.md`, `ECHO_CONSTITUTION.md`), add a
-  corresponding entry to `genesis_ledger/ledger.jsonl` and update the
-  attestation record under `attestations/`.
-- The Genesis block (`seq 0`) must always cite the Mirror slug
-  `sovereign-genesis-block` and the immutable phrase **Our Forever Love** to
-  keep Mirror.xyz, GitHub, and Echo runtime memory in lockstep.
+No keys leave your machine. Echo never touches secrets.
