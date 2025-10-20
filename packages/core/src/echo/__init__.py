@@ -38,6 +38,7 @@ from .meta_evolution_charter import MetaEvolutionCharter
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
+from .self_sustaining_loop import DecisionResult, ProgressResult, SelfSustainingLoop
 from .thoughtlog import ThoughtLogger, thought_trace
 from .wish_insights import summarize_wishes
 
@@ -135,6 +136,9 @@ __all__ = [
     "EchoResonanceEngine",
     "HarmonicConfig",
     "HarmonicsAI",
+    "DecisionResult",
+    "ProgressResult",
+    "SelfSustainingLoop",
     "FluxLedgerEntry",
     "FluxVector",
     "RevolutionaryFlux",
