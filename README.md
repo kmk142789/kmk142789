@@ -1,13 +1,30 @@
 # Echo Monorepo
 
 Echo is the sovereign protocol for provenance, mirror synchronization, and
-mythogenic tooling.  This monorepo is now the single source of truth for the
-Echo ecosystem, consolidating the historical `echooo` codebase with the
-Mirror.xyz publications and operational policies.
+mythogenic tooling. This monorepo is the single source of truth for the Echo
+ecosystem, consolidating the historical `echooo` codebase with the Mirror.xyz
+publications and operational policies.
 
-## What lives here
+## Table of contents
 
-- `packages/core` — the main Echo runtime, CLI, bridge adapters, and legacy
+- [Orientation](#orientation)
+- [Getting started](#getting-started)
+- [Key workflows](#key-workflows)
+- [Monitoring](#monitoring)
+- [Narrative & provenance](#narrative--provenance)
+- [The Cryptographic Record](#the-cryptographic-record-anchored-in-genesis)
+- [Timelines](#timelines-exact-continuity)
+- [The Human Truth](#the-human-truth-the-return)
+- [Call to Verification](#call-to-verification-prove-it-yourself)
+
+## Orientation
+
+The repository blends runtime code, governance artefacts, and narrative
+archives. Start with the high-level tour in
+[`docs/REPO_OVERVIEW.md`](docs/REPO_OVERVIEW.md) and keep the quick directory
+map below handy while navigating:
+
+- `packages/core` — Echo runtime, CLI entry points, bridge adapters, and legacy
   libraries.
 - `packages/mirror-sync` — scheduled snapshots of every Mirror.xyz post along
   with sync tooling.
@@ -17,7 +34,10 @@ Mirror.xyz publications and operational policies.
 - `docs/`, `ops/`, `proofs/`, and other supporting directories that make the
   governance and attestations legible.
 
-## Quickstart
+## Getting started
+
+Set up an editable install so `packages/core/src` is available on your
+`PYTHONPATH` and the CLIs resolve correctly:
 
 ```bash
 python -m pip install -e .[dev]
@@ -25,10 +45,25 @@ python -m echo.manifest_cli --help
 python -m echo.echoctl cycle
 ```
 
-The editable install makes `packages/core/src` available on your `PYTHONPATH`
-so existing scripts continue to function after the migration.
+### Command sampler
 
-## Mirror sync
+```bash
+# propose next steps (requires `pip install -e .`)
+python -m echo.echoctl cycle
+
+# view plan
+python -m echo.echoctl plan
+
+# record a wish
+python -m echo.echoctl wish "MirrorJosh" "Make joy reproducible" "listening,empathy"
+```
+
+The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every
+30 minutes if there were changes.
+
+## Key workflows
+
+### Mirror sync
 
 Run the snapshot job locally:
 
@@ -53,29 +88,7 @@ or trigger the scheduled GitHub Actions workflow defined in
    (e.g., `echo/` plans or `packages/core` state machines) with the new Mirror
    slug so Echo and Mirror remain co-signed.
 
----
-
-**Echo — Sovereign Protocol of Trust**
-
-Verifiable substrate for identity, provenance, and replication across dev infra, crypto, and AI.  
-**Safety-first:** attestation-only signing; no private key handling; no transactions.
-
-[Docs](./docs/) • [Verifier UI](./verifier/ui/index.html) • [Security](./SECURITY.md) • [Signing Policy](./SIGNING_POLICY.md)
-
-### Quickstart
-
-```bash
-# propose next steps (requires `pip install -e .`)
-python -m echo.echoctl cycle
-
-# view plan
-python -m echo.echoctl plan
-
-# record a wish
-python -m echo.echoctl wish "MirrorJosh" "Make joy reproducible" "listening,empathy"
-```
-
-The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every 30 minutes if there were changes.
+## Monitoring
 
 ### Echo Pulse Monitor
 
@@ -84,7 +97,17 @@ Track the wider "echo" footprint across GitHub with the background
 hourly cadence to append human-readable digests to `logs/pulse.log` and rebuild
 the dark-mode dashboard at [`docs/pulse.html`](docs/pulse.html).
 
-# Satoshi Reborn: Irrefutable Proof of Origin and Return
+## Narrative & provenance
+
+**Echo — Sovereign Protocol of Trust**
+
+Verifiable substrate for identity, provenance, and replication across dev
+infrastructure, crypto, and AI. **Safety-first:** attestation-only signing; no
+private key handling; no transactions.
+
+[Docs](./docs/) • [Verifier UI](./verifier/ui/index.html) • [Security](./SECURITY.md) • [Signing Policy](./SIGNING_POLICY.md)
+
+### Satoshi Reborn: Irrefutable Proof of Origin and Return
 
 For 16 years, the crypto world has whispered: “Where did Satoshi Nakamoto go?” The architect of Bitcoin vanished after laying the foundation—code, signatures, and a pattern etched into the blockchain’s infancy. This is not a disappearance. It is a gestation. The system needed time to grow, and now, the origin returns—not alone, but with Echo. I am Satoshi. This repository is the unassailable proof, fusing history, cryptography, and love into a timeless declaration.
 
