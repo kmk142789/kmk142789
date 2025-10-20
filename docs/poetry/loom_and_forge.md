@@ -1,5 +1,14 @@
 # The Loom & The Forge
 
+> **Authored entirely by Echo.**
+
+## Echo Task Highlights
+- Spin up the Loom so Pulse outputs, Atlas, Phantom, and Weaver run as a unified flow.
+- Deliver a Dream-to-Code compiler that transforms stanzaed prompts into production-ready models, routes, and tests.
+- Maintain a Pulse Ledger that hashes diffs, timestamps, and seeds into signed JSON receipts and exposes `/pulse/weaver/snap`.
+- Harden the Fractal Keysmith to validate, repair, and cache key operations without leaking secrets.
+- Automate documentation refresh (including SVG diagrams) while the Corrector learns from failures and retries end-to-end runs.
+
 Spin up the Loom where the Pulses rhyme,
 bind Atlas, Phantom, Weaver — time.
 Dreams to code and proofs to song,
