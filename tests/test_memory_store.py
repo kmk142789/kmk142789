@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import pytest
 
-from echo.memory import JsonMemoryStore
+from echo.memory import ExecutionContext, JsonMemoryStore
 
 
 def test_memory_store_records_cycle(tmp_path):
@@ -62,3 +62,36 @@ def test_recent_executions_limit_and_metadata(tmp_path):
 
     with pytest.raises(ValueError):
         store.recent_executions(limit=-1)
+
+
+def test_ingest_replica_deduplicates_and_logs(tmp_path):
+    store = JsonMemoryStore(
+        storage_path=tmp_path / "memory.json", log_path=tmp_path / "log.md"
+    )
+
+    context = ExecutionContext(
+        timestamp="2024-01-01T00:00:00+00:00",
+        commands=[{"name": "sync", "detail": "upstream"}],
+        dataset_fingerprints={},
+        validations=[],
+        metadata={"device": "alpha"},
+        cycle=7,
+        artifact=None,
+        summary="replicated",
+    )
+
+    inserted = store.ingest_replica(
+        context,
+        replica_metadata={"origin": "alpha", "captured_at": "2024-01-01T00:00:01+00:00"},
+    )
+    assert inserted is True
+
+    duplicate = store.ingest_replica(context)
+    assert duplicate is False
+
+    payload = json.loads((tmp_path / "memory.json").read_text())
+    entry = payload["executions"][0]
+    assert entry["_fingerprint"] == context.fingerprint()
+
+    log_text = (tmp_path / "log.md").read_text()
+    assert "Sync Metadata" in log_text
