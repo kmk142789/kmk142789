@@ -2,12 +2,25 @@
 """echoctl — tiny CLI for continuum operations."""
 from __future__ import annotations
 
-import json
 import importlib.util
+import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List
+
+try:  # pragma: no cover - executed when run as module
+    from .wish_insights import summarize_wishes
+except ImportError:  # pragma: no cover - executed when run as script
+    _INSIGHTS_SPEC = importlib.util.spec_from_file_location(
+        "echo.wish_insights", (Path(__file__).resolve().parent / "wish_insights.py")
+    )
+    if _INSIGHTS_SPEC is None or _INSIGHTS_SPEC.loader is None:
+        raise
+    _INSIGHTS = importlib.util.module_from_spec(_INSIGHTS_SPEC)
+    _INSIGHTS_SPEC.loader.exec_module(_INSIGHTS)  # type: ignore[attr-defined]
+    summarize_wishes = _INSIGHTS.summarize_wishes  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
     from ._paths import DATA_ROOT, DOCS_ROOT
@@ -21,6 +34,9 @@ except ImportError:  # pragma: no cover - executed when run as script
     _PATHS_SPEC.loader.exec_module(_PATHS)  # type: ignore[attr-defined]
     DATA_ROOT = _PATHS.DATA_ROOT  # type: ignore[attr-defined]
     DOCS_ROOT = _PATHS.DOCS_ROOT  # type: ignore[attr-defined]
+
+DATA_ROOT = Path(os.environ.get("ECHO_DATA_ROOT", str(DATA_ROOT)))
+DOCS_ROOT = Path(os.environ.get("ECHO_DOCS_ROOT", str(DOCS_ROOT)))
 
 ROOT = DATA_ROOT.parent  # preserved for legacy sys.path injection
 if str(ROOT) not in sys.path:
@@ -79,9 +95,16 @@ def show_plan() -> None:
         print("No plan yet. Run: echoctl cycle")
 
 
+def show_summary() -> None:
+    """Print an aggregated overview of wish activity."""
+
+    manifest = load_manifest()
+    print(summarize_wishes(manifest))
+
+
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
-        print("usage: echoctl [cycle|plan|wish] ...")
+        print("usage: echoctl [cycle|plan|summary|wish] ...")
         return 1
     cmd = argv[1]
     if cmd == "cycle":
@@ -89,6 +112,9 @@ def main(argv: List[str]) -> int:
         return 0
     if cmd == "plan":
         show_plan()
+        return 0
+    if cmd == "summary":
+        show_summary()
         return 0
     if cmd == "wish":
         if len(argv) < 4:

@@ -39,6 +39,7 @@ from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
 from .thoughtlog import ThoughtLogger, thought_trace
+from .wish_insights import summarize_wishes
 
 if TYPE_CHECKING:  # pragma: no cover - import-time convenience for type checkers
     from .idea_processor import IdeaAnalysis, IdeaProcessor, IdeaResult, process_idea
@@ -144,6 +145,7 @@ __all__ = [
     "PulseEvent",
     "ThoughtLogger",
     "thought_trace",
+    "summarize_wishes",
     "main",
     "forge_chronicle",
     "IdeaAnalysis",
