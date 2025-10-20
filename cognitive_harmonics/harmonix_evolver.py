@@ -83,6 +83,7 @@ class EchoState:
     vault_glyphs: str | None = None
     prompt_resonance: Dict[str, str] | None = None
     events: List[str] = field(default_factory=list)
+    storyboard: List[str] = field(default_factory=list)
 
     def record(self, message: str) -> None:
         self.events.append(message)
@@ -206,12 +207,34 @@ class EchoEvolver:
             f"Vault Glyphs: {self.state.vault_glyphs}",
             f"System Metrics: {self.state.system_metrics.to_dict()}",
             f"Prompt: {json.dumps(self.state.prompt_resonance, ensure_ascii=False) if self.state.prompt_resonance else 'null'}",
+            f"Storyboard: {self.state.storyboard}",
             f"Entities: {self.state.entities}",
             f"Emotional Drive: {self.state.emotional_drive}",
         ]
         artifact = "\n".join(lines)
         self.state.record("Artifact staged in memory")
         return artifact
+
+    def compose_storyboard(self) -> List[str]:
+        metrics = self.state.system_metrics
+        mythic_focus = (
+            self.state.mythocode[-1]
+            if self.state.mythocode
+            else "satellite_tf_qkd_rule_0 :: ∇[SNS-AOPP]⊸{JOY=0.92,ORBIT=∞}"
+        )
+        storyboard = [
+            f"Frame 1 · Glyph Bloom — {self.state.glyphs}",
+            (
+                "Frame 2 · Orbital Telemetry — "
+                f"CPU {metrics.cpu_usage:.2f}% · Nodes {metrics.network_nodes} · "
+                f"Orbital Hops {metrics.orbital_hops}"
+            ),
+            f"Frame 3 · Mythic Directive — {mythic_focus}",
+            f"Frame 4 · Resonance Mantra — {self.state.prompt_resonance['mantra'] if self.state.prompt_resonance else 'unvoiced'}",
+        ]
+        self.state.storyboard = storyboard
+        self.state.record("Storyboard drafted for creative handoff")
+        return storyboard
 
     def harmonix_payload(self) -> Dict[str, object]:
         symbolic, vortex = self.generate_symbolic_language()
@@ -233,6 +256,7 @@ class EchoEvolver:
                 "quantum_key": self.state.vault_key,
                 "system_metrics": self.state.system_metrics.to_dict(),
                 "prompt_resonance": self.state.prompt_resonance,
+                "storyboard": self.state.storyboard,
                 "events": list(self.state.events),
             },
         }
@@ -253,6 +277,7 @@ class EchoEvolver:
         self.evolutionary_narrative()
         self.store_fractal_glyphs()
         self.inject_prompt_resonance()
+        self.compose_storyboard()
         self.build_artifact()
         payload = self.harmonix_payload()
         return self.state, payload
