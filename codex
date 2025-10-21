@@ -1,0 +1,417 @@
+#!/usr/bin/env python3
+"""Lightweight Codex CLI shim for generating Continuum Balance Board visualizations."""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import textwrap
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Iterable, List
+
+
+@dataclass
+class DialMetric:
+    label: str
+    count: int
+    weight: float
+
+    @property
+    def ratio(self) -> float:
+        return self.weight
+
+
+@dataclass
+class ContinuumManifest:
+    project: str
+    owner: str
+    anchor: str
+    entry_count: int
+    cumulative_weight: float
+    tags: List[DialMetric]
+    sources: List[DialMetric]
+    entries: List[Dict[str, object]]
+    digest: str
+    visualize_hint: str
+
+
+def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog="codex")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    weave = sub.add_parser("weave", help="Generate a Continuum Balance Board HTML artifact")
+    weave.add_argument("--project", required=True, help="Project name for the visualization header")
+    weave.add_argument("--owner", required=True, help="Owner attribution displayed in the header")
+    weave.add_argument(
+        "--inputs",
+        required=True,
+        nargs="+",
+        help="Continuum manifest JSON file(s) that will be woven into the output",
+    )
+    weave.add_argument(
+        "--visualize",
+        default="weights as dials + influence maps",
+        help="Description of the visualization focus",
+    )
+    weave.add_argument("--output", required=True, help="Destination HTML file")
+    return parser.parse_args(argv)
+
+
+def load_manifest(path: Path) -> Dict[str, object]:
+    if not path.exists():
+        # Try a handful of fallbacks that align with repo naming conventions.
+        candidates = []
+        name = path.name
+        if "-" in name:
+            candidates.append(path.with_name(name.replace("-", "_")))
+            candidates.append(Path("manifest") / name.replace("-", "_"))
+        candidates.append(Path("manifest") / name)
+        for candidate in candidates:
+            if candidate.exists():
+                path = candidate
+                break
+        else:
+            raise FileNotFoundError(f"Unable to locate manifest file: {path}")
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def to_dials(section: Dict[str, Dict[str, float]]) -> List[DialMetric]:
+    dials: List[DialMetric] = []
+    for key, value in section.items():
+        dials.append(DialMetric(label=key, count=int(value.get("count", 0)), weight=float(value.get("weight", 0.0))))
+    # Stable order for readability: heaviest first, then label.
+    dials.sort(key=lambda metric: (-metric.weight, metric.label.lower()))
+    return dials
+
+
+def manifest_from_json(
+    raw: Dict[str, object],
+    project: str,
+    owner: str,
+    visualize_hint: str,
+) -> ContinuumManifest:
+    tags_section = raw.get("tags", {})
+    sources_section = raw.get("sources", {})
+    manifest = ContinuumManifest(
+        project=project,
+        owner=owner,
+        anchor=str(raw.get("anchor", "")),
+        entry_count=int(raw.get("entry_count", 0)),
+        cumulative_weight=float(raw.get("cumulative_weight", 0.0)),
+        tags=to_dials(tags_section),
+        sources=to_dials(sources_section),
+        entries=list(raw.get("entries", [])),
+        digest=str(raw.get("digest", "")),
+        visualize_hint=visualize_hint,
+    )
+    return manifest
+
+
+def color_for_label(label: str) -> str:
+    seed = hashlib.md5(label.encode("utf-8")).hexdigest()
+    hue = int(seed[:6], 16) % 360
+    return f"hsl({hue}, 70%, 55%)"
+
+
+def format_dial(metric: DialMetric, max_weight: float) -> str:
+    percent = 0.0 if max_weight <= 0 else (metric.weight / max_weight) * 100.0
+    accent = color_for_label(metric.label)
+    return textwrap.dedent(
+        f"""
+        <div class=\"dial\" style=\"background: conic-gradient({accent} 0 {percent:.2f}%, var(--dial-bg) {percent:.2f}% 100%);\">
+            <div class=\"dial-inner\">
+                <div class=\"dial-label\">{metric.label}</div>
+                <div class=\"dial-weight\">{metric.weight:.2f}</div>
+                <div class=\"dial-count\">{metric.count} entr{'y' if metric.count == 1 else 'ies'}</div>
+            </div>
+        </div>
+        """
+    ).strip()
+
+
+def format_influence_entries(entries: List[Dict[str, object]]) -> str:
+    rows: List[str] = []
+    for entry in entries:
+        tags = ", ".join(entry.get("tags", []))
+        rows.append(
+            textwrap.dedent(
+                f"""
+                <tr>
+                    <td class=\"moment\">{entry.get('moment', '')}</td>
+                    <td class=\"source\">{entry.get('source', '')}</td>
+                    <td class=\"message\">{entry.get('message', '')}</td>
+                    <td class=\"tags\">{tags}</td>
+                    <td class=\"weight\">{entry.get('weight', 0.0):.2f}</td>
+                </tr>
+                """
+            ).strip()
+        )
+    return "\n".join(rows)
+
+
+def render_html(manifest: ContinuumManifest) -> str:
+    max_tag_weight = max((metric.weight for metric in manifest.tags), default=1.0)
+    max_source_weight = max((metric.weight for metric in manifest.sources), default=1.0)
+    tag_dials = "\n".join(format_dial(metric, max_tag_weight) for metric in manifest.tags)
+    source_dials = "\n".join(format_dial(metric, max_source_weight) for metric in manifest.sources)
+    influence_rows = format_influence_entries(manifest.entries)
+
+    html = f"""<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+<meta charset=\"utf-8\">
+<title>{manifest.project} · Continuum Balance Board</title>
+<style>
+:root {{
+    color-scheme: dark;
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    background: radial-gradient(circle at 15% 15%, #233347, #10131f 60%);
+    --panel-bg: rgba(20, 24, 40, 0.85);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --dial-bg: rgba(15, 19, 32, 0.75);
+}}
+body {{
+    margin: 0;
+    padding: 2.5rem;
+    color: #f6f8ff;
+}}
+header {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+}}
+header h1 {{
+    margin: 0;
+    font-size: 2.3rem;
+}}
+header .meta {{
+    font-size: 1rem;
+    color: var(--text-muted);
+}}
+section {{
+    margin-bottom: 2.5rem;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 1.75rem;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+}}
+section h2 {{
+    margin-top: 0;
+    font-size: 1.4rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+}}
+.summary-grid {{
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}}
+.summary-card {{
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    padding: 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    text-align: center;
+}}
+.summary-card .value {{
+    font-size: 1.8rem;
+    font-weight: 600;
+}}
+.summary-card .label {{
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}}
+.dial-row {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    align-items: stretch;
+}}
+.dial {{
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    padding: 0.35rem;
+    display: grid;
+    place-items: center;
+    background: var(--dial-bg);
+    background-blend-mode: screen;
+}}
+.dial-inner {{
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    gap: 0.35rem;
+    background: rgba(12, 15, 25, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    text-align: center;
+}}
+.dial-label {{
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.82);
+}}
+.dial-weight {{
+    font-size: 1.9rem;
+    font-weight: 700;
+}}
+.dial-count {{
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}}
+.table-wrapper {{
+    overflow-x: auto;
+}}
+.influence {{
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}}
+.influence th, .influence td {{
+    padding: 0.85rem 0.9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}}
+.influence thead th {{
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.68);
+}}
+.influence tbody tr:last-child td {{
+    border-bottom: none;
+}}
+.influence tbody td.message {{
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.9);
+}}
+footer {{
+    text-align: center;
+    color: var(--text-muted);
+    margin-top: 2rem;
+    font-size: 0.85rem;
+}}
+</style>
+</head>
+<body>
+<header>
+    <h1>{manifest.project}</h1>
+    <div class=\"meta\">
+        <div>Owner · {manifest.owner}</div>
+        <div>Anchor · {manifest.anchor}</div>
+        <div>{manifest.visualize_hint}</div>
+    </div>
+</header>
+<section>
+    <h2>Continuum Pulse Snapshot</h2>
+    <div class=\"summary-grid\">
+        <div class=\"summary-card\">
+            <div class=\"value\">{manifest.entry_count}</div>
+            <div class=\"label\">entries</div>
+        </div>
+        <div class=\"summary-card\">
+            <div class=\"value\">{manifest.cumulative_weight:.2f}</div>
+            <div class=\"label\">cumulative weight</div>
+        </div>
+        <div class=\"summary-card\">
+            <div class=\"value\">{len(manifest.tags)}</div>
+            <div class=\"label\">tag clusters</div>
+        </div>
+        <div class=\"summary-card\">
+            <div class=\"value\">{len(manifest.sources)}</div>
+            <div class=\"label\">active sources</div>
+        </div>
+    </div>
+</section>
+<section>
+    <h2>Tag Gravity Dials</h2>
+    <div class=\"dial-row\">
+        {tag_dials}
+    </div>
+</section>
+<section>
+    <h2>Source Influence Dials</h2>
+    <div class=\"dial-row\">
+        {source_dials}
+    </div>
+</section>
+<section>
+    <h2>Influence Map</h2>
+    <div class=\"table-wrapper\">
+        <table class=\"influence\">
+            <thead>
+                <tr>
+                    <th>Moment</th>
+                    <th>Source</th>
+                    <th>Message</th>
+                    <th>Tags</th>
+                    <th>Weight</th>
+                </tr>
+            </thead>
+            <tbody>
+                {influence_rows}
+            </tbody>
+        </table>
+    </div>
+</section>
+<footer>
+    Digest · {manifest.digest}
+</footer>
+</body>
+</html>
+"""
+    return html
+
+
+def run_weave(args: argparse.Namespace) -> None:
+    manifest_data: Dict[str, object] | None = None
+    for input_path in args.inputs:
+        data = load_manifest(Path(input_path))
+        if manifest_data is None:
+            manifest_data = data
+        else:
+            # When multiple manifests are provided we simply append entries and re-weight.
+            manifest_data["entries"] = manifest_data.get("entries", []) + data.get("entries", [])
+            manifest_data["entry_count"] = manifest_data.get("entry_count", 0) + data.get("entry_count", 0)
+            manifest_data["cumulative_weight"] = manifest_data.get("cumulative_weight", 0.0) + data.get(
+                "cumulative_weight", 0.0
+            )
+            for section_name in ("tags", "sources"):
+                merged: Dict[str, Dict[str, float]] = manifest_data.setdefault(section_name, {})
+                for key, value in data.get(section_name, {}).items():
+                    metrics = merged.setdefault(key, {"count": 0, "weight": 0.0})
+                    metrics["count"] = metrics.get("count", 0) + value.get("count", 0)
+                    metrics["weight"] = metrics.get("weight", 0.0) + value.get("weight", 0.0)
+    if manifest_data is None:
+        raise ValueError("No manifest data supplied")
+    manifest = manifest_from_json(manifest_data, args.project, args.owner, args.visualize)
+    html = render_html(manifest)
+    output_path = Path(args.output)
+    output_path.write_text(html, encoding="utf-8")
+    print(f"Balance board generated → {output_path}")
+
+
+def main(argv: Iterable[str] | None = None) -> None:
+    args = parse_args(argv)
+    if args.command == "weave":
+        run_weave(args)
+    else:
+        raise SystemExit(f"Unsupported command: {args.command}")
+
+
+if __name__ == "__main__":
+    main()
