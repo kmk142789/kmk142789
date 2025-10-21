@@ -23,6 +23,13 @@ from .continuum_compass import (
     WeightRecommendation,
     parse_compass_payload,
 )
+from .continuum_atlas import (
+    AtlasState,
+    export_attestation,
+    resolve_apps,
+    resolve_domains,
+    resolve_keys,
+)
 from .continuum_engine import (
     ContinuumEngine,
     ContinuumEntry,
@@ -108,9 +115,11 @@ __all__ = [
     "AutonomyDecision",
     "AutonomyNode",
     "CreativePrompt",
+    "AtlasState",
     "ContinuumCompassReport",
     "ContinuumEngine",
     "ContinuumEntry",
+    "export_attestation",
     "ExpansionTarget",
     "ContinuumManifest",
     "ContinuumPlaybackEngine",
@@ -147,6 +156,9 @@ __all__ = [
     "HarmonicConfig",
     "HarmonicsAI",
     "StabilityScore",
+    "resolve_apps",
+    "resolve_domains",
+    "resolve_keys",
     "DecisionResult",
     "ProgressResult",
     "SelfSustainingLoop",
