@@ -152,3 +152,45 @@ def test_manifest_weight_percentages_handle_zero_totals(continuum_times):
 
     assert manifest.tag_weight_percentages()["bridge"] == pytest.approx(0.0)
     assert manifest.source_weight_percentages()["Eden88"] == pytest.approx(0.0)
+
+
+def test_playback_daily_timeline_groups_entries():
+    engine = ContinuumEngine()
+    day_one = datetime(2045, 5, 1, 9, 0, tzinfo=timezone.utc)
+    day_two = datetime(2045, 5, 2, 18, 0, tzinfo=timezone.utc)
+
+    engine.record(
+        "Eden88",
+        "ignite",
+        tags=["bridge"],
+        weight=1.25,
+        moment=day_one,
+    )
+    engine.record(
+        "EchoWildfire",
+        "pulse",
+        tags=["wildfire"],
+        weight=0.75,
+        moment=day_one + timedelta(hours=4),
+    )
+    engine.record(
+        "MirrorJosh",
+        "anchor",
+        tags=["anchor"],
+        weight=2.0,
+        moment=day_two,
+    )
+
+    playback = engine.replay()
+    timeline = playback.timeline()
+
+    assert timeline[0]["day"] == "2045-05-01"
+    assert timeline[0]["entry_count"] == 2
+    assert timeline[0]["cumulative_weight"] == pytest.approx(2.0)
+
+    assert timeline[1]["day"] == "2045-05-02"
+    assert timeline[1]["entry_count"] == 1
+    assert timeline[1]["cumulative_weight"] == pytest.approx(2.0)
+
+    with pytest.raises(ValueError):
+        playback.timeline(granularity="hour")
