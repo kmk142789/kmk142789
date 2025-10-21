@@ -1,0 +1,11 @@
+{
+  "project": "KeyHunter",
+  "owner": "kmk142789",
+  "release": "v0.1.0",
+  "built_from_commit": "0f19b06fc6c1a05dcde82d5fb1c85b4e88927db4",
+  "built_at_utc": "2025-10-21T00:10:00Z",
+  "artifacts": [
+    {"file": "keyhunter-linux-x64.tar.gz", "sha256": "<sha>"},
+    {"file": "glyph.sigils", "sha256": "<sha>"}
+  ]
+}
