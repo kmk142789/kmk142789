@@ -24,7 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence
@@ -39,6 +39,7 @@ except ModuleNotFoundError:  # pragma: no cover - fallback dependency
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_JSON_PATH = REPO_ROOT / "artifacts" / "sovereign_inventory.json"
 DEFAULT_MARKDOWN_PATH = REPO_ROOT / "artifacts" / "sovereign_inventory.md"
+DEFAULT_ORACLE_OUTPUT = REPO_ROOT / "artifacts" / "continuum_oracle.md"
 
 
 # ---------------------------------------------------------------------------
@@ -373,6 +374,233 @@ def write_inventory(
 
 
 # ---------------------------------------------------------------------------
+# Continuum oracle helpers
+# ---------------------------------------------------------------------------
+
+
+def _resolve_manifest_path(raw_path: str, root: Path = REPO_ROOT) -> Path:
+    """Resolve a manifest path supplied on the CLI."""
+
+    candidate = Path(raw_path)
+    if candidate.is_file():
+        return candidate
+
+    nested = root / candidate
+    if nested.is_file():
+        return nested
+
+    manifest_dir = root / "manifest"
+    manifest_candidate = manifest_dir / candidate.name
+    if manifest_candidate.is_file():
+        return manifest_candidate
+
+    raise FileNotFoundError(f"Unable to locate manifest: {raw_path}")
+
+
+def load_continuum_manifest(path: Path) -> Mapping[str, object]:
+    """Load a continuum manifest from ``path``."""
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, Mapping):  # pragma: no cover - defensive branch
+        raise ValueError("Continuum manifest must be a JSON object")
+    return data
+
+
+def _distribute_entry_weight(entries: Sequence[Mapping[str, object]]) -> Counter[str]:
+    tag_totals: Counter[str] = Counter()
+    for entry in entries:
+        tags = [str(tag) for tag in entry.get("tags", []) if tag]
+        if not tags:
+            continue
+        weight = float(entry.get("weight", 0.0))
+        share = weight / len(tags)
+        for tag in tags:
+            tag_totals[tag] += share
+    return tag_totals
+
+
+def summarize_manifest(manifest: Mapping[str, object]) -> Dict[str, object]:
+    """Compute baseline statistics for a continuum manifest."""
+
+    entries = [entry for entry in manifest.get("entries", []) if isinstance(entry, Mapping)]
+    total_weight = sum(float(entry.get("weight", 0.0)) for entry in entries)
+    tag_totals = _distribute_entry_weight(entries)
+
+    source_totals: Counter[str] = Counter()
+    for entry in entries:
+        source = str(entry.get("source", "unknown"))
+        source_totals[source] += float(entry.get("weight", 0.0))
+
+    return {
+        "entries": entries,
+        "total_weight": total_weight,
+        "tag_totals": tag_totals,
+        "source_totals": source_totals,
+    }
+
+
+def simulate_weight_shift(
+    baseline: Mapping[str, object],
+    *,
+    emphasis: str = "balance",
+    shift_ratio: float = 0.1,
+) -> Dict[str, Counter[str]]:
+    """Project how tag weights redistribute under a shift scenario."""
+
+    entries: Sequence[Mapping[str, object]] = baseline.get("entries", [])  # type: ignore[assignment]
+    if not entries:
+        return {"tag_totals": Counter(), "source_totals": Counter()}
+
+    shift_ratio = max(min(shift_ratio, 1.0), 0.0)
+    total_weight = float(baseline.get("total_weight", 0.0))
+    entry_weights = [float(entry.get("weight", 0.0)) for entry in entries]
+
+    if not any(entry_weights):
+        return {"tag_totals": Counter(), "source_totals": Counter()}
+
+    sorted_indices = sorted(range(len(entries)), key=lambda idx: entry_weights[idx])
+    lowest_idx = sorted_indices[0]
+    highest_idx = sorted_indices[-1]
+
+    adjusted_weights: List[float] = []
+    for idx, weight in enumerate(entry_weights):
+        if emphasis.lower().startswith("balance") and idx == highest_idx:
+            adjusted_weights.append(weight * (1.0 + shift_ratio))
+        elif emphasis.lower().startswith("balance") and idx == lowest_idx:
+            adjusted_weights.append(max(weight * (1.0 - shift_ratio), 0.0))
+        elif emphasis.lower().startswith("amplify"):
+            adjusted_weights.append(weight * (1.0 + shift_ratio))
+        else:
+            adjusted_weights.append(weight)
+
+    adjusted_total = sum(adjusted_weights)
+    if adjusted_total == 0:
+        adjusted_total = 1.0
+    normaliser = total_weight / adjusted_total if total_weight else 1.0
+
+    projected_entries = []
+    for entry, new_weight in zip(entries, adjusted_weights):
+        projected_entry = dict(entry)
+        projected_entry["weight"] = new_weight * normaliser
+        projected_entries.append(projected_entry)
+
+    tag_totals = _distribute_entry_weight(projected_entries)
+
+    source_totals: Counter[str] = Counter()
+    for entry in projected_entries:
+        source = str(entry.get("source", "unknown"))
+        source_totals[source] += float(entry.get("weight", 0.0))
+
+    return {"tag_totals": tag_totals, "source_totals": source_totals}
+
+
+def _render_weight_table(
+    baseline_totals: Counter[str],
+    shifted_totals: Counter[str],
+    *,
+    total_weight: float,
+) -> List[str]:
+    if not baseline_totals:
+        return ["(no weighted entries available)"]
+
+    lines = ["| Label | Baseline | Shifted | Delta |", "| --- | ---: | ---: | ---: |"]
+    labels = sorted(set(baseline_totals) | set(shifted_totals))
+    for label in labels:
+        base_value = baseline_totals.get(label, 0.0)
+        shifted_value = shifted_totals.get(label, 0.0)
+        base_pct = (base_value / total_weight * 100.0) if total_weight else 0.0
+        shifted_pct = (shifted_value / total_weight * 100.0) if total_weight else 0.0
+        delta = shifted_pct - base_pct
+        lines.append(
+            f"| {label} | {base_pct:5.2f}% | {shifted_pct:5.2f}% | {delta:+5.2f}% |"
+        )
+    return lines
+
+
+def generate_oracle_report(
+    *,
+    project: str,
+    owner: str,
+    manifest_path: Path,
+    weight_scenario: str,
+    prediction_focus: str,
+    root: Path = REPO_ROOT,
+) -> str:
+    """Generate a markdown continuum oracle report."""
+
+    manifest = load_continuum_manifest(manifest_path)
+    baseline = summarize_manifest(manifest)
+    emphasis = "balance" if "balance" in weight_scenario.lower() else "amplify"
+    shifted = simulate_weight_shift(baseline, emphasis=emphasis)
+
+    total_weight = float(baseline["total_weight"])
+    tag_table = _render_weight_table(baseline["tag_totals"], shifted["tag_totals"], total_weight=total_weight)
+    source_table = _render_weight_table(
+        baseline["source_totals"], shifted["source_totals"], total_weight=total_weight
+    )
+
+    anchor = manifest.get("anchor", "")
+    digest = manifest.get("digest", "")
+
+    try:
+        relative_path = manifest_path.relative_to(root)
+    except ValueError:
+        relative_path = manifest_path
+
+    lines = [
+        f"# Continuum Oracle Report — {project}",
+        "",
+        f"**Owner:** {owner}",
+        f"**Manifest:** {relative_path}",
+    ]
+
+    if anchor:
+        lines.append(f"**Anchor:** {anchor}")
+    if digest:
+        lines.append(f"**Digest:** `{digest}`")
+
+    lines.extend(
+        [
+            "",
+            "## Baseline Metrics",
+            f"- Entries captured: {len(baseline['entries'])}",
+            f"- Cumulative entry weight: {total_weight:.2f}",
+        ]
+    )
+
+    lines.extend(
+        [
+            "",
+            f"## Weight Shift Simulation — {weight_scenario}",
+            f"Prediction focus: {prediction_focus}",
+            "",
+            "### Tag distribution",
+            *tag_table,
+            "",
+            "### Source distribution",
+            *source_table,
+        ]
+    )
+
+    entries = baseline["entries"]
+    if entries:
+        most_recent = max(entries, key=lambda entry: str(entry.get("moment", "")))
+        lines.extend(
+            [
+                "",
+                "## Most recent signal",
+                f"- Moment: {most_recent.get('moment', 'unknown')}",
+                f"- Source: {most_recent.get('source', 'unknown')}",
+                f"- Message: {most_recent.get('message', '…')}",
+                f"- Tags: {', '.join(most_recent.get('tags', []))}",
+            ]
+        )
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # CLI handling
 # ---------------------------------------------------------------------------
 
@@ -400,6 +628,19 @@ def _build_parser() -> argparse.ArgumentParser:
     forge.add_argument("--report", type=Path, default=None, help="Report artifact to emit or reference")
     forge.add_argument("--json-output", type=Path, default=None, help="Optional custom JSON output path")
     forge.add_argument("--markdown-output", type=Path, default=None, help="Optional custom Markdown output path")
+    ignite = subparsers.add_parser("ignite", help="Generate continuum oracle reports")
+    ignite.add_argument("--project", required=True, help="Continuum project name")
+    ignite.add_argument("--owner", required=True, help="Owner requesting the oracle")
+    ignite.add_argument("--inputs", required=True, help="Continuum manifest to analyse")
+    ignite.add_argument("--weights", required=True, help="Weight scenario or board to project")
+    ignite.add_argument("--predict", required=True, help="Prediction focus or question")
+    ignite.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Optional report path. Defaults to artifacts/continuum_oracle.md",
+    )
+
     return parser
 
 
@@ -413,6 +654,27 @@ def _parse_csv_option(value: Optional[str]) -> Optional[List[str]]:
 def main(argv: Optional[Iterable[str]] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(list(argv) if argv is not None else None)
+
+    if args.command == "ignite":
+        output_path = args.output or DEFAULT_ORACLE_OUTPUT
+        try:
+            manifest_path = _resolve_manifest_path(args.inputs)
+        except FileNotFoundError as exc:  # pragma: no cover - CLI validation
+            parser.error(str(exc))
+            return 2
+
+        report = generate_oracle_report(
+            project=args.project,
+            owner=args.owner,
+            manifest_path=manifest_path,
+            weight_scenario=args.weights,
+            prediction_focus=args.predict,
+        )
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(report, encoding="utf-8")
+        print(report)
+        return 0
 
     if args.command != "forge":
         parser.print_help()
@@ -460,6 +722,10 @@ __all__ = [
     "collect_domains",
     "collect_keys",
     "collect_repos",
+    "generate_oracle_report",
+    "load_continuum_manifest",
+    "simulate_weight_shift",
+    "summarize_manifest",
     "main",
     "render_inventory",
     "write_inventory",
