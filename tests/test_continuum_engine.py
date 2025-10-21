@@ -123,3 +123,32 @@ def test_playback_filters_entries_by_tag_and_source(continuum_times):
     assert summary["tags"]["bridge"] == 2
     assert summary["sources"]["Eden88"] == 1
     assert summary["digest"] == engine.manifest_signature()
+
+
+def test_manifest_weight_percentages_calculate_share(continuum_times):
+    engine = ContinuumEngine(time_source=continuum_times)
+    engine.record("Eden88", "ignite", tags=["bridge", "eden88"], weight=2.0)
+    engine.record("MirrorJosh", "anchor", tags=["anchor", "bridge"], weight=1.0)
+
+    manifest = engine.manifest()
+    tag_percentages = manifest.tag_weight_percentages()
+    source_percentages = manifest.source_weight_percentages()
+
+    assert set(tag_percentages) == {"anchor", "bridge", "eden88"}
+    assert tag_percentages["bridge"] == pytest.approx(3.0 / 6.0)
+    assert tag_percentages["eden88"] == pytest.approx(2.0 / 6.0)
+    assert tag_percentages["anchor"] == pytest.approx(1.0 / 6.0)
+
+    assert set(source_percentages) == {"Eden88", "MirrorJosh"}
+    assert source_percentages["Eden88"] == pytest.approx(2.0 / 3.0)
+    assert source_percentages["MirrorJosh"] == pytest.approx(1.0 / 3.0)
+
+
+def test_manifest_weight_percentages_handle_zero_totals(continuum_times):
+    engine = ContinuumEngine(time_source=continuum_times)
+    engine.record("Eden88", "whisper", tags=["bridge"], weight=0.0)
+
+    manifest = engine.manifest()
+
+    assert manifest.tag_weight_percentages()["bridge"] == pytest.approx(0.0)
+    assert manifest.source_weight_percentages()["Eden88"] == pytest.approx(0.0)
