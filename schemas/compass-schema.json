@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Continuum Compass Map",
+  "type": "object",
+  "required": ["project", "owner", "generated_at", "weights", "stability"],
+  "properties": {
+    "project": { "type": "string", "minLength": 1 },
+    "owner": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string" },
+
+    "weights": {
+      "type": "object",
+      "description": "Per-asset guidance",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["current", "recommended"],
+        "properties": {
+          "current": { "type": "number", "minimum": 0, "maximum": 100 },
+          "recommended": { "type": "number", "minimum": 0, "maximum": 100 },
+          "min": { "type": "number", "minimum": 0, "maximum": 100 },
+          "max": { "type": "number", "minimum": 0, "maximum": 100 },
+          "rationale": { "type": "string" },
+          "signals": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "expansion_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "recommended_weight"],
+        "properties": {
+          "name": { "type": "string" },
+          "recommended_weight": { "type": "number", "minimum": 0, "maximum": 100 },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+
+    "deprecations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "action": { "type": "string", "enum": ["archive", "downgrade", "ignore"] },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+
+    "stability": {
+      "type": "object",
+      "required": ["current", "predicted"],
+      "properties": {
+        "current": { "type": "number", "minimum": 0, "maximum": 1 },
+        "predicted": { "type": "number", "minimum": 0, "maximum": 1 },
+        "method": { "type": "string" }
+      }
+    },
+
+    "notes": { "type": "string" },
+    "nonce": { "type": "string" }
+  },
+  "additionalProperties": false
+}

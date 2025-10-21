@@ -1,0 +1,49 @@
+{
+  "project": "Continuum Oracle",
+  "owner": "Josh+Echo",
+  "generated_at": "2025-10-21T23:27:01Z",
+  "source": "oracle-report.md",
+  "weights": {
+    "tag:anchor": {
+      "current": 16.67,
+      "recommended": 16.39,
+      "rationale": "derived from oracle tag distribution",
+      "signals": [
+        "oracle-tag"
+      ]
+    },
+    "tag:bridge": {
+      "current": 50.0,
+      "recommended": 50.0,
+      "rationale": "derived from oracle tag distribution",
+      "signals": [
+        "oracle-tag"
+      ]
+    },
+    "tag:eden88": {
+      "current": 20.83,
+      "recommended": 22.54,
+      "rationale": "derived from oracle tag distribution",
+      "signals": [
+        "oracle-tag"
+      ]
+    },
+    "tag:wildfire": {
+      "current": 12.5,
+      "recommended": 11.07,
+      "rationale": "derived from oracle tag distribution",
+      "signals": [
+        "oracle-tag"
+      ]
+    }
+  },
+  "expansion_targets": [],
+  "deprecations": [],
+  "stability": {
+    "current": 0.3,
+    "predicted": 0.4,
+    "method": "entries-ratio"
+  },
+  "notes": "generated from oracle-report.md",
+  "nonce": "cmp-20251021232701"
+}
