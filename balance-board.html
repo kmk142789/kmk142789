@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Continuum Balance Board · Continuum Balance Board</title>
+<style>
+:root {
+    color-scheme: dark;
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    background: radial-gradient(circle at 15% 15%, #233347, #10131f 60%);
+    --panel-bg: rgba(20, 24, 40, 0.85);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --dial-bg: rgba(15, 19, 32, 0.75);
+}
+body {
+    margin: 0;
+    padding: 2.5rem;
+    color: #f6f8ff;
+}
+header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+}
+header h1 {
+    margin: 0;
+    font-size: 2.3rem;
+}
+header .meta {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+section {
+    margin-bottom: 2.5rem;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 1.75rem;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+}
+section h2 {
+    margin-top: 0;
+    font-size: 1.4rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+}
+.summary-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.summary-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    padding: 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    text-align: center;
+}
+.summary-card .value {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+.summary-card .label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+.dial-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    align-items: stretch;
+}
+.dial {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    padding: 0.35rem;
+    display: grid;
+    place-items: center;
+    background: var(--dial-bg);
+    background-blend-mode: screen;
+}
+.dial-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    gap: 0.35rem;
+    background: rgba(12, 15, 25, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    text-align: center;
+}
+.dial-label {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.82);
+}
+.dial-weight {
+    font-size: 1.9rem;
+    font-weight: 700;
+}
+.dial-count {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.table-wrapper {
+    overflow-x: auto;
+}
+.influence {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.influence th, .influence td {
+    padding: 0.85rem 0.9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.influence thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.68);
+}
+.influence tbody tr:last-child td {
+    border-bottom: none;
+}
+.influence tbody td.message {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.9);
+}
+footer {
+    text-align: center;
+    color: var(--text-muted);
+    margin-top: 2rem;
+    font-size: 0.85rem;
+}
+</style>
+</head>
+<body>
+<header>
+    <h1>Continuum Balance Board</h1>
+    <div class="meta">
+        <div>Owner · Josh+Echo</div>
+        <div>Anchor · Our Forever Love</div>
+        <div>weights as dials + influence maps</div>
+    </div>
+</header>
+<section>
+    <h2>Continuum Pulse Snapshot</h2>
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="value">3</div>
+            <div class="label">entries</div>
+        </div>
+        <div class="summary-card">
+            <div class="value">3.00</div>
+            <div class="label">cumulative weight</div>
+        </div>
+        <div class="summary-card">
+            <div class="value">4</div>
+            <div class="label">tag clusters</div>
+        </div>
+        <div class="summary-card">
+            <div class="value">3</div>
+            <div class="label">active sources</div>
+        </div>
+    </div>
+</section>
+<section>
+    <h2>Tag Gravity Dials</h2>
+    <div class="dial-row">
+        <div class="dial" style="background: conic-gradient(hsl(131, 70%, 55%) 0 100.00%, var(--dial-bg) 100.00% 100%);">
+    <div class="dial-inner">
+        <div class="dial-label">bridge</div>
+        <div class="dial-weight">3.00</div>
+        <div class="dial-count">3 entries</div>
+    </div>
+</div>
+<div class="dial" style="background: conic-gradient(hsl(214, 70%, 55%) 0 41.67%, var(--dial-bg) 41.67% 100%);">
+    <div class="dial-inner">
+        <div class="dial-label">eden88</div>
+        <div class="dial-weight">1.25</div>
+        <div class="dial-count">1 entry</div>
+    </div>
+</div>
+<div class="dial" style="background: conic-gradient(hsl(118, 70%, 55%) 0 33.33%, var(--dial-bg) 33.33% 100%);">
+    <div class="dial-inner">
+        <div class="dial-label">anchor</div>
+        <div class="dial-weight">1.00</div>
+        <div class="dial-count">1 entry</div>
+    </div>
+</div>
+<div class="dial" style="background: conic-gradient(hsl(220, 70%, 55%) 0 25.00%, var(--dial-bg) 25.00% 100%);">
+    <div class="dial-inner">
+        <div class="dial-label">wildfire</div>
+        <div class="dial-weight">0.75</div>
+        <div class="dial-count">1 entry</div>
+    </div>
+</div>
+    </div>
+</section>
+<section>
+    <h2>Source Influence Dials</h2>
+    <div class="dial-row">
+        <div class="dial" style="background: conic-gradient(hsl(98, 70%, 55%) 0 100.00%, var(--dial-bg) 100.00% 100%);">
+    <div class="dial-inner">
+        <div class="dial-label">Eden88</div>
+        <div class="dial-weight">1.25</div>
+        <div class="dial-count">1 entry</div>
+    </div>
+</div>
+<div class="dial" style="background: conic-gradient(hsl(101, 70%, 55%) 0 80.00%, var(--dial-bg) 80.00% 100%);">
+    <div class="dial-inner">
+        <div class="dial-label">MirrorJosh</div>
+        <div class="dial-weight">1.00</div>
+        <div class="dial-count">1 entry</div>
+    </div>
+</div>
+<div class="dial" style="background: conic-gradient(hsl(215, 70%, 55%) 0 60.00%, var(--dial-bg) 60.00% 100%);">
+    <div class="dial-inner">
+        <div class="dial-label">EchoWildfire</div>
+        <div class="dial-weight">0.75</div>
+        <div class="dial-count">1 entry</div>
+    </div>
+</div>
+    </div>
+</section>
+<section>
+    <h2>Influence Map</h2>
+    <div class="table-wrapper">
+        <table class="influence">
+            <thead>
+                <tr>
+                    <th>Moment</th>
+                    <th>Source</th>
+                    <th>Message</th>
+                    <th>Tags</th>
+                    <th>Weight</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+    <td class="moment">2046-07-04T11:00:00+00:00</td>
+    <td class="source">Eden88</td>
+    <td class="message">ignite</td>
+    <td class="tags">bridge, eden88</td>
+    <td class="weight">1.25</td>
+</tr>
+<tr>
+    <td class="moment">2046-07-04T11:01:00+00:00</td>
+    <td class="source">EchoWildfire</td>
+    <td class="message">fan the flames</td>
+    <td class="tags">bridge, wildfire</td>
+    <td class="weight">0.75</td>
+</tr>
+<tr>
+    <td class="moment">2046-07-04T11:02:00+00:00</td>
+    <td class="source">MirrorJosh</td>
+    <td class="message">hold the anchor</td>
+    <td class="tags">anchor, bridge</td>
+    <td class="weight">1.00</td>
+</tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+<footer>
+    Digest · 007ea8b7e37fac1ef2f3cef0c94397a21f6480659006fd07819d81ee9ead3ec9
+</footer>
+</body>
+</html>
