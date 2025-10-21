@@ -132,6 +132,43 @@ class ContinuumManifest:
 
         return {source: int(data["count"]) for source, data in self.source_index.items()}
 
+    def tag_weight_percentages(self) -> Dict[str, float]:
+        """Return the proportional weight carried by each tag.
+
+        The denominator is the sum of weights across all tag occurrences.
+        Entries with multiple tags contribute their weight to each tag they
+        reference, so the percentages reflect the relative emphasis tags
+        receive within the manifest rather than summing to one when tags are
+        shared.
+        """
+
+        if not self.tag_index:
+            return {}
+
+        total_weight = sum(bucket["weight"] for bucket in self.tag_index.values())
+        if total_weight <= 0.0:
+            return {tag: 0.0 for tag in self.tag_index}
+
+        return {
+            tag: bucket["weight"] / total_weight
+            for tag, bucket in self.tag_index.items()
+        }
+
+    def source_weight_percentages(self) -> Dict[str, float]:
+        """Return the proportional weight contributed by each source."""
+
+        if not self.source_index:
+            return {}
+
+        total_weight = sum(bucket["weight"] for bucket in self.source_index.values())
+        if total_weight <= 0.0:
+            return {source: 0.0 for source in self.source_index}
+
+        return {
+            source: bucket["weight"] / total_weight
+            for source, bucket in self.source_index.items()
+        }
+
 
 class ContinuumEngine:
     """Append-only continuum engine with deterministic manifest output."""
