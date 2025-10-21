@@ -5,10 +5,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import textwrap
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Sequence
 
 
 @dataclass
@@ -40,7 +42,7 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="codex")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    weave = sub.add_parser("weave", help="Generate a Continuum Balance Board HTML artifact")
+    weave = sub.add_parser("weave", help="Generate a Continuum Balance Board artifact")
     weave.add_argument("--project", required=True, help="Project name for the visualization header")
     weave.add_argument("--owner", required=True, help="Owner attribution displayed in the header")
     weave.add_argument(
@@ -54,11 +56,35 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
         default="weights as dials + influence maps",
         help="Description of the visualization focus",
     )
-    weave.add_argument("--output", required=True, help="Destination HTML file")
+    weave.add_argument("--schema", help="Optional JSON schema describing the emitted artifact")
+    output_group = weave.add_mutually_exclusive_group(required=True)
+    output_group.add_argument("--output", dest="output", help="Destination HTML file")
+    output_group.add_argument("--emit", dest="output", help="Destination artifact file")
     return parser.parse_args(argv)
 
 
+_MANIFEST_LINE = re.compile(r"^\*\*Manifest:\*\*\s*`?([^`\n]+)`?", re.MULTILINE)
+
+
+def extract_manifest_path(report_path: Path) -> Path:
+    """Return the manifest path referenced inside *report_path* markdown."""
+
+    text = report_path.read_text(encoding="utf-8")
+    match = _MANIFEST_LINE.search(text)
+    if not match:
+        raise FileNotFoundError(f"Unable to locate manifest reference inside {report_path}")
+    manifest_ref = match.group(1).strip()
+    candidate = Path(manifest_ref)
+    if not candidate.is_absolute():
+        candidate = (report_path.parent / candidate).resolve()
+    return candidate
+
+
 def load_manifest(path: Path) -> Dict[str, object]:
+    if path.suffix.lower() == ".md":
+        # The markdown oracle reports embed a pointer to the real manifest.
+        manifest_path = extract_manifest_path(path)
+        return load_manifest(manifest_path)
     if not path.exists():
         # Try a handful of fallbacks that align with repo naming conventions.
         candidates = []
@@ -377,6 +403,141 @@ footer {{
     return html
 
 
+def _as_metric_map(metrics: Sequence[DialMetric]) -> List[Dict[str, object]]:
+    total_weight = sum(metric.weight for metric in metrics)
+    metric_map: List[Dict[str, object]] = []
+    for metric in metrics:
+        share = 0.0 if total_weight <= 0 else metric.weight / total_weight
+        metric_map.append(
+            {
+                "label": metric.label,
+                "count": metric.count,
+                "weight": round(metric.weight, 6),
+                "share": round(share, 6),
+            }
+        )
+    return metric_map
+
+
+def render_compass_map(
+    manifest: ContinuumManifest,
+    inputs: Sequence[str],
+    schema_reference: str | None,
+) -> Dict[str, object]:
+    """Return a Continuum Compass map derived from *manifest*."""
+
+    generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    compass_map: Dict[str, object] = {
+        "project": manifest.project,
+        "owner": manifest.owner,
+        "visualize": manifest.visualize_hint,
+        "anchor": manifest.anchor,
+        "digest": manifest.digest,
+        "entry_count": manifest.entry_count,
+        "cumulative_weight": manifest.cumulative_weight,
+        "tags": _as_metric_map(manifest.tags),
+        "sources": _as_metric_map(manifest.sources),
+        "entries": [],
+        "generated_at": generated_at,
+        "inputs": list(inputs),
+    }
+    if schema_reference:
+        compass_map["schema"] = schema_reference
+    for entry in manifest.entries:
+        tags = entry.get("tags", [])
+        if not isinstance(tags, list):
+            tags = list(tags)
+        meta = entry.get("meta", {})
+        if not isinstance(meta, dict):
+            meta = {}
+        compass_map["entries"].append(
+            {
+                "moment": str(entry.get("moment", "")),
+                "source": str(entry.get("source", "")),
+                "message": str(entry.get("message", "")),
+                "tags": [str(tag) for tag in tags],
+                "weight": float(entry.get("weight", 0.0)),
+                "meta": meta,
+            }
+        )
+    return compass_map
+
+
+TYPE_CHECKERS = {
+    "object": dict,
+    "array": list,
+    "string": str,
+    "number": (int, float),
+    "integer": int,
+    "boolean": bool,
+}
+
+
+def validate_type(expected: str | Sequence[str], value: object, path: str) -> None:
+    """Raise ``TypeError`` when *value* does not satisfy *expected*."""
+
+    if isinstance(expected, str):
+        expected = [expected]
+    for candidate in expected:
+        checker = TYPE_CHECKERS.get(candidate)
+        if checker is None:
+            continue
+        if candidate == "number" and isinstance(value, bool):
+            continue
+        if isinstance(value, checker) and not (candidate == "integer" and isinstance(value, bool)):
+            return
+    raise TypeError(f"Schema type mismatch at {path}: expected {expected}, received {type(value).__name__}")
+
+
+def validate_schema(schema: Dict[str, object], document: object, path: str = "root") -> None:
+    """Perform a lightweight validation of *document* using *schema*."""
+
+    schema_type = schema.get("type")
+    if schema_type is not None:
+        validate_type(schema_type, document, path)
+
+    if schema.get("type") == "object" and isinstance(document, dict):
+        required = schema.get("required", [])
+        for key in required:
+            if key not in document:
+                raise KeyError(f"Missing required field {path}.{key}")
+        properties = schema.get("properties", {})
+        for key, value in document.items():
+            if key in properties:
+                validate_schema(properties[key], value, f"{path}.{key}")
+    elif schema.get("type") == "array" and isinstance(document, list):
+        items_schema = schema.get("items")
+        if isinstance(items_schema, dict):
+            for index, item in enumerate(document):
+                validate_schema(items_schema, item, f"{path}[{index}]")
+
+
+def load_schema_document(path: Path | None) -> tuple[Dict[str, object], str] | tuple[None, None]:
+    """Return ``(schema, reference)`` for *path* when supplied."""
+
+    if path is None:
+        return None, None
+
+    candidates = [path]
+    if path.suffix:
+        candidates.append(Path("schemas") / path.name)
+        candidates.append(Path("schema") / path.name)
+        stem = path.stem
+        if not stem.endswith(".schema"):
+            candidates.append(Path("schemas") / f"{stem}.schema.json")
+            candidates.append(Path("schema") / f"{stem}.schema.json")
+    else:
+        candidates.append(Path("schemas") / path.name)
+        candidates.append(Path("schema") / path.name)
+
+    for candidate in candidates:
+        if candidate.exists():
+            with candidate.open("r", encoding="utf-8") as handle:
+                schema = json.load(handle)
+            return schema, str(candidate)
+    raise FileNotFoundError(f"Unable to locate schema file: {path}")
+
+
 def run_weave(args: argparse.Namespace) -> None:
     manifest_data: Dict[str, object] | None = None
     for input_path in args.inputs:
@@ -399,10 +560,19 @@ def run_weave(args: argparse.Namespace) -> None:
     if manifest_data is None:
         raise ValueError("No manifest data supplied")
     manifest = manifest_from_json(manifest_data, args.project, args.owner, args.visualize)
-    html = render_html(manifest)
     output_path = Path(args.output)
-    output_path.write_text(html, encoding="utf-8")
-    print(f"Balance board generated → {output_path}")
+    schema_doc, schema_reference = load_schema_document(Path(args.schema)) if args.schema else (None, None)
+
+    if schema_doc is not None or output_path.suffix.lower() == ".json":
+        compass_map = render_compass_map(manifest, args.inputs, schema_reference)
+        if schema_doc is not None:
+            validate_schema(schema_doc, compass_map)
+        output_path.write_text(json.dumps(compass_map, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print(f"Compass map generated → {output_path}")
+    else:
+        html = render_html(manifest)
+        output_path.write_text(html, encoding="utf-8")
+        print(f"Balance board generated → {output_path}")
 
 
 def main(argv: Iterable[str] | None = None) -> None:

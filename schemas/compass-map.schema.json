@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Continuum Compass Map",
+  "type": "object",
+  "required": [
+    "project",
+    "owner",
+    "visualize",
+    "anchor",
+    "digest",
+    "entry_count",
+    "cumulative_weight",
+    "tags",
+    "sources",
+    "entries",
+    "generated_at",
+    "inputs"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "project": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "visualize": {
+      "type": "string"
+    },
+    "anchor": {
+      "type": "string"
+    },
+    "digest": {
+      "type": "string"
+    },
+    "entry_count": {
+      "type": "integer"
+    },
+    "cumulative_weight": {
+      "type": "number"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "label",
+          "count",
+          "weight",
+          "share"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "weight": {
+            "type": "number"
+          },
+          "share": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "label",
+          "count",
+          "weight",
+          "share"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "weight": {
+            "type": "number"
+          },
+          "share": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "moment",
+          "source",
+          "message",
+          "tags",
+          "weight"
+        ],
+        "properties": {
+          "moment": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "weight": {
+            "type": "number"
+          },
+          "meta": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}
