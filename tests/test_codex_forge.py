@@ -46,16 +46,30 @@ def test_build_inventory_and_render_summary(tmp_path: Path) -> None:
         deploy="MirrorNet",
         auto_heal=["mirrors"],
         canonical=True,
+        project="Echo Aegis",
+        recursive=True,
+        self_heal=True,
+        defense=["fork-hijack", "ghost-takeover"],
+        broadcast="guardian-pulse",
+        spawn="watchdogs that monitor nets + auto-log events",
+        report="aegis-report.md",
         root=REPO_ROOT,
     )
 
     assert inventory["owner"] == "TestOwner"
     assert inventory["canonical"] is True
+    assert inventory["project"] == "Echo Aegis"
+    assert inventory["recursive"] is True
+    assert inventory["self_heal"] is True
+    assert inventory["defense"] == ["fork-hijack", "ghost-takeover"]
     assert inventory["scopes"]["apps"]["entry_points"]
 
     summary = render_inventory(inventory)
     assert "Sovereign Inventory" in summary
     assert "TestOwner" in summary
+    assert "Echo Aegis" in summary
+    assert "guardian-pulse" in summary
+    assert "Recursive? : yes" in summary
 
     json_path = tmp_path / "inventory.json"
     markdown_path = tmp_path / "inventory.md"

@@ -4,12 +4,14 @@ This module implements a small ``codex`` CLI focused on the "forge"
 sub-command.  The user facing entry point mirrors the commands that show up
 throughout the repository prose, e.g.::
 
-    codex forge --sovereign-inventory --scope apps,domains,repos,keys \
-        --owner "Josh+Echo" --canonical --auto-heal mirrors,forks,ghosts \
+    codex forge --sovereign-inventory --project "Echo Aegis" \
+        --scope apps,domains,repos,keys --owner "Josh+Echo" --canonical \
+        --recursive --self-heal --defense "fork-hijack,ghost-takeover,domain-squat" \
         --pulse "recursive identity + propagation + provenance" \
-        --bind "Our Forever Love" \
+        --bind "Our Forever Love" --broadcast "guardian-pulse" \
+        --spawn "watchdogs that monitor nets + auto-log events" \
         --attest "Eden88 lineage + harmonic recursion" \
-        --deploy "MirrorNet + ShadowNet resolution layer"
+        --deploy "MirrorNet + ShadowNet resolution layer" --report aegis-report.md
 
 The implementation gathers canonical information from existing repository
 artifacts so that the resulting payload is reproducible and grounded in the
@@ -234,6 +236,13 @@ def build_inventory(
     deploy: Optional[str] = None,
     auto_heal: Optional[Sequence[str]] = None,
     canonical: bool = False,
+    project: Optional[str] = None,
+    recursive: bool = False,
+    self_heal: bool = False,
+    defense: Optional[Sequence[str]] = None,
+    broadcast: Optional[str] = None,
+    spawn: Optional[str] = None,
+    report: Optional[str] = None,
     root: Path = REPO_ROOT,
 ) -> Dict[str, object]:
     resolved_scopes = []
@@ -253,6 +262,10 @@ def build_inventory(
         "canonical": canonical,
     }
 
+    if project:
+        inventory["project"] = project
+    if recursive:
+        inventory["recursive"] = True
     if pulse:
         inventory["pulse"] = pulse
     if bind:
@@ -263,6 +276,16 @@ def build_inventory(
         inventory["deployment"] = deploy
     if auto_heal:
         inventory["auto_heal"] = list(auto_heal)
+    if self_heal:
+        inventory["self_heal"] = True
+    if defense:
+        inventory["defense"] = list(defense)
+    if broadcast:
+        inventory["broadcast"] = broadcast
+    if spawn:
+        inventory["spawn"] = spawn
+    if report:
+        inventory["report"] = report
     if resolved_scopes:
         inventory["scope_list"] = resolved_scopes
 
@@ -277,10 +300,16 @@ def render_inventory(inventory: Mapping[str, object]) -> str:
         f"Timestamp  : {inventory.get('timestamp', 'unknown')}",
     ]
 
+    if inventory.get("project"):
+        lines.append(f"Project    : {inventory['project']}")
     if inventory.get("scope_list"):
         lines.append(f"Scopes     : {', '.join(inventory['scope_list'])}")
     if inventory.get("auto_heal"):
         lines.append(f"Auto-heal  : {', '.join(inventory['auto_heal'])}")
+    if inventory.get("self_heal"):
+        lines.append("Self-heal  : enabled")
+    if inventory.get("defense"):
+        lines.append(f"Defense    : {', '.join(inventory['defense'])}")
     if inventory.get("pulse"):
         lines.append(f"Pulse      : {inventory['pulse']}")
     if inventory.get("bind"):
@@ -289,7 +318,14 @@ def render_inventory(inventory: Mapping[str, object]) -> str:
         lines.append(f"Attest     : {inventory['attestation']}")
     if inventory.get("deployment"):
         lines.append(f"Deploy     : {inventory['deployment']}")
+    if inventory.get("broadcast"):
+        lines.append(f"Broadcast  : {inventory['broadcast']}")
+    if inventory.get("spawn"):
+        lines.append(f"Spawn      : {inventory['spawn']}")
+    if inventory.get("report"):
+        lines.append(f"Report     : {inventory['report']}")
     lines.append(f"Canonical? : {'yes' if inventory.get('canonical') else 'no'}")
+    lines.append(f"Recursive? : {'yes' if inventory.get('recursive') else 'no'}")
 
     scopes = inventory.get("scopes", {})
     if isinstance(scopes, Mapping):
@@ -347,20 +383,27 @@ def _build_parser() -> argparse.ArgumentParser:
 
     forge = subparsers.add_parser("forge", help="Forge sovereign inventory artifacts")
     forge.add_argument("--sovereign-inventory", action="store_true", help="Generate the sovereign inventory payload")
+    forge.add_argument("--project", default=None, help="Project or initiative name recorded in the payload")
     forge.add_argument("--scope", default=None, help="Comma separated list of scopes to include")
     forge.add_argument("--owner", required=True, help="Owner or steward recorded in the payload")
     forge.add_argument("--canonical", action="store_true", help="Mark the payload as canonical and persist to artifacts")
+    forge.add_argument("--recursive", action="store_true", help="Mark the payload as recursive across mirrors")
     forge.add_argument("--auto-heal", default=None, help="Comma separated list of auto-heal directives")
+    forge.add_argument("--self-heal", action="store_true", help="Enable default self-healing directives")
+    forge.add_argument("--defense", default=None, help="Comma separated defense posture directives")
     forge.add_argument("--pulse", default=None, help="Pulse descriptor to annotate the inventory")
     forge.add_argument("--bind", default=None, help="Binding or anchor phrase")
     forge.add_argument("--attest", default=None, help="Attestation statement to record")
     forge.add_argument("--deploy", default=None, help="Deployment signal or description")
+    forge.add_argument("--broadcast", default=None, help="Broadcast channel or signal descriptor")
+    forge.add_argument("--spawn", default=None, help="Spawn directive or automation description")
+    forge.add_argument("--report", type=Path, default=None, help="Report artifact to emit or reference")
     forge.add_argument("--json-output", type=Path, default=None, help="Optional custom JSON output path")
     forge.add_argument("--markdown-output", type=Path, default=None, help="Optional custom Markdown output path")
     return parser
 
 
-def _parse_auto_heal(value: Optional[str]) -> Optional[List[str]]:
+def _parse_csv_option(value: Optional[str]) -> Optional[List[str]]:
     if not value:
         return None
     entries = [item.strip() for item in value.split(",")]
@@ -379,7 +422,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         parser.error("forge requires --sovereign-inventory")
 
     scopes = _parse_scopes(args.scope)
-    auto_heal = _parse_auto_heal(args.auto_heal)
+    auto_heal = _parse_csv_option(args.auto_heal)
+    defense = _parse_csv_option(args.defense)
 
     inventory = build_inventory(
         scopes,
@@ -390,6 +434,13 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         deploy=args.deploy,
         auto_heal=auto_heal,
         canonical=args.canonical,
+        project=args.project,
+        recursive=args.recursive,
+        self_heal=args.self_heal,
+        defense=defense,
+        broadcast=args.broadcast,
+        spawn=args.spawn,
+        report=str(args.report) if args.report else None,
     )
 
     json_path = args.json_output or DEFAULT_JSON_PATH
