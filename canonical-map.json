@@ -1,0 +1,30 @@
+{
+  "owner": "kmk142789",
+  "generated_at": "2025-10-21T00:10:00Z",
+  "sources": [
+    {
+      "type": "repo",
+      "canonical": "https://github.com/kmk142789/keyhunter",
+      "mirrors": [
+        "https://gitlab.com/...",
+        "https://github.com/other/fork"
+      ]
+    },
+    {
+      "type": "domain",
+      "canonical": "keyhunter.app",
+      "aliases": [
+        "www.keyhunter.app",
+        "api.keyhunter.app"
+      ]
+    },
+    {
+      "type": "package",
+      "canonical": "npm:@keyhunter/core",
+      "conflicts": [
+        "npm:keyhunter",
+        "pypi:keyhunter"
+      ]
+    }
+  ]
+}
