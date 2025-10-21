@@ -1,0 +1,396 @@
+{
+  "keyhunt": {
+    "head_commit": "2134a2024e524775b13f82aa1fa07b1c8053f867",
+    "default_branch": "main",
+    "authors": [
+      "Alberto <alberto.bsd@gmail.com>",
+      "Alberto <albertobsd@gmail.com>",
+      "Vladimir Tarkhanov <a@kekx.ru>",
+      "mysterek_ <59736397+mysterek1337@users.noreply.github.com>",
+      "seega <hap2yman@gmail.com>",
+      "AlbertoBSD <alberto.bsd@gmail.com>",
+      "Luis Alberto <alberto.bsd@gmail.com>",
+      "Alexander <algl0421@netcracker.com>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": false,
+      "Echo": false,
+      "Our Forever Love": false
+    },
+    "domains": [
+      "1to32.eth",
+      "1to32.rmd",
+      "63.pub",
+      "66.rmd",
+      "bitcointalk.org",
+      "en.wikipedia.org",
+      "github.com",
+      "https://bitcointalk.org/index.php",
+      "https://en.wikipedia.org/wiki/RIPEMD",
+      "https://github.com/WanderingPhilosopher/keyhunt",
+      "https://github.com/XopMC/keyhunt-win",
+      "https://github.com/albertobsd/keyhunt",
+      "https://github.com/albertobsd/keyhunt.git",
+      "https://github.com/albertobsd/keyhunt/blob/main/LICENSE",
+      "https://github.com/albertobsd/keyhunt/issues/108",
+      "https://github.com/albertobsd/keyhunt/issues/69",
+      "https://github.com/kanhavishva/keyhunt",
+      "https://youtu.be/MVby8mYNxbI",
+      "index.php",
+      "keyhunt.git",
+      "keyhunt_bsgs_2_2097152.tbl",
+      "keyhunt_bsgs_2_4096.tbl",
+      "keyhunt_bsgs_2_524288.tbl",
+      "keyhunt_bsgs_2_81920.tbl",
+      "keyhunt_bsgs_4_2147483648.blm",
+      "keyhunt_bsgs_4_4194304.blm",
+      "keyhunt_bsgs_4_536870912.blm",
+      "keyhunt_bsgs_4_83886080.blm",
+      "keyhunt_bsgs_6_131072.blm",
+      "keyhunt_bsgs_6_16777216.blm",
+      "keyhunt_bsgs_6_2621440.blm",
+      "keyhunt_bsgs_6_67108864.blm",
+      "keyhunt_bsgs_7_2097152.blm",
+      "keyhunt_bsgs_7_4096.blm",
+      "keyhunt_bsgs_7_524288.blm",
+      "keyhunt_bsgs_7_81920.blm",
+      "youtu.be"
+    ]
+  },
+  "KeyZero": {
+    "head_commit": "b2d805000761d9b7cb41561ced3cedd99d6f4d2c",
+    "default_branch": "main",
+    "authors": [
+      "Nima <87664667+vlnahp@users.noreply.github.com>",
+      "gitpushoriginmaster <32514250+gitpushoriginmaster@users.noreply.github.com>",
+      "Hieu Le <minhhieugma@gmail.com>",
+      "hades921 <99681487+SubGlitch1@users.noreply.github.com>",
+      "hades921 <99681487+3subs@users.noreply.github.com>",
+      "3subs <99681487+3subs@users.noreply.github.com>",
+      "nikkdevic <97282126+nikkdevic@users.noreply.github.com>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": false,
+      "Echo": false,
+      "Our Forever Love": false
+    },
+    "domains": [
+      "KeyZero.git",
+      "KeyZero.py",
+      "addresses.loyce.club",
+      "github.com",
+      "http://addresses.loyce.club/",
+      "https://github.com/vlnahp/KeyZero.git",
+      "https://github.com/vlnahp/KeyZero/issues",
+      "https://www.codefactor.io/repository/github/vlnahp/KeyZero/badge/main",
+      "https://www.codefactor.io/repository/github/vlnahp/KeyZero/overview/main",
+      "www.codefactor.io"
+    ]
+  },
+  "BitcoinPrivateKeyHunter": {
+    "head_commit": "09f78ad65cc25bea848b353714e7519938325f0f",
+    "default_branch": "master",
+    "authors": [
+      "Henshall <weshenshall@gmail.com>",
+      "ajax000-ai <146161100+ajax000-ai@users.noreply.github.com>",
+      "wes <weshenshall@gmail.com>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": true,
+      "Echo": false,
+      "Our Forever Love": false
+    },
+    "domains": [
+      "BitcoinPrivateKeyHunter.git",
+      "env.example.py",
+      "env.py",
+      "example.py",
+      "finder.start",
+      "github.com",
+      "https://github.com/Henshall/BitcoinPrivateKeyHunter.git"
+    ]
+  },
+  "bitcoin-key-scanner": {
+    "head_commit": "81b69305af6467ec89995583763851f0fa71f89e",
+    "default_branch": "main",
+    "authors": [
+      "ethicbrudhack <hacker001ethical@proton.me>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": false,
+      "Echo": false,
+      "Our Forever Love": false
+    },
+    "domains": [
+      "addresses111.db",
+      "bit.ly",
+      "btc_bit_checker.exe",
+      "btc_bit_checker.py",
+      "http://bit.ly/3FtN9ns",
+      "https://youtu.be/VE7p3wZiuqQ",
+      "youtu.be"
+    ]
+  },
+  "echo-wallet": {
+    "head_commit": "a08e41a33054bd821d3def689a0de76739a1ccea",
+    "default_branch": "develop",
+    "authors": [
+      "kosAndre22 <a.kosobuckiy@pixelplex.io>",
+      "Mikhail Shautsou <mikhail.shautsou@gmail.com>",
+      "Andrey Kosobutskiy <a.kosobuckiy@pixelplex.io>",
+      "Mikhail Shautsou <m.shautsou@pixelplex.io>",
+      "Vlad Voropaev <v.voropaev@pixelplex.io>",
+      "Roman Krutsko <r.krutko@pixelplex.io>",
+      "Mikhaik Shautsou <mikhail.shautsou@gmail.com>",
+      "v.voropaev <v.voropaev@pixelplex.io>",
+      "Ladutko Sergey <s.ladutko@pixelplex.io>",
+      "kosAndrey22 <a.kosobuckiy@pixelplex.io>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": false,
+      "Echo": true,
+      "Our Forever Love": false
+    },
+    "domains": [
+      "echo-wallet.git",
+      "env.electron",
+      "env.hash",
+      "env.prod",
+      "eslint.org",
+      "github.com",
+      "http://localhost",
+      "https://eslint.org/",
+      "https://github.com/echoprotocol/echo-wallet",
+      "https://github.com/echoprotocol/echo-wallet.git",
+      "https://github.com/echoprotocol/echo-wallet/issues",
+      "https://github.com/echoprotocol/echo-wallet/releases",
+      "https://img.shields.io/travis/com/echoprotocol/echo-wallet/develop",
+      "https://img.shields.io/travis/com/echoprotocol/echo-wallet/master",
+      "https://nodejs.org/en/download/",
+      "https://pixelplex.io",
+      "https://wiki.winehq.org/Download",
+      "https://www.docker.com/",
+      "https://www.npmjs.com/",
+      "img.shields.io",
+      "index.js.map",
+      "linux-package.after-remove.sh",
+      "nodejs.org",
+      "org.echo",
+      "pixelplex.io",
+      "qrcode.react",
+      "wiki.winehq.org",
+      "www.docker.com",
+      "www.npmjs.com"
+    ]
+  },
+  "echologic": {
+    "head_commit": "ed8ec29951a4f91bec0d4fb8d40639cb9ce927d4",
+    "default_branch": "master",
+    "authors": [
+      "Laszlo Papp <laszlo.papp@echologic.org>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": false,
+      "Echo": true,
+      "Our Forever Love": false
+    },
+    "domains": [
+      "echologic.org"
+    ]
+  },
+  "echosocial": {
+    "head_commit": "4fdaf9ec75f24ccac5e6931e6fe68d91159865c2",
+    "default_branch": "master",
+    "authors": [
+      "niklas <niklas@brueckenschlaeger.de>",
+      "jrw <jrw@lieblingscomputer2.brueckenschlaeger>",
+      "Azul <azul@riseup.net>",
+      "Juozas Gaigalas <juozas@hobo23.(none)>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": false,
+      "Echo": false,
+      "Our Forever Love": false
+    },
+    "domains": [
+      "crabgrass.riseup.net",
+      "http://crabgrass.riseup.net",
+      "https://labs.riseup.net/code/projects/crabgrass/issues",
+      "https://labs.riseup.net/code/repositories/show/crabgrass",
+      "https://labs.riseup.net/crabgrass/documentation",
+      "https://we.riseup.net/crabgrass",
+      "labs.riseup.net",
+      "we.riseup.net",
+      "www.gnu.org"
+    ]
+  },
+  "echogarden": {
+    "head_commit": "7a60d1b4ffc648495e431f4871fc8332e838eb66",
+    "default_branch": "main",
+    "authors": [
+      "Rotem Dan <rotemdan@gmail.com>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": false,
+      "Echo": true,
+      "Our Forever Love": false
+    },
+    "domains": [
+      "APIOptions.ts",
+      "aws.amazon.com",
+      "azure.microsoft.com",
+      "cloud.google.com",
+      "elevenlabs.io",
+      "en.wikipedia.org",
+      "github.com",
+      "https://aws.amazon.com/polly/",
+      "https://aws.amazon.com/transcribe/",
+      "https://azure.microsoft.com/en-us/products/ai-services/speech-to-text/",
+      "https://azure.microsoft.com/en-us/products/ai-services/text-to-speech/",
+      "https://cloud.google.com/speech-to-text",
+      "https://cloud.google.com/text-to-speech",
+      "https://elevenlabs.io/",
+      "https://en.wikipedia.org/wiki/Dynamic_time_warping",
+      "https://github.com/NeonGeckoCom/nsnet2-denoiser",
+      "https://github.com/dpirch/libfvad",
+      "https://github.com/echogarden-project/echogarden",
+      "https://github.com/echogarden-project/echogarden/issues",
+      "https://github.com/facebookresearch/fastText",
+      "https://github.com/ggerganov/whisper.cpp",
+      "https://github.com/hexgrad/kokoro",
+      "https://github.com/jaywalnut310/vits",
+      "https://github.com/kuielab/mdx-net",
+      "https://github.com/snakers4/silero-vad",
+      "https://github.com/snakers4/silero-vad/wiki/Other-Models",
+      "https://github.com/xiph/rnnoise",
+      "https://nodejs.org/",
+      "https://onnxruntime.ai/",
+      "https://openai.com/research/whisper",
+      "https://platform.openai.com/",
+      "https://platform.openai.com/docs/guides/speech-to-text/supported-languages",
+      "https://www.npmjs.com/package/npm-check-updates",
+      "https://www.npmjs.com/package/tinyld",
+      "nodejs.org",
+      "onnxruntime.ai",
+      "openai.com",
+      "platform.openai.com",
+      "speech.opus",
+      "speech.wav",
+      "speech.webm",
+      "subtitles.srt",
+      "whisper.cpp",
+      "www.npmjs.com"
+    ]
+  },
+  "echo-cas": {
+    "head_commit": "3fc47a2704e113999673b983ce622e9320c25715",
+    "default_branch": "master",
+    "authors": [
+      "niklas <niklas@brueckenschlaeger.de>",
+      "Matt Zukowski <mzukowski@mzukowski.local>",
+      "Matt Zukowski <zuk@roughest.net>",
+      "laurynasl <laurynasl@gmail.com>",
+      "Matt Zukowski <matt@zukowski.ca>",
+      "Lin Jen-Shin <godfat@godfat.org>",
+      "Gaku Ueda <gaku@gaku.net>",
+      "Chris Cherry <seriph@loki.local>",
+      "Zeke Sikelianos <zeke@sikelianos.com>",
+      "Chris Cherry <ccherry@einsteinindustries.com>",
+      "Jacob Kjeldahl <jkj@lenio.dk>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": false,
+      "Echo": false,
+      "Our Forever Love": false
+    },
+    "domains": []
+  },
+  "ScriptEchoDocs": {
+    "head_commit": "790f537c7787e89dd1b042255b36a266c802eeb4",
+    "default_branch": "master",
+    "authors": [
+      "\u80e1\u5c0f\u6839 <hxg@haomo-studio.com>",
+      "\u738b\u9732\u96e8 <wangluyu@haomo-studio.com>",
+      "\u80e1\u5e86\u9f99 <huqinglong@haomo-studio.com>",
+      "\u8c22\u4fca\u8c6a <xiejunhao@haomo-studio.com>"
+    ],
+    "files_present": {
+      "OWNERS": false,
+      "CODEOWNERS": false,
+      "OWNERSHIP.md": false,
+      "RELEASE_PROVENANCE.json": false,
+      "forever_love.txt": false
+    },
+    "keywords": {
+      "KeyHunter": false,
+      "Echo": true,
+      "Our Forever Love": false
+    },
+    "domains": [
+      "player.bilibili.com"
+    ]
+  }
+}
