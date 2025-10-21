@@ -322,3 +322,45 @@ class ContinuumPlaybackEngine:
             "digest": self.manifest.digest,
         }
 
+    def timeline(self, *, granularity: str = "day") -> List[Dict[str, object]]:
+        """Return chronological buckets of manifest activity.
+
+        Parameters
+        ----------
+        granularity:
+            Currently only ``"day"`` is supported.  Additional granularities
+            can be introduced later without breaking callers that rely on the
+            default behaviour.
+
+        Returns
+        -------
+        List[Dict[str, object]]
+            Each element contains the bucket identifier (``"day"``), the
+            number of entries captured within that bucket, and the cumulative
+            weight of those entries.
+        """
+
+        if granularity != "day":
+            raise ValueError("granularity must be 'day'")
+
+        buckets: List[Dict[str, object]] = []
+        for entry in sorted(
+            self.manifest.entries,
+            key=lambda payload: datetime.fromisoformat(payload["moment"]),
+        ):
+            moment = datetime.fromisoformat(entry["moment"])
+            bucket_key = moment.date().isoformat()
+
+            if not buckets or buckets[-1]["day"] != bucket_key:
+                buckets.append(
+                    {"day": bucket_key, "entry_count": 0, "cumulative_weight": 0.0}
+                )
+
+            bucket = buckets[-1]
+            bucket["entry_count"] += 1
+            bucket["cumulative_weight"] = float(
+                bucket["cumulative_weight"] + float(entry["weight"])
+            )
+
+        return buckets
+
