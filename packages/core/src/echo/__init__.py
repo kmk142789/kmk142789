@@ -16,6 +16,13 @@ from .bridge_emitter import (
     daemon as bridge_daemon,
     process_once as bridge_process_once,
 )
+from .continuum_compass import (
+    ContinuumCompassReport,
+    ExpansionTarget,
+    StabilityScore,
+    WeightRecommendation,
+    parse_compass_payload,
+)
 from .continuum_engine import (
     ContinuumEngine,
     ContinuumEntry,
@@ -101,8 +108,10 @@ __all__ = [
     "AutonomyDecision",
     "AutonomyNode",
     "CreativePrompt",
+    "ContinuumCompassReport",
     "ContinuumEngine",
     "ContinuumEntry",
+    "ExpansionTarget",
     "ContinuumManifest",
     "ContinuumPlaybackEngine",
     "BridgeConfig",
@@ -137,6 +146,7 @@ __all__ = [
     "EchoResonanceEngine",
     "HarmonicConfig",
     "HarmonicsAI",
+    "StabilityScore",
     "DecisionResult",
     "ProgressResult",
     "SelfSustainingLoop",
@@ -154,7 +164,9 @@ __all__ = [
     "PulseEvent",
     "ThoughtLogger",
     "thought_trace",
+    "parse_compass_payload",
     "summarize_wishes",
+    "WeightRecommendation",
     "main",
     "forge_chronicle",
     "IdeaAnalysis",
