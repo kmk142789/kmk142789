@@ -54,6 +54,7 @@ echo = "echo.manifest_cli:main"
 echo-evolver = "echo_evolver:main"
 idea-processor = "echo.idea_processor:main"
 echodex = "echodex:main"
+codex = "codex:main"
 echo-vault = "echo.vault.cli:vault_cli"
 echo-ak = "echo.akit.cli:main"
 echocli = "echo_atlas.cli:main"
@@ -73,8 +74,9 @@ py-modules = [
   "echo_cascade",
   "echo_constellation",
   "echo_evolver",
-  "echo_manifest",
-  "echo_universal_key_agent",
+"echo_manifest",
+"echo_universal_key_agent",
+"codex",
 ]
 
 [tool.setuptools.exclude-package-data]
