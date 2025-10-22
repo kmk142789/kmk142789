@@ -95,3 +95,19 @@ def test_ingest_replica_deduplicates_and_logs(tmp_path):
 
     log_text = (tmp_path / "log.md").read_text()
     assert "Sync Metadata" in log_text
+
+
+def test_record_validation_copies_details(tmp_path):
+    store = JsonMemoryStore(
+        storage_path=tmp_path / "memory.json", log_path=tmp_path / "log.md"
+    )
+
+    details = {"count": 1}
+
+    with store.session() as session:
+        session.record_validation("integrity", "pass", details=details)
+        details["count"] = 2
+
+    payload = json.loads((tmp_path / "memory.json").read_text())
+    stored_details = payload["executions"][0]["validations"][0]["details"]
+    assert stored_details == {"count": 1}
