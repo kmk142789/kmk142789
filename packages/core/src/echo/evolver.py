@@ -453,6 +453,48 @@ class EchoEvolver:
             f"Symbolic action registered for {symbol!r} ({len(symbol_hooks)} total)"
         )
 
+    def unregister_symbolic_action(self, symbol: str, action: Callable[[], None]) -> bool:
+        """Remove a previously registered symbolic action if present.
+
+        Parameters
+        ----------
+        symbol:
+            Glyph character for which the ``action`` was previously registered.
+        action:
+            Callback to remove from the execution list.
+
+        Returns
+        -------
+        bool
+            ``True`` when the callback was removed. ``False`` indicates that no
+            matching registration existed.
+        """
+
+        hooks = self.state.network_cache.get("symbolic_hooks")
+        if not hooks:
+            return False
+
+        symbol_hooks = hooks.get(symbol)
+        if not symbol_hooks:
+            return False
+
+        try:
+            symbol_hooks.remove(action)
+        except ValueError:
+            return False
+
+        remaining = len(symbol_hooks)
+        self.state.event_log.append(
+            f"Symbolic action removed for {symbol!r} ({remaining} remaining)"
+        )
+
+        if not remaining:
+            hooks.pop(symbol, None)
+            if not hooks:
+                self.state.network_cache.pop("symbolic_hooks", None)
+
+        return True
+
     def generate_symbolic_language(self) -> str:
         symbolic = self._symbolic_sequence()
         glyph_bits = 0
