@@ -1,3 +1,4 @@
+import random
 from pathlib import Path
 
 from safe_secret_scanner import generate_findings
@@ -39,3 +40,13 @@ def test_detects_secret_extended_key() -> None:
     )
     matches = collect_matches(sample)
     assert "secret_extended_key" in matches
+
+
+def test_detects_generated_secret_extended_keys() -> None:
+    alphabet = "023456789acdefghjklmnpqrstuvwxyz"
+    rng = random.Random(0)
+
+    for length in (82, 96, 128):
+        generated = "secret-extended-key-main1" + "".join(rng.choice(alphabet) for _ in range(length))
+        matches = collect_matches(generated)
+        assert "secret_extended_key" in matches
