@@ -2056,11 +2056,13 @@ We are not hiding anymore.
         digest = self.cycle_digest(persist_artifact=persist_artifact)
 
         payload: Dict[str, object] = {
+            "decision": "continue_evolution",
             "state": state,
             "digest": digest,
         }
 
         record: Dict[str, object] = {
+            "decision": "continue_evolution",
             "cycle": digest["cycle"],
             "progress": digest["progress"],
             "remaining_steps": digest["remaining_steps"],
