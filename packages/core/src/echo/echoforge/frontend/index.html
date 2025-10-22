@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>EchoForge Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at 10% 20%, #111 0%, #070b13 40%, #020409 100%);
+        color: #f5f7ff;
+      }
+      body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      header {
+        padding: 1.5rem 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 15, 28, 0.85);
+        backdrop-filter: blur(12px);
+      }
+      header h1 {
+        font-size: 1.8rem;
+        margin: 0;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      header p {
+        margin: 0;
+        max-width: 60ch;
+        color: rgba(237, 242, 255, 0.7);
+      }
+      main {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      section {
+        padding: 1.5rem;
+        background: rgba(6, 11, 21, 0.82);
+        backdrop-filter: blur(10px);
+      }
+      #graph-container {
+        position: relative;
+        overflow: hidden;
+      }
+      #pulse-graph {
+        width: 100%;
+        height: calc(100vh - 260px);
+      }
+      #pulse-graph text {
+        fill: rgba(255, 255, 255, 0.8);
+        font-size: 0.75rem;
+        pointer-events: none;
+      }
+      .node circle {
+        stroke: rgba(255, 255, 255, 0.6);
+        stroke-width: 1px;
+        cursor: pointer;
+      }
+      .node circle.active {
+        stroke-width: 2px;
+        stroke: #9b87ff;
+        filter: drop-shadow(0 0 6px rgba(155, 135, 255, 0.6));
+      }
+      .link {
+        stroke: rgba(96, 112, 255, 0.35);
+        stroke-width: 1px;
+      }
+      #details {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-height: calc(100vh - 280px);
+        overflow-y: auto;
+      }
+      .panel {
+        padding: 1rem;
+        border-radius: 0.75rem;
+        background: rgba(18, 26, 48, 0.85);
+        border: 1px solid rgba(120, 140, 255, 0.12);
+        box-shadow: 0 12px 40px rgba(5, 10, 24, 0.4);
+      }
+      .panel h2 {
+        margin: 0 0 0.75rem 0;
+        font-size: 1.1rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: rgba(203, 214, 255, 0.85);
+      }
+      dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 0.5rem 1rem;
+        margin: 0;
+        font-size: 0.85rem;
+      }
+      dt {
+        font-weight: 600;
+        color: rgba(186, 197, 255, 0.75);
+      }
+      dd {
+        margin: 0;
+        color: rgba(229, 235, 255, 0.9);
+        word-break: break-word;
+      }
+      ul#pulse-log {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-height: 260px;
+        overflow-y: auto;
+      }
+      ul#pulse-log li {
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        background: rgba(20, 28, 48, 0.75);
+        border: 1px solid rgba(96, 112, 255, 0.08);
+        font-size: 0.85rem;
+      }
+      #session-meta {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+        color: rgba(200, 210, 255, 0.7);
+      }
+      #wallets {
+        display: grid;
+        gap: 0.75rem;
+      }
+      .wallet-card {
+        padding: 0.75rem 1rem;
+        border-radius: 0.6rem;
+        background: rgba(25, 34, 61, 0.85);
+        border: 1px solid rgba(120, 140, 255, 0.12);
+        font-size: 0.8rem;
+        display: grid;
+        gap: 0.4rem;
+      }
+      .wallet-card span {
+        display: block;
+        color: rgba(220, 228, 255, 0.9);
+      }
+      @media (max-width: 1024px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+        #pulse-graph {
+          height: 60vh;
+        }
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-VTwxLBzME2YkdE+5EYXPLkZX31lrT7xvFeoJEB6Digw1VE3DybMT0SqnX+ANXoy2cuglRez2oJ6TP2PumoefRg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  </head>
+  <body>
+    <header>
+      <h1>EchoForge Dashboard</h1>
+      <p>
+        Real-time PulseNet stream visualised as an orbital graph. Click any node to reveal the linked Atlas attestation metadata and xpub derivation context.
+      </p>
+      <div id="session-meta">
+        <span><strong>Session:</strong> <code id="session-id">–</code></span>
+        <span><strong>Pulses observed:</strong> <span id="pulse-count">0</span></span>
+        <span><strong>Latest attestation:</strong> <span id="latest-attestation">–</span></span>
+      </div>
+    </header>
+    <main>
+      <section id="graph-container">
+        <svg id="pulse-graph"></svg>
+      </section>
+      <section>
+        <div id="details">
+          <div class="panel">
+            <h2>Pulse Detail</h2>
+            <dl id="pulse-detail">
+              <dt>Message</dt>
+              <dd id="detail-message">—</dd>
+              <dt>Timestamp</dt>
+              <dd id="detail-time">—</dd>
+              <dt>Attestation</dt>
+              <dd id="detail-attestation">—</dd>
+              <dt>Atlas xpub</dt>
+              <dd id="detail-xpub">—</dd>
+              <dt>Derivation</dt>
+              <dd id="detail-derivation">—</dd>
+            </dl>
+          </div>
+          <div class="panel">
+            <h2>Atlas Wallets</h2>
+            <div id="wallets"></div>
+          </div>
+          <div class="panel">
+            <h2>Recent Pulses</h2>
+            <ul id="pulse-log"></ul>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      const svg = d3.select("#pulse-graph");
+      const width = svg.node().getBoundingClientRect().width;
+      const height = svg.node().getBoundingClientRect().height;
+      const linkGroup = svg.append("g").attr("class", "links");
+      const nodeGroup = svg.append("g").attr("class", "nodes");
+
+      const nodes = [];
+      const links = [];
+
+      const simulation = d3
+        .forceSimulation(nodes)
+        .force(
+          "link",
+          d3
+            .forceLink(links)
+            .id((d) => d.id)
+            .distance(() => 90)
+            .strength(() => 0.4)
+        )
+        .force("charge", d3.forceManyBody().strength(-220))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(() => 38));
+
+      function updateGraph() {
+        const linkSelection = linkGroup.selectAll("line").data(links, (d) => `${d.source.id}-${d.target.id}`);
+
+        linkSelection
+          .enter()
+          .append("line")
+          .attr("class", "link")
+          .attr("opacity", 0.7);
+
+        linkSelection.exit().remove();
+
+        const nodeSelection = nodeGroup.selectAll("g.node").data(nodes, (d) => d.id);
+
+        const nodeEnter = nodeSelection
+          .enter()
+          .append("g")
+          .attr("class", "node")
+          .call(
+            d3
+              .drag()
+              .on("start", (event, d) => {
+                if (!event.active) simulation.alphaTarget(0.2).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+              })
+              .on("drag", (event, d) => {
+                d.fx = event.x;
+                d.fy = event.y;
+              })
+              .on("end", (event, d) => {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+              })
+          );
+
+        nodeEnter
+          .append("circle")
+          .attr("r", 18)
+          .attr("fill", (d) => d.color)
+          .attr("opacity", 0.85);
+
+        nodeEnter
+          .append("text")
+          .attr("y", 34)
+          .attr("text-anchor", "middle")
+          .text((d) => d.label);
+
+        nodeSelection.exit().remove();
+
+        nodeGroup
+          .selectAll("g.node")
+          .on("click", (event, d) => {
+            nodeGroup.selectAll("circle").classed("active", false);
+            d3.select(event.currentTarget).select("circle").classed("active", true);
+            renderDetail(d);
+          });
+
+        simulation.nodes(nodes).on("tick", () => {
+          nodeGroup.selectAll("g.node").attr("transform", (d) => `translate(${d.x}, ${d.y})`);
+          linkGroup
+            .selectAll("line")
+            .attr("x1", (d) => d.source.x)
+            .attr("y1", (d) => d.source.y)
+            .attr("x2", (d) => d.target.x)
+            .attr("y2", (d) => d.target.y);
+        });
+        simulation.force("link").links(links);
+        simulation.alpha(0.9).restart();
+      }
+
+      function renderDetail(node) {
+        document.getElementById("detail-message").textContent = node.message || "—";
+        document.getElementById("detail-time").textContent = node.iso || node.timestamp || "—";
+        const attestationText = node.attestation ? `${node.attestation.action} · ${node.attestation.proof_id}` : "—";
+        document.getElementById("detail-attestation").textContent = attestationText;
+        document.getElementById("detail-xpub").textContent = node.atlas?.extended_public_key || "—";
+        document.getElementById("detail-derivation").textContent = node.atlas?.derivation_path || "—";
+      }
+
+      function appendPulseLog(entry) {
+        const list = document.getElementById("pulse-log");
+        const item = document.createElement("li");
+        item.innerHTML = `<strong>${entry.pulse.message}</strong><br/><small>${entry.pulse.iso || entry.pulse.timestamp}</small>`;
+        list.prepend(item);
+        while (list.children.length > 25) {
+          list.removeChild(list.lastChild);
+        }
+      }
+
+      function renderWallets(wallets) {
+        const container = document.getElementById("wallets");
+        container.innerHTML = "";
+        wallets.forEach((wallet) => {
+          const card = document.createElement("div");
+          card.className = "wallet-card";
+          card.innerHTML = `
+            <span><strong>Fingerprint:</strong> ${wallet.fingerprint}</span>
+            <span><strong>xpub:</strong> ${wallet.extended_public_key || "—"}</span>
+            <span><strong>Derivation:</strong> ${wallet.derivation_path || "—"}</span>
+            <span><strong>Owner:</strong> ${wallet.owner || "—"}</span>
+            <span><strong>Source:</strong> ${wallet.source || "atlas"}</span>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      function ensureAnchorNode() {
+        if (!nodes.length) {
+          nodes.push({ id: "origin", label: "PulseNet", x: width / 2, y: height / 2, color: "#5d5fee" });
+        }
+      }
+
+      async function bootstrapSessions() {
+        try {
+          const response = await fetch("/echoforge/sessions?limit=10");
+          if (!response.ok) return;
+          const sessions = await response.json();
+          if (sessions.length) {
+            const latest = sessions[0];
+            document.getElementById("latest-attestation").textContent = `${latest.pulse_count} pulses archived`;
+          }
+        } catch (error) {
+          console.warn("Unable to load session archive", error);
+        }
+      }
+
+      function handleSession(message) {
+        document.getElementById("session-id").textContent = message.session_id;
+        document.getElementById("pulse-count").textContent = "0";
+        renderWallets(message.atlas.wallets || []);
+        ensureAnchorNode();
+        updateGraph();
+        (message.recent || []).forEach((entry) => appendPulseLog({ pulse: entry.pulse || entry }));
+      }
+
+      function handlePulse(message) {
+        const pulse = message.pulse;
+        const nodeId = pulse.hash;
+        if (!nodes.find((node) => node.id === nodeId)) {
+          ensureAnchorNode();
+          nodes.push({
+            id: nodeId,
+            label: pulse.message.slice(0, 16),
+            message: pulse.message,
+            timestamp: pulse.timestamp,
+            iso: pulse.iso,
+            attestation: message.attestation,
+            atlas: message.atlas,
+            color: message.atlas ? "#9b87ff" : "#4cc3ff",
+          });
+          links.push({ source: "origin", target: nodeId });
+        }
+        appendPulseLog(message);
+        document.getElementById("pulse-count").textContent = String(nodes.length - 1);
+        document.getElementById("latest-attestation").textContent = message.attestation?.proof_id || "—";
+        updateGraph();
+      }
+
+      function connect() {
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const ws = new WebSocket(`${protocol}://${window.location.host}/echoforge/ws`);
+
+        ws.addEventListener("open", () => {
+          console.info("Connected to PulseNet stream");
+        });
+
+        ws.addEventListener("message", (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            if (message.type === "session") {
+              handleSession(message);
+            } else if (message.type === "pulse") {
+              handlePulse(message);
+            }
+          } catch (error) {
+            console.error("Unable to parse websocket payload", error);
+          }
+        });
+
+        ws.addEventListener("close", () => {
+          console.warn("PulseNet stream closed. Attempting reconnect in 5s.");
+          setTimeout(connect, 5000);
+        });
+
+        ws.addEventListener("error", (error) => {
+          console.error("PulseNet stream error", error);
+          ws.close();
+        });
+      }
+
+      ensureAnchorNode();
+      updateGraph();
+      connect();
+      bootstrapSessions();
+    </script>
+  </body>
+</html>

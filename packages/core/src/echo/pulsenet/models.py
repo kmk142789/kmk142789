@@ -103,6 +103,7 @@ class AttestedPulse(BaseModel):
     pulse: Mapping[str, Any]
     attestation: Mapping[str, Any]
     summary: Mapping[str, Any]
+    atlas: Mapping[str, Any] | None = None
 
 
 class ResolutionResult(BaseModel):
