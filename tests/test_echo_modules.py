@@ -131,6 +131,29 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertEqual(payload["cycle"], 2)
         self.assertIn("quantum_key", payload)
 
+    def test_configure_symbolic_sequence_overrides_and_resets_hooks(self) -> None:
+        triggered: list[bool] = []
+
+        def hook() -> None:
+            triggered.append(True)
+
+        self.evolver.register_symbolic_action("∇", hook)
+        self.assertIn("symbolic_hooks", self.evolver.state.network_cache)
+
+        new_sequence = "◇⊕"
+        applied = self.evolver.configure_symbolic_sequence(new_sequence, reset_hooks=True)
+        self.assertEqual(applied, new_sequence)
+        self.assertNotIn("symbolic_hooks", self.evolver.state.network_cache)
+
+        rendered = self.evolver.generate_symbolic_language()
+        self.assertEqual(rendered, new_sequence)
+        self.assertFalse(triggered)
+
+        restored = self.evolver.configure_symbolic_sequence(None)
+        self.assertEqual(restored, "∇⊸≋∇")
+        canonical = self.evolver.generate_symbolic_language()
+        self.assertEqual(canonical, "∇⊸≋∇")
+
     def test_cycle_diagnostics_summarizes_current_state(self) -> None:
         self.evolver.run(enable_network=False, persist_artifact=False)
 
