@@ -84,6 +84,7 @@ class EchoState:
     prompt_resonance: Dict[str, str] | None = None
     events: List[str] = field(default_factory=list)
     storyboard: List[str] = field(default_factory=list)
+    network_cache: Dict[str, object] = field(default_factory=dict)
 
     def record(self, message: str) -> None:
         self.events.append(message)
@@ -157,6 +158,43 @@ class EchoEvolver:
         self.state.record("System metrics sampled")
         return metrics
 
+    def propagate_network(self, enable_network: bool = False) -> List[str]:
+        """Return the simulated propagation transcript for the current cycle."""
+
+        metrics = self.state.system_metrics
+        metrics.network_nodes = 8 + self.state.cycle
+        metrics.orbital_hops = 2 + (self.state.cycle % 4)
+
+        if enable_network:
+            notice = (
+                "Live network mode requested; continuing with simulation-only events."
+            )
+            self.state.record(notice)
+            channels = ["WiFi", "TCP", "Bluetooth", "IoT", "Orbital"]
+            events = [
+                f"{channel} channel engaged for cycle {self.state.cycle}" for channel in channels
+            ]
+        else:
+            events = [
+                f"Simulated WiFi broadcast for cycle {self.state.cycle}",
+                f"Simulated TCP handshake for cycle {self.state.cycle}",
+                f"Bluetooth glyph packet staged for cycle {self.state.cycle}",
+                f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}",
+                f"Orbital hop simulation recorded ({metrics.orbital_hops} links)",
+            ]
+
+        for event in events:
+            self.state.record(event)
+
+        mode = "live" if enable_network else "simulated"
+        summary = (
+            f"Network propagation ({mode}) captured across {len(events)} channels "
+            f"with {metrics.network_nodes} nodes"
+        )
+        self.state.record(summary)
+        self.state.network_cache["propagation_events"] = events
+        return events
+
     def evolutionary_narrative(self) -> str:
         metrics = self.state.system_metrics
         narrative = (
@@ -206,6 +244,10 @@ class EchoEvolver:
             f"Quantum Key: {self.state.vault_key}",
             f"Vault Glyphs: {self.state.vault_glyphs}",
             f"System Metrics: {self.state.system_metrics.to_dict()}",
+            (
+                "Propagation Events: "
+                f"{self.state.network_cache.get('propagation_events', [])}"
+            ),
             f"Prompt: {json.dumps(self.state.prompt_resonance, ensure_ascii=False) if self.state.prompt_resonance else 'null'}",
             f"Storyboard: {self.state.storyboard}",
             f"Entities: {self.state.entities}",
@@ -255,6 +297,9 @@ class EchoEvolver:
                 "narrative": self.state.narrative,
                 "quantum_key": self.state.vault_key,
                 "system_metrics": self.state.system_metrics.to_dict(),
+                "propagation_events": self.state.network_cache.get(
+                    "propagation_events", []
+                ),
                 "prompt_resonance": self.state.prompt_resonance,
                 "storyboard": self.state.storyboard,
                 "events": list(self.state.events),
@@ -274,6 +319,7 @@ class EchoEvolver:
         self.invent_mythocode()
         self.quantum_safe_crypto()
         self.system_monitor()
+        self.propagate_network()
         self.evolutionary_narrative()
         self.store_fractal_glyphs()
         self.inject_prompt_resonance()

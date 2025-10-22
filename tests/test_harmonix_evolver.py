@@ -23,6 +23,8 @@ def test_run_cycle_payload_matches_schema_keys():
     assert "executable" in metadata["prompt_resonance"]["caution"]
     assert metadata["storyboard"]
     assert metadata["storyboard"][0].startswith("Frame 1")
+    assert metadata["propagation_events"]
+    assert metadata["propagation_events"] == state.network_cache["propagation_events"]
     assert state.events, "Events should log the harmonix operations"
 
 
@@ -36,3 +38,15 @@ def test_artifact_text_contains_core_sections():
     assert "Emotional Drive:" in artifact
     assert "\"caution\":" in artifact or "caution" in artifact
     assert "Storyboard:" in artifact
+    assert "Propagation Events:" in artifact
+
+
+def test_propagate_network_supports_live_mode() -> None:
+    evolver = EchoEvolver()
+    evolver.state.cycle = 2
+
+    events = evolver.propagate_network(enable_network=True)
+
+    assert any("channel engaged" in event for event in events)
+    assert any("Live network mode" in entry for entry in evolver.state.events)
+    assert evolver.state.network_cache["propagation_events"] == events
