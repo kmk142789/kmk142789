@@ -108,3 +108,45 @@ def test_metadata_index_and_timeline_report():
     assert "Total Executions: 3" in report
     assert "Command Frequency" in report
     assert "Validation Outcomes" not in report  # no validations recorded
+
+
+def test_metadata_value_counts_handles_complex_values():
+    executions = [
+        make_context(metadata={"group": "alpha"}),
+        make_context(metadata={"group": "alpha"}),
+        make_context(metadata={"group": "beta"}),
+        make_context(metadata={"group": {"name": "alpha", "level": 1}}),
+        make_context(metadata={"group": {"level": 1, "name": "alpha"}}),
+        make_context(metadata={"group": ["x", "y"]}),
+        make_context(metadata={"group": ["x", "y"]}),
+        make_context(metadata={"group": None}),
+        make_context(metadata={"group": {"alpha"}}),
+        make_context(metadata={"other": "ignored"}),
+    ]
+
+    analytics = MemoryAnalytics(executions)
+
+    summary = analytics.metadata_value_counts("group")
+
+    def find_value(predicate):
+        for entry in summary:
+            if predicate(entry.value):
+                return entry
+        raise AssertionError("value not found")
+
+    assert find_value(lambda value: value == "alpha").count == 2
+    assert find_value(lambda value: value == "beta").count == 1
+    assert (
+        find_value(
+            lambda value: isinstance(value, dict)
+            and value.get("name") == "alpha"
+            and value.get("level") == 1
+        ).count
+        == 2
+    )
+    assert find_value(lambda value: isinstance(value, list) and value == ["x", "y"]).count == 2
+    assert find_value(lambda value: value is None).count == 1
+    assert find_value(lambda value: isinstance(value, set) and value == {"alpha"}).count == 1
+
+    empty = analytics.metadata_value_counts("missing")
+    assert empty == []
