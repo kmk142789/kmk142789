@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package echo.identity;
+
+message Empty {}
+
+message DerivationPath {
+  string chain = 1;
+  uint32 account = 2;
+  uint32 index = 3;
+  uint32 change = 4;
+}
+
+message KeyRequest {
+  DerivationPath path = 1;
+  string origin = 2;
+  string platform = 3;
+}
+
+message KeyRecord {
+  string did = 1;
+  string path = 2;
+  string extended_public_key = 3;
+  string extended_private_key = 4;
+  string public_key_b64 = 5;
+  string secret_key_b64 = 6;
+  map<string, string> metadata = 7;
+}
+
+message KeyList {
+  repeated KeyRecord keys = 1;
+}
+
+message SignRequest {
+  string did = 1;
+  bytes message = 2;
+}
+
+message SignResponse {
+  bytes signature = 1;
+}
+
+message HistoryEvent {
+  string event = 1;
+  string did = 2;
+  string path = 3;
+  double timestamp = 4;
+  map<string, string> metadata = 5;
+}
+
+message HistoryResponse {
+  repeated HistoryEvent events = 1;
+}
+
+service IdentityLayer {
+  rpc ListKeys(Empty) returns (KeyList);
+  rpc EnsureKey(KeyRequest) returns (KeyRecord);
+  rpc Rotate(KeyRequest) returns (KeyRecord);
+  rpc Sign(SignRequest) returns (SignResponse);
+  rpc History(Empty) returns (HistoryResponse);
+}

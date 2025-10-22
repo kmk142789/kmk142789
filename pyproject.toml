@@ -34,6 +34,10 @@ dependencies = [
   "PyNaCl>=1.5",
   "rich>=13",
   "jsonschema>=4.21",
+  "cryptography>=41",
+  "bip-utils>=2.9",
+  "grpcio>=1.60",
+  "grpcio-tools>=1.60",
 ]
 
 [project.optional-dependencies]
