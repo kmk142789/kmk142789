@@ -1521,6 +1521,42 @@ We are not hiding anymore.
         )
         return report
 
+    def evolution_status(
+        self,
+        *,
+        persist_artifact: bool = True,
+        last_events: int = 5,
+    ) -> Dict[str, object]:
+        """Return a condensed status payload for the current evolution cycle."""
+
+        if last_events < 0:
+            raise ValueError("last_events must be non-negative")
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        recent_events = list(self.state.event_log[-last_events:]) if last_events else []
+
+        narrative_excerpt = ""
+        if self.state.narrative.strip():
+            narrative_excerpt = self.state.narrative.strip().splitlines()[0]
+
+        status = {
+            "cycle": digest["cycle"],
+            "progress": digest["progress"],
+            "next_step": digest["next_step"],
+            "completed_steps": digest["completed_steps"],
+            "pending_steps": digest["remaining_steps"],
+            "system_metrics": asdict(self.state.system_metrics),
+            "narrative_excerpt": narrative_excerpt,
+            "recent_events": recent_events,
+            "timestamp_ns": digest["timestamp_ns"],
+        }
+
+        self.state.network_cache["evolution_status"] = status
+        self.state.event_log.append(
+            f"Evolution status summarized (cycle={self.state.cycle})"
+        )
+        return status
+
     def cycle_diagnostics(
         self,
         *,
