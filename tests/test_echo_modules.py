@@ -146,6 +146,23 @@ class EchoEvolverTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.evolver.cycle_diagnostics(include_events=True, event_limit=0)
 
+    def test_progress_matrix_tracks_step_history(self) -> None:
+        self.evolver.advance_cycle()
+        self.evolver.mutate_code()
+
+        matrix = self.evolver.progress_matrix(persist_artifact=False)
+
+        self.assertEqual(matrix["cycle"], 1)
+        self.assertTrue(matrix["history_available"])
+        self.assertGreaterEqual(matrix["steps_completed"], 2)
+        self.assertEqual(matrix, self.evolver.state.network_cache.get("progress_matrix"))
+
+        first_row = matrix["rows"][0]
+        self.assertEqual(first_row["step"], "advance_cycle")
+        self.assertEqual(first_row["status"], "completed")
+        self.assertIsNotNone(first_row["timestamp_ns"])
+        self.assertIn("Progress matrix computed", self.evolver.state.event_log[-1])
+
     def test_recent_event_summary_reports_latest_entries(self) -> None:
         self.evolver.advance_cycle()
         self.evolver.mutate_code()
