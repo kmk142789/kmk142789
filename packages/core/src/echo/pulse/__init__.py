@@ -6,6 +6,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
+from .broadcaster import CrossLedgerBroadcast, CrossLedgerBroadcaster, CrossLedgerProof
 from .cross_ledger import CrossLedgerSynchronizer
 from .ledger import PulseLedger, PulseReceipt, create_app
 
@@ -28,4 +29,7 @@ __all__ = list(getattr(_legacy, "__all__", [])) + [
     "PulseReceipt",
     "create_app",
     "CrossLedgerSynchronizer",
+    "CrossLedgerBroadcaster",
+    "CrossLedgerBroadcast",
+    "CrossLedgerProof",
 ]
