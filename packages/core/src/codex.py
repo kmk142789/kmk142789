@@ -29,6 +29,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence
 
+from echo.continuum_atlas import AtlasState, export_attestation
+
 
 try:  # pragma: no cover - fallback for Python < 3.11
     import tomllib
@@ -40,6 +42,13 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_JSON_PATH = REPO_ROOT / "artifacts" / "sovereign_inventory.json"
 DEFAULT_MARKDOWN_PATH = REPO_ROOT / "artifacts" / "sovereign_inventory.md"
 DEFAULT_ORACLE_OUTPUT = REPO_ROOT / "artifacts" / "continuum_oracle.md"
+DEFAULT_ATLAS_ATTESTATION_PATH = REPO_ROOT / "artifacts" / "continuum_atlas_attestation.json"
+
+
+def _current_timestamp() -> str:
+    """Return the current UTC timestamp in ISO-8601 format."""
+
+    return datetime.now(timezone.utc).isoformat()
 
 
 # ---------------------------------------------------------------------------
@@ -605,6 +614,61 @@ def generate_oracle_report(
 # ---------------------------------------------------------------------------
 
 
+def build_atlas_attestation(
+    *,
+    project: str,
+    owner: str,
+    xpub: str,
+    fingerprint: str,
+    derivation_path: str,
+    signer: str,
+    issued_at: str | None = None,
+    source: str = "codex-attest",
+) -> Dict[str, object]:
+    """Return a Continuum Atlas attestation payload for a watch-only wallet."""
+
+    cleaned_xpub = xpub.strip()
+    cleaned_fingerprint = fingerprint.strip()
+    cleaned_path = derivation_path.strip()
+
+    if not cleaned_xpub:
+        raise ValueError("xpub must be provided")
+    if not cleaned_fingerprint:
+        raise ValueError("fingerprint must be provided")
+    if not cleaned_path:
+        raise ValueError("derivation path must be provided")
+
+    state = AtlasState()
+    wallet_ledger = state.ledger.setdefault("wallets", {})
+    wallet_ledger[cleaned_fingerprint] = {
+        "owner": owner,
+        "proofs": [cleaned_xpub],
+        "metadata": {
+            "fingerprint": cleaned_fingerprint,
+            "extended_public_key": cleaned_xpub,
+            "derivation_path": cleaned_path,
+            "project": project,
+        },
+    }
+
+    oracle_payload: Dict[str, object] = {
+        "project": project,
+        "owner": owner,
+        "source": source,
+        "weights": {},
+        "expansion_targets": [],
+        "stability_score": {
+            "current": 1.0,
+            "predicted": 1.0,
+            "method": source,
+        },
+    }
+    if issued_at:
+        oracle_payload["generated_at"] = issued_at
+
+    return export_attestation(state, oracle_payload, signer=signer)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Echo Codex CLI")
     subparsers = parser.add_subparsers(dest="command")
@@ -641,6 +705,18 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional report path. Defaults to artifacts/continuum_oracle.md",
     )
 
+    attest = subparsers.add_parser(
+        "attest",
+        help="Generate a Continuum Atlas attestation for a watch-only wallet",
+    )
+    attest.add_argument("--project", required=True, help="Project name recorded in the attestation")
+    attest.add_argument("--owner", required=True, help="Owner or steward associated with the wallet")
+    attest.add_argument("--xpub", required=True, help="Extended public key captured in the attestation")
+    attest.add_argument("--fingerprint", required=True, help="Master fingerprint for the watch-only wallet")
+    attest.add_argument("--path", dest="derivation_path", required=True, help="Derivation path associated with the xpub")
+    attest.add_argument("--export", type=Path, default=None, help="Output path for the attestation JSON artifact")
+    attest.add_argument("--signer", default=None, help="Optional signer label recorded in the attestation")
+
     return parser
 
 
@@ -674,6 +750,32 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(report, encoding="utf-8")
         print(report)
+        return 0
+
+    if args.command == "attest":
+        export_path = args.export or DEFAULT_ATLAS_ATTESTATION_PATH
+        attestation = build_atlas_attestation(
+            project=args.project,
+            owner=args.owner,
+            xpub=args.xpub,
+            fingerprint=args.fingerprint,
+            derivation_path=args.derivation_path,
+            signer=args.signer or args.owner,
+            issued_at=_current_timestamp(),
+        )
+
+        export_path.parent.mkdir(parents=True, exist_ok=True)
+        export_path.write_text(
+            json.dumps(attestation, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+        summary_lines = attestation.get("compass_summary", [])
+        if summary_lines:
+            print("\n".join(summary_lines))
+            print("")
+        print(f"Signature: {attestation['signature']}")
+        print(f"Attestation written to {export_path}")
         return 0
 
     if args.command != "forge":
@@ -717,6 +819,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
 
 
 __all__ = [
+    "build_atlas_attestation",
     "build_inventory",
     "collect_apps",
     "collect_domains",
