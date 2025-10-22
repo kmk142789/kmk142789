@@ -244,6 +244,12 @@ PATTERNS: List[Pattern] = [
     Pattern("pem_private", re.compile(r"-----BEGIN (?:EC|RSA|DSA|PRIVATE) KEY-----")),
     Pattern("aws_access_key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
     Pattern("google_api_key", re.compile(r"\bAIza[0-9A-Za-z\-_]{35}\b")),
+    Pattern(
+        "secret_extended_key",
+        re.compile(
+            r"\bsecret-extended-key-(?:main|test|reg|sim|alpha|beta|local)1[023456789acdefghjklmnpqrstuvwxyz]{80,}\b"
+        ),
+    ),
     Pattern("ssh_rsa_private", re.compile(r"-----BEGIN OPENSSH PRIVATE KEY-----")),
 ]
 
