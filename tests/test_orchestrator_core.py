@@ -123,6 +123,8 @@ def test_orchestrator_core_persists_manifest(tmp_path: Path) -> None:
     weights = decision["weights"]
     assert weights["pulsenet"] >= 0.25
     assert weights["atlas"] >= 0.2
+    assert "momentum" in decision
+    assert decision["momentum"]["triggers"] == []
 
 
 def test_orchestrator_adaptive_weighting_dampens_noise(tmp_path: Path) -> None:
@@ -154,6 +156,40 @@ def test_orchestrator_adaptive_weighting_dampens_noise(tmp_path: Path) -> None:
 
     assert noisy_weight < clean_weight
     assert noisy_service.latest_decision is not None
+
+
+def test_orchestrator_momentum_triggers_track_progress(tmp_path: Path) -> None:
+    pulsenet = StubPulseNet(_make_summary(6, 2), _make_attestations())
+    evolver = StubEvolver(_make_digest(0.1))
+    resonance = StubResonance(4000.0)
+
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=evolver,  # type: ignore[arg-type]
+        resonance_engine=resonance,
+        atlas_resolver=None,
+    )
+
+    first = service.orchestrate()
+    assert first["momentum"]["triggers"] == []
+
+    evolver._digest = _make_digest(0.85)
+    resonance._score = 9000.0
+    surge = service.orchestrate()
+    surge_triggers = surge["momentum"]["triggers"]
+    assert surge_triggers, "surge should produce momentum triggers"
+    assert any(trigger["action"] == "accelerate_cycle" for trigger in surge_triggers)
+    assert surge.get("triggers") == surge_triggers
+
+    pulsenet._attestations = []  # type: ignore[attr-defined]
+    evolver._digest = _make_digest(0.05)
+    resonance._score = 200.0
+    slump = service.orchestrate()
+    slump_triggers = slump["momentum"]["triggers"]
+    assert slump_triggers, "slump should produce momentum stabilisation triggers"
+    assert any(trigger["action"] == "stabilise_cycle" for trigger in slump_triggers)
+    assert slump.get("triggers") == slump_triggers
 
 
 def test_orchestrator_flow_endpoint(tmp_path: Path) -> None:

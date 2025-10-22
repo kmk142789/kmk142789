@@ -107,6 +107,11 @@ class OrchestratorCore:
             "inputs": inputs,
         }
 
+        momentum = self._evaluate_momentum(inputs, coherence, weights)
+        decision["momentum"] = momentum
+        if momentum["triggers"]:
+            decision["triggers"] = list(momentum["triggers"])
+
         manifest_path = self._persist(decision)
         decision["manifest"] = {"path": str(manifest_path)}
 
@@ -363,6 +368,91 @@ class OrchestratorCore:
 
         return {"nodes": nodes, "edges": edges}
 
+    def _evaluate_momentum(
+        self,
+        inputs: Mapping[str, Any],
+        coherence: float,
+        weights: Mapping[str, float],
+    ) -> MutableMapping[str, Any]:
+        digest = inputs.get("cycle_digest", {})
+        progress = 0.0
+        if isinstance(digest, Mapping):
+            progress = float(digest.get("progress", 0.0) or 0.0)
+
+        prev_progress = progress
+        prev_coherence = coherence
+        if isinstance(self._last_decision, Mapping):
+            previous_inputs = self._last_decision.get("inputs")
+            if isinstance(previous_inputs, Mapping):
+                previous_digest = previous_inputs.get("cycle_digest")
+                if isinstance(previous_digest, Mapping):
+                    prev_progress = float(previous_digest.get("progress", 0.0) or 0.0)
+            previous_coherence_payload = self._last_decision.get("coherence")
+            if isinstance(previous_coherence_payload, Mapping):
+                prev_score = previous_coherence_payload.get("score")
+                if isinstance(prev_score, (int, float)):
+                    prev_coherence = self._coherence_from_score(float(prev_score))
+
+        delta_progress = progress - prev_progress
+        delta_coherence = coherence - prev_coherence
+
+        summary = inputs.get("pulse_summary", {})
+        total_entries = 0.0
+        if isinstance(summary, Mapping):
+            total_entries = float(summary.get("total_entries", 0) or 0)
+        attestations = inputs.get("attestations", [])
+        attested_count = sum(1 for item in attestations if isinstance(item, Mapping))
+        attested_ratio = attested_count / total_entries if total_entries else 0.0
+        attested_ratio = self._clamp(attested_ratio)
+
+        positive_delta = max(delta_progress, 0.0)
+        negative_delta = max(-delta_progress, 0.0)
+        momentum_score = self._clamp(
+            0.5 * positive_delta + 0.3 * coherence + 0.2 * attested_ratio
+        )
+        slump_score = self._clamp(
+            0.5 * negative_delta + 0.3 * (1.0 - coherence) + 0.2 * (1.0 - attested_ratio)
+        )
+
+        triggers: list[dict[str, Any]] = []
+        if positive_delta >= 0.05 and momentum_score >= 0.6:
+            triggers.append(
+                {
+                    "id": "momentum_surge",
+                    "kind": "momentum",
+                    "action": "accelerate_cycle",
+                    "reason": f"progress advanced {delta_progress:.2f}",
+                    "momentum": self._round(momentum_score),
+                }
+            )
+        if (negative_delta >= 0.05 or coherence < 0.25) and slump_score >= 0.5:
+            if negative_delta >= 0.05:
+                detail = f"progress regressed {negative_delta:.2f}"
+            else:
+                detail = "coherence dipped below 0.25"
+            triggers.append(
+                {
+                    "id": "momentum_stall",
+                    "kind": "momentum",
+                    "action": "stabilise_cycle",
+                    "reason": detail,
+                    "momentum": self._round(slump_score),
+                }
+            )
+
+        return {
+            "progress": self._round(progress),
+            "previous_progress": self._round(prev_progress),
+            "delta_progress": self._round(delta_progress),
+            "coherence": self._round(coherence),
+            "previous_coherence": self._round(prev_coherence),
+            "delta_coherence": self._round(delta_coherence),
+            "attested_ratio": self._round(attested_ratio),
+            "score": self._round(momentum_score),
+            "slump": self._round(slump_score),
+            "triggers": triggers,
+        }
+
     def _persist(self, decision: Mapping[str, Any]) -> Path:
         timestamp = datetime.now(timezone.utc)
         filename = f"orchestration_{timestamp.strftime('%Y%m%dT%H%M%S%fZ')}.json"
@@ -394,6 +484,10 @@ class OrchestratorCore:
     @staticmethod
     def _clamp(value: float, low: float = 0.0, high: float = 1.0) -> float:
         return max(low, min(high, float(value)))
+
+    @staticmethod
+    def _round(value: float, digits: int = 4) -> float:
+        return float(round(float(value), digits))
 
     @staticmethod
     def _now_iso() -> str:
