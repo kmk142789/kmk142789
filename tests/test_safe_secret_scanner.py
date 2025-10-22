@@ -42,6 +42,14 @@ def test_detects_secret_extended_key() -> None:
     assert "secret_extended_key" in matches
 
 
+def test_detects_secret_extended_key_case_insensitive() -> None:
+    sample = (
+        "SECRET-EXTENDED-KEY-MAIN1QWRZVZXLTSQQPQXAK7NYN86E8N29403MUN6WXRKVDKNCFNVRSHDRRGNSQXMMKW5LKVRK9CWSGFLJ6P6QMCV7LDHRALA0J77ZFP9L9TRQWMU0M9QVPC7SJS9CQNEGAYVVZJPCV3E83FKZKNAQFUM97X2052EM8NEDM6FDMJS27ZRVXSXE2D4U4WLPK6RPX84GJU8EGFM0TD8YLSFFV6NY5DLFDUKSSC8N22ZVV5KKLVGYLQHTLNSDJGK79XLVGDJJYSJ3N6LVVNXZXJS5A0ZTY"
+    )
+    matches = collect_matches(sample)
+    assert "secret_extended_key" in matches
+
+
 def test_detects_generated_secret_extended_keys() -> None:
     alphabet = "023456789acdefghjklmnpqrstuvwxyz"
     rng = random.Random(0)
