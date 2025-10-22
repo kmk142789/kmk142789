@@ -14,6 +14,8 @@ from echo.pulsenet import AtlasAttestationResolver, PulseNetGatewayService
 from echo.pulsenet.api import create_router as create_pulsenet_router
 from echo.pulsenet.registration import RegistrationStore
 from echo.pulsenet.stream import PulseAttestor, PulseHistoryStreamer
+from echo.resonance import HarmonicsAI
+from echo.evolver import EchoEvolver
 from echo_atlas.api import create_router as create_atlas_router
 from echo_atlas.service import AtlasService
 from pulse_weaver.api import create_router as create_pulse_weaver_router
@@ -24,6 +26,8 @@ from .state import dag, receipts, session_heads, set_dag, set_receipts, set_sess
 from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulseweaver import build_pulse_bus, build_watchdog
 from echo.pulseweaver.api import create_router as create_pulse_router
+from echo.orchestrator.core import OrchestratorCore
+from echo.orchestrator.api import create_router as create_orchestrator_router
 
 app = FastAPI(title="Echo")
 app.include_router(echonet_router)
@@ -71,6 +75,17 @@ _echoforge_service = EchoForgeDashboardService(
     frontend_path=_echoforge_frontend,
 )
 app.include_router(create_echoforge_router(_echoforge_service))
+
+_orchestrator_state = Path.cwd() / "state" / "orchestrator"
+_orchestrator_state.mkdir(parents=True, exist_ok=True)
+_orchestrator_service = OrchestratorCore(
+    state_dir=_orchestrator_state,
+    pulsenet=_pulsenet_service,
+    evolver=EchoEvolver(),
+    resonance_engine=HarmonicsAI(),
+    atlas_resolver=_pulsenet_atlas_resolver,
+)
+app.include_router(create_orchestrator_router(_orchestrator_service))
 
 __all__ = [
     "app",
