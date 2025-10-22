@@ -13,3 +13,9 @@ A batch of `secret-extended-key-main` values was provided via support channels. 
 - Automate monitoring to flag accidental publication of `secret-extended-key-main` prefixes.
 
 Documented for incident tracking. Do **not** commit or redistribute the raw secret values in version control.
+
+## 2025-05-11 Update
+- Support provided an additional bundle of 46 `secret-extended-key-main` values.
+- Treat every associated credential, wallet, or derivation path as compromised until the keys are rotated.
+- Confirm downstream configuration repositories, CI/CD variables, and runtime stores are scrubbed of the exposed material.
+- Capture sanitized evidence only (for example, hashed digests or counts) when recording any follow-up investigation notes.
