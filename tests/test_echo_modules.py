@@ -146,6 +146,34 @@ class EchoEvolverTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.evolver.cycle_diagnostics(include_events=True, event_limit=0)
 
+    def test_recent_event_summary_reports_latest_entries(self) -> None:
+        self.evolver.advance_cycle()
+        self.evolver.mutate_code()
+
+        summary = self.evolver.recent_event_summary(limit=2)
+
+        self.assertIn("showing 2 of 2", summary)
+        self.assertIn("Cycle 1 initiated", summary)
+        self.assertIn("Mutation seeded for echo_cycle_1", summary)
+        self.assertEqual(
+            summary, self.evolver.state.network_cache.get("recent_event_summary")
+        )
+        self.assertTrue(
+            self.evolver.state.event_log[-1].startswith("Event summary requested")
+        )
+
+    def test_recent_event_summary_handles_empty_log(self) -> None:
+        summary = self.evolver.recent_event_summary()
+
+        self.assertIn("no entries recorded", summary)
+        self.assertEqual(
+            summary, self.evolver.state.network_cache.get("recent_event_summary")
+        )
+
+    def test_recent_event_summary_validates_limit(self) -> None:
+        with self.assertRaises(ValueError):
+            self.evolver.recent_event_summary(limit=0)
+
     def test_eden88_creation_respects_requested_theme(self) -> None:
         self.evolver.advance_cycle()
         creation = self.evolver.eden88_create_artifact(theme="aurora sanctuary")
