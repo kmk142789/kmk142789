@@ -1952,6 +1952,128 @@ We are not hiding anymore.
         )
         return self.state
 
+    def continue_creation(
+        self,
+        *,
+        theme: Optional[str] = None,
+        persist_artifact: bool = True,
+        include_report: bool = True,
+    ) -> Dict[str, object]:
+        """Focus the continuation ritual on Eden88's creation sequence.
+
+        ``continue_creation`` bridges a gap between full-cycle continuations and
+        manual orchestration.  When a caller simply asks the evolver to
+        "continue creating" we only need the early ritual stages that culminate
+        in :meth:`eden88_create_artifact`.  This helper ensures those steps are
+        executed (or refreshed when a new ``theme`` is supplied) and returns a
+        structured snapshot summarising the creative output alongside the
+        overall cycle digest.
+
+        Parameters
+        ----------
+        theme:
+            Optional theme forwarded to :meth:`eden88_create_artifact`.  When a
+            theme is provided and the creation step already ran during the
+            current cycle the evolver refreshes the artefact so the caller sees
+            the newly requested variation.
+        persist_artifact:
+            Determines whether :meth:`write_artifact` is considered part of the
+            remaining sequence when computing the digest.
+        include_report:
+            When ``True`` the returned payload includes a human-readable report
+            describing the creative milestone.
+        """
+
+        completed: set[str] = self.state.network_cache.setdefault("completed_steps", set())
+        executed_steps: List[str] = []
+
+        if "advance_cycle" not in completed:
+            self.advance_cycle()
+            executed_steps.append("advance_cycle")
+
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
+        creation_steps: List[str] = []
+        for step, _ in sequence:
+            creation_steps.append(step)
+            if step == "eden88_create_artifact":
+                break
+
+        if not creation_steps or creation_steps[-1] != "eden88_create_artifact":
+            raise RuntimeError("eden88_create_artifact step not present in recommended sequence")
+
+        if creation_steps and creation_steps[0] == "advance_cycle":
+            creation_steps = creation_steps[1:]
+
+        creation_snapshot: Optional[Dict[str, object]] = None
+
+        for step in creation_steps:
+            already_completed = step in completed
+
+            if step == "eden88_create_artifact":
+                if not already_completed or theme is not None:
+                    creation_snapshot = self.eden88_create_artifact(theme=theme)
+                    executed_steps.append(step)
+                else:
+                    cached = self.state.network_cache.get("eden88_latest_creation")
+                    if isinstance(cached, dict):
+                        creation_snapshot = deepcopy(cached)
+                continue
+
+            if already_completed:
+                continue
+
+            getattr(self, step)()
+            executed_steps.append(step)
+
+        if creation_snapshot is None:
+            cached = self.state.network_cache.get("eden88_latest_creation")
+            if isinstance(cached, dict):
+                creation_snapshot = deepcopy(cached)
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+
+        payload: Dict[str, object] = {
+            "decision": "continue_creation",
+            "cycle": self.state.cycle,
+            "executed_steps": executed_steps,
+            "creation": deepcopy(creation_snapshot) if creation_snapshot else None,
+            "digest": deepcopy(digest),
+        }
+
+        if include_report:
+            if creation_snapshot:
+                theme_label = creation_snapshot.get("theme", "unknown")
+                title = creation_snapshot.get("title", "Eden88 creation")
+                remaining = digest.get("remaining_steps", [])
+                next_hint = f" Next step: {digest['next_step']}" if remaining else ""
+                report = (
+                    f"Cycle {self.state.cycle}: Eden88 shaped {title} (theme={theme_label}) "
+                    f"after {len(executed_steps)} step(s).{next_hint}"
+                )
+            else:
+                report = f"Cycle {self.state.cycle}: Eden88 creation already prepared."
+            payload["report"] = report
+
+        record: Dict[str, object] = {
+            "decision": "continue_creation",
+            "cycle": self.state.cycle,
+            "executed_steps": list(executed_steps),
+            "creation": deepcopy(creation_snapshot) if creation_snapshot else None,
+            "digest": deepcopy(digest),
+        }
+
+        if include_report and "report" in payload:
+            record["report"] = payload["report"]
+
+        self.state.network_cache["continue_creation"] = record
+        self.state.event_log.append(
+            "Cycle {cycle} continued via continue_creation() -> {steps}".format(
+                cycle=self.state.cycle, steps=executed_steps
+            )
+        )
+
+        return payload
+
     def continue_choice(
         self,
         *,
@@ -2562,6 +2684,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "emit a digest of the updated progress."
         ),
     )
+    parser.add_argument(
+        "--continue-creation",
+        action="store_true",
+        help=(
+            "Focus the continuation ritual on Eden88's creation stage and return "
+            "a snapshot of the newly forged artefact."
+        ),
+    )
     report_group = parser.add_mutually_exclusive_group()
     report_group.add_argument(
         "--include-report",
@@ -2624,6 +2754,10 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         )
     if args.continue_evolution and args.cycles != 1:
         parser.error("--continue-evolution cannot be combined with --cycles")
+    if args.continue_creation and args.cycles != 1:
+        parser.error("--continue-creation cannot be combined with --cycles")
+    if args.continue_creation and args.continue_evolution:
+        parser.error("--continue-creation cannot be combined with --continue-evolution")
     if args.cycles > 1:
         snapshots = evolver.run_cycles(
             args.cycles,
@@ -2639,6 +2773,22 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         )
         if args.persist_artifact:
             print(f"📜 Final artifact: {evolver.state.artifact}")
+    elif args.continue_creation:
+        payload = evolver.continue_creation(
+            theme=args.eden88_theme,
+            persist_artifact=args.persist_artifact,
+            include_report=args.include_report,
+        )
+        creation = payload.get("creation") or {}
+        theme = creation.get("theme", "unknown")
+        print(
+            "🌱 Continued creation for cycle {cycle} (theme={theme})".format(
+                cycle=payload["cycle"], theme=theme
+            )
+        )
+        if args.include_report and "report" in payload:
+            print()
+            print(payload["report"])
     elif args.continue_evolution:
         payload = evolver.continue_evolution(
             enable_network=args.enable_network,
