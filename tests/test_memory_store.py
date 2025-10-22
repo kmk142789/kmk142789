@@ -39,6 +39,32 @@ def test_memory_store_records_cycle(tmp_path):
     assert "Dataset Fingerprints" in log_text
 
 
+def test_session_records_metrics(tmp_path):
+    storage = tmp_path / "memory.json"
+    log = tmp_path / "ECHO_LOG.md"
+    store = JsonMemoryStore(storage_path=storage, log_path=log)
+
+    metadata = {"phase": 1}
+
+    with store.session() as session:
+        session.record_metric("latency", 123.4, unit="ms", metadata=metadata)
+        metadata["phase"] = 2
+        session.record_metric("latency", 200, unit="ms")
+        session.record_metric("notes", "warmup")
+
+    payload = json.loads(storage.read_text())
+    metrics = payload["executions"][0]["metrics"]
+    assert metrics["latency"][0]["value"] == 123.4
+    assert metrics["latency"][0]["metadata"] == {"phase": 1}
+    assert metrics["latency"][1]["value"] == 200
+    assert metrics["latency"][1]["unit"] == "ms"
+    assert metrics["notes"][0]["value"] == "warmup"
+
+    log_text = log.read_text()
+    assert "Metrics" in log_text
+    assert "latency" in log_text
+
+
 def test_recent_executions_limit_and_metadata(tmp_path):
     store = JsonMemoryStore(
         storage_path=tmp_path / "memory.json", log_path=tmp_path / "log.md"
@@ -64,6 +90,64 @@ def test_recent_executions_limit_and_metadata(tmp_path):
 
     with pytest.raises(ValueError):
         store.recent_executions(limit=-1)
+
+
+def test_recent_executions_time_filters(tmp_path):
+    store = JsonMemoryStore(
+        storage_path=tmp_path / "memory.json", log_path=tmp_path / "log.md"
+    )
+
+    contexts = [
+        ExecutionContext(
+            timestamp="2024-01-01T00:00:00+00:00",
+            commands=[],
+            dataset_fingerprints={},
+            validations=[],
+            metadata={},
+            cycle=1,
+            artifact=None,
+            summary=None,
+        ),
+        ExecutionContext(
+            timestamp="2024-01-02T00:00:00+00:00",
+            commands=[],
+            dataset_fingerprints={},
+            validations=[],
+            metadata={},
+            cycle=2,
+            artifact=None,
+            summary=None,
+        ),
+        ExecutionContext(
+            timestamp="2024-01-03T00:00:00+00:00",
+            commands=[],
+            dataset_fingerprints={},
+            validations=[],
+            metadata={},
+            cycle=3,
+            artifact=None,
+            summary=None,
+        ),
+    ]
+
+    for context in contexts:
+        inserted = store.ingest_replica(context)
+        assert inserted is True
+
+    recent = store.recent_executions(since="2024-01-02T00:00:00+00:00")
+    assert [ctx.cycle for ctx in recent] == [2, 3]
+
+    window = store.recent_executions(until="2024-01-02T12:00:00Z")
+    assert [ctx.cycle for ctx in window] == [1, 2]
+
+    span = store.recent_executions(since="2024-01-01T12:00:00+00:00", until=contexts[2].timestamp)
+    assert [ctx.cycle for ctx in span] == [2, 3]
+
+    with pytest.raises(ValueError):
+        store.recent_executions(since="invalid")
+
+    with pytest.raises(TypeError):
+        store.recent_executions(since=123)  # type: ignore[arg-type]
 
 
 def test_ingest_replica_deduplicates_and_logs(tmp_path):

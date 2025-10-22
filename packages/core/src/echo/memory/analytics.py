@@ -6,6 +6,7 @@ import copy
 import json
 from collections import Counter, defaultdict
 from dataclasses import dataclass
+from statistics import mean
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .store import ExecutionContext, JsonMemoryStore
@@ -149,6 +150,59 @@ class MemoryAnalytics:
             for context in self._executions
         ]
 
+    def metric_series(self, name: str) -> List[Dict[str, Any]]:
+        """Return a chronological series of samples for ``name``.
+
+        Each entry contains the execution timestamp, cycle number (if available)
+        and the recorded metric payload for the requested metric.
+        """
+
+        series: List[Dict[str, Any]] = []
+        for context in self._executions:
+            samples = context.metrics.get(name, [])
+            for sample in samples:
+                payload = {
+                    "timestamp": context.timestamp,
+                    "cycle": context.cycle,
+                    "value": sample.get("value"),
+                    "recorded_at": sample.get("recorded_at"),
+                }
+                if "unit" in sample:
+                    payload["unit"] = sample["unit"]
+                if "metadata" in sample:
+                    payload["metadata"] = sample["metadata"]
+                series.append(payload)
+        return series
+
+    def metric_summary(self, name: str) -> Optional[Dict[str, Any]]:
+        """Return aggregate statistics for numeric samples of ``name``.
+
+        Non-numeric metric values are ignored. When no numeric samples are
+        present ``None`` is returned.
+        """
+
+        numeric_values: List[float] = []
+        for entry in self.metric_series(name):
+            value = entry.get("value")
+            if isinstance(value, (int, float)):
+                numeric_values.append(float(value))
+
+        if not numeric_values:
+            return None
+
+        return {
+            "count": len(numeric_values),
+            "min": min(numeric_values),
+            "max": max(numeric_values),
+            "average": mean(numeric_values),
+        }
+
+    def metric_names(self) -> List[str]:
+        """Return a sorted list of metric identifiers present in executions."""
+
+        names = {name for context in self._executions for name in context.metrics if context.metrics.get(name)}
+        return sorted(names)
+
     # ------------------------------------------------------------------
     # Reporting
     # ------------------------------------------------------------------
@@ -171,6 +225,25 @@ class MemoryAnalytics:
             for summary in validations:
                 outcomes = ", ".join(f"{status}: {count}" for status, count in sorted(summary.outcomes.items()))
                 lines.append(f"- {summary.name}: {outcomes}\n")
+            lines.append("\n")
+
+        metric_names = self.metric_names()
+        if metric_names:
+            lines.append("## Metrics\n")
+            for metric_name in metric_names:
+                summary = self.metric_summary(metric_name)
+                if summary:
+                    lines.append(
+                        "- {name}: count={count}, min={min:.3f}, max={max:.3f}, average={avg:.3f}\n".format(
+                            name=metric_name,
+                            count=summary["count"],
+                            min=summary["min"],
+                            max=summary["max"],
+                            avg=summary["average"],
+                        )
+                    )
+                else:
+                    lines.append(f"- {metric_name}: non-numeric samples\n")
             lines.append("\n")
 
         return "".join(lines)
