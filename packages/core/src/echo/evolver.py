@@ -1048,6 +1048,8 @@ We are not hiding anymore.
         self.state.event_log.append(summary)
 
         self.state.network_cache["propagation_events"] = events
+        self.state.network_cache["propagation_mode"] = mode
+        self.state.network_cache["propagation_summary"] = summary
         self._mark_step("propagate_network")
         return events
 
