@@ -31,7 +31,11 @@ CREATE TABLE IF NOT EXISTS records (
     entropy_hint TEXT NOT NULL,
     policy TEXT NOT NULL,
     enc_priv BLOB NOT NULL,
-    nonce BLOB NOT NULL
+    nonce BLOB NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
+    expires_at REAL,
+    last_rotated_at REAL,
+    rotation_count INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_records_label ON records(label);
@@ -53,6 +57,7 @@ class VaultStore:
         self._conn.row_factory = sqlite3.Row
         with self._lock:
             self._conn.executescript(_SCHEMA)
+            self._ensure_record_columns()
             if self._read_meta("version") is None:
                 self._write_meta("version", self.VERSION)
             if self._read_meta("salt") is None:
@@ -101,14 +106,19 @@ class VaultStore:
             record.policy.model_dump_json(),
             enc_priv,
             nonce,
+            record.status,
+            record.expires_at,
+            record.last_rotated_at,
+            record.rotation_count,
         )
         with self._lock:
             self._conn.execute(
                 """
                 INSERT INTO records(
                     id, label, fmt, tags, created_at, last_used_at,
-                    use_count, entropy_hint, policy, enc_priv, nonce
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    use_count, entropy_hint, policy, enc_priv, nonce,
+                    status, expires_at, last_rotated_at, rotation_count
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 payload,
             )
@@ -117,7 +127,13 @@ class VaultStore:
     def list_records(self) -> List[VaultRecord]:
         with self._lock:
             rows = self._conn.execute(
-                "SELECT id, label, fmt, tags, created_at, last_used_at, use_count, entropy_hint, policy FROM records"
+                """
+                SELECT
+                    id, label, fmt, tags, created_at, last_used_at, use_count,
+                    entropy_hint, policy, status, expires_at, last_rotated_at,
+                    rotation_count
+                FROM records
+                """
             ).fetchall()
         return [self._row_to_record(row) for row in rows]
 
@@ -152,7 +168,13 @@ class VaultStore:
                 )
             self._conn.commit()
             row = self._conn.execute(
-                "SELECT id, label, fmt, tags, created_at, last_used_at, use_count, entropy_hint, policy FROM records WHERE id=?",
+                """
+                SELECT
+                    id, label, fmt, tags, created_at, last_used_at, use_count,
+                    entropy_hint, policy, status, expires_at, last_rotated_at,
+                    rotation_count
+                FROM records WHERE id=?
+                """,
                 (record_id,),
             ).fetchone()
         if row is None:
@@ -167,7 +189,13 @@ class VaultStore:
             )
             self._conn.commit()
             row = self._conn.execute(
-                "SELECT id, label, fmt, tags, created_at, last_used_at, use_count, entropy_hint, policy FROM records WHERE id=?",
+                """
+                SELECT
+                    id, label, fmt, tags, created_at, last_used_at, use_count,
+                    entropy_hint, policy, status, expires_at, last_rotated_at,
+                    rotation_count
+                FROM records WHERE id=?
+                """,
                 (record_id,),
             ).fetchone()
         if row is None:
@@ -184,6 +212,74 @@ class VaultStore:
         if row is None:
             raise KeyError(record_id)
         return row["enc_priv"], row["nonce"]
+
+    def rotate_record(
+        self,
+        record_id: str,
+        *,
+        enc_priv: bytes,
+        nonce: bytes,
+        rotation_ts: float,
+        expires_at: Optional[float],
+        entropy_hint: str,
+        rotation_count: int,
+    ) -> VaultRecord:
+        with self._lock:
+            self._conn.execute(
+                """
+                UPDATE records
+                SET enc_priv=?, nonce=?, last_used_at=NULL, use_count=0,
+                    entropy_hint=?, last_rotated_at=?, rotation_count=?,
+                    expires_at=?, status='active'
+                WHERE id=?
+                """,
+                (
+                    enc_priv,
+                    nonce,
+                    entropy_hint,
+                    rotation_ts,
+                    rotation_count,
+                    expires_at,
+                    record_id,
+                ),
+            )
+            self._conn.commit()
+            row = self._conn.execute(
+                """
+                SELECT
+                    id, label, fmt, tags, created_at, last_used_at, use_count,
+                    entropy_hint, policy, status, expires_at, last_rotated_at,
+                    rotation_count
+                FROM records WHERE id=?
+                """,
+                (record_id,),
+            ).fetchone()
+        if row is None:
+            raise KeyError(record_id)
+        return self._row_to_record(row)
+
+    def mark_status(
+        self, record_id: str, *, status: str, expires_at: Optional[float]
+    ) -> VaultRecord:
+        with self._lock:
+            self._conn.execute(
+                "UPDATE records SET status=?, expires_at=? WHERE id=?",
+                (status, expires_at, record_id),
+            )
+            self._conn.commit()
+            row = self._conn.execute(
+                """
+                SELECT
+                    id, label, fmt, tags, created_at, last_used_at, use_count,
+                    entropy_hint, policy, status, expires_at, last_rotated_at,
+                    rotation_count
+                FROM records WHERE id=?
+                """,
+                (record_id,),
+            ).fetchone()
+        if row is None:
+            raise KeyError(record_id)
+        return self._row_to_record(row)
 
     # ------------------------------------------------------------------
     # Helpers
@@ -202,9 +298,31 @@ class VaultStore:
             tags=tags,
             entropy_hint=row["entropy_hint"],
             policy=VaultPolicy.model_validate(policy_data),
+            status=row["status"],
+            expires_at=row["expires_at"],
+            last_rotated_at=row["last_rotated_at"],
+            rotation_count=row["rotation_count"],
         )
 
     def close(self) -> None:
         with self._lock:
             self._conn.commit()
             self._conn.close()
+
+    def _ensure_record_columns(self) -> None:
+        with self._lock:
+            info_rows = self._conn.execute("PRAGMA table_info(records)").fetchall()
+        existing = {row[1] for row in info_rows}
+        alterations = {
+            "status": "ALTER TABLE records ADD COLUMN status TEXT NOT NULL DEFAULT 'active'",
+            "expires_at": "ALTER TABLE records ADD COLUMN expires_at REAL",
+            "last_rotated_at": "ALTER TABLE records ADD COLUMN last_rotated_at REAL",
+            "rotation_count": "ALTER TABLE records ADD COLUMN rotation_count INTEGER NOT NULL DEFAULT 0",
+        }
+        missing = [sql for column, sql in alterations.items() if column not in existing]
+        if not missing:
+            return
+        with self._lock:
+            for statement in missing:
+                self._conn.execute(statement)
+            self._conn.commit()
