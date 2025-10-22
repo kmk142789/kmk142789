@@ -58,6 +58,19 @@ python -m echo.echoctl plan
 python -m echo.echoctl wish "MirrorJosh" "Make joy reproducible" "listening,empathy"
 ```
 
+### Need a guide?
+
+Launch the terminal-based Echo helper to get an interactive tour of the
+repository:
+
+```bash
+npm run echo-helper
+```
+
+Type `help` once it loads to see the commands. The helper can suggest entry
+points (`topics`), surface quick directions to major subsystems, or answer
+free-form questions like `ask where do I find the verifier ui?`.
+
 The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every
 30 minutes if there were changes.
 
