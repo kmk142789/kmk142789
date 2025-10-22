@@ -1,6 +1,11 @@
+from pathlib import Path
+
 import pytest
 
 from tools.decode_raw_tx import decode_raw_transaction
+
+
+DATA_DIR = Path(__file__).with_name("data")
 
 
 def test_decode_simple_transaction():
@@ -101,3 +106,28 @@ def test_decode_standard_addresses_across_networks():
     assert regtest_addresses[1] == "2MsFaWkH7qEYjrPNNssRg8oJUMRpAs4D6Ps"
     assert regtest_addresses[2] == "bcrt1qqqgjyv6y24n80zye42aueh0wluqpzg3n9tg8m2"
     assert regtest_addresses[3] == "bcrt1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sj9hjuh"
+
+
+def test_decode_large_legacy_transaction():
+    raw_hex = (DATA_DIR / "tx_e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114.hex").read_text().strip()
+
+    decoded = decode_raw_transaction(raw_hex)
+
+    assert decoded.version == 1
+    assert decoded.lock_time == 0
+    assert decoded.txid == "e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114"
+    assert decoded.wtxid == decoded.txid
+
+    assert len(decoded.inputs) == 27
+    assert decoded.inputs[0].prev_txid == "7d74a566c2f3c198cd18e4346c98fa34004c8d74442cf67c55b07b84011f5704"
+    assert decoded.inputs[-1].prev_txid == "46ec391a35a0a06494b5026feca98178a69d1e590407a2ad6f2692aa5f13adfa"
+
+    assert len(decoded.outputs) == 2
+    values = [txout.value_satoshis for txout in decoded.outputs]
+    assert values == [7_995_600_000_000, 55_000_000]
+
+    addresses = [txout.address for txout in decoded.outputs]
+    assert addresses == [
+        "1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF",
+        "1GPuT4JD1yKTEGnw2csTCqSAtS3DRiTD69",
+    ]
