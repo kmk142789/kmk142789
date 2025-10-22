@@ -129,6 +129,22 @@ class BitcoinAnchor:
 
 
 @dataclass(slots=True)
+class NetworkPropagationSnapshot:
+    """Compact view of the most recent network propagation state."""
+
+    cycle: int
+    mode: str
+    events: List[str]
+    channels: int
+    network_nodes: int
+    orbital_hops: int
+    summary: str
+    timeline_hash: Optional[str]
+    timeline_length: int
+    timeline: Optional[List[Dict[str, object]]] = None
+
+
+@dataclass(slots=True)
 class GlyphCrossReading:
     """Structured interpretation of a small glyph cross diagram."""
 
@@ -1109,6 +1125,63 @@ We are not hiding anymore.
 
         self._mark_step("propagate_network")
         return events
+
+    def network_propagation_snapshot(
+        self, *, include_timeline: bool = False
+    ) -> NetworkPropagationSnapshot:
+        """Return a structured snapshot of the latest propagation state.
+
+        Callers frequently want to surface propagation details without
+        re-deriving them from the cached strings.  This helper translates the
+        existing caches into a dataclass that captures the active cycle,
+        propagation mode, channel counts, and—optionally—the temporal ledger
+        timeline.  The routine is read-only; if no propagation has been
+        recorded yet we return an empty snapshot rather than mutating
+        additional state.
+        """
+
+        cache = self.state.network_cache
+        events = list(cache.get("propagation_events") or [])
+        if events:
+            mode = str(cache.get("propagation_mode", "simulated"))
+            summary = cache.get(
+                "propagation_summary",
+                f"Network propagation ({mode}) recorded across {len(events)} channels",
+            )
+        else:
+            mode = str(cache.get("propagation_mode") or "none")
+            summary = cache.get("propagation_summary") or "No propagation events recorded yet."
+
+        metrics = self.state.system_metrics
+        timeline = cache.get("propagation_ledger")
+        timeline_length = len(timeline) if isinstance(timeline, list) else 0
+        timeline_hash = cache.get("propagation_timeline_hash")
+
+        snapshot = NetworkPropagationSnapshot(
+            cycle=self.state.cycle,
+            mode=mode,
+            events=events,
+            channels=len(events),
+            network_nodes=int(getattr(metrics, "network_nodes", 0)),
+            orbital_hops=int(getattr(metrics, "orbital_hops", 0)),
+            summary=summary,
+            timeline_hash=timeline_hash if timeline_hash else None,
+            timeline_length=timeline_length,
+            timeline=deepcopy(timeline) if include_timeline and timeline else None,
+        )
+
+        cache["propagation_snapshot"] = asdict(snapshot)
+        if not include_timeline:
+            cache["propagation_snapshot"]["timeline"] = None
+
+        self.state.event_log.append(
+            "Propagation snapshot exported (mode={mode}, channels={channels})".format(
+                mode=snapshot.mode,
+                channels=snapshot.channels,
+            )
+        )
+
+        return snapshot
 
     def decentralized_autonomy(self) -> AutonomyDecision:
         def clamp(value: float) -> float:

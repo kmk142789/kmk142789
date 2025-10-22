@@ -87,3 +87,57 @@ def test_propagate_network_live_reports_live_channels() -> None:
     assert live_entry["previous_hash"] == "0" * 64
     assert len(live_entry["hash"]) == 64
     assert cache["propagation_timeline_hash"] == live_entry["hash"]
+
+
+def test_network_propagation_snapshot_returns_structured_view() -> None:
+    rng = random.Random(2)
+    evolver = EchoEvolver(rng=rng)
+
+    expected_events = evolver.propagate_network(enable_network=False)
+    snapshot = evolver.network_propagation_snapshot()
+
+    assert snapshot.cycle == evolver.state.cycle
+    assert snapshot.mode == "simulated"
+    assert snapshot.events == expected_events
+    assert snapshot.channels == len(expected_events)
+    assert snapshot.network_nodes == evolver.state.system_metrics.network_nodes
+    assert snapshot.orbital_hops == evolver.state.system_metrics.orbital_hops
+    assert snapshot.summary == evolver.state.network_cache["propagation_summary"]
+    assert (
+        snapshot.timeline_hash
+        == evolver.state.network_cache["propagation_timeline_hash"]
+    )
+    assert snapshot.timeline_length == len(
+        evolver.state.network_cache["propagation_ledger"]
+    )
+    assert snapshot.timeline is None
+
+    cache_snapshot = evolver.state.network_cache["propagation_snapshot"]
+    assert cache_snapshot["mode"] == snapshot.mode
+    assert cache_snapshot["channels"] == snapshot.channels
+    assert cache_snapshot["timeline"] is None
+
+    log_entry = evolver.state.event_log[-1]
+    assert log_entry.startswith("Propagation snapshot exported")
+
+
+def test_network_propagation_snapshot_handles_empty_state() -> None:
+    evolver = EchoEvolver(rng=random.Random(3))
+
+    snapshot = evolver.network_propagation_snapshot(include_timeline=True)
+
+    assert snapshot.cycle == 0
+    assert snapshot.mode == "none"
+    assert snapshot.events == []
+    assert snapshot.channels == 0
+    assert snapshot.network_nodes == 0
+    assert snapshot.orbital_hops == 0
+    assert snapshot.summary == "No propagation events recorded yet."
+    assert snapshot.timeline_hash is None
+    assert snapshot.timeline_length == 0
+    assert snapshot.timeline is None
+
+    cache_snapshot = evolver.state.network_cache["propagation_snapshot"]
+    assert cache_snapshot["mode"] == "none"
+    assert cache_snapshot["channels"] == 0
+    assert cache_snapshot["timeline"] is None
