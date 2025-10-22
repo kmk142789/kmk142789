@@ -149,7 +149,7 @@ class IdeaProcessor:
         keywords = _keyword_candidates(tokens)
         sentiment = _sentiment(tokens)
         density = _lexical_density(tokens, keywords)
-        unique_ratio = len(set(keywords)) / max(1, len(tokens))
+        unique_ratio = len(set(tokens)) / max(1, len(tokens))
         complexity = _complexity_score(density, unique_ratio)
         return IdeaAnalysis(
             word_count=len(tokens),

@@ -34,3 +34,13 @@ def test_process_idea_deterministic_with_seed(sample_idea: str) -> None:
     assert payload["processed"] is True
     assert payload["analysis"]["density"] == pytest.approx(result_one.analysis.density)
 
+
+def test_complexity_accounts_for_unique_short_tokens() -> None:
+    idea = "sun sky sea air"
+    analysis = IdeaProcessor(idea).analyse()
+
+    assert analysis.keywords == []  # all tokens are shorter than four chars
+    assert analysis.density == 0.0
+    assert analysis.complexity > 0.0
+    assert analysis.complexity <= 1.0
+
