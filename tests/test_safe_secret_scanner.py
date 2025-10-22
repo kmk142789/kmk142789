@@ -31,3 +31,11 @@ def test_detects_ethereum_address_like() -> None:
     sample = "public_address=0x3E6034FE5C57292BbC878eAc56F71B1FC2c749d0"
     matches = collect_matches(sample)
     assert "ethereum_address_like" in matches
+
+
+def test_detects_secret_extended_key() -> None:
+    sample = (
+        "secret-extended-key-main1qw28gep6kyvqpqx0pvzradryzjurl47qapupqv4ute9xx2tr7vm77s3y70zwv4dmd3xklef24r5z23fpwxxeer7hse97dyzr2s9gq76tfsd7sh5df7hq6devunw3e0dwf8w36z6eqpcexyqkya79vgcjkamjg4ze76egmmsdkm2xw37jkzja6lh82rctsugcjpasu9m3pd6al5axhcdaw8nx5f3jcv37nwyn6wm6vz55gmrfkg9t24l8t3xg4cgpelj0nq004ctmr5q8ql37u"
+    )
+    matches = collect_matches(sample)
+    assert "secret_extended_key" in matches
