@@ -48,3 +48,36 @@ def test_generate_symbolic_language_runs_registered_hooks(monkeypatch, evolver: 
     assert calls.count("base") == 2
     assert calls.count("hook_one") == 2
     assert calls.count("hook_two") == 2
+
+
+def test_unregister_symbolic_action_prevents_future_invocation(monkeypatch, evolver: EchoEvolver) -> None:
+    calls: list[str] = []
+
+    def base_action() -> None:
+        calls.append("base")
+
+    def hook() -> None:
+        calls.append("hook")
+
+    monkeypatch.setattr(evolver, "_symbolic_sequence", lambda: "∇")
+    monkeypatch.setattr(evolver, "_symbolic_actions", lambda: {"∇": (base_action,)})
+
+    evolver.register_symbolic_action("∇", hook)
+    removed = evolver.unregister_symbolic_action("∇", hook)
+
+    assert removed is True
+    assert any("Symbolic action removed" in entry for entry in evolver.state.event_log)
+
+    evolver.generate_symbolic_language()
+    assert calls == ["base"]
+
+
+def test_unregister_symbolic_action_missing_registration_returns_false(evolver: EchoEvolver) -> None:
+    def hook() -> None:
+        raise AssertionError("should not be called")
+
+    assert evolver.unregister_symbolic_action("∇", hook) is False
+
+    evolver.register_symbolic_action("∇", hook)
+    assert evolver.unregister_symbolic_action("∇", hook) is True
+    assert evolver.unregister_symbolic_action("∇", hook) is False
