@@ -23,6 +23,7 @@ class ExecutionContext:
     cycle: Optional[int] = None
     artifact: Optional[str] = None
     summary: Optional[str] = None
+    metrics: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> "ExecutionContext":
@@ -39,6 +40,11 @@ class ExecutionContext:
             cycle=payload.get("cycle"),
             artifact=payload.get("artifact"),
             summary=payload.get("summary"),
+            metrics={
+                name: [dict(entry) for entry in series if isinstance(entry, Mapping)]
+                for name, series in payload.get("metrics", {}).items()
+                if isinstance(series, list)
+            },
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -115,6 +121,8 @@ class JsonMemoryStore:
         *,
         limit: Optional[int] = None,
         metadata_filter: Optional[Mapping[str, Any]] = None,
+        since: Optional[datetime | str] = None,
+        until: Optional[datetime | str] = None,
     ) -> List[ExecutionContext]:
         """Return the most recent execution contexts, optionally filtered.
 
@@ -124,6 +132,10 @@ class JsonMemoryStore:
                 below zero raise :class:`ValueError`.
             metadata_filter: Optional mapping of metadata keys and values that
                 must match for an execution to be included in the result.
+            since: Optional ISO-8601 timestamp (or :class:`datetime`) limiting
+                the results to executions recorded at or after the timestamp.
+            until: Optional ISO-8601 timestamp (or :class:`datetime`) limiting
+                the results to executions recorded at or before the timestamp.
 
         Returns:
             A list of :class:`ExecutionContext` instances in chronological
@@ -133,11 +145,27 @@ class JsonMemoryStore:
         if limit is not None and limit < 0:
             raise ValueError("limit must be non-negative")
 
+        since_dt = self._coerce_datetime(since) if since is not None else None
+        until_dt = self._coerce_datetime(until) if until is not None else None
+
         payload = self._load()
         executions = [
             ExecutionContext.from_dict(entry)
             for entry in payload.get("executions", [])
         ]
+
+        if since_dt or until_dt:
+            filtered: List[ExecutionContext] = []
+            for context in executions:
+                timestamp = self._parse_timestamp(context.timestamp)
+                if timestamp is None:
+                    continue
+                if since_dt and timestamp < since_dt:
+                    continue
+                if until_dt and timestamp > until_dt:
+                    continue
+                filtered.append(context)
+            executions = filtered
 
         if metadata_filter:
             def matches(context: ExecutionContext) -> bool:
@@ -152,6 +180,27 @@ class JsonMemoryStore:
             executions = executions[-limit:]
 
         return executions
+
+    @staticmethod
+    def _coerce_datetime(value: datetime | str) -> datetime:
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, str):
+            parsed = JsonMemoryStore._parse_timestamp(value)
+            if parsed is None:
+                raise ValueError(f"could not parse timestamp: {value}")
+            return parsed
+        raise TypeError("datetime filter must be a datetime or ISO-8601 string")
+
+    @staticmethod
+    def _parse_timestamp(value: str) -> Optional[datetime]:
+        if not value:
+            return None
+        try:
+            normalised = value.replace("Z", "+00:00")
+            return datetime.fromisoformat(normalised)
+        except ValueError:
+            return None
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -230,6 +279,24 @@ class JsonMemoryStore:
                 detail = result.get("details")
                 suffix = f" ({detail})" if detail else ""
                 lines.append(f"  * {result['name']}: {result['status']}{suffix}\n")
+        if context.metrics:
+            lines.append("* Metrics:\n")
+            for name, series in sorted(context.metrics.items()):
+                if not series:
+                    continue
+                for sample in series:
+                    value = sample.get("value")
+                    unit = sample.get("unit")
+                    recorded_at = sample.get("recorded_at")
+                    meta = sample.get("metadata")
+                    descriptor = f"{value}"
+                    if unit:
+                        descriptor = f"{descriptor} {unit}"
+                    if recorded_at:
+                        descriptor = f"{descriptor} at {recorded_at}"
+                    if meta:
+                        descriptor = f"{descriptor} ({json.dumps(meta, ensure_ascii=False, sort_keys=True)})"
+                    lines.append(f"  * {name}: {descriptor}\n")
         if context.metadata:
             lines.append("* Metadata:\n")
             for key, value in context.metadata.items():
@@ -254,6 +321,7 @@ class ExecutionSession:
         self.commands: List[Dict[str, Any]] = []
         self.dataset_fingerprints: Dict[str, Dict[str, Any]] = {}
         self.validations: List[Dict[str, Any]] = []
+        self.metrics: Dict[str, List[Dict[str, Any]]] = {}
         self.cycle: Optional[int] = None
         self.artifact: Optional[str] = None
         self.summary: Optional[str] = None
@@ -325,6 +393,42 @@ class ExecutionSession:
     def set_cycle(self, cycle: int) -> None:
         self.cycle = cycle
 
+    def record_metric(
+        self,
+        name: str,
+        value: Any,
+        *,
+        unit: Optional[str] = None,
+        metadata: Optional[Mapping[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Record a metric sample associated with this execution.
+
+        Parameters
+        ----------
+        name:
+            Metric identifier.
+        value:
+            Recorded value. The value is deep-copied to shield the stored record from
+            external mutation.
+        unit:
+            Optional unit string for human readable reporting.
+        metadata:
+            Optional mapping of additional attributes describing the metric sample.
+        """
+
+        entry: Dict[str, Any] = {
+            "value": deepcopy(value),
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+        }
+        if unit is not None:
+            entry["unit"] = unit
+        if metadata:
+            entry["metadata"] = deepcopy(dict(metadata))
+
+        series = self.metrics.setdefault(name, [])
+        series.append(entry)
+        return entry
+
     def set_artifact(self, artifact: Path | str | None) -> None:
         if artifact is None:
             self.artifact = None
@@ -354,6 +458,7 @@ class ExecutionSession:
             commands=self.commands,
             dataset_fingerprints=self.dataset_fingerprints,
             validations=self.validations,
+            metrics=self.metrics,
             metadata=self.metadata,
             cycle=self.cycle,
             artifact=self.artifact,

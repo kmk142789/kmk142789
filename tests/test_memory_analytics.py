@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from echo.memory.analytics import MemoryAnalytics
 from echo.memory.store import ExecutionContext
 
@@ -14,6 +16,7 @@ def make_context(**overrides):
         cycle=None,
         artifact=None,
         summary=None,
+        metrics={},
     )
     base.update(overrides)
     return ExecutionContext(**base)
@@ -150,3 +153,54 @@ def test_metadata_value_counts_handles_complex_values():
 
     empty = analytics.metadata_value_counts("missing")
     assert empty == []
+
+
+def test_metric_series_and_summary():
+    executions = [
+        make_context(
+            timestamp="2024-03-01T00:00:00+00:00",
+            cycle=1,
+            metrics={
+                "latency": [
+                    {"value": 120.0, "unit": "ms", "recorded_at": "2024-03-01T00:00:01+00:00"}
+                ],
+                "notes": [
+                    {"value": "warmup", "recorded_at": "2024-03-01T00:00:02+00:00", "metadata": {"phase": 1}}
+                ],
+            },
+        ),
+        make_context(
+            timestamp="2024-03-02T00:00:00+00:00",
+            cycle=2,
+            metrics={
+                "latency": [
+                    {"value": 100, "unit": "ms", "recorded_at": "2024-03-02T00:00:01+00:00"},
+                    {"value": 90, "unit": "ms", "recorded_at": "2024-03-02T00:00:02+00:00"},
+                ]
+            },
+        ),
+        make_context(
+            timestamp="2024-03-03T00:00:00+00:00",
+            cycle=3,
+            metrics={"latency": [{"value": "n/a", "recorded_at": "2024-03-03T00:00:01+00:00"}]},
+        ),
+    ]
+
+    analytics = MemoryAnalytics(executions)
+
+    series = analytics.metric_series("latency")
+    assert len(series) == 4
+    assert series[0]["cycle"] == 1
+    assert series[1]["value"] == 100
+    assert series[2]["unit"] == "ms"
+    assert series[3]["value"] == "n/a"
+
+    summary = analytics.metric_summary("latency")
+    assert summary == {"count": 3, "min": 90.0, "max": 120.0, "average": pytest.approx(103.3333333)}
+
+    assert analytics.metric_summary("notes") is None
+    assert analytics.metric_names() == ["latency", "notes"]
+
+    report = analytics.as_markdown_report()
+    assert "## Metrics" in report
+    assert "latency" in report
