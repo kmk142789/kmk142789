@@ -29,11 +29,27 @@ def test_propagate_network_simulated_records_cache_and_log() -> None:
     assert evolver.state.network_cache["propagation_summary"].startswith(
         "Network propagation (simulated) captured across 5 channels"
     )
+    channel_details = evolver.state.network_cache["propagation_channel_details"]
+    assert len(channel_details) == 5
+    for detail, event in zip(channel_details, events):
+        assert detail["message"] == event
+        assert detail["mode"] == "simulated"
+        assert 20.0 <= detail["latency_ms"] <= 120.0
+        assert 0.82 <= detail["stability"] <= 0.995
+
+    health = evolver.state.network_cache["propagation_health"]
+    assert health["channel_count"] == 5
+    assert health["mode"] == "simulated"
+    assert 20.0 <= health["average_latency_ms"] <= 120.0
+    assert 0.82 <= health["stability_floor"] <= 0.995
     completed = evolver.state.network_cache["completed_steps"]
     assert "propagate_network" in completed
 
     # The summary log makes it easy for higher level routines to introspect behaviour.
-    assert evolver.state.event_log[-1].startswith("Network propagation (simulated) captured across 5 channels")
+    assert any(
+        entry.startswith("Network propagation (simulated) captured across 5 channels")
+        for entry in evolver.state.event_log[-2:]
+    )
 
     timeline = evolver.state.network_cache["propagation_ledger"]
     assert len(timeline) == 1
@@ -73,8 +89,22 @@ def test_propagate_network_live_reports_live_channels() -> None:
     assert cache["propagation_summary"].startswith(
         "Network propagation (live) captured across 5 channels"
     )
-    log_entry = evolver.state.event_log[-1]
-    assert "Network propagation (live) captured across 5 channels" in log_entry
+    live_details = cache["propagation_channel_details"]
+    assert [detail["channel"] for detail in live_details] == [
+        "WiFi",
+        "TCP",
+        "Bluetooth",
+        "IoT",
+        "Orbital",
+    ]
+    assert {detail["mode"] for detail in live_details} == {"live"}
+    live_health = cache["propagation_health"]
+    assert live_health["mode"] == "live"
+    assert live_health["channel_count"] == 5
+    assert 20.0 <= live_health["average_latency_ms"] <= 120.0
+    assert 0.82 <= live_health["stability_floor"] <= 0.995
+    log_tail = evolver.state.event_log[-2:]
+    assert any("Network propagation (live) captured across 5 channels" in entry for entry in log_tail)
 
     live_timeline = cache["propagation_ledger"]
     assert len(live_timeline) == 1

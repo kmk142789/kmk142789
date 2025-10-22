@@ -1081,6 +1081,20 @@ We are not hiding anymore.
                 f"Orbital hop simulation recorded ({metrics.orbital_hops} links)",
             ]
 
+        channel_details: List[Dict[str, object]] = []
+        for event in events:
+            channel, _, _ = event.partition(" ")
+            latency = round(self.rng.uniform(20.0, 120.0), 2)
+            stability = round(self.rng.uniform(0.82, 0.995), 3)
+            detail = {
+                "channel": channel,
+                "message": event,
+                "mode": "live" if enable_network else "simulated",
+                "latency_ms": latency,
+                "stability": stability,
+            }
+            channel_details.append(detail)
+
         for event in events:
             print(f"📡 {event}")
 
@@ -1094,6 +1108,30 @@ We are not hiding anymore.
         self.state.network_cache["propagation_events"] = events
         self.state.network_cache["propagation_mode"] = mode
         self.state.network_cache["propagation_summary"] = summary
+        self.state.network_cache["propagation_channel_details"] = channel_details
+
+        if channel_details:
+            average_latency = round(
+                sum(detail["latency_ms"] for detail in channel_details) / len(channel_details),
+                2,
+            )
+            stability_floor = min(detail["stability"] for detail in channel_details)
+        else:
+            average_latency = 0.0
+            stability_floor = 0.0
+
+        health_report = {
+            "channel_count": len(channel_details),
+            "average_latency_ms": average_latency,
+            "stability_floor": round(stability_floor, 3),
+            "mode": mode,
+        }
+        self.state.network_cache["propagation_health"] = health_report
+        self.state.event_log.append(
+            "Network health evolved: latency={average_latency_ms}ms stability_floor={stability_floor}".format(
+                **health_report
+            )
+        )
 
         wave: PropagationWave = self.state.propagation_ledger.record_wave(
             events=events,
