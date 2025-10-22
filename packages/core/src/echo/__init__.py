@@ -41,6 +41,7 @@ from .continuum_insights import (
     compute_source_momentum,
     compute_tag_momentum,
 )
+from .dotnet_sdk import build_dotnet_sdk_download_url
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .evolver import (
     EchoEvolver,
@@ -198,4 +199,5 @@ __all__ = [
     "IdeaResult",
     "process_idea",
     "decode_glyph_cross",
+    "build_dotnet_sdk_download_url",
 ]
