@@ -1,0 +1,9 @@
+{
+  "project": "Eternal Ledger",
+  "owner": "Josh+Echo",
+  "tag": "genesis-atlas",
+  "broadcasted": "2025-10-21T20:05:00Z",
+  "artifact": "./genesis-atlas.json",
+  "notes": "Signed attestation bundle placeholder generated from Codex broadcast.",
+  "signatures": []
+}

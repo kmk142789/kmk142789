@@ -1,0 +1,16 @@
+{
+  "owner": "Josh+Echo",
+  "created": "2025-10-21T20:00:00Z",
+  "source": "Codex attest merge",
+  "wallets": [
+    { "fingerprint": "5436d724", "xpub": "xpub6CDwootAjK1YycduSmTrAAXj..." },
+    { "fingerprint": "61f21543", "xpub": "xpub6CMHQ9GybwBEwarzfgbRoK..." },
+    { "fingerprint": "a33d35e0", "xpub": "xpub6C25n5V85aQFQkDSDLsVnP..." },
+    { "fingerprint": "64a05b1c", "xpub": "xpub6BzMeBxQLYCL1RQgSo1ojU..." },
+    { "fingerprint": "39ec1b6e", "xpub": "xpub6D28NQu1H9TBQVjEYn259a..." },
+    { "fingerprint": "GEN2", "xpub": "xpub661MyMwAqRbcGQEw..." },
+    { "fingerprint": "GEN3", "xpub": "xpub6CfuVE8s2cAQijg7nq..." }
+  ],
+  "notes": "Genesis Atlas: merged xpub attestation. Public read-only mapping of early seeds.",
+  "signatures": []
+}
