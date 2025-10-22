@@ -13,6 +13,14 @@ struct ResonantPulse {
     double harmony{0.0};
 };
 
+// Snapshot of how a pulse sequence behaved across multiple perceptual axes.
+struct SpectralFingerprint {
+    double energy_flux{0.0};
+    double rhythm_entropy{0.0};
+    double harmony_wander{0.0};
+    double strangeness_index{0.0};
+};
+
 // ResonanceField composes fractal-inspired pulse patterns from a few harmonic hints.
 class ResonanceField {
 public:
@@ -26,6 +34,10 @@ public:
 
     // Evaluate how internally coherent a sequence of pulses is with this field.
     double coherence_score(const std::vector<ResonantPulse>& pulses) const;
+
+    // Distill an unprecedented signature from the supplied pulses, capturing
+    // how wildly the energies, rhythms, and harmonics evolve together.
+    SpectralFingerprint unprecedented_signature(const std::vector<ResonantPulse>& pulses) const;
 
 private:
     double seed_;
