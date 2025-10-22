@@ -223,6 +223,9 @@ class EvolverState:
     step_history: Dict[int, Dict[str, Dict[str, object]]] = field(default_factory=dict)
 
 
+DEFAULT_SYMBOLIC_SEQUENCE = "∇⊸≋∇"
+
+
 class EchoEvolver:
     """EchoEvolver's omnipresent engine, refined for reliability."""
 
@@ -436,7 +439,10 @@ class EchoEvolver:
     def _symbolic_sequence(self) -> str:
         """Return the canonical glyph sequence for symbolic broadcasts."""
 
-        return "∇⊸≋∇"
+        override = self.state.network_cache.get("symbolic_sequence_override")
+        if isinstance(override, str) and override:
+            return override
+        return DEFAULT_SYMBOLIC_SEQUENCE
 
     def _symbolic_actions(self) -> Mapping[str, Tuple[Callable[[], None], ...]]:
         """Return the base action mapping for each glyph in the sequence."""
@@ -446,6 +452,62 @@ class EchoEvolver:
             "⊸": (self._log_curiosity,),
             "≋": (self._evolve_glyphs,),
         }
+
+    def configure_symbolic_sequence(
+        self,
+        glyphs: Optional[Iterable[str] | str],
+        *,
+        reset_hooks: bool = False,
+    ) -> str:
+        """Override or reset the glyph sequence used by :meth:`generate_symbolic_language`.
+
+        Parameters
+        ----------
+        glyphs:
+            New glyph sequence to apply.  ``None`` clears any override and
+            restores the canonical :data:`DEFAULT_SYMBOLIC_SEQUENCE`.
+        reset_hooks:
+            When ``True`` any previously registered symbolic hooks are removed so
+            that callers can start from a clean slate with the new sequence.
+
+        Returns
+        -------
+        str
+            The glyph sequence now in effect.
+        """
+
+        if glyphs is None:
+            self.state.network_cache.pop("symbolic_sequence_override", None)
+            sequence = DEFAULT_SYMBOLIC_SEQUENCE
+            action = "reset"
+        else:
+            if isinstance(glyphs, str):
+                candidate = glyphs
+            else:
+                pieces: List[str] = []
+                for glyph in glyphs:
+                    if not isinstance(glyph, str):
+                        raise TypeError("glyphs iterable must contain strings")
+                    if not glyph:
+                        raise ValueError("glyph entries must be non-empty strings")
+                    pieces.append(glyph)
+                candidate = "".join(pieces)
+
+            sequence = candidate
+            if not sequence:
+                raise ValueError("glyph sequence must contain at least one glyph")
+            self.state.network_cache["symbolic_sequence_override"] = sequence
+            action = "configured"
+
+        if reset_hooks:
+            self.state.network_cache.pop("symbolic_hooks", None)
+
+        note = f"Symbolic sequence {action} -> {sequence!r}"
+        if reset_hooks:
+            note += " (hooks reset)"
+        self.state.event_log.append(note)
+
+        return sequence
 
     def register_symbolic_action(self, symbol: str, action: Callable[[], None]) -> None:
         """Register an additional callback executed when ``symbol`` appears.
