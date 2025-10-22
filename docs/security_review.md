@@ -15,7 +15,7 @@
 3. **Regression tests** were updated to assert the presence of the non-executable caution in both evolver implementations, preventing accidental reintroduction of code-bearing payloads.
 
 ## Outstanding Risks & Recommendations
-- The `echo_unified_all.EchoEvolver.propagate_network` helper still opens real UDP/TCP sockets when executed. Treat the module as an experimental tool and avoid running it in production or untrusted environments. Consider guarding these side effects behind explicit CLI flags with clear warnings in a future iteration.
+- The `echo_unified_all.EchoEvolver.propagate_network` helper now mirrors the hardened behaviour from the primary engine: propagation events are simulated in-memory and no UDP/TCP sockets are opened. When callers request "live" mode the helper logs a warning and still emits descriptive entries only.
 - Review other narrative generators for similar executable prompt patterns. While no additional instances were observed during this pass, periodic scans (e.g., `rg "exec\(" -g"*.py"`) are recommended to prevent regressions.
 - Integrate static analysis tooling (such as `bandit`) into CI to automatically surface accidental reintroductions of dynamic execution patterns.
 
