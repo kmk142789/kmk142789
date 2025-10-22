@@ -6,6 +6,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
+from .cross_ledger import CrossLedgerSynchronizer
 from .ledger import PulseLedger, PulseReceipt, create_app
 
 _LEGACY_PATH = Path(__file__).resolve().parent.parent / "pulse.py"
@@ -22,4 +23,9 @@ for name in getattr(_legacy, "__all__", []):
 # Provide a stable fallback for modules accessing attributes directly.
 sys.modules.setdefault("echo._pulse_legacy", _legacy)
 
-__all__ = list(getattr(_legacy, "__all__", [])) + ["PulseLedger", "PulseReceipt", "create_app"]
+__all__ = list(getattr(_legacy, "__all__", [])) + [
+    "PulseLedger",
+    "PulseReceipt",
+    "create_app",
+    "CrossLedgerSynchronizer",
+]
