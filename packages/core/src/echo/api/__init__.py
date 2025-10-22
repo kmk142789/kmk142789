@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
 
+from echo.bridge import BridgeSyncService, EchoBridgeAPI
 from echo.bridge.router import create_router as create_bridge_router
 from echo.echoforge.api import create_router as create_echoforge_router
 from echo.echoforge.service import EchoForgeDashboardService
@@ -31,7 +33,19 @@ from echo.orchestrator.api import create_router as create_orchestrator_router
 
 app = FastAPI(title="Echo")
 app.include_router(echonet_router)
-app.include_router(create_bridge_router())
+
+_bridge_api = EchoBridgeAPI(
+    github_repository=os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY"),
+    telegram_chat_id=os.getenv("ECHO_BRIDGE_TELEGRAM_CHAT_ID"),
+    firebase_collection=os.getenv("ECHO_BRIDGE_FIREBASE_COLLECTION"),
+)
+_bridge_state_dir = Path.cwd() / "state" / "bridge"
+_bridge_state_dir.mkdir(parents=True, exist_ok=True)
+_bridge_sync_service = BridgeSyncService.from_environment(
+    state_dir=_bridge_state_dir,
+    github_repository=_bridge_api.github_repository,
+)
+app.include_router(create_bridge_router(api=_bridge_api, sync_service=_bridge_sync_service))
 
 _atlas_service = AtlasService(Path.cwd())
 _atlas_service.ensure_ready()
@@ -84,6 +98,7 @@ _orchestrator_service = OrchestratorCore(
     evolver=EchoEvolver(),
     resonance_engine=HarmonicsAI(),
     atlas_resolver=_pulsenet_atlas_resolver,
+    bridge_service=_bridge_sync_service,
 )
 app.include_router(create_orchestrator_router(_orchestrator_service))
 

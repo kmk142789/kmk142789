@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any, Mapping
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -12,10 +13,17 @@ from echo.orchestrator.core import OrchestratorCore
 
 
 class StubPulseNet:
-    def __init__(self, summary: dict, attestations: list[dict], wallets: list[dict] | None = None) -> None:
+    def __init__(
+        self,
+        summary: dict,
+        attestations: list[dict],
+        wallets: list[dict] | None = None,
+        registrations: list[dict] | None = None,
+    ) -> None:
         self._summary = summary
         self._attestations = attestations
         self._wallets = wallets or []
+        self._registrations = registrations or []
 
     def pulse_summary(self) -> dict:
         return self._summary
@@ -25,6 +33,9 @@ class StubPulseNet:
 
     def atlas_wallets(self) -> list[dict]:
         return list(self._wallets)
+
+    def registrations(self) -> list[dict]:
+        return list(self._registrations)
 
 
 class StubEvolver:
@@ -83,7 +94,12 @@ def _make_attestations(message: str = "coherent harmonic") -> list[dict]:
 
 
 def test_orchestrator_core_persists_manifest(tmp_path: Path) -> None:
-    pulsenet = StubPulseNet(_make_summary(), _make_attestations(), wallets=[{"fingerprint": "abc"}])
+    pulsenet = StubPulseNet(
+        _make_summary(),
+        _make_attestations(),
+        wallets=[{"fingerprint": "abc"}],
+        registrations=[{"unstoppable_domains": ["echo.crypto"]}],
+    )
     evolver = StubEvolver(_make_digest())
     resonance = StubResonance(score=800.0)
 
@@ -110,7 +126,11 @@ def test_orchestrator_core_persists_manifest(tmp_path: Path) -> None:
 
 
 def test_orchestrator_adaptive_weighting_dampens_noise(tmp_path: Path) -> None:
-    clean_pulsenet = StubPulseNet(_make_summary(12, 3), _make_attestations("harmonic cascade"))
+    clean_pulsenet = StubPulseNet(
+        _make_summary(12, 3),
+        _make_attestations("harmonic cascade"),
+        registrations=[{"vercel_projects": ["pulse-clean"]}],
+    )
     noisy_pulsenet = StubPulseNet(_make_summary(12, 3), [])
     evolver = StubEvolver(_make_digest())
 
@@ -137,7 +157,11 @@ def test_orchestrator_adaptive_weighting_dampens_noise(tmp_path: Path) -> None:
 
 
 def test_orchestrator_flow_endpoint(tmp_path: Path) -> None:
-    pulsenet = StubPulseNet(_make_summary(), _make_attestations())
+    pulsenet = StubPulseNet(
+        _make_summary(),
+        _make_attestations(),
+        registrations=[{"unstoppable_domains": ["echo.crypto"]}],
+    )
     service = OrchestratorCore(
         state_dir=tmp_path,
         pulsenet=pulsenet,
@@ -155,3 +179,50 @@ def test_orchestrator_flow_endpoint(tmp_path: Path) -> None:
     data = response.json()
     assert data["graph"]["nodes"]
     assert "manifest" in data
+
+
+class StubBridgeService:
+    def __init__(self) -> None:
+        self.calls: list[Mapping[str, Any]] = []
+        self.log_path = Path("/tmp/log.jsonl")
+
+    def sync(self, decision: Mapping[str, Any]) -> list[dict[str, Any]]:
+        self.calls.append(decision)
+        cycle = (
+            str(decision.get("inputs", {}).get("cycle_digest", {}).get("cycle", ""))
+            if isinstance(decision, Mapping)
+            else ""
+        )
+        return [
+            {
+                "id": "stub",
+                "timestamp": "2024-01-01T00:00:00+00:00",
+                "connector": "stub",
+                "action": "noop",
+                "status": "ok",
+                "detail": "stub event",
+                "cycle": cycle,
+                "coherence": 0.5,
+                "manifest_path": "manifest.json",
+                "payload": {},
+            }
+        ]
+
+
+def test_orchestrator_records_bridge_sync(tmp_path: Path) -> None:
+    pulsenet = StubPulseNet(_make_summary(), _make_attestations())
+    bridge = StubBridgeService()
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=StubEvolver(_make_digest()),  # type: ignore[arg-type]
+        resonance_engine=StubResonance(600.0),
+        atlas_resolver=None,
+        bridge_service=bridge,
+    )
+
+    decision = service.orchestrate()
+
+    assert bridge.calls, "Bridge service should be invoked"
+    assert "bridge_sync" in decision
+    assert decision["bridge_sync"]["operations"][0]["connector"] == "stub"

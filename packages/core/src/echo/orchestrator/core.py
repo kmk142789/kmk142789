@@ -7,7 +7,10 @@ import math
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping, MutableMapping, Protocol, Sequence
+from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Protocol, Sequence
+
+if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
+    from echo.bridge.service import BridgeSyncService
 
 from echo.evolver import EchoEvolver
 from echo.pulsenet import AtlasAttestationResolver, PulseNetGatewayService
@@ -41,6 +44,7 @@ class OrchestratorCore:
         resonance_engine: ResonanceEngine,
         atlas_resolver: AtlasAttestationResolver | None = None,
         manifest_limit: int = 30,
+        bridge_service: "BridgeSyncService" | None = None,
     ) -> None:
         self._state_dir = Path(state_dir)
         self._state_dir.mkdir(parents=True, exist_ok=True)
@@ -72,6 +76,7 @@ class OrchestratorCore:
         )
 
         self._last_decision: MutableMapping[str, Any] | None = None
+        self._bridge_service = bridge_service
 
     # ------------------------------------------------------------------
     # Public API
@@ -104,6 +109,22 @@ class OrchestratorCore:
 
         manifest_path = self._persist(decision)
         decision["manifest"] = {"path": str(manifest_path)}
+
+        if self._bridge_service:
+            try:
+                operations = self._bridge_service.sync(decision)
+                bridge_payload: MutableMapping[str, Any] = {
+                    "operations": operations,
+                    "log_path": str(self._bridge_service.log_path),
+                }
+            except Exception as exc:  # pragma: no cover - defensive against I/O errors
+                bridge_payload = {
+                    "operations": [],
+                    "log_path": str(self._bridge_service.log_path),
+                    "error": str(exc),
+                }
+            decision["bridge_sync"] = bridge_payload
+
         self._last_decision = decision
         return decision
 
@@ -136,11 +157,23 @@ class OrchestratorCore:
 
         cycle_digest = self._evolver.cycle_digest(persist_artifact=False)
 
+        registrations: Sequence[Mapping[str, Any]] = []
+        if hasattr(self._pulsenet, "registrations"):
+            try:
+                raw_regs = self._pulsenet.registrations()  # type: ignore[call-arg]
+                if isinstance(raw_regs, Sequence):
+                    registrations = [
+                        item for item in raw_regs if isinstance(item, Mapping)
+                    ]
+            except Exception:  # pragma: no cover - tolerate offline registration store
+                registrations = []
+
         return {
             "pulse_summary": summary,
             "attestations": enriched_attestations,
             "atlas_wallets": atlas_wallets,
             "cycle_digest": cycle_digest,
+            "registrations": list(registrations),
         }
 
     def _enrich_attestations(

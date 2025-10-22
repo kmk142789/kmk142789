@@ -57,3 +57,43 @@ class StatusResponse(BaseModel):
         ..., description="Connectors that are currently configured."
     )
 
+
+class SyncLogEntry(BaseModel):
+    """Structured representation of a bridge sync operation."""
+
+    id: str = Field(..., description="Unique identifier for the sync entry.")
+    timestamp: str = Field(..., description="Timestamp for when the sync was recorded.")
+    connector: str = Field(..., description="Connector that produced the sync payload.")
+    action: str = Field(..., description="Action executed or planned for the connector.")
+    status: str = Field(..., description="Outcome status for the sync operation.")
+    detail: Optional[str] = Field(
+        default=None, description="Human-readable description of the sync operation."
+    )
+    cycle: Optional[str] = Field(
+        default=None, description="Cycle identifier associated with the sync entry."
+    )
+    coherence: Optional[float] = Field(
+        default=None, description="Coherence score at the time of the sync."
+    )
+    manifest_path: Optional[str] = Field(
+        default=None,
+        description="Path to the manifest that produced this sync entry, when available.",
+    )
+    payload: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Structured payload forwarded to the downstream connector.",
+    )
+
+
+class SyncResponse(BaseModel):
+    """API response bundling sync history entries."""
+
+    cycle: Optional[str] = Field(
+        default=None,
+        description="Cycle identifier for the latest sync entry contained in the response.",
+    )
+    operations: List[SyncLogEntry] = Field(
+        default_factory=list,
+        description="Ordered list of sync operations, newest entries last.",
+    )
+
