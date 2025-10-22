@@ -41,9 +41,12 @@ struct LineageReport {
     bool signatures_valid{true};
     std::vector<std::string> lineage_breaks;
     std::vector<std::string> signature_failures;
+    std::vector<std::string> temporal_anomalies;
     std::optional<uint64_t> earliest_start_ms;
     std::optional<uint64_t> latest_end_ms;
     uint64_t total_duration_ms{};
+    double continuity_score{1.0};
+    double tempo_consistency{1.0};
     std::map<std::string, MetricSummary> metrics;
 };
 

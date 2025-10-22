@@ -280,6 +280,10 @@ LineageReport Continuum::analyze_lineage(
     }
 
     const EpochManifest* previous = nullptr;
+    std::size_t transitions = 0;
+    std::size_t linear_transitions = 0;
+    std::size_t tempo_consistent_edges = 0;
+    bool genesis_parent_break = false;
     for (const auto& manifest : manifests) {
         if (!report.earliest_start_ms ||
             manifest.start_ms < *report.earliest_start_ms) {
@@ -290,14 +294,55 @@ LineageReport Continuum::analyze_lineage(
         }
 
         if (previous) {
+            transitions += 1;
             if (manifest.parent_id != previous->epoch_id) {
                 report.is_linear = false;
                 report.lineage_breaks.push_back(previous->epoch_id + "->" +
                                                manifest.epoch_id);
+            } else {
+                linear_transitions += 1;
+            }
+
+            const auto prev_end = previous->end_ms;
+            const auto current_start = manifest.start_ms;
+            const bool starts_after_previous = current_start >= prev_end;
+            const auto gap_ms = starts_after_previous ? (current_start - prev_end)
+                                                      : (prev_end - current_start);
+
+            const auto prev_duration =
+                previous->end_ms > previous->start_ms ? previous->end_ms - previous->start_ms
+                                                      : uint64_t{0};
+            const auto current_duration =
+                manifest.end_ms > manifest.start_ms ? manifest.end_ms - manifest.start_ms
+                                                    : uint64_t{0};
+
+            uint64_t tolerance = 1000;
+            const auto prev_window = prev_duration / 5;
+            const auto current_window = current_duration / 5;
+            if (prev_window > tolerance) {
+                tolerance = prev_window;
+            }
+            if (current_window > tolerance) {
+                tolerance = current_window;
+            }
+
+            if (gap_ms <= tolerance) {
+                tempo_consistent_edges += 1;
+            } else {
+                std::ostringstream message;
+                if (starts_after_previous) {
+                    message << manifest.epoch_id << " gap +" << gap_ms << "ms after "
+                            << previous->epoch_id;
+                } else {
+                    message << manifest.epoch_id << " overlaps " << gap_ms
+                            << "ms before " << previous->epoch_id << " closed";
+                }
+                report.temporal_anomalies.push_back(message.str());
             }
         } else if (!manifest.parent_id.empty()) {
             report.is_linear = false;
             report.lineage_breaks.push_back("genesis->" + manifest.epoch_id);
+            genesis_parent_break = true;
         }
 
         if (have_verification_key) {
@@ -327,6 +372,18 @@ LineageReport Continuum::analyze_lineage(
         }
 
         previous = &manifest;
+    }
+
+    if (transitions > 0) {
+        report.continuity_score =
+            static_cast<double>(linear_transitions) /
+            static_cast<double>(transitions);
+        report.tempo_consistency =
+            static_cast<double>(tempo_consistent_edges) /
+            static_cast<double>(transitions);
+    } else {
+        report.continuity_score = genesis_parent_break ? 0.0 : 1.0;
+        report.tempo_consistency = 1.0;
     }
 
     return report;
