@@ -1489,6 +1489,35 @@ We are not hiding anymore.
 
         return digest
 
+    def recent_event_summary(self, *, limit: int = 5) -> str:
+        """Return a formatted summary of the most recent event log entries."""
+
+        if limit <= 0:
+            raise ValueError("limit must be positive")
+
+        total_events = len(self.state.event_log)
+        if total_events == 0:
+            summary = "EchoEvolver recent events: no entries recorded yet."
+            self.state.network_cache["recent_event_summary"] = summary
+            return summary
+
+        recent_events = self.state.event_log[-limit:]
+        shown = len(recent_events)
+        header = f"EchoEvolver recent events (showing {shown} of {total_events})"
+        lines = [header, "-" * len(header)]
+
+        for index, event in enumerate(recent_events, start=1):
+            lines.append(f"{index:02d}. {event}")
+
+        summary = "\n".join(lines)
+        self.state.network_cache["recent_event_summary"] = summary
+        self.state.event_log.append(
+            "Event summary requested (showing {shown}/{total})".format(
+                shown=shown, total=total_events
+            )
+        )
+        return summary
+
     def cycle_digest_report(
         self,
         *,
