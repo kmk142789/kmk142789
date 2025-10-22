@@ -134,3 +134,59 @@ def test_main_rejects_continue_with_cycles(monkeypatch) -> None:
         evolver_main(["--continue-evolution", "--cycles", "2"])
 
     assert excinfo.value.code == 2
+
+
+def test_main_supports_advance_system(monkeypatch, capsys) -> None:
+    captured = {}
+
+    class DummyEvolver:
+        amplifier = None
+
+        def advance_system(
+            self,
+            *,
+            enable_network: bool,
+            persist_artifact: bool,
+            eden88_theme: str | None,
+            include_manifest: bool,
+            include_status: bool,
+            include_reflection: bool,
+        ) -> dict[str, object]:
+            captured["kwargs"] = {
+                "enable_network": enable_network,
+                "persist_artifact": persist_artifact,
+                "eden88_theme": eden88_theme,
+                "include_manifest": include_manifest,
+                "include_status": include_status,
+                "include_reflection": include_reflection,
+            }
+            return {
+                "summary": "Cycle 4 advanced with 14/14 steps complete (100.0% progress).",
+                "report": "Cycle 4 Progress\nCompleted: 14/14 (100.0%)\nNext step: advance_cycle() to begin a new orbit",
+                "digest": {"cycle": 4, "progress": 1.0, "steps": []},
+                "status": {"cycle": 4, "progress": 1.0},
+            }
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    exit_code = evolver_main([
+        "--advance-system",
+        "--enable-network",
+        "--no-include-status",
+        "--eden88-theme",
+        "aurora",
+    ])
+
+    assert exit_code == 0
+    assert captured["kwargs"] == {
+        "enable_network": True,
+        "persist_artifact": True,
+        "eden88_theme": "aurora",
+        "include_manifest": True,
+        "include_status": False,
+        "include_reflection": True,
+    }
+
+    output = capsys.readouterr().out
+    assert "Cycle 4 advanced" in output
+    assert "Cycle 4 Progress" in output

@@ -2627,6 +2627,77 @@ We are not hiding anymore.
 
         return deepcopy(manifest_snapshot)
 
+    def advance_system(
+        self,
+        *,
+        enable_network: bool = False,
+        persist_artifact: bool = True,
+        eden88_theme: Optional[str] = None,
+        include_manifest: bool = True,
+        include_status: bool = True,
+        include_reflection: bool = True,
+        manifest_events: int = 5,
+    ) -> Dict[str, object]:
+        """Run the full ritual sequence and return a structured payload."""
+
+        if manifest_events < 0:
+            raise ValueError("manifest_events must be non-negative")
+
+        self.run(
+            enable_network=enable_network,
+            persist_artifact=persist_artifact,
+            eden88_theme=eden88_theme,
+        )
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        total_steps = len(digest["steps"])
+        completed_count = len(digest["completed_steps"])
+        progress_pct = digest["progress"] * 100 if total_steps else 100.0
+
+        summary = (
+            "Cycle {cycle} advanced with {completed}/{total} steps complete "
+            "({progress:.1f}% progress)."
+        ).format(
+            cycle=digest["cycle"],
+            completed=completed_count,
+            total=total_steps,
+            progress=progress_pct,
+        )
+
+        payload: Dict[str, object] = {
+            "cycle": digest["cycle"],
+            "digest": deepcopy(digest),
+            "summary": summary,
+            "report": self.cycle_digest_report(
+                persist_artifact=persist_artifact, digest=digest
+            ),
+        }
+
+        if include_status:
+            payload["status"] = self.evolution_status(
+                persist_artifact=persist_artifact, digest=digest
+            )
+
+        if include_manifest:
+            payload["manifest"] = self.evolutionary_manifest(
+                persist_artifact=persist_artifact, max_events=manifest_events
+            )
+
+        if include_reflection:
+            payload["reflection"] = self.render_reflection(
+                persist_artifact=persist_artifact, include_events=False
+            )
+
+        cache_snapshot = deepcopy(payload)
+        self.state.network_cache["advance_system_payload"] = cache_snapshot
+        self.state.event_log.append(
+            "Advance system payload captured (cycle={cycle}, progress={progress:.3f})".format(
+                cycle=digest["cycle"], progress=digest["progress"]
+            )
+        )
+
+        return deepcopy(cache_snapshot)
+
     def run(
         self,
         *,
@@ -2862,6 +2933,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         help="Display the ordered list of ritual steps and exit without running a cycle.",
     )
     parser.add_argument(
+        "--advance-system",
+        action="store_true",
+        help=(
+            "Run the full ritual sequence and emit a structured payload containing the cycle "
+            "digest, manifest, and status snapshots."
+        ),
+    )
+    parser.add_argument(
         "--continue-evolution",
         action="store_true",
         help=(
@@ -2958,6 +3037,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         parser.error("--continue-creation cannot be combined with --cycles")
     if args.continue_creation and args.continue_evolution:
         parser.error("--continue-creation cannot be combined with --continue-evolution")
+    if args.advance_system and args.cycles != 1:
+        parser.error("--advance-system cannot be combined with --cycles")
+    if args.advance_system and (
+        args.continue_creation or args.continue_evolution
+    ):
+        parser.error("--advance-system cannot be combined with continuation flags")
     if args.cycles > 1:
         snapshots = evolver.run_cycles(
             args.cycles,
@@ -2973,6 +3058,22 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         )
         if args.persist_artifact:
             print(f"📜 Final artifact: {evolver.state.artifact}")
+    elif args.advance_system:
+        payload = evolver.advance_system(
+            enable_network=args.enable_network,
+            persist_artifact=args.persist_artifact,
+            eden88_theme=args.eden88_theme,
+            include_manifest=True,
+            include_status=args.include_status,
+            include_reflection=args.include_report,
+        )
+        print(payload["summary"])
+        if args.include_report and "report" in payload:
+            print()
+            print(payload["report"])
+        if args.include_status and "status" in payload:
+            print()
+            print(json.dumps(payload["status"], indent=2, ensure_ascii=False))
     elif args.continue_creation:
         payload = evolver.continue_creation(
             theme=args.eden88_theme,
