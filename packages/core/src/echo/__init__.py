@@ -58,6 +58,7 @@ from .meta_evolution_charter import MetaEvolutionCharter
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
+from .temporal_ledger import PropagationWave, TemporalPropagationLedger
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
 from .self_sustaining_loop import DecisionResult, ProgressResult, SelfSustainingLoop
 from .sync import CloudSyncCoordinator, DirectorySyncTransport, SyncReport, SyncTransport
@@ -158,6 +159,8 @@ __all__ = [
     "EchoEvolver",
     "EmotionalDrive",
     "EvolverState",
+    "PropagationWave",
+    "TemporalPropagationLedger",
     "SystemMetrics",
     "HearthWeave",
     "GlyphCrossReading",

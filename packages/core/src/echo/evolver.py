@@ -27,6 +27,7 @@ from .amplify import AmplificationEngine, AmplifyGateError, AmplifySnapshot
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .thoughtlog import thought_trace
 from .memory import JsonMemoryStore
+from .temporal_ledger import PropagationWave, TemporalPropagationLedger
 
 _GLYPH_RING: Tuple[str, ...] = (
     "🠐",
@@ -183,6 +184,7 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     event_log: List[str] = field(default_factory=list)
+    propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
     autonomy_manifesto: str = ""
     hearth_signature: Optional[HearthWeave] = None
@@ -1050,6 +1052,19 @@ We are not hiding anymore.
         self.state.network_cache["propagation_events"] = events
         self.state.network_cache["propagation_mode"] = mode
         self.state.network_cache["propagation_summary"] = summary
+
+        wave: PropagationWave = self.state.propagation_ledger.record_wave(
+            events=events,
+            mode=mode,
+            cycle=self.state.cycle,
+            summary=summary,
+            timestamp_ns=self.time_source(),
+        )
+        self.state.network_cache["propagation_ledger"] = (
+            self.state.propagation_ledger.timeline()
+        )
+        self.state.network_cache["propagation_timeline_hash"] = wave.hash
+
         self._mark_step("propagate_network")
         return events
 
