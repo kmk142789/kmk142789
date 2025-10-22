@@ -52,3 +52,29 @@ def test_summary_command_uses_custom_data_root(tmp_path, monkeypatch):
     assert "Total wishes: 1" in result.stdout
     assert "Echo" in result.stdout
     assert "care" in result.stdout
+
+
+def test_groundbreaking_command_outputs_json(tmp_path, monkeypatch):
+    monkeypatch.setenv("PYTHONPATH", str(ROOT))
+    pulses = [
+        {"timestamp": 1_700_000_000.0, "message": "🌀 evolve:manual:a", "hash": "aa"},
+        {"timestamp": 1_700_000_060.0, "message": "🌀 evolve:manual:b", "hash": "bb"},
+        {"timestamp": 1_700_000_180.0, "message": "✨ craft:auto:c", "hash": "cc"},
+    ]
+    pulses_path = tmp_path / "pulses.json"
+    pulses_path.write_text(json.dumps(pulses), encoding="utf-8")
+
+    result = run(
+        [
+            "groundbreaking",
+            "--pulses",
+            str(pulses_path),
+            "--limit",
+            "3",
+            "--json",
+        ]
+    )
+
+    payload = json.loads(result.stdout)
+    assert payload["imprint"]["contributions"]
+    assert payload["threads"]
