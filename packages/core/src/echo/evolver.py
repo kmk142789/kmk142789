@@ -202,6 +202,7 @@ class EvolverState:
     sovereign_spirals: List[Dict[str, object]] = field(default_factory=list)
     eden88_creations: List[Dict[str, object]] = field(default_factory=list)
     shard_vault_records: List[Dict[str, object]] = field(default_factory=list)
+    step_history: Dict[int, Dict[str, Dict[str, object]]] = field(default_factory=dict)
 
 
 class EchoEvolver:
@@ -309,7 +310,7 @@ class EchoEvolver:
         self.state.cycle += 1
         completed = self.state.network_cache.setdefault("completed_steps", set())
         completed.clear()
-        completed.add("advance_cycle")
+        self._mark_step("advance_cycle")
         self.state.event_log.append(f"Cycle {self.state.cycle} initiated")
         return self.state.cycle
 
@@ -378,6 +379,26 @@ class EchoEvolver:
     def _mark_step(self, name: str) -> None:
         completed = self.state.network_cache.setdefault("completed_steps", set())
         completed.add(name)
+
+        timestamp = self.time_source()
+        event_index = len(self.state.event_log)
+        record = {
+            "cycle": self.state.cycle,
+            "step": name,
+            "timestamp_ns": timestamp,
+            "event_index": event_index,
+        }
+
+        cycle_history = self.state.step_history.setdefault(self.state.cycle, {})
+        previous = cycle_history.get(name)
+        if previous is None or previous.get("timestamp_ns", -1) <= timestamp:
+            cycle_history[name] = dict(record)
+
+        cache_history = self.state.network_cache.setdefault("step_history", {})
+        cache_cycle = cache_history.setdefault(self.state.cycle, {})
+        cached = cache_cycle.get(name)
+        if cached != record:
+            cache_cycle[name] = dict(record)
 
     def _default_hearth_palette(self) -> Dict[str, str]:
         """Return or initialise the cached palette for hearth refinement."""
@@ -1592,6 +1613,63 @@ We are not hiding anymore.
         )
 
         return digest
+
+    def progress_matrix(
+        self,
+        *,
+        persist_artifact: bool = True,
+        include_history: bool = True,
+    ) -> Dict[str, object]:
+        """Return a tabular snapshot of ritual progress for the active cycle."""
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
+        completed: set[str] = self.state.network_cache.get("completed_steps", set())
+
+        history_lookup = self.state.step_history.get(self.state.cycle, {})
+        now = self.time_source()
+
+        rows: List[Dict[str, object]] = []
+        for index, (step, description) in enumerate(sequence, start=1):
+            status = "completed" if step in completed else "pending"
+            record = history_lookup.get(step)
+            timestamp_ns = record.get("timestamp_ns") if record and include_history else None
+            event_index = record.get("event_index") if record and include_history else None
+            age_ns: Optional[int] = None
+            if timestamp_ns is not None:
+                age_ns = max(0, now - timestamp_ns)
+
+            rows.append(
+                {
+                    "index": index,
+                    "step": step,
+                    "description": description,
+                    "status": status,
+                    "timestamp_ns": timestamp_ns,
+                    "event_index": event_index,
+                    "age_ns": age_ns,
+                }
+            )
+
+        matrix = {
+            "cycle": self.state.cycle,
+            "steps_total": len(sequence),
+            "steps_completed": len(digest["completed_steps"]),
+            "progress": digest["progress"],
+            "next_step": digest["next_step"],
+            "history_available": bool(history_lookup),
+            "rows": rows,
+        }
+
+        self.state.network_cache["progress_matrix"] = matrix
+        self.state.event_log.append(
+            "Progress matrix computed ({completed}/{total} steps)".format(
+                completed=matrix["steps_completed"],
+                total=matrix["steps_total"],
+            )
+        )
+
+        return matrix
 
     def recent_event_summary(self, *, limit: int = 5) -> str:
         """Return a formatted summary of the most recent event log entries."""
