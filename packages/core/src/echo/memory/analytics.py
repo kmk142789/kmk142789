@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import copy
+import json
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .store import ExecutionContext, JsonMemoryStore
 
@@ -15,6 +17,14 @@ class ValidationSummary:
 
     name: str
     outcomes: Dict[str, int]
+
+
+@dataclass(slots=True)
+class MetadataValueCount:
+    """Count of how frequently a metadata value appears across executions."""
+
+    value: Any
+    count: int
 
 
 class MemoryAnalytics:
@@ -98,6 +108,34 @@ class MemoryAnalytics:
                 )
         return entries
 
+    def metadata_value_counts(self, key: str) -> List[MetadataValueCount]:
+        """Return frequency counts for distinct metadata values associated with ``key``.
+
+        The method is resilient to unhashable values such as dictionaries or lists by
+        internally normalising them with a canonical string representation while still
+        returning the original value (copied when necessary) to the caller.
+        """
+
+        buckets: Dict[str, MetadataValueCount] = {}
+        for context in self._executions:
+            if key not in context.metadata:
+                continue
+            raw_value = context.metadata[key]
+            canonical = self._canonical_metadata_value(raw_value)
+            entry = buckets.get(canonical)
+            if entry is None:
+                buckets[canonical] = MetadataValueCount(
+                    value=self._preserve_metadata_value(raw_value),
+                    count=1,
+                )
+            else:
+                entry.count += 1
+
+        ordered: List[Tuple[str, MetadataValueCount]] = sorted(
+            buckets.items(), key=lambda item: (-item[1].count, item[0])
+        )
+        return [entry for _, entry in ordered]
+
     def timeline(self) -> List[Dict[str, Any]]:
         """Return a simplified timeline of executions."""
 
@@ -145,5 +183,33 @@ class MemoryAnalytics:
 
         return list(self._executions)
 
+    # ------------------------------------------------------------------
+    # Internal utilities
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _canonical_metadata_value(value: Any) -> str:
+        """Return a canonical string for grouping metadata values."""
 
-__all__ = ["MemoryAnalytics", "ValidationSummary"]
+        primitive_types = (str, int, float, bool)
+        if value is None or isinstance(value, primitive_types):
+            return f"{type(value).__name__}:{value!r}"
+
+        try:
+            serialised = json.dumps(
+                value, sort_keys=True, ensure_ascii=False, separators=(",", ":")
+            )
+            return f"{type(value).__name__}:{serialised}"
+        except TypeError:
+            return f"{type(value).__name__}:{repr(value)}"
+
+    @staticmethod
+    def _preserve_metadata_value(value: Any) -> Any:
+        """Return a safe copy of ``value`` for inclusion in analytics results."""
+
+        try:
+            return copy.deepcopy(value)
+        except TypeError:
+            return value
+
+
+__all__ = ["MemoryAnalytics", "MetadataValueCount", "ValidationSummary"]
