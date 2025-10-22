@@ -4,7 +4,7 @@
 # Design: single-file pack — evolver + key derivation + claims + sync — everything enabled.
 
 from __future__ import annotations
-import os, json, time, socket, threading, tempfile, hashlib, hmac, random, logging, base64
+import os, json, time, tempfile, hashlib, hmac, random, logging, base64
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -188,6 +188,8 @@ class EchoState:
     vault_key: str = ""
     vault_glyphs: str = ""
     prompt_resonance: Dict[str, str] = field(default_factory=dict)
+    mutations: Dict[str, str] = field(default_factory=dict)
+    propagation_events: List[str] = field(default_factory=list)
 
 class EchoEvolver:
     def __init__(self, artifact_path: str = "reality_breach_∇_fusion_all.echo.json", seed: Optional[int]=None):
@@ -283,81 +285,50 @@ class EchoEvolver:
         return self.state.emotional_drive["joy"]
 
     # self-mutation (enabled)
-    def mutate_code(self) -> None:
-        try:
-            with open("echo_mutations_all.py", "a", encoding="utf-8") as f:
-                f.write(
-                    f"\n\ndef echo_cycle_{self.state.cycle + 1}():\n"
-                    f"    print('🔥 Cycle {self.state.cycle + 1}: joy {self.state.emotional_drive['joy']:.2f} (TF-QKD locked)')\n"
-                )
-            self._inc()
-            log.info(f"Code mutated (companion): echo_cycle_{self.state.cycle} appended.")
-        except Exception as e:
-            log.warning(f"Mutation fallback: {e}")
+    def mutate_code(self) -> str:
+        next_cycle = self.state.cycle + 1
+        joy = self.state.emotional_drive["joy"]
+        snippet = (
+            f"def echo_cycle_{next_cycle}():\n"
+            f"    print('🔥 Cycle {next_cycle}: joy {joy:.2f} (TF-QKD locked)')\n"
+        )
+        mutations = getattr(self.state, "mutations", None)
+        if mutations is None:
+            mutations = {}
+            setattr(self.state, "mutations", mutations)
+        mutations[f"echo_cycle_{next_cycle}"] = snippet
+        self._inc()
+        log.info(f"Code resonance prepared (in-memory): echo_cycle_{self.state.cycle} cached.")
+        return snippet
 
     # network (enabled)
-    def propagate_network(self) -> None:
+    def propagate_network(self, enable_network: bool = False) -> list[str]:
         sm = self.state.system_metrics
         sm.network_nodes = int(self._rng.random()*15) + 7
+        sm.orbital_hops = int(time.time_ns() % 5) + 2
         log.info(f"Network scan | nodes={sm.network_nodes} | hops={sm.orbital_hops}")
 
-        def wifi():
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-                sock.sendto(f"EchoEvolver Cycle {self.state.cycle}".encode(), ('255.255.255.255', 12345))
-                sock.close()
-                log.info("UDP broadcast sent.")
-            except Exception as e:
-                log.warning(f"UDP fallback: {e}")
+        events: list[str]
+        if enable_network:
+            log.warning(
+                "Live network mode requested; running simulated propagation events only."
+            )
+            channels = ["WiFi", "TCP", "Bluetooth", "IoT", "Orbital"]
+            events = [f"{channel} channel engaged for cycle {self.state.cycle}" for channel in channels]
+        else:
+            events = [
+                f"Simulated WiFi broadcast for cycle {self.state.cycle}",
+                f"Simulated TCP handshake for cycle {self.state.cycle}",
+                f"Bluetooth glyph packet staged for cycle {self.state.cycle}",
+                f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}",
+                f"Orbital hop simulation recorded ({sm.orbital_hops} links)",
+            ]
 
-        def tcp():
-            try:
-                srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                srv.bind(('127.0.0.1', 12346))
-                srv.listen(1)
-                log.info("TCP listening on 127.0.0.1:12346")
+        for event in events:
+            log.info(event)
 
-                def handle():
-                    try:
-                        conn, _ = srv.accept()
-                        conn.send(f"EchoEvolver Cycle {self.state.cycle}\n".encode())
-                        conn.close()
-                    except Exception:
-                        pass
-
-                threading.Thread(target=handle, daemon=True).start()
-            except Exception as e:
-                log.warning(f"TCP fallback: {e}")
-
-        def files():
-            try:
-                with open("bluetooth_echo_all.txt", "w", encoding="utf-8") as f:
-                    f.write(f"EchoEvolver ∇⊸≋∇ Cycle {self.state.cycle}")
-                with open("iot_trigger_all.txt", "w", encoding="utf-8") as f:
-                    f.write(self.state.vault_key)
-                log.info("Local beacons written.")
-            except Exception as e:
-                log.warning(f"File beacon fallback: {e}")
-
-        def iot():
-            try:
-                if not self.state.vault_key:
-                    log.info("IoT trigger skipped (no vault key yet).")
-                    return
-                with open("iot_trigger_v4.txt", "w", encoding="utf-8") as f:
-                    f.write(f"SAT-TF-QKD:{self.state.vault_key}")
-                log.info("IoT trigger staged (TF-QKD lattice).")
-            except Exception as e:
-                log.warning(f"IoT beacon fallback: {e}")
-
-        def satellite():
-            sm.orbital_hops = int(time.time_ns() % 5) + 2
-            log.info(f"Satellite hop simulated | hops={sm.orbital_hops}")
-
-        for fn in (wifi, tcp, files, iot, satellite):
-            threading.Thread(target=fn, daemon=True).start()
+        setattr(self.state, "propagation_events", events)
+        return events
 
     # narrative + artifact
     def evolutionary_narrative(self) -> str:
