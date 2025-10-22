@@ -17,6 +17,9 @@ def test_continue_evolution_bootstraps_cycle(tmp_path):
     assert digest["remaining_steps"] == []
     assert "report" in payload
     assert payload["report"].startswith("Cycle")
+    status = payload["status"]
+    assert status["cycle"] == digest["cycle"]
+    assert status["progress"] == digest["progress"]
     assert artifact_path.exists()
 
     record = evolver.state.network_cache["continue_evolution"]
@@ -24,6 +27,7 @@ def test_continue_evolution_bootstraps_cycle(tmp_path):
     assert record["cycle"] == digest["cycle"]
     assert record["progress"] == digest["progress"]
     assert record["remaining_steps"] == []
+    assert record["status"]["cycle"] == digest["cycle"]
     assert "continue_evolution()" in evolver.state.event_log[-1]
 
 
@@ -34,18 +38,22 @@ def test_continue_evolution_respects_flags(tmp_path):
     evolver.advance_cycle()
     evolver.mutate_code()
 
-    payload = evolver.continue_evolution(persist_artifact=False, include_report=False)
+    payload = evolver.continue_evolution(
+        persist_artifact=False, include_report=False, include_status=False
+    )
 
     assert payload["decision"] == "continue_evolution"
 
     digest = payload["digest"]
     assert "report" not in payload
+    assert "status" not in payload
     assert artifact_path.exists() is False
     assert digest["remaining_steps"] == []
 
     record = evolver.state.network_cache["continue_evolution"]
     assert record["decision"] == "continue_evolution"
     assert "report" not in record
+    assert "status" not in record
     assert record["remaining_steps"] == []
     assert record["next_step"] == "Next step: advance_cycle() to begin a new orbit"
 

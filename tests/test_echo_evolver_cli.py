@@ -47,11 +47,13 @@ def test_main_supports_continue_evolution(monkeypatch, capsys) -> None:
             enable_network: bool,
             persist_artifact: bool,
             include_report: bool,
+            include_status: bool,
         ) -> Dict[str, object]:
             captured["kwargs"] = {
                 "enable_network": enable_network,
                 "persist_artifact": persist_artifact,
                 "include_report": include_report,
+                "include_status": include_status,
             }
             return {
                 "digest": {
@@ -72,11 +74,54 @@ def test_main_supports_continue_evolution(monkeypatch, capsys) -> None:
         "enable_network": False,
         "persist_artifact": True,
         "include_report": False,
+        "include_status": True,
     }
 
     output = capsys.readouterr().out
     assert "Continued cycle 3" in output
     assert "Cycle 3 Progress" not in output
+
+
+def test_main_allows_disabling_status_snapshot(monkeypatch) -> None:
+    captured: Dict[str, object] = {}
+
+    class DummyEvolver:
+        amplifier = None
+
+        def continue_evolution(
+            self,
+            *,
+            enable_network: bool,
+            persist_artifact: bool,
+            include_report: bool,
+            include_status: bool,
+        ) -> Dict[str, object]:
+            captured["kwargs"] = {
+                "enable_network": enable_network,
+                "persist_artifact": persist_artifact,
+                "include_report": include_report,
+                "include_status": include_status,
+            }
+            return {
+                "digest": {
+                    "cycle": 1,
+                    "progress": 1.0,
+                    "remaining_steps": [],
+                    "next_step": "Next step: advance_cycle() to begin a new orbit",
+                }
+            }
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    exit_code = evolver_main(["--continue-evolution", "--no-include-status"])
+
+    assert exit_code == 0
+    assert captured["kwargs"] == {
+        "enable_network": False,
+        "persist_artifact": True,
+        "include_report": True,
+        "include_status": False,
+    }
 
 
 def test_main_rejects_continue_with_cycles(monkeypatch) -> None:
