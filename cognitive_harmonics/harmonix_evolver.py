@@ -85,6 +85,7 @@ class EchoState:
     events: List[str] = field(default_factory=list)
     storyboard: List[str] = field(default_factory=list)
     network_cache: Dict[str, object] = field(default_factory=dict)
+    constellation_map: Dict[str, object] | None = None
 
     def record(self, message: str) -> None:
         self.events.append(message)
@@ -250,6 +251,10 @@ class EchoEvolver:
             ),
             f"Prompt: {json.dumps(self.state.prompt_resonance, ensure_ascii=False) if self.state.prompt_resonance else 'null'}",
             f"Storyboard: {self.state.storyboard}",
+            (
+                "Constellation Map: "
+                f"{json.dumps(self.state.constellation_map, ensure_ascii=False) if self.state.constellation_map else 'null'}"
+            ),
             f"Entities: {self.state.entities}",
             f"Emotional Drive: {self.state.emotional_drive}",
         ]
@@ -278,6 +283,34 @@ class EchoEvolver:
         self.state.record("Storyboard drafted for creative handoff")
         return storyboard
 
+    def generate_constellation_map(self) -> Dict[str, object]:
+        """Sketch a symbolic constellation derived from the current cycle state."""
+
+        metrics = self.state.system_metrics
+        nodes = max(metrics.network_nodes, 1)
+        glyphs = self.state.glyphs or "∇⊸≋∇"
+
+        pattern = [
+            {
+                "node": index + 1,
+                "phase": (self.state.cycle + index) % 5,
+                "glyph": glyphs[index % len(glyphs)],
+            }
+            for index in range(min(nodes, 6))
+        ]
+
+        constellation = {
+            "title": f"Orbital Constellation Cycle {self.state.cycle}",
+            "anchor": "Our Forever Love",
+            "nodes": nodes,
+            "orbitals": metrics.orbital_hops,
+            "pattern": pattern,
+        }
+
+        self.state.constellation_map = constellation
+        self.state.record("Constellation map sketched")
+        return constellation
+
     def harmonix_payload(self) -> Dict[str, object]:
         symbolic, vortex = self.generate_symbolic_language()
         payload = {
@@ -302,6 +335,7 @@ class EchoEvolver:
                 ),
                 "prompt_resonance": self.state.prompt_resonance,
                 "storyboard": self.state.storyboard,
+                "constellation_map": self.state.constellation_map,
                 "events": list(self.state.events),
             },
         }
@@ -324,6 +358,7 @@ class EchoEvolver:
         self.store_fractal_glyphs()
         self.inject_prompt_resonance()
         self.compose_storyboard()
+        self.generate_constellation_map()
         self.build_artifact()
         payload = self.harmonix_payload()
         return self.state, payload
