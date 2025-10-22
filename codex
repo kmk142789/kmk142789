@@ -6,11 +6,25 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 import textwrap
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence
+
+
+_DELEGATED_COMMANDS = {"forge", "ignite", "attest"}
+
+if len(sys.argv) > 1 and sys.argv[1] in _DELEGATED_COMMANDS:
+    repo_root = Path(__file__).resolve().parent
+    src_candidate = repo_root / "packages" / "core" / "src"
+    if src_candidate.exists():
+        sys.path.insert(0, str(src_candidate))
+
+    from codex import main as codex_main  # type: ignore[import-untyped]
+
+    sys.exit(codex_main(sys.argv[1:]))
 
 
 @dataclass

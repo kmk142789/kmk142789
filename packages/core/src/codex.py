@@ -36,10 +36,22 @@ except ModuleNotFoundError:  # pragma: no cover - fallback dependency
     import tomli as tomllib  # type: ignore[no-redef]
 
 
+from echo.continuum_atlas import (
+    AtlasState,
+    export_attestation,
+    resolve_apps,
+    resolve_domains,
+    resolve_keys,
+)
+
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_JSON_PATH = REPO_ROOT / "artifacts" / "sovereign_inventory.json"
 DEFAULT_MARKDOWN_PATH = REPO_ROOT / "artifacts" / "sovereign_inventory.md"
 DEFAULT_ORACLE_OUTPUT = REPO_ROOT / "artifacts" / "continuum_oracle.md"
+DEFAULT_CANONICAL_MAP = REPO_ROOT / "canonical-map.json"
+DEFAULT_COMPASS_MAP = REPO_ROOT / "compass-map.json"
+DEFAULT_ATLAS_ATTESTATION = REPO_ROOT / "artifacts" / "continuum_atlas_attestation.json"
 
 
 # ---------------------------------------------------------------------------
@@ -601,6 +613,181 @@ def generate_oracle_report(
 
 
 # ---------------------------------------------------------------------------
+# Continuum atlas helpers
+# ---------------------------------------------------------------------------
+
+
+def _resolve_existing_path(*candidates: Optional[Path]) -> Path:
+    """Return the first existing path from *candidates* or raise."""
+
+    checked: List[Path] = []
+    for candidate in candidates:
+        if candidate is None:
+            continue
+        path = candidate if isinstance(candidate, Path) else Path(candidate)
+        checked.append(path)
+        if path.exists():
+            return path
+    joined = ", ".join(str(path) for path in checked) or "<none>"
+    raise FileNotFoundError(f"Unable to locate attestation input. Checked: {joined}")
+
+
+def _load_json_mapping(path: Path, *, description: str) -> Mapping[str, object]:
+    """Load ``path`` and ensure it is a JSON object."""
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:  # pragma: no cover - CLI validation
+        raise FileNotFoundError(f"{description} not found: {path}") from exc
+    except json.JSONDecodeError as exc:  # pragma: no cover - CLI validation
+        raise ValueError(f"{description} is not valid JSON: {path}") from exc
+    if not isinstance(data, Mapping):  # pragma: no cover - defensive branch
+        raise ValueError(f"{description} must be a JSON object: {path}")
+    return data
+
+
+def _relative_to_repo(path: Path) -> str:
+    """Return ``path`` relative to the repository root if possible."""
+
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(REPO_ROOT))
+    except ValueError:  # pragma: no cover - defensive branch
+        return str(resolved)
+
+
+def _string_list(value: object) -> List[str]:
+    """Return *value* as a list of non-empty strings."""
+
+    if isinstance(value, (list, tuple, set)):
+        return [str(item) for item in value if item]
+    return []
+
+
+def _format_app_identifier(entry_type: str, canonical: str) -> str:
+    """Normalise application identifiers for atlas entries."""
+
+    identifier = canonical.strip()
+    if entry_type in {"repo", "service"} and "://" in identifier:
+        identifier = identifier.split("://", 1)[1]
+    identifier = identifier.rstrip("/")
+    if entry_type and not identifier.startswith(f"{entry_type}:"):
+        identifier = f"{entry_type}:{identifier}" if identifier else entry_type
+    return identifier
+
+
+def _extract_domain_claims(
+    canonical_map: Mapping[str, object],
+    owner: str,
+    *,
+    proof_source: str,
+) -> List[Mapping[str, object]]:
+    """Build domain claims from the canonical map."""
+
+    claims: List[Mapping[str, object]] = []
+    sources = canonical_map.get("sources", [])
+    if not isinstance(sources, Iterable):
+        return claims
+    for entry in sources:
+        if not isinstance(entry, Mapping):
+            continue
+        if str(entry.get("type", "")).lower() != "domain":
+            continue
+        canonical_value = str(entry.get("canonical", "")).strip()
+        if not canonical_value:
+            continue
+        claim_owner = str(entry.get("owner") or owner).strip()
+        if not claim_owner:
+            continue
+        claims.append(
+            {
+                "owner": claim_owner,
+                "domain": canonical_value,
+                "proof": entry.get("proof") or f"{proof_source}:{canonical_value}",
+                "status": entry.get("status"),
+                "records": _string_list(entry.get("records") or entry.get("aliases")),
+                "confidence": entry.get("confidence"),
+                "source": entry.get("source") or proof_source,
+            }
+        )
+    return claims
+
+
+def _extract_app_claims(
+    canonical_map: Mapping[str, object],
+    owner: str,
+    *,
+    proof_source: str,
+) -> List[Mapping[str, object]]:
+    """Build application claims from the canonical map."""
+
+    claims: List[Mapping[str, object]] = []
+    sources = canonical_map.get("sources", [])
+    if not isinstance(sources, Iterable):
+        return claims
+    for entry in sources:
+        if not isinstance(entry, Mapping):
+            continue
+        entry_type = str(entry.get("type", "")).lower()
+        if entry_type in {"", "domain"}:
+            continue
+        canonical_value = str(entry.get("canonical", "")).strip()
+        if not canonical_value:
+            continue
+        claim_owner = str(entry.get("owner") or owner).strip()
+        if not claim_owner:
+            continue
+        identifier = _format_app_identifier(entry_type, canonical_value)
+        claims.append(
+            {
+                "owner": claim_owner,
+                "app": identifier,
+                "platform": entry_type,
+                "version": entry.get("version"),
+                "proof": entry.get("proof") or f"{proof_source}:{identifier}",
+                "confidence": entry.get("confidence"),
+                "source": entry.get("source") or proof_source,
+            }
+        )
+    return claims
+
+
+def _build_atlas_state(
+    canonical_map: Mapping[str, object],
+    *,
+    owner: str,
+    xpub: Optional[str],
+    derivation_path: Optional[str],
+    canonical_label: str,
+) -> AtlasState:
+    """Create an :class:`AtlasState` populated from repository sources."""
+
+    state = AtlasState()
+    domain_claims = _extract_domain_claims(canonical_map, owner, proof_source=canonical_label)
+    if domain_claims:
+        resolve_domains(domain_claims, state=state, source=canonical_label)
+
+    app_claims = _extract_app_claims(canonical_map, owner, proof_source=canonical_label)
+    if app_claims:
+        resolve_apps(app_claims, state=state, source=canonical_label)
+
+    if xpub:
+        key_claim: Dict[str, object] = {
+            "owner": owner,
+            "wallet": xpub,
+            "proof": f"watch-only:{xpub}",
+            "network": "bitcoin",
+            "confidence": 1.0,
+            "source": "watch-only",
+        }
+        if derivation_path:
+            key_claim["labels"] = [f"path:{derivation_path}"]
+        resolve_keys([key_claim], state=state, source="watch-only")
+
+    return state
+
+
+# ---------------------------------------------------------------------------
 # CLI handling
 # ---------------------------------------------------------------------------
 
@@ -641,6 +828,35 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional report path. Defaults to artifacts/continuum_oracle.md",
     )
 
+    attest = subparsers.add_parser("attest", help="Export Continuum Atlas attestation")
+    attest.add_argument("--project", required=True, help="Continuum atlas project name")
+    attest.add_argument("--owner", required=True, help="Owner recorded in the ledger")
+    attest.add_argument("--xpub", help="Extended public key to include as a watch-only wallet")
+    attest.add_argument("--path", help="Derivation path associated with --xpub")
+    attest.add_argument(
+        "--export",
+        type=Path,
+        default=None,
+        help="Output path for the attestation JSON document",
+    )
+    attest.add_argument(
+        "--canonical-map",
+        type=Path,
+        default=None,
+        help="Canonical map JSON path (defaults to canonical-map.json)",
+    )
+    attest.add_argument(
+        "--compass-map",
+        type=Path,
+        default=None,
+        help="Continuum compass payload (defaults to compass-map.json)",
+    )
+    attest.add_argument(
+        "--signer",
+        default="continuum-atlas",
+        help="Signer identifier recorded in the attestation",
+    )
+
     return parser
 
 
@@ -651,9 +867,87 @@ def _parse_csv_option(value: Optional[str]) -> Optional[List[str]]:
     return [entry for entry in entries if entry]
 
 
+def _run_attest(args: argparse.Namespace) -> int:
+    """Handle the ``codex attest`` sub-command."""
+
+    canonical_candidates = [args.canonical_map, DEFAULT_CANONICAL_MAP]
+    canonical_map_path = _resolve_existing_path(*canonical_candidates)
+
+    compass_candidates = [
+        args.compass_map,
+        DEFAULT_COMPASS_MAP,
+        REPO_ROOT / "compass-maps" / "compass-map.json",
+    ]
+    compass_map_path = _resolve_existing_path(*compass_candidates)
+
+    canonical_map = _load_json_mapping(canonical_map_path, description="Canonical map")
+    compass_payload = _load_json_mapping(compass_map_path, description="Compass payload")
+
+    owner = str(args.owner or "").strip()
+    project = str(args.project or "").strip()
+    if not owner:
+        raise ValueError("Owner must be a non-empty string")
+    if not project:
+        raise ValueError("Project must be a non-empty string")
+
+    xpub = str(args.xpub).strip() if args.xpub else None
+    derivation_path = str(args.path).strip() if args.path else None
+
+    canonical_label = _relative_to_repo(canonical_map_path)
+    state = _build_atlas_state(
+        canonical_map,
+        owner=owner,
+        xpub=xpub,
+        derivation_path=derivation_path,
+        canonical_label=canonical_label,
+    )
+
+    payload = dict(compass_payload)
+    payload["project"] = project
+    payload["owner"] = owner
+
+    attestation = export_attestation(state, payload, signer=args.signer)
+
+    context = {
+        "project": project,
+        "owner": owner,
+        "canonical_map": canonical_label,
+        "compass_map": _relative_to_repo(compass_map_path),
+    }
+    if xpub:
+        context["xpub"] = xpub
+    if derivation_path:
+        context["derivation_path"] = derivation_path
+    attestation["context"] = context
+
+    output_path = args.export or DEFAULT_ATLAS_ATTESTATION
+    output_path = output_path if isinstance(output_path, Path) else Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(attestation, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    for line in attestation.get("compass_summary", []):
+        print(line)
+    ledger = attestation.get("ledger", {})
+    wallets = ledger.get("wallets", {})
+    domains = ledger.get("domains", {})
+    apps = ledger.get("apps", {})
+    print(f"Ledger wallets: {len(wallets)} | domains: {len(domains)} | apps: {len(apps)}")
+    print(f"Signature: {attestation.get('signature', '')}")
+    print(f"Attestation written to {output_path}")
+
+    return 0
+
+
 def main(argv: Optional[Iterable[str]] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(list(argv) if argv is not None else None)
+
+    if args.command == "attest":
+        try:
+            return _run_attest(args)
+        except (FileNotFoundError, ValueError) as exc:  # pragma: no cover - CLI validation
+            parser.error(str(exc))
+            return 2
 
     if args.command == "ignite":
         output_path = args.output or DEFAULT_ORACLE_OUTPUT
