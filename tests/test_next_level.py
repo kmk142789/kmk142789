@@ -115,3 +115,44 @@ def test_discover_tasks_respects_max_file_size(tmp_path):
     tasks_with_large = discover_tasks(tmp_path, max_file_size=generous_limit)
     assert any(task.path == large for task in tasks_with_large)
     assert any(task.path == included for task in tasks_with_large)
+
+
+def test_discover_tasks_supports_nested_skip_paths(tmp_path):
+    nested_dir = tmp_path / "src" / "module" / "depth"
+    nested_dir.mkdir(parents=True)
+    skipped = nested_dir / "skipped.py"
+    skipped.write_text("# TODO hidden\n", encoding="utf-8")
+
+    included = tmp_path / "src" / "other.py"
+    included.write_text("# TODO keep\n", encoding="utf-8")
+
+    tasks = discover_tasks(tmp_path, skip_dirs=["src/module"])
+    assert all(task.path != skipped for task in tasks)
+    assert any(task.path == included for task in tasks)
+
+
+def test_discover_tasks_handles_platform_specific_paths(tmp_path):
+    nested = tmp_path / "src" / "module" / "file.py"
+    nested.parent.mkdir(parents=True)
+    nested.write_text("# TODO hidden\n", encoding="utf-8")
+
+    keep = tmp_path / "src" / "module_two.py"
+    keep.write_text("# TODO keep\n", encoding="utf-8")
+
+    windows_style = "src\\module"
+    tasks = discover_tasks(tmp_path, skip_dirs=[windows_style])
+    assert all(task.path != nested for task in tasks)
+    assert any(task.path == keep for task in tasks)
+
+
+def test_discover_tasks_accepts_absolute_skip_paths(tmp_path):
+    nested = tmp_path / "src" / "module" / "file.py"
+    nested.parent.mkdir(parents=True)
+    nested.write_text("# TODO hidden\n", encoding="utf-8")
+
+    keep = tmp_path / "src" / "keep.py"
+    keep.write_text("# TODO keep\n", encoding="utf-8")
+
+    tasks = discover_tasks(tmp_path, skip_dirs=[str(nested.parent)])
+    assert all(task.path != nested for task in tasks)
+    assert any(task.path == keep for task in tasks)

@@ -53,6 +53,52 @@ DEFAULT_SKIP_DIRS = {
 }
 
 
+def _normalise_skip_entries(
+    base_path: Path, entries: Optional[Sequence[str]]
+) -> tuple[Set[str], List[Tuple[str, ...]]]:
+    """Return normalised directory and path filters for skip entries."""
+
+    skip_names = DEFAULT_SKIP_DIRS.copy()
+    skip_paths: List[Tuple[str, ...]] = []
+
+    if not entries:
+        return skip_names, skip_paths
+
+    for raw in entries:
+        if not raw:
+            continue
+        candidate = raw.strip()
+        if not candidate:
+            continue
+
+        path_candidate = Path(candidate)
+        path_parts: Tuple[str, ...]
+
+        if path_candidate.is_absolute():
+            try:
+                relative = path_candidate.relative_to(base_path)
+            except ValueError:
+                # The skip entry points outside the base path. In that case fall back
+                # to matching by name so we still honour the intent of the filter.
+                tail = path_candidate.name
+                path_parts = (tail,) if tail else tuple()
+            else:
+                path_parts = tuple(part for part in relative.parts if part not in {"", "."})
+        else:
+            normalised = candidate.replace("\\", "/")
+            path_parts = tuple(part for part in normalised.split("/") if part and part != ".")
+
+        if not path_parts:
+            continue
+
+        if len(path_parts) == 1:
+            skip_names.add(path_parts[0])
+        else:
+            skip_paths.append(path_parts)
+
+    return skip_names, skip_paths
+
+
 @dataclass(slots=True)
 class Task:
     """Representation of a discovered TODO/FIXME entry."""
@@ -67,9 +113,31 @@ class Task:
         return f"- `{relative}:{self.line}` — **{self.tag}** {self.text.strip()}"
 
 
-def _should_skip(path: Path, skip_dirs: Set[str]) -> bool:
-    parts = set(path.parts)
-    return any(part in skip_dirs for part in parts)
+def _should_skip(
+    path: Path,
+    base_path: Path,
+    skip_names: Set[str],
+    skip_paths: Sequence[Tuple[str, ...]],
+) -> bool:
+    """Return ``True`` when ``path`` should be ignored during scanning."""
+
+    try:
+        relative_parts = path.relative_to(base_path).parts
+    except ValueError:
+        relative_parts = path.parts
+
+    dir_parts = relative_parts[:-1] if path.is_file() else relative_parts
+
+    if any(part in skip_names for part in dir_parts):
+        return True
+
+    for candidate in skip_paths:
+        length = len(candidate)
+        if len(dir_parts) >= length and tuple(dir_parts[:length]) == candidate:
+            return True
+        if len(relative_parts) >= length and tuple(relative_parts[:length]) == candidate:
+            return True
+    return False
 
 
 def discover_tasks(
@@ -84,15 +152,15 @@ def discover_tasks(
     are skipped to avoid expensive scans of large artifacts.
     """
 
-    skip_lookup = DEFAULT_SKIP_DIRS.copy()
-    if skip_dirs:
-        for entry in skip_dirs:
-            if entry:
-                skip_lookup.add(entry)
+    skip_lookup, skip_paths = _normalise_skip_entries(base_path, skip_dirs)
 
     tag_filter: Optional[Set[str]] = None
     if allowed_tags:
-        tag_filter = {tag.upper() for tag in allowed_tags}
+        tag_filter = {
+            tag.upper()
+            for tag in (entry.strip() for entry in allowed_tags if entry)
+            if tag
+        }
 
     tasks: List[Task] = []
     seen: Set[Tuple[Path, int, str, str]] = set()
@@ -100,7 +168,7 @@ def discover_tasks(
     for file_path in base_path.rglob("*"):
         if not file_path.is_file():
             continue
-        if _should_skip(file_path, skip_lookup):
+        if _should_skip(file_path, base_path, skip_lookup, skip_paths):
             continue
         if max_file_size is not None and max_file_size >= 0:
             try:
