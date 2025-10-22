@@ -247,7 +247,8 @@ PATTERNS: List[Pattern] = [
     Pattern(
         "secret_extended_key",
         re.compile(
-            r"\bsecret-extended-key-(?:main|test|reg|sim|alpha|beta|local)1[023456789acdefghjklmnpqrstuvwxyz]{80,}\b"
+            r"\bsecret-extended-key-(?:main|test|reg|sim|alpha|beta|local)1[023456789acdefghjklmnpqrstuvwxyz]{80,}\b",
+            flags=re.IGNORECASE,
         ),
     ),
     Pattern("ssh_rsa_private", re.compile(r"-----BEGIN OPENSSH PRIVATE KEY-----")),
