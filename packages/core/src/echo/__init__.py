@@ -56,6 +56,7 @@ from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
+from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
 from .self_sustaining_loop import DecisionResult, ProgressResult, SelfSustainingLoop
 from .sync import CloudSyncCoordinator, DirectorySyncTransport, SyncReport, SyncTransport
@@ -173,6 +174,9 @@ __all__ = [
     "FluxLedgerEntry",
     "FluxVector",
     "RevolutionaryFlux",
+    "QuantumSynchronizer",
+    "SynchronizerReport",
+    "SynchronizerSignal",
     "spin_compass",
     "CloudSyncCoordinator",
     "DirectorySyncTransport",
