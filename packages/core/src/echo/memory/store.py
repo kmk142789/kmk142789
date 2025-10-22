@@ -246,6 +246,8 @@ class JsonMemoryStore:
 class ExecutionSession:
     """Context manager used to accumulate execution memory."""
 
+    LEDGER_GENESIS_HASH = "0" * 64
+
     def __init__(self, store: JsonMemoryStore, *, metadata: Optional[Dict[str, Any]] = None) -> None:
         self.store = store
         self.metadata: Dict[str, Any] = metadata or {}
@@ -257,6 +259,7 @@ class ExecutionSession:
         self.summary: Optional[str] = None
         self._timestamp = datetime.now(timezone.utc)
         self._closed = False
+        self._previous_validation_hash = self.LEDGER_GENESIS_HASH
 
     # ------------------------------------------------------------------
     # Mutation helpers
@@ -293,11 +296,26 @@ class ExecutionSession:
         *,
         details: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
+        recorded_at = datetime.now(timezone.utc).isoformat()
+        entry_details = deepcopy(details) if details is not None else {}
         entry = {
             "name": name,
             "status": status,
-            "details": deepcopy(details) if details is not None else {},
+            "details": entry_details,
+            "recorded_at": recorded_at,
+            "previous_hash": self._previous_validation_hash,
         }
+        ledger_payload = {
+            "name": name,
+            "status": status,
+            "details": entry_details,
+            "recorded_at": recorded_at,
+            "previous_hash": self._previous_validation_hash,
+        }
+        normalized = json.dumps(ledger_payload, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+        ledger_hash = sha256(normalized.encode("utf-8")).hexdigest()
+        entry["ledger_hash"] = ledger_hash
+        self._previous_validation_hash = ledger_hash
         self.validations.append(entry)
         return entry
 

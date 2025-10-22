@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+from hashlib import sha256
+
 import pytest
 
-from echo.memory import ExecutionContext, JsonMemoryStore
+from echo.memory import ExecutionContext, ExecutionSession, JsonMemoryStore
 
 
 def test_memory_store_records_cycle(tmp_path):
@@ -111,3 +113,31 @@ def test_record_validation_copies_details(tmp_path):
     payload = json.loads((tmp_path / "memory.json").read_text())
     stored_details = payload["executions"][0]["validations"][0]["details"]
     assert stored_details == {"count": 1}
+
+
+def test_validation_ledger_chains_each_entry(tmp_path):
+    store = JsonMemoryStore(
+        storage_path=tmp_path / "memory.json", log_path=tmp_path / "log.md"
+    )
+
+    with store.session() as session:
+        session.record_validation("integrity", "pass", details={"count": 1})
+        session.record_validation("consistency", "fail")
+
+    payload = json.loads((tmp_path / "memory.json").read_text())
+    entries = payload["executions"][0]["validations"]
+    assert entries[0]["previous_hash"] == ExecutionSession.LEDGER_GENESIS_HASH
+    assert entries[1]["previous_hash"] == entries[0]["ledger_hash"]
+
+    for entry in entries:
+        ledger_payload = {
+            "name": entry["name"],
+            "status": entry["status"],
+            "details": entry["details"],
+            "recorded_at": entry["recorded_at"],
+            "previous_hash": entry["previous_hash"],
+        }
+        normalized = json.dumps(
+            ledger_payload, sort_keys=True, ensure_ascii=False, separators=(",", ":")
+        )
+        assert entry["ledger_hash"] == sha256(normalized.encode("utf-8")).hexdigest()
