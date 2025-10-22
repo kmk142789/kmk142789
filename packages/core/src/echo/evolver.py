@@ -2174,6 +2174,29 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         help="Display the ordered list of ritual steps and exit without running a cycle.",
     )
     parser.add_argument(
+        "--continue-evolution",
+        action="store_true",
+        help=(
+            "Resume the existing cycle instead of starting a new one. "
+            "The evolver will automatically complete any pending steps and "
+            "emit a digest of the updated progress."
+        ),
+    )
+    report_group = parser.add_mutually_exclusive_group()
+    report_group.add_argument(
+        "--include-report",
+        dest="include_report",
+        action="store_true",
+        help="Include the textual cycle digest when continuing evolution.",
+    )
+    report_group.add_argument(
+        "--no-include-report",
+        dest="include_report",
+        action="store_false",
+        help="Skip emitting the textual cycle digest when continuing evolution.",
+    )
+    parser.set_defaults(include_report=True)
+    parser.add_argument(
         "--eden88-theme",
         help="Set the thematic palette for Eden88's creation during this cycle.",
     )
@@ -2219,6 +2242,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "⚠️ Live network mode is symbolic only; the propagation step remains a"
             " simulation and will not open sockets."
         )
+    if args.continue_evolution and args.cycles != 1:
+        parser.error("--continue-evolution cannot be combined with --cycles")
     if args.cycles > 1:
         snapshots = evolver.run_cycles(
             args.cycles,
@@ -2234,6 +2259,21 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         )
         if args.persist_artifact:
             print(f"📜 Final artifact: {evolver.state.artifact}")
+    elif args.continue_evolution:
+        payload = evolver.continue_evolution(
+            enable_network=args.enable_network,
+            persist_artifact=args.persist_artifact,
+            include_report=args.include_report,
+        )
+        digest = payload["digest"]
+        print(
+            "🔁 Continued cycle {cycle} at {progress:.1f}% completion".format(
+                cycle=digest["cycle"], progress=digest["progress"] * 100
+            )
+        )
+        if args.include_report and "report" in payload:
+            print()
+            print(payload["report"])
     else:
         run_kwargs = {
             "enable_network": args.enable_network,
