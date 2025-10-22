@@ -2,5 +2,6 @@
 
 from .api import create_router
 from .service import PulseNetGatewayService
+from .atlas import AtlasAttestationResolver
 
-__all__ = ["PulseNetGatewayService", "create_router"]
+__all__ = ["AtlasAttestationResolver", "PulseNetGatewayService", "create_router"]

@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, AsyncIterator, Mapping
 
 from fastapi import WebSocket, WebSocketDisconnect
 
 from echo_atlas.service import AtlasService
 
-from .models import RegistrationRecord, RegistrationRequest
+from .models import PulseHistoryEntry, RegistrationRecord, RegistrationRequest
 from .registration import RegistrationStore
 from .resolver import AtlasProvider, CrossDomainResolver
 from .stream import PulseAttestor, PulseHistoryStreamer
+from .atlas import AtlasAttestationResolver
 
 
 class PulseNetGatewayService:
@@ -28,12 +29,14 @@ class PulseNetGatewayService:
         attestor: PulseAttestor,
         atlas_service: AtlasService,
         resolver_config: Path | None = None,
+        atlas_resolver: AtlasAttestationResolver | None = None,
     ) -> None:
         self._project_root = project_root
         self._store = registration_store
         self._streamer = pulse_streamer
         self._attestor = attestor
         self._atlas_service = atlas_service
+        self._atlas_resolver = atlas_resolver
         self._resolver = CrossDomainResolver(
             AtlasProvider(atlas_service),
             registration_store.list(),
@@ -82,24 +85,53 @@ class PulseNetGatewayService:
             "activity": [item.__dict__ for item in summary.activity],
         }
 
+    def atlas_wallets(self) -> list[Mapping[str, Any]]:
+        if not self._atlas_resolver:
+            return []
+        return [dict(item) for item in self._atlas_resolver.wallets()]
+
+    async def iter_pulses(self) -> AsyncIterator[Mapping[str, Any]]:
+        async for entry in self._streamer.subscribe():
+            attestation = self._attestor.attest(entry)
+            yield self._build_event(entry, attestation)
+
     async def stream_pulses(self, websocket: WebSocket) -> None:
         await websocket.accept()
-        await websocket.send_json({"type": "summary", "data": self.pulse_summary()})
+        await websocket.send_json(
+            {
+                "type": "summary",
+                "data": self.pulse_summary(),
+                "atlas": self.atlas_wallets(),
+            }
+        )
         try:
-            async for entry in self._streamer.subscribe():
-                attestation = self._attestor.attest(entry)
+            async for event in self.iter_pulses():
                 await websocket.send_json(
                     {
                         "type": "pulse",
-                        "pulse": entry.to_dict(),
-                        "attestation": attestation,
-                        "summary": self.pulse_summary(),
+                        **event,
                     }
                 )
         except WebSocketDisconnect:  # pragma: no cover - fastapi handles disconnect semantics
             return
         except asyncio.CancelledError:  # pragma: no cover - connection closed abruptly
             return
+
+    def _build_event(self, entry: PulseHistoryEntry, attestation: Mapping[str, Any]) -> Mapping[str, Any]:
+        metadata = None
+        if self._atlas_resolver:
+            for key in (attestation.get("proof_id"), entry.hash, entry.message.split(":")[-1]):
+                if isinstance(key, str):
+                    resolved = self._atlas_resolver.lookup(key)
+                    if resolved:
+                        metadata = resolved.as_dict()
+                        break
+        return {
+            "pulse": entry.to_dict(),
+            "attestation": attestation,
+            "summary": self.pulse_summary(),
+            "atlas": metadata,
+        }
 
 
 __all__ = ["PulseNetGatewayService"]

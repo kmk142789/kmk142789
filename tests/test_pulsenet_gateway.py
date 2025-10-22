@@ -115,6 +115,7 @@ def test_api_register_and_stream(tmp_path: Path) -> None:
     with client.websocket_connect("/pulsenet/pulse-stream") as ws:
         initial = ws.receive_json()
         assert initial["type"] == "summary"
+        assert "atlas" in initial
         history_path = tmp_path / "pulse_history.json"
         pulses = json.loads(history_path.read_text(encoding="utf-8"))
         pulses.append(
@@ -128,3 +129,4 @@ def test_api_register_and_stream(tmp_path: Path) -> None:
         event = ws.receive_json()
         assert event["type"] == "pulse"
         assert event["pulse"]["message"] == "🔥 ignite"
+        assert "atlas" in event
