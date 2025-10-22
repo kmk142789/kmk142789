@@ -38,6 +38,23 @@ def create_router(service: PulseNetGatewayService) -> APIRouter:
     def _summary(gateway: PulseNetGatewayService = Depends(lambda: service)) -> dict:
         return gateway.pulse_summary()
 
+    @router.get("/replay", name="pulsenet_replay")
+    def _replay(
+        limit: int | None = Query(None, ge=1, le=500, description="Maximum events to return"),
+        offset: int = Query(0, ge=0, description="Number of events to skip"),
+        xpub: str | None = Query(None, description="Filter by extended public key"),
+        fingerprint: str | None = Query(None, description="Filter by BIP32 fingerprint"),
+        attestation_id: str | None = Query(None, description="Filter by attestation identifier"),
+        gateway: PulseNetGatewayService = Depends(lambda: service),
+    ) -> list[dict]:
+        return gateway.replay(
+            limit=limit,
+            offset=offset,
+            xpub=xpub,
+            fingerprint=fingerprint,
+            attestation_id=attestation_id,
+        )
+
     @router.websocket("/pulse-stream")
     async def _pulse_stream(websocket: WebSocket) -> None:
         await service.stream_pulses(websocket)

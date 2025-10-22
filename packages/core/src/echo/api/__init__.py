@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from echo.bridge.router import create_router as create_bridge_router
 from echo.pulsenet import PulseNetGatewayService
 from echo.pulsenet.api import create_router as create_pulsenet_router
+from echo.pulsenet.persistence import PulseEventStore
 from echo.pulsenet.registration import RegistrationStore
 from echo.pulsenet.stream import PulseAttestor, PulseHistoryStreamer
 from echo_atlas.api import create_router as create_atlas_router
@@ -42,11 +43,13 @@ app.include_router(create_pulse_router(_pulse_watchdog, _pulse_bus, _pulse_ledge
 _pulsenet_state = Path.cwd() / "state" / "pulsenet"
 _pulsenet_state.mkdir(parents=True, exist_ok=True)
 _pulsenet_store = RegistrationStore(_pulsenet_state / "registrations.json")
+_pulsenet_events = PulseEventStore(_pulsenet_state / "pulse_events.db")
 _pulsenet_stream = PulseHistoryStreamer(Path.cwd() / "pulse_history.json")
 _pulsenet_attestor = PulseAttestor(TemporalLedger(state_dir=_pulsenet_state))
 _pulsenet_service = PulseNetGatewayService(
     project_root=Path.cwd(),
     registration_store=_pulsenet_store,
+    event_store=_pulsenet_events,
     pulse_streamer=_pulsenet_stream,
     attestor=_pulsenet_attestor,
     atlas_service=_atlas_service,

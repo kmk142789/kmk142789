@@ -15,6 +15,7 @@ from echo_atlas.service import AtlasService
 
 from echo.pulsenet import PulseNetGatewayService, create_router
 from echo.pulsenet.models import RegistrationRequest
+from echo.pulsenet.persistence import PulseEventStore
 from echo.pulsenet.registration import RegistrationStore
 from echo.pulsenet.stream import PulseAttestor, PulseHistoryStreamer
 
@@ -34,11 +35,13 @@ def _make_gateway(
     atlas = AtlasService(project_root)
     atlas.ensure_ready()
     store = RegistrationStore(state_dir / "pulsenet" / "registrations.json")
+    event_store = PulseEventStore(state_dir / "pulsenet" / "pulse_events.db")
     streamer = PulseHistoryStreamer(history_path, poll_interval=poll_interval)
     attestor = PulseAttestor(TemporalLedger(state_dir=state_dir / "pulsenet"))
     return PulseNetGatewayService(
         project_root=project_root,
         registration_store=store,
+        event_store=event_store,
         pulse_streamer=streamer,
         attestor=attestor,
         atlas_service=atlas,
@@ -128,3 +131,44 @@ def test_api_register_and_stream(tmp_path: Path) -> None:
         event = ws.receive_json()
         assert event["type"] == "pulse"
         assert event["pulse"]["message"] == "🔥 ignite"
+
+
+def test_gateway_replay_filters_and_endpoint(tmp_path: Path) -> None:
+    payload = {
+        "kind": "atlas_attestation",
+        "xpub": "xpub6CMHQ9GybwBEXAMPLEKEYXPm4o9saiN",
+        "fingerprint": "61f21543",
+    }
+    history = [
+        {
+            "timestamp": datetime(2025, 10, 21, tzinfo=timezone.utc).timestamp(),
+            "message": json.dumps(payload),
+            "hash": "attestation-hash",
+        }
+    ]
+    gateway = _make_gateway(tmp_path, initial_history=history)
+    records = gateway.replay()
+    assert records
+    first = records[0]
+    assert first["xpub"] == payload["xpub"]
+    assert first["fingerprint"] == payload["fingerprint"]
+    attestation_id = first["attestation"]["id"]
+
+    by_xpub = gateway.replay(xpub=payload["xpub"])
+    assert len(by_xpub) == 1
+    assert by_xpub[0]["attestation"]["id"] == attestation_id
+
+    by_attestation = gateway.replay(attestation_id=attestation_id)
+    assert by_attestation[0]["xpub"] == payload["xpub"]
+
+    app = FastAPI()
+    app.include_router(create_router(gateway))
+    client = TestClient(app)
+    response = client.get(
+        "/pulsenet/replay",
+        params={"fingerprint": payload["fingerprint"], "limit": 10},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["metadata"]["fingerprint"] == payload["fingerprint"]

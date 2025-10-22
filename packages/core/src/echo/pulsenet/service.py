@@ -11,6 +11,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from echo_atlas.service import AtlasService
 
 from .models import RegistrationRecord, RegistrationRequest
+from .persistence import PulseEventStore
 from .registration import RegistrationStore
 from .resolver import AtlasProvider, CrossDomainResolver
 from .stream import PulseAttestor, PulseHistoryStreamer
@@ -24,6 +25,7 @@ class PulseNetGatewayService:
         *,
         project_root: Path,
         registration_store: RegistrationStore,
+        event_store: PulseEventStore,
         pulse_streamer: PulseHistoryStreamer,
         attestor: PulseAttestor,
         atlas_service: AtlasService,
@@ -31,6 +33,7 @@ class PulseNetGatewayService:
     ) -> None:
         self._project_root = project_root
         self._store = registration_store
+        self._events = event_store
         self._streamer = pulse_streamer
         self._attestor = attestor
         self._atlas_service = atlas_service
@@ -47,7 +50,9 @@ class PulseNetGatewayService:
     def _bootstrap(self) -> None:
         existing = self._streamer.load_entries()
         self._streamer.mark_seen(existing)
-        self._attestor.ensure(existing)
+        attestations = self._attestor.ensure(existing)
+        for entry, attestation in zip(existing, attestations):
+            self._events.record(entry, attestation)
 
     # ------------------------------------------------------------------
     # Registration
@@ -82,12 +87,31 @@ class PulseNetGatewayService:
             "activity": [item.__dict__ for item in summary.activity],
         }
 
+    def replay(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int = 0,
+        xpub: str | None = None,
+        fingerprint: str | None = None,
+        attestation_id: str | None = None,
+    ) -> list[Mapping[str, Any]]:
+        records = self._events.replay(
+            limit=limit,
+            offset=offset,
+            xpub=xpub,
+            fingerprint=fingerprint,
+            attestation_id=attestation_id,
+        )
+        return [record.to_dict() for record in records]
+
     async def stream_pulses(self, websocket: WebSocket) -> None:
         await websocket.accept()
         await websocket.send_json({"type": "summary", "data": self.pulse_summary()})
         try:
             async for entry in self._streamer.subscribe():
                 attestation = self._attestor.attest(entry)
+                self._events.record(entry, attestation)
                 await websocket.send_json(
                     {
                         "type": "pulse",
