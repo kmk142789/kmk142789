@@ -2,6 +2,8 @@ import json
 import random
 from pathlib import Path
 
+import pytest
+
 from echo import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 
 
@@ -50,3 +52,29 @@ def test_resonance_engine_process(tmp_path: Path) -> None:
     assert "echo" in result and "harmonic_message" in result
     assert result["chain_memory"]
     assert result["harmonic_score"] > 0
+    assert "resonance_trend" in result
+
+
+def test_harmonics_resonance_trend_detects_growth() -> None:
+    harmonics = HarmonicsAI(config=HarmonicConfig(expansion_threshold=10.0))
+    harmonics.symbolic_matrix = {"a": 1.0, "b": 1.5, "c": 2.0}
+
+    harmonics.respond("a")
+    harmonics.respond("b")
+    harmonics.respond("c")
+
+    trend = harmonics.resonance_trend(window=3)
+    history = harmonics.score_history[-3:]
+    expected = (history[-1] - history[0]) / 2
+
+    assert trend == pytest.approx(expected, rel=1e-6)
+    assert trend > 0
+
+
+def test_harmonics_resonance_trend_requires_window() -> None:
+    harmonics = HarmonicsAI()
+
+    with pytest.raises(ValueError):
+        harmonics.resonance_trend(window=1)
+
+    assert harmonics.resonance_trend(window=3) == 0.0

@@ -14,6 +14,7 @@ from typing import Dict, List, Optional
 
 import json
 import random
+import math
 
 
 @dataclass(slots=True)
@@ -49,6 +50,7 @@ class HarmonicsAI:
         self.resonance_patterns: Dict[str, str] = {}
         self.chain_memory: List[str] = []
         self.symbolic_matrix = self._generate_symbolic_matrix()
+        self.score_history: List[float] = []
 
     # ------------------------------------------------------------------
     # Symbol generation and scoring
@@ -82,6 +84,7 @@ class HarmonicsAI:
             message = f"🌀 {pattern} [Harmonic Expansion Enabled]"
         else:
             message = f"✨ Adjusting Frequencies: {score:.2f}"
+        self._record_score(score)
         return HarmonicResponse(
             message=message,
             harmonic_score=score,
@@ -96,6 +99,48 @@ class HarmonicsAI:
         else:
             response.message = f"{response.message} | Chain length {len(self.chain_memory)}"
         return response
+
+    def resonance_trend(self, window: int = 5) -> float:
+        """Return the slope of recent harmonic scores.
+
+        The trend is calculated using an ordinary least squares fit on the
+        ``window`` most recent harmonic scores. Positive values indicate a
+        rising resonance energy, while negative values imply decay. The result
+        is expressed as score change per interaction step.
+        """
+
+        if window < 2:
+            raise ValueError("window must be at least 2")
+
+        if not self.score_history:
+            return 0.0
+
+        samples = self.score_history[-window:]
+        sample_count = len(samples)
+        if sample_count < 2:
+            return 0.0
+
+        mean_x = (sample_count - 1) / 2.0
+        mean_y = math.fsum(samples) / sample_count
+
+        numerator = 0.0
+        denominator = 0.0
+        for index, value in enumerate(samples):
+            x_delta = index - mean_x
+            numerator += x_delta * (value - mean_y)
+            denominator += x_delta * x_delta
+
+        if denominator == 0.0:
+            return 0.0
+
+        return numerator / denominator
+
+    def _record_score(self, score: float) -> None:
+        self.score_history.append(score)
+        # Keep the history bounded to avoid unbounded memory growth in
+        # long-lived processes such as orchestration daemons.
+        if len(self.score_history) > 256:
+            self.score_history = self.score_history[-256:]
 
 
 @dataclass(slots=True)
@@ -211,4 +256,5 @@ class EchoResonanceEngine:
             "harmonic_score": harmonic_response.harmonic_score,
             "symbol_matrix": harmonic_response.symbol_matrix,
             "chain_memory": list(self.harmonics.chain_memory),
+            "resonance_trend": self.harmonics.resonance_trend(),
         }
