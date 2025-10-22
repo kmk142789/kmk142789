@@ -1,4 +1,4 @@
-.PHONY: akit plan wish cycle test
+.PHONY: akit plan wish cycle test all
 
 akit:
 	python -m pytest -q
@@ -6,13 +6,15 @@ akit:
 	python -m echo.akit.cli --dry-run --cycles 1 --output artifacts/akit/ci-run.json
 
 cycle:
-python -m echo.echoctl cycle
+	python -m echo.echoctl cycle
 
 plan:
-python -m echo.echoctl plan
+	python -m echo.echoctl plan
 
 wish:
-python -m echo.echoctl wish "$(W)" "$(D)" "$(C)"
+	python -m echo.echoctl wish "$(W)" "$(D)" "$(C)"
 
 test:
 	pytest -q
+
+all: test
