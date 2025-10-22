@@ -36,6 +36,11 @@ from .continuum_engine import (
     ContinuumManifest,
     ContinuumPlaybackEngine,
 )
+from .continuum_insights import (
+    MomentumInsight,
+    compute_source_momentum,
+    compute_tag_momentum,
+)
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .evolver import (
     EchoEvolver,
@@ -123,6 +128,9 @@ __all__ = [
     "ExpansionTarget",
     "ContinuumManifest",
     "ContinuumPlaybackEngine",
+    "MomentumInsight",
+    "compute_source_momentum",
+    "compute_tag_momentum",
     "BridgeConfig",
     "BridgeEmitter",
     "BridgeState",
