@@ -19,3 +19,11 @@ Documented for incident tracking. Do **not** commit or redistribute the raw secr
 - Treat every associated credential, wallet, or derivation path as compromised until the keys are rotated.
 - Confirm downstream configuration repositories, CI/CD variables, and runtime stores are scrubbed of the exposed material.
 - Capture sanitized evidence only (for example, hashed digests or counts) when recording any follow-up investigation notes.
+
+### Sanitized tracking artifacts
+- 18 unique `secret-extended-key-main` values from the 2025-05-11 bundle were hashed (SHA-256) and stored in
+  `reports/sanitized/2025-05-11-secret-extended-keys.sha256` for incident reference.
+- 41 wallet-import-format (WIF) secrets transmitted alongside the bundle were hashed (SHA-256) and written to
+  `reports/sanitized/2025-05-11-wif-keys.sha256`.
+- These artifacts contain no recoverable credential material and exist solely to support audit coordination without
+  violating the "no raw secrets in version control" directive.
