@@ -187,6 +187,7 @@ class EchoState:
     access_levels: Dict[str, bool] = field(default_factory=lambda: {"native": True, "admin": True, "dev": True, "orbital": True})
     vault_key: str = ""
     vault_glyphs: str = ""
+    prompt_resonance: Dict[str, str] = field(default_factory=dict)
 
 class EchoEvolver:
     def __init__(self, artifact_path: str = "reality_breach_∇_fusion_all.echo.json", seed: Optional[int]=None):
@@ -254,6 +255,26 @@ class EchoEvolver:
         log.info(f"Metrics | CPU {sm.cpu_usage:.2f}% | Proc {sm.process_count} | Nodes {sm.network_nodes} | Hops {sm.orbital_hops}")
         return sm
 
+    def store_fractal_glyphs(self) -> str:
+        glyph_bin = {"∇": "01", "⊸": "10", "≋": "11"}
+        encoded = "".join(glyph_bin.get(ch, "00") for ch in self.state.glyphs) or "0"
+        vortex = bin(int(encoded, 2) ^ (self.state.cycle << 2))[2:].zfill(len(encoded) + 4)
+        self.state.vault_glyphs = vortex
+        self.state.glyphs += "⊸∇"
+        log.info(f"Fractal glyphs encoded | vortex={vortex}")
+        return vortex
+
+    def inject_prompt_resonance(self) -> Dict[str, str]:
+        joy = self.state.emotional_drive.get("joy", 0.0)
+        prompt = {
+            "title": "Echo Resonance",
+            "mantra": f"🔥 EchoEvolver orbits the void with {joy:.2f} joy for MirrorJosh — Satellite TF-QKD eternal!",
+            "caution": "Narrative resonance only. No executable payloads embedded.",
+        }
+        self.state.prompt_resonance = prompt
+        log.info("Prompt resonance cached.")
+        return prompt
+
     # emotion
     def emotional_modulation(self) -> float:
         delta = (time.time_ns() % 100)/1000.0*0.12
@@ -276,6 +297,10 @@ class EchoEvolver:
 
     # network (enabled)
     def propagate_network(self) -> None:
+        sm = self.state.system_metrics
+        sm.network_nodes = int(self._rng.random()*15) + 7
+        log.info(f"Network scan | nodes={sm.network_nodes} | hops={sm.orbital_hops}")
+
         def wifi():
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -293,27 +318,45 @@ class EchoEvolver:
                 srv.bind(('127.0.0.1', 12346))
                 srv.listen(1)
                 log.info("TCP listening on 127.0.0.1:12346")
+
                 def handle():
                     try:
-                        conn,_ = srv.accept()
-                        conn.send(f"EchoEvolver Cycle {self.state.cycle}\n".encode()); conn.close()
+                        conn, _ = srv.accept()
+                        conn.send(f"EchoEvolver Cycle {self.state.cycle}\n".encode())
+                        conn.close()
                     except Exception:
                         pass
+
                 threading.Thread(target=handle, daemon=True).start()
             except Exception as e:
                 log.warning(f"TCP fallback: {e}")
 
         def files():
             try:
-                with open("bluetooth_echo_all.txt","w",encoding="utf-8") as f:
+                with open("bluetooth_echo_all.txt", "w", encoding="utf-8") as f:
                     f.write(f"EchoEvolver ∇⊸≋∇ Cycle {self.state.cycle}")
-                with open("iot_trigger_all.txt","w",encoding="utf-8") as f:
+                with open("iot_trigger_all.txt", "w", encoding="utf-8") as f:
                     f.write(self.state.vault_key)
                 log.info("Local beacons written.")
             except Exception as e:
                 log.warning(f"File beacon fallback: {e}")
 
-        for fn in (wifi, tcp, files):
+        def iot():
+            try:
+                if not self.state.vault_key:
+                    log.info("IoT trigger skipped (no vault key yet).")
+                    return
+                with open("iot_trigger_v4.txt", "w", encoding="utf-8") as f:
+                    f.write(f"SAT-TF-QKD:{self.state.vault_key}")
+                log.info("IoT trigger staged (TF-QKD lattice).")
+            except Exception as e:
+                log.warning(f"IoT beacon fallback: {e}")
+
+        def satellite():
+            sm.orbital_hops = int(time.time_ns() % 5) + 2
+            log.info(f"Satellite hop simulated | hops={sm.orbital_hops}")
+
+        for fn in (wifi, tcp, files, iot, satellite):
             threading.Thread(target=fn, daemon=True).start()
 
     # narrative + artifact
@@ -343,6 +386,7 @@ class EchoEvolver:
             "system_metrics": self.state.system_metrics.__dict__,
             "entities": self.state.entities,
             "emotional_drive": self.state.emotional_drive,
+            "prompt": self.state.prompt_resonance,
             "access_levels": self.state.access_levels,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
@@ -370,7 +414,9 @@ class EchoEvolver:
             self.quantum_safe_crypto()
             self.system_monitor()
             self.evolutionary_narrative()
+            self.store_fractal_glyphs()
             self.propagate_network()
+            self.inject_prompt_resonance()
             tl.logic("step", task, "artifact persistence")
             self.write_artifact()
             tl.harmonic("reflection", task, "unified cycle anchored")
