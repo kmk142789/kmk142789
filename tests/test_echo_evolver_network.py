@@ -25,6 +25,10 @@ def test_propagate_network_simulated_records_cache_and_log() -> None:
 
     # The simulated events are cached for downstream tooling and marked as complete.
     assert evolver.state.network_cache["propagation_events"] == events
+    assert evolver.state.network_cache["propagation_mode"] == "simulated"
+    assert evolver.state.network_cache["propagation_summary"].startswith(
+        "Network propagation (simulated) captured across 5 channels"
+    )
     completed = evolver.state.network_cache["completed_steps"]
     assert "propagate_network" in completed
 
@@ -47,5 +51,10 @@ def test_propagate_network_live_reports_live_channels() -> None:
         "Orbital channel engaged for cycle 3",
     ]
 
+    cache = evolver.state.network_cache
+    assert cache["propagation_mode"] == "live"
+    assert cache["propagation_summary"].startswith(
+        "Network propagation (live) captured across 5 channels"
+    )
     log_entry = evolver.state.event_log[-1]
     assert "Network propagation (live) captured across 5 channels" in log_entry
