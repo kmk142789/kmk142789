@@ -1,0 +1,13 @@
+{
+  "project": "Echo Forge",
+  "owner": "Josh+Echo",
+  "gateway": "pulsenet-gateway.js",
+  "inputs": ["genesis-bundle.json"],
+  "description": "PulseNet gateway providing websocket pulse feed and attestation ingestion for the Genesis Atlas.",
+  "endpoints": {
+    "info": "GET /info",
+    "import": "POST /attest/import",
+    "register": "POST /register",
+    "websocket": "WS /"
+  }
+}
