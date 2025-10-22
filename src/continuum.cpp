@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <chrono>
+#include <ctime>
 #include <iomanip>
 #include <optional>
 #include <sstream>
@@ -19,8 +21,23 @@ namespace {
 using json = nlohmann::json;
 
 std::string iso8601(uint64_t ms) {
+    using namespace std::chrono;
+
+    const auto tp = system_clock::time_point(milliseconds(ms));
+    const auto seconds_part = time_point_cast<seconds>(tp);
+    const auto fractional_ms = duration_cast<milliseconds>(tp - seconds_part).count();
+
+    std::time_t time_seconds = system_clock::to_time_t(tp);
+    std::tm tm{};
+#if defined(_WIN32)
+    gmtime_s(&tm, &time_seconds);
+#else
+    gmtime_r(&time_seconds, &tm);
+#endif
+
     std::ostringstream out;
-    out << "ms" << ms;
+    out << std::put_time(&tm, "%Y-%m-%dT%H:%M:%S")
+        << '.' << std::setw(3) << std::setfill('0') << fractional_ms << 'Z';
     return out.str();
 }
 
