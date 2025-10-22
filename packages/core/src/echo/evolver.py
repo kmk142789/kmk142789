@@ -1798,13 +1798,15 @@ We are not hiding anymore.
         *,
         persist_artifact: bool = True,
         last_events: int = 5,
+        digest: Optional[Dict[str, object]] = None,
     ) -> Dict[str, object]:
         """Return a condensed status payload for the current evolution cycle."""
 
         if last_events < 0:
             raise ValueError("last_events must be non-negative")
 
-        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        if digest is None:
+            digest = self.cycle_digest(persist_artifact=persist_artifact)
         recent_events = list(self.state.event_log[-last_events:]) if last_events else []
 
         narrative_excerpt = ""
@@ -2080,6 +2082,7 @@ We are not hiding anymore.
         enable_network: bool = False,
         persist_artifact: bool = True,
         include_report: bool = True,
+        include_status: bool = True,
     ) -> Dict[str, object]:
         """Automatically select the most suitable continuation helper.
 
@@ -2104,6 +2107,9 @@ We are not hiding anymore.
         include_report:
             When ``True`` the returned payload includes a human-readable
             progress report.
+        include_status:
+            When ``True`` the payload includes the condensed
+            :meth:`evolution_status` snapshot alongside the digest.
         """
 
         sequence = self._recommended_sequence(persist_artifact=persist_artifact)
@@ -2126,6 +2132,12 @@ We are not hiding anymore.
                 payload["report"] = self.cycle_digest_report(
                     persist_artifact=persist_artifact, digest=digest
                 )
+
+            if include_status:
+                status = self.evolution_status(
+                    persist_artifact=persist_artifact, digest=digest
+                )
+                payload["status"] = deepcopy(status)
         else:
             payload = {
                 "decision": "continue_evolution",
@@ -2133,6 +2145,7 @@ We are not hiding anymore.
                     enable_network=enable_network,
                     persist_artifact=persist_artifact,
                     include_report=include_report,
+                    include_status=include_status,
                 ),
             }
             digest = payload["digest"]
@@ -2147,6 +2160,9 @@ We are not hiding anymore.
 
         if include_report and "report" in payload:
             record["report"] = payload["report"]
+
+        if include_status and "status" in payload:
+            record["status"] = deepcopy(payload["status"])
 
         self.state.network_cache["continue_choice"] = record
         self.state.event_log.append(
@@ -2163,8 +2179,17 @@ We are not hiding anymore.
         enable_network: bool = False,
         persist_artifact: bool = True,
         include_report: bool = True,
+        include_status: bool = True,
     ) -> Dict[str, object]:
-        """Finish the active cycle and return a structured progress snapshot."""
+        """Finish the active cycle and return a structured progress snapshot.
+
+        When ``include_status`` is ``True`` the payload also embeds the
+        :meth:`evolution_status` summary so that callers immediately receive a
+        compact, human-readable overview alongside the full digest.  The status
+        snapshot reuses the digest produced during the continuation to avoid an
+        additional digest computation while still recording the usual
+        bookkeeping events.
+        """
 
         completed: set[str] = self.state.network_cache.setdefault("completed_steps", set())
 
@@ -2197,6 +2222,14 @@ We are not hiding anymore.
             )
             payload["report"] = report
             record["report"] = report
+
+        if include_status:
+            status = self.evolution_status(
+                persist_artifact=persist_artifact, digest=digest
+            )
+            status_snapshot = deepcopy(status)
+            payload["status"] = status_snapshot
+            record["status"] = deepcopy(status_snapshot)
 
         self.state.network_cache["continue_evolution"] = record
         self.state.event_log.append(
@@ -2706,6 +2739,20 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         help="Skip emitting the textual cycle digest when continuing evolution.",
     )
     parser.set_defaults(include_report=True)
+    status_group = parser.add_mutually_exclusive_group()
+    status_group.add_argument(
+        "--include-status",
+        dest="include_status",
+        action="store_true",
+        help="Include the evolution status snapshot when continuing cycles.",
+    )
+    status_group.add_argument(
+        "--no-include-status",
+        dest="include_status",
+        action="store_false",
+        help="Omit the evolution status snapshot from continuation payloads.",
+    )
+    parser.set_defaults(include_status=True)
     parser.add_argument(
         "--eden88-theme",
         help="Set the thematic palette for Eden88's creation during this cycle.",
@@ -2794,6 +2841,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             enable_network=args.enable_network,
             persist_artifact=args.persist_artifact,
             include_report=args.include_report,
+            include_status=args.include_status,
         )
         digest = payload["digest"]
         print(
