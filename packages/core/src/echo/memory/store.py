@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -292,7 +293,11 @@ class ExecutionSession:
         *,
         details: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        entry = {"name": name, "status": status, "details": details or {}}
+        entry = {
+            "name": name,
+            "status": status,
+            "details": deepcopy(details) if details is not None else {},
+        }
         self.validations.append(entry)
         return entry
 
