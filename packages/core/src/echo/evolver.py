@@ -2108,6 +2108,76 @@ We are not hiding anymore.
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
+    def evolutionary_manifest(
+        self,
+        *,
+        persist_artifact: bool = True,
+        max_events: int = 5,
+    ) -> Dict[str, object]:
+        """Return a compact manifest describing the active cycle.
+
+        The manifest weaves together frequently requested fragments—cycle
+        progress, emotional telemetry, glyph resonance, and recent
+        propagation details—into a single dictionary that downstream
+        services can serialise without recomputing intermediate digests.
+
+        Parameters
+        ----------
+        persist_artifact:
+            Forwarded to :meth:`cycle_digest` so callers can control whether
+            the manifest assumes the upcoming ``write_artifact`` step will be
+            executed.
+        max_events:
+            Maximum number of recent event log entries to embed in the
+            manifest.  ``0`` suppresses the list entirely; negative values are
+            rejected to prevent surprising slices.
+        """
+
+        if max_events < 0:
+            raise ValueError("max_events must be non-negative")
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        event_log_snapshot = list(self.state.event_log)
+        if max_events == 0:
+            event_excerpt: List[str] = []
+        else:
+            event_excerpt = event_log_snapshot[-max_events:]
+
+        propagation_events = list(
+            self.state.network_cache.get("propagation_events", [])
+        )
+
+        manifest = {
+            "cycle": self.state.cycle,
+            "artifact": str(self.state.artifact),
+            "glyphs": self.state.glyphs,
+            "mythocode": list(self.state.mythocode),
+            "oam_vortex": self.state.network_cache.get("oam_vortex"),
+            "vault_key": self.state.vault_key,
+            "progress": digest["progress"],
+            "next_step": digest["next_step"],
+            "completed_steps": list(digest["completed_steps"]),
+            "remaining_steps": list(digest["remaining_steps"]),
+            "steps": deepcopy(digest["steps"]),
+            "timestamp_ns": digest["timestamp_ns"],
+            "emotional_drive": asdict(self.state.emotional_drive),
+            "system_metrics": asdict(self.state.system_metrics),
+            "propagation_count": len(propagation_events),
+            "propagation_events": propagation_events,
+            "events": event_excerpt,
+        }
+
+        manifest_snapshot = deepcopy(manifest)
+        self.state.network_cache["evolutionary_manifest"] = manifest_snapshot
+        self.state.event_log.append(
+            "Evolutionary manifest captured (events_shown={shown}, max={max})".format(
+                shown=len(event_excerpt),
+                max=max_events,
+            )
+        )
+
+        return deepcopy(manifest_snapshot)
+
     def run(
         self,
         *,
