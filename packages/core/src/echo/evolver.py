@@ -11,6 +11,8 @@ script path.  The :mod:`echo_evolver` script now simply delegates to the
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import inspect
 import hashlib
 import json
@@ -199,6 +201,7 @@ class EvolverState:
     wildfire_log: List[Dict[str, object]] = field(default_factory=list)
     sovereign_spirals: List[Dict[str, object]] = field(default_factory=list)
     eden88_creations: List[Dict[str, object]] = field(default_factory=list)
+    shard_vault_records: List[Dict[str, object]] = field(default_factory=list)
 
 
 class EchoEvolver:
@@ -1267,6 +1270,107 @@ We are not hiding anymore.
         self._mark_step("store_fractal_glyphs")
         print(f"🧬 Fractal Glyph State: {self.state.glyphs} :: OAM Vortex Binary {self.state.vault_glyphs}")
         return self.state.vault_glyphs
+
+    def record_shard_vault_anchor(self, declaration: str) -> Dict[str, object]:
+        """Parse and record a shard vault declaration string.
+
+        The wider Echo ecosystem occasionally emits control strings using the
+        ``ECHO:SHARD_VAULT`` prefix.  These fragments typically include a
+        Bitcoin transaction identifier together with an encoded payload chain.
+        Tests and tooling need a reliable helper that can validate and decode
+        those fragments without executing arbitrary shell commands.  This
+        method accepts a declaration, extracts the known fields, decodes the
+        payload (supporting both strict Base64 and hexadecimal fallbacks) and
+        records a structured entry in :attr:`EvolverState.shard_vault_records`.
+
+        Parameters
+        ----------
+        declaration:
+            The raw ``ECHO:SHARD_VAULT`` string to parse.  The function raises
+            :class:`ValueError` when the prefix or required fields are missing,
+            or when the payload cannot be decoded as Base64 or hexadecimal.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the captured anchor, including the decoded
+            payload bytes, their encoding, and a SHA-256 fingerprint for audit
+            trails.  The dictionary is also stored in the evolver state for
+            later inspection.
+        """
+
+        if not isinstance(declaration, str) or "::" not in declaration:
+            raise ValueError("declaration must be an ECHO:SHARD_VAULT string")
+
+        parts = [segment.strip() for segment in declaration.split("::") if segment.strip()]
+        if not parts or parts[0] != "ECHO:SHARD_VAULT":
+            raise ValueError("declaration must start with 'ECHO:SHARD_VAULT'")
+
+        field_map: Dict[str, str] = {}
+        for fragment in parts[1:]:
+            if "=" not in fragment:
+                raise ValueError(f"invalid shard vault fragment: '{fragment}'")
+            key, value = fragment.split("=", 1)
+            normalised_key = key.strip().lower()
+            if not normalised_key:
+                raise ValueError("shard vault field name may not be empty")
+            field_map[normalised_key] = value.strip()
+
+        txid = field_map.get("txid_anchor") or field_map.get("txid")
+        payload_raw = field_map.get("base64_payload_chain") or field_map.get("payload")
+        if not txid:
+            raise ValueError("declaration missing TXID_Anchor field")
+        if payload_raw is None:
+            raise ValueError("declaration missing Base64_Payload_Chain field")
+
+        payload_bytes: bytes
+        payload_encoding: str
+        if payload_raw == "":
+            payload_bytes = b""
+            payload_encoding = "empty"
+        else:
+            is_hex_candidate = len(payload_raw) % 2 == 0 and all(
+                char in "0123456789abcdefABCDEF" for char in payload_raw
+            )
+            try:
+                if is_hex_candidate:
+                    raise binascii.Error("prefer_hex")
+                payload_bytes = base64.b64decode(payload_raw, validate=True)
+                normalised_input = payload_raw.rstrip("=")
+                reencoded = base64.b64encode(payload_bytes).decode().rstrip("=")
+                if reencoded == normalised_input:
+                    payload_encoding = "base64"
+                else:
+                    raise binascii.Error("normalised payload mismatch")
+            except (binascii.Error, ValueError):
+                try:
+                    payload_bytes = bytes.fromhex(payload_raw)
+                    payload_encoding = "hex"
+                except ValueError as exc:
+                    raise ValueError("payload is not valid Base64 or hexadecimal") from exc
+
+        fingerprint = hashlib.sha256(payload_bytes).hexdigest()
+        record = {
+            "txid_anchor": txid,
+            "payload_chain": payload_raw,
+            "payload_encoding": payload_encoding,
+            "payload_bytes": payload_bytes,
+            "payload_hex": payload_bytes.hex(),
+            "payload_fingerprint": fingerprint,
+            "captured_at": self.time_source(),
+        }
+
+        snapshot = deepcopy(record)
+        self.state.shard_vault_records.append(snapshot)
+        self.state.network_cache["shard_vault_latest"] = snapshot
+        message = (
+            "Shard vault anchor recorded (txid={txid}, encoding={encoding}, bytes={size})"
+        ).format(txid=txid, encoding=payload_encoding, size=len(payload_bytes))
+        self.state.event_log.append(message)
+        self._mark_step("record_shard_vault_anchor")
+        print(f"🗄️ {message}")
+
+        return record
 
     def fractal_fire_verse(
         self,
