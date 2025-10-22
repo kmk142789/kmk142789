@@ -9,7 +9,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List
+from typing import Iterator, List
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -113,6 +113,25 @@ class PulseLedger:
             if len(receipts) >= limit:
                 break
         return receipts
+
+    def iter_receipts(self) -> Iterator[PulseReceipt]:
+        """Yield every receipt stored in the ledger in chronological order."""
+
+        if not self.root.exists():
+            return
+
+        for path in sorted(self.root.rglob("*.json")):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            yield PulseReceipt(
+                sha256_of_diff=data["sha256_of_diff"],
+                time=data["time"],
+                actor=data["actor"],
+                rhyme=data["rhyme"],
+                result=data["result"],
+                seed=data["seed"],
+                signature=data["signature"],
+                path=path,
+            )
 
 
 class _LedgerLogRequest(BaseModel):
