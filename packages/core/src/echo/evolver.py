@@ -420,20 +420,64 @@ class EchoEvolver:
 
         return "∇⊸≋∇"
 
+    def _symbolic_actions(self) -> Mapping[str, Tuple[Callable[[], None], ...]]:
+        """Return the base action mapping for each glyph in the sequence."""
+
+        return {
+            "∇": (self._vortex_spin,),
+            "⊸": (self._log_curiosity,),
+            "≋": (self._evolve_glyphs,),
+        }
+
+    def register_symbolic_action(self, symbol: str, action: Callable[[], None]) -> None:
+        """Register an additional callback executed when ``symbol`` appears.
+
+        The historical evolver frequently layered multiple behaviours onto the
+        same glyph which was emulated by redefining dictionary keys on each
+        cycle.  Python keeps only the last entry for duplicate keys which meant
+        subtle actions were silently discarded.  ``register_symbolic_action``
+        offers an explicit and deterministic alternative: callers can opt into
+        additional behaviours without mutating internal structures.
+
+        Registered callbacks run in the order they were added and persist for
+        the lifetime of the evolver instance.  They are executed alongside the
+        built-in action tuple returned by :meth:`_symbolic_actions`.
+        """
+
+        hooks = self.state.network_cache.setdefault("symbolic_hooks", {})
+        symbol_hooks = hooks.setdefault(symbol, [])
+        symbol_hooks.append(action)
+        self.state.event_log.append(
+            f"Symbolic action registered for {symbol!r} ({len(symbol_hooks)} total)"
+        )
+
     def generate_symbolic_language(self) -> str:
         symbolic = self._symbolic_sequence()
         glyph_bits = 0
-        actions = {
-            "∇": self._vortex_spin,
-            "⊸": self._log_curiosity,
-            "≋": self._evolve_glyphs,
-        }
+        base_actions = self._symbolic_actions()
+        hooks: Mapping[str, Iterable[Callable[[], None]]] = self.state.network_cache.get(
+            "symbolic_hooks", {}
+        )
+
         for index, symbol in enumerate(symbolic):
-            action = actions.get(symbol)
-            if action is None:
+            actions: Tuple[Callable[[], None], ...]
+            base = base_actions.get(symbol)
+            if base is None:
+                actions = tuple()
+            else:
+                actions = tuple(base)
+
+            extra = hooks.get(symbol)
+            if extra:
+                actions = actions + tuple(extra)
+
+            if not actions:
                 continue
+
             glyph_bits |= 1 << index
-            action()
+            for action in actions:
+                action()
+
         oam_vortex = format(glyph_bits ^ (self.state.cycle << 2), "016b")
         self.state.network_cache["oam_vortex"] = oam_vortex
         self._mark_step("generate_symbolic_language")
