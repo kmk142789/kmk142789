@@ -7,7 +7,7 @@ import secrets
 import threading
 import time
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from .crypto import decrypt, derive_key, encrypt, random_nonce, zeroize
 from .models import VaultPolicy, VaultRecord
@@ -212,6 +212,9 @@ class Vault:
             zeroize(key_buffer)
 
         created_at = time.time()
+        expires_at: Optional[float] = None
+        if policy_obj.max_age_s > 0:
+            expires_at = created_at + policy_obj.max_age_s
         record = VaultRecord(
             id=str(uuid.uuid4()),
             label=label,
@@ -222,6 +225,10 @@ class Vault:
             use_count=0,
             entropy_hint=secrets.token_hex(4),
             policy=policy_obj,
+            status="active",
+            expires_at=expires_at,
+            last_rotated_at=created_at,
+            rotation_count=0,
         )
         self._store.insert_record(record, enc_priv=ciphertext, nonce=nonce)
         return record
@@ -261,6 +268,9 @@ class Vault:
     ) -> dict:
         with self._lock:
             record, ciphertext, nonce = self._store.fetch_record(record_id)
+            record, ciphertext, nonce = self._ensure_lifecycle(
+                record_id, record, ciphertext, nonce
+            )
             self._enforce_policy(record)
             secret_bytes = decrypt(bytes(self._master_key), ciphertext, nonce)
             secret_buffer = bytearray(secret_bytes)
@@ -315,6 +325,84 @@ class Vault:
             and (time.time() - record.last_used_at) < policy.cooldown_s
         ):
             raise PermissionError("cooldown active for record")
+
+    def _ensure_lifecycle(
+        self,
+        record_id: str,
+        record: VaultRecord,
+        ciphertext: bytes,
+        nonce: bytes,
+    ) -> Tuple[VaultRecord, bytes, bytes]:
+        now = time.time()
+        if record.status != "active":
+            raise PermissionError(f"record is {record.status}")
+        policy = record.policy
+        reference_ts = record.last_rotated_at or record.created_at
+        expires_at = record.expires_at
+        expired = expires_at is not None and now >= expires_at
+        interval_due = (
+            policy.rotation_interval_s > 0
+            and now - reference_ts >= policy.rotation_interval_s
+        )
+        if not expired and not interval_due:
+            return record, ciphertext, nonce
+
+        if not policy.auto_rotate:
+            self._store.mark_status(
+                record_id, status="expired", expires_at=expires_at or now
+            )
+            raise PermissionError("record requires manual rotation")
+
+        rotated_record, new_ciphertext, new_nonce = self._rotate_record(
+            record_id,
+            record,
+            ciphertext,
+            nonce,
+            rotation_ts=now,
+        )
+        return rotated_record, new_ciphertext, new_nonce
+
+    def _rotate_record(
+        self,
+        record_id: str,
+        record: VaultRecord,
+        ciphertext: bytes,
+        nonce: bytes,
+        *,
+        rotation_ts: float,
+    ) -> Tuple[VaultRecord, bytes, bytes]:
+        secret_bytes = decrypt(bytes(self._master_key), ciphertext, nonce)
+        secret_buffer = bytearray(secret_bytes)
+        try:
+            new_ciphertext, new_nonce = encrypt(
+                bytes(self._master_key), bytes(secret_buffer), nonce=random_nonce()
+            )
+        finally:
+            zeroize(secret_buffer)
+        new_entropy = secrets.token_hex(4)
+        expires_at: Optional[float] = None
+        if record.policy.max_age_s > 0:
+            expires_at = rotation_ts + record.policy.max_age_s
+        updated_record = self._store.rotate_record(
+            record_id,
+            enc_priv=new_ciphertext,
+            nonce=new_nonce,
+            rotation_ts=rotation_ts,
+            expires_at=expires_at,
+            entropy_hint=new_entropy,
+            rotation_count=record.rotation_count + 1,
+        )
+        return updated_record, new_ciphertext, new_nonce
+
+    def rotate(self, record_id: str) -> VaultRecord:
+        """Force a rotation cycle for the given record."""
+
+        with self._lock:
+            record, ciphertext, nonce = self._store.fetch_record(record_id)
+            rotated_record, _, _ = self._rotate_record(
+                record_id, record, ciphertext, nonce, rotation_ts=time.time()
+            )
+            return rotated_record
 
 
 def open_vault(path: str, passphrase: str) -> Vault:

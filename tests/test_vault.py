@@ -109,3 +109,59 @@ def test_zeroize_invoked(monkeypatch, tmp_path):
     vault.sign(record.id, PAYLOAD)
     assert calls, "zeroize was not invoked"
     vault.close()
+
+
+def test_auto_rotation_on_expiry(monkeypatch, tmp_path):
+    vault = _new_vault(tmp_path)
+    policy = VaultPolicy(max_age_s=5, auto_rotate=True)
+    record = vault.import_key(label="rotating", key=HEX_KEY, fmt="hex", policy=policy)
+
+    time_state = {"value": vault_module.time.time()}
+
+    def fake_time():
+        return time_state["value"]
+
+    monkeypatch.setattr(vault_module.time, "time", fake_time)
+
+    time_state["value"] += 6
+    vault.sign(record.id, PAYLOAD)
+    rotated = vault.get(record.id)
+    assert rotated.rotation_count == 1
+    assert rotated.status == "active"
+    assert rotated.use_count == 1
+    assert rotated.last_rotated_at == pytest.approx(time_state["value"])
+    assert rotated.expires_at == pytest.approx(time_state["value"] + policy.max_age_s)
+    vault.close()
+
+
+def test_manual_rotation_required(monkeypatch, tmp_path):
+    vault = _new_vault(tmp_path)
+    policy = VaultPolicy(max_age_s=1, auto_rotate=False)
+    record = vault.import_key(label="manual", key=HEX_KEY, fmt="hex", policy=policy)
+
+    time_state = {"value": vault_module.time.time()}
+
+    def fake_time():
+        return time_state["value"]
+
+    monkeypatch.setattr(vault_module.time, "time", fake_time)
+
+    time_state["value"] += 2
+    with pytest.raises(PermissionError):
+        vault.sign(record.id, PAYLOAD)
+
+    expired = vault.get(record.id)
+    assert expired.status == "expired"
+    vault.close()
+
+
+def test_manual_rotate_api(tmp_path):
+    vault = _new_vault(tmp_path)
+    record = vault.import_key(label="manual-cycle", key=HEX_KEY, fmt="hex")
+    vault.sign(record.id, PAYLOAD)
+
+    rotated = vault.rotate(record.id)
+    assert rotated.rotation_count == 1
+    assert rotated.use_count == 0
+    assert rotated.last_used_at is None
+    vault.close()
