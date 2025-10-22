@@ -586,6 +586,17 @@ This will run the refined EchoEvolver engine with the same deterministic
 simulation steps exercised by the automated test suite.  To analyse creative
 prompts with the upgraded processor, run:
 
+If you would rather execute a cycle directly from the repository without
+installing the package, invoke the lightweight helper script:
+
+```bash
+python scripts/evolve_system.py --seed 7 --artifact cycles/latest.json
+```
+
+The helper mirrors the ``EchoEvolver.run`` sequence and surfaces common
+toggles such as ``--enable-network`` and ``--no-persist-artifact`` so you can
+experiment with different modes from the command line.
+
 ```bash
 idea-processor "EchoEvolver weaves radiant glyphs across the satellite lattice"
 ```
