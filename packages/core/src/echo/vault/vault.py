@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import secrets
 import threading
 import time
 import uuid
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 from .crypto import decrypt, derive_key, encrypt, random_nonce, zeroize
@@ -167,16 +170,26 @@ def sign_payload(priv_key: bytes, payload: bytes, *, rand_nonce: bool = True) ->
 class Vault:
     """Encrypted key vault with policy enforcement."""
 
-    def __init__(self, store: VaultStore, master_key: bytes) -> None:
+    def __init__(
+        self,
+        store: VaultStore,
+        master_key: bytes,
+        *,
+        audit_log_path: str | Path | None = None,
+    ) -> None:
         self._store = store
         self._master_key = bytearray(master_key)
         self._lock = threading.RLock()
+        self._audit_lock = threading.RLock()
+        self._rotation_audit_path = self._resolve_audit_path(audit_log_path)
 
     @classmethod
-    def open(cls, path: str, passphrase: str) -> "Vault":
+    def open(
+        cls, path: str, passphrase: str, *, audit_log_path: str | Path | None = None
+    ) -> "Vault":
         store = VaultStore(path)
         key = derive_key(passphrase, store.salt())
-        return cls(store, key)
+        return cls(store, key, audit_log_path=audit_log_path)
 
     # ------------------------------------------------------------------
     # Lifecycle helpers
@@ -185,6 +198,12 @@ class Vault:
         with self._lock:
             zeroize(self._master_key)
             self._store.close()
+
+    @property
+    def rotation_audit_path(self) -> Path:
+        """Return the path used to persist rotation audit events."""
+
+        return self._rotation_audit_path
 
     # ------------------------------------------------------------------
     # CRUD
@@ -360,6 +379,13 @@ class Vault:
             nonce,
             rotation_ts=now,
         )
+        reason = "expiry" if expired else "interval"
+        self._record_rotation_event(
+            record=rotated_record,
+            rotation_ts=now,
+            reason=reason,
+            automatic=True,
+        )
         return rotated_record, new_ciphertext, new_nonce
 
     def _rotate_record(
@@ -402,10 +428,65 @@ class Vault:
             rotated_record, _, _ = self._rotate_record(
                 record_id, record, ciphertext, nonce, rotation_ts=time.time()
             )
+            self._record_rotation_event(
+                record=rotated_record,
+                rotation_ts=rotated_record.last_rotated_at or time.time(),
+                reason="manual",
+                automatic=False,
+            )
             return rotated_record
 
+    # ------------------------------------------------------------------
+    # Audit helpers
+    # ------------------------------------------------------------------
 
-def open_vault(path: str, passphrase: str) -> Vault:
+    def _resolve_audit_path(self, audit_log_path: str | Path | None) -> Path:
+        base_path = Path(audit_log_path) if audit_log_path else self._store.path
+        if base_path.is_dir():
+            path = base_path / "vault_rotation_audit.jsonl"
+        else:
+            path = base_path.with_name(f"{base_path.stem}_rotation_audit.jsonl")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def _record_rotation_event(
+        self,
+        *,
+        record: VaultRecord,
+        rotation_ts: float,
+        reason: str,
+        automatic: bool,
+    ) -> None:
+        entry = {
+            "timestamp": datetime.fromtimestamp(rotation_ts, tz=timezone.utc).isoformat(),
+            "record_id": record.id,
+            "label": record.label,
+            "reason": reason,
+            "automatic": automatic,
+            "rotation_count": record.rotation_count,
+            "entropy_hint": record.entropy_hint,
+            "expires_at": (
+                datetime.fromtimestamp(record.expires_at, tz=timezone.utc).isoformat()
+                if record.expires_at is not None
+                else None
+            ),
+        }
+        try:
+            payload = json.dumps(entry, sort_keys=True)
+        except (TypeError, ValueError):  # pragma: no cover - defensive guard
+            return
+        try:
+            with self._audit_lock, self._rotation_audit_path.open(
+                "a", encoding="utf-8"
+            ) as handle:
+                handle.write(payload + "\n")
+        except OSError:  # pragma: no cover - tolerate filesystem errors
+            return
+
+
+def open_vault(
+    path: str, passphrase: str, *, audit_log_path: str | Path | None = None
+) -> Vault:
     """Convenience wrapper around :meth:`Vault.open`."""
 
-    return Vault.open(path, passphrase)
+    return Vault.open(path, passphrase, audit_log_path=audit_log_path)

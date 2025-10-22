@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import List
 
 import pytest
@@ -164,4 +165,45 @@ def test_manual_rotate_api(tmp_path):
     assert rotated.rotation_count == 1
     assert rotated.use_count == 0
     assert rotated.last_used_at is None
+    vault.close()
+
+
+def test_rotation_audit_log_records_events(monkeypatch, tmp_path):
+    vault = _new_vault(tmp_path)
+    policy = VaultPolicy(max_age_s=1, auto_rotate=True)
+    record = vault.import_key(label="audited", key=HEX_KEY, fmt="hex", policy=policy)
+
+    time_state = {"value": vault_module.time.time()}
+
+    def fake_time():
+        return time_state["value"]
+
+    monkeypatch.setattr(vault_module.time, "time", fake_time)
+
+    time_state["value"] += 2
+    vault.sign(record.id, PAYLOAD)
+    audit_path = vault.rotation_audit_path
+    assert audit_path.exists()
+    payloads = [
+        json.loads(line)
+        for line in audit_path.read_text().splitlines()
+        if line.strip()
+    ]
+    assert payloads, "auto rotation should be logged"
+    auto_event = payloads[-1]
+    assert auto_event["record_id"] == record.id
+    assert auto_event["automatic"] is True
+    assert auto_event["reason"] == "expiry"
+
+    rotated = vault.rotate(record.id)
+    payloads = [
+        json.loads(line)
+        for line in audit_path.read_text().splitlines()
+        if line.strip()
+    ]
+    manual_event = payloads[-1]
+    assert manual_event["automatic"] is False
+    assert manual_event["reason"] == "manual"
+    assert manual_event["rotation_count"] == rotated.rotation_count
+    assert manual_event["rotation_count"] >= auto_event["rotation_count"]
     vault.close()
