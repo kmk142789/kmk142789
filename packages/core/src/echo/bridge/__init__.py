@@ -23,4 +23,19 @@ _bridge = _load_bridge_module()
 BridgePlan = _bridge.BridgePlan
 EchoBridgeAPI = _bridge.EchoBridgeAPI
 
-__all__ = ["BridgePlan", "EchoBridgeAPI", "_load_bridge_module"]
+from .service import (  # noqa: E402  # pylint: disable=wrong-import-position
+    BridgeSyncService,
+    GitHubIssueConnector,
+    UnstoppableDomainConnector,
+    VercelDeployConnector,
+)
+
+__all__ = [
+    "BridgePlan",
+    "BridgeSyncService",
+    "EchoBridgeAPI",
+    "GitHubIssueConnector",
+    "UnstoppableDomainConnector",
+    "VercelDeployConnector",
+    "_load_bridge_module",
+]
