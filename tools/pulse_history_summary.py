@@ -1,199 +1,127 @@
-"""Utility for summarizing the repository's pulse history logs.
+#!/usr/bin/env python3
+"""Generate a quick summary of the repository's pulse history log.
 
-This module provides a small command line helper that reads a pulse history
-JSON file (``pulse_history.json`` by default) and prints summary information
-such as the first and last recorded pulses, the average interval between
-entries, and a frequency table of message prefixes. The functions are
-implemented in a reusable way so that they can be imported by tests or other
-scripts without relying on CLI parsing.
+The script reads ``pulse_history.json`` and prints a handful of statistics that
+make it easier to reason about the activity recorded in the ledger.
 """
-
 from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, List, Mapping, MutableMapping, Sequence
+from typing import Iterable, List, Mapping
 
 
 @dataclass(frozen=True)
-class PulseSummary:
-    """Summary statistics for a pulse history dataset."""
+class PulseEvent:
+    """Single event entry loaded from ``pulse_history.json``."""
 
-    count: int
-    first_timestamp: str
-    last_timestamp: str
-    first_message: str
-    last_message: str
-    average_interval_seconds: float | None
-    prefix_counts: Mapping[str, int]
+    timestamp: float
+    message: str
+    hash: str
 
+    @property
+    def datetime(self) -> datetime:
+        """Return the timestamp as a timezone-aware ``datetime`` object."""
 
-def _format_timestamp(timestamp: float) -> str:
-    """Convert a Unix timestamp to an ISO-8601 string in UTC."""
+        return datetime.fromtimestamp(self.timestamp, tz=timezone.utc)
 
-    return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
+    @property
+    def category(self) -> str:
+        """Return the high-level category encoded in the ``message`` field."""
 
-
-def _extract_message_prefix(message: str) -> str:
-    """Return a short prefix for a pulse message.
-
-    The pulse history uses ``<emoji> action:details`` as its convention. When
-    a colon is present, the portion before the first colon is used as the
-    prefix, otherwise the entire message is treated as the prefix.
-    """
-
-    cleaned = message.strip()
-    if not cleaned:
-        return ""
-    if ":" in cleaned:
-        return cleaned.split(":", 1)[0]
-    return cleaned
+        return self.message.split(":", maxsplit=1)[0]
 
 
-def summarize_pulse_history(entries: Sequence[Mapping[str, object]]) -> PulseSummary:
-    """Compute statistics for the provided pulse history entries.
+def load_events(path: Path) -> List[PulseEvent]:
+    """Load the JSON log into a list of :class:`PulseEvent` objects."""
 
-    Parameters
-    ----------
-    entries:
-        A sequence of pulse dictionaries containing at least ``timestamp`` and
-        ``message`` keys.
+    raw_entries = json.loads(path.read_text())
+    events: List[PulseEvent] = []
+    for index, entry in enumerate(raw_entries):
+        try:
+            events.append(
+                PulseEvent(
+                    timestamp=float(entry["timestamp"]),
+                    message=str(entry["message"]),
+                    hash=str(entry["hash"]),
+                )
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"Malformed entry at index {index}: {entry!r}") from exc
+    return events
 
-    Returns
-    -------
-    PulseSummary
-        A dataclass with aggregate information about the history.
 
-    Raises
-    ------
-    ValueError
-        If the sequence is empty or required keys are missing.
-    """
+def count_by_category(events: Iterable[PulseEvent]) -> Mapping[str, int]:
+    """Return the total number of events for each category."""
 
-    if not entries:
-        raise ValueError("pulse history is empty")
+    counts: dict[str, int] = {}
+    for event in events:
+        counts[event.category] = counts.get(event.category, 0) + 1
+    return dict(sorted(counts.items(), key=lambda item: item[0]))
 
-    try:
-        sorted_entries = sorted(entries, key=lambda e: float(e["timestamp"]))
-    except KeyError as exc:  # pragma: no cover - defensive programming
-        raise ValueError("pulse entries must include 'timestamp'") from exc
 
-    first = sorted_entries[0]
-    last = sorted_entries[-1]
+def format_datetime(value: datetime) -> str:
+    """Convert a ``datetime`` into a short, human-readable string."""
 
-    try:
-        first_ts = float(first["timestamp"])
-        last_ts = float(last["timestamp"])
-    except (TypeError, ValueError, KeyError) as exc:  # pragma: no cover
-        raise ValueError("pulse timestamps must be numeric") from exc
+    return value.strftime("%Y-%m-%d %H:%M:%S %Z")
 
-    prefix_counts = Counter(
-        _extract_message_prefix(str(entry.get("message", ""))) for entry in entries
+
+def summarize(events: List[PulseEvent]) -> str:
+    """Produce a human-readable summary report for the provided events."""
+
+    if not events:
+        return "No events found."
+
+    sorted_events = sorted(events, key=lambda event: event.timestamp)
+    first, last = sorted_events[0], sorted_events[-1]
+    counts = count_by_category(events)
+
+    lines = [
+        f"Total events: {len(events)}",
+        f"Time span: {format_datetime(first.datetime)} → {format_datetime(last.datetime)}",
+        "",
+        "Events by category:",
+    ]
+
+    width = max(len(category) for category in counts)
+    for category, amount in counts.items():
+        lines.append(f"  {category.ljust(width)} : {amount}")
+
+    return "\n".join(lines)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Summarise entries from pulse_history.json.",
     )
-    sorted_prefix_counts = dict(
-        sorted(prefix_counts.items(), key=lambda item: (-item[1], item[0]))
-    )
-
-    average_interval = None
-    if len(sorted_entries) > 1:
-        average_interval = (last_ts - first_ts) / (len(sorted_entries) - 1)
-
-    return PulseSummary(
-        count=len(sorted_entries),
-        first_timestamp=_format_timestamp(first_ts),
-        last_timestamp=_format_timestamp(last_ts),
-        first_message=str(first.get("message", "")),
-        last_message=str(last.get("message", "")),
-        average_interval_seconds=average_interval,
-        prefix_counts=sorted_prefix_counts,
-    )
-
-
-def load_pulse_history(path: Path) -> List[MutableMapping[str, object]]:
-    """Load pulse history entries from ``path``.
-
-    The function raises ``FileNotFoundError`` if the path does not exist and
-    ``json.JSONDecodeError`` if the file does not contain valid JSON.
-    """
-
-    with path.open("r", encoding="utf-8") as handle:
-        data = json.load(handle)
-
-    if not isinstance(data, list):
-        raise ValueError("pulse history must be a JSON array")
-
-    entries: List[MutableMapping[str, object]] = []
-    for idx, entry in enumerate(data):
-        if not isinstance(entry, MutableMapping):
-            raise ValueError(f"pulse entry at index {idx} must be an object")
-        entries.append(entry)
-    return entries
-
-
-def _format_prefix_table(prefix_counts: Mapping[str, int], *, limit: int | None = None) -> str:
-    """Return a formatted string table for prefix counts."""
-
-    items = list(prefix_counts.items())
-    if isinstance(limit, int):
-        items = items[:max(limit, 0)]
-    rows: Iterable[str] = (f"- {prefix or '[empty]'} :: {count}" for prefix, count in items)
-    return "\n".join(rows)
-
-
-def main(argv: Sequence[str] | None = None) -> int:
-    """Entry point for the ``pulse_history_summary`` CLI."""
-
-    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--history",
+        "path",
+        nargs="?",
         type=Path,
         default=Path("pulse_history.json"),
-        help="Path to the pulse history JSON file (default: pulse_history.json)",
+        help="Path to the pulse history JSON file. Defaults to pulse_history.json in the repository root.",
     )
-    parser.add_argument(
-        "--top",
-        type=int,
-        default=5,
-        help="Number of message prefixes to display (default: 5)",
-    )
-    parser.add_argument(
-        "--recent",
-        type=int,
-        default=0,
-        help="Show the last N pulses after the summary (default: 0)",
-    )
-    args = parser.parse_args(argv)
-
-    entries = load_pulse_history(args.history)
-    summary = summarize_pulse_history(entries)
-
-    print(f"Total pulses: {summary.count}")
-    print(f"First pulse: {summary.first_timestamp} :: {summary.first_message}")
-    print(f"Last pulse:  {summary.last_timestamp} :: {summary.last_message}")
-    if summary.average_interval_seconds is not None:
-        print(f"Average interval: {summary.average_interval_seconds:.2f} seconds")
-    else:
-        print("Average interval: n/a")
-
-    print("\nTop message prefixes:")
-    table = _format_prefix_table(summary.prefix_counts, limit=args.top)
-    if table:
-        print(table)
-    else:
-        print("(no prefixes)")
-
-    if args.recent:
-        print(f"\nMost recent {args.recent} pulses:")
-        for entry in entries[-args.recent :]:
-            ts = _format_timestamp(float(entry["timestamp"]))
-            print(f"- {ts} :: {entry.get('message', '')}")
-
-    return 0
+    return parser.parse_args()
 
 
-if __name__ == "__main__":  # pragma: no cover - CLI entry point
-    raise SystemExit(main())
+def main() -> None:
+    args = parse_args()
+    path: Path = args.path
+    if not path.exists():
+        repo_root = Path(__file__).resolve().parent.parent
+        candidate = repo_root / path
+        if candidate.exists():
+            path = candidate
+        else:
+            raise SystemExit(f"File not found: {path}")
+
+    events = load_events(path)
+    report = summarize(events)
+    print(report)
+
+
+if __name__ == "__main__":
+    main()
