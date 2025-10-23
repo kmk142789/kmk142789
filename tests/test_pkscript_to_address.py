@@ -108,6 +108,28 @@ def test_pkscript_ignores_leading_address_line() -> None:
     assert address == UNCOMPRESSED_ADDRESS
 
 
+def test_pkscript_can_validate_expected_address() -> None:
+    address_with_dash = UNCOMPRESSED_ADDRESS[:6] + "-" + UNCOMPRESSED_ADDRESS[6:]
+    script = [address_with_dash, "Pkscript", UNCOMPRESSED_PUBKEY, "OP_CHECK", "SIG"]
+
+    address = pkscript_to_address(script, validate_expected=True)
+
+    assert address == UNCOMPRESSED_ADDRESS
+
+
+def test_pkscript_validation_detects_mismatch() -> None:
+    wrong_address = UNCOMPRESSED_ADDRESS[:-1] + "1"
+    script = [wrong_address, "Pkscript", UNCOMPRESSED_PUBKEY, "OP_CHECK", "SIG"]
+
+    with pytest.raises(PkScriptError, match="does not match"):
+        pkscript_to_address(script, validate_expected=True)
+
+
+def test_pkscript_validation_requires_expected_address() -> None:
+    with pytest.raises(PkScriptError, match="does not include an address"):
+        pkscript_to_address(EXAMPLE_SCRIPT, validate_expected=True)
+
+
 def test_pkscript_ignores_labeled_address_line() -> None:
     labeled = f"Address: {UNCOMPRESSED_ADDRESS[:5]}-{UNCOMPRESSED_ADDRESS[5:]}"
     script = [labeled, "Pkscript", UNCOMPRESSED_PUBKEY, "OP_CHECK", "SIG"]
@@ -284,4 +306,32 @@ def test_cli_handles_direct_script_invocation(tmp_path) -> None:
     )
 
     assert proc.stdout.strip() == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
+
+
+def test_cli_validates_expected_address(tmp_path) -> None:
+    script_path = Path(__file__).resolve().parents[1] / "tools" / "pkscript_to_address.py"
+    script = "\n".join(
+        [
+            UNCOMPRESSED_ADDRESS,
+            "Pkscript",
+            UNCOMPRESSED_PUBKEY,
+            "OP_CHECK",
+            "SIG",
+        ]
+    ) + "\n"
+
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+
+    proc = subprocess.run(
+        [sys.executable, str(script_path), "--validate"],
+        input=script,
+        text=True,
+        capture_output=True,
+        check=True,
+        env=env,
+        cwd=script_path.parents[1],
+    )
+
+    assert proc.stdout.strip() == UNCOMPRESSED_ADDRESS
 

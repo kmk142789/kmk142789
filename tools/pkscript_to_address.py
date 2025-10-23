@@ -67,6 +67,7 @@ except ModuleNotFoundError as exc:  # pragma: no cover - import fall back
 
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 _BECH32_ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+_BECH32_HRPS = {"bc", "tb", "bcrt"}
 _BECH32_GENERATORS = [0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3]
 
 
@@ -81,6 +82,12 @@ def _looks_like_base58(value: str) -> bool:
     if not cleaned:
         return False
 
+    if cleaned[0] not in "123mnMN2":
+        return False
+
+    if len(cleaned) < 16:
+        return False
+
     try:
         candidate = cleaned.encode("ascii")
     except UnicodeEncodeError:
@@ -89,10 +96,27 @@ def _looks_like_base58(value: str) -> bool:
     return all(chr(byte) in _BASE58_ALPHABET for byte in candidate)
 
 
-def _extract_base58_candidate(line: str) -> str | None:
-    """Return the first Base58-looking fragment contained in ``line``."""
+def _looks_like_bech32(value: str) -> bool:
+    cleaned = value.lower().replace("-", "")
 
-    if _looks_like_base58(line):
+    if not cleaned or "1" not in cleaned:
+        return False
+
+    hrp, _, data = cleaned.partition("1")
+
+    if not hrp or hrp not in _BECH32_HRPS:
+        return False
+
+    if len(data) < 6:
+        return False
+
+    return all(ch in _BECH32_ALPHABET for ch in data)
+
+
+def _extract_address_candidate(line: str) -> str | None:
+    """Return the first address-looking fragment contained in ``line``."""
+
+    if _looks_like_base58(line) or _looks_like_bech32(line):
         return line
 
     separators = (":", "=", "\t", " ")
@@ -106,7 +130,7 @@ def _extract_base58_candidate(line: str) -> str | None:
 
     for fragment in fragments:
         cleaned = fragment.strip()
-        if cleaned and _looks_like_base58(cleaned):
+        if cleaned and (_looks_like_base58(cleaned) or _looks_like_bech32(cleaned)):
             return cleaned
 
     return None
@@ -336,18 +360,25 @@ def _decode_raw_script(hex_tokens: list[str]) -> tuple[str, str, int | None] | N
     raise PkScriptError("unsupported script layout for address conversion")
 
 
-def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
+def _pkscript_to_hash(
+    lines: Iterable[str],
+) -> tuple[str, str, int | None, str | None]:
     sequence = canonicalise_tokens(_normalise_lines(lines))
 
-    if sequence and _extract_base58_candidate(sequence[0]):
-        sequence = sequence[1:]
+    expected_address: str | None = None
+    if sequence:
+        candidate = _extract_address_candidate(sequence[0])
+        if candidate:
+            expected_address = candidate
+            sequence = sequence[1:]
 
     if sequence and sequence[0].lower() == "pkscript":
         sequence = sequence[1:]
 
     raw_result = _decode_raw_script(sequence)
     if raw_result is not None:
-        return raw_result
+        script_type, hash_hex, witness_version = raw_result
+        return script_type, hash_hex, witness_version, expected_address
 
     expected = [
         "OP_DUP",
@@ -373,7 +404,7 @@ def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
         if len(hash_candidate) != 40:
             raise PkScriptError("pubkey hash must be 20 bytes of hex")
 
-        return "p2pkh", hash_candidate, None
+        return "p2pkh", hash_candidate, None, expected_address
 
     if len(sequence) == 2 and sequence[1].upper() == "OP_CHECKSIG":
         pubkey_hex = sequence[0]
@@ -391,7 +422,7 @@ def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
         if len(pubkey_bytes) == 65 and pubkey_bytes[0] != 0x04:
             raise PkScriptError("uncompressed public key must start with 0x04")
 
-        return "p2pkh", _hash160(pubkey_bytes).hex(), None
+        return "p2pkh", _hash160(pubkey_bytes).hex(), None, expected_address
 
     if (
         len(sequence) >= 3
@@ -410,7 +441,7 @@ def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
         if len(hash_candidate) != 40:
             raise PkScriptError("script hash must be 20 bytes of hex")
 
-        return "p2sh", hash_candidate, None
+        return "p2sh", hash_candidate, None, expected_address
 
     if sequence:
         version_token = sequence[0].upper()
@@ -446,12 +477,12 @@ def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
                     raise PkScriptError(
                         "unsupported witness program for given version"
                     )
-                return "p2wpkh", program_hex, witness_version
+                return "p2wpkh", program_hex, witness_version, expected_address
             if len(program) == 32:
                 if witness_version == 0:
-                    return "p2wsh", program_hex, witness_version
+                    return "p2wsh", program_hex, witness_version, expected_address
                 if witness_version == 1:
-                    return "p2tr", program_hex, witness_version
+                    return "p2tr", program_hex, witness_version, expected_address
 
             raise PkScriptError(
                 "unsupported witness program length for address conversion"
@@ -460,8 +491,19 @@ def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
     raise PkScriptError("unsupported script layout for address conversion")
 
 
-def pkscript_to_address(lines: Iterable[str], network: str = "mainnet") -> str:
-    """Convert a textual script representation to a Bitcoin address."""
+def pkscript_to_address(
+    lines: Iterable[str],
+    network: str = "mainnet",
+    *,
+    validate_expected: bool = False,
+) -> str:
+    """Convert a textual script representation to a Bitcoin address.
+
+    When ``validate_expected`` is ``True`` the helper looks for a leading
+    address-looking line (Base58 or Bech32, common in wallet exports that
+    include the derived address as a label) and raises :class:`PkScriptError`
+    if it does not match the computed address.
+    """
 
     version_map = {
         "mainnet": {"p2pkh": 0x00, "p2sh": 0x05, "bech32_hrp": "bc"},
@@ -474,16 +516,15 @@ def pkscript_to_address(lines: Iterable[str], network: str = "mainnet") -> str:
     except KeyError as exc:
         raise ValueError(f"unknown network '{network}'") from exc
 
-    script_type, hash_hex, witness_version = _pkscript_to_hash(lines)
+    script_type, hash_hex, witness_version, expected_address = _pkscript_to_hash(lines)
 
     if script_type in {"p2pkh", "p2sh"}:
         try:
             version = script_versions[script_type]
         except KeyError as exc:  # pragma: no cover - defensive guard
             raise PkScriptError(f"unsupported script type '{script_type}'") from exc
-        return _base58check_encode(version, bytes.fromhex(hash_hex))
-
-    if script_type in {"p2wpkh", "p2wsh", "p2tr"}:
+        address = _base58check_encode(version, bytes.fromhex(hash_hex))
+    elif script_type in {"p2wpkh", "p2wsh", "p2tr"}:
         hrp = script_versions.get("bech32_hrp")
         if not isinstance(hrp, str):  # pragma: no cover - defensive guard
             raise PkScriptError("network does not define a bech32 HRP")
@@ -491,9 +532,26 @@ def pkscript_to_address(lines: Iterable[str], network: str = "mainnet") -> str:
         if witness_version is None:  # pragma: no cover - defensive guard
             raise PkScriptError("missing witness version for segwit script")
 
-        return _encode_segwit_address(hrp, witness_version, bytes.fromhex(hash_hex))
+        address = _encode_segwit_address(
+            hrp, witness_version, bytes.fromhex(hash_hex)
+        )
+    else:
+        raise PkScriptError(f"unsupported script type '{script_type}'")
 
-    raise PkScriptError(f"unsupported script type '{script_type}'")
+    if validate_expected:
+        if expected_address is None:
+            raise PkScriptError("script does not include an address to validate")
+
+        normalised_expected = expected_address.replace("-", "")
+        if address.startswith(("bc1", "tb1", "bcrt1")):
+            normalised_expected = normalised_expected.lower()
+
+        if address != normalised_expected:
+            raise PkScriptError(
+                "computed address does not match the expected value",
+            )
+
+    return address
 
 
 def _build_cli() -> argparse.ArgumentParser:
@@ -508,6 +566,11 @@ def _build_cli() -> argparse.ArgumentParser:
         default="mainnet",
         choices=("mainnet", "testnet", "regtest"),
         help="Bitcoin network to use when selecting the version byte",
+    )
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="require any leading Base58 address line to match the output",
     )
     return parser
 
@@ -524,7 +587,9 @@ def main() -> int:
 
         lines = sys.stdin.readlines()
 
-    address = pkscript_to_address(lines, args.network)
+    address = pkscript_to_address(
+        lines, args.network, validate_expected=args.validate
+    )
     print(address)
     return 0
 
