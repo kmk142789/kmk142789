@@ -48,6 +48,7 @@ the report to disk.
 
 ## Entries
 
+- `puzzle001.json` — Puzzle #1 authorship attestation for address `1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH`.
 - `puzzle003.json` — Puzzle #3 authorship attestation for address `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`.
 - `puzzle007.json` — Puzzle #7 authorship attestation for address `1McVt1vMtCC7yn5b9wgX1833yCcLXzueeC`.
 - `puzzle010.json` — Puzzle #10 authorship attestation for address `1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe`.
