@@ -98,37 +98,50 @@ def _normalise_lines(lines: Iterable[str]) -> list[str]:
 def _collapse_op_checksig(sequence: list[str]) -> list[str]:
     """Return ``sequence`` with standalone ``OP_CHECK`` ``SIG`` merged."""
 
+    target = "OP_CHECKSIG"
+    target_clean = target.replace("_", "")
+
     collapsed: list[str] = []
     idx = 0
     while idx < len(sequence):
         token = sequence[idx]
         upper = token.upper()
-        if "OP_CHECKSIG".startswith(upper):
-            combined = token
-            combined_upper = combined.upper()
+        clean = upper.replace("_", "")
+
+        if target.startswith(upper) or target_clean.startswith(clean):
+            combined_upper = upper
+            combined_clean = clean
             lookahead = idx
+
             while (
-                combined_upper != "OP_CHECKSIG"
+                combined_clean != target_clean
                 and lookahead + 1 < len(sequence)
-                and "OP_CHECKSIG".startswith(combined_upper)
+                and (
+                    target.startswith(combined_upper)
+                    or target_clean.startswith(combined_clean)
+                )
             ):
                 lookahead += 1
-                combined += sequence[lookahead]
-                combined_upper = combined.upper()
+                next_token = sequence[lookahead]
+                combined_upper = (combined_upper + next_token).upper()
+                combined_clean = combined_upper.replace("_", "")
 
-            if combined_upper == "OP_CHECKSIG":
-                collapsed.append("OP_CHECKSIG")
+            if combined_clean == target_clean:
+                collapsed.append(target)
                 idx = lookahead + 1
                 continue
+
         if upper == "OP_CHECK" and idx + 1 < len(sequence):
             next_token = sequence[idx + 1].upper()
             if next_token in {"SIG"}:
-                collapsed.append("OP_CHECKSIG")
+                collapsed.append(target)
                 idx += 2
                 continue
+
         collapsed.append(token)
         idx += 1
     return collapsed
+
 
 
 def _hash160(data: bytes) -> bytes:
