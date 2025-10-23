@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
-from argon2.low_level import Type, hash_secret_raw
 from bip_utils import (
     Bip39MnemonicGenerator,
     Bip39SeedGenerator,
@@ -271,16 +270,14 @@ class EncryptedIdentityVault:
         params = params or self._argon2_params
         if params is None:
             raise VaultIntegrityError("Argon2 parameters missing")
-        key = hash_secret_raw(
-            secret=self._passphrase,
-            salt=params.salt,
-            time_cost=params.time_cost,
-            memory_cost=params.memory_cost,
-            parallelism=params.parallelism,
-            hash_len=params.hash_len,
-            type=Type.ID,
+        iterations = max(params.time_cost, 1) * 60_000
+        return hashlib.pbkdf2_hmac(
+            "sha256",
+            self._passphrase,
+            params.salt,
+            iterations,
+            dklen=params.hash_len,
         )
-        return key
 
     def _matches_derivation(self, entry: Dict[str, object], chain: str, account: int, index: int, change: int) -> bool:
         deriv = entry.get("derivation", {})

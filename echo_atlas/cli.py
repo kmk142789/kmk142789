@@ -77,7 +77,12 @@ def cmd_web(args: argparse.Namespace) -> int:
 
     app = create_app(service)
     ensure_directory(service.project_root / "artifacts")
-    import uvicorn
+    try:
+        import uvicorn  # type: ignore[import-not-found]
+    except ImportError as exc:  # pragma: no cover - exercised in optional path
+        raise RuntimeError(
+            "uvicorn is required to run the web server; install echo-evolver[web]"
+        ) from exc
 
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
     return 0

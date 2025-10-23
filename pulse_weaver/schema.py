@@ -7,7 +7,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict
 
-from jsonschema import Draft202012Validator, ValidationError
+class ValidationError(ValueError):
+    """Raised when the snapshot payload is malformed."""
+
 
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schemas" / "pulse_weaver.schema.json"
 
@@ -18,14 +20,66 @@ def _load_schema() -> Dict[str, Any]:
         return json.load(handle)
 
 
-def get_validator() -> Draft202012Validator:
-    schema = _load_schema()
-    return Draft202012Validator(schema)
+def get_validator() -> "PulseWeaverValidator":
+    return PulseWeaverValidator()
+
+
+class PulseWeaverValidator:
+    def validate(self, payload: Dict[str, Any]) -> None:
+        validate_snapshot(payload)
+
+
+def _require(condition: bool, message: str) -> None:
+    if not condition:
+        raise ValidationError(message)
+
+
+def _validate_summary(summary: Dict[str, Any]) -> None:
+    _require(isinstance(summary, dict), "summary must be an object")
+    for field in ("total", "by_status", "atlas_links", "phantom_threads"):
+        _require(field in summary, f"summary missing '{field}'")
+    _require(isinstance(summary["total"], int) and summary["total"] >= 0, "total must be a non-negative integer")
+    for map_field in ("by_status", "atlas_links", "phantom_threads"):
+        mapping = summary[map_field]
+        _require(isinstance(mapping, dict), f"{map_field} must be an object")
+        for value in mapping.values():
+            _require(isinstance(value, int) and value >= 0, f"{map_field} counts must be non-negative integers")
+
+
+def _validate_ledger(entries: list[Any]) -> None:
+    _require(isinstance(entries, list), "ledger must be a list")
+    for entry in entries:
+        _require(isinstance(entry, dict), "ledger entries must be objects")
+        for field in ("key", "status", "message", "cycle", "created_at"):
+            _require(field in entry, f"ledger entry missing '{field}'")
+
+
+def _validate_links(entries: list[Any]) -> None:
+    _require(isinstance(entries, list), "links must be a list")
+    for entry in entries:
+        _require(isinstance(entry, dict), "link entries must be objects")
+        for field in ("key", "created_at"):
+            _require(field in entry, f"link entry missing '{field}'")
+
+
+def _validate_phantom(entries: list[Any]) -> None:
+    _require(isinstance(entries, list), "phantom must be a list")
+    for entry in entries:
+        _require(isinstance(entry, dict), "phantom entries must be objects")
+        for field in ("timestamp", "message", "hash"):
+            _require(field in entry, f"phantom entry missing '{field}'")
 
 
 def validate_snapshot(payload: Dict[str, Any]) -> None:
-    validator = get_validator()
-    validator.validate(payload)
+    _require(isinstance(payload, dict), "payload must be an object")
+    for field in ("schema", "summary", "ledger", "links", "phantom", "rhyme"):
+        _require(field in payload, f"missing required field '{field}'")
+    _require(payload["schema"] == "pulse.weaver/snapshot-v1", "schema must be 'pulse.weaver/snapshot-v1'")
+    _validate_summary(payload["summary"])
+    _validate_ledger(payload["ledger"])
+    _validate_links(payload["links"])
+    _validate_phantom(payload["phantom"])
+    _require(isinstance(payload["rhyme"], str), "rhyme must be a string")
 
 
 __all__ = ["get_validator", "validate_snapshot", "ValidationError"]

@@ -5,6 +5,8 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
+from .harmonic_cognition import HarmonicResponse, HarmonicSettings, harmonic_cognition  # noqa: E402
+
 __all__ = [
     "EllegatoAI",
     "HarmonicResponse",
