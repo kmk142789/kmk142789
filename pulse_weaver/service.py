@@ -170,6 +170,38 @@ class PulseWeaverService:
         self._validator.validate(payload)
         return snapshot
 
+    # ------------------------------------------------------------------
+    # Targeted lookups
+    # ------------------------------------------------------------------
+    def get_event(self, key: str) -> WeaveFragment | None:
+        """Return the most recent ledger entry for ``key`` if available."""
+
+        self.ensure_ready()
+        return self.repository.find_event(key=key)
+
+    def cycle_ledger(
+        self,
+        cycle: str,
+        *,
+        limit: int | None = None,
+        statuses: Iterable[str] | None = None,
+    ) -> List[WeaveFragment]:
+        """Return ledger fragments belonging to ``cycle`` in chronological order."""
+
+        self.ensure_ready()
+        status_values = tuple(statuses) if statuses else None
+        return self.repository.list_events_for_cycle(
+            cycle=cycle,
+            limit=limit,
+            statuses=status_values,
+        )
+
+    def cycle_summary(self, cycle: str) -> Dict[str, int]:
+        """Return status counts for a specific cycle."""
+
+        self.ensure_ready()
+        return self.repository.counts_by_status_for_cycle(cycle=cycle)
+
     def _build_counts(self) -> _Counts:
         status_counts = self.repository.counts_by_status()
         total = sum(status_counts.values())
