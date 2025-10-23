@@ -223,16 +223,22 @@ def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
         "OP_CHECKSIG",
     ]
 
-    if len(sequence) == 5 and sequence[0:2] == expected[:2] and sequence[3:] == expected[2:]:
-        hash_candidate = sequence[2]
+    if (
+        len(sequence) >= 5
+        and sequence[0:2] == expected[:2]
+        and sequence[-2:] == expected[2:]
+    ):
+        hash_tokens = sequence[2:-2]
+        if not hash_tokens:
+            raise PkScriptError("pubkey hash must follow OP_HASH160")
+
+        hash_candidate, consumed = _collect_hex_tokens(hash_tokens)
+
+        if consumed != len(hash_tokens):
+            raise PkScriptError("pubkey hash must be hexadecimal")
 
         if len(hash_candidate) != 40:
             raise PkScriptError("pubkey hash must be 20 bytes of hex")
-
-        try:
-            bytes.fromhex(hash_candidate)
-        except ValueError as exc:  # pragma: no cover - defensive guard
-            raise PkScriptError("pubkey hash must be hexadecimal") from exc
 
         return "p2pkh", hash_candidate, None
 
@@ -255,19 +261,21 @@ def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
         return "p2pkh", _hash160(pubkey_bytes).hex(), None
 
     if (
-        len(sequence) == 3
+        len(sequence) >= 3
         and sequence[0].upper() == "OP_HASH160"
-        and sequence[2].upper() == "OP_EQUAL"
+        and sequence[-1].upper() == "OP_EQUAL"
     ):
-        hash_candidate = sequence[1]
+        hash_tokens = sequence[1:-1]
+        if not hash_tokens:
+            raise PkScriptError("script hash must follow OP_HASH160")
+
+        hash_candidate, consumed = _collect_hex_tokens(hash_tokens)
+
+        if consumed != len(hash_tokens):
+            raise PkScriptError("script hash must be hexadecimal")
 
         if len(hash_candidate) != 40:
             raise PkScriptError("script hash must be 20 bytes of hex")
-
-        try:
-            bytes.fromhex(hash_candidate)
-        except ValueError as exc:
-            raise PkScriptError("script hash must be hexadecimal") from exc
 
         return "p2sh", hash_candidate, None
 

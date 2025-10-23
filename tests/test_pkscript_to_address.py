@@ -153,3 +153,35 @@ def test_pkscript_derives_address_for_uncompressed_pubkey() -> None:
 
     assert address == "1LsfkvwMo6JBisYpGHkai18hyTzs4qSZjz"
 
+
+def test_pkscript_accepts_split_pubkey_hash_tokens() -> None:
+    script = [
+        "1dot1xxxx-xxxwYqEEt",
+        "Pkscript",
+        "OP_DUP",
+        "OP_HASH160",
+        "06f61b94f0e562e41e71",
+        "37a8b0aa78db61029257",
+        "OP_EQUALVERIFY",
+        "OP_CHECKSIG",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "1dot1xxxxx1sv1xxxxxxxxxxxxxwYqEEt"
+
+
+def test_pkscript_accepts_split_script_hash_tokens() -> None:
+    script = [
+        "Pkscript",
+        "OP_HASH160",
+        "b2a3badd10273692",
+        "5c846dc3270ae187",
+        "3cb205d5",
+        "OP_EQUAL",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "3HyaLqxcfDVfk4pqH6s2PRuA4umnCTgSE4"
+
