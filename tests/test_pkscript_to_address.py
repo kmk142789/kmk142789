@@ -52,6 +52,18 @@ TAPROOT_PROGRAM = (
     "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
 )
 
+SPLIT_CHECKSIG_SCRIPT = textwrap.dedent(
+    """
+    1CYG7y3fu-UZ5p1HVmV
+    Pkscript
+    04e0041b4b4d9b6feb7221803a35d997efada6e2b5d24f5fc7205f2ea6b62a1adc9983a7a7dab7e93ea791bed5928e7a32286fa4facadd16313b75b467aea77499
+    OP_CHECK
+    SIG
+    """
+).strip().splitlines()
+
+SPLIT_CHECKSIG_ADDRESS = "1CYG7y3fukVLdobqgUtbknwWKUZ5p1HVmV"
+
 
 def test_pkscript_to_address_mainnet() -> None:
     address = pkscript_to_address(EXAMPLE_SCRIPT)
@@ -217,6 +229,12 @@ def test_pkscript_converts_full_uncompressed_pubkey_listing() -> None:
     address = pkscript_to_address(script)
 
     assert address == "16LoW7y83wtawMg5XmT4M3Q7EdjjUmenjM"
+
+
+def test_pkscript_handles_split_op_check_sig_sample() -> None:
+    address = pkscript_to_address(SPLIT_CHECKSIG_SCRIPT)
+
+    assert address == SPLIT_CHECKSIG_ADDRESS
 
 
 def test_pkscript_accepts_split_pubkey_hash_tokens() -> None:
