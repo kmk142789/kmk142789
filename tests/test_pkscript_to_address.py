@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import os
 import textwrap
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -236,4 +240,24 @@ def test_pkscript_handles_raw_witness_script_with_metadata() -> None:
     address = pkscript_to_address(script)
 
     assert address == "bc1qr2cr30jzq5ew7eqegzqq9usa77neexu7txc2de"
+
+
+def test_cli_handles_direct_script_invocation(tmp_path) -> None:
+    script_path = Path(__file__).resolve().parents[1] / "tools" / "pkscript_to_address.py"
+    example = "\n".join(EXAMPLE_SCRIPT) + "\n"
+
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+
+    proc = subprocess.run(
+        [sys.executable, str(script_path)],
+        input=example,
+        text=True,
+        capture_output=True,
+        check=True,
+        env=env,
+        cwd=script_path.parents[1],
+    )
+
+    assert proc.stdout.strip() == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
 
