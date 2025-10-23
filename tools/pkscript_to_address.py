@@ -48,9 +48,21 @@ from __future__ import annotations
 import argparse
 import hashlib
 import string
+import sys
+from pathlib import Path
 from typing import Iterable
 
-from verifier.pkscript_registry import canonicalise_tokens
+try:
+    from verifier.pkscript_registry import canonicalise_tokens
+except ModuleNotFoundError as exc:  # pragma: no cover - import fall back
+    if exc.name != "verifier":
+        raise
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+
+    from verifier.pkscript_registry import canonicalise_tokens
 
 
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
