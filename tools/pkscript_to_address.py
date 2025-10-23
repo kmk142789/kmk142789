@@ -27,6 +27,25 @@ from typing import Iterable
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
+def _looks_like_base58(value: str) -> bool:
+    """Return ``True`` when ``value`` resembles a Base58 string."""
+
+    if not value:
+        return False
+
+    cleaned = value.replace("-", "")
+
+    if not cleaned:
+        return False
+
+    try:
+        candidate = cleaned.encode("ascii")
+    except UnicodeEncodeError:
+        return False
+
+    return all(chr(byte) in _BASE58_ALPHABET for byte in candidate)
+
+
 class PkScriptError(ValueError):
     """Raised when a script does not match the expected P2PKH pattern."""
 
@@ -92,6 +111,9 @@ def _hash160(data: bytes) -> bytes:
 
 def _pkscript_to_hash(lines: Iterable[str]) -> str:
     sequence = _collapse_op_checksig(_normalise_lines(lines))
+
+    if sequence and _looks_like_base58(sequence[0]):
+        sequence = sequence[1:]
 
     if sequence and sequence[0].lower() == "pkscript":
         sequence = sequence[1:]
