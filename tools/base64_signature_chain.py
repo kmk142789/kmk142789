@@ -22,10 +22,12 @@ import hashlib
 import json
 import sys
 from dataclasses import dataclass, field
+import re
 from typing import Iterable, Sequence
 
 
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+_BASE64_SEGMENT_PATTERN = re.compile(r"[A-Za-z0-9+/]+={0,2}")
 
 
 def _base58check_encode(payload: bytes) -> str:
@@ -114,6 +116,19 @@ class SignatureChain:
 
     @classmethod
     def from_blob(cls, blob: str) -> "SignatureChain":
+        """Create a chain by parsing *blob* for base64 signature fragments."""
+
+        if not blob:
+            return cls()
+
+        # Prefer regex-based extraction so concatenated fragments without
+        # whitespace (the default wallet export style) are handled.  When no
+        # match is found fall back to splitting on whitespace to support
+        # explicitly separated inputs.
+        matches = [match.group(0) for match in _BASE64_SEGMENT_PATTERN.finditer(blob)]
+        if matches:
+            return cls(entries=matches)
+
         entries = [chunk for chunk in blob.split() if chunk]
         return cls(entries=entries)
 
