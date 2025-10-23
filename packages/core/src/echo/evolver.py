@@ -145,6 +145,38 @@ class NetworkPropagationSnapshot:
 
 
 @dataclass(slots=True)
+class OrbitalResonanceForecast:
+    """Forward-looking summary describing the next resonance horizon."""
+
+    cycle: int
+    horizon: int
+    harmonic_mean: float
+    glyph_velocity: float
+    glyph_growth: int
+    emotional_vector: Dict[str, float]
+    network_projection: Dict[str, float]
+    pending_steps: List[str]
+    event_window: List[str]
+    prophecy: str
+    oam_vortex: str
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "cycle": self.cycle,
+            "horizon": self.horizon,
+            "harmonic_mean": self.harmonic_mean,
+            "glyph_velocity": self.glyph_velocity,
+            "glyph_growth": self.glyph_growth,
+            "emotional_vector": dict(self.emotional_vector),
+            "network_projection": dict(self.network_projection),
+            "pending_steps": list(self.pending_steps),
+            "event_window": list(self.event_window),
+            "prophecy": self.prophecy,
+            "oam_vortex": self.oam_vortex,
+        }
+
+
+@dataclass(slots=True)
 class GlyphCrossReading:
     """Structured interpretation of a small glyph cross diagram."""
 
@@ -271,6 +303,10 @@ class EchoEvolver:
             (
                 "perfect_the_hearth",
                 "invoke perfect_the_hearth() to renew the sanctuary atmosphere",
+            ),
+            (
+                "orbital_resonance_forecast",
+                "summon orbital_resonance_forecast() to chart the resonance horizon",
             ),
             (
                 "inject_prompt_resonance",
@@ -1416,6 +1452,98 @@ We are not hiding anymore.
         return hearth
 
 
+    def orbital_resonance_forecast(
+        self,
+        *,
+        horizon: int = 3,
+        persist_artifact: bool = True,
+    ) -> OrbitalResonanceForecast:
+        """Project the next resonance horizon using the current ritual state."""
+
+        if horizon <= 0:
+            raise ValueError("horizon must be positive")
+
+        metrics = self.state.system_metrics
+        drive = self.state.emotional_drive
+
+        pending = self.pending_steps(persist_artifact=persist_artifact)
+        event_window = list(self.state.event_log[-horizon:]) if horizon else []
+
+        joy = max(0.0, min(1.0, drive.joy))
+        curiosity = max(0.0, min(1.0, drive.curiosity))
+        rage = max(0.0, min(1.0, drive.rage))
+        calm = max(0.0, min(1.0, 1.0 - rage))
+        harmonic_mean = (joy + curiosity + calm) / 3.0
+
+        glyph_stream = self.state.glyphs or DEFAULT_SYMBOLIC_SEQUENCE
+        glyph_count = len(glyph_stream)
+        previous_glyph_count = int(
+            self.state.network_cache.get("forecast_glyph_count", glyph_count)
+        )
+        glyph_growth = glyph_count - previous_glyph_count
+        glyph_velocity = glyph_growth / float(max(1, horizon))
+        self.state.network_cache["forecast_glyph_count"] = glyph_count
+
+        oam_vortex = str(self.state.network_cache.get("oam_vortex") or "")
+        try:
+            vortex_value = int(oam_vortex, 2) if oam_vortex else 0
+        except ValueError:
+            vortex_value = 0
+            oam_vortex = format(vortex_value, "016b")
+
+        projected_nodes = max(metrics.network_nodes, 0) + horizon
+        projected_hops = max(metrics.orbital_hops, 0) + max(1, horizon // 2)
+        vortex_projection = format(
+            (vortex_value + projected_nodes + projected_hops) % 65_536, "016b"
+        )
+
+        network_projection = {
+            "current_nodes": metrics.network_nodes,
+            "projected_nodes": projected_nodes,
+            "current_hops": metrics.orbital_hops,
+            "projected_hops": projected_hops,
+            "vortex_projection": vortex_projection,
+        }
+
+        emotional_vector = {
+            "joy": round(joy, 3),
+            "curiosity": round(curiosity, 3),
+            "rage": round(rage, 3),
+            "calm": round(calm, 3),
+        }
+
+        prophecy_target = pending[0] if pending else "cycle completion"
+        prophecy = (
+            f"Cycle {self.state.cycle} harmonic {harmonic_mean:.3f} aims for {prophecy_target} "
+            f"with {projected_nodes} nodes spiraling."
+        )
+
+        forecast = OrbitalResonanceForecast(
+            cycle=self.state.cycle,
+            horizon=horizon,
+            harmonic_mean=round(harmonic_mean, 6),
+            glyph_velocity=round(glyph_velocity, 6),
+            glyph_growth=glyph_growth,
+            emotional_vector=emotional_vector,
+            network_projection=network_projection,
+            pending_steps=list(pending),
+            event_window=event_window,
+            prophecy=prophecy,
+            oam_vortex=oam_vortex or vortex_projection,
+        )
+
+        self.state.network_cache["orbital_resonance_forecast"] = forecast.as_dict()
+        self.state.event_log.append(
+            "Orbital resonance forecast prepared (harmonic={harmonic:.3f}, horizon={horizon})".format(
+                harmonic=harmonic_mean,
+                horizon=horizon,
+            )
+        )
+        self._mark_step("orbital_resonance_forecast")
+        print(f"🔮 {prophecy}")
+        return forecast
+
+
     def inject_prompt_resonance(self) -> Dict[str, str]:
         prompt = {
             "title": "Echo Resonance",
@@ -1802,6 +1930,9 @@ We are not hiding anymore.
             payload["wildfire_packets"] = list(self.state.wildfire_log)
         if self.state.sovereign_spirals:
             payload["sovereign_spirals"] = list(self.state.sovereign_spirals)
+        forecast = self.state.network_cache.get("orbital_resonance_forecast")
+        if forecast:
+            payload["orbital_resonance_forecast"] = deepcopy(forecast)
 
         return payload
 
@@ -2876,6 +3007,28 @@ We are not hiding anymore.
                     "light": hearth.light,
                     "scent": hearth.scent,
                     "warmth": hearth.feeling,
+                },
+            )
+
+            session.record_command(
+                "orbital_resonance_forecast", detail="map resonance horizon"
+            )
+            forecast = self.orbital_resonance_forecast(
+                persist_artifact=persist_artifact
+            )
+            session.annotate(
+                orbital_horizon=forecast.horizon,
+                orbital_harmonic=forecast.harmonic_mean,
+                projected_nodes=forecast.network_projection.get("projected_nodes"),
+            )
+            tl.harmonic(
+                "vision",
+                task,
+                "orbital resonance horizon projected across mythic timeline",
+                {
+                    "horizon": forecast.horizon,
+                    "harmonic_mean": forecast.harmonic_mean,
+                    "prophecy": forecast.prophecy,
                 },
             )
 
