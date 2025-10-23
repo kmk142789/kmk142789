@@ -191,6 +191,20 @@ def test_pkscript_derives_address_for_uncompressed_pubkey() -> None:
     assert address == "1LsfkvwMo6JBisYpGHkai18hyTzs4qSZjz"
 
 
+def test_pkscript_derives_address_for_classic_p2pk_script() -> None:
+    script = textwrap.dedent(
+        """
+        Pkscript
+        0411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3
+        OP_CHECKSIG
+        """
+    ).strip().splitlines()
+
+    address = pkscript_to_address(script)
+
+    assert address == "12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S"
+
+
 def test_pkscript_accepts_split_pubkey_hash_tokens() -> None:
     script = [
         "1dot1xxxx-xxxwYqEEt",
