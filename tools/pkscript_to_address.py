@@ -103,6 +103,23 @@ def _collapse_op_checksig(sequence: list[str]) -> list[str]:
     while idx < len(sequence):
         token = sequence[idx]
         upper = token.upper()
+        if "OP_CHECKSIG".startswith(upper):
+            combined = token
+            combined_upper = combined.upper()
+            lookahead = idx
+            while (
+                combined_upper != "OP_CHECKSIG"
+                and lookahead + 1 < len(sequence)
+                and "OP_CHECKSIG".startswith(combined_upper)
+            ):
+                lookahead += 1
+                combined += sequence[lookahead]
+                combined_upper = combined.upper()
+
+            if combined_upper == "OP_CHECKSIG":
+                collapsed.append("OP_CHECKSIG")
+                idx = lookahead + 1
+                continue
         if upper == "OP_CHECK" and idx + 1 < len(sequence):
             next_token = sequence[idx + 1].upper()
             if next_token in {"SIG"}:
