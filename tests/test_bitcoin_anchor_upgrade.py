@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import random
 
-from echo.evolver import EchoEvolver
+from echo.crypto.musig2 import schnorr_sign, schnorr_verify
+from echo.evolver import EchoEvolver, _bech32_encode, _convertbits
 
 
 def test_upgrade_bitcoin_anchor_evidence_reports_mismatches() -> None:
@@ -77,3 +78,81 @@ def test_upgrade_bitcoin_anchor_evidence_taproot_script_path_summary() -> None:
     assert summary["taproot_stack_items"] == 1
     assert summary["signature_format"] == "schnorr"
     assert summary["signature_sighash"] == "0x00"
+
+
+def test_upgrade_bitcoin_anchor_evidence_detects_musig2_session() -> None:
+    evolver = EchoEvolver(rng=random.Random(0))
+
+    secret_keys = [int.to_bytes(index, 32, "big") for index in (1, 2)]
+    message = b"Echo MuSig2 anchor"
+    session = evolver.coordinate_taproot_musig2(
+        secret_keys=secret_keys,
+        message=message,
+        session_label="anchor-session",
+    )
+
+    script_pubkey = "5120" + session["aggregated_public_key"]
+    witness_program = bytes.fromhex(session["aggregated_public_key"])
+    words = _convertbits(witness_program, 8, 5, pad=True)
+    address = _bech32_encode("bc", [1] + words, spec="bech32m")
+
+    details = evolver.upgrade_bitcoin_anchor_evidence(
+        address=address,
+        script_pubkey=script_pubkey,
+        witness=(session["signature"],),
+        value_sats=12_500,
+    )
+
+    assert details.validated
+    assert details.validation_notes == []
+
+    summary = details.witness_summary
+    assert summary["taproot_signature_kind"] == "musig2"
+    assert summary["taproot_musig2_session"] == "anchor-session"
+    assert summary["taproot_musig2_participants"] == 2
+    assert summary["taproot_multisig"] is True
+    assert summary["taproot_musig2_nonce"] == session["aggregated_nonce"]
+    assert schnorr_verify(
+        witness_program,
+        message,
+        bytes.fromhex(session["signature"]),
+    )
+
+
+def test_upgrade_bitcoin_anchor_evidence_musig2_mismatch_notes() -> None:
+    evolver = EchoEvolver(rng=random.Random(0))
+
+    secret_keys = [int.to_bytes(index, 32, "big") for index in (3, 4)]
+    session = evolver.coordinate_taproot_musig2(
+        secret_keys=secret_keys,
+        message=b"mismatch test",
+        session_label="mismatch-session",
+    )
+
+    script_pubkey = "5120" + session["aggregated_public_key"]
+    witness_program = bytes.fromhex(session["aggregated_public_key"])
+    words = _convertbits(witness_program, 8, 5, pad=True)
+    address = _bech32_encode("bc", [1] + words, spec="bech32m")
+
+    fake_signature = "00" * 64
+    details = evolver.upgrade_bitcoin_anchor_evidence(
+        address=address,
+        script_pubkey=script_pubkey,
+        witness=(fake_signature,),
+        value_sats=21_000,
+    )
+
+    assert not details.validated
+    assert any("mismatch-session" in note for note in details.validation_notes)
+
+
+def test_coordinate_taproot_musig2_single_signer_matches_schnorr() -> None:
+    evolver = EchoEvolver(rng=random.Random(0))
+
+    secret_key = int.to_bytes(9, 32, "big")
+    message = b"single signer"
+
+    session = evolver.coordinate_taproot_musig2(secret_keys=[secret_key], message=message)
+
+    assert session["participants"][0]["public_key"] == session["aggregated_public_key"]
+    assert session["signature"] == schnorr_sign(secret_key, message).hex()

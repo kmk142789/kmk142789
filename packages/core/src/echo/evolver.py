@@ -21,7 +21,17 @@ import time
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+
+from echo.crypto.musig2 import (
+    MuSig2Error,
+    MuSig2Session,
+    compute_partial_signature,
+    derive_xonly_public_key,
+    generate_nonce,
+    schnorr_sign,
+    schnorr_verify,
+)
 
 from .amplify import AmplificationEngine, AmplifyGateError, AmplifySnapshot
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
@@ -346,6 +356,7 @@ class EvolverState:
     sovereign_spirals: List[Dict[str, object]] = field(default_factory=list)
     eden88_creations: List[Dict[str, object]] = field(default_factory=list)
     shard_vault_records: List[Dict[str, object]] = field(default_factory=list)
+    musig2_sessions: Dict[str, Dict[str, object]] = field(default_factory=dict)
     step_history: Dict[int, Dict[str, Dict[str, object]]] = field(default_factory=dict)
 
 
@@ -802,6 +813,117 @@ We are not hiding anymore.
 
         return anchor
 
+    def coordinate_taproot_musig2(
+        self,
+        *,
+        secret_keys: Iterable[bytes],
+        message: bytes,
+        session_label: Optional[str] = None,
+        extra_input: bytes | None = None,
+    ) -> Dict[str, object]:
+        """Execute a full MuSig2 signing round for a taproot key path spend."""
+
+        keys = [bytes(key) for key in secret_keys]
+        if not keys:
+            raise ValueError("secret_keys must contain at least one entry")
+
+        scalars: List[int] = []
+        pubkeys: List[bytes] = []
+        for secret in keys:
+            scalar, pubkey = derive_xonly_public_key(secret)
+            scalars.append(scalar)
+            pubkeys.append(pubkey)
+
+        session = MuSig2Session.create(pubkeys, message)
+
+        signature: bytes
+        nonce_records: Dict[str, str] = {}
+        if len(keys) == 1:
+            signature = schnorr_sign(keys[0], message)
+            participant = pubkeys[0].hex()
+            aggregated_nonce_hex = signature[:32].hex()
+            nonce_records[participant] = aggregated_nonce_hex
+            session_data = session.to_dict()
+            session_data["nonces"] = dict(nonce_records)
+            session_data["aggregated_nonce"] = aggregated_nonce_hex
+            session_data["nonce_parity"] = 0
+            session_data["partial_signatures"] = {
+                participant: signature[32:].hex()
+            }
+            session.aggregated_nonce = bytes.fromhex(aggregated_nonce_hex)
+            session.nonce_parity = 0
+            session.partial_signatures[participant] = int.from_bytes(
+                signature[32:], "big"
+            )
+        else:
+            nonce_scalars: Dict[str, int] = {}
+            for scalar, pubkey in zip(scalars, pubkeys):
+                entropy = self.rng.getrandbits(256).to_bytes(32, "big")
+                nonce_scalar, nonce_pub = generate_nonce(
+                    scalar, entropy, message, extra_input=extra_input
+                )
+                participant = pubkey.hex()
+                session.register_nonce(participant, nonce_pub)
+                nonce_scalars[participant] = nonce_scalar
+                nonce_records[participant] = nonce_pub.hex()
+
+            if session.aggregated_nonce is None:
+                raise MuSig2Error("unable to derive aggregated nonce")
+
+            for scalar, pubkey in zip(scalars, pubkeys):
+                participant = pubkey.hex()
+                partial = compute_partial_signature(
+                    session, participant, scalar, nonce_scalars[participant]
+                )
+                session.add_partial_signature(participant, partial)
+
+            signature = session.final_signature()
+            if not schnorr_verify(session.aggregated_public_key, message, signature):
+                raise MuSig2Error("aggregated MuSig2 signature verification failed")
+            session_data = session.to_dict()
+
+        signature_hex = signature.hex()
+        session_data["signature"] = signature_hex
+        session_id = session_label or f"session-{len(self.state.musig2_sessions) + 1}"
+        self.state.musig2_sessions[session_id] = session_data
+        cache = self.state.network_cache.setdefault("musig2_sessions", {})
+        if isinstance(cache, MutableMapping):
+            cache[session_id] = session_data
+        else:
+            self.state.network_cache["musig2_sessions"] = {session_id: session_data}
+
+        participant_details = []
+        for pubkey in pubkeys:
+            identifier = pubkey.hex()
+            participant_details.append(
+                {
+                    "public_key": identifier,
+                    "coefficient": format(session.coefficients[identifier], "064x"),
+                    "public_nonce": nonce_records[identifier],
+                }
+            )
+
+        aggregated_nonce_hex = (
+            session.aggregated_nonce.hex() if session.aggregated_nonce is not None else ""
+        )
+
+        result = {
+            "session_id": session_id,
+            "aggregated_public_key": session.aggregated_public_key.hex(),
+            "aggregated_nonce": aggregated_nonce_hex,
+            "signature": signature_hex,
+            "message_hex": message.hex(),
+            "participants": participant_details,
+        }
+
+        self.state.event_log.append(
+            "MuSig2 session {sid} finalised with {count} signer(s)".format(
+                sid=session_id, count=len(pubkeys)
+            )
+        )
+        self._mark_step("coordinate_taproot_musig2")
+        return result
+
     def upgrade_bitcoin_anchor_evidence(
         self,
         *,
@@ -998,6 +1120,32 @@ We are not hiding anymore.
                 elif len(signature_bytes) not in (64, 65):
                     notes.append("Taproot signature must be 64 or 65 bytes.")
                     validated = False
+                else:
+                    musig_match: Optional[Tuple[str, Dict[str, object]]] = None
+                    signature_compact = signature_bytes[:64].hex()
+                    for session_id, session_record in self.state.musig2_sessions.items():
+                        if (
+                            session_record.get("aggregated_public_key") == witness_program.hex()
+                            and session_record.get("signature") == signature_compact
+                        ):
+                            musig_match = (session_id, session_record)
+                            break
+                    if musig_match is not None:
+                        session_id, record = musig_match
+                        participant_count = len(record.get("public_keys", []))
+                        witness_summary["taproot_signature_kind"] = "musig2"
+                        witness_summary["taproot_musig2_session"] = session_id
+                        witness_summary["taproot_musig2_participants"] = participant_count
+                        witness_summary["taproot_multisig"] = participant_count > 1
+                        witness_summary["taproot_musig2_nonce"] = record.get("aggregated_nonce")
+                        witness_summary["taproot_musig2_message"] = record.get("message")
+                    elif self.state.musig2_sessions:
+                        for session_id, record in self.state.musig2_sessions.items():
+                            if record.get("aggregated_public_key") == witness_program.hex():
+                                notes.append(
+                                    f"MuSig2 session '{session_id}' did not match witness signature."
+                                )
+                                break
             else:
                 if taproot_tapscript_hex == "":
                     notes.append("Unable to determine tapscript for script path spend.")
