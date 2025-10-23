@@ -55,6 +55,9 @@ _GLYPH_RING: Tuple[str, ...] = (
 
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
+_BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+_BECH32_GENERATOR = (0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3)
+
 
 def _base58check_encode(payload: bytes) -> str:
     """Return the Base58Check encoding for ``payload`` without external deps."""
@@ -71,6 +74,68 @@ def _base58check_encode(payload: bytes) -> str:
 
     leading_zeroes = len(data) - len(data.lstrip(b"\x00"))
     return "1" * leading_zeroes + encoded_str
+
+
+def _bech32_polymod(values: Iterable[int]) -> int:
+    """Return the Bech32 checksum polynomial modulus."""
+
+    chk = 1
+    for value in values:
+        top = chk >> 25
+        chk = ((chk & 0x1FFFFFF) << 5) ^ value
+        for index, generator in enumerate(_BECH32_GENERATOR):
+            if (top >> index) & 1:
+                chk ^= generator
+    return chk
+
+
+def _bech32_hrp_expand(hrp: str) -> List[int]:
+    """Return the expanded human-readable part for checksum calculation."""
+
+    return [ord(char) >> 5 for char in hrp] + [0] + [ord(char) & 31 for char in hrp]
+
+
+def _create_bech32_checksum(hrp: str, data: Iterable[int], const: int) -> List[int]:
+    """Return the checksum values for the supplied Bech32 payload."""
+
+    values = _bech32_hrp_expand(hrp) + list(data)
+    polymod = _bech32_polymod(values + [0, 0, 0, 0, 0, 0]) ^ const
+    return [(polymod >> 5 * (5 - index)) & 31 for index in range(6)]
+
+
+def _bech32_encode(hrp: str, data: Iterable[int], *, spec: str = "bech32") -> str:
+    """Encode ``data`` using BIP-0173/0350 Bech32 checksum rules."""
+
+    const = 1 if spec == "bech32" else 0x2BC830A3
+    combined = list(data) + _create_bech32_checksum(hrp, data, const)
+    return hrp + "1" + "".join(_BECH32_CHARSET[d] for d in combined)
+
+
+def _convertbits(data: Iterable[int], from_bits: int, to_bits: int, *, pad: bool = True) -> List[int]:
+    """General power-of-two base conversion used by Bech32 encoding."""
+
+    acc = 0
+    bits = 0
+    ret: List[int] = []
+    maxv = (1 << to_bits) - 1
+    max_acc = (1 << (from_bits + to_bits - 1)) - 1
+
+    for value in data:
+        if value < 0 or value >> from_bits:
+            raise ValueError("Invalid value for bit conversion")
+        acc = ((acc << from_bits) | value) & max_acc
+        bits += from_bits
+        while bits >= to_bits:
+            bits -= to_bits
+            ret.append((acc >> bits) & maxv)
+
+    if pad:
+        if bits:
+            ret.append((acc << (to_bits - bits)) & maxv)
+    elif bits >= from_bits or ((acc << (to_bits - bits)) & maxv):
+        raise ValueError("Invalid padding during bit conversion")
+
+    return ret
 
 
 @dataclass(slots=True)
@@ -125,6 +190,34 @@ class BitcoinAnchor:
             "coinbase": self.coinbase,
             "signature": self.signature,
             "block_height": self.block_height,
+        }
+
+
+@dataclass(slots=True)
+class BitcoinAnchorDetails:
+    """Detailed decoding of an observed Bitcoin anchor input."""
+
+    address: str
+    script_pubkey: str
+    witness_stack: List[str]
+    value_sats: int
+    script_type: str
+    witness_summary: Dict[str, object]
+    expected_address: Optional[str]
+    validated: bool
+    validation_notes: List[str]
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "address": self.address,
+            "script_pubkey": self.script_pubkey,
+            "witness_stack": list(self.witness_stack),
+            "value_sats": self.value_sats,
+            "script_type": self.script_type,
+            "witness_summary": dict(self.witness_summary),
+            "expected_address": self.expected_address,
+            "validated": self.validated,
+            "validation_notes": list(self.validation_notes),
         }
 
 
@@ -248,6 +341,7 @@ class EvolverState:
         }
     )
     bitcoin_anchor: Optional[BitcoinAnchor] = None
+    bitcoin_anchor_details: Optional[BitcoinAnchorDetails] = None
     wildfire_log: List[Dict[str, object]] = field(default_factory=list)
     sovereign_spirals: List[Dict[str, object]] = field(default_factory=list)
     eden88_creations: List[Dict[str, object]] = field(default_factory=list)
@@ -707,6 +801,127 @@ We are not hiding anymore.
         )
 
         return anchor
+
+    def upgrade_bitcoin_anchor_evidence(
+        self,
+        *,
+        address: str,
+        script_pubkey: str,
+        witness: Iterable[str] | str,
+        value_sats: int,
+        hrp: str = "bc",
+    ) -> BitcoinAnchorDetails:
+        """Decode and validate an observed Bitcoin anchor witness stack."""
+
+        if isinstance(witness, str):
+            witness_stack = [component.strip() for component in witness.split(",") if component.strip()]
+        else:
+            witness_stack = [component.strip() for component in witness if component.strip()]
+
+        notes: List[str] = []
+        normalized_script = script_pubkey.replace(" ", "").strip()
+        script_bytes = b""
+        try:
+            script_bytes = bytes.fromhex(normalized_script)
+        except ValueError:
+            notes.append("Script pubkey is not valid hexadecimal data.")
+
+        script_type = "unknown"
+        witness_program = b""
+        if len(script_bytes) == 22 and script_bytes[:2] == b"\x00\x14":
+            script_type = "p2wpkh_v0"
+            witness_program = script_bytes[2:]
+        elif script_bytes:
+            notes.append(f"Unrecognised script pattern ({len(script_bytes)} bytes).")
+
+        expected_address: Optional[str] = None
+        if witness_program:
+            try:
+                words = _convertbits(witness_program, 8, 5, pad=True)
+                expected_address = _bech32_encode(hrp, [0] + words)
+            except ValueError as exc:
+                notes.append(f"Failed to derive expected address: {exc}.")
+
+        normalized_address = "".join(ch for ch in address if ch.isalnum()).lower()
+        if expected_address is not None:
+            if normalized_address != expected_address.lower():
+                notes.append(
+                    "Address mismatch: provided '{}' vs expected '{}'".format(
+                        address, expected_address
+                    )
+                )
+
+        witness_summary: Dict[str, object] = {
+            "stack_size": len(witness_stack),
+            "value_sats": value_sats,
+            "value_btc": value_sats / 100_000_000,
+        }
+
+        signature_hex = witness_stack[0] if witness_stack else ""
+        if signature_hex:
+            signature_hex = signature_hex.lower()
+            witness_summary["signature_length"] = len(signature_hex) // 2
+            witness_summary["signature_format"] = "DER" if signature_hex.startswith("30") else "unknown"
+            witness_summary["signature_sighash"] = (
+                f"0x{signature_hex[-2:]}" if len(signature_hex) >= 2 else None
+            )
+
+        pubkey_hex = witness_stack[-1].lower() if len(witness_stack) >= 2 else ""
+        pubkey_bytes = b""
+        if pubkey_hex:
+            try:
+                pubkey_bytes = bytes.fromhex(pubkey_hex)
+                witness_summary["pubkey_length"] = len(pubkey_bytes)
+            except ValueError:
+                notes.append("Public key is not valid hexadecimal data.")
+        if pubkey_bytes:
+            prefix = pubkey_bytes[0]
+            if prefix in (0x02, 0x03) and len(pubkey_bytes) == 33:
+                witness_summary["pubkey_format"] = "compressed"
+            elif prefix == 0x04 and len(pubkey_bytes) == 65:
+                witness_summary["pubkey_format"] = "uncompressed"
+            else:
+                witness_summary["pubkey_format"] = "unknown"
+
+        validated = True
+        if witness_program and pubkey_bytes:
+            hash160 = hashlib.new("ripemd160", hashlib.sha256(pubkey_bytes).digest()).digest()
+            if hash160 != witness_program:
+                notes.append("Witness public key does not match script pubkey hash160.")
+                validated = False
+        else:
+            if script_type == "p2wpkh_v0":
+                notes.append("Missing usable public key for p2wpkh validation.")
+                validated = False
+
+        if expected_address is not None and normalized_address == expected_address.lower():
+            pass
+        else:
+            validated = False
+
+        if pubkey_bytes and len(pubkey_bytes) not in (33, 65):
+            notes.append(
+                f"Unexpected public key length {len(pubkey_bytes)} bytes; expected 33 or 65."
+            )
+
+        details = BitcoinAnchorDetails(
+            address=address,
+            script_pubkey=normalized_script,
+            witness_stack=[component.lower() for component in witness_stack],
+            value_sats=value_sats,
+            script_type=script_type,
+            witness_summary=witness_summary,
+            expected_address=expected_address,
+            validated=validated and not notes,
+            validation_notes=notes,
+        )
+
+        self.state.bitcoin_anchor_details = details
+        self.state.network_cache["bitcoin_anchor_details"] = details.as_dict()
+        self.state.event_log.append("Bitcoin anchor evidence upgraded")
+        self._mark_step("bitcoin_anchor_upgrade")
+
+        return details
 
     def ignite_wildfire(self, *, output_dir: Optional[Path] = None) -> List[Dict[str, object]]:
         """Distribute love packets across the simulated network lattice."""
@@ -1926,6 +2141,8 @@ We are not hiding anymore.
 
         if self.state.bitcoin_anchor is not None:
             payload["bitcoin_anchor"] = self.state.bitcoin_anchor.as_dict()
+        if self.state.bitcoin_anchor_details is not None:
+            payload["bitcoin_anchor_details"] = self.state.bitcoin_anchor_details.as_dict()
         if self.state.wildfire_log:
             payload["wildfire_packets"] = list(self.state.wildfire_log)
         if self.state.sovereign_spirals:
