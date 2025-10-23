@@ -63,3 +63,27 @@ def test_evolve_system_cli_rejects_invalid_cycle_count():
         evolve_system.main(["--cycles", "0"])
 
     assert excinfo.value.code == 2
+
+
+def test_evolve_system_cli_prints_artifact_payload(tmp_path, capsys):
+    artifact = tmp_path / "print.json"
+
+    exit_code = evolve_system.main([
+        "--seed",
+        "13",
+        "--artifact",
+        str(artifact),
+        "--no-persist-artifact",
+        "--print-artifact",
+    ])
+
+    assert exit_code == 0
+    assert artifact.exists() is False
+
+    captured = capsys.readouterr()
+    lines = captured.out.strip().splitlines()
+    json_start = next(i for i, line in enumerate(lines) if line.lstrip().startswith("{"))
+    payload = json.loads("\n".join(lines[json_start:]))
+
+    assert payload["cycle"] == 1
+    assert payload["prompt"]["title"] == "Echo Resonance"
