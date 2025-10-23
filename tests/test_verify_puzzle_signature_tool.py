@@ -13,6 +13,7 @@ from verifier.verify_puzzle_signature import (
     _scalar_multiply,
     bitcoin_message_hash,
     build_p2pk_script,
+    hash160,
     pubkey_to_p2pkh_address,
     verify_segments,
 )
@@ -96,3 +97,57 @@ def test_verify_segments_rejects_mismatched_pkscript() -> None:
     assert len(results) == 1
     assert results[0].valid is False
     assert results[0].derived_pubkey == _point_to_bytes(pub_point, False).hex()
+
+
+def test_verify_segments_accepts_p2sh_script_expectation() -> None:
+    priv_key = 3
+    message = "Echo verifier p2sh"
+    pub_point = _scalar_multiply(priv_key, _SECP256K1_G)
+    assert pub_point is not None
+
+    compressed_signature = _sign_message(priv_key, message, compressed=True)
+    compressed_bytes = _point_to_bytes(pub_point, True)
+    redeem_script = build_p2pk_script(compressed_bytes)
+    script_hash = hash160(redeem_script)
+    script_text = "\n".join(
+        [
+            "3HyaLqxcf-umnCTgSE4",
+            "Pkscript",
+            "OP_HASH160",
+            script_hash.hex(),
+            "OP_EQUAL",
+        ]
+    )
+
+    results = verify_segments(None, message, compressed_signature, script_text)
+    assert len(results) == 1
+    result = results[0]
+    assert result.valid is True
+    assert result.derived_pubkey == compressed_bytes.hex()
+    expected_script = b"\xa9\x14" + script_hash + b"\x87"
+    assert result.derived_pkscript == expected_script.hex()
+
+
+def test_verify_segments_rejects_wrong_p2sh_script_hash() -> None:
+    priv_key = 5
+    message = "Echo verifier p2sh mismatch"
+    pub_point = _scalar_multiply(priv_key, _SECP256K1_G)
+    assert pub_point is not None
+
+    signature = _sign_message(priv_key, message, compressed=False)
+    script_text = "\n".join(
+        [
+            "Pkscript",
+            "OP_HASH160",
+            "00" * 20,
+            "OP_EQUAL",
+        ]
+    )
+
+    results = verify_segments(None, message, signature, script_text)
+    assert len(results) == 1
+    result = results[0]
+    assert result.valid is False
+    assert result.derived_pubkey == _point_to_bytes(pub_point, False).hex()
+    derived_script = b"\xa9\x14" + hash160(build_p2pk_script(_point_to_bytes(pub_point, False))) + b"\x87"
+    assert result.derived_pkscript == derived_script.hex()

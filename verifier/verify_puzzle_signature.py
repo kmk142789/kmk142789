@@ -50,14 +50,14 @@ class SignatureCheckResult:
 
 @dataclass
 class PkScriptExpectation:
-    """Canonical representation of the expected pay-to-pubkey script."""
+    """Canonical representation of an expected script target."""
 
-    pubkey: bytes
+    pubkey: Optional[bytes]
     script: bytes
 
     @property
-    def pubkey_hex(self) -> str:
-        return self.pubkey.hex()
+    def pubkey_hex(self) -> Optional[str]:
+        return None if self.pubkey is None else self.pubkey.hex()
 
     @property
     def script_hex(self) -> str:
@@ -70,6 +70,20 @@ BASE58_ALPHABET = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 HEX_TOKEN_PATTERN = re.compile(r"^[0-9a-fA-F]+$")
 IGNORED_PK_TOKENS = {"PKSCRIPT"}
+P2SH_PREFIX = b"\xa9"
+P2SH_SUFFIX = b"\x87"
+
+
+def hash160(payload: bytes) -> bytes:
+    return hashlib.new("ripemd160", hashlib.sha256(payload).digest()).digest()
+
+
+def _is_base58_token(token: str) -> bool:
+    try:
+        data = token.encode("ascii")
+    except UnicodeEncodeError:
+        return False
+    return all(byte in BASE58_ALPHABET for byte in data)
 
 
 def encode_varint(n: int) -> bytes:
@@ -204,26 +218,38 @@ def build_p2pk_script(pubkey: bytes) -> bytes:
 
 
 def parse_pkscript(value: str) -> PkScriptExpectation:
-    """Parse a textual pay-to-pubkey script description."""
+    """Parse a textual script description."""
 
-    cleaned = value.replace(":", " ").replace(",", " ")
-    tokens = cleaned.split()
-
-    hex_parts: list[str] = []
-    saw_op_checksig = False
+    cleaned = value.replace(":", " ").replace(",", " ").replace("-", " ")
+    tokens = [token for token in cleaned.split() if token]
+    normalized: list[tuple[str, str]] = []
+    saw_hash160 = False
     for token in tokens:
-        if not token:
-            continue
         upper = token.upper()
-        if upper == "OP_CHECKSIG":
-            saw_op_checksig = True
-            continue
         if upper in IGNORED_PK_TOKENS:
             continue
         if upper.startswith("0X"):
             token = token[2:]
             upper = token.upper()
+        normalized.append((token, upper))
+        if upper == "OP_HASH160":
+            saw_hash160 = True
+
+    if saw_hash160:
+        return _parse_p2sh_tokens(normalized)
+    return _parse_p2pk_tokens(normalized)
+
+
+def _parse_p2pk_tokens(tokens: list[tuple[str, str]]) -> PkScriptExpectation:
+    hex_parts: list[str] = []
+    saw_op_checksig = False
+    for token, upper in tokens:
+        if upper == "OP_CHECKSIG":
+            saw_op_checksig = True
+            continue
         if not HEX_TOKEN_PATTERN.fullmatch(token):
+            if _is_base58_token(token):
+                continue
             raise ValueError(f"invalid token {token!r} in pk script")
         hex_parts.append(token)
 
@@ -266,6 +292,39 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
         raise ValueError("public key must be 33 or 65 bytes long")
 
     return PkScriptExpectation(pubkey=pubkey, script=build_p2pk_script(pubkey))
+
+
+def _parse_p2sh_tokens(tokens: list[tuple[str, str]]) -> PkScriptExpectation:
+    hash_parts: list[str] = []
+    saw_hash160 = False
+    saw_equal = False
+    for token, upper in tokens:
+        if upper == "OP_HASH160":
+            if saw_hash160:
+                raise ValueError("duplicate OP_HASH160 in pk script")
+            saw_hash160 = True
+            continue
+        if upper == "OP_EQUAL":
+            saw_equal = True
+            continue
+        if not HEX_TOKEN_PATTERN.fullmatch(token):
+            if _is_base58_token(token):
+                continue
+            raise ValueError(f"invalid token {token!r} in pk script")
+        hash_parts.append(token)
+
+    if not saw_hash160 or not saw_equal:
+        raise ValueError("pk script must include OP_HASH160 and OP_EQUAL for P2SH targets")
+
+    hash_hex = "".join(hash_parts)
+    if len(hash_hex) % 2 != 0:
+        raise ValueError("pk script hash must have an even length")
+    script_hash = bytes.fromhex(hash_hex)
+    if len(script_hash) != 20:
+        raise ValueError("pk script hash must be 20 bytes long")
+
+    script = P2SH_PREFIX + bytes([len(script_hash)]) + script_hash + P2SH_SUFFIX
+    return PkScriptExpectation(pubkey=None, script=script)
 
 
 def iter_signature_segments(signature: str) -> Iterable[str]:
@@ -321,22 +380,47 @@ def verify_segments(
                 derived_address = pubkey_to_p2pkh_address(pub_point, compressed)
                 valid = derived_address == address
             else:
-                chosen = _point_to_bytes(pub_point, compressed)
-                derived_pubkey_hex = chosen.hex()
-                derived_pkscript_hex = build_p2pk_script(chosen).hex()
+                if expectation.pubkey is not None:
+                    chosen = _point_to_bytes(pub_point, compressed)
+                    derived_pubkey_hex = chosen.hex()
+                    derived_pkscript_hex = build_p2pk_script(chosen).hex()
 
-                uncompressed = _point_to_bytes(pub_point, False)
-                compressed_bytes = _point_to_bytes(pub_point, True)
-                if expectation.pubkey == uncompressed:
-                    derived_pubkey_hex = uncompressed.hex()
-                    derived_pkscript_hex = build_p2pk_script(uncompressed).hex()
-                    valid = True
-                elif expectation.pubkey == compressed_bytes:
-                    derived_pubkey_hex = compressed_bytes.hex()
-                    derived_pkscript_hex = build_p2pk_script(compressed_bytes).hex()
-                    valid = True
+                    uncompressed = _point_to_bytes(pub_point, False)
+                    compressed_bytes = _point_to_bytes(pub_point, True)
+                    if expectation.pubkey == uncompressed:
+                        derived_pubkey_hex = uncompressed.hex()
+                        derived_pkscript_hex = build_p2pk_script(uncompressed).hex()
+                        valid = True
+                    elif expectation.pubkey == compressed_bytes:
+                        derived_pubkey_hex = compressed_bytes.hex()
+                        derived_pkscript_hex = build_p2pk_script(compressed_bytes).hex()
+                        valid = True
+                    else:
+                        valid = False
                 else:
+                    uncompressed = _point_to_bytes(pub_point, False)
+                    compressed_bytes = _point_to_bytes(pub_point, True)
+                    redeem_candidates = [
+                        (uncompressed, build_p2pk_script(uncompressed)),
+                        (compressed_bytes, build_p2pk_script(compressed_bytes)),
+                    ]
+
+                    derived_pubkey_hex = uncompressed.hex()
+                    redeem_hash_script = None
+                    derived_pkscript_hex = build_p2pk_script(uncompressed).hex()
                     valid = False
+                    for pub_bytes, redeem in redeem_candidates:
+                        script_hash = hash160(redeem)
+                        script = P2SH_PREFIX + bytes([len(script_hash)]) + script_hash + P2SH_SUFFIX
+                        if redeem_hash_script is None:
+                            redeem_hash_script = script
+                        if script == expectation.script:
+                            derived_pubkey_hex = pub_bytes.hex()
+                            derived_pkscript_hex = script.hex()
+                            valid = True
+                            break
+                    if not valid and redeem_hash_script is not None:
+                        derived_pkscript_hex = redeem_hash_script.hex()
         except Exception:
             valid = False
 
@@ -403,7 +487,8 @@ def main() -> None:
         payload["address"] = args.address
     if script_expectation is not None:
         payload["pkscript"] = script_expectation.script_hex
-        payload["pubkey"] = script_expectation.pubkey_hex
+        if script_expectation.pubkey_hex is not None:
+            payload["pubkey"] = script_expectation.pubkey_hex
 
     json_kwargs = {"ensure_ascii": False}
     if args.pretty:
