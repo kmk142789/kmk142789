@@ -44,6 +44,11 @@ P2WPKH_SCRIPT = [
 ]
 
 
+TAPROOT_PROGRAM = (
+    "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+)
+
+
 def test_pkscript_to_address_mainnet() -> None:
     address = pkscript_to_address(EXAMPLE_SCRIPT)
     assert address == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
@@ -121,6 +126,22 @@ def test_p2wpkh_uses_correct_hrp_on_testnet() -> None:
     address = pkscript_to_address(P2WPKH_SCRIPT, network="testnet")
 
     assert address == "tb1qnpt930k0lrqj4as2zquul4qyn6p5km7jc0w7ws"
+
+
+def test_p2tr_script_is_supported() -> None:
+    script = ["Pkscript", "OP_1", TAPROOT_PROGRAM]
+
+    address = pkscript_to_address(script)
+
+    assert address == "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0"
+
+
+def test_p2tr_uses_correct_hrp_on_testnet() -> None:
+    script = ["Pkscript", "OP_1", TAPROOT_PROGRAM]
+
+    address = pkscript_to_address(script, network="testnet")
+
+    assert address == "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq47zagq"
 
 
 def test_pkscript_handles_split_checksig_token() -> None:
