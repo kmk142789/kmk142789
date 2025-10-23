@@ -33,6 +33,9 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     assert digest["cycle"] == 1
     assert payload["summary"].startswith("Cycle 1 advanced")
     assert payload["report"].startswith("Cycle 1 Progress")
+    assert payload["next_step"].startswith("Next step:")
+    assert payload["next_step"] == digest["next_step"]
+    assert payload["next_step"] in payload["summary"]
 
     manifest = payload["manifest"]
     assert manifest["cycle"] == 1
@@ -75,6 +78,8 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     assert matrix["cycle"] == 1
     assert matrix["steps_total"] >= 1
     assert any(row["step"] == "advance_cycle" for row in matrix["rows"])
+
+    assert payload["next_step"].startswith("Next step:")
 
     summary = payload["event_summary"]
     assert "recent events" in summary
