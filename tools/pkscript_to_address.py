@@ -407,11 +407,20 @@ def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
                 raise PkScriptError("witness program must be hexadecimal") from exc
 
             if len(program) == 20:
+                if witness_version != 0:
+                    raise PkScriptError(
+                        "unsupported witness program for given version"
+                    )
                 return "p2wpkh", program_hex, witness_version
             if len(program) == 32:
-                return "p2wsh", program_hex, witness_version
+                if witness_version == 0:
+                    return "p2wsh", program_hex, witness_version
+                if witness_version == 1:
+                    return "p2tr", program_hex, witness_version
 
-            raise PkScriptError("unsupported witness program length for address conversion")
+            raise PkScriptError(
+                "unsupported witness program length for address conversion"
+            )
 
     raise PkScriptError("unsupported script layout for address conversion")
 
