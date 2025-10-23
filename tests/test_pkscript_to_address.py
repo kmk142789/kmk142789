@@ -30,6 +30,14 @@ UNCOMPRESSED_PUBKEY = (
 UNCOMPRESSED_ADDRESS = "1JtCBgQucKnV4j9nUYgVvrfYDGH4X3KHsu"
 
 
+USER_PROVIDED_PUBKEY = (
+    "04f5efde0c2d30ab28e3dbe804c1a4aaf13066f9b198a4159c76f8f79b3b20caf99f7c97"
+    "9ed6c71481061277a6fc8666977c249da99960c97c8d8714fda9f0e883"
+)
+
+USER_PROVIDED_ADDRESS = "1P9VmZogiic8d5ZUVZofrdtzXgtpbG9fop"
+
+
 P2SH_SCRIPT = textwrap.dedent(
     """
     Pkscript
@@ -111,6 +119,19 @@ def test_pkscript_allows_hyphenated_checksig_token() -> None:
     address = pkscript_to_address(script)
 
     assert address == UNCOMPRESSED_ADDRESS
+
+
+def test_pkscript_converts_user_provided_uncompressed_pubkey_script() -> None:
+    script = [
+        "1P9VmZogi-gtpbG9fop",
+        "Pkscript",
+        USER_PROVIDED_PUBKEY,
+        "OP_CHECKSIG",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == USER_PROVIDED_ADDRESS
 
 
 def test_pkscript_allows_hyphenated_split_checksig_tokens() -> None:
