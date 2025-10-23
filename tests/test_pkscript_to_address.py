@@ -52,3 +52,19 @@ def test_pkscript_allows_pubkey_plus_checksig() -> None:
 
     assert address == "1JtCBgQucKnV4j9nUYgVvrfYDGH4X3KHsu"
 
+
+def test_pkscript_accepts_witness_program_hex() -> None:
+    script = ["Pkscript", "0014751e76e8199196d454941c45d1b3a323f1433bd6"]
+
+    address = pkscript_to_address(script)
+
+    assert address == "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
+
+
+def test_pkscript_witness_program_respects_network() -> None:
+    script = ["Pkscript", "0014751e76e8199196d454941c45d1b3a323f1433bd6"]
+
+    address = pkscript_to_address(script, network="testnet")
+
+    assert address == "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"
+
