@@ -17,9 +17,10 @@ in one command while still keeping deterministic runs for tests.
 from __future__ import annotations
 
 import argparse
+import json
 import random
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Iterable, Mapping, Optional
 
 from echo.evolver import EchoEvolver
 
@@ -78,6 +79,14 @@ def build_parser() -> argparse.ArgumentParser:
             "Ignored when the final artifact is skipped."
         ),
     )
+    parser.add_argument(
+        "--print-artifact",
+        action="store_true",
+        help=(
+            "Emit the final artifact payload to stdout even when the artifact "
+            "is not written to disk."
+        ),
+    )
     return parser
 
 
@@ -98,6 +107,7 @@ def execute_evolution(
     artifact: Optional[Path],
     cycles: int,
     persist_intermediate: bool,
+    print_artifact: bool,
 ) -> EchoEvolver:
     """Execute a full cycle and return the configured evolver instance."""
 
@@ -119,6 +129,12 @@ def execute_evolution(
             persist_intermediate=persist_intermediate,
             eden88_theme=eden88_theme,
         )
+    if print_artifact:
+        prompt = evolver.state.network_cache.get("last_prompt")
+        if not isinstance(prompt, Mapping):
+            prompt = {}
+        payload = evolver.artifact_payload(prompt=prompt)
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
     return evolver
 
 
@@ -140,6 +156,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         artifact=args.artifact,
         cycles=args.cycles,
         persist_intermediate=args.persist_intermediate,
+        print_artifact=args.print_artifact,
     )
 
     return 0
