@@ -44,6 +44,19 @@ P2WPKH_SCRIPT = [
 ]
 
 
+SPLIT_EQUALVERIFY_SCRIPT = [
+    "Pkscript",
+    "OP_DUP",
+    "OP_HASH",
+    "160",
+    "08d2de7257e4f777653b939c6bcb7401aeabf1ff",
+    "OP_EQUAL",
+    "VERIFY",
+    "OP_CH",
+    "ECKSIG",
+]
+
+
 def test_pkscript_to_address_mainnet() -> None:
     address = pkscript_to_address(EXAMPLE_SCRIPT)
     assert address == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
@@ -138,4 +151,10 @@ def test_pkscript_handles_underscoreless_split_checksig_token() -> None:
     address = pkscript_to_address(script)
 
     assert address == "1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ"
+
+
+def test_pkscript_handles_split_equalverify_and_hash160_tokens() -> None:
+    address = pkscript_to_address(SPLIT_EQUALVERIFY_SCRIPT)
+
+    assert address == "1of1xxxxx1anonymity1xxxxxxxz9JzFN"
 

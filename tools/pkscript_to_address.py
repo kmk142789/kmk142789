@@ -112,10 +112,15 @@ def _normalise_lines(lines: Iterable[str]) -> list[str]:
     return [line.strip() for line in lines if line.strip()]
 
 
-def _collapse_op_checksig(sequence: list[str]) -> list[str]:
-    """Return ``sequence`` with standalone ``OP_CHECK`` ``SIG`` merged."""
+def _collapse_tokens(sequence: list[str], target: str) -> list[str]:
+    """Return ``sequence`` with fragments merged into ``target``.
 
-    target = "OP_CHECKSIG"
+    Wallet exports sometimes split opcodes across multiple lines (for example
+    ``OP_CHECK`` on one line and ``SIG`` on the next).  The parser is tolerant of
+    these variants by collapsing any subsequence that concatenates to ``target``
+    (ignoring underscores).
+    """
+
     target_clean = target.replace("_", "")
 
     collapsed: list[str] = []
@@ -148,12 +153,10 @@ def _collapse_op_checksig(sequence: list[str]) -> list[str]:
                 idx = lookahead + 1
                 continue
 
-        if upper == "OP_CHECK" and idx + 1 < len(sequence):
-            next_token = sequence[idx + 1].upper()
-            if next_token in {"SIG"}:
-                collapsed.append(target)
-                idx += 2
-                continue
+        if upper == target and clean == target_clean:
+            collapsed.append(target)
+            idx += 1
+            continue
 
         collapsed.append(token)
         idx += 1
@@ -254,7 +257,10 @@ def _collect_hex_tokens(tokens: list[str]) -> tuple[str, int]:
 
 
 def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
-    sequence = _collapse_op_checksig(_normalise_lines(lines))
+    sequence = _normalise_lines(lines)
+
+    for target in ("OP_CHECKSIG", "OP_EQUALVERIFY", "OP_HASH160"):
+        sequence = _collapse_tokens(sequence, target)
 
     if sequence and _looks_like_base58(sequence[0]):
         sequence = sequence[1:]
