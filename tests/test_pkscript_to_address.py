@@ -193,6 +193,7 @@ def test_pkscript_derives_address_for_uncompressed_pubkey() -> None:
 
 def test_pkscript_example_from_export_dump() -> None:
     script = [
+        "1dyoBoF5v-5qjAfBTx9",
         "Pkscript",
         "046cc86ddcd0860b7cef16cbaad7fe31fda1bf073c25cb833fa9e409e7f51e296f39b653a9c8040a2f967319ff37cf14b0991b86173462a2d5907cb6c5648b5b76",
         "OP_CHECKSIG",
