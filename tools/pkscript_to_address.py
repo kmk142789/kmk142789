@@ -64,8 +64,34 @@ def _normalise_lines(lines: Iterable[str]) -> list[str]:
     return [line.strip() for line in lines if line.strip()]
 
 
+def _collapse_op_checksig(sequence: list[str]) -> list[str]:
+    """Return ``sequence`` with standalone ``OP_CHECK`` ``SIG`` merged."""
+
+    collapsed: list[str] = []
+    idx = 0
+    while idx < len(sequence):
+        token = sequence[idx]
+        upper = token.upper()
+        if upper == "OP_CHECK" and idx + 1 < len(sequence):
+            next_token = sequence[idx + 1].upper()
+            if next_token in {"SIG"}:
+                collapsed.append("OP_CHECKSIG")
+                idx += 2
+                continue
+        collapsed.append(token)
+        idx += 1
+    return collapsed
+
+
+def _hash160(data: bytes) -> bytes:
+    """Return the RIPEMD160(SHA256(data)) digest."""
+
+    sha = hashlib.sha256(data).digest()
+    return hashlib.new("ripemd160", sha).digest()
+
+
 def _pkscript_to_hash(lines: Iterable[str]) -> str:
-    sequence = _normalise_lines(lines)
+    sequence = _collapse_op_checksig(_normalise_lines(lines))
 
     if sequence and sequence[0].lower() == "pkscript":
         sequence = sequence[1:]
@@ -77,23 +103,38 @@ def _pkscript_to_hash(lines: Iterable[str]) -> str:
         "OP_CHECKSIG",
     ]
 
-    if len(sequence) != 5:
-        raise PkScriptError("expected five components for a P2PKH script")
+    if len(sequence) == 5 and sequence[0:2] == expected[:2] and sequence[3:] == expected[2:]:
+        hash_candidate = sequence[2]
 
-    if sequence[0:2] != expected[:2] or sequence[3:] != expected[2:]:
-        raise PkScriptError("unexpected operations in script")
+        if len(hash_candidate) != 40:
+            raise PkScriptError("pubkey hash must be 20 bytes of hex")
 
-    hash_candidate = sequence[2]
+        try:
+            bytes.fromhex(hash_candidate)
+        except ValueError as exc:  # pragma: no cover - defensive guard
+            raise PkScriptError("pubkey hash must be hexadecimal") from exc
 
-    if len(hash_candidate) != 40:
-        raise PkScriptError("pubkey hash must be 20 bytes of hex")
+        return hash_candidate
 
-    try:
-        bytes.fromhex(hash_candidate)
-    except ValueError as exc:  # pragma: no cover - defensive guard
-        raise PkScriptError("pubkey hash must be hexadecimal") from exc
+    if len(sequence) == 2 and sequence[1].upper() == "OP_CHECKSIG":
+        pubkey_hex = sequence[0]
+        try:
+            pubkey_bytes = bytes.fromhex(pubkey_hex)
+        except ValueError as exc:
+            raise PkScriptError("public key must be hexadecimal") from exc
 
-    return hash_candidate
+        if len(pubkey_bytes) not in {33, 65}:
+            raise PkScriptError("public key must be 33 or 65 bytes long")
+
+        if len(pubkey_bytes) == 33 and pubkey_bytes[0] not in (0x02, 0x03):
+            raise PkScriptError("compressed public key must start with 0x02 or 0x03")
+
+        if len(pubkey_bytes) == 65 and pubkey_bytes[0] != 0x04:
+            raise PkScriptError("uncompressed public key must start with 0x04")
+
+        return _hash160(pubkey_bytes).hex()
+
+    raise PkScriptError("unsupported script layout for address conversion")
 
 
 def pkscript_to_address(lines: Iterable[str], network: str = "mainnet") -> str:
