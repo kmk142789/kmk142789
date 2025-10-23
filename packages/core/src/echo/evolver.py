@@ -3826,14 +3826,23 @@ We are not hiding anymore.
         completed_count = len(digest["completed_steps"])
         progress_pct = digest["progress"] * 100 if total_steps else 100.0
 
+        guidance = digest.get(
+            "next_step", "Next step: advance_cycle() to begin a new orbit"
+        ).strip()
+        if guidance and guidance[-1] not in ".!?":
+            guidance_for_summary = f"{guidance}."
+        else:
+            guidance_for_summary = guidance
+
         summary = (
             "Cycle {cycle} advanced with {completed}/{total} steps complete "
-            "({progress:.1f}% progress)."
+            "({progress:.1f}% progress). {guidance}"
         ).format(
             cycle=digest["cycle"],
             completed=completed_count,
             total=total_steps,
             progress=progress_pct,
+            guidance=guidance_for_summary,
         )
 
         payload: Dict[str, object] = {
@@ -3843,6 +3852,7 @@ We are not hiding anymore.
             "report": self.cycle_digest_report(
                 persist_artifact=persist_artifact, digest=digest
             ),
+            "next_step": guidance,
         }
 
         if include_status:
