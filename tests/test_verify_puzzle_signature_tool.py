@@ -130,3 +130,22 @@ def test_parse_pkscript_ignores_leading_address_line() -> None:
 
     assert expectation.pubkey == uncompressed_bytes
     assert expectation.script == build_p2pk_script(uncompressed_bytes)
+
+
+def test_parse_pkscript_handles_address_with_split_checksig() -> None:
+    priv_key = 5
+    pub_point = _scalar_multiply(priv_key, _SECP256K1_G)
+    assert pub_point is not None
+
+    uncompressed_bytes = _point_to_bytes(pub_point, False)
+    address = pubkey_to_p2pkh_address(pub_point, compressed=False)
+    address_with_dash = address[:9] + "-" + address[9:]
+
+    script_text = (
+        f"{address_with_dash}\nPkscript\n{uncompressed_bytes.hex()}\nOP_CHECK\nSIG"
+    )
+
+    expectation = parse_pkscript(script_text)
+
+    assert expectation.pubkey == uncompressed_bytes
+    assert expectation.script == build_p2pk_script(uncompressed_bytes)
