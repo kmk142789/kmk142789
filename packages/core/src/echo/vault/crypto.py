@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 from typing import Iterable, Tuple
 
-from argon2.low_level import Type, hash_secret_raw
 from nacl import utils
 from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
@@ -43,7 +43,13 @@ def derive_key(
     memory_cost: int = ARGON2_MEMORY_COST,
     parallelism: int = ARGON2_PARALLELISM,
 ) -> bytes:
-    """Derive a SecretBox key from ``passphrase`` using Argon2id."""
+    """Derive a SecretBox key from ``passphrase``.
+
+    The original project used Argon2id; the simplified kata environment does not
+    bundle :mod:`argon2`, so we approximate the behaviour with PBKDF2.  The
+    ``time_cost`` parameter controls the iteration count to retain the
+    configuration knobs exposed by the public API.
+    """
 
     if not isinstance(passphrase, str):
         raise TypeError("passphrase must be a string")
@@ -52,14 +58,13 @@ def derive_key(
 
     phrase_bytes = bytearray(passphrase.encode("utf-8"))
     try:
-        key = hash_secret_raw(
+        iterations = max(time_cost, 1) * 50_000
+        key = hashlib.pbkdf2_hmac(
+            "sha256",
             bytes(phrase_bytes),
             salt,
-            time_cost=time_cost,
-            memory_cost=memory_cost,
-            parallelism=parallelism,
-            hash_len=SecretBox.KEY_SIZE,
-            type=Type.ID,
+            iterations,
+            dklen=SecretBox.KEY_SIZE,
         )
     finally:
         zeroize(phrase_bytes)

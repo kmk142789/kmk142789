@@ -92,7 +92,9 @@ class PulseLedger:
         expected = self._signature(payload)
         return hmac.compare_digest(expected, receipt.signature)
 
-    def latest(self, limit: int = 5) -> List[PulseReceipt]:
+    def latest(self, limit: int | None = 5) -> List[PulseReceipt]:
+        if limit is None:
+            limit = 5
         if limit <= 0:
             return []
         files = sorted(self.root.rglob("*.json"))
