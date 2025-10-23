@@ -151,3 +151,34 @@ def test_verify_segments_rejects_wrong_p2sh_script_hash() -> None:
     assert result.derived_pubkey == _point_to_bytes(pub_point, False).hex()
     derived_script = b"\xa9\x14" + hash160(build_p2pk_script(_point_to_bytes(pub_point, False))) + b"\x87"
     assert result.derived_pkscript == derived_script.hex()
+
+
+def test_verify_segments_accepts_p2sh_length_markers() -> None:
+    priv_key = 7
+    message = "Echo verifier p2sh length markers"
+    pub_point = _scalar_multiply(priv_key, _SECP256K1_G)
+    assert pub_point is not None
+
+    signature = _sign_message(priv_key, message, compressed=True)
+    compressed_bytes = _point_to_bytes(pub_point, True)
+    redeem_script = build_p2pk_script(compressed_bytes)
+    script_hash = hash160(redeem_script)
+
+    for length_token in ("0x14", "20"):
+        script_text = "\n".join(
+            [
+                "Pkscript",
+                "OP_HASH160",
+                length_token,
+                script_hash.hex(),
+                "OP_EQUAL",
+            ]
+        )
+
+        results = verify_segments(None, message, signature, script_text)
+        assert len(results) == 1
+        result = results[0]
+        assert result.valid is True
+        assert result.derived_pubkey == compressed_bytes.hex()
+        expected_script = b"\xa9\x14" + script_hash + b"\x87"
+        assert result.derived_pkscript == expected_script.hex()

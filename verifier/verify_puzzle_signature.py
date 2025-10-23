@@ -222,16 +222,16 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
 
     cleaned = value.replace(":", " ").replace(",", " ").replace("-", " ")
     tokens = [token for token in cleaned.split() if token]
-    normalized: list[tuple[str, str]] = []
+    normalized: list[tuple[str, str, str]] = []
     saw_hash160 = False
     for token in tokens:
-        upper = token.upper()
-        if upper in IGNORED_PK_TOKENS:
+        original_upper = token.upper()
+        if original_upper in IGNORED_PK_TOKENS:
             continue
-        if upper.startswith("0X"):
+        if original_upper.startswith("0X"):
             token = token[2:]
-            upper = token.upper()
-        normalized.append((token, upper))
+        upper = token.upper()
+        normalized.append((token, upper, original_upper))
         if upper == "OP_HASH160":
             saw_hash160 = True
 
@@ -240,10 +240,10 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
     return _parse_p2pk_tokens(normalized)
 
 
-def _parse_p2pk_tokens(tokens: list[tuple[str, str]]) -> PkScriptExpectation:
+def _parse_p2pk_tokens(tokens: list[tuple[str, str, str]]) -> PkScriptExpectation:
     hex_parts: list[str] = []
     saw_op_checksig = False
-    for token, upper in tokens:
+    for token, upper, _ in tokens:
         if upper == "OP_CHECKSIG":
             saw_op_checksig = True
             continue
@@ -294,11 +294,11 @@ def _parse_p2pk_tokens(tokens: list[tuple[str, str]]) -> PkScriptExpectation:
     return PkScriptExpectation(pubkey=pubkey, script=build_p2pk_script(pubkey))
 
 
-def _parse_p2sh_tokens(tokens: list[tuple[str, str]]) -> PkScriptExpectation:
+def _parse_p2sh_tokens(tokens: list[tuple[str, str, str]]) -> PkScriptExpectation:
     hash_parts: list[str] = []
     saw_hash160 = False
     saw_equal = False
-    for token, upper in tokens:
+    for token, upper, original_upper in tokens:
         if upper == "OP_HASH160":
             if saw_hash160:
                 raise ValueError("duplicate OP_HASH160 in pk script")
@@ -307,6 +307,15 @@ def _parse_p2sh_tokens(tokens: list[tuple[str, str]]) -> PkScriptExpectation:
         if upper == "OP_EQUAL":
             saw_equal = True
             continue
+        if saw_hash160 and not hash_parts:
+            if token.isdecimal() and int(token) == 20:
+                continue
+            if original_upper.startswith("0X"):
+                try:
+                    if int(token, 16) == 0x14:
+                        continue
+                except ValueError:
+                    pass
         if not HEX_TOKEN_PATTERN.fullmatch(token):
             if _is_base58_token(token):
                 continue
