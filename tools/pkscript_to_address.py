@@ -547,8 +547,15 @@ def pkscript_to_address(
             normalised_expected = normalised_expected.lower()
 
         if address != normalised_expected:
+            expected_hint = normalised_expected
+            if expected_address != normalised_expected:
+                expected_hint = (
+                    f"{normalised_expected} (normalised from '{expected_address}')"
+                )
+
             raise PkScriptError(
-                "computed address does not match the expected value",
+                "computed address "
+                f"{address} does not match the expected value {expected_hint}",
             )
 
     return address
