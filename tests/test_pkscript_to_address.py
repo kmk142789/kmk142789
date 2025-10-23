@@ -36,6 +36,14 @@ P2SH_SCRIPT = textwrap.dedent(
 ).strip().splitlines()
 
 
+P2WPKH_SCRIPT = [
+    "Pkscript",
+    "OP_0",
+    "985658becff8c12af60a1039cfd4049e834b6",
+    "fd2",
+]
+
+
 def test_pkscript_to_address_mainnet() -> None:
     address = pkscript_to_address(EXAMPLE_SCRIPT)
     assert address == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
@@ -85,6 +93,18 @@ def test_p2sh_uses_correct_testnet_prefix() -> None:
     address = pkscript_to_address(P2SH_SCRIPT, network="testnet")
 
     assert address == "2N9XnQateGg11wrTNxEUu1NtRHFywvnptxe"
+
+
+def test_p2wpkh_script_is_supported() -> None:
+    address = pkscript_to_address(P2WPKH_SCRIPT)
+
+    assert address == "bc1qnpt930k0lrqj4as2zquul4qyn6p5km7jjf4d4r"
+
+
+def test_p2wpkh_uses_correct_hrp_on_testnet() -> None:
+    address = pkscript_to_address(P2WPKH_SCRIPT, network="testnet")
+
+    assert address == "tb1qnpt930k0lrqj4as2zquul4qyn6p5km7jc0w7ws"
 
 
 def test_pkscript_handles_split_checksig_token() -> None:
