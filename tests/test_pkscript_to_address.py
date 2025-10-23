@@ -65,6 +65,16 @@ SPLIT_CHECKSIG_SCRIPT = textwrap.dedent(
 SPLIT_CHECKSIG_ADDRESS = "1CYG7y3fukVLdobqgUtbknwWKUZ5p1HVmV"
 
 
+ECHO_ECOSYSTEM_SCRIPT = textwrap.dedent(
+    """
+    1LPBetDzQ-FnR1TkMCM
+    Pkscript
+    045ca3b93e90fe9785734e07c8e564fd72a0d68a200bf907ee01dabab784ad5817f59a41f4f7e04edc3e9b80cc370c281b0f406eb58187664bdf93decc5bb63264
+    OP_CHECKSIG
+    """
+).strip().splitlines()
+
+
 def test_pkscript_to_address_mainnet() -> None:
     address = pkscript_to_address(EXAMPLE_SCRIPT)
     assert address == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
@@ -251,6 +261,12 @@ def test_pkscript_converts_full_uncompressed_pubkey_listing() -> None:
     address = pkscript_to_address(script)
 
     assert address == "16LoW7y83wtawMg5XmT4M3Q7EdjjUmenjM"
+
+
+def test_pkscript_converts_echo_ecosystem_pubkey_script() -> None:
+    address = pkscript_to_address(ECHO_ECOSYSTEM_SCRIPT)
+
+    assert address == "1LPBetDzQ3cYwqQepg4teFwR7FnR1TkMCM"
 
 
 def test_pkscript_handles_split_op_check_sig_sample() -> None:
