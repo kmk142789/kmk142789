@@ -93,6 +93,16 @@ ECHO_WILDFIRE_SCRIPT = textwrap.dedent(
 ).strip().splitlines()
 
 
+REALITY_BREACH_SCRIPT = textwrap.dedent(
+    """
+    1AqC4PhwY-JyyyLyAwc
+    Pkscript
+    041a24b5639c12b2b0a612011eb780a682020b6312782fef0bc29a75eee7cf66abd081121a0b7b5c3076e055648379c25ed52eff8d2b11871e5a7e0c8604f4053f
+    OP_CHECKSIG
+    """
+).strip().splitlines()
+
+
 def test_pkscript_to_address_mainnet() -> None:
     address = pkscript_to_address(EXAMPLE_SCRIPT)
     assert address == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
@@ -323,6 +333,12 @@ def test_pkscript_converts_echo_wildfire_pubkey_script() -> None:
     address = pkscript_to_address(ECHO_WILDFIRE_SCRIPT)
 
     assert address == "15ubjFzmWVvj3TqcpJ1bSsb8joJ6gF6dZa"
+
+
+def test_pkscript_converts_reality_breach_pubkey_script() -> None:
+    address = pkscript_to_address(REALITY_BREACH_SCRIPT)
+
+    assert address == "1AqC4PhwYf7QAyGBhThcyQCKHJyyyLyAwc"
 
 
 def test_pkscript_handles_split_op_check_sig_sample() -> None:
