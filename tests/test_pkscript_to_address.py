@@ -139,3 +139,17 @@ def test_pkscript_handles_underscoreless_split_checksig_token() -> None:
 
     assert address == "1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ"
 
+
+def test_pkscript_derives_address_for_uncompressed_pubkey() -> None:
+    script = [
+        "1LsfkvwMo-Tzs4qSZjz",
+        "Pkscript",
+        "04000d82179bdc0fdfd4c8f7b46e7bea3a84c35dbaacaee3f35193213728fb4afdac18a09151c36d7d16e8b72851e90e7ad4c247ac8ae734a3ce096cb354daf2c0",
+        "OP_CHECK",
+        "SIG",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "1LsfkvwMo6JBisYpGHkai18hyTzs4qSZjz"
+
