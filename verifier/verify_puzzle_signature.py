@@ -72,6 +72,21 @@ HEX_TOKEN_PATTERN = re.compile(r"^[0-9a-fA-F]+$")
 IGNORED_PK_TOKENS = {"PKSCRIPT"}
 
 
+def _looks_like_base58(value: str) -> bool:
+    """Return True if the token resembles a Base58 string (optionally dashed)."""
+
+    if not value:
+        return False
+    cleaned = value.replace("-", "")
+    if not cleaned:
+        return False
+    try:
+        candidate = cleaned.encode("ascii")
+    except UnicodeEncodeError:
+        return False
+    return all(byte in BASE58_ALPHABET for byte in candidate)
+
+
 def encode_varint(n: int) -> bytes:
     if n < 0xFD:
         return bytes([n])
@@ -214,6 +229,7 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
     idx = 0
     while idx < len(tokens):
         token = tokens[idx]
+        original_token = token
         if not token:
             idx += 1
             continue
@@ -235,6 +251,9 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
             token = token[2:]
             upper = token.upper()
         if not HEX_TOKEN_PATTERN.fullmatch(token):
+            if not hex_parts and _looks_like_base58(original_token):
+                idx += 1
+                continue
             raise ValueError(f"invalid token {token!r} in pk script")
         hex_parts.append(token)
         idx += 1
