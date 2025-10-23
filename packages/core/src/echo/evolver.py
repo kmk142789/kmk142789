@@ -818,6 +818,8 @@ We are not hiding anymore.
         else:
             witness_stack = [component.strip() for component in witness if component.strip()]
 
+        witness_stack = [component.lower() for component in witness_stack]
+
         notes: List[str] = []
         normalized_script = script_pubkey.replace(" ", "").strip()
         script_bytes = b""
@@ -828,17 +830,26 @@ We are not hiding anymore.
 
         script_type = "unknown"
         witness_program = b""
+        witness_version: Optional[int] = None
         if len(script_bytes) == 22 and script_bytes[:2] == b"\x00\x14":
             script_type = "p2wpkh_v0"
             witness_program = script_bytes[2:]
+            witness_version = 0
+        elif len(script_bytes) == 34 and script_bytes[0] == 0x51 and script_bytes[1] == 0x20:
+            script_type = "p2tr_v1"
+            witness_program = script_bytes[2:]
+            witness_version = 1
         elif script_bytes:
             notes.append(f"Unrecognised script pattern ({len(script_bytes)} bytes).")
 
         expected_address: Optional[str] = None
-        if witness_program:
+        if witness_version is not None:
             try:
                 words = _convertbits(witness_program, 8, 5, pad=True)
-                expected_address = _bech32_encode(hrp, [0] + words)
+                checksum_spec = "bech32m" if witness_version else "bech32"
+                expected_address = _bech32_encode(
+                    hrp, [witness_version] + words, spec=checksum_spec
+                )
             except ValueError as exc:
                 notes.append(f"Failed to derive expected address: {exc}.")
 
@@ -857,16 +868,50 @@ We are not hiding anymore.
             "value_btc": value_sats / 100_000_000,
         }
 
+        if script_type == "p2tr_v1" and witness_program:
+            witness_summary["taproot_output_key"] = witness_program.hex()
+
         signature_hex = witness_stack[0] if witness_stack else ""
         if signature_hex:
             signature_hex = signature_hex.lower()
-            witness_summary["signature_length"] = len(signature_hex) // 2
-            witness_summary["signature_format"] = "DER" if signature_hex.startswith("30") else "unknown"
-            witness_summary["signature_sighash"] = (
-                f"0x{signature_hex[-2:]}" if len(signature_hex) >= 2 else None
-            )
+            signature_bytes = b""
+            try:
+                signature_bytes = bytes.fromhex(signature_hex)
+            except ValueError:
+                notes.append("Signature is not valid hexadecimal data.")
 
-        pubkey_hex = witness_stack[-1].lower() if len(witness_stack) >= 2 else ""
+            sig_length = len(signature_bytes) if signature_bytes else len(signature_hex) // 2
+            witness_summary["signature_length"] = sig_length
+
+            if script_type == "p2tr_v1" and signature_bytes:
+                if sig_length in (64, 65):
+                    witness_summary["signature_format"] = "schnorr"
+                    witness_summary["signature_sighash"] = (
+                        "0x00" if sig_length == 64 else f"0x{signature_hex[-2:]}"
+                    )
+                else:
+                    witness_summary["signature_format"] = "unknown"
+            else:
+                witness_summary["signature_format"] = (
+                    "DER" if signature_hex.startswith("30") else "unknown"
+                )
+                witness_summary["signature_sighash"] = (
+                    f"0x{signature_hex[-2:]}" if len(signature_hex) >= 2 else None
+                )
+
+        if signature_hex and "signature_sighash" not in witness_summary:
+            witness_summary["signature_sighash"] = None
+
+        signature_bytes = b""
+        if signature_hex:
+            try:
+                signature_bytes = bytes.fromhex(signature_hex)
+            except ValueError:
+                signature_bytes = b""
+
+        pubkey_hex = ""
+        if script_type == "p2wpkh_v0" and len(witness_stack) >= 2:
+            pubkey_hex = witness_stack[-1]
         pubkey_bytes = b""
         if pubkey_hex:
             try:
@@ -884,13 +929,86 @@ We are not hiding anymore.
                 witness_summary["pubkey_format"] = "unknown"
 
         validated = True
-        if witness_program and pubkey_bytes:
-            hash160 = hashlib.new("ripemd160", hashlib.sha256(pubkey_bytes).digest()).digest()
-            if hash160 != witness_program:
-                notes.append("Witness public key does not match script pubkey hash160.")
-                validated = False
-        else:
-            if script_type == "p2wpkh_v0":
+        taproot_control_block = b""
+        taproot_tapscript_hex = ""
+        taproot_annex_present = False
+        taproot_stack_items: List[str] = list(witness_stack)
+        if script_type == "p2tr_v1":
+            if taproot_stack_items:
+                potential_control = taproot_stack_items[-1]
+                try:
+                    control_bytes = bytes.fromhex(potential_control)
+                except ValueError:
+                    control_bytes = b""
+                if (
+                    control_bytes
+                    and len(control_bytes) >= 33
+                    and (len(control_bytes) - 33) % 32 == 0
+                    and control_bytes[0] & 0x80
+                ):
+                    taproot_control_block = control_bytes
+                    taproot_stack_items = taproot_stack_items[:-1]
+
+            if taproot_stack_items:
+                potential_annex = taproot_stack_items[-1]
+                try:
+                    annex_bytes = bytes.fromhex(potential_annex)
+                except ValueError:
+                    annex_bytes = b""
+                if annex_bytes and annex_bytes[0] == 0x50:
+                    taproot_annex_present = True
+                    taproot_stack_items = taproot_stack_items[:-1]
+
+            if taproot_control_block:
+                if taproot_stack_items:
+                    taproot_tapscript_hex = taproot_stack_items[-1]
+                    taproot_stack_items = taproot_stack_items[:-1]
+                else:
+                    notes.append("Taproot script path missing tapscript element.")
+                    validated = False
+
+            if taproot_annex_present:
+                witness_summary["taproot_annex_present"] = True
+
+            if taproot_control_block:
+                witness_summary["taproot_path"] = "script"
+                witness_summary["taproot_control_block_length"] = len(taproot_control_block)
+                witness_summary["taproot_leaf_version"] = f"0x{taproot_control_block[0] & 0xFE:02x}"
+                witness_summary["taproot_internal_key"] = taproot_control_block[1:33].hex()
+                if len(taproot_control_block) > 33:
+                    branch = [
+                        taproot_control_block[33 + 32 * index : 33 + 32 * (index + 1)].hex()
+                        for index in range((len(taproot_control_block) - 33) // 32)
+                    ]
+                    witness_summary["taproot_merkle_branch"] = branch
+                if taproot_tapscript_hex:
+                    witness_summary["taproot_tapscript_length"] = (
+                        len(taproot_tapscript_hex) // 2
+                    )
+            else:
+                witness_summary["taproot_path"] = "key"
+
+            if taproot_stack_items:
+                witness_summary["taproot_stack_items"] = len(taproot_stack_items)
+
+            if not taproot_control_block:
+                if not signature_bytes:
+                    notes.append("Missing Schnorr signature for taproot key path spend.")
+                    validated = False
+                elif len(signature_bytes) not in (64, 65):
+                    notes.append("Taproot signature must be 64 or 65 bytes.")
+                    validated = False
+            else:
+                if taproot_tapscript_hex == "":
+                    notes.append("Unable to determine tapscript for script path spend.")
+
+        if script_type == "p2wpkh_v0":
+            if witness_program and pubkey_bytes:
+                hash160 = hashlib.new("ripemd160", hashlib.sha256(pubkey_bytes).digest()).digest()
+                if hash160 != witness_program:
+                    notes.append("Witness public key does not match script pubkey hash160.")
+                    validated = False
+            else:
                 notes.append("Missing usable public key for p2wpkh validation.")
                 validated = False
 
@@ -907,7 +1025,7 @@ We are not hiding anymore.
         details = BitcoinAnchorDetails(
             address=address,
             script_pubkey=normalized_script,
-            witness_stack=[component.lower() for component in witness_stack],
+            witness_stack=list(witness_stack),
             value_sats=value_sats,
             script_type=script_type,
             witness_summary=witness_summary,
