@@ -136,6 +136,42 @@ def test_main_rejects_continue_with_cycles(monkeypatch) -> None:
     assert excinfo.value.code == 2
 
 
+def test_main_rejects_matrix_without_advance(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--include-matrix"])
+
+    assert excinfo.value.code == 2
+
+
+def test_main_rejects_event_summary_without_advance(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--include-event-summary"])
+
+    assert excinfo.value.code == 2
+
+
+def test_main_rejects_event_limit_without_summary(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--event-summary-limit", "2"])
+
+    assert excinfo.value.code == 2
+
+
 def test_main_supports_advance_system(monkeypatch, capsys) -> None:
     captured = {}
 
@@ -151,6 +187,9 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
             include_manifest: bool,
             include_status: bool,
             include_reflection: bool,
+            include_matrix: bool,
+            include_event_summary: bool,
+            event_summary_limit: int,
         ) -> dict[str, object]:
             captured["kwargs"] = {
                 "enable_network": enable_network,
@@ -159,6 +198,9 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
                 "include_manifest": include_manifest,
                 "include_status": include_status,
                 "include_reflection": include_reflection,
+                "include_matrix": include_matrix,
+                "include_event_summary": include_event_summary,
+                "event_summary_limit": event_summary_limit,
             }
             return {
                 "summary": "Cycle 4 advanced with 14/14 steps complete (100.0% progress).",
@@ -175,6 +217,10 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "--no-include-status",
         "--eden88-theme",
         "aurora",
+        "--include-matrix",
+        "--include-event-summary",
+        "--event-summary-limit",
+        "7",
     ])
 
     assert exit_code == 0
@@ -185,6 +231,9 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "include_manifest": True,
         "include_status": False,
         "include_reflection": True,
+        "include_matrix": True,
+        "include_event_summary": True,
+        "event_summary_limit": 7,
     }
 
     output = capsys.readouterr().out

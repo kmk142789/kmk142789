@@ -2698,12 +2698,27 @@ We are not hiding anymore.
         include_manifest: bool = True,
         include_status: bool = True,
         include_reflection: bool = True,
+        include_matrix: bool = False,
+        include_event_summary: bool = False,
+        event_summary_limit: int = 5,
         manifest_events: int = 5,
     ) -> Dict[str, object]:
-        """Run the full ritual sequence and return a structured payload."""
+        """Run the full ritual sequence and return a structured payload.
+
+        The returned dictionary always includes the cycle ``digest`` plus a human
+        readable ``summary`` and ``report``.  Optional sections such as the
+        evolution ``status``, the Eden88 ``manifest``, a tabular
+        ``progress_matrix``, and a recent ``event_summary`` can be toggled via
+        the corresponding ``include_*`` flags.  These flags default to ``True``
+        for the legacy sections (manifest/status/reflection) and ``False`` for
+        the newly added matrix and event summary to avoid surprising callers
+        with larger payloads.
+        """
 
         if manifest_events < 0:
             raise ValueError("manifest_events must be non-negative")
+        if include_event_summary and event_summary_limit <= 0:
+            raise ValueError("event_summary_limit must be positive when including the event summary")
 
         self.run(
             enable_network=enable_network,
@@ -2748,6 +2763,16 @@ We are not hiding anymore.
         if include_reflection:
             payload["reflection"] = self.render_reflection(
                 persist_artifact=persist_artifact, include_events=False
+            )
+
+        if include_matrix:
+            payload["progress_matrix"] = self.progress_matrix(
+                persist_artifact=persist_artifact
+            )
+
+        if include_event_summary:
+            payload["event_summary"] = self.recent_event_summary(
+                limit=event_summary_limit
             )
 
         cache_snapshot = deepcopy(payload)
@@ -3003,6 +3028,31 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         ),
     )
     parser.add_argument(
+        "--include-matrix",
+        action="store_true",
+        help=(
+            "Include the tabular progress matrix when running --advance-system to"
+            " surface per-step completion details."
+        ),
+    )
+    parser.add_argument(
+        "--include-event-summary",
+        action="store_true",
+        help=(
+            "Include a formatted summary of the most recent event log entries"
+            " when running --advance-system."
+        ),
+    )
+    parser.add_argument(
+        "--event-summary-limit",
+        type=int,
+        default=5,
+        help=(
+            "Number of recent events to include in the summary when"
+            " --include-event-summary is enabled (default: 5)."
+        ),
+    )
+    parser.add_argument(
         "--continue-evolution",
         action="store_true",
         help=(
@@ -3105,6 +3155,18 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         args.continue_creation or args.continue_evolution
     ):
         parser.error("--advance-system cannot be combined with continuation flags")
+    if args.include_event_summary and args.event_summary_limit <= 0:
+        parser.error("--event-summary-limit must be positive when including the event summary")
+    if (args.include_matrix or args.include_event_summary) and not args.advance_system:
+        parser.error(
+            "--include-matrix and --include-event-summary can only be used with --advance-system"
+        )
+    default_event_limit = parser.get_default("event_summary_limit")
+    if args.event_summary_limit != default_event_limit:
+        if not args.include_event_summary:
+            parser.error("--event-summary-limit requires --include-event-summary")
+        if not args.advance_system:
+            parser.error("--event-summary-limit requires --advance-system")
     if args.cycles > 1:
         snapshots = evolver.run_cycles(
             args.cycles,
@@ -3128,6 +3190,9 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             include_manifest=True,
             include_status=args.include_status,
             include_reflection=args.include_report,
+            include_matrix=args.include_matrix,
+            include_event_summary=args.include_event_summary,
+            event_summary_limit=args.event_summary_limit,
         )
         print(payload["summary"])
         if args.include_report and "report" in payload:
