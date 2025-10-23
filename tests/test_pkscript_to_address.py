@@ -4,7 +4,8 @@ import textwrap
 
 import pytest
 
-from tools.pkscript_to_address import PkScriptError, pkscript_to_address
+from tools.pkscript_to_address import pkscript_to_address
+from tools.script_decoder import PkScriptError, ScriptDecodingError
 
 
 EXAMPLE_SCRIPT = textwrap.dedent(
@@ -62,7 +63,7 @@ def test_pkscript_requires_valid_structure() -> None:
 
 
 def test_unknown_network_is_rejected() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ScriptDecodingError):
         pkscript_to_address(EXAMPLE_SCRIPT, network="venusnet")
 
 

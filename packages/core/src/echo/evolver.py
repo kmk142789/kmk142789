@@ -13,7 +13,9 @@ from __future__ import annotations
 import argparse
 import base64
 import binascii
+import importlib.util
 import inspect
+import sys
 import hashlib
 import json
 import random
@@ -22,6 +24,20 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
+
+def _load_script_decoder() -> tuple[object, object]:  # pragma: no cover - helper
+    base = Path(__file__).resolve().parents[4]
+    module_path = base / "tools" / "script_decoder.py"
+    spec = importlib.util.spec_from_file_location("tools.script_decoder", module_path)
+    if spec is None or spec.loader is None:
+        raise ImportError("Unable to load tools.script_decoder")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault("tools.script_decoder", module)
+    spec.loader.exec_module(module)  # type: ignore[attr-defined]
+    return module.ScriptDecodingError, module.decode_script
+
+
+ScriptDecodingError, decode_script = _load_script_decoder()
 
 from .amplify import AmplificationEngine, AmplifyGateError, AmplifySnapshot
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
@@ -773,8 +789,19 @@ We are not hiding anymore.
         private_key = hashlib.sha256(seed).digest()
         public_key = hashlib.sha256(private_key).digest()
         ripemd160 = hashlib.new("ripemd160", public_key).digest()
-        payload = b"\x00" + ripemd160
-        address = _base58check_encode(payload)
+        script_tokens = [
+            "OP_DUP",
+            "OP_HASH160",
+            ripemd160.hex(),
+            "OP_EQUALVERIFY",
+            "OP_CHECKSIG",
+        ]
+        try:
+            result = decode_script("bitcoin", script_tokens, network="mainnet")
+            address = result.addresses[0]
+        except (IndexError, ScriptDecodingError):
+            payload = b"\x00" + ripemd160
+            address = _base58check_encode(payload)
 
         coinbase_text = f"/EchoFragment✨Satoshi/{self.state.vault_key or 'N/A'}/"
         message = f"Rising Above, {self.time_source()}".encode()
@@ -831,27 +858,71 @@ We are not hiding anymore.
         script_type = "unknown"
         witness_program = b""
         witness_version: Optional[int] = None
-        if len(script_bytes) == 22 and script_bytes[:2] == b"\x00\x14":
-            script_type = "p2wpkh_v0"
-            witness_program = script_bytes[2:]
-            witness_version = 0
-        elif len(script_bytes) == 34 and script_bytes[0] == 0x51 and script_bytes[1] == 0x20:
-            script_type = "p2tr_v1"
-            witness_program = script_bytes[2:]
-            witness_version = 1
-        elif script_bytes:
-            notes.append(f"Unrecognised script pattern ({len(script_bytes)} bytes).")
+        script_tokens: Optional[List[str]] = None
+        if script_bytes:
+            if len(script_bytes) == 22 and script_bytes[:2] == b"\x00\x14":
+                witness_version = 0
+                witness_program = script_bytes[2:]
+                script_tokens = ["OP_0", witness_program.hex()]
+            elif len(script_bytes) == 34 and script_bytes[0] == 0x51 and script_bytes[1] == 0x20:
+                witness_version = 1
+                witness_program = script_bytes[2:]
+                script_tokens = ["OP_1", witness_program.hex()]
+            elif (
+                len(script_bytes) == 25
+                and script_bytes[0] == 0x76
+                and script_bytes[1] == 0xA9
+                and script_bytes[2] == 0x14
+                and script_bytes[-2] == 0x88
+                and script_bytes[-1] == 0xAC
+            ):
+                script_tokens = [
+                    "OP_DUP",
+                    "OP_HASH160",
+                    script_bytes[3:-2].hex(),
+                    "OP_EQUALVERIFY",
+                    "OP_CHECKSIG",
+                ]
+            elif (
+                len(script_bytes) == 23
+                and script_bytes[0] == 0xA9
+                and script_bytes[1] == 0x14
+                and script_bytes[-1] == 0x87
+            ):
+                script_tokens = [
+                    "OP_HASH160",
+                    script_bytes[2:-1].hex(),
+                    "OP_EQUAL",
+                ]
+            else:
+                notes.append(f"Unrecognised script pattern ({len(script_bytes)} bytes).")
 
         expected_address: Optional[str] = None
-        if witness_version is not None:
+        decoder_metadata: Dict[str, object] = {}
+        if script_tokens is not None:
             try:
-                words = _convertbits(witness_program, 8, 5, pad=True)
-                checksum_spec = "bech32m" if witness_version else "bech32"
-                expected_address = _bech32_encode(
-                    hrp, [witness_version] + words, spec=checksum_spec
+                result = decode_script(
+                    "bitcoin", script_tokens, network="mainnet", hrp=hrp
                 )
-            except ValueError as exc:
-                notes.append(f"Failed to derive expected address: {exc}.")
+            except ScriptDecodingError as exc:
+                notes.append(f"Decoder rejected script: {exc}.")
+            else:
+                decoder_metadata = dict(result.metadata)
+                script_type = result.metadata.get("script_type", script_type)
+                witness_version = result.metadata.get("witness_version", witness_version)
+                if result.addresses:
+                    expected_address = result.addresses[0]
+                if result.opcode_trace:
+                    decoder_metadata.setdefault("opcode_trace", result.opcode_trace)
+                if witness_program and script_type in {"p2wpkh", "p2wsh", "p2tr"}:
+                    decoder_metadata.setdefault("witness_program", witness_program.hex())
+        elif script_bytes:
+            notes.append("Unable to derive opcode trace for provided script.")
+
+        if script_type == "p2wpkh" and (witness_version in (None, 0)):
+            script_type = "p2wpkh_v0"
+        elif script_type == "p2tr":
+            script_type = "p2tr_v1"
 
         normalized_address = "".join(ch for ch in address if ch.isalnum()).lower()
         if expected_address is not None:
@@ -867,6 +938,9 @@ We are not hiding anymore.
             "value_sats": value_sats,
             "value_btc": value_sats / 100_000_000,
         }
+
+        if decoder_metadata:
+            witness_summary["decoder_metadata"] = decoder_metadata
 
         if script_type == "p2tr_v1" and witness_program:
             witness_summary["taproot_output_key"] = witness_program.hex()

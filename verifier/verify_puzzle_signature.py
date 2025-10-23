@@ -19,6 +19,8 @@ import re
 from dataclasses import dataclass
 from typing import Iterable, List, Optional, Union
 
+from tools.script_decoder import ScriptDecodingError, decode_script
+
 _SECP256K1_P = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
 _SECP256K1_N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 _SECP256K1_GX = 55066263022277343669578718895168534326250603453777594175500187360389116729240
@@ -104,18 +106,6 @@ def bitcoin_message_hash(message: str) -> bytes:
         + message.encode("utf-8")
     )
     return hashlib.sha256(hashlib.sha256(payload).digest()).digest()
-
-
-def b58encode(data: bytes) -> bytes:
-    # Strip leading zeros for encoding but preserve count for prefixing
-    zeros = len(data) - len(data.lstrip(b"\x00"))
-    num = int.from_bytes(data, "big")
-    encoded = bytearray()
-    while num > 0:
-        num, rem = divmod(num, 58)
-        encoded.append(BASE58_ALPHABET[rem])
-    encoded.extend(b"1" * zeros)
-    return bytes(reversed(encoded))
 
 
 def _inverse_mod(value: int, modulus: int) -> int:
@@ -209,9 +199,17 @@ def pubkey_to_p2pkh_address(pubkey: tuple[int, int], compressed: bool) -> str:
     pub_bytes = _point_to_bytes(pubkey, compressed)
     sha = hashlib.sha256(pub_bytes).digest()
     ripe = hashlib.new("ripemd160", sha).digest()
-    versioned = b"\x00" + ripe
-    checksum = hashlib.sha256(hashlib.sha256(versioned).digest()).digest()[:4]
-    return b58encode(versioned + checksum).decode("ascii")
+    script_tokens = [
+        "OP_DUP",
+        "OP_HASH160",
+        ripe.hex(),
+        "OP_EQUALVERIFY",
+        "OP_CHECKSIG",
+    ]
+    result = decode_script("bitcoin", script_tokens, network="mainnet")
+    if not result.addresses:
+        raise ScriptDecodingError("decoder failed to derive an address")
+    return result.addresses[0]
 
 
 def build_p2pk_script(pubkey: bytes) -> bytes:
@@ -295,6 +293,11 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
             raise ValueError("uncompressed public key must start with 0x04")
     else:
         raise ValueError("public key must be 33 or 65 bytes long")
+
+    try:
+        decode_script("bitcoin", [pubkey.hex(), "OP_CHECKSIG"], network="mainnet")
+    except ScriptDecodingError as exc:
+        raise ValueError(str(exc)) from exc
 
     return PkScriptExpectation(pubkey=pubkey, script=build_p2pk_script(pubkey))
 

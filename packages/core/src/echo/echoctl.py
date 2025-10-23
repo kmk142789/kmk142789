@@ -11,6 +11,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+SCRIPT_ROOT = Path(__file__).resolve().parents[4]
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+
 try:  # pragma: no cover - executed when run as module
     from .wish_insights import summarize_wishes
 except ImportError:  # pragma: no cover - executed when run as script
