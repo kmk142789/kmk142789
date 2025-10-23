@@ -14,6 +14,8 @@
 
 namespace echo {
 
+class TemporalMosaic;
+
 // Immutable epoch summary recorded in the event log
 struct EpochManifest {
     std::string epoch_id;        // e.g. "epoch-2025-10-12T08:31:22Z-001"
@@ -79,6 +81,8 @@ public:
     // Verify signature & lineage of a manifest against local DID (or provided pk)
     static bool verify_manifest(const EpochManifest& manifest,
                                 const std::vector<uint8_t>& pubkey);
+
+    TemporalMosaic craft_temporal_mosaic(std::size_t depth = 12) const;
 
 private:
     MemoryStore& store_;
