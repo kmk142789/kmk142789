@@ -50,6 +50,8 @@ import hashlib
 import string
 from typing import Iterable
 
+from verifier.pkscript_registry import canonicalise_tokens
+
 
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 _BECH32_ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
@@ -110,54 +112,6 @@ def _base58_encode(data: bytes) -> str:
 
 def _normalise_lines(lines: Iterable[str]) -> list[str]:
     return [line.strip() for line in lines if line.strip()]
-
-
-def _collapse_op_checksig(sequence: list[str]) -> list[str]:
-    """Return ``sequence`` with standalone ``OP_CHECK`` ``SIG`` merged."""
-
-    target = "OP_CHECKSIG"
-    target_clean = target.replace("_", "")
-
-    collapsed: list[str] = []
-    idx = 0
-    while idx < len(sequence):
-        token = sequence[idx]
-        upper = token.upper()
-        clean = upper.replace("_", "")
-
-        if target.startswith(upper) or target_clean.startswith(clean):
-            combined_upper = upper
-            combined_clean = clean
-            lookahead = idx
-
-            while (
-                combined_clean != target_clean
-                and lookahead + 1 < len(sequence)
-                and (
-                    target.startswith(combined_upper)
-                    or target_clean.startswith(combined_clean)
-                )
-            ):
-                lookahead += 1
-                next_token = sequence[lookahead]
-                combined_upper = (combined_upper + next_token).upper()
-                combined_clean = combined_upper.replace("_", "")
-
-            if combined_clean == target_clean:
-                collapsed.append(target)
-                idx = lookahead + 1
-                continue
-
-        if upper == "OP_CHECK" and idx + 1 < len(sequence):
-            next_token = sequence[idx + 1].upper()
-            if next_token in {"SIG"}:
-                collapsed.append(target)
-                idx += 2
-                continue
-
-        collapsed.append(token)
-        idx += 1
-    return collapsed
 
 
 
@@ -254,7 +208,7 @@ def _collect_hex_tokens(tokens: list[str]) -> tuple[str, int]:
 
 
 def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
-    sequence = _collapse_op_checksig(_normalise_lines(lines))
+    sequence = canonicalise_tokens(_normalise_lines(lines))
 
     if sequence and _looks_like_base58(sequence[0]):
         sequence = sequence[1:]

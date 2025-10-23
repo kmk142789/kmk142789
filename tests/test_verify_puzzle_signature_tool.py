@@ -4,6 +4,8 @@ import base64
 import hashlib
 import hmac
 
+from verifier import pkscript_registry
+
 from verifier.verify_puzzle_signature import (
     PkScriptExpectation,
     _SECP256K1_G,
@@ -149,3 +151,37 @@ def test_parse_pkscript_handles_address_with_split_checksig() -> None:
 
     assert expectation.pubkey == uncompressed_bytes
     assert expectation.script == build_p2pk_script(uncompressed_bytes)
+
+
+def test_plugin_discovery_collapses_split_checksig_tokens() -> None:
+    pkscript_registry.reload_plugins()
+
+    collapsed = pkscript_registry.canonicalise_tokens(["OP_CHECK", "SIG"])
+
+    assert collapsed == ["OP_CHECKSIG"]
+
+
+def test_temporary_plugin_allows_hot_swapping() -> None:
+    pkscript_registry.reload_plugins()
+
+    class RenamePlugin:
+        name = "rename-checksig"
+
+        def transform(self, tokens):
+            return ["OP_CUSTOMSIG" if token.upper() == "OP_CHECKSIG" else token for token in tokens]
+
+    with pkscript_registry.temporary_plugin(RenamePlugin(), prepend=True):
+        modified = pkscript_registry.canonicalise_tokens(["OP_CHECKSIG"])
+
+    assert modified == ["OP_CUSTOMSIG"]
+
+    restored = pkscript_registry.canonicalise_tokens(["OP_CHECK", "SIG"])
+    assert restored == ["OP_CHECKSIG"]
+
+
+def test_plugin_pipeline_preserves_unknown_tokens() -> None:
+    pkscript_registry.reload_plugins()
+
+    tokens = ["OP_HASH160", "abcdef", "OP_EQUAL"]
+
+    assert pkscript_registry.canonicalise_tokens(tokens) == tokens
