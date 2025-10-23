@@ -153,6 +153,22 @@ def test_parse_pkscript_handles_address_with_split_checksig() -> None:
     assert expectation.script == build_p2pk_script(uncompressed_bytes)
 
 
+def test_parse_pkscript_ignores_trailing_witness_metadata() -> None:
+    priv_key = 6
+    pub_point = _scalar_multiply(priv_key, _SECP256K1_G)
+    assert pub_point is not None
+
+    uncompressed_bytes = _point_to_bytes(pub_point, False)
+    script_text = (
+        f"Pkscript\n{uncompressed_bytes.hex()}\nOP_CHECKSIG\nWitness\nignored data"
+    )
+
+    expectation = parse_pkscript(script_text)
+
+    assert expectation.pubkey == uncompressed_bytes
+    assert expectation.script == build_p2pk_script(uncompressed_bytes)
+
+
 def test_plugin_discovery_collapses_split_checksig_tokens() -> None:
     pkscript_registry.reload_plugins()
 

@@ -72,6 +72,7 @@ BASE58_ALPHABET = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 HEX_TOKEN_PATTERN = re.compile(r"^[0-9a-fA-F]+$")
 IGNORED_PK_TOKENS = {"PKSCRIPT"}
+PKSCRIPT_METADATA_SENTINELS = {"WITNESS", "WITNESSES"}
 
 
 def _looks_like_base58(value: str) -> bool:
@@ -224,7 +225,14 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
     """Parse a textual pay-to-pubkey script description."""
 
     cleaned = value.replace(":", " ").replace(",", " ")
-    tokens = canonicalise_tokens(cleaned.split())
+    raw_tokens = canonicalise_tokens(cleaned.split())
+
+    tokens: list[str] = []
+    for token in raw_tokens:
+        sentinel = token.rstrip(":").upper()
+        if sentinel in PKSCRIPT_METADATA_SENTINELS:
+            break
+        tokens.append(token)
 
     hex_parts: list[str] = []
     saw_op_checksig = False

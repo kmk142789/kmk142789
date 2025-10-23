@@ -185,3 +185,18 @@ def test_pkscript_accepts_split_script_hash_tokens() -> None:
 
     assert address == "3HyaLqxcfDVfk4pqH6s2PRuA4umnCTgSE4"
 
+
+def test_pkscript_handles_raw_witness_script_with_metadata() -> None:
+    script = [
+        "bc1qr2cr3-xu7txc2de",
+        "Pkscript",
+        "00141ab038be420532ef6419408002f21df7a79c9b9e",
+        "Witness",
+        "304402203acb6b2bbefd1475ab6c0922ed8ab3f02efa9605353f04832bb416350c2d3c2702204d7d4d394634636dac0ed107f7fe888876debba977d5116c4f6dcf441777e88701,03a57e8e4099ef1db00db7bfab566d159a3a6c94b53a03942f570a52733eb1",
+        "fea9",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "bc1qr2cr30jzq5ew7eqegzqq9usa77neexu7txc2de"
+

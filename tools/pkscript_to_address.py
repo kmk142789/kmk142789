@@ -110,8 +110,23 @@ def _base58_encode(data: bytes) -> str:
     return "1" * leading_zeroes + result
 
 
+_SCRIPT_METADATA_SENTINELS = {"WITNESS", "WITNESSES"}
+
+
 def _normalise_lines(lines: Iterable[str]) -> list[str]:
-    return [line.strip() for line in lines if line.strip()]
+    normalised: list[str] = []
+    for line in lines:
+        cleaned = line.strip()
+        if not cleaned:
+            continue
+
+        sentinel = cleaned.split()[0].rstrip(":").upper()
+        if sentinel in _SCRIPT_METADATA_SENTINELS:
+            break
+
+        normalised.append(cleaned)
+
+    return normalised
 
 
 
@@ -207,6 +222,85 @@ def _collect_hex_tokens(tokens: list[str]) -> tuple[str, int]:
     return "".join(collected), len(collected)
 
 
+def _decode_raw_script(hex_tokens: list[str]) -> tuple[str, str, int | None] | None:
+    if not hex_tokens:
+        return None
+
+    raw_hex, consumed = _collect_hex_tokens(hex_tokens)
+
+    if not raw_hex or consumed != len(hex_tokens):
+        return None
+
+    try:
+        script = bytes.fromhex(raw_hex)
+    except ValueError as exc:  # pragma: no cover - defensive guard
+        raise PkScriptError("script must be hexadecimal") from exc
+
+    if (
+        len(script) == 25
+        and script[0] == 0x76
+        and script[1] == 0xA9
+        and script[2] == 0x14
+        and script[-2:] == b"\x88\xAC"
+    ):
+        return "p2pkh", script[3:-2].hex(), None
+
+    if (
+        len(script) == 23
+        and script[0] == 0xA9
+        and script[1] == 0x14
+        and script[-1] == 0x87
+    ):
+        return "p2sh", script[2:-1].hex(), None
+
+    if len(script) >= 4:
+        version_byte = script[0]
+        push_len = script[1]
+        program = script[2:]
+
+        if push_len != len(program):
+            raise PkScriptError("witness program push length mismatch")
+
+        if version_byte == 0x00:
+            witness_version = 0
+        elif 0x51 <= version_byte <= 0x60:
+            witness_version = version_byte - 0x50
+        else:
+            witness_version = None
+
+        if witness_version is not None:
+            if witness_version == 0 and len(program) == 20:
+                return "p2wpkh", program.hex(), witness_version
+            if witness_version == 0 and len(program) == 32:
+                return "p2wsh", program.hex(), witness_version
+            if witness_version == 1 and len(program) == 32:
+                return "p2tr", program.hex(), witness_version
+
+            raise PkScriptError(
+                "unsupported witness program length for address conversion"
+            )
+
+    if len(script) >= 3 and script[-1] == 0xAC:
+        push_len = script[0]
+        pubkey = script[1:-1]
+
+        if push_len != len(pubkey):
+            raise PkScriptError("public key pushdata length mismatch")
+
+        if len(pubkey) == 33:
+            if pubkey[0] not in (0x02, 0x03):
+                raise PkScriptError("compressed public key must start with 0x02 or 0x03")
+        elif len(pubkey) == 65:
+            if pubkey[0] != 0x04:
+                raise PkScriptError("uncompressed public key must start with 0x04")
+        else:
+            raise PkScriptError("public key must be 33 or 65 bytes long")
+
+        return "p2pkh", _hash160(pubkey).hex(), None
+
+    raise PkScriptError("unsupported script layout for address conversion")
+
+
 def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
     sequence = canonicalise_tokens(_normalise_lines(lines))
 
@@ -215,6 +309,10 @@ def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
 
     if sequence and sequence[0].lower() == "pkscript":
         sequence = sequence[1:]
+
+    raw_result = _decode_raw_script(sequence)
+    if raw_result is not None:
+        return raw_result
 
     expected = [
         "OP_DUP",
@@ -341,7 +439,7 @@ def pkscript_to_address(lines: Iterable[str], network: str = "mainnet") -> str:
             raise PkScriptError(f"unsupported script type '{script_type}'") from exc
         return _base58check_encode(version, bytes.fromhex(hash_hex))
 
-    if script_type in {"p2wpkh", "p2wsh"}:
+    if script_type in {"p2wpkh", "p2wsh", "p2tr"}:
         hrp = script_versions.get("bech32_hrp")
         if not isinstance(hrp, str):  # pragma: no cover - defensive guard
             raise PkScriptError("network does not define a bech32 HRP")
