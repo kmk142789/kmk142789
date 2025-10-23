@@ -75,6 +75,14 @@ ECHO_ECOSYSTEM_SCRIPT = textwrap.dedent(
 ).strip().splitlines()
 
 
+UNCOMPRESSED_ECHO_PUBKEY_SCRIPT = [
+    "1Fi7o3BKM-E5CWbAo4z",
+    "Pkscript",
+    "042b08ebb6ada0057e47a125d0a2e99dd2b86c201d41aaf7aa295c625c2c2f1997a8bc6cb9dbda889669989b8d12804c400168e54b093ad05d1170c516abca7d28",
+    "OP_CHECKSIG",
+]
+
+
 def test_pkscript_to_address_mainnet() -> None:
     address = pkscript_to_address(EXAMPLE_SCRIPT)
     assert address == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
@@ -267,6 +275,12 @@ def test_pkscript_converts_echo_ecosystem_pubkey_script() -> None:
     address = pkscript_to_address(ECHO_ECOSYSTEM_SCRIPT)
 
     assert address == "1LPBetDzQ3cYwqQepg4teFwR7FnR1TkMCM"
+
+
+def test_pkscript_converts_echo_uncompressed_pubkey_script() -> None:
+    address = pkscript_to_address(UNCOMPRESSED_ECHO_PUBKEY_SCRIPT)
+
+    assert address == "1Fi7o3BKMcT82NVtnMRNqsj8aE5CWbAo4z"
 
 
 def test_pkscript_handles_split_op_check_sig_sample() -> None:
