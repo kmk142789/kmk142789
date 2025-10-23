@@ -77,6 +77,29 @@ def _looks_like_base58(value: str) -> bool:
     return all(chr(byte) in _BASE58_ALPHABET for byte in candidate)
 
 
+def _extract_base58_candidate(line: str) -> str | None:
+    """Return the first Base58-looking fragment contained in ``line``."""
+
+    if _looks_like_base58(line):
+        return line
+
+    separators = (":", "=", "\t", " ")
+    fragments = [line]
+
+    for separator in separators:
+        next_fragments: list[str] = []
+        for fragment in fragments:
+            next_fragments.extend(part for part in fragment.split(separator) if part)
+        fragments = next_fragments
+
+    for fragment in fragments:
+        cleaned = fragment.strip()
+        if cleaned and _looks_like_base58(cleaned):
+            return cleaned
+
+    return None
+
+
 class PkScriptError(ValueError):
     """Raised when a script does not match the expected formats."""
 
@@ -304,7 +327,7 @@ def _decode_raw_script(hex_tokens: list[str]) -> tuple[str, str, int | None] | N
 def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str, int | None]:
     sequence = canonicalise_tokens(_normalise_lines(lines))
 
-    if sequence and _looks_like_base58(sequence[0]):
+    if sequence and _extract_base58_candidate(sequence[0]):
         sequence = sequence[1:]
 
     if sequence and sequence[0].lower() == "pkscript":
