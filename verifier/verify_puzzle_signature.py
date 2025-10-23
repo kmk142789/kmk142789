@@ -19,6 +19,8 @@ import re
 from dataclasses import dataclass
 from typing import Iterable, List, Optional, Union
 
+from tools.script_decoder import DecodedScript, decode_script
+
 from .pkscript_registry import canonicalise_tokens
 
 _SECP256K1_P = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
@@ -412,11 +414,16 @@ def main() -> None:
         parser.error("provide exactly one of --address or --pkscript")
 
     script_expectation: Optional[PkScriptExpectation] = None
+    decoded_script: Optional[DecodedScript] = None
     if args.pkscript is not None:
         try:
             script_expectation = parse_pkscript(args.pkscript)
         except ValueError as exc:
             parser.error(f"invalid --pkscript value: {exc}")
+        try:
+            decoded_script = decode_script("bitcoin", args.pkscript.splitlines())
+        except Exception as exc:
+            parser.error(f"unable to decode --pkscript with universal decoder: {exc}")
 
     results = verify_segments(
         args.address,
@@ -436,6 +443,8 @@ def main() -> None:
     if script_expectation is not None:
         payload["pkscript"] = script_expectation.script_hex
         payload["pubkey"] = script_expectation.pubkey_hex
+    if decoded_script is not None:
+        payload["decoded_script"] = decoded_script.to_dict()
 
     json_kwargs = {"ensure_ascii": False}
     if args.pretty:

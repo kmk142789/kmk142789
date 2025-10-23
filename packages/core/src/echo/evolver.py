@@ -33,6 +33,8 @@ from echo.crypto.musig2 import (
     schnorr_verify,
 )
 
+from tools.script_decoder import DecodedScript, decode_script
+
 from .amplify import AmplificationEngine, AmplifyGateError, AmplifySnapshot
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .thoughtlog import thought_trace
@@ -944,36 +946,39 @@ We are not hiding anymore.
 
         notes: List[str] = []
         normalized_script = script_pubkey.replace(" ", "").strip()
-        script_bytes = b""
+
+        network_map = {"bc": "mainnet", "tb": "testnet", "bcrt": "regtest"}
+        decoder_network = network_map.get(hrp.lower(), "mainnet")
+
+        decoded_script: Optional[DecodedScript] = None
         try:
-            script_bytes = bytes.fromhex(normalized_script)
-        except ValueError:
-            notes.append("Script pubkey is not valid hexadecimal data.")
+            decoded_script = decode_script("bitcoin", normalized_script, network=decoder_network)
+        except Exception as exc:
+            notes.append(f"Failed to decode script pubkey: {exc}.")
 
         script_type = "unknown"
         witness_program = b""
         witness_version: Optional[int] = None
-        if len(script_bytes) == 22 and script_bytes[:2] == b"\x00\x14":
-            script_type = "p2wpkh_v0"
-            witness_program = script_bytes[2:]
-            witness_version = 0
-        elif len(script_bytes) == 34 and script_bytes[0] == 0x51 and script_bytes[1] == 0x20:
-            script_type = "p2tr_v1"
-            witness_program = script_bytes[2:]
-            witness_version = 1
-        elif script_bytes:
-            notes.append(f"Unrecognised script pattern ({len(script_bytes)} bytes).")
-
         expected_address: Optional[str] = None
-        if witness_version is not None:
-            try:
-                words = _convertbits(witness_program, 8, 5, pad=True)
-                checksum_spec = "bech32m" if witness_version else "bech32"
-                expected_address = _bech32_encode(
-                    hrp, [witness_version] + words, spec=checksum_spec
-                )
-            except ValueError as exc:
-                notes.append(f"Failed to derive expected address: {exc}.")
+
+        if decoded_script is not None:
+            script_type = decoded_script.metadata.get("script_type", "unknown")
+            witness_version = decoded_script.metadata.get("witness_version")
+            expected_address = decoded_script.address
+            program_hex = decoded_script.metadata.get("hash_hex", "")
+            if program_hex and script_type in {"p2wpkh", "p2wsh", "p2tr"}:
+                try:
+                    witness_program = bytes.fromhex(program_hex)
+                except ValueError:
+                    witness_program = b""
+            if script_type not in {"p2wpkh", "p2wsh", "p2tr", "p2pkh", "p2sh"}:
+                notes.append(f"Decoded script type '{script_type}' is not explicitly handled.")
+
+        display_script_type = script_type
+        if script_type == "p2wpkh" and witness_version == 0:
+            display_script_type = "p2wpkh_v0"
+        elif script_type == "p2tr" and witness_version == 1:
+            display_script_type = "p2tr_v1"
 
         normalized_address = "".join(ch for ch in address if ch.isalnum()).lower()
         if expected_address is not None:
@@ -990,7 +995,10 @@ We are not hiding anymore.
             "value_btc": value_sats / 100_000_000,
         }
 
-        if script_type == "p2tr_v1" and witness_program:
+        if decoded_script is not None:
+            witness_summary["decoded_script"] = decoded_script.to_dict()
+
+        if script_type == "p2tr" and witness_program:
             witness_summary["taproot_output_key"] = witness_program.hex()
 
         signature_hex = witness_stack[0] if witness_stack else ""
@@ -1005,7 +1013,7 @@ We are not hiding anymore.
             sig_length = len(signature_bytes) if signature_bytes else len(signature_hex) // 2
             witness_summary["signature_length"] = sig_length
 
-            if script_type == "p2tr_v1" and signature_bytes:
+            if script_type == "p2tr" and signature_bytes:
                 if sig_length in (64, 65):
                     witness_summary["signature_format"] = "schnorr"
                     witness_summary["signature_sighash"] = (
@@ -1032,7 +1040,7 @@ We are not hiding anymore.
                 signature_bytes = b""
 
         pubkey_hex = ""
-        if script_type == "p2wpkh_v0" and len(witness_stack) >= 2:
+        if script_type == "p2wpkh" and len(witness_stack) >= 2:
             pubkey_hex = witness_stack[-1]
         pubkey_bytes = b""
         if pubkey_hex:
@@ -1055,7 +1063,7 @@ We are not hiding anymore.
         taproot_tapscript_hex = ""
         taproot_annex_present = False
         taproot_stack_items: List[str] = list(witness_stack)
-        if script_type == "p2tr_v1":
+        if script_type == "p2tr":
             if taproot_stack_items:
                 potential_control = taproot_stack_items[-1]
                 try:
@@ -1150,7 +1158,7 @@ We are not hiding anymore.
                 if taproot_tapscript_hex == "":
                     notes.append("Unable to determine tapscript for script path spend.")
 
-        if script_type == "p2wpkh_v0":
+        if script_type == "p2wpkh":
             if witness_program and pubkey_bytes:
                 hash160 = hashlib.new("ripemd160", hashlib.sha256(pubkey_bytes).digest()).digest()
                 if hash160 != witness_program:
@@ -1175,7 +1183,7 @@ We are not hiding anymore.
             script_pubkey=normalized_script,
             witness_stack=list(witness_stack),
             value_sats=value_sats,
-            script_type=script_type,
+            script_type=display_script_type,
             witness_summary=witness_summary,
             expected_address=expected_address,
             validated=validated and not notes,

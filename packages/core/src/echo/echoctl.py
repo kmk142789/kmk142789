@@ -7,9 +7,32 @@ import importlib.util
 import json
 import os
 import sys
+import types
 from datetime import datetime
 from pathlib import Path
 from typing import List
+
+try:  # pragma: no cover - prefer package import when available
+    from tools.script_decoder import decode_script
+except ModuleNotFoundError:  # pragma: no cover - executed when run as script
+    script_path = None
+    for candidate in Path(__file__).resolve().parents:
+        potential = candidate / "tools" / "script_decoder.py"
+        if potential.exists():
+            script_path = potential
+            repo_root = candidate
+            break
+    if script_path is None:
+        raise FileNotFoundError("unable to locate tools/script_decoder.py")
+    spec = importlib.util.spec_from_file_location("tools.script_decoder", script_path)
+    if spec is None or spec.loader is None:
+        raise
+    module = importlib.util.module_from_spec(spec)
+    package = sys.modules.setdefault("tools", types.ModuleType("tools"))
+    package.__path__ = [str(repo_root / "tools")]  # type: ignore[attr-defined]
+    sys.modules["tools.script_decoder"] = module
+    spec.loader.exec_module(module)
+    decode_script = module.decode_script  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
     from .wish_insights import summarize_wishes
@@ -193,6 +216,33 @@ def run_groundbreaking(argv: List[str]) -> int:
     )
 
     payload = report.to_dict()
+
+    for thread in payload.get("threads", []):
+        metadata = thread.get("metadata")
+        if not isinstance(metadata, dict):
+            continue
+        chain = str(metadata.get("chain", "bitcoin")).lower()
+        script_source = (
+            metadata.get("script_pubkey")
+            or metadata.get("script")
+            or metadata.get("call_data")
+            or metadata.get("instruction")
+        )
+        if script_source is None:
+            continue
+        decode_kwargs: dict[str, object] = {}
+        if chain in {"bitcoin", "btc"} and "network" in metadata:
+            decode_kwargs["network"] = str(metadata["network"])
+        if chain in {"ethereum", "eth"} and "chain_id" in metadata:
+            try:
+                decode_kwargs["chain_id"] = int(metadata["chain_id"])
+            except (TypeError, ValueError):  # pragma: no cover - metadata guard
+                pass
+        try:
+            decoded = decode_script(chain, script_source, **decode_kwargs)
+        except Exception:  # pragma: no cover - best-effort enrichment
+            continue
+        metadata["decoded_script"] = decoded.to_dict()
     if options.output:
         options.output.parent.mkdir(parents=True, exist_ok=True)
         options.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
