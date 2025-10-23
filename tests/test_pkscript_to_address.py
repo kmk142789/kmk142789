@@ -143,8 +143,27 @@ def test_pkscript_validation_detects_mismatch() -> None:
     wrong_address = UNCOMPRESSED_ADDRESS[:-1] + "1"
     script = [wrong_address, "Pkscript", UNCOMPRESSED_PUBKEY, "OP_CHECK", "SIG"]
 
-    with pytest.raises(PkScriptError, match="does not match"):
+    with pytest.raises(PkScriptError) as excinfo:
         pkscript_to_address(script, validate_expected=True)
+
+    message = str(excinfo.value)
+    assert "does not match" in message
+    assert UNCOMPRESSED_ADDRESS in message
+    assert wrong_address in message
+
+
+def test_pkscript_validation_reports_normalised_expected() -> None:
+    truncated = UNCOMPRESSED_ADDRESS[:8] + "-" + UNCOMPRESSED_ADDRESS[-8:]
+    script = [truncated, "Pkscript", UNCOMPRESSED_PUBKEY, "OP_CHECK", "SIG"]
+
+    with pytest.raises(PkScriptError) as excinfo:
+        pkscript_to_address(script, validate_expected=True)
+
+    message = str(excinfo.value)
+    assert UNCOMPRESSED_ADDRESS in message
+    normalised = truncated.replace("-", "")
+    assert normalised in message
+    assert truncated in message
 
 
 def test_pkscript_validation_requires_expected_address() -> None:
