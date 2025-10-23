@@ -29,3 +29,51 @@ def test_upgrade_bitcoin_anchor_evidence_reports_mismatches() -> None:
 
     payload = evolver.artifact_payload(prompt={"mantra": "test"})
     assert payload["bitcoin_anchor_details"]["expected_address"] == details.expected_address
+
+
+def test_upgrade_bitcoin_anchor_evidence_taproot_key_path() -> None:
+    evolver = EchoEvolver(rng=random.Random(0))
+
+    details = evolver.upgrade_bitcoin_anchor_evidence(
+        address="bc1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sg5tmnz",
+        script_pubkey="5120000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+        witness=("11" * 64,),
+        value_sats=50_000,
+    )
+
+    assert details.script_type == "p2tr_v1"
+    assert details.expected_address == "bc1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sg5tmnz"
+    assert details.validated
+    assert details.validation_notes == []
+
+    summary = details.witness_summary
+    assert summary["signature_format"] == "schnorr"
+    assert summary["signature_length"] == 64
+    assert summary["signature_sighash"] == "0x00"
+    assert summary["taproot_path"] == "key"
+    assert summary["taproot_output_key"] == "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+
+
+def test_upgrade_bitcoin_anchor_evidence_taproot_script_path_summary() -> None:
+    evolver = EchoEvolver(rng=random.Random(0))
+
+    tapscript_hex = "51" + "20" * 8
+    control_block_hex = "c0" + "12" * 32
+    details = evolver.upgrade_bitcoin_anchor_evidence(
+        address="bc1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sg5tmnz",
+        script_pubkey="5120000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+        witness=("22" * 64, tapscript_hex, control_block_hex),
+        value_sats=75_000,
+    )
+
+    assert details.script_type == "p2tr_v1"
+    assert details.validated
+
+    summary = details.witness_summary
+    assert summary["taproot_path"] == "script"
+    assert summary["taproot_control_block_length"] == 33
+    assert summary["taproot_internal_key"] == "12" * 32
+    assert summary["taproot_tapscript_length"] == len(tapscript_hex) // 2
+    assert summary["taproot_stack_items"] == 1
+    assert summary["signature_format"] == "schnorr"
+    assert summary["signature_sighash"] == "0x00"
