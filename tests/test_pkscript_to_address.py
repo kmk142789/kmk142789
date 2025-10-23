@@ -26,6 +26,16 @@ UNCOMPRESSED_PUBKEY = (
 UNCOMPRESSED_ADDRESS = "1JtCBgQucKnV4j9nUYgVvrfYDGH4X3KHsu"
 
 
+P2SH_SCRIPT = textwrap.dedent(
+    """
+    Pkscript
+    OP_HASH160
+    b2a3badd102736925c846dc3270ae1873cb205d5
+    OP_EQUAL
+    """
+).strip().splitlines()
+
+
 def test_pkscript_to_address_mainnet() -> None:
     address = pkscript_to_address(EXAMPLE_SCRIPT)
     assert address == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
@@ -63,4 +73,16 @@ def test_pkscript_ignores_leading_address_line() -> None:
     address = pkscript_to_address(script)
 
     assert address == UNCOMPRESSED_ADDRESS
+
+
+def test_p2sh_script_is_supported() -> None:
+    address = pkscript_to_address(P2SH_SCRIPT)
+
+    assert address == "3HyaLqxcfDVfk4pqH6s2PRuA4umnCTgSE4"
+
+
+def test_p2sh_uses_correct_testnet_prefix() -> None:
+    address = pkscript_to_address(P2SH_SCRIPT, network="testnet")
+
+    assert address == "2N9XnQateGg11wrTNxEUu1NtRHFywvnptxe"
 

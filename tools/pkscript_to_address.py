@@ -1,4 +1,4 @@
-"""Utilities for turning simple P2PKH scripts into Bitcoin addresses.
+"""Utilities for turning simple Bitcoin scripts into base58 addresses.
 
 This module understands the very common pay-to-public-key-hash (P2PKH)
 `pkscript` layout that appears in a lot of wallet export formats:
@@ -15,6 +15,18 @@ OP_CHECKSIG
 The helper reads that representation and emits the corresponding base58
 address.  The parsing code is intentionally conservative so that we fail
 fast on malformed input instead of silently creating the wrong address.
+
+In addition to the classic P2PKH form the helper also understands the
+minimal pay-to-script-hash (P2SH) construction:
+
+```
+Pkscript
+OP_HASH160
+<20 byte script hash>
+OP_EQUAL
+```
+
+Both script variants are widely used in wallet exports.
 """
 
 from __future__ import annotations
@@ -109,7 +121,7 @@ def _hash160(data: bytes) -> bytes:
     return hashlib.new("ripemd160", sha).digest()
 
 
-def _pkscript_to_hash(lines: Iterable[str]) -> str:
+def _pkscript_to_hash(lines: Iterable[str]) -> tuple[str, str]:
     sequence = _collapse_op_checksig(_normalise_lines(lines))
 
     if sequence and _looks_like_base58(sequence[0]):
@@ -136,7 +148,7 @@ def _pkscript_to_hash(lines: Iterable[str]) -> str:
         except ValueError as exc:  # pragma: no cover - defensive guard
             raise PkScriptError("pubkey hash must be hexadecimal") from exc
 
-        return hash_candidate
+        return "p2pkh", hash_candidate
 
     if len(sequence) == 2 and sequence[1].upper() == "OP_CHECKSIG":
         pubkey_hex = sequence[0]
@@ -154,23 +166,50 @@ def _pkscript_to_hash(lines: Iterable[str]) -> str:
         if len(pubkey_bytes) == 65 and pubkey_bytes[0] != 0x04:
             raise PkScriptError("uncompressed public key must start with 0x04")
 
-        return _hash160(pubkey_bytes).hex()
+        return "p2pkh", _hash160(pubkey_bytes).hex()
+
+    if (
+        len(sequence) == 3
+        and sequence[0].upper() == "OP_HASH160"
+        and sequence[2].upper() == "OP_EQUAL"
+    ):
+        hash_candidate = sequence[1]
+
+        if len(hash_candidate) != 40:
+            raise PkScriptError("script hash must be 20 bytes of hex")
+
+        try:
+            bytes.fromhex(hash_candidate)
+        except ValueError as exc:
+            raise PkScriptError("script hash must be hexadecimal") from exc
+
+        return "p2sh", hash_candidate
 
     raise PkScriptError("unsupported script layout for address conversion")
 
 
 def pkscript_to_address(lines: Iterable[str], network: str = "mainnet") -> str:
-    """Convert a textual P2PKH script representation to a base58 address."""
+    """Convert a textual script representation to a base58 address."""
 
-    version_map = {"mainnet": 0x00, "testnet": 0x6F, "regtest": 0x6F}
+    version_map = {
+        "mainnet": {"p2pkh": 0x00, "p2sh": 0x05},
+        "testnet": {"p2pkh": 0x6F, "p2sh": 0xC4},
+        "regtest": {"p2pkh": 0x6F, "p2sh": 0xC4},
+    }
 
     try:
-        version = version_map[network.lower()]
+        script_versions = version_map[network.lower()]
     except KeyError as exc:
         raise ValueError(f"unknown network '{network}'") from exc
 
-    pubkey_hash = _pkscript_to_hash(lines)
-    return _base58check_encode(version, bytes.fromhex(pubkey_hash))
+    script_type, hash_hex = _pkscript_to_hash(lines)
+
+    try:
+        version = script_versions[script_type]
+    except KeyError as exc:  # pragma: no cover - defensive guard
+        raise PkScriptError(f"unsupported script type '{script_type}'") from exc
+
+    return _base58check_encode(version, bytes.fromhex(hash_hex))
 
 
 def _build_cli() -> argparse.ArgumentParser:
