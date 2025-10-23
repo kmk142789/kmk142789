@@ -125,6 +125,14 @@ def _hash256(data: bytes) -> bytes:
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 
+def _hash160(data: bytes) -> bytes:
+    """Return the HASH160 digest of *data*."""
+
+    sha = hashlib.sha256(data).digest()
+    ripe = hashlib.new("ripemd160", sha).digest()
+    return ripe
+
+
 def _base58check_encode(version: int, payload: bytes) -> str:
     data = bytes([version]) + payload
     checksum = _hash256(data)[:4]
@@ -208,6 +216,21 @@ def _decode_script_pubkey(script: bytes, network: Mapping[str, object]) -> str |
         return _base58check_encode(int(network["p2pkh"]), script[3:-2])
     if len(script) == 23 and script.startswith(b"\xA9\x14") and script.endswith(b"\x87"):
         return _base58check_encode(int(network["p2sh"]), script[2:-1])
+    if script.endswith(b"\xAC") and len(script) >= 35:
+        push_opcode = script[0]
+        pubkey: bytes | None = None
+        if push_opcode in (33, 65) and len(script) == push_opcode + 2:
+            pubkey = script[1:-1]
+        elif push_opcode == 0x4C and len(script) >= 3:
+            length = script[1]
+            if len(script) == length + 3:
+                pubkey = script[2:-1]
+        elif push_opcode == 0x4D and len(script) >= 4:
+            length = int.from_bytes(script[1:3], "little")
+            if len(script) == length + 4:
+                pubkey = script[3:-1]
+        if pubkey is not None and len(pubkey) in (33, 65):
+            return _base58check_encode(int(network["p2pkh"]), _hash160(pubkey))
     if len(script) >= 4 and script[1] == len(script) - 2:
         opcode = script[0]
         if opcode == 0x00:

@@ -108,6 +108,34 @@ def test_decode_standard_addresses_across_networks():
     assert regtest_addresses[3] == "bcrt1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sj9hjuh"
 
 
+def test_decode_p2pk_script_returns_legacy_address():
+    pubkey = (
+        "04001dedd724d2b4bbd7eca4cb718e794295a8ed8026131e7e1b2f65292b805df56a2da041c6"
+        "ac52784c5ee25109f095958bf85ac348a6458b08d2d2c7ed7cd23f"
+    )
+    script_pubkey = "41" + pubkey + "ac"
+    script_len = f"{len(script_pubkey) // 2:02x}"
+    raw_hex = "".join(
+        [
+            "01000000",
+            "01",
+            "00" * 32,
+            "00000000",
+            "00",
+            "ffffffff",
+            "01",
+            "00f2052a01000000",
+            script_len,
+            script_pubkey,
+            "00000000",
+        ]
+    )
+
+    decoded = decode_raw_transaction(raw_hex)
+
+    assert decoded.outputs[0].address == "1F1R16o5vDABgnrxKGxHstcVswtgsJtHHx"
+
+
 def test_decode_large_legacy_transaction():
     raw_hex = (DATA_DIR / "tx_e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114.hex").read_text().strip()
 
