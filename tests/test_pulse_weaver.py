@@ -53,3 +53,47 @@ def test_service_records_and_snapshot(tmp_path: Path) -> None:
     assert success_entry["proof"] == "success-proof"
     assert "Pulse Weaver Rhyme" in payload["rhyme"]
     assert "Total: 2" in payload["rhyme"]
+
+
+def test_cycle_queries_and_filters(tmp_path: Path) -> None:
+    service = PulseWeaverService(tmp_path)
+    service.record_failure(
+        key="key-cycle-a",
+        message="cycle failure",
+        cycle="cycle-xyz",
+        metadata={"attempt": 1},
+    )
+    service.record_success(
+        key="key-cycle-b",
+        message="cycle success",
+        cycle="cycle-xyz",
+    )
+    service.record_failure(
+        key="key-cycle-b",
+        message="retry failed",
+        cycle="cycle-xyz",
+    )
+    service.record_success(
+        key="key-other",
+        message="outside cycle",
+        cycle="cycle-abc",
+    )
+
+    latest = service.get_event("key-cycle-b")
+    assert latest is not None
+    assert latest.message == "retry failed"
+    assert latest.status == "failure"
+
+    full_cycle = service.cycle_ledger("cycle-xyz")
+    assert [entry.key for entry in full_cycle] == [
+        "key-cycle-a",
+        "key-cycle-b",
+        "key-cycle-b",
+    ]
+
+    only_failures = service.cycle_ledger("cycle-xyz", statuses=("failure",))
+    assert [entry.status for entry in only_failures] == ["failure", "failure"]
+
+    summary = service.cycle_summary("cycle-xyz")
+    assert summary["failure"] == 2
+    assert summary["success"] == 1

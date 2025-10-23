@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from typing import Dict, List, Mapping
+from typing import Dict, Iterable, List, Mapping, Sequence
 
 from ..adapters.base import PulseWeaverAdapter
 from ..core import LinkRecord, WeaveFragment
@@ -103,10 +103,92 @@ class PulseWeaverRepository:
             )
         return fragments
 
+    def find_event(self, *, key: str) -> WeaveFragment | None:
+        with self.adapter.context() as conn:
+            row = conn.execute(
+                """
+                SELECT key, status, message, cycle, proof, echo, metadata, created_at
+                FROM pulse_weaver_events
+                WHERE key = ?
+                ORDER BY datetime(created_at) DESC, id DESC
+                LIMIT 1
+                """,
+                (key,),
+            ).fetchone()
+        if row is None:
+            return None
+        metadata = json.loads(row["metadata"]) if row["metadata"] else {}
+        return WeaveFragment(
+            key=row["key"],
+            status=row["status"],
+            message=row["message"],
+            cycle=row["cycle"],
+            proof=row["proof"],
+            echo=row["echo"],
+            created_at=datetime.fromisoformat(row["created_at"]),
+            metadata=metadata,
+        )
+
+    def list_events_for_cycle(
+        self,
+        *,
+        cycle: str,
+        limit: int | None = None,
+        statuses: Iterable[str] | None = None,
+    ) -> List[WeaveFragment]:
+        clauses = ["cycle = ?"]
+        params: List[object] = [cycle]
+        status_values: Sequence[str] | None = tuple(statuses) if statuses else None
+        if status_values:
+            placeholders = ",".join("?" for _ in status_values)
+            clauses.append(f"status IN ({placeholders})")
+            params.extend(status_values)
+        query = (
+            "SELECT key, status, message, cycle, proof, echo, metadata, created_at "
+            "FROM pulse_weaver_events "
+        )
+        if clauses:
+            query += "WHERE " + " AND ".join(clauses) + " "
+        query += "ORDER BY datetime(created_at) ASC, id ASC"
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(limit)
+        with self.adapter.context() as conn:
+            rows = conn.execute(query, params).fetchall()
+        fragments: List[WeaveFragment] = []
+        for row in rows:
+            metadata = json.loads(row["metadata"]) if row["metadata"] else {}
+            fragments.append(
+                WeaveFragment(
+                    key=row["key"],
+                    status=row["status"],
+                    message=row["message"],
+                    cycle=row["cycle"],
+                    proof=row["proof"],
+                    echo=row["echo"],
+                    created_at=datetime.fromisoformat(row["created_at"]),
+                    metadata=metadata,
+                )
+            )
+        return fragments
+
     def counts_by_status(self) -> Dict[str, int]:
         with self.adapter.context() as conn:
             rows = conn.execute(
                 "SELECT status, COUNT(*) as total FROM pulse_weaver_events GROUP BY status"
+            ).fetchall()
+        return {row["status"]: int(row["total"]) for row in rows}
+
+    def counts_by_status_for_cycle(self, *, cycle: str) -> Dict[str, int]:
+        with self.adapter.context() as conn:
+            rows = conn.execute(
+                """
+                SELECT status, COUNT(*) as total
+                FROM pulse_weaver_events
+                WHERE cycle = ?
+                GROUP BY status
+                """,
+                (cycle,),
             ).fetchall()
         return {row["status"]: int(row["total"]) for row in rows}
 
