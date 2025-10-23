@@ -159,3 +159,51 @@ def test_decode_large_legacy_transaction():
         "1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF",
         "1GPuT4JD1yKTEGnw2csTCqSAtS3DRiTD69",
     ]
+
+
+def test_decode_segwit_input_with_witness_data():
+    raw_hex = "".join(
+        [
+            "020000000001",
+            "01",
+            "11" * 32,
+            "01000000",
+            "00",
+            "feffffff",
+            "01",
+            "50c3000000000000",
+            "16",
+            "00140f63219fedadc34ed6ff94f1b3b88ab8a504cfa9",
+            "02",
+            "47",
+            "304402202867960a27050983e51f8e7841357abcc0e4ac2f30b97e7aa67969179aa8bd1e",
+            "02204b809269c74b35b8ddc37e840ffabb3b7b862873ba99034d7e3a564056f9fedf01",
+            "21",
+            "027a4872acb18555c58daec8be1bd288596e3ea3cd29d41b67ee372b5839f7b998",
+            "00000000",
+        ]
+    )
+
+    decoded = decode_raw_transaction(raw_hex)
+
+    assert decoded.version == 2
+    assert decoded.lock_time == 0
+    assert decoded.txid == "41ab3bb7c19441e1f4f098bdf3feed7f0ed54143b301cb2c530c64290a4716c5"
+    assert decoded.wtxid == "2dffb2fb985fd0d3184898bf486551717cdd0d17aef79ae718ecb031eb56da8a"
+
+    assert len(decoded.inputs) == 1
+    txin = decoded.inputs[0]
+    assert txin.prev_txid == "1111111111111111111111111111111111111111111111111111111111111111"
+    assert txin.output_index == 1
+    assert txin.script_sig == ""
+    assert txin.sequence == 0xFFFFFFFE
+    assert txin.witness == [
+        "304402202867960a27050983e51f8e7841357abcc0e4ac2f30b97e7aa67969179aa8bd1e02204b809269c74b35b8ddc37e840ffabb3b7b862873ba99034d7e3a564056f9fedf01",
+        "027a4872acb18555c58daec8be1bd288596e3ea3cd29d41b67ee372b5839f7b998",
+    ]
+
+    assert len(decoded.outputs) == 1
+    txout = decoded.outputs[0]
+    assert txout.value_satoshis == 50_000
+    assert txout.script_pubkey == "00140f63219fedadc34ed6ff94f1b3b88ab8a504cfa9"
+    assert txout.address == "bc1qpa3jr8ld4hp5a4hljncm8wy2hzjsfnafycxqg8"
