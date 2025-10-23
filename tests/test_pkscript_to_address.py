@@ -52,3 +52,19 @@ def test_pkscript_allows_pubkey_plus_checksig() -> None:
 
     assert address == "1JtCBgQucKnV4j9nUYgVvrfYDGH4X3KHsu"
 
+
+def test_pkscript_allows_fragmented_op_checksig() -> None:
+    script = [
+        "Pkscript",
+        "OP_DUP",
+        "OP_HASH160",
+        "03b7892656a4c3df81b2f3e974f8e5ed2dc78dee",
+        "OP_EQUALVERIFY",
+        "OP_CH",
+        "ECKSIG",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ"
+

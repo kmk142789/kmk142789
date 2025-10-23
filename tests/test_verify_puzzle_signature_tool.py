@@ -113,6 +113,20 @@ def test_parse_pkscript_allows_split_op_check_sig() -> None:
     assert expectation.script == build_p2pk_script(uncompressed_bytes)
 
 
+def test_parse_pkscript_allows_fragmented_op_checksig() -> None:
+    priv_key = 5
+    pub_point = _scalar_multiply(priv_key, _SECP256K1_G)
+    assert pub_point is not None
+
+    uncompressed_bytes = _point_to_bytes(pub_point, False)
+    script_text = f"Pkscript\n{uncompressed_bytes.hex()}\nOP_CH\nECKSIG"
+
+    expectation = parse_pkscript(script_text)
+
+    assert expectation.pubkey == uncompressed_bytes
+    assert expectation.script == build_p2pk_script(uncompressed_bytes)
+
+
 def test_parse_pkscript_ignores_leading_address_line() -> None:
     priv_key = 4
     pub_point = _scalar_multiply(priv_key, _SECP256K1_G)

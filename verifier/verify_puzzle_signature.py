@@ -87,6 +87,26 @@ def _looks_like_base58(value: str) -> bool:
     return all(byte in BASE58_ALPHABET for byte in candidate)
 
 
+def _consume_split_opcode(tokens: list[str], start: int, target: str) -> Optional[int]:
+    """Return index after ``target`` if it is fragmented across tokens."""
+
+    first = tokens[start].upper()
+    if not target.startswith(first) or first == target:
+        return None
+
+    candidate = first
+    idx = start + 1
+    while idx < len(tokens):
+        next_token = tokens[idx].upper()
+        if not target.startswith(candidate + next_token):
+            break
+        candidate += next_token
+        idx += 1
+        if candidate == target:
+            return idx
+    return None
+
+
 def encode_varint(n: int) -> bytes:
     if n < 0xFD:
         return bytes([n])
@@ -237,6 +257,11 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
         if upper == "OP_CHECKSIG":
             saw_op_checksig = True
             idx += 1
+            continue
+        split_idx = _consume_split_opcode(tokens, idx, "OP_CHECKSIG")
+        if split_idx is not None:
+            saw_op_checksig = True
+            idx = split_idx
             continue
         if upper == "OP_CHECK" and idx + 1 < len(tokens):
             next_token = tokens[idx + 1].upper()

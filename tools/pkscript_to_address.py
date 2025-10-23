@@ -64,6 +64,48 @@ def _normalise_lines(lines: Iterable[str]) -> list[str]:
     return [line.strip() for line in lines if line.strip()]
 
 
+def _merge_split_tokens(sequence: list[str]) -> list[str]:
+    """Join tokens that are fragments of known opcodes."""
+
+    known_ops = {"OP_CHECKSIG"}
+    merged: list[str] = []
+    idx = 0
+    while idx < len(sequence):
+        token = sequence[idx]
+        upper = token.upper()
+
+        matched = False
+        for op in known_ops:
+            if upper == op:
+                merged.append(op)
+                matched = True
+                idx += 1
+                break
+            if not op.startswith(upper) or upper == op:
+                continue
+            candidate = upper
+            lookahead = idx + 1
+            while lookahead < len(sequence):
+                next_token = sequence[lookahead].upper()
+                if not op.startswith(candidate + next_token):
+                    break
+                candidate += next_token
+                lookahead += 1
+                if candidate == op:
+                    merged.append(op)
+                    matched = True
+                    idx = lookahead
+                    break
+            if matched:
+                break
+        if matched:
+            continue
+        merged.append(token)
+        idx += 1
+
+    return merged
+
+
 def _collapse_op_checksig(sequence: list[str]) -> list[str]:
     """Return ``sequence`` with standalone ``OP_CHECK`` ``SIG`` merged."""
 
@@ -91,7 +133,9 @@ def _hash160(data: bytes) -> bytes:
 
 
 def _pkscript_to_hash(lines: Iterable[str]) -> str:
-    sequence = _collapse_op_checksig(_normalise_lines(lines))
+    sequence = _normalise_lines(lines)
+    sequence = _merge_split_tokens(sequence)
+    sequence = _collapse_op_checksig(sequence)
 
     if sequence and sequence[0].lower() == "pkscript":
         sequence = sequence[1:]
