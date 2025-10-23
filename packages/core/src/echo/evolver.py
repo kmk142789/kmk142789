@@ -65,6 +65,12 @@ _GLYPH_RING: Tuple[str, ...] = (
 
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
+_BASE58_PREFIXES: Dict[str, bytes] = {
+    "bc": b"\x00",
+    "tb": b"\x6f",
+    "bcrt": b"\x6f",
+}
+
 _BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 _BECH32_GENERATOR = (0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3)
 
@@ -989,6 +995,9 @@ We are not hiding anymore.
         script_type = "unknown"
         witness_program = b""
         witness_version: Optional[int] = None
+        pubkey_in_script: Optional[bytes] = None
+        pubkey_hash_in_script: Optional[bytes] = None
+        derived_pubkey_hash: Optional[bytes] = None
         if len(script_bytes) == 22 and script_bytes[:2] == b"\x00\x14":
             script_type = "p2wpkh_v0"
             witness_program = script_bytes[2:]
@@ -997,6 +1006,28 @@ We are not hiding anymore.
             script_type = "p2tr_v1"
             witness_program = script_bytes[2:]
             witness_version = 1
+        elif (
+            len(script_bytes) in (35, 67)
+            and script_bytes[0] in (0x21, 0x41)
+            and script_bytes[-1] == 0xAC
+        ):
+            push_length = script_bytes[0]
+            payload = script_bytes[1:-1]
+            if push_length == len(payload) and len(payload) in (33, 65):
+                script_type = "p2pk_legacy"
+                pubkey_in_script = payload
+            else:
+                notes.append("Invalid pubkey push length for legacy p2pk script.")
+        elif len(script_bytes) in (33, 65):
+            script_type = "p2pk_legacy"
+            pubkey_in_script = script_bytes
+        elif (
+            len(script_bytes) == 25
+            and script_bytes[:3] == b"\x76\xa9\x14"
+            and script_bytes[-2:] == b"\x88\xac"
+        ):
+            script_type = "p2pkh_legacy"
+            pubkey_hash_in_script = script_bytes[3:23]
         elif script_bytes:
             notes.append(f"Unrecognised script pattern ({len(script_bytes)} bytes).")
 
@@ -1010,6 +1041,27 @@ We are not hiding anymore.
                 )
             except ValueError as exc:
                 notes.append(f"Failed to derive expected address: {exc}.")
+
+        if script_type in {"p2pk_legacy", "p2pkh_legacy"}:
+            prefix = _BASE58_PREFIXES.get(hrp)
+            if prefix is None:
+                notes.append(
+                    f"Unsupported network prefix for '{hrp}' legacy address decoding."
+                )
+            else:
+                if script_type == "p2pkh_legacy":
+                    hash160 = pubkey_hash_in_script or b""
+                else:
+                    hash160 = b""
+                    if pubkey_in_script:
+                        hash160 = hashlib.new(
+                            "ripemd160", hashlib.sha256(pubkey_in_script).digest()
+                        ).digest()
+                        derived_pubkey_hash = hash160
+                    else:
+                        notes.append("Legacy p2pk script missing public key bytes.")
+                if hash160:
+                    expected_address = _base58check_encode(prefix + hash160)
 
         normalized_address = "".join(ch for ch in address if ch.isalnum()).lower()
         if expected_address is not None:
@@ -1025,6 +1077,16 @@ We are not hiding anymore.
             "value_sats": value_sats,
             "value_btc": value_sats / 100_000_000,
         }
+
+        if script_type == "p2pk_legacy":
+            witness_summary["legacy_script"] = "p2pk"
+        elif script_type == "p2pkh_legacy":
+            witness_summary["legacy_script"] = "p2pkh"
+
+        if derived_pubkey_hash is not None:
+            witness_summary["pubkey_hash160"] = derived_pubkey_hash.hex()
+        elif pubkey_hash_in_script is not None:
+            witness_summary["pubkey_hash160"] = pubkey_hash_in_script.hex()
 
         if script_type == "p2tr_v1" and witness_program:
             witness_summary["taproot_output_key"] = witness_program.hex()
@@ -1068,10 +1130,15 @@ We are not hiding anymore.
                 signature_bytes = b""
 
         pubkey_hex = ""
-        if script_type == "p2wpkh_v0" and len(witness_stack) >= 2:
-            pubkey_hex = witness_stack[-1]
         pubkey_bytes = b""
-        if pubkey_hex:
+        if pubkey_in_script is not None:
+            pubkey_bytes = pubkey_in_script
+            pubkey_hex = pubkey_bytes.hex()
+            witness_summary["pubkey_length"] = len(pubkey_bytes)
+            witness_summary["pubkey_origin"] = "script_pubkey"
+        elif script_type in {"p2wpkh_v0", "p2pkh_legacy"} and len(witness_stack) >= 2:
+            pubkey_hex = witness_stack[-1]
+        if pubkey_hex and not pubkey_bytes:
             try:
                 pubkey_bytes = bytes.fromhex(pubkey_hex)
                 witness_summary["pubkey_length"] = len(pubkey_bytes)
@@ -1194,6 +1261,15 @@ We are not hiding anymore.
                     validated = False
             else:
                 notes.append("Missing usable public key for p2wpkh validation.")
+                validated = False
+        elif script_type == "p2pkh_legacy":
+            if pubkey_hash_in_script is not None and pubkey_bytes:
+                hash160 = hashlib.new("ripemd160", hashlib.sha256(pubkey_bytes).digest()).digest()
+                if hash160 != pubkey_hash_in_script:
+                    notes.append("Witness public key does not match script pubkey hash160.")
+                    validated = False
+            else:
+                notes.append("Missing usable public key for p2pkh validation.")
                 validated = False
 
         if expected_address is not None and normalized_address == expected_address.lower():
