@@ -211,14 +211,25 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
 
     hex_parts: list[str] = []
     saw_op_checksig = False
-    for token in tokens:
+    idx = 0
+    while idx < len(tokens):
+        token = tokens[idx]
         if not token:
+            idx += 1
             continue
         upper = token.upper()
         if upper == "OP_CHECKSIG":
             saw_op_checksig = True
+            idx += 1
             continue
+        if upper == "OP_CHECK" and idx + 1 < len(tokens):
+            next_token = tokens[idx + 1].upper()
+            if next_token in {"SIG"}:
+                saw_op_checksig = True
+                idx += 2
+                continue
         if upper in IGNORED_PK_TOKENS:
+            idx += 1
             continue
         if upper.startswith("0X"):
             token = token[2:]
@@ -226,6 +237,7 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
         if not HEX_TOKEN_PATTERN.fullmatch(token):
             raise ValueError(f"invalid token {token!r} in pk script")
         hex_parts.append(token)
+        idx += 1
 
     if not hex_parts and not saw_op_checksig:
         raise ValueError("pk script must contain public key hex data")

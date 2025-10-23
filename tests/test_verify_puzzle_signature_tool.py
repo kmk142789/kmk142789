@@ -13,6 +13,7 @@ from verifier.verify_puzzle_signature import (
     _scalar_multiply,
     bitcoin_message_hash,
     build_p2pk_script,
+    parse_pkscript,
     pubkey_to_p2pkh_address,
     verify_segments,
 )
@@ -96,3 +97,17 @@ def test_verify_segments_rejects_mismatched_pkscript() -> None:
     assert len(results) == 1
     assert results[0].valid is False
     assert results[0].derived_pubkey == _point_to_bytes(pub_point, False).hex()
+
+
+def test_parse_pkscript_allows_split_op_check_sig() -> None:
+    priv_key = 3
+    pub_point = _scalar_multiply(priv_key, _SECP256K1_G)
+    assert pub_point is not None
+
+    uncompressed_bytes = _point_to_bytes(pub_point, False)
+    script_text = f"Pkscript\n{uncompressed_bytes.hex()}\nOP_CHECK\nSIG"
+
+    expectation = parse_pkscript(script_text)
+
+    assert expectation.pubkey == uncompressed_bytes
+    assert expectation.script == build_p2pk_script(uncompressed_bytes)
