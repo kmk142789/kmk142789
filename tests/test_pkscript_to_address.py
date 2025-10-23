@@ -4,7 +4,11 @@ import textwrap
 
 import pytest
 
-from tools.pkscript_to_address import PkScriptError, pkscript_to_address
+from tools.pkscript_to_address import (
+    PkScriptError,
+    pkscript_to_address,
+    pkscripts_to_addresses,
+)
 
 
 EXAMPLE_SCRIPT = textwrap.dedent(
@@ -152,4 +156,60 @@ def test_pkscript_derives_address_for_uncompressed_pubkey() -> None:
     address = pkscript_to_address(script)
 
     assert address == "1LsfkvwMo6JBisYpGHkai18hyTzs4qSZjz"
+
+
+def test_pkscripts_to_addresses_handles_multiple_blocks() -> None:
+    bundle = textwrap.dedent(
+        """
+        1xxxxxxxx-xxy1kmdGr
+        Pkscript
+        OP_DUP
+        OP_HASH160
+        0a9598557e4075d6543a51a33a6a84d6945b6a8e
+        OP_EQUALVERIFY
+        OP_CH
+        ECKSIG
+
+        1LRYV8sfK-d4ofkun75
+        Pkscript
+        OP_DUP
+        OP_HASH160
+        d50ea7c912e637124e7703458e99aacf5971868f
+        OP_EQUALVERIFY
+        OP_CH
+        ECKSIG
+        """
+    ).splitlines()
+
+    addresses = pkscripts_to_addresses(bundle)
+
+    assert addresses == [
+        "1xxxxxxxxxxxxxxxxxxxxxxxxxy1kmdGr",
+        "1LRYV8sfKHik9RaxCMQq98Xpfd4ofkun75",
+    ]
+
+
+def test_pkscripts_to_addresses_splits_on_repeated_marker() -> None:
+    bundle = [
+        "1Lets1xxx-xxy2EaMkJ",
+        "Pkscript",
+        "OP_DUP",
+        "OP_HASH160",
+        "03b7892656a4c3df81b2f3e974f8e5ed2dc78dee",
+        "OP_EQUALVERIFY",
+        "OP_CHECKSIG",
+        "Pkscript",
+        "OP_DUP",
+        "OP_HASH160",
+        "b99c0c36e80c3409e730bfed297a85359489043d",
+        "OP_EQUALVERIFY",
+        "OP_CHECKSIG",
+    ]
+
+    addresses = pkscripts_to_addresses(bundle)
+
+    assert addresses == [
+        "1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ",
+        "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha",
+    ]
 

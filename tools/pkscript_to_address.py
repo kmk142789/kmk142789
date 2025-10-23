@@ -114,6 +114,44 @@ def _normalise_lines(lines: Iterable[str]) -> list[str]:
     return [line.strip() for line in lines if line.strip()]
 
 
+def split_script_blocks(lines: Iterable[str]) -> list[list[str]]:
+    """Split ``lines`` into individual script blocks.
+
+    Wallet exports occasionally bundle multiple ``Pkscript`` snippets in the
+    same file.  Blocks are separated either by blank lines or by a repeated
+    ``Pkscript`` marker.  The latter allows callers to paste back-to-back
+    scripts without inserting extra whitespace.
+    """
+
+    blocks: list[list[str]] = []
+    current: list[str] = []
+
+    for raw_line in lines:
+        line = raw_line.rstrip("\n")
+
+        if not line.strip():
+            if current:
+                blocks.append(current)
+                current = []
+            continue
+
+        lower = line.strip().lower()
+        if (
+            current
+            and lower == "pkscript"
+            and any(token.strip().lower() == "pkscript" for token in current)
+        ):
+            blocks.append(current)
+            current = []
+
+        current.append(line)
+
+    if current:
+        blocks.append(current)
+
+    return blocks
+
+
 
 def _hash160(data: bytes) -> bytes:
     """Return the RIPEMD160(SHA256(data)) digest."""
@@ -346,6 +384,13 @@ def pkscript_to_address(lines: Iterable[str], network: str = "mainnet") -> str:
     raise PkScriptError(f"unsupported script type '{script_type}'")
 
 
+def pkscripts_to_addresses(lines: Iterable[str], network: str = "mainnet") -> list[str]:
+    """Return addresses for every script block contained in ``lines``."""
+
+    blocks = split_script_blocks(lines)
+    return [pkscript_to_address(block, network) for block in blocks]
+
+
 def _build_cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -374,8 +419,13 @@ def main() -> int:
 
         lines = sys.stdin.readlines()
 
-    address = pkscript_to_address(lines, args.network)
-    print(address)
+    addresses = pkscripts_to_addresses(lines, args.network)
+
+    if not addresses:
+        raise SystemExit("no script data provided")
+
+    for address in addresses:
+        print(address)
     return 0
 
 
