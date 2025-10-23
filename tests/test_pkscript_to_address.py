@@ -74,6 +74,22 @@ def test_pkscript_allows_pubkey_plus_checksig() -> None:
     assert address == UNCOMPRESSED_ADDRESS
 
 
+def test_pkscript_allows_hyphenated_checksig_token() -> None:
+    script = ["Pkscript", UNCOMPRESSED_PUBKEY, "OP-CHECKSIG"]
+
+    address = pkscript_to_address(script)
+
+    assert address == UNCOMPRESSED_ADDRESS
+
+
+def test_pkscript_allows_hyphenated_split_checksig_tokens() -> None:
+    script = ["Pkscript", UNCOMPRESSED_PUBKEY, "OP-CHECK", "S-IG"]
+
+    address = pkscript_to_address(script)
+
+    assert address == UNCOMPRESSED_ADDRESS
+
+
 def test_pkscript_ignores_leading_address_line() -> None:
     address_with_dash = UNCOMPRESSED_ADDRESS[:6] + "-" + UNCOMPRESSED_ADDRESS[6:]
     script = [address_with_dash, "Pkscript", UNCOMPRESSED_PUBKEY, "OP_CHECK", "SIG"]
