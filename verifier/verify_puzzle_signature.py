@@ -19,6 +19,8 @@ import re
 from dataclasses import dataclass
 from typing import Iterable, List, Optional, Union
 
+from .pkscript_registry import canonicalise_tokens
+
 _SECP256K1_P = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
 _SECP256K1_N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 _SECP256K1_GX = 55066263022277343669578718895168534326250603453777594175500187360389116729240
@@ -222,14 +224,13 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
     """Parse a textual pay-to-pubkey script description."""
 
     cleaned = value.replace(":", " ").replace(",", " ")
-    tokens = cleaned.split()
+    tokens = canonicalise_tokens(cleaned.split())
 
     hex_parts: list[str] = []
     saw_op_checksig = False
     idx = 0
     while idx < len(tokens):
         token = tokens[idx]
-        original_token = token
         if not token:
             idx += 1
             continue
@@ -251,7 +252,7 @@ def parse_pkscript(value: str) -> PkScriptExpectation:
             token = token[2:]
             upper = token.upper()
         if not HEX_TOKEN_PATTERN.fullmatch(token):
-            if not hex_parts and _looks_like_base58(original_token):
+            if not hex_parts and _looks_like_base58(token):
                 idx += 1
                 continue
             raise ValueError(f"invalid token {token!r} in pk script")
