@@ -13,6 +13,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "echo/mosaic.hpp"
 #include "echo/util.hpp"
 
 namespace echo {
@@ -404,6 +405,12 @@ LineageReport Continuum::analyze_lineage(
     }
 
     return report;
+}
+
+TemporalMosaic Continuum::craft_temporal_mosaic(std::size_t depth) const {
+    auto manifests = history(depth);
+    auto lineage = analyze_lineage(depth);
+    return TemporalMosaic(std::move(manifests), std::move(lineage));
 }
 
 }  // namespace echo
