@@ -40,3 +40,15 @@ def test_unknown_network_is_rejected() -> None:
     with pytest.raises(ValueError):
         pkscript_to_address(EXAMPLE_SCRIPT, network="venusnet")
 
+
+def test_pkscript_allows_pubkey_plus_checksig() -> None:
+    pubkey = (
+        "040005929d4eb70647483f96782be615f7b72f89f02996621b0d792fd3edd20"
+        "dc229a99dfe63582d5471b55bcbb1d96c6e770ea406ce03bc798dc714bab36d5740"
+    )
+    script = ["Pkscript", pubkey, "OP_CHECK", "SIG"]
+
+    address = pkscript_to_address(script)
+
+    assert address == "1JtCBgQucKnV4j9nUYgVvrfYDGH4X3KHsu"
+
