@@ -108,6 +108,15 @@ def test_pkscript_ignores_leading_address_line() -> None:
     assert address == UNCOMPRESSED_ADDRESS
 
 
+def test_pkscript_ignores_labeled_address_line() -> None:
+    labeled = f"Address: {UNCOMPRESSED_ADDRESS[:5]}-{UNCOMPRESSED_ADDRESS[5:]}"
+    script = [labeled, "Pkscript", UNCOMPRESSED_PUBKEY, "OP_CHECK", "SIG"]
+
+    address = pkscript_to_address(script)
+
+    assert address == UNCOMPRESSED_ADDRESS
+
+
 def test_p2sh_script_is_supported() -> None:
     address = pkscript_to_address(P2SH_SCRIPT)
 
