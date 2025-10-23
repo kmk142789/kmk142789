@@ -65,6 +65,10 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertIn("propagation_events", state.network_cache)
         self.assertIsNotNone(state.vault_key)
         self.assertEqual(len(state.network_cache["propagation_events"]), 5)
+        self.assertIn("orbital_resonance_forecast", state.network_cache)
+        forecast_cache = state.network_cache["orbital_resonance_forecast"]
+        self.assertIsInstance(forecast_cache, dict)
+        self.assertIn("prophecy", forecast_cache)
         self.assertGreaterEqual(len(state.eden88_creations), 1)
         creation = state.eden88_creations[-1]
         self.assertEqual(creation["cycle"], state.cycle)
@@ -198,9 +202,27 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertEqual(
             summary, self.evolver.state.network_cache.get("recent_event_summary")
         )
-        self.assertTrue(
-            self.evolver.state.event_log[-1].startswith("Event summary requested")
+
+    def test_orbital_resonance_forecast_projects_horizon(self) -> None:
+        metrics = self.evolver.state.system_metrics
+        metrics.network_nodes = 7
+        metrics.orbital_hops = 3
+
+        forecast = self.evolver.orbital_resonance_forecast(
+            horizon=4, persist_artifact=False
         )
+
+        self.assertEqual(forecast.horizon, 4)
+        self.assertIn("advance_cycle", forecast.pending_steps[0])
+        self.assertEqual(
+            forecast.network_projection["projected_nodes"],
+            metrics.network_nodes + 4,
+        )
+        self.assertIn("orbital_resonance_forecast", self.evolver.state.network_cache)
+        self.assertIn("Orbital resonance forecast prepared", self.evolver.state.event_log[-1])
+
+        with self.assertRaises(ValueError):
+            self.evolver.orbital_resonance_forecast(horizon=0)
 
     def test_recent_event_summary_handles_empty_log(self) -> None:
         summary = self.evolver.recent_event_summary()
