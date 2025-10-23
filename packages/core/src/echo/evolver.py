@@ -2078,6 +2078,167 @@ We are not hiding anymore.
 
         return matrix
 
+    def event_log_statistics(
+        self,
+        *,
+        limit: Optional[int] = None,
+        include_patterns: Optional[Iterable[str]] = None,
+    ) -> Dict[str, object]:
+        """Return aggregate statistics for the event log.
+
+        Parameters
+        ----------
+        limit:
+            Optional maximum number of most-recent events to consider.  When
+            ``None`` the full event log is analysed.  ``limit`` must be a
+            positive integer when supplied.
+        include_patterns:
+            Optional iterable of case-insensitive substrings used to filter the
+            considered events.  When provided only events that include at least
+            one of the substrings are counted as matches.  Empty strings are
+            ignored and duplicate patterns are coalesced so callers can
+            confidently forward user-provided input.
+
+        Returns
+        -------
+        dict
+            A dictionary describing how many events were inspected, how many
+            matched the supplied patterns, per-pattern match counts, and a
+            compact selection of the most recent matching entries.  The
+            structure is stable and suitable for JSON serialisation.
+        """
+
+        if limit is not None:
+            if limit <= 0:
+                raise ValueError("limit must be positive")
+
+        total_events = len(self.state.event_log)
+        events = list(self.state.event_log)
+        if limit is not None and total_events > limit:
+            events = events[-limit:]
+
+        considered = len(events)
+
+        pattern_counts: Dict[str, int] = {}
+        normalized_patterns: List[tuple[str, str]] = []
+        if include_patterns:
+            seen: set[str] = set()
+            for pattern in include_patterns:
+                if not pattern:
+                    continue
+                pattern_str = str(pattern)
+                lowered = pattern_str.lower()
+                if lowered in seen:
+                    continue
+                seen.add(lowered)
+                normalized_patterns.append((pattern_str, lowered))
+                pattern_counts[pattern_str] = 0
+
+        matched_events: List[str] = []
+        for event in events:
+            if not normalized_patterns:
+                matched_events.append(event)
+                continue
+
+            lowered_event = event.lower()
+            matched = False
+            for pattern_str, lowered in normalized_patterns:
+                if lowered in lowered_event:
+                    pattern_counts[pattern_str] += 1
+                    matched = True
+            if matched:
+                matched_events.append(event)
+
+        coverage_ratio = (
+            len(matched_events) / considered if considered and matched_events else 0.0
+        )
+
+        recent_count = min(5, len(matched_events))
+        recent_events = matched_events[-recent_count:] if recent_count else []
+
+        summary = {
+            "total_events": total_events,
+            "considered_events": considered,
+            "matched_events": len(matched_events),
+            "coverage_ratio": round(coverage_ratio, 3),
+            "pattern_counts": pattern_counts,
+            "first_event": events[0] if events else None,
+            "last_event": events[-1] if events else None,
+            "recent_events": list(recent_events),
+        }
+
+        self.state.network_cache["event_log_statistics"] = deepcopy(summary)
+        self.state.event_log.append(
+            "Event log statistics computed (considered={considered}, matched={matched})".format(
+                considered=considered,
+                matched=len(matched_events),
+            )
+        )
+
+        return summary
+
+    def cycle_timeline(self, cycle: Optional[int] = None) -> Dict[str, object]:
+        """Return an ordered view of step execution for ``cycle``.
+
+        The evolver already records a granular :attr:`EvolverState.step_history`
+        keyed by cycle and step name.  ``cycle_timeline`` translates that
+        internal mapping into a deterministic list sorted by timestamp so that
+        CLIs, notebooks, and tests can render the ritual progression without
+        duplicating sorting or elapsed-time calculations.
+
+        Parameters
+        ----------
+        cycle:
+            Cycle identifier to inspect.  Defaults to the currently active
+            cycle when omitted.
+        """
+
+        target_cycle = self.state.cycle if cycle is None else int(cycle)
+        history = self.state.step_history.get(target_cycle, {})
+        records = sorted(
+            (dict(record) for record in history.values()),
+            key=lambda entry: entry.get("timestamp_ns", 0),
+        )
+
+        first_timestamp: Optional[int] = None
+        if records:
+            first_timestamp = records[0].get("timestamp_ns")
+
+        steps: List[Dict[str, object]] = []
+        for order, record in enumerate(records, start=1):
+            timestamp = record.get("timestamp_ns")
+            elapsed: Optional[int]
+            if first_timestamp is not None and timestamp is not None:
+                elapsed = max(0, timestamp - first_timestamp)
+            else:
+                elapsed = None
+
+            steps.append(
+                {
+                    "order": order,
+                    "step": record.get("step"),
+                    "timestamp_ns": timestamp,
+                    "event_index": record.get("event_index"),
+                    "elapsed_ns": elapsed,
+                }
+            )
+
+        payload = {
+            "cycle": target_cycle,
+            "count": len(steps),
+            "first_timestamp_ns": steps[0]["timestamp_ns"] if steps else None,
+            "last_timestamp_ns": steps[-1]["timestamp_ns"] if steps else None,
+            "steps": steps,
+        }
+
+        timeline_cache = self.state.network_cache.setdefault("cycle_timelines", {})
+        timeline_cache[target_cycle] = deepcopy(payload)
+        self.state.event_log.append(
+            f"Cycle timeline exported (cycle={target_cycle}, steps={len(steps)})"
+        )
+
+        return payload
+
     def recent_event_summary(self, *, limit: int = 5) -> str:
         """Return a formatted summary of the most recent event log entries."""
 
