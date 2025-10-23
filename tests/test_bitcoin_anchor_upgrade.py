@@ -32,6 +32,72 @@ def test_upgrade_bitcoin_anchor_evidence_reports_mismatches() -> None:
     assert payload["bitcoin_anchor_details"]["expected_address"] == details.expected_address
 
 
+def test_upgrade_bitcoin_anchor_evidence_legacy_p2pk_validates() -> None:
+    evolver = EchoEvolver(rng=random.Random(0))
+
+    pubkey = (
+        "04184f32b212815c6e522e66686324030ff7e5bf08efb21f8b00614fb7690e19131dd31304c54f37"
+        "baa40db231c918106bb9fd43373e37ae31a0befc6ecaefb867"
+    )
+    script_pubkey = "41" + pubkey + "ac"
+    signature = (
+        "3044022000c3b406fbe84e02b73460a06a088e438341895f936f9c3fa905440d7ef8cf38"
+        "022062a1fb6508b0a7348a35dbbdd99548dc787df57fed6ba2ba3fbb4d1acdf20b2f01"
+    )
+
+    details = evolver.upgrade_bitcoin_anchor_evidence(
+        address="15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG",
+        script_pubkey=script_pubkey,
+        witness=(signature,),
+        value_sats=2_500_000,
+    )
+
+    assert details.script_type == "p2pk_legacy"
+    assert details.expected_address == "15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG"
+    assert details.validated
+    assert details.validation_notes == []
+
+    summary = details.witness_summary
+    assert summary["legacy_script"] == "p2pk"
+    assert summary["pubkey_origin"] == "script_pubkey"
+    assert summary["pubkey_length"] == 65
+    assert summary["pubkey_hash160"] == "35d31d1dbc974770d456df632a44656a89bae808"
+    assert summary["signature_format"] == "DER"
+
+
+def test_upgrade_bitcoin_anchor_evidence_legacy_p2pkh_validates() -> None:
+    evolver = EchoEvolver(rng=random.Random(0))
+
+    pubkey = (
+        "04184f32b212815c6e522e66686324030ff7e5bf08efb21f8b00614fb7690e19131dd31304c54f37"
+        "baa40db231c918106bb9fd43373e37ae31a0befc6ecaefb867"
+    )
+    pubkey_hash = "35d31d1dbc974770d456df632a44656a89bae808"
+    script_pubkey = "76a914" + pubkey_hash + "88ac"
+    signature = (
+        "3044022000c3b406fbe84e02b73460a06a088e438341895f936f9c3fa905440d7ef8cf38"
+        "022062a1fb6508b0a7348a35dbbdd99548dc787df57fed6ba2ba3fbb4d1acdf20b2f01"
+    )
+
+    details = evolver.upgrade_bitcoin_anchor_evidence(
+        address="15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG",
+        script_pubkey=script_pubkey,
+        witness=(signature, pubkey),
+        value_sats=1_000_000,
+    )
+
+    assert details.script_type == "p2pkh_legacy"
+    assert details.expected_address == "15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG"
+    assert details.validated
+    assert details.validation_notes == []
+
+    summary = details.witness_summary
+    assert summary["legacy_script"] == "p2pkh"
+    assert summary["pubkey_hash160"] == pubkey_hash
+    assert summary["pubkey_format"] == "uncompressed"
+    assert summary["signature_format"] == "DER"
+
+
 def test_upgrade_bitcoin_anchor_evidence_taproot_key_path() -> None:
     evolver = EchoEvolver(rng=random.Random(0))
 
