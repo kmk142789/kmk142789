@@ -86,3 +86,20 @@ def test_p2sh_uses_correct_testnet_prefix() -> None:
 
     assert address == "2N9XnQateGg11wrTNxEUu1NtRHFywvnptxe"
 
+
+def test_pkscript_handles_split_checksig_token() -> None:
+    script = [
+        "1Lets1xxx-xxy2EaMkJ",
+        "Pkscript",
+        "OP_DUP",
+        "OP_HASH160",
+        "03b7892656a4c3df81b2f3e974f8e5ed2dc78dee",
+        "OP_EQUALVERIFY",
+        "OP_CH",
+        "ECKSIG",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ"
+
