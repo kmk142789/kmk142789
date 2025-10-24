@@ -55,6 +55,14 @@ P2WPKH_SCRIPT = [
     "fd2",
 ]
 
+P2WPKH_SPLIT_PROGRAM_SCRIPT = [
+    "bc1qc3vcs-7s73gprks",
+    "Pkscript",
+    "OP_0",
+    "c4598868877bf90e21de3606382b19591f947",
+    "a1e",
+]
+
 
 TAPROOT_PROGRAM = (
     "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
@@ -243,6 +251,12 @@ def test_p2wpkh_uses_correct_hrp_on_testnet() -> None:
     address = pkscript_to_address(P2WPKH_SCRIPT, network="testnet")
 
     assert address == "tb1qnpt930k0lrqj4as2zquul4qyn6p5km7jc0w7ws"
+
+
+def test_p2wpkh_allows_split_witness_program_tokens() -> None:
+    address = pkscript_to_address(P2WPKH_SPLIT_PROGRAM_SCRIPT)
+
+    assert address == "bc1qc3vcs6y800usugw7xcrrs2cety0eg7s73gprks"
 
 
 def test_p2tr_script_is_supported() -> None:
