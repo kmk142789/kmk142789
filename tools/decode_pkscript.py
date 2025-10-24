@@ -18,6 +18,20 @@ _NETWORK_PREFIXES = {
 _KNOWN_OPS = {"OP_DUP", "OP_HASH160", "OP_EQUALVERIFY", "OP_CHECKSIG"}
 
 
+def _clean_opcode(token: str) -> str:
+    """Return ``token`` uppercased with separators removed."""
+
+    return token.upper().replace("_", "").replace("-", "")
+
+
+_OP_CLEAN_MAP = {_clean_opcode(op): op for op in _KNOWN_OPS}
+_OP_PREFIXES = {
+    clean[:index]
+    for clean in _OP_CLEAN_MAP
+    for index in range(1, len(clean))
+}
+
+
 class ScriptDecodeError(ValueError):
     """Raised when the provided script cannot be interpreted as P2PKH."""
 
@@ -80,33 +94,39 @@ def _tokens_from_hex(script: str) -> List[str]:
 def _normalize_tokens(script: str) -> List[str]:
     parts = re.split(r"\s+", script.strip())
     tokens: List[str] = []
-    buffer = ""
+    buffer_clean = ""
+    buffer_raw: List[str] = []
 
     for part in filter(None, parts):
-        upper = part.upper()
-        candidate = upper if not buffer else buffer + upper
+        clean = _clean_opcode(part)
 
-        if candidate in _KNOWN_OPS:
-            tokens.append(candidate)
-            buffer = ""
+        if buffer_clean:
+            candidate_clean = buffer_clean + clean
+            candidate_raw = buffer_raw + [part]
+        else:
+            candidate_clean = clean
+            candidate_raw = [part]
+
+        if candidate_clean in _OP_CLEAN_MAP:
+            tokens.append(_OP_CLEAN_MAP[candidate_clean])
+            buffer_clean = ""
+            buffer_raw.clear()
             continue
 
-        if upper in _KNOWN_OPS:
-            tokens.append(upper)
-            buffer = ""
+        if (buffer_clean or clean.startswith("OP")) and candidate_clean in _OP_PREFIXES:
+            buffer_clean = candidate_clean
+            buffer_raw = candidate_raw
             continue
 
-        if upper.startswith("OP_"):
-            buffer = candidate
-            continue
-
-        if buffer:
-            raise ScriptDecodeError(f"unrecognized opcode sequence: {buffer} {part}")
+        if buffer_clean:
+            fragments = " ".join(candidate_raw)
+            raise ScriptDecodeError(f"unrecognized opcode sequence: {fragments}")
 
         tokens.append(part)
 
-    if buffer:
-        raise ScriptDecodeError(f"dangling opcode fragment: {buffer}")
+    if buffer_clean:
+        fragments = " ".join(buffer_raw)
+        raise ScriptDecodeError(f"dangling opcode fragment: {fragments}")
 
     return tokens
 

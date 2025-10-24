@@ -11,6 +11,16 @@ def test_decode_textual_script_handles_split_opcodes() -> None:
     )
 
 
+def test_decode_textual_script_handles_op_prefix_fragments() -> None:
+    script = """OP\nDUP\nOP_HASH\n160\n03b7892656a4c3df81b2f3e974f8e5ed2dc78dee\nOP_EQUAL\nVERIFY\nOP\nCHECK\nSIG"""
+    decoded = decode_p2pkh_script(script)
+    assert decoded == DecodedScript(
+        address="1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ",
+        pubkey_hash="03b7892656a4c3df81b2f3e974f8e5ed2dc78dee",
+        network="mainnet",
+    )
+
+
 def test_decode_script_ignores_metadata_lines() -> None:
     script = """1PWo3JeB9-as7fsVzXU\nPkscript\nOP_DUP\nOP_HASH160\nf6f5431d25bbf7b12e8add9af5e3475c44a0a5b8\nOP_EQUALVERIFY\nOP_CH\nECKSIG"""
     decoded = decode_p2pkh_script(script)
