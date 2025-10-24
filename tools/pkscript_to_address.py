@@ -179,6 +179,9 @@ def _normalise_lines(lines: Iterable[str]) -> list[str]:
         if not cleaned:
             continue
 
+        if cleaned.startswith("#"):
+            continue
+
         sentinel = cleaned.split()[0].rstrip(":").upper()
         if sentinel in _SCRIPT_METADATA_SENTINELS:
             break

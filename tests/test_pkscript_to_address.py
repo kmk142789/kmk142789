@@ -179,6 +179,23 @@ def test_pkscript_ignores_leading_address_line() -> None:
     assert address == UNCOMPRESSED_ADDRESS
 
 
+def test_pkscript_skips_comment_header_lines() -> None:
+    script = [
+        "#87",
+        "1PxH3K1Sh-SH4qGPrvq",
+        "Pkscript",
+        "OP_DUP",
+        "OP_HASH160",
+        "fbc708d671c03e26661b9c08f77598a529858b5e",
+        "OP_EQUALVERIFY",
+        "OP_CHECKSIG",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "1PxH3K1Shdjb7gSEoTX7UPDZ6SH4qGPrvq"
+
+
 def test_pkscript_can_validate_expected_address() -> None:
     address_with_dash = UNCOMPRESSED_ADDRESS[:6] + "-" + UNCOMPRESSED_ADDRESS[6:]
     script = [address_with_dash, "Pkscript", UNCOMPRESSED_PUBKEY, "OP_CHECK", "SIG"]
