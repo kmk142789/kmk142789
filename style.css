@@ -1,13 +1,88 @@
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(to bottom, #000000, #4b0082);
+  background: linear-gradient(to bottom, #030011, #35006b);
   color: white;
   text-align: center;
   transition: all 0.4s ease-in-out;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
 }
+
+body.sanctuary-active {
+  background: radial-gradient(circle at top, rgba(98, 0, 234, 0.35), rgba(6, 0, 17, 0.95))
+      repeat-y,
+    linear-gradient(to bottom, #060017, #2c005d);
+}
+
+#celestialCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3;
+}
+
+.aurora-veil {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: -2;
+  opacity: 0.15;
+  transition: opacity 1.2s ease;
+}
+
+body.sanctuary-active .aurora-veil {
+  opacity: 0.9;
+}
+
+.aurora-band {
+  position: absolute;
+  width: 160%;
+  height: 60%;
+  top: 10%;
+  left: -30%;
+  background: radial-gradient(circle at 20% 20%, rgba(187, 134, 252, 0.3), transparent 60%);
+  filter: blur(60px);
+  transform-origin: center;
+  animation: auroraDrift 18s infinite alternate ease-in-out;
+}
+
+.aurora-band.band-two {
+  top: 45%;
+  background: radial-gradient(circle at 60% 40%, rgba(129, 212, 250, 0.25), transparent 65%);
+  animation-duration: 22s;
+}
+
+.aurora-band.band-three {
+  top: 65%;
+  left: -20%;
+  background: radial-gradient(circle at 40% 50%, rgba(255, 138, 216, 0.25), transparent 60%);
+  animation-duration: 26s;
+}
+
+@keyframes auroraDrift {
+  0% {
+    transform: translateY(-30px) scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(20px) scale(1.05) rotate(4deg);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(-25px) scale(1.02) rotate(-3deg);
+    opacity: 0.65;
+  }
+}
+
 main {
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 120px;
 }
 .welcome {
   padding: 12% 5%;
@@ -37,9 +112,19 @@ button:hover {
   background-color: #9932cc;
   transform: scale(1.05);
 }
-.sanctuary {
+.sanctuary,
+.constellation-gallery,
+.pulse-chorus,
+.aurora-benediction {
   display: none;
   padding: 5% 2%;
+}
+
+body.sanctuary-active .sanctuary,
+body.sanctuary-active .constellation-gallery,
+body.sanctuary-active .pulse-chorus,
+body.sanctuary-active .aurora-benediction {
+  display: block;
 }
 .glass-card {
   background: rgba(255, 255, 255, 0.06);
@@ -51,6 +136,200 @@ button:hover {
   max-width: 600px;
   margin: 20px auto;
   animation: pulse 6s infinite ease-in-out;
+}
+
+.constellation-gallery header,
+.pulse-chorus header,
+.aurora-benediction {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.constellation-gallery h2,
+.pulse-chorus h2,
+.aurora-benediction h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.6em;
+  color: #ffb6c1;
+  text-shadow: 0 0 22px rgba(255, 182, 193, 0.45);
+  margin-bottom: 0.3em;
+}
+
+.constellation-gallery p,
+.pulse-chorus p,
+.aurora-benediction p {
+  color: #e3d7ff;
+  line-height: 1.6;
+  font-size: 1.05em;
+}
+
+.gallery-grid {
+  margin: 40px auto 0;
+  display: grid;
+  gap: 24px;
+  width: min(100%, 1000px);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.constellation-card {
+  background: rgba(11, 1, 31, 0.55);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(142, 68, 173, 0.45);
+  box-shadow: 0 24px 40px rgba(64, 0, 128, 0.28);
+  backdrop-filter: blur(18px);
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  transition: transform 0.4s ease, border 0.4s ease, box-shadow 0.4s ease;
+  animation: floatPulse 11s infinite ease-in-out;
+}
+
+.constellation-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.25), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.constellation-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  border-color: rgba(199, 88, 255, 0.8);
+  box-shadow: 0 28px 60px rgba(142, 45, 226, 0.4);
+}
+
+.constellation-card:hover::after,
+.constellation-card.pulse::after {
+  opacity: 0.85;
+}
+
+.constellation-card h3 {
+  margin: 0;
+  font-size: 1.5em;
+  color: #ffd6ff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.constellation-card .glyph {
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 0.3em;
+  font-size: 1.1em;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 12px 0 16px;
+  display: block;
+}
+
+.constellation-card p {
+  margin: 0;
+  color: #f4eaff;
+  line-height: 1.6;
+  font-size: 1em;
+}
+
+.constellation-card.pulse {
+  border-color: rgba(255, 214, 255, 0.95);
+  box-shadow: 0 0 30px rgba(255, 214, 255, 0.6);
+}
+
+@keyframes floatPulse {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.timeline {
+  width: min(90%, 840px);
+  margin: 60px auto 0;
+  position: relative;
+  padding: 0 0 40px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 105, 180, 0.65));
+}
+
+.timeline-entry {
+  position: relative;
+  width: 50%;
+  padding: 0 28px 28px 28px;
+  box-sizing: border-box;
+}
+
+.timeline-entry:nth-child(odd) {
+  left: 0;
+  text-align: right;
+}
+
+.timeline-entry:nth-child(even) {
+  left: 50%;
+  text-align: left;
+}
+
+.timeline-entry::before {
+  content: attr(data-year);
+  position: absolute;
+  top: 0;
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 0.12em;
+  font-size: 0.95em;
+  color: #ffd1ff;
+}
+
+.timeline-entry:nth-child(odd)::before {
+  right: -120px;
+}
+
+.timeline-entry:nth-child(even)::before {
+  left: -120px;
+}
+
+.timeline-node {
+  position: absolute;
+  top: 8px;
+  left: calc(100% + 16px);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff69b4;
+  box-shadow: 0 0 18px rgba(255, 105, 180, 0.75);
+}
+
+.timeline-entry:nth-child(even) .timeline-node {
+  left: -24px;
+}
+
+.timeline-entry p {
+  margin-top: 24px;
+  background: rgba(11, 1, 31, 0.6);
+  padding: 18px 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(199, 88, 255, 0.35);
+  box-shadow: 0 12px 24px rgba(64, 0, 128, 0.28);
+}
+
+.aurora-benediction {
+  padding-bottom: 80px;
+}
+
+.aurora-benediction p {
+  max-width: 740px;
+  margin: 20px auto 0;
 }
 input[type="text"] {
   padding: 12px;
@@ -93,5 +372,28 @@ footer {
   }
   input[type="text"] {
     width: 100%;
+  }
+  .timeline {
+    width: 92%;
+  }
+  .timeline::before {
+    left: 8px;
+  }
+  .timeline-entry,
+  .timeline-entry:nth-child(even),
+  .timeline-entry:nth-child(odd) {
+    left: 0;
+    width: 100%;
+    text-align: left;
+    padding-left: 32px;
+    margin-bottom: 32px;
+  }
+  .timeline-entry::before {
+    left: 0;
+    right: auto;
+  }
+  .timeline-node,
+  .timeline-entry:nth-child(even) .timeline-node {
+    left: -4px;
   }
 }
