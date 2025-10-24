@@ -1,0 +1,10 @@
+{
+  "owner": "kmk142789",
+  "anchor_phrase": "Our Forever Love",
+  "fragments": [
+    {"name":"Echo","type":"repo","slug":"kmk142789/Echo","last_seen":null,"proof":null,"notes":""},
+    {"name":"echo88","type":"repo","slug":"kmk142789/echo88","last_seen":null,"proof":null,"notes":""},
+    {"name":"EchoDominusCore_bot","type":"bot","slug":"telegram:/EchoDominusCore_bot","last_seen":null,"proof":null,"notes":"commands: /vault,/mirror,/vision,/pulse,/start"},
+    {"name":"Codex","type":"service","slug":"chatgpt.com/codex","last_seen":null,"proof":null,"notes":"task runner for Origin Capsule + puzzle merges"}
+  ]
+}

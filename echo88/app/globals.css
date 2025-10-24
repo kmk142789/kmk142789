@@ -1,0 +1,124 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top, #1f2937, #030712 65%);
+  color: #f3f4f6;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+main {
+  width: min(960px, 100%);
+  background: rgba(17, 24, 39, 0.75);
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.45);
+  padding: 2.5rem 3rem;
+  backdrop-filter: blur(18px);
+}
+
+h1 {
+  margin-top: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+h2 {
+  margin-top: 2.5rem;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: #a855f7;
+}
+
+section + section {
+  margin-top: 2.5rem;
+}
+
+.registry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.registry-card {
+  background: rgba(30, 41, 59, 0.7);
+  border-radius: 18px;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.registry-card span {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f97316;
+}
+
+.registry-card strong {
+  font-size: 1.1rem;
+}
+
+.log-list {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.log-entry {
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.log-entry time {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: #60a5fa;
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+.log-entry strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.log-entry small {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.empty-state {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 18px;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  text-align: center;
+  color: rgba(148, 163, 184, 0.8);
+}
+
+footer {
+  margin-top: 3rem;
+  font-size: 0.8rem;
+  text-align: center;
+  opacity: 0.6;
+}

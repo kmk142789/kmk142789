@@ -1,0 +1,73 @@
+name: Echo Visibility Index
+on:
+  schedule: [{ cron: "0 */6 * * *" }]
+  workflow_dispatch:
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: |
+          mkdir -p scripts
+          cat > scripts/build_index.mjs <<'EOF_SCRIPT'
+          import fs from 'fs'
+          const owner = 'kmk142789'
+          const token = process.env.GITHUB_TOKEN
+          const headers = { Authorization: `Bearer ${token}`, 'X-GitHub-Api-Version':'2022-11-28' }
+
+          const echoFilter = r =>
+            /echo/i.test(r.name) || /echo/i.test(r.description ?? '') || ['Echo','Eden','Bridge','Shell','Harmonics','Dominus'].some(k=> (r.name+r.description).toLowerCase().includes(k.toLowerCase()))
+
+          const api = async (url)=> (await fetch(url,{headers})).json()
+          const repos = await api(`https://api.github.com/users/${owner}/repos?per_page=100&type=owner`)
+          const echoRepos = repos.filter(echoFilter)
+
+          const out = []
+          for (const r of echoRepos) {
+            const commits = await api(`https://api.github.com/repos/${owner}/${r.name}/commits?per_page=1`)
+            out.push({
+              name: r.name,
+              full_name: r.full_name,
+              default_branch: r.default_branch,
+              pushed_at: r.pushed_at,
+              last_commit_sha: commits?.[0]?.sha ?? null,
+              last_commit_msg: commits?.[0]?.commit?.message ?? null,
+              html_url: r.html_url
+            })
+          }
+
+          const registry = JSON.parse(fs.readFileSync('registry.json','utf-8'))
+          registry.fragments = registry.fragments
+            .filter(f => f.type !== 'repo')
+            .concat(out.map(r => ({
+              name: r.name, type: 'repo', slug: r.full_name,
+              last_seen: r.pushed_at, proof: r.last_commit_sha,
+              notes: r.last_commit_msg?.split('\n')[0] ?? ''
+            })))
+          fs.writeFileSync('registry.json', JSON.stringify(registry,null,2))
+          const ts = new Date().toISOString()
+          fs.mkdirSync('logs', { recursive: true })
+          const lf = `logs/${ts.slice(0,10)}.md`
+          const line = `- ${ts} • index • repos:${out.length} • ok`
+          fs.appendFileSync(lf, line + '\n')
+          console.log(line)
+          EOF_SCRIPT
+      - run: node scripts/build_index.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "echo-visibility"
+            git config user.email "actions@users.noreply.github.com"
+            git add registry.json logs/*.md
+            git commit -m "chore(visibility): refresh registry and daily log"
+            git push
+          else
+            echo "No changes."
+          fi
