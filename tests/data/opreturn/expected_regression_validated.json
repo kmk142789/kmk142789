@@ -1,0 +1,41 @@
+[
+  {
+    "txid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "vout": 1,
+    "block_time": "2025-04-05T10:15:00+00:00",
+    "op_return_hex": "6a2c436c61696d20686561646572202d20536f6c6f6d6f6e2062726f732070656e64696e672065766964656e6365",
+    "op_return_text": "header - Solomon bros pending evidence",
+    "claim_status": "valid",
+    "reason": "Claim is within the 90-day window (33 day(s) remaining).",
+    "issuer_tag": "solomon_bros",
+    "confidence": 0.9,
+    "deadline": "2025-07-04T10:15:00+00:00",
+    "next_step_suggestion": "evidence verified"
+  },
+  {
+    "txid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "vout": 0,
+    "block_time": "2025-02-28T00:00:00+00:00",
+    "op_return_hex": "6a2f4d6573736167653a206c6567616c20726570726573656e746174697665202b206f776e6572206f662077616c6c6574",
+    "op_return_text": "legal representative + owner of wallet",
+    "claim_status": "expired",
+    "reason": "Claim window expired 3 day(s) ago on 2025-05-29",
+    "issuer_tag": "self_attested_owner",
+    "confidence": 0.75,
+    "deadline": "2025-05-29T00:00:00+00:00",
+    "next_step_suggestion": "escalate for allocation"
+  },
+  {
+    "txid": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "vout": 2,
+    "block_time": "2025-05-20T18:45:00+00:00",
+    "op_return_hex": "6a14436c61696d207061796c6f6164206e6f74696365",
+    "op_return_text": "notice",
+    "claim_status": "valid",
+    "reason": "Claim is within the 90-day window (78 day(s) remaining).",
+    "issuer_tag": "kmk142789",
+    "confidence": 0.4,
+    "deadline": "2025-08-18T18:45:00+00:00",
+    "next_step_suggestion": "action (not expired)"
+  }
+]
