@@ -37,6 +37,25 @@ def test_decode_hex_script() -> None:
     assert decoded.address == "1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ"
 
 
+def test_decode_script_ignores_comment_lines_and_fragments() -> None:
+    script = """# leading metadata
+OP_DUP # duplicate top stack item
+# inline payload comment follows
+OP_HASH160
+03b7892656a4c3df81b2f3e974f8e5ed2dc78dee
+# enforce equality
+OP_EQUALVERIFY # ensure signature matches
+#
+OP_CHECKSIG
+"""
+    decoded = decode_p2pkh_script(script)
+    assert decoded == DecodedScript(
+        address="1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ",
+        pubkey_hash="03b7892656a4c3df81b2f3e974f8e5ed2dc78dee",
+        network="mainnet",
+    )
+
+
 def test_invalid_script_raises() -> None:
     bad_script = "OP_HASH160 00112233445566778899aabbccddeeff00112233 OP_EQUALVERIFY"
     try:

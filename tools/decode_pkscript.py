@@ -62,14 +62,14 @@ def _sha256(data: bytes) -> bytes:
 
 
 def _is_hex_script(script: str) -> bool:
-    cleaned = script.strip().replace(" ", "")
+    cleaned = _strip_comments(script).strip().replace(" ", "")
     if not cleaned or len(cleaned) % 2:
         return False
     return all(ch in string.hexdigits for ch in cleaned)
 
 
 def _tokens_from_hex(script: str) -> List[str]:
-    raw = bytes.fromhex(script.strip().replace(" ", ""))
+    raw = bytes.fromhex(_strip_comments(script).strip().replace(" ", ""))
     if len(raw) < 25:
         raise ScriptDecodeError("hex script too short for P2PKH")
     if raw[0] != 0x76 or raw[1] != 0xa9:
@@ -91,8 +91,24 @@ def _tokens_from_hex(script: str) -> List[str]:
     ]
 
 
+def _strip_comments(script: str) -> str:
+    """Return ``script`` with comment fragments removed."""
+
+    lines: List[str] = []
+    for raw_line in script.splitlines():
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if "#" in stripped:
+            stripped = stripped.split("#", 1)[0].strip()
+            if not stripped:
+                continue
+        lines.append(stripped)
+    return "\n".join(lines)
+
+
 def _normalize_tokens(script: str) -> List[str]:
-    parts = re.split(r"\s+", script.strip())
+    parts = re.split(r"\s+", _strip_comments(script))
     tokens: List[str] = []
     buffer_clean = ""
     buffer_raw: List[str] = []
