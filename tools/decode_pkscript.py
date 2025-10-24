@@ -15,6 +15,8 @@ _NETWORK_PREFIXES = {
     "regtest": b"\x6f",
 }
 
+_KNOWN_OPS = {"OP_DUP", "OP_HASH160", "OP_EQUALVERIFY", "OP_CHECKSIG"}
+
 
 class ScriptDecodeError(ValueError):
     """Raised when the provided script cannot be interpreted as P2PKH."""
@@ -79,32 +81,74 @@ def _normalize_tokens(script: str) -> List[str]:
     parts = re.split(r"\s+", script.strip())
     tokens: List[str] = []
     buffer = ""
-    known_ops = {"OP_DUP", "OP_HASH160", "OP_EQUALVERIFY", "OP_CHECKSIG"}
+
     for part in filter(None, parts):
-        candidate = part if not buffer else buffer + part
-        if candidate in known_ops:
+        upper = part.upper()
+        candidate = upper if not buffer else buffer + upper
+
+        if candidate in _KNOWN_OPS:
             tokens.append(candidate)
             buffer = ""
             continue
-        if part in known_ops:
-            tokens.append(part)
+
+        if upper in _KNOWN_OPS:
+            tokens.append(upper)
             buffer = ""
             continue
-        if part.startswith("OP_"):
-            buffer = part
+
+        if upper.startswith("OP_"):
+            buffer = candidate
             continue
+
         if buffer:
             raise ScriptDecodeError(f"unrecognized opcode sequence: {buffer} {part}")
+
         tokens.append(part)
+
     if buffer:
         raise ScriptDecodeError(f"dangling opcode fragment: {buffer}")
+
     return tokens
 
 
-def _ensure_pattern(tokens: Iterable[str]) -> List[str]:
-    collected = list(tokens)
-    if len(collected) != 5:
+def _extract_p2pkh_tokens(tokens: Iterable[str]) -> List[str]:
+    """Return the canonical five-token P2PKH sequence from ``tokens``."""
+
+    sequence: List[str] = []
+    started = False
+
+    for token in tokens:
+        if len(sequence) == 5:
+            upper = token.upper()
+            if upper in _KNOWN_OPS or re.fullmatch(r"[0-9a-fA-F]{40}", token):
+                raise ScriptDecodeError("unexpected tokens after canonical P2PKH sequence")
+            continue
+
+        upper = token.upper()
+
+        if upper in _KNOWN_OPS:
+            sequence.append(upper)
+            started = True
+            continue
+
+        if re.fullmatch(r"[0-9a-fA-F]{40}", token):
+            sequence.append(token.lower())
+            started = True
+            continue
+
+        if not started:
+            continue
+
+        raise ScriptDecodeError(f"unexpected token in script body: {token}")
+
+    if len(sequence) != 5:
         raise ScriptDecodeError("script must contain five elements for P2PKH")
+
+    return sequence
+
+
+def _ensure_pattern(tokens: Iterable[str]) -> List[str]:
+    collected = _extract_p2pkh_tokens(tokens)
     op_dup, op_hash, payload, op_equalverify, op_checksig = collected
     if op_dup != "OP_DUP" or op_hash != "OP_HASH160":
         raise ScriptDecodeError("script must start with OP_DUP OP_HASH160")
