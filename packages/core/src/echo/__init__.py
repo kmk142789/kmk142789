@@ -55,6 +55,7 @@ from .evolver import (
 from .impossible_realities import ImpossibleEvent, ImpossibleRealityEngine
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
+from .moonshot import MoonshotLens, MoonshotReport, PlanSummary, PulseSummary, WishSummary
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
@@ -182,6 +183,11 @@ __all__ = [
     "SynchronizerReport",
     "SynchronizerSignal",
     "spin_compass",
+    "MoonshotLens",
+    "MoonshotReport",
+    "PlanSummary",
+    "PulseSummary",
+    "WishSummary",
     "CloudSyncCoordinator",
     "DirectorySyncTransport",
     "SyncReport",
