@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -26,6 +27,37 @@ class PuzzleSolution:
     public_key: str
     private_key: str
     solve_date: str
+
+    def p2pkh_script(self, *, separator: str = " ") -> str:
+        """Return the canonical P2PKH locking script for this puzzle wallet.
+
+        Parameters
+        ----------
+        separator:
+            Token separator used when joining the assembly representation.  The
+            default yields a single-line script while callers may request a
+            newline-delimited variant by passing ``"\n"``.
+
+        Raises
+        ------
+        ValueError
+            If the stored HASH160 payload is not the expected 20-byte hex
+            string.  This protects against accidentally emitting malformed
+            scripts for incomplete dataset entries.
+        """
+
+        payload = self.hash160_compressed.lower()
+        if not re.fullmatch(r"[0-9a-f]{40}", payload):
+            raise ValueError("puzzle record does not contain a valid HASH160")
+
+        parts = [
+            "OP_DUP",
+            "OP_HASH160",
+            payload,
+            "OP_EQUALVERIFY",
+            "OP_CHECKSIG",
+        ]
+        return separator.join(parts)
 
 
 @lru_cache(maxsize=1)
@@ -82,6 +114,15 @@ def get_solution_by_bits(bits: int) -> PuzzleSolution:
         if entry.bits == bits:
             return entry
     raise KeyError(f"No puzzle solution recorded for {bits} bits")
+
+
+def get_puzzle_metadata(bits: int) -> PuzzleSolution:
+    """Return the raw dataset entry for ``bits`` regardless of solve status."""
+
+    for entry in _load_raw_dataset():
+        if entry.bits == bits:
+            return entry
+    raise KeyError(f"No puzzle metadata recorded for {bits} bits")
 
 
 def find_solution_by_address(address: str) -> Optional[PuzzleSolution]:
