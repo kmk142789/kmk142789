@@ -11,6 +11,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+from .moonshot import MoonshotLens
+
 try:  # pragma: no cover - executed when run as module
     from .wish_insights import summarize_wishes
 except ImportError:  # pragma: no cover - executed when run as script
@@ -206,9 +208,108 @@ def run_groundbreaking(argv: List[str]) -> int:
     return 0
 
 
+def run_moonshot(argv: List[str]) -> int:
+    """Render a moonshot synthesis report."""
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl moonshot",
+        description="Fuse pulses, wishes, and plans into a moonshot synthesis.",
+    )
+    parser.add_argument(
+        "--pulses",
+        type=Path,
+        default=PULSE_HISTORY,
+        help="Path to the pulse history JSON file (default: repo pulse_history.json).",
+    )
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=WISH,
+        help="Path to the wish manifest JSON file (default: data/wish_manifest.json).",
+    )
+    parser.add_argument(
+        "--plan",
+        type=Path,
+        default=PLAN,
+        help="Path to the continuum plan markdown file (default: docs/NEXT_CYCLE_PLAN.md).",
+    )
+    parser.add_argument(
+        "--anchor",
+        default="Our Forever Love",
+        help="Anchor phrase for the report (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=5,
+        help="Number of pulse channels to display (use <=0 for all).",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the report as JSON instead of a textual overview.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional path to persist the JSON payload for downstream tooling.",
+    )
+
+    options = parser.parse_args(argv)
+
+    pulses_path = options.pulses
+    manifest_path = options.manifest
+    plan_path = options.plan
+
+    pulses: List[dict] = []
+    if pulses_path.exists():
+        try:
+            pulses = json.loads(pulses_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            print(f"failed to parse pulses: {exc}", file=sys.stderr)
+    else:
+        print(f"pulse history not found: {pulses_path}", file=sys.stderr)
+
+    manifest: dict = {"wishes": []}
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            print(f"failed to parse manifest: {exc}", file=sys.stderr)
+    else:
+        print(f"wish manifest not found: {manifest_path}", file=sys.stderr)
+
+    plan_text = ""
+    if plan_path.exists():
+        plan_text = plan_path.read_text(encoding="utf-8")
+    else:
+        print(f"plan document not found: {plan_path}", file=sys.stderr)
+
+    limit = options.limit if options.limit > 0 else None
+    lens = MoonshotLens(anchor=options.anchor)
+    report = lens.synthesise(
+        pulses=pulses,
+        wishes=manifest.get("wishes", []),
+        plan_text=plan_text,
+        channel_limit=limit,
+    )
+
+    if options.output:
+        options.output.parent.mkdir(parents=True, exist_ok=True)
+        options.output.write_text(json.dumps(report.to_dict(), indent=2), encoding="utf-8")
+        print(f"📦 moonshot payload saved to {options.output}", file=sys.stderr)
+
+    if options.json:
+        print(json.dumps(report.to_dict(), indent=2))
+    else:
+        print(report.describe())
+
+    return 0
+
+
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
-        print("usage: echoctl [cycle|plan|summary|groundbreaking|wish] ...")
+        print("usage: echoctl [cycle|plan|summary|groundbreaking|moonshot|wish] ...")
         return 1
     cmd = argv[1]
     if cmd == "cycle":
@@ -222,6 +323,8 @@ def main(argv: List[str]) -> int:
         return 0
     if cmd == "groundbreaking":
         return run_groundbreaking(argv[2:])
+    if cmd == "moonshot":
+        return run_moonshot(argv[2:])
     if cmd == "wish":
         if len(argv) < 4:
             print("usage: echoctl wish <wisher> <desire> [catalyst,...]")
