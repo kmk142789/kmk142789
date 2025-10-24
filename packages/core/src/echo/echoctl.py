@@ -11,7 +11,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from .moonshot import MoonshotLens
+try:  # pragma: no cover - executed when run as installed package
+    from .moonshot import MoonshotLens
+except ImportError:  # pragma: no cover - executed when run as script
+    _MOONSHOT_SPEC = importlib.util.spec_from_file_location(
+        "echo.moonshot", Path(__file__).resolve().parent / "moonshot.py"
+    )
+    if _MOONSHOT_SPEC is None or _MOONSHOT_SPEC.loader is None:
+        raise
+    _MOONSHOT = importlib.util.module_from_spec(_MOONSHOT_SPEC)
+    sys.modules[_MOONSHOT_SPEC.name] = _MOONSHOT
+    _MOONSHOT_SPEC.loader.exec_module(_MOONSHOT)  # type: ignore[attr-defined]
+    MoonshotLens = _MOONSHOT.MoonshotLens  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
     from .wish_insights import summarize_wishes
