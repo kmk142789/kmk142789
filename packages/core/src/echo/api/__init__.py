@@ -24,6 +24,7 @@ from pulse_weaver.api import create_router as create_pulse_weaver_router
 from pulse_weaver.service import PulseWeaverService
 
 from .routes_echonet import router as echonet_router
+from .routes_registry import router as registry_router
 from .state import dag, receipts, session_heads, set_dag, set_receipts, set_session_heads
 from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulseweaver import build_pulse_bus, build_watchdog
@@ -33,6 +34,7 @@ from echo.orchestrator.api import create_router as create_orchestrator_router
 
 app = FastAPI(title="Echo")
 app.include_router(echonet_router)
+app.include_router(registry_router)
 
 _bridge_api = EchoBridgeAPI(
     github_repository=os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY"),
