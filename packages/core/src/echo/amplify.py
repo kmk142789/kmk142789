@@ -296,6 +296,22 @@ class AmplificationEngine:
         with self.log_path.open("a", encoding="utf-8") as handle:
             json.dump(snapshot.as_dict(), handle, sort_keys=True)
             handle.write("\n")
+        try:  # pragma: no cover - best-effort export refresh
+            from .timeline import refresh_cycle_timeline
+        except Exception:  # pragma: no cover - optional dependency failure
+            return
+        try:
+            log_dir = self.log_path.resolve().parent
+        except FileNotFoundError:  # pragma: no cover - resolution edge case
+            log_dir = self.log_path.parent
+        project_root = log_dir.parent if log_dir.name == "state" else log_dir
+        try:
+            refresh_cycle_timeline(
+                project_root=project_root,
+                amplify_log=self.log_path,
+            )
+        except Exception:  # pragma: no cover - avoid blocking persistence
+            pass
 
     def update_manifest(self, snapshot: AmplifySnapshot) -> None:
         if not self.manifest_path.exists():

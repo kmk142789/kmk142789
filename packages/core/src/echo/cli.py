@@ -18,6 +18,7 @@ from pulse_weaver.cli import register_subcommand as register_pulse_weaver
 
 from .amplify import AmplificationEngine, AmplifyState
 from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
+from .timeline import build_cycle_timeline, refresh_cycle_timeline
 from .tools.forecast import project_indices, sparkline
 from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulseweaver import PulseBus, WatchdogConfig, build_pulse_bus, build_watchdog
@@ -289,6 +290,50 @@ def _cmd_pulse_history(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_timeline(args: argparse.Namespace) -> int:
+    project_root = args.project_root or Path.cwd()
+    if args.cycle is not None:
+        entries = build_cycle_timeline(
+            project_root=project_root,
+            amplify_log=args.amplify_log,
+            pulse_history=args.pulse_history,
+            puzzle_index=args.puzzle_index,
+            limit=args.limit,
+        )
+        if not entries:
+            print("No cycle snapshots available.")
+            return 1
+        for entry in entries:
+            if entry.snapshot.cycle == args.cycle:
+                print(json.dumps(entry.to_dict(), indent=2, sort_keys=True))
+                print()
+                print(entry.to_markdown())
+                return 0
+        print(f"No timeline entry for cycle {args.cycle}.")
+        return 1
+
+    entries = refresh_cycle_timeline(
+        project_root=project_root,
+        amplify_log=args.amplify_log,
+        pulse_history=args.pulse_history,
+        puzzle_index=args.puzzle_index,
+        output_dir=args.out,
+        limit=args.limit,
+    )
+    if not entries:
+        print("No cycle snapshots available; timeline exports not created.")
+        return 1
+
+    if args.out is not None:
+        target_dir = Path(args.out)
+        if not target_dir.is_absolute():
+            target_dir = project_root / target_dir
+    else:
+        target_dir = project_root / "artifacts"
+    print(f"Cycle timeline exports refreshed in {target_dir}")
+    return 0
+
+
 def _cmd_ledger_snapshot(args: argparse.Namespace) -> int:
     ledger = TemporalLedger(state_dir=args.state or Path("state"))
     since = datetime.fromisoformat(args.since) if args.since else None
@@ -388,6 +433,49 @@ def main(argv: Iterable[str] | None = None) -> int:
     forecast_parser.add_argument("--cycles", type=int, default=12)
     forecast_parser.add_argument("--plot", action="store_true")
     forecast_parser.set_defaults(func=_cmd_forecast)
+
+    timeline_parser = subparsers.add_parser(
+        "timeline", help="Aggregate cycle, pulse, and puzzle relationships"
+    )
+    timeline_parser.add_argument(
+        "--cycle",
+        type=int,
+        help="Render a single cycle timeline to stdout",
+    )
+    timeline_parser.add_argument(
+        "--limit",
+        type=int,
+        help="Limit processing to the most recent N cycles",
+    )
+    timeline_parser.add_argument(
+        "--amplify-log",
+        type=Path,
+        default=Path("state/amplify_log.jsonl"),
+        help="Path to amplification history (default: state/amplify_log.jsonl)",
+    )
+    timeline_parser.add_argument(
+        "--pulse-history",
+        type=Path,
+        default=Path("pulse_history.json"),
+        help="Path to pulse history ledger (default: pulse_history.json)",
+    )
+    timeline_parser.add_argument(
+        "--puzzle-index",
+        type=Path,
+        default=Path("data/puzzle_index.json"),
+        help="Path to the puzzle index dataset (default: data/puzzle_index.json)",
+    )
+    timeline_parser.add_argument(
+        "--out",
+        type=Path,
+        help="Directory to write exported artifacts (default: artifacts)",
+    )
+    timeline_parser.add_argument(
+        "--project-root",
+        type=Path,
+        help="Repository root to resolve relative paths (default: current directory)",
+    )
+    timeline_parser.set_defaults(func=_cmd_timeline)
 
     pulse_parser = subparsers.add_parser("pulse", help="Pulse Weaver utilities")
     pulse_sub = pulse_parser.add_subparsers(dest="pulse_command", required=True)
