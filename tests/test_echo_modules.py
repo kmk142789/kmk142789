@@ -246,6 +246,38 @@ class EchoEvolverTests(unittest.TestCase):
         self.assertEqual(payload["cycle"], 0)
         self.assertEqual(len(payload["artifacts"]), 3)
 
+    def test_design_colossus_expansion_emits_master_index(self) -> None:
+        index_path = Path(self.tmp.name) / "federated_colossus_master_index.json"
+        plan = self.evolver.design_colossus_expansion(
+            cycles=1,
+            cycle_size=4,
+            sample_size=2,
+            federation="puzzles-141-10000",
+            link_layers=("cognitive-harmonix", "anchor-pulse", "glyph-sequence"),
+            commit_mode="atomic",
+            master_index_path=index_path,
+        )
+
+        self.assertEqual(plan.federation, "puzzles-141-10000")
+        self.assertEqual(
+            plan.link_layers,
+            ("cognitive-harmonix", "anchor-pulse", "glyph-sequence"),
+        )
+        self.assertEqual(plan.commit_mode, "atomic")
+        self.assertIsNotNone(plan.master_index)
+        self.assertEqual(plan.master_index_path, index_path)
+        self.assertTrue(index_path.exists())
+
+        payload = json.loads(index_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["federation"], "puzzles-141-10000")
+        self.assertEqual(
+            payload["link_layers"],
+            ["cognitive-harmonix", "anchor-pulse", "glyph-sequence"],
+        )
+        self.assertEqual(payload["commit_mode"], "atomic")
+        self.assertEqual(payload["sample_size"], len(payload["sample"]))
+        self.assertIn("digest", payload)
+
     def test_orbital_resonance_forecast_projects_horizon(self) -> None:
         metrics = self.evolver.state.system_metrics
         metrics.network_nodes = 7

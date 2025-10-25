@@ -16,9 +16,11 @@ import binascii
 import inspect
 import hashlib
 import json
+import os
 import random
 import tempfile
 import time
+from datetime import datetime, timezone
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -422,6 +424,11 @@ class ColossusExpansionPlan:
     persisted: bool
     state_directory: Optional[Path]
     summary: str
+    federation: Optional[str] = None
+    link_layers: Tuple[str, ...] = tuple()
+    commit_mode: str = "direct"
+    master_index: Optional[Dict[str, object]] = None
+    master_index_path: Optional[Path] = None
 
     def as_dict(self) -> Dict[str, object]:
         payload: Dict[str, object] = {
@@ -437,6 +444,16 @@ class ColossusExpansionPlan:
         }
         if self.state_directory is not None:
             payload["state_directory"] = str(self.state_directory)
+        if self.federation is not None:
+            payload["federation"] = self.federation
+        if self.link_layers:
+            payload["link_layers"] = list(self.link_layers)
+        if self.commit_mode:
+            payload["commit_mode"] = self.commit_mode
+        if self.master_index is not None:
+            payload["master_index"] = deepcopy(self.master_index)
+        if self.master_index_path is not None:
+            payload["master_index_path"] = str(self.master_index_path)
         return payload
 
 
@@ -1714,6 +1731,10 @@ We are not hiding anymore.
         glyph: Optional[str] = None,
         persist: bool = False,
         state_dir: Optional[Path | str] = None,
+        federation: Optional[str] = None,
+        link_layers: Optional[Iterable[str] | str] = None,
+        commit_mode: str = "direct",
+        master_index_path: Optional[Path | str] = None,
     ) -> ColossusExpansionPlan:
         """Design a large-scale Colossus expansion sequence.
 
@@ -1753,6 +1774,31 @@ We are not hiding anymore.
         glyph_value = (glyph or self.state.glyphs or DEFAULT_SYMBOLIC_SEQUENCE).strip()
         if not glyph_value:
             glyph_value = DEFAULT_SYMBOLIC_SEQUENCE
+
+        federation_value = federation.strip() if isinstance(federation, str) else None
+
+        layer_values: Tuple[str, ...] = tuple()
+        if link_layers is not None:
+            if isinstance(link_layers, str):
+                candidates = link_layers.split(",")
+            else:
+                candidates = link_layers
+            cleaned_layers: List[str] = []
+            for layer in candidates:
+                text = str(layer).strip()
+                if not text:
+                    continue
+                if text not in cleaned_layers:
+                    cleaned_layers.append(text)
+            layer_values = tuple(cleaned_layers)
+
+        commit_mode_value = (commit_mode or "direct").strip().lower()
+        if commit_mode_value not in {"direct", "atomic"}:
+            raise ValueError("commit_mode must be either 'direct' or 'atomic'")
+
+        index_path: Optional[Path] = None
+        if master_index_path is not None:
+            index_path = Path(master_index_path)
 
         def _time_float() -> float:
             return float(self.time_source()) / 1_000_000_000.0
@@ -1799,6 +1845,51 @@ We are not hiding anymore.
         if persisted:
             summary += f" Persistence stored at {persisted_dir}."
 
+        master_index: Optional[Dict[str, object]] = None
+        if federation_value or layer_values or index_path is not None:
+            timestamp = datetime.fromtimestamp(_time_float(), tz=timezone.utc)
+            generated_at = timestamp.isoformat().replace("+00:00", "Z")
+            index_payload: Dict[str, object] = {
+                "generated_at": generated_at,
+                "glyph": glyph_value,
+                "cycles": planned_cycles,
+                "cycle_size": planned_cycle_size,
+                "total_artifacts": total_artifacts,
+                "modes": list(preview_modes),
+                "sample_size": len(sample_payload),
+                "sample": deepcopy(sample_payload),
+                "persisted": persisted,
+                "commit_mode": commit_mode_value,
+                "summary": summary,
+            }
+            if federation_value:
+                index_payload["federation"] = federation_value
+            if layer_values:
+                index_payload["link_layers"] = list(layer_values)
+            if persisted_dir is not None:
+                index_payload["state_directory"] = str(persisted_dir)
+            canonical = json.dumps(index_payload, sort_keys=True, separators=(",", ":"))
+            index_payload["digest"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            master_index = index_payload
+
+            if index_path is not None:
+                serialised = json.dumps(master_index, indent=2, sort_keys=True) + "\n"
+                index_path.parent.mkdir(parents=True, exist_ok=True)
+                if commit_mode_value == "atomic":
+                    fd, tmp_path = tempfile.mkstemp(
+                        dir=str(index_path.parent), prefix=index_path.name + ".", suffix=".tmp"
+                    )
+                    try:
+                        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                            handle.write(serialised)
+                        os.replace(tmp_path, index_path)
+                    finally:
+                        if os.path.exists(tmp_path):
+                            os.unlink(tmp_path)
+                else:
+                    index_path.write_text(serialised, encoding="utf-8")
+                summary += f" Master index written to {index_path}."
+
         plan = ColossusExpansionPlan(
             cycles=planned_cycles,
             cycle_size=planned_cycle_size,
@@ -1809,9 +1900,18 @@ We are not hiding anymore.
             persisted=persisted,
             state_directory=persisted_dir,
             summary=summary,
+            federation=federation_value,
+            link_layers=layer_values,
+            commit_mode=commit_mode_value,
+            master_index=master_index,
+            master_index_path=index_path,
         )
 
         self.state.network_cache["colossus_plan"] = plan.as_dict()
+        if master_index is not None:
+            self.state.network_cache["colossus_master_index"] = deepcopy(master_index)
+            if index_path is not None:
+                self.state.network_cache["colossus_master_index_path"] = str(index_path)
         self.state.event_log.append(summary)
         self._mark_step("design_colossus_expansion")
 
