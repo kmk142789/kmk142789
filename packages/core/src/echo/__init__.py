@@ -50,6 +50,7 @@ from .cosmic_mnemonic_forge import (
     render_constellation,
 )
 from .dotnet_sdk import build_dotnet_sdk_download_url
+from .echo_nexus_hub import EchoNexusHub, ScheduleLoopDigest, WorkerStory
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .echo_visionary_kernel import BitwisePixelEngine, EchoVisionaryKernel, WorkerBot
 from .evolver import (
@@ -199,6 +200,7 @@ __all__ = [
     "BridgeEmitter",
     "BridgeState",
     "BitwisePixelEngine",
+    "EchoNexusHub",
     "EchoNexusPortal",
     "EchoVisionaryKernel",
     "ImpossibleEvent",
@@ -225,6 +227,7 @@ __all__ = [
     "PropagationWave",
     "TemporalPropagationLedger",
     "SystemMetrics",
+    "ScheduleLoopDigest",
     "HearthWeave",
     "GlyphCrossReading",
     "EchoAI",
@@ -232,6 +235,7 @@ __all__ = [
     "HarmonicConfig",
     "HarmonicsAI",
     "WorkerBot",
+    "WorkerStory",
     "StabilityScore",
     "resolve_apps",
     "resolve_domains",
