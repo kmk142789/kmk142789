@@ -20,7 +20,8 @@ Example usage:
     WIF (compressed): KzA4xmBM1SwLk4N3C6grkFuFdEASpnEEa5GmR2v4EJUNvqh7Q6kL
 
 The command accepts either the puzzle ``bits`` value, the Bitcoin
-address, or the 20-byte hash160 fingerprint.
+address, the 20-byte hash160 fingerprint, or a canonical P2PKH locking
+script.
 """
 
 from __future__ import annotations
@@ -30,6 +31,8 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
+
+from tools.decode_pkscript import ScriptDecodeError, decode_p2pkh_script
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -110,12 +113,20 @@ def _match_entry(
     raise SystemExit("Could not locate a matching puzzle entry.")
 
 
+def _hash160_from_pkscript(pkscript: str) -> str:
+    """Extract the canonical hash160 payload from a textual P2PKH script."""
+
+    decoded = decode_p2pkh_script(pkscript)
+    return decoded.pubkey_hash.lower()
+
+
 def main(argv: Optional[Iterable[str]] = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("bits", type=int, nargs="?", help="Puzzle bits number to look up")
     group.add_argument("--address", help="Bitcoin address to match")
     group.add_argument("--hash160", help="Legacy hash160 fingerprint to match")
+    group.add_argument("--pkscript", help="Canonical P2PKH script to match")
     parser.add_argument(
         "--solutions",
         type=Path,
@@ -126,7 +137,19 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     args = parser.parse_args(argv)
 
     entries = _load_solutions(args.solutions)
-    entry = _match_entry(entries, bits=args.bits, address=args.address, hash160=args.hash160)
+    derived_hash160: Optional[str] = None
+    if args.pkscript:
+        try:
+            derived_hash160 = _hash160_from_pkscript(args.pkscript)
+        except ScriptDecodeError as exc:  # pragma: no cover - defensive guard
+            raise SystemExit(f"Could not parse provided PkScript: {exc}")
+
+    entry = _match_entry(
+        entries,
+        bits=args.bits,
+        address=args.address,
+        hash160=args.hash160 or derived_hash160,
+    )
 
     pubkey = entry["public_key"]
     derived_address = _derive_p2pkh_address(pubkey)
