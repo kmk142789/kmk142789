@@ -1,0 +1,216 @@
+{
+  "rdapConformance": [
+    "rdap_level_0",
+    "icann_rdap_response_profile_1",
+    "icann_rdap_technical_implementation_guide_1",
+    "redacted"
+  ],
+  "notices": [
+    {
+      "title": "Terms of Service",
+      "description": [
+        "Access to RDAP information is provided to assist persons in determining the contents of a domain name registration record in the registry database. The data in this record is provided by Identity Digital or, if the record pertains to a TLD not operated by Identity Digital, then the corresponding primary Registry Operator for informational purposes only, and neither Identity Digital nor the Registry Operator guarantee its accuracy. This service is intended only for query-based access. You agree that you will use this data only for lawful purposes and that, under no circumstances will you use this data to (a) allow, enable, or otherwise support the transmission by e-mail, telephone, or facsimile of mass unsolicited, commercial advertising or solicitations to entities other than the data recipient's own existing customers; or (b) enable high volume, automated, electronic processes that send queries or data to the systems of Identity Digital, a Registrar, or Registry Operator except as reasonably necessary to register domain names or modify existing registrations. When using the RDAP service, please consider the following: the RDAP service is not a replacement for standard EPP commands to the SRS service. RDAP is not considered authoritative for registered domain objects. The RDAP service may be scheduled for downtime during production or OT&E maintenance periods. Queries to the RDAP services are throttled. If too many queries are received from a single IP address within a specified time, the service will begin to reject further queries for a period of time to prevent disruption of RDAP service access. Abuse of the RDAP system through data mining is mitigated by detecting and limiting bulk query access from single sources. Where applicable, the presence of a [Non-Public Data] tag indicates that such data is not made publicly available due to applicable data privacy laws or requirements. Should you wish to contact the registrant, please refer to the RDAP records available through the registrar URL listed above. Access to non-public data may be provided, upon request, where it can be reasonably confirmed that the requester holds a specific legitimate interest and a proper legal basis for accessing the withheld data. Access to the data provided by Identity Digital can be requested by submitting a request via the form found at https://www.identity.digital/about/policies/whois-layered-access/ Identity Digital Inc. and, if applicable, the primary Registry Operators reserve the right to modify these terms at any time. By submitting this query, you agree to abide by this policy."
+      ],
+      "links": [
+        {
+          "value": "https://rdap.identitydigital.services/rdap/domain/btcpuzzle.info",
+          "rel": "terms-of-service",
+          "href": "https://www.identity.digital/policies/rdds-access-policy",
+          "type": "text/html"
+        }
+      ]
+    },
+    {
+      "title": "Status Codes",
+      "description": [
+        "For more information on domain status codes, please visit https://icann.org/epp"
+      ],
+      "links": [
+        {
+          "value": "https://rdap.identitydigital.services/rdap/domain/btcpuzzle.info",
+          "rel": "glossary",
+          "href": "https://icann.org/epp",
+          "type": "application/rdap+json"
+        }
+      ]
+    },
+    {
+      "title": "RDDS Inaccuracy Complaint Form",
+      "description": [
+        "URL of the ICANN RDDS Inaccuracy Complaint Form: https://icann.org/wicf"
+      ],
+      "links": [
+        {
+          "value": "https://rdap.identitydigital.services/rdap/domain/btcpuzzle.info",
+          "rel": "help",
+          "href": "https://icann.org/wicf",
+          "type": "application/rdap+json"
+        }
+      ]
+    }
+  ],
+  "ldhName": "btcpuzzle.info",
+  "unicodeName": "btcpuzzle.info",
+  "nameservers": [
+    {
+      "ldhName": "gina.ns.cloudflare.com",
+      "unicodeName": "gina.ns.cloudflare.com",
+      "objectClassName": "nameserver",
+      "handle": "151925e86c83480eae739b61620a8d2f-DONUTS",
+      "status": [
+        "associated"
+      ]
+    },
+    {
+      "ldhName": "charles.ns.cloudflare.com",
+      "unicodeName": "charles.ns.cloudflare.com",
+      "objectClassName": "nameserver",
+      "handle": "076f62228e98430ea0f7720bd05736f2-DONUTS",
+      "status": [
+        "associated"
+      ]
+    }
+  ],
+  "secureDNS": {
+    "delegationSigned": false,
+    "maxSigLife": 1
+  },
+  "publicIds": [
+    {
+      "type": "IANA Registrar ID",
+      "identifier": "1068"
+    }
+  ],
+  "redacted": [
+    {
+      "name": {
+        "type": "Registry Domain ID"
+      },
+      "prePath": "$.handle",
+      "pathLang": "jsonpath",
+      "method": "removal"
+    }
+  ],
+  "objectClassName": "domain",
+  "status": [
+    "client transfer prohibited"
+  ],
+  "events": [
+    {
+      "eventAction": "expiration",
+      "eventDate": "2026-05-19T08:57:04.602Z"
+    },
+    {
+      "eventAction": "registration",
+      "eventDate": "2023-05-19T08:57:04.602Z"
+    },
+    {
+      "eventAction": "last changed",
+      "eventDate": "2024-04-12T23:50:32.478Z"
+    },
+    {
+      "eventAction": "last update of RDAP database",
+      "eventDate": "2025-10-25T19:24:34.926Z"
+    }
+  ],
+  "entities": [
+    {
+      "vcardArray": [
+        "vcard",
+        [
+          [
+            "version",
+            {},
+            "text",
+            "4.0"
+          ],
+          [
+            "fn",
+            {},
+            "text",
+            "NameCheap, Inc."
+          ]
+        ]
+      ],
+      "roles": [
+        "registrar"
+      ],
+      "publicIds": [
+        {
+          "type": "IANA Registrar ID",
+          "identifier": "1068"
+        }
+      ],
+      "objectClassName": "entity",
+      "handle": "1068",
+      "entities": [
+        {
+          "vcardArray": [
+            "vcard",
+            [
+              [
+                "version",
+                {},
+                "text",
+                "4.0"
+              ],
+              [
+                "fn",
+                {},
+                "text",
+                "Jenn"
+              ],
+              [
+                "tel",
+                {
+                  "type": "voice"
+                },
+                "uri",
+                "tel:+1.9854014545"
+              ],
+              [
+                "email",
+                {},
+                "text",
+                "abuse@namecheap.com"
+              ]
+            ]
+          ],
+          "roles": [
+            "abuse"
+          ],
+          "objectClassName": "entity",
+          "handle": "10af0f41201e4614a3b8939baba4bdf2-DONUTS"
+        }
+      ],
+      "links": [
+        {
+          "value": "https://rdap.identitydigital.services/rdap/entity/1068",
+          "rel": "self",
+          "href": "https://rdap.identitydigital.services/rdap/entity/1068",
+          "type": "application/rdap+json"
+        },
+        {
+          "value": "https://rdap.namecheap.com/",
+          "rel": "about",
+          "href": "https://rdap.namecheap.com/",
+          "type": "application/rdap+json"
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "value": "https://rdap.identitydigital.services/rdap/domain/btcpuzzle.info",
+      "rel": "related",
+      "href": "https://rdap.namecheap.com/domain/btcpuzzle.info",
+      "type": "application/rdap+json"
+    },
+    {
+      "value": "https://rdap.identitydigital.services/rdap/domain/btcpuzzle.info",
+      "rel": "self",
+      "href": "https://rdap.identitydigital.services/rdap/domain/btcpuzzle.info",
+      "type": "application/rdap+json"
+    }
+  ]
+}
