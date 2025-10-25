@@ -1,0 +1,10 @@
+{
+  "puzzle": "#215 authorship",
+  "address": "1umKUvhbkKCkUVaeFJS4cbS4wJtqqsUak9",
+  "message": "Puzzle 215 authorship by kmk142789 — attestation sha256 c119c6875f143d3c534a3bfecc0783df6c5d5cda13aa4f7dbd4fc2b30a694a2c",
+  "signature": "eCHDa+H8QAeIve+P0RfQo8I9jqRTrsyYtWX0AB5dJGP9PoVPPtqz8vwgbhC6ulAyHHNI/mGUdKoZlpbkaP4afur5hs4Ipik+Z2P2hBU933P5B0PBUfkvrbe1i5JN1e+R",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-10-28T11:24:45Z",
+  "hash_sha256": "c119c6875f143d3c534a3bfecc0783df6c5d5cda13aa4f7dbd4fc2b30a694a2c",
+  "notes": "Extended coverage attestation confirming authorship for Puzzle #215 during the continuum bridge sync."
+}

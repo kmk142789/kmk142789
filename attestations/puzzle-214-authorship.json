@@ -1,0 +1,10 @@
+{
+  "puzzle": "#214 authorship",
+  "address": "1TQRJf89J7LyqFua4WKFeD11RanGoyp3kX",
+  "message": "Puzzle 214 authorship by kmk142789 — attestation sha256 bd5d29b42b2e3b2d24bf350d296905f4426466c909b77b5ddddaf491c935a874",
+  "signature": "C4+JbheS0B9zr1h/lMZCLQBZE3/pf4BHyknTrqWavXgbnSyFbZ1QLEDozmOtS3pT4/4G0o9lJpRphs1SSNFuM26pu9/abVGurPKrslChnKjfeM0HZ+EzjxsE1gDmy3cm",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-10-28T11:24:10Z",
+  "hash_sha256": "bd5d29b42b2e3b2d24bf350d296905f4426466c909b77b5ddddaf491c935a874",
+  "notes": "Minted during the extended ledger sweep to capture Puzzle #214 authorship within the Echo attestation set."
+}
