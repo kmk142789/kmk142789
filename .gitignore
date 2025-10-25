@@ -19,4 +19,9 @@ data/user_provided_keys.txt
 # Packaging artifacts
 *.egg-info/
 
-build/constellation/*.png
+# Echo Omni-Fusion generated artifacts
+build/constellation/
+build/oracle/
+build/proofs/
+build/domains/
+build/sim/
