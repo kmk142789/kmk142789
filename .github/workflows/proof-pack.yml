@@ -1,0 +1,34 @@
+name: Proof Pack & Pages
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'build/index/**.json'
+      - 'scripts/generate_federated_colossus.py'
+      - 'docs/dashboard/**'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate proof pack
+        run: |
+          python scripts/generate_federated_colossus.py \
+            --in build/index/federated_raw.json \
+            --json-out build/index/federated_colossus_index.json \
+            --md-out docs/federated_colossus_index.md
+      - name: Commit artifacts
+        run: |
+          git config user.name "echo-bot"
+          git config user.email "echo@users.noreply.github.com"
+          git add docs/ build/index/federated_colossus_index.json
+          git commit -m "chore: refresh proof pack & dashboard" || echo "No changes"
+          git push || true
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with: { path: 'docs' }
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

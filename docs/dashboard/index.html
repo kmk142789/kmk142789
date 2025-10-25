@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Federated Colossus — Live Index</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:24px;line-height:1.35}
+  header{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  h1{margin:0;font-size:20px}
+  .pill{padding:4px 8px;border-radius:999px;background:#f2f2f2}
+  .grid{display:grid;gap:12px}
+  .card{border:1px solid #eee;border-radius:12px;padding:12px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  label{font-size:12px;color:#555}
+  input{padding:6px 8px;border:1px solid #ddd;border-radius:8px}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:8px;border-bottom:1px solid #f0f0f0;font-size:13px;text-align:left}
+  th{background:#fafafa}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  .muted{color:#666}
+</style>
+<header>
+  <h1>Federated Colossus — Live Index</h1>
+  <span id="refreshed" class="pill muted"></span>
+  <span id="stats" class="pill"></span>
+</header>
+
+<section class="card grid">
+  <div class="row">
+    <div>
+      <label>Cycle</label><br/>
+      <input id="f-cycle" placeholder="e.g. 12" />
+    </div>
+    <div>
+      <label>Puzzle ID</label><br/>
+      <input id="f-puzzle" placeholder="e.g. 131" />
+    </div>
+    <div>
+      <label>Address (prefix ok)</label><br/>
+      <input id="f-addr" placeholder="e.g. 1Feex" />
+    </div>
+    <div>
+      <label>&nbsp;</label><br/>
+      <button id="btn-filter">Filter</button>
+      <button id="btn-clear">Clear</button>
+    </div>
+  </div>
+  <div class="muted">Backed by <span class="mono">build/index/federated_colossus_index.json</span></div>
+</section>
+
+<section class="card">
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th>Cycle</th>
+        <th>Puzzle</th>
+        <th>Address</th>
+        <th>Title</th>
+        <th>Digest</th>
+        <th class="muted">Source</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<script src="./app.js"></script>
+</html>
