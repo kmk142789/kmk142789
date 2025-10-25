@@ -1,0 +1,92 @@
+;;
+;; Domain:     unstoppabledomains.com.
+;; Exported:   2025-10-25 18:22:20
+;;
+;; This file is intended for use for informational and archival
+;; purposes ONLY and MUST be edited before use on a production
+;; DNS server.  In particular, you must:
+;;   -- update the SOA record with the correct authoritative name server
+;;   -- update the SOA record with the contact e-mail address information
+;;   -- update the NS record(s) with the authoritative name servers for this domain.
+;;
+;; For further information, please consult the BIND documentation
+;; located on the following website:
+;;
+;; http://www.isc.org/
+;;
+;; And RFC 1035:
+;;
+;; http://www.ietf.org/rfc/rfc1035.txt
+;;
+;; Please note that we do NOT offer technical support for any use
+;; of this zone data, the BIND name server, or any other third-party
+;; DNS software.
+;;
+;; Use at your own risk.
+;; SOA Record
+unstoppabledomains.com.  3600   IN  SOA brian.ns.cloudflare.com. dns.cloudflare.com. 2051308314 10000 2400 604800 3600
+
+;; NS Records
+unstoppabledomains.com.  86400  IN  NS  brian.ns.cloudflare.com.
+unstoppabledomains.com.  86400  IN  NS  emerie.ns.cloudflare.com.
+
+;; A Records
+shop.unstoppabledomains.com.     1   IN  A   18.238.217.40   ; cf_tags=cf-proxied:true
+shop.unstoppabledomains.com.     1   IN  A   18.238.217.39   ; cf_tags=cf-proxied:true
+shop.unstoppabledomains.com.     1   IN  A   18.238.217.3    ; cf_tags=cf-proxied:true
+shop.unstoppabledomains.com.     1   IN  A   18.238.217.58   ; cf_tags=cf-proxied:true
+staging.unstoppabledomains.com.  1   IN  A   151.101.194.137 ; cf_tags=cf-proxied:true
+staging.unstoppabledomains.com.  1   IN  A   151.101.130.137 ; cf_tags=cf-proxied:true
+staging.unstoppabledomains.com.  1   IN  A   151.101.66.137  ; cf_tags=cf-proxied:true
+staging.unstoppabledomains.com.  1   IN  A   151.101.2.137   ; cf_tags=cf-proxied:true
+unstoppabledomains.com.          1   IN  A   151.101.194.137 ; cf_tags=cf-proxied:true
+unstoppabledomains.com.          1   IN  A   151.101.130.137 ; cf_tags=cf-proxied:true
+unstoppabledomains.com.          1   IN  A   151.101.66.137  ; cf_tags=cf-proxied:true
+unstoppabledomains.com.          1   IN  A   151.101.2.137   ; cf_tags=cf-proxied:true
+
+;; CAA Records
+unstoppabledomains.com.  1   IN  CAA 0 issue "pki.goog"
+unstoppabledomains.com.  1   IN  CAA 0 issue "letsencrypt.org"
+unstoppabledomains.com.  1   IN  CAA 0 issue "amazon.com"
+
+;; CNAME Records
+_acme-challenge.unstoppabledomains.com.  1   IN  CNAME   n3y7d3aoy0p8ux4n3v.fastly-validations.com.  ; cf_tags=cf-proxied:true
+api.unstoppabledomains.com.                1   IN  CNAME   k.sni.global.fastly.net.                  ; cf_tags=cf-proxied:true
+auth.unstoppabledomains.com.               1   IN  CNAME   ghs.googlehosted.com.                    ; cf_tags=cf-proxied:true
+_dmarc.unstoppabledomains.com.             1   IN  CNAME   _d87449372.fdmarc.net.                   ; cf_tags=cf-proxied:true
+docs.unstoppabledomains.com.               1   IN  CNAME   ssl.redocly.com.                         ; cf_tags=cf-proxied:true
+email.unstoppabledomains.com.              1   IN  CNAME   e.customeriomail.com.                    ; cf_tags=cf-proxied:true
+images.unstoppabledomains.com.             1   IN  CNAME   k.sni.global.fastly.net.                 ; cf_tags=cf-proxied:true
+links.unstoppabledomains.com.              1   IN  CNAME   j.sni.global.fastly.net.                 ; cf_tags=cf-proxied:true
+s1._domainkey.unstoppabledomains.com.      1   IN  CNAME   s1.domainkey.u6953949.wl200.sendgrid.net.; cf_tags=cf-proxied:true
+s2._domainkey.unstoppabledomains.com.      1   IN  CNAME   s2.domainkey.u6953949.wl200.sendgrid.net.; cf_tags=cf-proxied:true
+status.unstoppabledomains.com.             1   IN  CNAME   wtsnzt5gz3fl.stspg-customer.com.         ; cf_tags=cf-proxied:true
+support.unstoppabledomains.com.            1   IN  CNAME   dd852ca5a3e04eb14ba57b8571cb55a0.freshdesk.com.; cf_tags=cf-proxied:true
+www.unstoppabledomains.com.                1   IN  CNAME   k.sni.global.fastly.net.                 ; cf_tags=cf-proxied:true
+
+;; MX Records
+unstoppabledomains.com.  1   IN  MX  10 alt4.aspmx.l.google.com.
+unstoppabledomains.com.  1   IN  MX  10 alt3.aspmx.l.google.com.
+unstoppabledomains.com.  1   IN  MX  5 alt2.aspmx.l.google.com.
+unstoppabledomains.com.  1   IN  MX  5 alt1.aspmx.l.google.com.
+unstoppabledomains.com.  1   IN  MX  1 aspmx.l.google.com.
+
+;; NS Records
+unstoppabledomains.com.  1   IN  NS  ns-cloud-d4.googledomains.com.
+unstoppabledomains.com.  1   IN  NS  ns-cloud-d3.googledomains.com.
+unstoppabledomains.com.  1   IN  NS  ns-cloud-d2.googledomains.com.
+unstoppabledomains.com.  1   IN  NS  ns-cloud-d1.googledomains.com.
+
+;; TXT Records
+google._domainkey.unstoppabledomains.com.   1   IN  TXT "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjwVTphnvYqG5uxuZ6f9zzdGKfFD16HMQ4sKoc2WEydYuybNuGryU2qaAWfNda+I6Y1HL+T0yLV1i4O00f/Gkoylkkd19PD3L4X3r0rJwONfx500ISSNNPEg4roHNn9MTdh2TQvXvQIQM6JbTA7U7343p9B4o+3zc61uRWYgh1k08EiqL8me8i2h795+Iuyif+" "5HzfVKVrOZ0XfshmBbxP+/bz3YaYZCzcmyCXd/VHMD8KHlQuEm9MnLkK5aV7M2fHv/dq1KjvL7qQffdXvfA07pemo3xU5JBv8WV/YAfbMoZNsFnKw4qa70O29KtnsFgpdkKEGBc+PLyNcQ+TvJi/QIDAQAB"
+smtpapi._domainkey.unstoppabledomains.com.  1   IN  TXT "k=rsa; t=s; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDPtW5iwpXVPiH5FzJ7Nrl8USzuY9zqqzjE0D1r04xDN6qwziDnmgcFNNfMewVKN2D1O+2J9N14hRprzByFwfQW76yojh54Xu3uSbQ3JP0A7k8o8GutRF8zbFUA8n0ZH2y0cIEjMliXY4W4LwPA7m4q0ObmvSjhd63O9d8z1XkUBwIDAQAB"
+unstoppabledomains.com.                      1   IN  TXT "wallet-connect-dns-verification=7d35b685fde49777d1b8aae6e34e478b368659017d2344a2fe876b1d510df0c4"
+unstoppabledomains.com.                      1   IN  TXT "google-site-verification=zW4zz8OO7MOKbL-QOpP2Odv5bJpZtNXOkfjrGCDi-lU"
+unstoppabledomains.com.                      1   IN  TXT "google-site-verification=wq8UeRXNt0HrMiF8kMNAmbjioXky0tMaSh4A-aDAYfk"
+unstoppabledomains.com.                      1   IN  TXT "google-site-verification=tSDP2-8jDnSh6u1s1kpX-y59VNtKDH3Xhp02e2uOohk"
+unstoppabledomains.com.                      1   IN  TXT "google-site-verification=Sy2g_t0weHANIQBnuOAhw4nE65nReMgWblGs1NL80qs"
+unstoppabledomains.com.                      1   IN  TXT "google-site-verification=Di7Wv-F4-SQ8Z5c6IclbNYdKUY9brCjzyjVHmPwwKgk"
+unstoppabledomains.com.                      1   IN  TXT "facebook-domain-verification=6vsub2aa3e0v5d72k0e6ekqlpc2prh"
+unstoppabledomains.com.                      1   IN  TXT "cursor-domain-verification-pser0v=9HrUAwtlqST2fb0TYwHDik6h4"
+unstoppabledomains.com.                      1   IN  TXT "v=spf1 include:_s87449372.fdmarc.net ~all"
+unstoppabledomains.com.                      1   IN  TXT "vmf4pa0f8guhi7uqh00657m73g"
