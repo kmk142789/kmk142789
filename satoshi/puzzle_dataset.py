@@ -28,6 +28,14 @@ class PuzzleSolution:
     private_key: str
     solve_date: str
 
+    def _normalised_hash160(self) -> str:
+        """Return the validated lowercase HASH160 fingerprint for the entry."""
+
+        payload = self.hash160_compressed.lower()
+        if not re.fullmatch(r"[0-9a-f]{40}", payload):
+            raise ValueError("puzzle record does not contain a valid HASH160")
+        return payload
+
     def p2pkh_script(self, *, separator: str = " ") -> str:
         """Return the canonical P2PKH locking script for this puzzle wallet.
 
@@ -46,10 +54,7 @@ class PuzzleSolution:
             scripts for incomplete dataset entries.
         """
 
-        payload = self.hash160_compressed.lower()
-        if not re.fullmatch(r"[0-9a-f]{40}", payload):
-            raise ValueError("puzzle record does not contain a valid HASH160")
-
+        payload = self._normalised_hash160()
         parts = [
             "OP_DUP",
             "OP_HASH160",
@@ -58,6 +63,12 @@ class PuzzleSolution:
             "OP_CHECKSIG",
         ]
         return separator.join(parts)
+
+    def p2pkh_script_hex(self) -> str:
+        """Return the canonical hexadecimal encoding of the locking script."""
+
+        payload = self._normalised_hash160()
+        return f"76a914{payload}88ac"
 
 
 @lru_cache(maxsize=1)
