@@ -26,7 +26,9 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
         include_manifest=True,
         include_status=True,
         include_reflection=True,
+        include_system_report=True,
         manifest_events=3,
+        system_report_events=2,
     )
 
     digest = payload["digest"]
@@ -54,6 +56,10 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     reflection = payload["reflection"]
     assert reflection["cycle"] == 1
 
+    system_report = payload["system_report"]
+    assert "Recent events (showing 2" in system_report
+    assert evolver.state.network_cache["system_advancement_report"] == system_report
+
     assert "advance_system_payload" in evolver.state.network_cache
     assert "propagation" not in payload
 
@@ -80,7 +86,9 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
         include_matrix=True,
         include_event_summary=True,
         include_propagation=True,
+        include_system_report=True,
         event_summary_limit=3,
+        system_report_events=4,
     )
 
     matrix = payload["progress_matrix"]
@@ -103,6 +111,9 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     assert propagation["channels"] >= 1
     assert propagation["mode"] == "simulated"
 
+    system_report = payload["system_report"]
+    assert "Recent events" in system_report
+
 
 def test_advance_system_rejects_invalid_event_summary_limit(tmp_path, monkeypatch):
     class LocalThoughtLogger(thoughtlog_module.ThoughtLogger):
@@ -123,4 +134,12 @@ def test_advance_system_rejects_invalid_event_summary_limit(tmp_path, monkeypatc
             persist_artifact=False,
             include_event_summary=True,
             event_summary_limit=0,
+        )
+
+    with pytest.raises(ValueError):
+        evolver.advance_system(
+            enable_network=False,
+            persist_artifact=False,
+            include_system_report=True,
+            system_report_events=0,
         )

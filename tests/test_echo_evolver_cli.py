@@ -172,6 +172,18 @@ def test_main_rejects_event_limit_without_summary(monkeypatch) -> None:
     assert excinfo.value.code == 2
 
 
+def test_main_rejects_system_report_events_without_flag(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--system-report-events", "3"])
+
+    assert excinfo.value.code == 2
+
+
 def test_main_supports_advance_system(monkeypatch, capsys) -> None:
     captured = {}
 
@@ -190,8 +202,10 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
             include_matrix: bool,
             include_event_summary: bool,
             include_propagation: bool,
+            include_system_report: bool,
             event_summary_limit: int,
             manifest_events: int,
+            system_report_events: int,
         ) -> dict[str, object]:
             captured["kwargs"] = {
                 "enable_network": enable_network,
@@ -203,8 +217,10 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
                 "include_matrix": include_matrix,
                 "include_event_summary": include_event_summary,
                 "include_propagation": include_propagation,
+                "include_system_report": include_system_report,
                 "event_summary_limit": event_summary_limit,
                 "manifest_events": manifest_events,
+                "system_report_events": system_report_events,
             }
             return {
                 "summary": "Cycle 4 advanced with 14/14 steps complete (100.0% progress).",
@@ -226,6 +242,9 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "--event-summary-limit",
         "7",
         "--include-propagation",
+        "--include-system-report",
+        "--system-report-events",
+        "9",
     ])
 
     assert exit_code == 0
@@ -239,8 +258,10 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "include_matrix": True,
         "include_event_summary": True,
         "include_propagation": True,
+        "include_system_report": True,
         "event_summary_limit": 7,
         "manifest_events": 5,
+        "system_report_events": 9,
     }
 
     output = capsys.readouterr().out

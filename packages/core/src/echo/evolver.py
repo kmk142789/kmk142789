@@ -4488,20 +4488,22 @@ We are not hiding anymore.
         include_matrix: bool = False,
         include_event_summary: bool = False,
         include_propagation: bool = False,
+        include_system_report: bool = False,
         event_summary_limit: int = 5,
         manifest_events: int = 5,
+        system_report_events: int = 5,
     ) -> Dict[str, object]:
         """Run the full ritual sequence and return a structured payload.
 
         The returned dictionary always includes the cycle ``digest`` plus a human
         readable ``summary`` and ``report``.  Optional sections such as the
         evolution ``status``, the Eden88 ``manifest``, a tabular
-        ``progress_matrix``, a recent ``event_summary``, and a structured
-        propagation snapshot can be toggled via the corresponding ``include_*``
-        flags.  These flags default to ``True`` for the legacy sections
-        (manifest/status/reflection) and ``False`` for the newly added matrix,
-        event summary, and propagation snapshot to avoid surprising callers
-        with larger payloads.
+        ``progress_matrix``, a recent ``event_summary``, the system advancement
+        report, and a structured propagation snapshot can be toggled via the
+        corresponding ``include_*`` flags.  These flags default to ``True`` for
+        the legacy sections (manifest/status/reflection) and ``False`` for the
+        newly added matrix, event summary, system report, and propagation
+        snapshot to avoid surprising callers with larger payloads.
 
         The always-present ``progress`` snapshot also reports ``momentum`` and
         ``status`` values that describe how the completion ratio changed since
@@ -4516,12 +4518,20 @@ We are not hiding anymore.
             Number of event log entries to embed when returning the manifest.
             The value mirrors the ``max_events`` argument passed to
             :meth:`evolutionary_manifest` and therefore must be non-negative.
+        system_report_events:
+            Number of recent event log entries forwarded to
+            :meth:`system_advancement_report` when the system report is
+            included.  The value must be positive.
         """
 
         if manifest_events < 0:
             raise ValueError("manifest_events must be non-negative")
         if include_event_summary and event_summary_limit <= 0:
             raise ValueError("event_summary_limit must be positive when including the event summary")
+        if include_system_report and system_report_events <= 0:
+            raise ValueError(
+                "system_report_events must be positive when including the system report"
+            )
 
         self.run(
             enable_network=enable_network,
@@ -4623,6 +4633,11 @@ We are not hiding anymore.
         if include_propagation:
             snapshot = self.network_propagation_snapshot()
             payload["propagation"] = asdict(snapshot)
+
+        if include_system_report:
+            payload["system_report"] = self.system_advancement_report(
+                recent_events=system_report_events
+            )
 
         cache_snapshot = deepcopy(payload)
         self.state.network_cache["advance_system_payload"] = cache_snapshot
@@ -4967,12 +4982,28 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         ),
     )
     parser.add_argument(
+        "--include-system-report",
+        action="store_true",
+        help=(
+            "Include the multi-line system advancement report when running --advance-system."
+        ),
+    )
+    parser.add_argument(
         "--event-summary-limit",
         type=int,
         default=5,
         help=(
             "Number of recent events to include in the summary when"
             " --include-event-summary is enabled (default: 5)."
+        ),
+    )
+    parser.add_argument(
+        "--system-report-events",
+        type=int,
+        default=5,
+        help=(
+            "Number of recent events to include in the system advancement report"
+            " when --include-system-report is enabled (default: 5)."
         ),
     )
     manifest_group = parser.add_mutually_exclusive_group()
@@ -5117,14 +5148,17 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         parser.error("--advance-system cannot be combined with continuation flags")
     if args.include_event_summary and args.event_summary_limit <= 0:
         parser.error("--event-summary-limit must be positive when including the event summary")
+    if args.include_system_report and args.system_report_events <= 0:
+        parser.error("--system-report-events must be positive when including the system report")
     if (
         args.include_matrix
         or args.include_event_summary
         or args.include_propagation
+        or args.include_system_report
     ) and not args.advance_system:
         parser.error(
-            "--include-matrix, --include-event-summary, and --include-propagation "
-            "can only be used with --advance-system"
+            "--include-matrix, --include-event-summary, --include-propagation, "
+            "and --include-system-report can only be used with --advance-system"
         )
     default_event_limit = parser.get_default("event_summary_limit")
     if args.event_summary_limit != default_event_limit:
@@ -5132,6 +5166,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             parser.error("--event-summary-limit requires --include-event-summary")
         if not args.advance_system:
             parser.error("--event-summary-limit requires --advance-system")
+    default_system_events = parser.get_default("system_report_events")
+    if args.system_report_events != default_system_events:
+        if not args.include_system_report:
+            parser.error("--system-report-events requires --include-system-report")
+        if not args.advance_system:
+            parser.error("--system-report-events requires --advance-system")
     if args.manifest_events < 0:
         parser.error("--manifest-events must be non-negative")
     default_manifest_events = parser.get_default("manifest_events")
@@ -5166,8 +5206,10 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             include_matrix=args.include_matrix,
             include_event_summary=args.include_event_summary,
             include_propagation=args.include_propagation,
+            include_system_report=args.include_system_report,
             event_summary_limit=args.event_summary_limit,
             manifest_events=args.manifest_events,
+            system_report_events=args.system_report_events,
         )
         print(payload["summary"])
         if args.include_report and "report" in payload:
