@@ -332,13 +332,17 @@ def _build_summary(tasks: Sequence[Task], base_path: Path) -> List[str]:
         location_counts[top_level] += 1
 
     summary_lines = ["## Summary\n\n", "| Category | Count |\n", "| --- | ---: |\n"]
-    for tag, count in sorted(tag_counts.items()):
+    for tag, count in sorted(
+        tag_counts.items(), key=lambda item: (-item[1], item[0])
+    ):
         summary_lines.append(f"| {tag} | {count} |\n")
     summary_lines.append("\n")
     summary_lines.append("### Top-Level Locations\n\n")
     summary_lines.append("| Path | Count |\n")
     summary_lines.append("| --- | ---: |\n")
-    for location, count in sorted(location_counts.items()):
+    for location, count in sorted(
+        location_counts.items(), key=lambda item: (-item[1], item[0])
+    ):
         summary_lines.append(f"| {location} | {count} |\n")
     summary_lines.append("\n")
     return summary_lines

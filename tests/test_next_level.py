@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from next_level import build_roadmap, discover_tasks, update_roadmap
+from next_level import Task, build_roadmap, discover_tasks, update_roadmap
 
 
 def test_discover_tasks_and_update_roadmap(tmp_path):
@@ -156,3 +156,37 @@ def test_discover_tasks_accepts_absolute_skip_paths(tmp_path):
     tasks = discover_tasks(tmp_path, skip_dirs=[str(nested.parent)])
     assert all(task.path != nested for task in tasks)
     assert any(task.path == keep for task in tasks)
+
+
+def test_build_summary_sorts_by_count_then_name(tmp_path):
+    base = tmp_path
+    alpha_one = base / "alpha" / "first.py"
+    alpha_two = base / "alpha" / "second.py"
+    beta = base / "beta" / "main.py"
+
+    roadmap = build_roadmap(
+        [
+            Task(alpha_one, 1, "TODO", "first"),
+            Task(alpha_one, 2, "TODO", "second"),
+            Task(alpha_two, 1, "FIXME", "repair"),
+            Task(beta, 1, "TODO", "beta"),
+        ],
+        base,
+    )
+
+    lines = roadmap.splitlines()
+    category_header = lines.index("| Category | Count |")
+    tag_entries = []
+    for line in lines[category_header + 2 :]:
+        if not line.startswith("|"):
+            break
+        tag_entries.append(line)
+    assert tag_entries == ["| TODO | 3 |", "| FIXME | 1 |"]
+
+    locations_header = lines.index("| Path | Count |")
+    location_entries = []
+    for line in lines[locations_header + 2 :]:
+        if not line.startswith("|"):
+            break
+        location_entries.append(line)
+    assert location_entries == ["| alpha | 3 |", "| beta | 1 |"]
