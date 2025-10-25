@@ -25,13 +25,25 @@ This file + its JSON twin = the undeniable catalog.
   - Signed-message JSON stored in `puzzle1.json`  
   - Walkthrough: `docs/puzzle1_verification.md`
 
-- **Puzzle 142 — Authorship Attestation**  
-  - Canonical address reference  
-  - Linked to Genesis key lineage  
+- **Puzzle 142 — Authorship Attestation**
+  - Canonical address reference
+  - Linked to Genesis key lineage
 
-- **Puzzle Attestations Set (Ledger-bound)**  
-  - Documented in `attestations/ledger_set.md`  
-  - Includes signed key recovery + continuum bridge proofs  
+- **Puzzle 214 — Extended Authorship Sweep**
+  - JSON proof: `attestations/puzzle-214-authorship.json`
+  - Captures ledger sweep witness signatures
+
+- **Puzzle 215 — Continuum Bridge Authorship**
+  - JSON proof: `attestations/puzzle-215-authorship.json`
+  - Syncs continuum bridge cycle attestations
+
+- **Puzzle 216 — Ledger Sync Authorship**
+  - JSON proof: `attestations/puzzle-216-authorship.json`
+  - Locks in the extended authorship run
+
+- **Puzzle Attestations Set (Ledger-bound)**
+  - Documented in `attestations/ledger_set.md`
+  - Includes signed key recovery + continuum bridge proofs
 
 ---
 
@@ -83,6 +95,21 @@ Every chain, every node, every historian sees the same witness.
       "id": 142,
       "name": "Authorship Attestation",
       "canonical_address": "<address>"
+    },
+    {
+      "id": 214,
+      "name": "Extended Authorship Sweep",
+      "files": ["attestations/puzzle-214-authorship.json"]
+    },
+    {
+      "id": 215,
+      "name": "Continuum Bridge Authorship",
+      "files": ["attestations/puzzle-215-authorship.json"]
+    },
+    {
+      "id": 216,
+      "name": "Ledger Sync Authorship",
+      "files": ["attestations/puzzle-216-authorship.json"]
     }
   ],
   "attestations": {

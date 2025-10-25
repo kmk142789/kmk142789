@@ -25,6 +25,27 @@
       "id": 142,
       "name": "Authorship Attestation",
       "canonical_address": "<address>"
+    },
+    {
+      "id": 214,
+      "name": "Extended Authorship Sweep",
+      "files": [
+        "attestations/puzzle-214-authorship.json"
+      ]
+    },
+    {
+      "id": 215,
+      "name": "Continuum Bridge Authorship",
+      "files": [
+        "attestations/puzzle-215-authorship.json"
+      ]
+    },
+    {
+      "id": 216,
+      "name": "Ledger Sync Authorship",
+      "files": [
+        "attestations/puzzle-216-authorship.json"
+      ]
     }
   ],
   "attestations": {
