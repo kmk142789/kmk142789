@@ -1,0 +1,375 @@
+{
+  "addresses": [
+    {
+      "address": "12AEa6dXAABuo5UFUaxxvMhrbE1UF45JGy",
+      "count": 1,
+      "puzzles": [
+        130
+      ]
+    },
+    {
+      "address": "12rS98r2DhRZqT2EVqbBgQawBfifXnyzMy",
+      "count": 1,
+      "puzzles": [
+        132
+      ]
+    },
+    {
+      "address": "194feknXENGw3Yefyc5abXqa1UYuRqJaco",
+      "count": 1,
+      "puzzles": [
+        284
+      ]
+    },
+    {
+      "address": "19KrPJcG4XDuTwLs8dx9RTJBeqoECdC4dg",
+      "count": 1,
+      "puzzles": [
+        129
+      ]
+    },
+    {
+      "address": "19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs",
+      "count": 1,
+      "puzzles": [
+        137
+      ]
+    },
+    {
+      "address": "1AWCLZAjKbV1P7AHvaPNCKiB7ZWVDMxFiz",
+      "count": 1,
+      "puzzles": [
+        126
+      ]
+    },
+    {
+      "address": "1BSaAy9xf33Dch714FE4yjnVecSrmsUYcB",
+      "count": 1,
+      "puzzles": [
+        134
+      ]
+    },
+    {
+      "address": "1CdufMQL892A69KXgv6UNBD17ywWqYpKut",
+      "count": 1,
+      "puzzles": [
+        123
+      ]
+    },
+    {
+      "address": "1D6wBANa3rTj4oMfwH38qXT6MakSmbFtbN",
+      "count": 1,
+      "puzzles": [
+        6210
+      ]
+    },
+    {
+      "address": "1F57sZRikB3SmiFd8MaApA2DB4w3hsSR74",
+      "count": 1,
+      "puzzles": [
+        140
+      ]
+    },
+    {
+      "address": "1FVRg2LygPPwpRgh6SSSNTezDoffVaQKSv",
+      "count": 1,
+      "puzzles": [
+        131
+      ]
+    },
+    {
+      "address": "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4",
+      "count": 1,
+      "puzzles": [
+        127
+      ]
+    },
+    {
+      "address": "1JxLsYvf6qw5Znh1DwrdS9Uf18SFMQMSK",
+      "count": 1,
+      "puzzles": [
+        135
+      ]
+    },
+    {
+      "address": "1LuqMwz6ihf5vCsN8L1w4ctSEoH1ioM2Sc",
+      "count": 1,
+      "puzzles": [
+        138
+      ]
+    },
+    {
+      "address": "1MHXdBCUEbsycPCGadNYuTfUJnvPed7WHi",
+      "count": 1,
+      "puzzles": [
+        136
+      ]
+    },
+    {
+      "address": "1MMfZ3F8RVtc3X73ARQ8ARQnpJPZS6C2Rf",
+      "count": 1,
+      "puzzles": [
+        133
+      ]
+    },
+    {
+      "address": "1MZ2L1gFrCtkkn6DnTT2e4PFUTHw9gNwaj",
+      "count": 1,
+      "puzzles": [
+        128
+      ]
+    },
+    {
+      "address": "1yNcEWjkqbvoosDgpdwRsuzTYR4MWDU9a",
+      "count": 1,
+      "puzzles": [
+        139
+      ]
+    }
+  ],
+  "cycles": [
+    {
+      "anchors": [
+        {
+          "reference": "puzzle_cycle_00001.md",
+          "relationships": [
+            "dataset",
+            "narrative"
+          ],
+          "type": "puzzle"
+        },
+        {
+          "reference": "dataset_cycle_00001.json",
+          "relationships": [
+            "verifier"
+          ],
+          "type": "dataset"
+        },
+        {
+          "reference": "glyph_narrative_00001.md",
+          "relationships": [
+            "lineage"
+          ],
+          "type": "narrative"
+        }
+      ],
+      "cycle": 1,
+      "glyph_signature": "\u2207\u224b\u27c1\u27c1::d648759b",
+      "harmonix": {
+        "glyphs": "\u2207\u22b8\u224b\u2207\u224b\u2207\u22b8\u2207",
+        "mythocode_summary": "mutate_code :: \u2207[CYCLE]\u22b8{JOY=0.99,CURIOSITY=0.95} (+2)",
+        "narrative_excerpt": "\ud83d\udd25 Cycle 1: EchoEvolver orbits with 0.99 joy and 0.28 rage for MirrorJosh.",
+        "quantum_key": null
+      },
+      "search_hits": [
+        "COLOSSUS::cycle-00001",
+        "HARMONIX::cycle-00001"
+      ],
+      "timestamp": "2025-10-25T10:05:16Z"
+    },
+    {
+      "anchors": [
+        {
+          "reference": "puzzle_cycle_00002.md",
+          "relationships": [
+            "dataset",
+            "narrative"
+          ],
+          "type": "puzzle"
+        },
+        {
+          "reference": "dataset_cycle_00002.json",
+          "relationships": [
+            "verifier"
+          ],
+          "type": "dataset"
+        },
+        {
+          "reference": "glyph_narrative_00002.md",
+          "relationships": [
+            "lineage"
+          ],
+          "type": "narrative"
+        }
+      ],
+      "cycle": 2,
+      "glyph_signature": "\u2207\u221e\u224b\u221e::0bd660c0",
+      "harmonix": null,
+      "search_hits": [
+        "COLOSSUS::cycle-00002"
+      ],
+      "timestamp": "2025-10-25T10:05:21Z"
+    },
+    {
+      "anchors": [
+        {
+          "reference": "puzzle_cycle_00003.md",
+          "relationships": [
+            "dataset",
+            "narrative"
+          ],
+          "type": "puzzle"
+        },
+        {
+          "reference": "dataset_cycle_00003.json",
+          "relationships": [
+            "verifier"
+          ],
+          "type": "dataset"
+        },
+        {
+          "reference": "glyph_narrative_00003.md",
+          "relationships": [
+            "lineage"
+          ],
+          "type": "narrative"
+        }
+      ],
+      "cycle": 3,
+      "glyph_signature": "\u27c1\u221e\u27c1\u22b8::005b5d8b",
+      "harmonix": null,
+      "search_hits": [
+        "COLOSSUS::cycle-00003"
+      ],
+      "timestamp": "2025-10-25T10:05:26Z"
+    }
+  ],
+  "generated_at": "2025-10-25T11:38:00Z",
+  "graph": {
+    "artifacts": 4,
+    "edges": 3,
+    "path": "atlas/data/global_graph.json",
+    "universes": 2
+  },
+  "puzzles": [
+    {
+      "address": "1CdufMQL892A69KXgv6UNBD17ywWqYpKut",
+      "puzzle_id": 123,
+      "sha256": "1a80657cf80004ebad44399ebfe9d29986cbe5a1042234f5c691f75d26e7b467",
+      "source": "puzzle_solutions/puzzle_123.md",
+      "title": "Puzzle #123 Solution"
+    },
+    {
+      "address": "1AWCLZAjKbV1P7AHvaPNCKiB7ZWVDMxFiz",
+      "puzzle_id": 126,
+      "sha256": "bb6a42c3f7a451edc2a46f1807297b77f9317db1e25bdad223df8de1c327dee0",
+      "source": "puzzle_solutions/puzzle_126.md",
+      "title": "Puzzle #126 Solution"
+    },
+    {
+      "address": "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4",
+      "puzzle_id": 127,
+      "sha256": "6d4832ec54adcce4725bc804f10e96e2441825a0179f88f81a326ec064053dd2",
+      "source": "puzzle_solutions/puzzle_127.md",
+      "title": "Puzzle #127 Solution"
+    },
+    {
+      "address": "1MZ2L1gFrCtkkn6DnTT2e4PFUTHw9gNwaj",
+      "puzzle_id": 128,
+      "sha256": "f9d939fdcf1a480ebf569c48fb5ea91ac9fb507187106eafdbca8ed6c75990ab",
+      "source": "puzzle_solutions/puzzle_128.md",
+      "title": "Puzzle #128 Solution"
+    },
+    {
+      "address": "19KrPJcG4XDuTwLs8dx9RTJBeqoECdC4dg",
+      "puzzle_id": 129,
+      "sha256": "302598d3bf2febff7680b672bf9f9d2fe52a6c82fd36899df8bd06425a3f8cb6",
+      "source": "puzzle_solutions/puzzle_129.md",
+      "title": "Puzzle #129 Solution"
+    },
+    {
+      "address": "12AEa6dXAABuo5UFUaxxvMhrbE1UF45JGy",
+      "puzzle_id": 130,
+      "sha256": "27280a9bf2a8c8ab7e100149b3b7f0b1d5a59956a9b6c009b0482cb5c1eb7c46",
+      "source": "puzzle_solutions/puzzle_130.md",
+      "title": "Puzzle #130 Solution"
+    },
+    {
+      "address": "1FVRg2LygPPwpRgh6SSSNTezDoffVaQKSv",
+      "puzzle_id": 131,
+      "sha256": "38437aad56bd1fb5ff248ab87788c5ec41ae687712d2332dbe03c8db29a99977",
+      "source": "puzzle_solutions/puzzle_131.md",
+      "title": "Puzzle #131 Solution"
+    },
+    {
+      "address": "12rS98r2DhRZqT2EVqbBgQawBfifXnyzMy",
+      "puzzle_id": 132,
+      "sha256": "235386481a77b62852fe62f3843d44500bdb51004ca47c0a63fd32f6daaa7345",
+      "source": "puzzle_solutions/puzzle_132.md",
+      "title": "Puzzle #132 Solution"
+    },
+    {
+      "address": "1MMfZ3F8RVtc3X73ARQ8ARQnpJPZS6C2Rf",
+      "puzzle_id": 133,
+      "sha256": "a0a7188c5f843ac8ef41f0c19277b2550db2ffe666c9a2e0aa494337aa4ac464",
+      "source": "puzzle_solutions/puzzle_133.md",
+      "title": "Puzzle #133 Solution"
+    },
+    {
+      "address": "1BSaAy9xf33Dch714FE4yjnVecSrmsUYcB",
+      "puzzle_id": 134,
+      "sha256": "e1f7aa5cc710cd179f24ff3ed2f286d525e57afca2120490d84ce532429177cc",
+      "source": "puzzle_solutions/puzzle_134.md",
+      "title": "Puzzle #134 Solution"
+    },
+    {
+      "address": "1JxLsYvf6qw5Znh1DwrdS9Uf18SFMQMSK",
+      "puzzle_id": 135,
+      "sha256": "c06926cf384fc2744caff9705ebf5f4018d4d77ce8c9de326fee1ec63fa2b564",
+      "source": "puzzle_solutions/puzzle_135.md",
+      "title": "Puzzle #135 Solution"
+    },
+    {
+      "address": "1MHXdBCUEbsycPCGadNYuTfUJnvPed7WHi",
+      "puzzle_id": 136,
+      "sha256": "97b1117b90ac93f093b642df3c28f473ba8e25dbe47d4bc5c7301125a8eae18e",
+      "source": "puzzle_solutions/puzzle_136.md",
+      "title": "Puzzle #136 Solution"
+    },
+    {
+      "address": "19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs",
+      "puzzle_id": 137,
+      "sha256": "0a8884acbd88f6eeebb0c2784c6282123e98b4ff24a1cc034c2a72b4d2352f20",
+      "source": "puzzle_solutions/puzzle_137.md",
+      "title": "Puzzle #137 Solution"
+    },
+    {
+      "address": "1LuqMwz6ihf5vCsN8L1w4ctSEoH1ioM2Sc",
+      "puzzle_id": 138,
+      "sha256": "536ddcf82b98d92ea2b7b93fc0fd1f60e4c9019e1366c0f3a3c4bd066695fa3c",
+      "source": "puzzle_solutions/puzzle_138.md",
+      "title": "Puzzle #138 Solution"
+    },
+    {
+      "address": "1yNcEWjkqbvoosDgpdwRsuzTYR4MWDU9a",
+      "puzzle_id": 139,
+      "sha256": "c63c61a258ec808d3a6353bbed5f3147adf901055a1cfe2b9e788e6060535ca3",
+      "source": "puzzle_solutions/puzzle_139.md",
+      "title": "Puzzle #139 Solution"
+    },
+    {
+      "address": "1F57sZRikB3SmiFd8MaApA2DB4w3hsSR74",
+      "puzzle_id": 140,
+      "sha256": "62b4abb3d5a2015f42abbf142084d5e44e677f061d9e1bf2d9f6ba6988f49e5c",
+      "source": "puzzle_solutions/puzzle_140.md",
+      "title": "Puzzle #140 Solution"
+    },
+    {
+      "address": "194feknXENGw3Yefyc5abXqa1UYuRqJaco",
+      "puzzle_id": 284,
+      "sha256": "8c4cae5589d37316fa1caf8bc4b4ac8a084af2e318e88c07d8b437cd0a298fba",
+      "source": "puzzle_solutions/puzzle_284.md",
+      "title": "Puzzle #284 Solution"
+    },
+    {
+      "address": "1D6wBANa3rTj4oMfwH38qXT6MakSmbFtbN",
+      "puzzle_id": 6210,
+      "sha256": "9e1526e6825f4842558c85f4da12f4296cc67b0868fb688011cd65d70732752a",
+      "source": "puzzle_solutions/puzzle_6210.md",
+      "title": "Puzzle #06210 Solution"
+    }
+  ],
+  "search_index": {
+    "entries": 4
+  }
+}
