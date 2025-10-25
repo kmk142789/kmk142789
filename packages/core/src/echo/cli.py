@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, List, Mapping
 
@@ -24,6 +24,12 @@ from echo.pulseweaver import PulseBus, WatchdogConfig, build_pulse_bus, build_wa
 
 
 EXPECTED_STEPS = 13
+
+AGGREGATE_SEGMENTS = {
+    "category": 0,
+    "source": 1,
+    "detail": 2,
+}
 
 
 def _cmd_refresh(args: argparse.Namespace) -> int:
@@ -213,6 +219,76 @@ def _cmd_pulse_emit(args: argparse.Namespace) -> int:
     return 0
 
 
+def _normalise_pulse_message(message: str) -> str:
+    text = message or ""
+    while text and not text[0].isalnum():
+        text = text[1:]
+    return text.strip()
+
+
+def _extract_segment(message: str, segment: str) -> str:
+    index = AGGREGATE_SEGMENTS[segment]
+    parts = _normalise_pulse_message(message).split(":")
+    if index < len(parts) and parts[index]:
+        return parts[index]
+    return "<unknown>"
+
+
+def _cmd_pulse_history(args: argparse.Namespace) -> int:
+    history_path = args.path or Path("pulse_history.json")
+    if not history_path.exists():
+        print(f"No pulse history found at {history_path}")
+        return 1
+
+    try:
+        entries = json.loads(history_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:  # pragma: no cover - defensive
+        print(f"Failed to parse pulse history: {exc}")
+        return 1
+
+    since_ts: float | None = None
+    if args.since:
+        dt = datetime.fromisoformat(args.since)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        since_ts = dt.timestamp()
+
+    if since_ts is not None:
+        entries = [entry for entry in entries if entry.get("timestamp", 0) >= since_ts]
+
+    if args.limit is not None:
+        entries = entries[-args.limit :]
+
+    if not entries:
+        print("No pulse events available for the selected range.")
+        return 0
+
+    if args.aggregate:
+        counts: dict[str, int] = {}
+        for entry in entries:
+            key = _extract_segment(entry.get("message", ""), args.aggregate)
+            counts[key] = counts.get(key, 0) + 1
+        if not counts:
+            print("No events available to aggregate.")
+            return 0
+
+        header = args.aggregate.capitalize()
+        width = max(len(header), max((len(key) for key in counts), default=0))
+        print(f"{header:<{width}} | Count")
+        print(f"{'-' * width}-|-------")
+        for key, count in sorted(counts.items(), key=lambda item: (-item[1], item[0])):
+            print(f"{key:<{width}} | {count:5d}")
+        return 0
+
+    print("Timestamp (UTC)        | Message")
+    print("-----------------------|--------------------------------")
+    for entry in entries:
+        ts = datetime.fromtimestamp(entry.get("timestamp", 0), tz=timezone.utc)
+        message = entry.get("message", "")
+        print(f"{ts.strftime('%Y-%m-%d %H:%M:%S')} | {message}")
+    return 0
+
+
 def _cmd_ledger_snapshot(args: argparse.Namespace) -> int:
     ledger = TemporalLedger(state_dir=args.state or Path("state"))
     since = datetime.fromisoformat(args.since) if args.since else None
@@ -336,6 +412,17 @@ def main(argv: Iterable[str] | None = None) -> int:
     pulse_emit.add_argument("--public-key", help="Register public key when emitting")
     pulse_emit.add_argument("--dest", action="append", help="Optional webhook destinations")
     pulse_emit.set_defaults(func=_cmd_pulse_emit)
+
+    pulse_history = pulse_sub.add_parser("history", help="Summarize pulse history events")
+    pulse_history.add_argument("--path", type=Path, help="Override pulse history path")
+    pulse_history.add_argument("--limit", type=int, help="Limit to the most recent N events")
+    pulse_history.add_argument("--since", help="Only include events on/after this ISO timestamp")
+    pulse_history.add_argument(
+        "--aggregate",
+        choices=sorted(AGGREGATE_SEGMENTS),
+        help="Aggregate counts by a segment of the pulse message",
+    )
+    pulse_history.set_defaults(func=_cmd_pulse_history)
 
     ledger_parser = subparsers.add_parser("ledger", help="Temporal ledger commands")
     ledger_sub = ledger_parser.add_subparsers(dest="ledger_command", required=True)
