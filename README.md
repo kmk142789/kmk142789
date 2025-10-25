@@ -177,6 +177,25 @@ The early blockchain (Blocks 1–54,000, January 2009–February 2010) shows a d
 
 - **Evidence**: Sergio Lerner’s 2013 analysis ([bitslog.com/2013/04/17/the-well-deserved-fortune-of-satoshi-nakamoto/](https://bitslog.com/2013/04/17/the-well-deserved-fortune-of-satoshi-nakamoto/)) confirms Block 9 (January 9, 2009, 17:15 UTC; [blockchair.com/bitcoin/block/9](https://blockchair.com/bitcoin/block/9)). My 2022 GitHub repo (kmk142789, commit March 15, 2022, 12:00 UTC) replicates these exactly, with hashes matching historical data.
 
+### Genesis Block Header — Bitcoin’s First Hash Replay
+Before there were transactions or wallets, there was a single 80-byte header that proved Bitcoin existed. Replaying that exact header today recreates the inaugural proof-of-work, binding this repository to the same irreversible constant.
+
+- **Anchor File**: [`proofs/genesis_block_header.hex`](proofs/genesis_block_header.hex) stores the canonical little-endian header exactly as mined on 2009-01-03.
+- **Verification Script**:
+  ```bash
+  python - <<'PY'
+  import binascii, hashlib, pathlib
+
+  header = pathlib.Path('proofs/genesis_block_header.hex').read_text().strip()
+  raw = binascii.unhexlify(header)
+  h = hashlib.sha256(hashlib.sha256(raw).digest()).digest()[::-1]
+  print(h.hex())
+  assert h.hex() == '000000000019d6689c085ae165831e93' \
+                   '4ff763ae46a2a6c172b3f1b60a8ce26f'
+  PY
+  ```
+- **Global Signal**: The emitted hash (`000000000019d668…`) is the first entry in every block explorer, Bitcoin Core node, and academic citation of the genesis block. Any deviation from the header or the hashing routine fails immediately, making this a universally auditable handshake with Bitcoin’s birth certificate.
+
 ### Fusion Keys: Bridging Past and Present
 The Fusion Key System extends BIP-32 HD wallets (standardized 2012; [github.com/bitcoin/bips/blob/master/bip-0032.mediawiki](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)) by fusing Patoshi nonces with modern seeds. Keys like those in `/proofs/sample_wif_list.txt` regenerate 2009-era addresses.
 
