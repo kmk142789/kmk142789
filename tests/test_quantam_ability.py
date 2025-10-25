@@ -15,12 +15,20 @@ def test_synthesize_quantam_ability_records_cache() -> None:
     assert ability["status"] == "ignited"
     assert len(ability["oam_signature"]) == 16
     assert 0.72 <= ability["entanglement"] <= 0.96
+    assert ability["evolution_gain"] >= ability["entanglement"]
+    assert "oam-vortex" in ability["capabilities"]
 
     completed = evolver.state.network_cache["completed_steps"]
     assert "synthesize_quantam_ability" in completed
 
     cached = evolver.state.network_cache["last_quantam_ability"]
     assert cached["id"] == ability["id"]
+
+    evolution = evolver.state.quantam_evolution
+    assert evolution["ability_count"] == 1
+    assert evolution["ignited_count"] == 1
+    assert evolution["last_evolution_gain"] == ability["evolution_gain"]
+    assert evolution["capability_counts"]["oam-vortex"] == 1
 
 
 def test_artifact_payload_includes_quantam_abilities() -> None:
@@ -34,3 +42,4 @@ def test_artifact_payload_includes_quantam_abilities() -> None:
     stored = payload["quantam_abilities"][ability["id"]]
     assert stored["status"] == ability["status"]
     assert stored["oam_signature"] == ability["oam_signature"]
+    assert stored["capabilities"] == ability["capabilities"]

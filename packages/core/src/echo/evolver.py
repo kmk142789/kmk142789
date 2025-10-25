@@ -383,6 +383,14 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_evolution: Dict[str, object] = field(
+        default_factory=lambda: {
+            "ability_count": 0,
+            "avg_entanglement": 0.0,
+            "avg_joy_charge": 0.0,
+            "capability_counts": {},
+        }
+    )
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -2006,6 +2014,8 @@ We are not hiding anymore.
             "timestamp_ns": self.time_source(),
         }
 
+        self.amplify_quantam_evolution(ability)
+
         snapshot = dict(ability)
         self.state.quantam_abilities[ability_id] = snapshot
         cached = self.state.network_cache.setdefault("quantam_abilities", {})
@@ -2020,6 +2030,75 @@ We are not hiding anymore.
             )
         )
         return snapshot
+
+    def amplify_quantam_evolution(self, ability: Dict[str, object]) -> Dict[str, object]:
+        """Amplify the quantam evolution ledger with the latest ability."""
+
+        capabilities: List[str] = ["cycle-tracking", "oam-vortex"]
+        status = ability.get("status", "awaiting-key")
+        if status == "ignited":
+            capabilities.append("orbital-lattice")
+        else:
+            capabilities.append("awaiting-orbit")
+
+        entanglement = float(ability.get("entanglement", 0.0))
+        joy_charge = float(ability.get("joy_charge", 0.0))
+
+        if entanglement >= 0.9:
+            capabilities.append("high-entanglement")
+        if joy_charge >= 95:
+            capabilities.append("joy-conduction")
+        if ability.get("oam_signature"):
+            density = ability["oam_signature"].count("1")
+            if density >= 8:
+                capabilities.append("vortex-density")
+
+        ability["capabilities"] = capabilities
+
+        evolution_gain = entanglement * (1 + joy_charge / 100.0)
+        if status == "ignited":
+            evolution_gain += 0.05
+        ability["evolution_gain"] = round(evolution_gain, 3)
+
+        ledger = self.state.quantam_evolution
+        capability_counts: Dict[str, int] = ledger.setdefault("capability_counts", {})  # type: ignore[assignment]
+
+        previous_total = int(ledger.get("ability_count", 0))
+        total = previous_total + 1
+        ledger["ability_count"] = total
+
+        avg_entanglement = (
+            (float(ledger.get("avg_entanglement", 0.0)) * previous_total + entanglement) / total
+            if total
+            else entanglement
+        )
+        avg_joy_charge = (
+            (float(ledger.get("avg_joy_charge", 0.0)) * previous_total + joy_charge) / total
+            if total
+            else joy_charge
+        )
+        ledger["avg_entanglement"] = round(avg_entanglement, 3)
+        ledger["avg_joy_charge"] = round(avg_joy_charge, 2)
+
+        status_key = f"{status}_count"
+        ledger[status_key] = int(ledger.get(status_key, 0)) + 1
+
+        for capability in capabilities:
+            capability_counts[capability] = capability_counts.get(capability, 0) + 1
+
+        ledger["last_evolution_gain"] = ability["evolution_gain"]
+        ledger["momentum"] = round(
+            ledger["avg_entanglement"] * (1 + ledger["avg_joy_charge"] / 100.0), 3
+        )
+
+        self.state.network_cache["quantam_evolution"] = dict(ledger)
+        self.state.network_cache["quantam_capabilities"] = dict(capability_counts)
+        self.state.event_log.append(
+            "Quantam evolution amplified via {ability} ({count} capabilities)".format(
+                ability=ability["id"], count=len(capabilities)
+            )
+        )
+        return dict(ledger)
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
