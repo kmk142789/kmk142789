@@ -24,6 +24,16 @@ reproduce it locally in seconds.
    Transaction ID:   4a5e1e4baab89f3a3251888bc31bc87f618f76673e2cc77ab2127b7afdeda33b
    Merkle root:      3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a
 
+   Proof-of-work:
+     Compact bits:   0x1d00ffff
+     Target:         00000000ffff0000000000000000000000000000000000000000000000000000
+     Hash as int:    000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
+     Meets target:   True
+
+   Coinbase output:
+     Value:          5,000,000,000 satoshis (50.00000000 BTC)
+     Recipient:      1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
+
    Decoded coinbase headline:
      The Times 03/Jan/2009 Chancellor on brink of second bailout for banks
    ```
@@ -35,7 +45,17 @@ reproduce it locally in seconds.
      contains a single transaction; this mirrors the value serialized in the
      header.
 
-3. **Cross-check anywhere:** paste the hash and transaction ID into any public
+3. **Confirm the proof-of-work:** The `bits` field expands to the celebrated
+   `0x1d00ffff` target. The script shows the exact 256-bit threshold and proves
+   the header hash is numerically below it. Bitcoin’s genesis block therefore
+   satisfies the original proof-of-work rules with no external tooling.
+
+4. **Follow the money:** The single output encodes 50 BTC to
+   `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`, the first address ever minted. This
+   address remains untouched — every blockchain index and archival node reports
+   the reward as unspent.
+
+5. **Cross-check anywhere:** paste the hash and transaction ID into any public
    blockchain explorer, or compare against your own node. Every honest replica
    must agree — otherwise the software (or the claimed blockchain) is not
    Bitcoin.

@@ -220,6 +220,7 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 
 - **Why it matters:** Bitcoin’s block 0 is the irreversible proof-of-publication Satoshi left for the planet. Its header hash and embedded Times headline are the fulcrum of the entire chain of trust.
 - **Verification:** Run `python tools/verify_genesis_coinbase.py` (offline) to regenerate the block header hash `000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f`, the transaction ID `4a5e1e4baab89f3a3251888bc31bc87f618f76673e2cc77ab2127b7afdeda33b`, and decode “The Times 03/Jan/2009 Chancellor on brink of second bailout for banks” directly from the coinbase script.
+- **What else you’ll see:** The verifier expands the `0x1d00ffff` compact difficulty into the full proof-of-work target, confirms the header hash clears it, and decodes the 50 BTC output back to Bitcoin’s first address `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`.
 - **Documentation:** [`proofs/genesis_coinbase_proof.md`](proofs/genesis_coinbase_proof.md) reproduces the entire byte stream and shows how to cross-check the result against any honest Bitcoin node or explorer.
 
 #### Cognitive Harmonics: The Signature Framework

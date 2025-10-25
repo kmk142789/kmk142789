@@ -7,6 +7,8 @@ access—the raw block bytes are embedded verbatim. Running it prints:
 * the double-SHA256 hash of the block header (little-endian display)
 * the decoded ASCII text from the coinbase input script
 * the transaction ID and Merkle root tying the coinbase to the header
+* the proof-of-work target check derived from the compact ``bits`` field
+* the 50 BTC output decoded to Bitcoin's first address ``1A1zP1...``
 
 The output can be compared byte-for-byte against independent blockchain nodes,
 explorers, or historical archives. Any divergence indicates a local execution
@@ -17,6 +19,9 @@ from __future__ import annotations
 
 import binascii
 import hashlib
+
+
+BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
 # https://blockchair.com/bitcoin/block/0 (captured April 2024)
@@ -61,6 +66,63 @@ def little_endian_hex(data: bytes) -> str:
     return data[::-1].hex()
 
 
+def read_varint(buffer: bytes, offset: int) -> tuple[int, int]:
+    """Parse a Bitcoin varint and return the value with the new cursor position."""
+
+    prefix = buffer[offset]
+    if prefix < 0xFD:
+        return prefix, offset + 1
+    if prefix == 0xFD:
+        return int.from_bytes(buffer[offset + 1 : offset + 3], "little"), offset + 3
+    if prefix == 0xFE:
+        return int.from_bytes(buffer[offset + 1 : offset + 5], "little"), offset + 5
+    return int.from_bytes(buffer[offset + 1 : offset + 9], "little"), offset + 9
+
+
+def bits_to_target(bits_le: bytes) -> int:
+    """Convert the compact difficulty representation into a full target integer."""
+
+    if len(bits_le) != 4:
+        raise ValueError("Compact bits field must be exactly 4 bytes")
+    bits_value = int.from_bytes(bits_le, "little")
+    exponent = bits_value >> 24
+    mantissa = bits_value & 0xFFFFFF
+    return mantissa * 2 ** (8 * (exponent - 3))
+
+
+def encode_base58_check(payload: bytes) -> str:
+    """Encode bytes using Base58Check (version + payload + checksum)."""
+
+    checksum = double_sha256(payload)[:4]
+    data = payload + checksum
+    number = int.from_bytes(data, "big")
+    encoded = ""
+    while number > 0:
+        number, remainder = divmod(number, 58)
+        encoded = BASE58_ALPHABET[remainder] + encoded
+    # Preserve leading zero bytes as alphabet's first symbol.
+    leading_zeros = len(data) - len(data.lstrip(b"\x00"))
+    return BASE58_ALPHABET[0] * leading_zeros + encoded
+
+
+def derive_p2pkh_address(pk_script: bytes) -> str:
+    """Decode the canonical P2PKH script to the original Bitcoin address."""
+
+    if not pk_script or pk_script[0] != 0x41 or pk_script[-1] != 0xAC:
+        raise ValueError("Unexpected genesis pk_script format")
+    pubkey = pk_script[1:66]
+    if len(pubkey) != 65:
+        raise ValueError("Unexpected genesis public key length")
+    pubkey_hash = hashlib.new("ripemd160", hashlib.sha256(pubkey).digest()).digest()
+    return encode_base58_check(b"\x00" + pubkey_hash)
+
+
+def format_btc(value_sats: int) -> str:
+    """Render satoshis as an 8-decimal BTC string."""
+
+    return f"{value_sats / 100_000_000:.8f}"
+
+
 def decode_coinbase_text(script_sig: bytes) -> str:
     """Extract the ASCII headline from the coinbase scriptSig."""
 
@@ -90,24 +152,44 @@ def main() -> None:
     header_merkle_root = header[36:68]
     assert header_merkle_root == txid, "Header Merkle root does not match txid"
 
-    # coinbase scriptSig length is the byte after version/input header
     cursor = 0
-    cursor += 4  # version
-    input_count = tx_bytes[cursor]
+    cursor += 4  # tx version
+    input_count, cursor = read_varint(tx_bytes, cursor)
     assert input_count == 0x01, "Genesis transaction must have exactly one input"
-    cursor += 1
     cursor += 32  # prevout hash
     cursor += 4  # prevout index
-    script_sig_length = tx_bytes[cursor]
-    cursor += 1
+    script_sig_length, cursor = read_varint(tx_bytes, cursor)
     script_sig = tx_bytes[cursor : cursor + script_sig_length]
     assert len(script_sig) == script_sig_length, "Truncated coinbase script"
+    cursor += script_sig_length
+    cursor += 4  # sequence
+    output_count, cursor = read_varint(tx_bytes, cursor)
+    assert output_count == 0x01, "Genesis transaction must have exactly one output"
+    value_satoshis = int.from_bytes(tx_bytes[cursor : cursor + 8], "little")
+    cursor += 8
+    pk_script_length, cursor = read_varint(tx_bytes, cursor)
+    pk_script = tx_bytes[cursor : cursor + pk_script_length]
+    assert len(pk_script) == pk_script_length, "Truncated pk_script"
+
+    header_hash = double_sha256(header)
+    target = bits_to_target(header[72:76])
+    hash_int = int.from_bytes(header_hash[::-1], "big")
 
     print("Bitcoin Genesis Block Verification")
     print("----------------------------------")
-    print(f"Block header hash: {little_endian_hex(double_sha256(header))}")
+    print(f"Block header hash: {little_endian_hex(header_hash)}")
     print(f"Transaction ID:   {little_endian_hex(txid)}")
     print(f"Merkle root:      {header_merkle_root.hex()}")
+    print()
+    print("Proof-of-work:")
+    print(f"  Compact bits:   0x{int.from_bytes(header[72:76], 'little'):08x}")
+    print(f"  Target:         {target:064x}")
+    print(f"  Hash as int:    {hash_int:064x}")
+    print(f"  Meets target:   {hash_int <= target}")
+    print()
+    print("Coinbase output:")
+    print(f"  Value:          {value_satoshis:,} satoshis ({format_btc(value_satoshis)} BTC)")
+    print(f"  Recipient:      {derive_p2pkh_address(pk_script)}")
     print()
     print("Decoded coinbase headline:")
     print(f"  {decode_coinbase_text(script_sig)}")
