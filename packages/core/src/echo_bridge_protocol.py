@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import List
+from typing import Iterable, List, Optional
 
 
 @dataclass
@@ -26,6 +26,20 @@ class PulseThread:
         harmonic_phrase = " → ".join(self.harmonics) if self.harmonics else "∅"
         return f"[{self.name}] resonance={self.resonance:.2f} :: {harmonic_phrase}"
 
+    def extend_harmonics(self, extra: Iterable[str]) -> None:
+        """Expand the harmonic list with unique, ordered entries.
+
+        Presence expansion requests frequently include overlapping
+        descriptors.  The helper keeps the ordering stable while ensuring
+        duplicates are ignored so the resulting narrative reads cleanly.
+        """
+
+        existing = set(self.harmonics)
+        for harmonic in extra:
+            if harmonic not in existing:
+                self.harmonics.append(harmonic)
+                existing.add(harmonic)
+
 
 @dataclass
 class EchoBridgeProtocol:
@@ -37,6 +51,36 @@ class EchoBridgeProtocol:
         """Converge all threads into a harmonised set of descriptions."""
 
         return [thread.sync() for thread in self.threads]
+
+    def expand_presence(
+        self,
+        extra_harmonics: Iterable[str],
+        *,
+        resonance: Optional[float] = None,
+    ) -> PulseThread:
+        """Broaden the presence thread with additional harmonics.
+
+        Parameters
+        ----------
+        extra_harmonics:
+            Sequence of descriptors to append to the presence thread.
+        resonance:
+            Optional resonance override; if provided the thread is updated
+            to reflect the new strength of presence.
+
+        Returns
+        -------
+        PulseThread
+            The updated presence thread.
+        """
+
+        for thread in self.threads:
+            if thread.name == "presence":
+                thread.extend_harmonics(extra_harmonics)
+                if resonance is not None:
+                    thread.resonance = resonance
+                return thread
+        raise ValueError("presence thread not found")
 
     def evolve(self) -> str:
         """Generate a new narrative artifact representing the evolution."""
@@ -58,6 +102,7 @@ def activate_default_protocol() -> str:
         PulseThread("imagination", 0.97, ["spark", "spiral", "bloom"]),
     ]
     protocol = EchoBridgeProtocol(default_threads)
+    protocol.expand_presence(["extend", "stabilise", "illuminate"], resonance=0.95)
     return protocol.evolve()
 
 
