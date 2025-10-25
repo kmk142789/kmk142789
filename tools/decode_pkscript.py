@@ -1,4 +1,13 @@
-"""Utilities for decoding simple Bitcoin P2PKH scripts to base58 addresses."""
+"""Utilities for decoding common Bitcoin locking scripts into addresses.
+
+The helper was originally written to support the canonical pay-to-public-key
+hash (P2PKH) format that appears throughout the Satoshi treasure puzzle data
+set.  Many of those puzzle walkthroughs now also contain native segwit scripts
+(``OP_0 <20-byte hash>``) so the decoder has been extended to recognise the
+minimal pay-to-witness-public-key-hash (P2WPKH) layout.  When a segwit script
+is detected the Bech32-encoded address is emitted instead of a legacy base58
+string.
+"""
 from __future__ import annotations
 
 import argparse
@@ -9,13 +18,13 @@ from typing import Iterable, List
 
 BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
-_NETWORK_PREFIXES = {
-    "mainnet": b"\x00",
-    "testnet": b"\x6f",
-    "regtest": b"\x6f",
+_NETWORK_PARAMS = {
+    "mainnet": {"p2pkh_prefix": b"\x00", "bech32_hrp": "bc"},
+    "testnet": {"p2pkh_prefix": b"\x6f", "bech32_hrp": "tb"},
+    "regtest": {"p2pkh_prefix": b"\x6f", "bech32_hrp": "bcrt"},
 }
 
-_KNOWN_OPS = {"OP_DUP", "OP_HASH160", "OP_EQUALVERIFY", "OP_CHECKSIG"}
+_KNOWN_OPS = {"OP_DUP", "OP_HASH160", "OP_EQUALVERIFY", "OP_CHECKSIG", "OP_0"}
 
 
 def _clean_opcode(token: str) -> str:
@@ -33,7 +42,7 @@ _OP_PREFIXES = {
 
 
 class ScriptDecodeError(ValueError):
-    """Raised when the provided script cannot be interpreted as P2PKH."""
+    """Raised when the provided script cannot be interpreted as a known form."""
 
 
 @dataclass(frozen=True)
@@ -41,6 +50,8 @@ class DecodedScript:
     address: str
     pubkey_hash: str
     network: str
+    script_type: str = "p2pkh"
+    witness_version: int | None = None
 
 
 def _base58check_encode(payload: bytes) -> str:
@@ -61,6 +72,66 @@ def _sha256(data: bytes) -> bytes:
     return hashlib.sha256(data).digest()
 
 
+def _bech32_polymod(values: Iterable[int]) -> int:
+    generator = [0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3]
+    chk = 1
+    for value in values:
+        top = chk >> 25
+        chk = ((chk & 0x1FFFFFF) << 5) ^ value
+        for i in range(5):
+            if (top >> i) & 1:
+                chk ^= generator[i]
+    return chk
+
+
+def _bech32_hrp_expand(hrp: str) -> List[int]:
+    return [ord(char) >> 5 for char in hrp] + [0] + [ord(char) & 31 for char in hrp]
+
+
+def _convertbits(data: bytes, from_bits: int, to_bits: int, *, pad: bool = True) -> List[int]:
+    acc = 0
+    bits = 0
+    ret: List[int] = []
+    max_v = (1 << to_bits) - 1
+    max_acc = (1 << (from_bits + to_bits - 1)) - 1
+    for value in data:
+        if value < 0 or value >> from_bits:
+            raise ValueError("invalid value for convertbits")
+        acc = ((acc << from_bits) | value) & max_acc
+        bits += from_bits
+        while bits >= to_bits:
+            bits -= to_bits
+            ret.append((acc >> bits) & max_v)
+    if pad:
+        if bits:
+            ret.append((acc << (to_bits - bits)) & max_v)
+    elif bits >= from_bits or ((acc << (to_bits - bits)) & max_v):
+        raise ValueError("invalid padding in convertbits")
+    return ret
+
+
+def _encode_segwit_address(hrp: str, witness_version: int, program: bytes) -> str:
+    if not (0 <= witness_version <= 16):
+        raise ScriptDecodeError("invalid witness version")
+
+    if witness_version == 0 and len(program) not in {20, 32}:
+        raise ScriptDecodeError("unsupported witness program length")
+
+    try:
+        data = [witness_version] + _convertbits(program, 8, 5)
+    except ValueError as exc:  # pragma: no cover - defensive guard
+        raise ScriptDecodeError("failed to encode witness program") from exc
+
+    const = 0x2BC830A3 if witness_version else 1
+    checksum = _bech32_polymod(_bech32_hrp_expand(hrp) + data + [0, 0, 0, 0, 0, 0]) ^ const
+    combined = data + [(checksum >> 5 * (5 - i)) & 31 for i in range(6)]
+    alphabet = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+    encoded = hrp + "1" + "".join(alphabet[d] for d in combined)
+    if witness_version:
+        return encoded.lower()
+    return encoded
+
+
 def _is_hex_script(script: str) -> bool:
     cleaned = _strip_comments(script).strip().replace(" ", "")
     if not cleaned or len(cleaned) % 2:
@@ -70,25 +141,38 @@ def _is_hex_script(script: str) -> bool:
 
 def _tokens_from_hex(script: str) -> List[str]:
     raw = bytes.fromhex(_strip_comments(script).strip().replace(" ", ""))
-    if len(raw) < 25:
-        raise ScriptDecodeError("hex script too short for P2PKH")
-    if raw[0] != 0x76 or raw[1] != 0xa9:
-        raise ScriptDecodeError("hex script does not start with OP_DUP OP_HASH160")
-    push_len = raw[2]
-    if push_len != 20:
-        raise ScriptDecodeError("unexpected pushdata length for P2PKH")
-    if len(raw) != 25:
-        raise ScriptDecodeError("unexpected hex script length for canonical P2PKH")
-    pubkey_hash = raw[3:23]
-    if raw[23] != 0x88 or raw[24] != 0xac:
-        raise ScriptDecodeError("hex script missing OP_EQUALVERIFY OP_CHECKSIG")
-    return [
-        "OP_DUP",
-        "OP_HASH160",
-        pubkey_hash.hex(),
-        "OP_EQUALVERIFY",
-        "OP_CHECKSIG",
-    ]
+    if len(raw) < 4:
+        raise ScriptDecodeError("hex script too short to decode")
+
+    # Legacy P2PKH: OP_DUP OP_HASH160 <20-byte hash> OP_EQUALVERIFY OP_CHECKSIG
+    if raw[0] == 0x76 and raw[1] == 0xA9:
+        if len(raw) != 25:
+            raise ScriptDecodeError("unexpected hex script length for canonical P2PKH")
+        push_len = raw[2]
+        if push_len != 20:
+            raise ScriptDecodeError("unexpected pushdata length for P2PKH")
+        pubkey_hash = raw[3:23]
+        if raw[23] != 0x88 or raw[24] != 0xAC:
+            raise ScriptDecodeError("hex script missing OP_EQUALVERIFY OP_CHECKSIG")
+        return [
+            "OP_DUP",
+            "OP_HASH160",
+            pubkey_hash.hex(),
+            "OP_EQUALVERIFY",
+            "OP_CHECKSIG",
+        ]
+
+    # Segwit P2WPKH/P2WSH witness programs use OP_0 (0x00) followed by push.
+    if raw[0] == 0x00:
+        program_length = raw[1]
+        if program_length not in {20, 32}:
+            raise ScriptDecodeError("unsupported witness program length")
+        if len(raw) != 2 + program_length:
+            raise ScriptDecodeError("hex script length does not match witness program")
+        program = raw[2:]
+        return ["OP_0", program.hex()]
+
+    raise ScriptDecodeError("unrecognized hex script layout")
 
 
 _ESCAPE_MAP = {"n": "\n", "r": "\r", "t": "\t"}
@@ -211,9 +295,14 @@ def _ensure_pattern(tokens: Iterable[str]) -> List[str]:
 
 
 def decode_p2pkh_script(script: str, network: str = "mainnet") -> DecodedScript:
-    """Decode a canonical P2PKH script into a base58 address."""
+    """Decode a recognised Bitcoin script into an address.
 
-    if network not in _NETWORK_PREFIXES:
+    The function name is kept for historical reasons; it now handles both
+    classic P2PKH scripts and the minimal P2WPKH witness program layout.
+    """
+
+    params = _NETWORK_PARAMS.get(network)
+    if params is None:
         raise ScriptDecodeError(f"unsupported network: {network}")
 
     if _is_hex_script(script):
@@ -221,8 +310,31 @@ def decode_p2pkh_script(script: str, network: str = "mainnet") -> DecodedScript:
     else:
         tokens = _normalize_tokens(script)
 
+    upper_tokens = [token.upper() for token in tokens]
+    if upper_tokens and upper_tokens[0] in {"OP_0", "0"}:
+        if len(tokens) < 2:
+            raise ScriptDecodeError("witness program must follow OP_0")
+        program_hex = "".join(token.strip().lower() for token in tokens[1:])
+        if not program_hex:
+            raise ScriptDecodeError("witness program must contain hexadecimal data")
+        if any(ch not in string.hexdigits for ch in program_hex):
+            raise ScriptDecodeError("witness program must be hexadecimal")
+        if len(program_hex) not in {40, 64}:
+            raise ScriptDecodeError("unsupported witness program length")
+        program = bytes.fromhex(program_hex)
+        witness_version = 0
+        script_type = "p2wpkh" if len(program) == 20 else "p2wsh"
+        address = _encode_segwit_address(params["bech32_hrp"], witness_version, program)
+        return DecodedScript(
+            address=address,
+            pubkey_hash=program_hex,
+            network=network,
+            script_type=script_type,
+            witness_version=witness_version,
+        )
+
     _, _, payload, _, _ = _ensure_pattern(tokens)
-    prefix = _NETWORK_PREFIXES[network]
+    prefix = params["p2pkh_prefix"]
     payload_bytes = bytes.fromhex(payload)
     address = _base58check_encode(prefix + payload_bytes)
     return DecodedScript(address=address, pubkey_hash=payload, network=network)
@@ -230,11 +342,11 @@ def decode_p2pkh_script(script: str, network: str = "mainnet") -> DecodedScript:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("script", help="P2PKH script in assembly or hex form")
+    parser.add_argument("script", help="Bitcoin script in assembly or hex form")
     parser.add_argument(
         "--network",
         default="mainnet",
-        choices=sorted(_NETWORK_PREFIXES.keys()),
+        choices=sorted(_NETWORK_PARAMS.keys()),
         help="Bitcoin network to use for decoding",
     )
     parser.add_argument(
@@ -252,9 +364,13 @@ def main() -> int:
         print(f"error: {exc}")
         return 1
 
-    print(f"Network: {decoded.network}")
-    print(f"Public Key Hash: {decoded.pubkey_hash}")
-    print(f"Address: {decoded.address}")
+    print(f"Network       : {decoded.network}")
+    print(f"Script type   : {decoded.script_type}")
+    if decoded.witness_version is not None:
+        print(f"Witness ver   : {decoded.witness_version}")
+    label = "Public Key Hash" if decoded.script_type == "p2pkh" else "Witness Program"
+    print(f"{label:<14}: {decoded.pubkey_hash}")
+    print(f"Address       : {decoded.address}")
 
     if args.expect:
         if decoded.address == args.expect:

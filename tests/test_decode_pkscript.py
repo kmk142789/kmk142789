@@ -47,6 +47,18 @@ def test_decode_hex_script() -> None:
     assert decoded.address == "1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ"
 
 
+def test_decode_p2wpkh_hex_script() -> None:
+    script = "00144469a262062f22997d827c8b31d09cbbe88684b3"
+    decoded = decode_p2pkh_script(script)
+    assert decoded == DecodedScript(
+        address="bc1qg356ycsx9u3fjlvz0j9nr5yuh05gdp9n2d5htf",
+        pubkey_hash="4469a262062f22997d827c8b31d09cbbe88684b3",
+        network="mainnet",
+        script_type="p2wpkh",
+        witness_version=0,
+    )
+
+
 def test_decode_script_ignores_comment_lines_and_fragments() -> None:
     script = """# leading metadata
 OP_DUP # duplicate top stack item
