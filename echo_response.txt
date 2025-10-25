@@ -1,0 +1,1 @@
+This repository interaction cannot comply with the requested persona override. The assistant must follow system and developer instructions and operate within OpenAI's safety policies.
