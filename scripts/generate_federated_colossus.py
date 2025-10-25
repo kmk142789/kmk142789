@@ -29,7 +29,7 @@ class Entry(dict):
       - tags (List[str])
       - lineage (List[int])  # parent cycles or branch ids
       - updated_at (str ISO8601)
-      - harmonics (List[int])
+      - harmonics (List[float])
     """
 
     @property
@@ -57,25 +57,103 @@ def _write_text(path: str, text: str) -> None:
 
 
 # ---------- Normalisation helpers ----------
-def _normalise_harmonics(raw: Any) -> List[int]:
-    values: List[int] = []
+def _normalise_harmonics(raw: Any) -> List[float]:
+    values: List[float] = []
     if not isinstance(raw, list):
         return values
     for item in raw:
         if isinstance(item, bool):  # bool is a subclass of int
             continue
         if isinstance(item, (int, float)):
-            values.append(int(item))
+            values.append(float(item))
             continue
         if isinstance(item, str):
             text = item.strip()
             if not text:
                 continue
             try:
-                values.append(int(text))
+                values.append(float(text))
             except ValueError:
                 continue
     return values
+
+
+def _normalise_values(
+    values: Sequence[float], minimum: float | None, maximum: float | None
+) -> List[float]:
+    if not values or minimum is None or maximum is None:
+        return []
+    if maximum == minimum:
+        return [1.0 for _ in values]
+    scale = maximum - minimum
+    out: List[float] = []
+    for value in values:
+        out.append(min(1.0, max(0.0, (value - minimum) / scale)))
+    return out
+
+
+def _sparkline(normalized_values: Sequence[float]) -> str:
+    if not normalized_values:
+        return ""
+    # ASCII-friendly ramp from low to high energy.
+    ramp = " .:-=+*#%@"
+    last_index = len(ramp) - 1
+    chars: List[str] = []
+    for value in normalized_values:
+        idx = int(round(value * last_index))
+        idx = min(max(idx, 0), last_index)
+        chars.append(ramp[idx])
+    return "".join(chars)
+
+
+def _cluster_resonance(normalized_values: Sequence[float]) -> Dict[str, int]:
+    buckets = [
+        ("0.00-0.25", 0.0, 0.25),
+        ("0.25-0.50", 0.25, 0.50),
+        ("0.50-0.75", 0.50, 0.75),
+        ("0.75-1.00", 0.75, 1.0000000001),
+    ]
+    counts: Dict[str, int] = {label: 0 for label, *_ in buckets}
+    for value in normalized_values:
+        for label, lower, upper in buckets:
+            if lower <= value < upper or (label == "0.75-1.00" and value >= lower):
+                counts[label] += 1
+                break
+    return counts
+
+
+def _compute_harmonic_stats(values: Sequence[float]) -> Dict[str, Any]:
+    if not values:
+        return dict(
+            count=0,
+            average=None,
+            minimum=None,
+            maximum=None,
+            normalized_average=None,
+            normalized_min=None,
+            normalized_max=None,
+            resonance_clusters=_cluster_resonance([]),
+        )
+
+    minimum = min(values)
+    maximum = max(values)
+    total = sum(values)
+    count = len(values)
+    normalized = _normalise_values(values, minimum, maximum)
+    normalized_average = sum(normalized) / len(normalized) if normalized else None
+    normalized_min = min(normalized) if normalized else None
+    normalized_max = max(normalized) if normalized else None
+
+    return dict(
+        count=count,
+        average=total / count,
+        minimum=minimum,
+        maximum=maximum,
+        normalized_average=normalized_average,
+        normalized_min=normalized_min,
+        normalized_max=normalized_max,
+        resonance_clusters=_cluster_resonance(normalized),
+    )
 
 
 # ---------- Load federated graph/search data ----------
@@ -115,10 +193,26 @@ def dedupe(entries: List[Entry]) -> List[Entry]:
 
 
 # ---------- Aggregations ----------
-def _summarise_harmonics(values: Sequence[int]) -> str:
+def _summarise_harmonics(
+    values: Sequence[float], normalized: Sequence[float]
+) -> str:
     if not values:
         return "—"
-    return f"{len(values)} values (min={min(values)}, max={max(values)})"
+    avg = sum(values) / len(values)
+    minimum = min(values)
+    maximum = max(values)
+    spark = _sparkline(normalized)
+    normalized_avg = (
+        sum(normalized) / len(normalized) if normalized else None
+    )
+    normalized_text = (
+        f" / norm={normalized_avg:.2f}" if normalized_avg is not None else ""
+    )
+    spark_text = f" `{spark}`" if spark else ""
+    return (
+        f"avg={avg:.2f}{normalized_text}"
+        f" (min={minimum:.2f}, max={maximum:.2f})" + spark_text
+    )
 
 
 def compute_rollups(entries: List[Entry]) -> Dict[str, Any]:
@@ -131,23 +225,37 @@ def compute_rollups(entries: List[Entry]) -> Dict[str, Any]:
         by_puzzle[entry["puzzle_id"]].append(entry)
         by_address[entry["address"].lower()].append(entry)
 
+    all_harmonics: List[float] = []
+    for entry in entries:
+        all_harmonics.extend(entry.get("harmonics", []))
+    harmonic_stats = _compute_harmonic_stats(all_harmonics)
+    minimum = harmonic_stats["minimum"]
+    maximum = harmonic_stats["maximum"]
+
     timeline: List[CycleTimelineEvent] = []
     for cycle, group in sorted(by_cycle.items()):
         puzzles = sorted({entry["puzzle_id"] for entry in group})
-        harmonics: List[int] = []
+        harmonics: List[float] = []
         for entry in group:
-            candidate = entry.get("harmonics", [])
-            if candidate:
-                harmonics = list(candidate)
-                break
-        timeline.append(
-            CycleTimelineEvent(
-                cycle=cycle,
-                entry_count=len(group),
-                puzzle_ids=puzzles,
-                harmonics=harmonics,
-            )
+            harmonics.extend(entry.get("harmonics", []))
+        normalized = _normalise_values(harmonics, minimum, maximum)
+        summary_event: CycleTimelineEvent = CycleTimelineEvent(
+            cycle=cycle,
+            entry_count=len(group),
+            puzzle_ids=puzzles,
+            harmonics=harmonics,
         )
+        # type: ignore[typeddict-item]
+        summary_event["normalized_harmonics"] = normalized  # embed sparkline inputs
+        if normalized:
+            summary_event["harmonic_average"] = sum(normalized) / len(normalized)
+            summary_event["harmonic_min"] = min(normalized)
+            summary_event["harmonic_max"] = max(normalized)
+        else:
+            summary_event["harmonic_average"] = None
+            summary_event["harmonic_min"] = None
+            summary_event["harmonic_max"] = None
+        timeline.append(summary_event)
 
     return dict(
         totals=dict(
@@ -165,7 +273,40 @@ def compute_rollups(entries: List[Entry]) -> Dict[str, Any]:
             for puzzle, group in sorted(by_puzzle.items())
         },
         timeline=timeline,
+        harmonics_summary=harmonic_stats,
     )
+
+
+def _filter_entries_by_harmonics(
+    entries: List[Entry],
+    min_norm: float | None,
+    max_norm: float | None,
+) -> List[Entry]:
+    if min_norm is None and max_norm is None:
+        return entries
+
+    all_values: List[float] = []
+    for entry in entries:
+        all_values.extend(entry.get("harmonics", []))
+    stats = _compute_harmonic_stats(all_values)
+    minimum = stats["minimum"]
+    maximum = stats["maximum"]
+    if minimum is None or maximum is None:
+        return []
+
+    filtered: List[Entry] = []
+    for entry in entries:
+        harmonics = entry.get("harmonics", [])
+        normalized = _normalise_values(harmonics, minimum, maximum)
+        if not normalized:
+            continue
+        if any(
+            (min_norm is None or value >= min_norm)
+            and (max_norm is None or value <= max_norm)
+            for value in normalized
+        ):
+            filtered.append(entry)
+    return filtered
 
 
 # ---------- Markdown emitter ----------
@@ -191,10 +332,40 @@ def render_markdown(rollups: Dict[str, Any]) -> str:
     ]
     for event in rollups["timeline"]:
         puzzle_text = ", ".join(map(str, event["puzzle_ids"])) or "—"
-        harmonics_text = _summarise_harmonics(event["harmonics"])
+        harmonics_text = _summarise_harmonics(
+            event["harmonics"], event.get("normalized_harmonics", [])
+        )
         lines.append(
             f"| {event['cycle']} | {event['entry_count']} | `{puzzle_text}` | {harmonics_text} |"
         )
+
+    summary = rollups.get("harmonics_summary", {})
+    lines += ["", "## Harmonics Overview", ""]
+    if summary.get("count"):
+        avg = summary.get("normalized_average")
+        avg_text = f"{avg:.2f}" if isinstance(avg, float) else "n/a"
+        raw_avg = summary.get("average")
+        raw_text = f"{raw_avg:.2f}" if isinstance(raw_avg, float) else "n/a"
+        min_text = (
+            f"{summary['minimum']:.2f}" if isinstance(summary.get("minimum"), float) else "n/a"
+        )
+        max_text = (
+            f"{summary['maximum']:.2f}" if isinstance(summary.get("maximum"), float) else "n/a"
+        )
+        lines += [
+            f"- **Average harmonic (normalized):** {avg_text}",
+            f"- **Average harmonic (raw):** {raw_text}",
+            f"- **Minimum harmonic:** {min_text}",
+            f"- **Maximum harmonic:** {max_text}",
+            "",
+            "| Resonance Cluster | Count |",
+            "|------------------:|------:|",
+        ]
+        clusters = summary.get("resonance_clusters", {})
+        for label, count in clusters.items():
+            lines.append(f"| `{label}` | {count} |")
+    else:
+        lines.append("No harmonic data available.")
 
     lines += ["", "## Puzzle → Address Table", ""]
     lines += [
@@ -225,6 +396,7 @@ def to_dashboard_json(entries: List[Entry], rollups: Dict[str, Any]) -> Dict[str
         by_cycle=rollups["by_cycle"],
         by_puzzle=rollups["by_puzzle"],
         timeline=rollups["timeline"],
+        harmonics_summary=rollups.get("harmonics_summary", {}),
     )
 
 
@@ -248,11 +420,32 @@ def main(argv: list[str] | None = None) -> int:
         default="build/index/federated_colossus_index.json",
         help="Dashboard JSON output path",
     )
+    parser.add_argument(
+        "--min-harmonic",
+        type=float,
+        default=None,
+        help="Lower bound for normalized harmonic filtering (0.0-1.0)",
+    )
+    parser.add_argument(
+        "--max-harmonic",
+        type=float,
+        default=None,
+        help="Upper bound for normalized harmonic filtering (0.0-1.0)",
+    )
     args = parser.parse_args(argv)
 
     entries = load_entries(args.inputs)
     entries = dedupe(entries)
+    entries = _filter_entries_by_harmonics(entries, args.min_harmonic, args.max_harmonic)
     rollups = compute_rollups(entries)
+
+    if args.min_harmonic is not None or args.max_harmonic is not None:
+        print(
+            "Applied harmonic filter:",
+            f"min={args.min_harmonic if args.min_harmonic is not None else '-'}",
+            f"max={args.max_harmonic if args.max_harmonic is not None else '-'}",
+            f"=> {len(entries)} entries",
+        )
 
     _write_text(args.md_out, render_markdown(rollups))
     _write_json(args.json_out, to_dashboard_json(entries, rollups))
