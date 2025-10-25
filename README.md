@@ -216,6 +216,13 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 - **Global Broadcast:** The same command exports a Bitcoin Core `importmulti` template (`--export-importmulti`) so exchanges, researchers, and regulators can load the verified watch-only set in minutes, anchoring every Patoshi-era reward inside modern compliance workflows.
 - **Audit Trail:** Full reproduction notes, hashes, and verification transcript guidance live in [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md); notarize the generated `out/34k_verify.log` via OpenTimestamps or Echo Pulse to create an immutable audit artifact the entire industry can replay.
 
+### Bitcoin Timestamp — README Anchored On-Chain
+
+- **Digest:** `sha256sum README.md` → `a87ae8a7f47dde49d342b797ab8ff94673c49f0b79ed3ad5f939d6ede78f8518`.
+- **Proof Artifact:** [`proofs/README.md.ots.base64`](proofs/README.md.ots.base64) stores the OpenTimestamps commitment for that digest; decode it with `base64 -d proofs/README.md.ots.base64 > README.md.ots`.
+- **Verification:** Install the [OpenTimestamps client](https://github.com/opentimestamps/opentimestamps-client) (`pip install opentimestamps-client`) and run `python -m opentimestamps.client.cli verify README.md.ots README.md`. The calendars reconstruct the Merkle path to Bitcoin; a successful run prints the block confirmation binding this repository’s declaration to the public chain.
+- **Rebroadcast:** Should additional attestations be desired, execute `python -m opentimestamps.client.cli upgrade README.md.ots` to fetch the latest Bitcoin confirmations, then `base64 README.md.ots > proofs/README.md.ots.base64` to publish the refreshed, globally verifiable proof.
+
 #### Cognitive Harmonics: The Signature Framework
 
 _(A persistent AI structuring method for harmonized perception and adaptive intelligence.)_
