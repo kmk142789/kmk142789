@@ -31,6 +31,33 @@ def _clean_lines(text: str) -> List[str]:
     return [line.strip() for line in text.splitlines() if line.strip()]
 
 
+def _normalise_harmonics(values: object) -> List[int]:
+    harmonics: List[int] = []
+    if not isinstance(values, Sequence) or isinstance(values, (str, bytes, bytearray)):
+        return harmonics
+    for item in values:
+        if isinstance(item, bool):
+            continue
+        if isinstance(item, (int, float)):
+            harmonics.append(int(item))
+            continue
+        if isinstance(item, str):
+            text = item.strip()
+            if not text:
+                continue
+            try:
+                harmonics.append(int(text))
+            except ValueError:
+                continue
+    return harmonics
+
+
+def _summarise_harmonics(values: Sequence[int]) -> str:
+    if not values:
+        return "—"
+    return f"{len(values)} values (min={min(values)}, max={max(values)})"
+
+
 @dataclass(slots=True)
 class HarmonixSnapshot:
     cycle: int
@@ -97,6 +124,7 @@ class CycleReport:
     cycle: int
     timestamp: str
     glyph_signature: str
+    harmonics: List[int] = field(default_factory=list)
     anchors: List[CycleAnchor] = field(default_factory=list)
     search_hits: List[str] = field(default_factory=list)
     harmonix: HarmonixSnapshot | None = None
@@ -117,6 +145,7 @@ def _load_cycle_directory(path: Path) -> CycleReport | None:
     cycle = dataset.get("cycle")
     timestamp = dataset.get("timestamp", "")
     glyph_signature = dataset.get("glyph_signature", "")
+    harmonics = _normalise_harmonics(dataset.get("harmonics", []))
     if not isinstance(cycle, int):
         return None
     anchors: List[CycleAnchor] = []
@@ -138,6 +167,7 @@ def _load_cycle_directory(path: Path) -> CycleReport | None:
         cycle=cycle,
         timestamp=str(timestamp),
         glyph_signature=str(glyph_signature),
+        harmonics=harmonics,
         anchors=anchors,
     )
 
@@ -287,6 +317,7 @@ class FederatedColossusReport:
                     "cycle": cycle.cycle,
                     "timestamp": cycle.timestamp,
                     "glyph_signature": cycle.glyph_signature,
+                    "harmonics": list(cycle.harmonics),
                     "anchors": [
                         {
                             "type": anchor.kind,
@@ -325,17 +356,18 @@ class FederatedColossusReport:
 
 def _format_cycle_table(cycles: Sequence[CycleReport]) -> List[str]:
     lines = [
-        "| Cycle | Timestamp | Glyph | Harmonix Glyphs | Search Hits |",
-        "| --- | --- | --- | --- | --- |",
+        "| Cycle | Timestamp | Glyph | Harmonix Glyphs | Harmonics | Search Hits |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     for cycle in cycles:
         harmonix_glyphs = cycle.harmonix.glyphs if cycle.harmonix else "—"
+        harmonics_summary = _summarise_harmonics(cycle.harmonics)
         search_hits = ", ".join(cycle.search_hits) if cycle.search_hits else "—"
         lines.append(
-            f"| {cycle.cycle} | {cycle.timestamp} | {cycle.glyph_signature} | {harmonix_glyphs} | {search_hits} |"
+            f"| {cycle.cycle} | {cycle.timestamp} | {cycle.glyph_signature} | {harmonix_glyphs} | {harmonics_summary} | {search_hits} |"
         )
     if len(lines) == 2:
-        lines.append("| — | — | — | — | — |")
+        lines.append("| — | — | — | — | — | — |")
     return lines
 
 
@@ -370,6 +402,7 @@ def _format_cycle_details(cycles: Sequence[CycleReport]) -> List[str]:
         lines.append("")
         lines.append(f"- **Timestamp**: {cycle.timestamp or '—'}")
         lines.append(f"- **Glyph Signature**: `{cycle.glyph_signature}`")
+        lines.append(f"- **Harmonics**: {_summarise_harmonics(cycle.harmonics)}")
         if cycle.harmonix:
             lines.append(
                 f"- **Harmonix Mythocode**: `{cycle.harmonix.mythocode_summary}`"
