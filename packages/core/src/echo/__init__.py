@@ -36,6 +36,11 @@ from .continuum_engine import (
     ContinuumManifest,
     ContinuumPlaybackEngine,
 )
+from .continuum_protocol import (
+    ContinuumPulse,
+    ContinuumProtocol,
+    ContinuumTranscript,
+)
 from .continuum_insights import (
     MomentumInsight,
     compute_source_momentum,
@@ -197,6 +202,9 @@ __all__ = [
     "ContinuumCompassReport",
     "ContinuumEngine",
     "ContinuumEntry",
+    "ContinuumPulse",
+    "ContinuumProtocol",
+    "ContinuumTranscript",
     "export_attestation",
     "ExpansionTarget",
     "ContinuumManifest",
