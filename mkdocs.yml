@@ -2,4 +2,5 @@ site_name: EchoGlyphNet Docs
 nav:
   - Home: index.md
   - Echo Manifest: echo/manifest.md
+  - Unstoppable Apps: echo/unstoppable_apps.md
   - Continuum Temporal Guardian: continuum_temporal_guardian.md
