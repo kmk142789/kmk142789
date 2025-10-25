@@ -1,4 +1,4 @@
-"""Decode human-readable P2PKH scripts into puzzle metadata."""
+"""Decode Bitcoin locking scripts into puzzle metadata."""
 
 from __future__ import annotations
 
@@ -10,10 +10,9 @@ from . import puzzle_dataset
 from .show_puzzle_solution import (
     SOLUTIONS_PATH,
     _entry_to_solution,
-    _hash160_to_p2pkh_address,
+    _decode_script,
     _load_solutions,
     _match_entry,
-    _parse_p2pkh_hash160,
 )
 
 
@@ -33,13 +32,13 @@ def _format_solution(solution: puzzle_dataset.PuzzleSolution) -> str:
 
 
 def main(argv: Optional[Iterable[str]] = None) -> None:
-    """Decode a canonical P2PKH script and optionally match the puzzle entry."""
+    """Decode a canonical script and optionally match the puzzle entry."""
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "pkscript",
         help=(
-            "Canonical P2PKH script in either newline-delimited ASM form or "
+            "Bitcoin script in either newline-delimited assembly form or "
             "hexadecimal notation."
         ),
     )
@@ -57,18 +56,32 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
 
     args = parser.parse_args(argv)
 
-    fingerprint = _parse_p2pkh_hash160(args.pkscript)
-    address = _hash160_to_p2pkh_address(fingerprint)
+    decoded = _decode_script(args.pkscript)
+    print(f"Script type   : {decoded.script_type}")
 
-    print(f"Hash160       : {fingerprint}")
-    print(f"Legacy address: {address}")
+    address = decoded.address
+    fingerprint = decoded.pubkey_hash.lower()
+
+    if decoded.script_type == "p2pk":
+        if decoded.pubkey:
+            print(f"Public key    : {decoded.pubkey}")
+        print(f"Hash160       : {fingerprint}")
+        print(f"Legacy address: {address}")
+    elif decoded.script_type == "p2pkh":
+        print(f"Hash160       : {fingerprint}")
+        print(f"Legacy address: {address}")
+    else:
+        if decoded.witness_version is not None:
+            print(f"Witness ver   : {decoded.witness_version}")
+        print(f"Witness prog  : {fingerprint}")
+        print(f"Address       : {address}")
 
     if not args.lookup:
         return
 
     entries = _load_solutions(args.solutions)
     try:
-        entry = _match_entry(entries, hash160=fingerprint)
+        entry = _match_entry(entries, address=address, hash160=fingerprint)
     except SystemExit:
         print("Lookup        : no matching puzzle entry found.")
         return
