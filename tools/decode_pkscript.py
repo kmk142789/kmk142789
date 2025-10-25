@@ -91,11 +91,26 @@ def _tokens_from_hex(script: str) -> List[str]:
     ]
 
 
+_ESCAPE_MAP = {"n": "\n", "r": "\r", "t": "\t"}
+
+
+def _expand_escape_sequences(script: str) -> str:
+    """Replace common escaped whitespace sequences with their literals."""
+
+    def _replace(match: re.Match[str]) -> str:
+        key = match.group(1)
+        return _ESCAPE_MAP.get(key, match.group(0))
+
+    # Only translate recognised escapes so that hex payloads remain untouched.
+    return re.sub(r"\\(n|r|t)", _replace, script)
+
+
 def _strip_comments(script: str) -> str:
     """Return ``script`` with comment fragments removed."""
 
+    expanded = _expand_escape_sequences(script)
     lines: List[str] = []
-    for raw_line in script.splitlines():
+    for raw_line in expanded.splitlines():
         stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
             continue
