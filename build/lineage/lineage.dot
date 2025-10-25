@@ -1,0 +1,15 @@
+digraph PuzzleLineage {
+  rankdir=LR;
+  node [shape=record, style=filled, fillcolor="#0b3d91", fontcolor=white, fontname=Helvetica];
+  n100 [label="Puzzle 100\n1KCgMv8fo2TPBpddVi9jqmMmcne9uSNJ5F\nP2PKH", fillcolor="#0b3d91"];
+  n108 [label="Puzzle 108\n1HB1iKUqeffnVsvQsbpC6dNi1XKbyNuqao\nP2PKH", fillcolor="#0b3d91"];
+  n110 [label="Puzzle 110\n12JzYkkN76xkwvcPT6AWKZtGX6w2LAgsJg\nP2PKH", fillcolor="#0b3d91"];
+  n125 [label="Puzzle 125\n1PXAyUB8ZoH3WD8n5zoAthYjN15yN5CVq5\nP2PKH", fillcolor="#0b3d91"];
+  n251 [label="Puzzle 251\n1M3u4q5Q35qtQPmDHeubVbk7APYi3VVoBX\nP2PKH", fillcolor="#0b3d91"];
+  n256 [label="Puzzle 256\n1FMcotmnqqE5M2x9DDX3VfPAPuBWArGisa\nP2PKH", fillcolor="#0b3d91"];
+  n100 -> n108 [label="base58.fragment"];
+  n108 -> n110 [label="base58.fragment"];
+  n110 -> n125 [label="base58.fragment"];
+  n125 -> n251 [label="base58.fragment"];
+  n251 -> n256 [label="base58.fragment"];
+}

@@ -1,0 +1,32 @@
+{
+  "puzzle_id": 251,
+  "doc": "docs/puzzles/puzzle-251.md",
+  "sha256": "b9af311f669fa29db85c1ada38731d5b2e1dedc385421b29d67499f58241ba95",
+  "addresses": [
+    "1569a483a88e35ed349a521a414ca",
+    "1M3u4q5Q35qtQPmDHeubVbk7APYi3VVoBX"
+  ],
+  "hash160": [
+    "dbeecf6406c1569a483a88e35ed349a521a414ca"
+  ],
+  "script_type": "p2pkh",
+  "status": "reconstructed",
+  "lineage": [
+    {
+      "source": 125,
+      "target": 251,
+      "domain": "base58.fragment"
+    },
+    {
+      "source": 251,
+      "target": 256,
+      "domain": "base58.fragment"
+    }
+  ],
+  "domains": {
+    "error": "Unauthorized",
+    "status": 401,
+    "body": "{\n  \"message\":\"No API key found in request\"\n}"
+  },
+  "generated": "2025-10-25T09:22:23.613842+00:00"
+}

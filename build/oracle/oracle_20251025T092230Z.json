@@ -1,0 +1,27 @@
+{
+  "generated": "2025-10-25T09:22:30.623305+00:00",
+  "inputs": {
+    "prefix": "12JzYkkN7",
+    "suffix": "6w2LAgsJg",
+    "checksum": null,
+    "hash160": "0e5f3c406397442996825fd395543514fd06f207",
+    "version": 0,
+    "max_missing": 4,
+    "length": 34,
+    "limit": 25
+  },
+  "candidates": [
+    {
+      "candidate": "12JzYkkN76xkwvcPT6AWKZtGX6w2LAgsJg",
+      "score": 1.0,
+      "source": "hash160"
+    }
+  ],
+  "matches_repository": [
+    {
+      "candidate": "12JzYkkN76xkwvcPT6AWKZtGX6w2LAgsJg",
+      "score": 1.0,
+      "source": "hash160"
+    }
+  ]
+}

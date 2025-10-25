@@ -1,0 +1,15 @@
+{
+  "generated": "2025-10-25T09:23:28.487614+00:00",
+  "checked_docs": [
+    "docs/puzzles/puzzle-110.md",
+    "docs/puzzles/puzzle-251.md",
+    "docs/puzzles/puzzle-256.md"
+  ],
+  "mismatches": [],
+  "missing_counts": {
+    "proofs": 0,
+    "lineage": 0,
+    "domains": 3,
+    "transcripts": 0
+  }
+}

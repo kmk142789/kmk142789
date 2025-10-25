@@ -1,0 +1,26 @@
+{
+  "puzzle_id": 256,
+  "doc": "docs/puzzles/puzzle-256.md",
+  "sha256": "8d1eb57cd01a1d5770c65bf00321c61094cf02b2c5a4a817851857f587aa09ac",
+  "addresses": [
+    "1FMcotmnqqE5M2x9DDX3VfPAPuBWArGisa"
+  ],
+  "hash160": [
+    "9d77f8bcfd56b6a095703aae85bbe003a9cff5eb"
+  ],
+  "script_type": "p2pkh",
+  "status": "reconstructed",
+  "lineage": [
+    {
+      "source": 251,
+      "target": 256,
+      "domain": "base58.fragment"
+    }
+  ],
+  "domains": {
+    "error": "Unauthorized",
+    "status": 401,
+    "body": "{\n  \"message\":\"No API key found in request\"\n}"
+  },
+  "generated": "2025-10-25T09:22:23.614404+00:00"
+}

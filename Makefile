@@ -1,4 +1,4 @@
-.PHONY: akit plan wish cycle test all
+.PHONY: akit plan wish cycle test all lineage
 
 akit:
 	python -m pytest -q
@@ -18,3 +18,6 @@ test:
 	pytest -q
 
 all: test
+
+lineage:
+	python scripts/generate_lineage.py

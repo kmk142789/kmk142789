@@ -1,0 +1,19 @@
+{
+  "puzzle": 256,
+  "script": "OP_DUP OP_HASH160 9d77f8bcfd56b6a095703aae85bbe003a9cff5eb OP_EQUALVERIFY OP_CHECKSIG",
+  "analysis": {
+    "type": "p2pkh",
+    "hash160": "9d77f8bcfd56b6a095703aae85bbe003a9cff5eb",
+    "address": "1FMcotmnqqE5M2x9DDX3VfPAPuBWArGisa",
+    "script": [
+      "OP_DUP",
+      "OP_HASH160",
+      "9d77f8bcfd56b6a095703aae85bbe003a9cff5eb",
+      "OP_EQUALVERIFY",
+      "OP_CHECKSIG"
+    ],
+    "description": "Pay-to-PubKey-Hash (legacy)."
+  },
+  "tree": "PKScript (p2pkh)\n\u251c\u2500 OP_DUP\n\u251c\u2500 OP_HASH160\n\u251c\u2500 9d77f8bcfd56b6a095703aae85bbe003a9cff5eb\n\u251c\u2500 OP_EQUALVERIFY\n\u2514\u2500 OP_CHECKSIG\n   \u21b3 HASH160: 9d77f8bcfd56b6a095703aae85bbe003a9cff5eb\n   \u21b3 Address: 1FMcotmnqqE5M2x9DDX3VfPAPuBWArGisa\n   \u21b3 Pay-to-PubKey-Hash (legacy).",
+  "address": "1FMcotmnqqE5M2x9DDX3VfPAPuBWArGisa"
+}
