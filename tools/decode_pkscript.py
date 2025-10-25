@@ -52,6 +52,7 @@ class DecodedScript:
     network: str
     script_type: str = "p2pkh"
     witness_version: int | None = None
+    pubkey: str | None = None
 
 
 def _base58check_encode(payload: bytes) -> str:
@@ -70,6 +71,14 @@ def _sha256(data: bytes) -> bytes:
     import hashlib
 
     return hashlib.sha256(data).digest()
+
+
+def _hash160(data: bytes) -> bytes:
+    import hashlib
+
+    ripemd = hashlib.new("ripemd160")
+    ripemd.update(_sha256(data))
+    return ripemd.digest()
 
 
 def _bech32_polymod(values: Iterable[int]) -> int:
@@ -162,6 +171,16 @@ def _tokens_from_hex(script: str) -> List[str]:
             "OP_CHECKSIG",
         ]
 
+    # Legacy pay-to-public-key: <pubkey> OP_CHECKSIG
+    if raw[-1] == 0xAC and raw[0] in {0x21, 0x41}:
+        push_len = raw[0]
+        if len(raw) != push_len + 2:
+            raise ScriptDecodeError("unexpected hex script length for canonical P2PK")
+        pubkey = raw[1:-1]
+        if len(pubkey) != push_len:
+            raise ScriptDecodeError("hex script contains truncated public key")
+        return [pubkey.hex(), "OP_CHECKSIG"]
+
     # Segwit P2WPKH/P2WSH witness programs use OP_0 (0x00) followed by push.
     if raw[0] == 0x00:
         program_length = raw[1]
@@ -246,6 +265,41 @@ def _normalize_tokens(script: str) -> List[str]:
     return tokens
 
 
+def _extract_pubkey(tokens: Iterable[str]) -> str | None:
+    parts = [token.strip() for token in tokens if token.strip()]
+    if not parts:
+        return None
+
+    first = parts[0]
+    remainder = parts[1:]
+    if (
+        len(parts) >= 2
+        and len(first) <= 2
+        and all(ch in string.hexdigits for ch in first)
+    ):
+        try:
+            indicated = int(first, 16)
+        except ValueError:
+            indicated = None
+        else:
+            joined = "".join(remainder)
+            if (
+                indicated in {33, 65}
+                and len(joined) == indicated * 2
+                and all(ch in string.hexdigits for ch in joined)
+            ):
+                parts = remainder
+
+    candidate = "".join(parts)
+    if not candidate:
+        return None
+
+    candidate = candidate.lower()
+    if len(candidate) in {66, 130} and all(ch in string.hexdigits for ch in candidate):
+        return candidate
+    return None
+
+
 def _extract_p2pkh_tokens(tokens: Iterable[str]) -> List[str]:
     """Return the canonical five-token P2PKH sequence from ``tokens``."""
 
@@ -311,6 +365,22 @@ def decode_p2pkh_script(script: str, network: str = "mainnet") -> DecodedScript:
         tokens = _normalize_tokens(script)
 
     upper_tokens = [token.upper() for token in tokens]
+    if upper_tokens and upper_tokens[-1] == "OP_CHECKSIG" and "OP_EQUALVERIFY" not in upper_tokens:
+        pubkey_hex = _extract_pubkey(tokens[:-1])
+        if pubkey_hex:
+            pubkey_bytes = bytes.fromhex(pubkey_hex)
+            if len(pubkey_bytes) not in {33, 65}:
+                raise ScriptDecodeError("public key must be 33 or 65 bytes for P2PK")
+            pubkey_hash = _hash160(pubkey_bytes)
+            address = _base58check_encode(params["p2pkh_prefix"] + pubkey_hash)
+            return DecodedScript(
+                address=address,
+                pubkey_hash=pubkey_hash.hex(),
+                network=network,
+                script_type="p2pk",
+                pubkey=pubkey_hex,
+            )
+
     if upper_tokens and upper_tokens[0] in {"OP_0", "0"}:
         if len(tokens) < 2:
             raise ScriptDecodeError("witness program must follow OP_0")
@@ -368,8 +438,12 @@ def main() -> int:
     print(f"Script type   : {decoded.script_type}")
     if decoded.witness_version is not None:
         print(f"Witness ver   : {decoded.witness_version}")
-    label = "Public Key Hash" if decoded.script_type == "p2pkh" else "Witness Program"
-    print(f"{label:<14}: {decoded.pubkey_hash}")
+    if decoded.script_type == "p2pk":
+        print(f"Public Key    : {decoded.pubkey}")
+        print(f"Hash160       : {decoded.pubkey_hash}")
+    else:
+        label = "Public Key Hash" if decoded.script_type == "p2pkh" else "Witness Program"
+        print(f"{label:<14}: {decoded.pubkey_hash}")
     print(f"Address       : {decoded.address}")
 
     if args.expect:
