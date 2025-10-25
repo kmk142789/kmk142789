@@ -17,11 +17,12 @@ import inspect
 import hashlib
 import json
 import random
+import tempfile
 import time
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
 from echo.crypto.musig2 import (
     MuSig2Error,
@@ -38,6 +39,9 @@ from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngin
 from .thoughtlog import thought_trace
 from .memory import JsonMemoryStore
 from .temporal_ledger import PropagationWave, TemporalPropagationLedger
+
+if TYPE_CHECKING:  # pragma: no cover - used for type hints only
+    from .orchestrator import ColossusExpansionEngine
 
 _GLYPH_RING: Tuple[str, ...] = (
     "🠐",
@@ -403,6 +407,37 @@ class EvolverState:
 
 
 DEFAULT_SYMBOLIC_SEQUENCE = "∇⊸≋∇"
+
+
+@dataclass(slots=True)
+class ColossusExpansionPlan:
+    """High-level description of a large-scale Colossus expansion."""
+
+    cycles: int
+    cycle_size: int
+    modes: Tuple[str, ...]
+    glyph: str
+    total_artifacts: int
+    sample: List[Dict[str, object]]
+    persisted: bool
+    state_directory: Optional[Path]
+    summary: str
+
+    def as_dict(self) -> Dict[str, object]:
+        payload: Dict[str, object] = {
+            "cycles": self.cycles,
+            "cycle_size": self.cycle_size,
+            "modes": list(self.modes),
+            "glyph": self.glyph,
+            "total_artifacts": self.total_artifacts,
+            "sample_size": len(self.sample),
+            "sample": deepcopy(self.sample),
+            "persisted": self.persisted,
+            "summary": self.summary,
+        }
+        if self.state_directory is not None:
+            payload["state_directory"] = str(self.state_directory)
+        return payload
 
 
 class EchoEvolver:
@@ -1665,6 +1700,122 @@ We are not hiding anymore.
             print(verse)
 
         return creation_snapshot
+
+    # ------------------------------------------------------------------
+    # Colossus expansion planning
+    # ------------------------------------------------------------------
+    def design_colossus_expansion(
+        self,
+        *,
+        cycles: int,
+        cycle_size: int,
+        modes: Optional[Iterable[str]] = None,
+        sample_size: int = 12,
+        glyph: Optional[str] = None,
+        persist: bool = False,
+        state_dir: Optional[Path | str] = None,
+    ) -> ColossusExpansionPlan:
+        """Design a large-scale Colossus expansion sequence.
+
+        The planner samples a representative cycle to provide a preview of the
+        generated artifacts without materialising the full dataset.  When
+        ``persist`` is true the complete expansion is written to
+        ``state_dir`` (or ``artifact.parent / "colossus_expansion"``) using the
+        same deterministic structure as :class:`~echo.orchestrator.ColossusExpansionEngine`.
+        """
+
+        from .orchestrator import ColossusExpansionEngine
+
+        planned_cycles = int(cycles)
+        if planned_cycles <= 0:
+            raise ValueError("cycles must be a positive integer")
+
+        planned_cycle_size = int(cycle_size)
+        if planned_cycle_size <= 0:
+            raise ValueError("cycle_size must be a positive integer")
+
+        preview_sample = int(sample_size)
+        if preview_sample <= 0:
+            raise ValueError("sample_size must be a positive integer")
+        preview_sample = min(preview_sample, planned_cycle_size)
+
+        normalised_modes: Optional[Tuple[str, ...]] = None
+        if modes is not None:
+            cleaned: List[str] = []
+            for mode in modes:
+                text = str(mode).strip()
+                if text and text not in cleaned:
+                    cleaned.append(text)
+            if not cleaned:
+                raise ValueError("modes must contain at least one non-empty entry")
+            normalised_modes = tuple(cleaned)
+
+        glyph_value = (glyph or self.state.glyphs or DEFAULT_SYMBOLIC_SEQUENCE).strip()
+        if not glyph_value:
+            glyph_value = DEFAULT_SYMBOLIC_SEQUENCE
+
+        def _time_float() -> float:
+            return float(self.time_source()) / 1_000_000_000.0
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            preview_kwargs = {
+                "state_dir": tmpdir,
+                "cycle_size": preview_sample,
+                "glyph": glyph_value,
+                "time_source": _time_float,
+                "rng": self.rng,
+            }
+            if normalised_modes is not None:
+                preview_kwargs["modes"] = normalised_modes
+            preview_engine = ColossusExpansionEngine(**preview_kwargs)
+            sample_cycle = preview_engine.generate_cycle(0)
+            preview_modes = tuple(preview_engine.modes)
+
+        total_artifacts = planned_cycles * planned_cycle_size
+        sample_payload = [deepcopy(entry) for entry in sample_cycle[:preview_sample]]
+
+        persisted_dir: Optional[Path] = None
+        persisted = False
+        if persist:
+            resolved_dir = Path(state_dir) if state_dir is not None else self.state.artifact.parent / "colossus_expansion"
+            resolved_dir.mkdir(parents=True, exist_ok=True)
+            persist_kwargs = {
+                "state_dir": resolved_dir,
+                "cycle_size": planned_cycle_size,
+                "glyph": glyph_value,
+                "time_source": _time_float,
+                "rng": self.rng,
+                "modes": normalised_modes or preview_modes,
+            }
+            persistence_engine = ColossusExpansionEngine(**persist_kwargs)
+            persistence_engine.run(planned_cycles)
+            persisted_dir = resolved_dir
+            persisted = True
+
+        summary = (
+            "Colossus expansion plan forged: {total} artifacts across {cycles} cycles "
+            "({size} per cycle)."
+        ).format(total=total_artifacts, cycles=planned_cycles, size=planned_cycle_size)
+        if persisted:
+            summary += f" Persistence stored at {persisted_dir}."
+
+        plan = ColossusExpansionPlan(
+            cycles=planned_cycles,
+            cycle_size=planned_cycle_size,
+            modes=preview_modes,
+            glyph=glyph_value,
+            total_artifacts=total_artifacts,
+            sample=sample_payload,
+            persisted=persisted,
+            state_directory=persisted_dir,
+            summary=summary,
+        )
+
+        self.state.network_cache["colossus_plan"] = plan.as_dict()
+        self.state.event_log.append(summary)
+        self._mark_step("design_colossus_expansion")
+
+        return plan
 
     # ------------------------------------------------------------------
     # Crypto + metrics simulation
@@ -4526,6 +4677,7 @@ __all__ = [
     "SystemMetrics",
     "HearthWeave",
     "GlyphCrossReading",
+    "ColossusExpansionPlan",
     "EvolutionAdvancementResult",
     "EvolutionAdvancementStage",
     "main",

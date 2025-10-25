@@ -203,6 +203,49 @@ class EchoEvolverTests(unittest.TestCase):
             summary, self.evolver.state.network_cache.get("recent_event_summary")
         )
 
+    def test_design_colossus_expansion_records_plan(self) -> None:
+        plan = self.evolver.design_colossus_expansion(
+            cycles=3,
+            cycle_size=24,
+            sample_size=5,
+            modes=("puzzle", "dataset", "verifier", "narrative"),
+        )
+
+        self.assertEqual(plan.cycles, 3)
+        self.assertEqual(plan.cycle_size, 24)
+        self.assertEqual(plan.total_artifacts, 72)
+        self.assertFalse(plan.persisted)
+        self.assertIsNone(plan.state_directory)
+        self.assertGreaterEqual(len(plan.sample), 1)
+        self.assertIn("puzzle", plan.modes)
+        cache = self.evolver.state.network_cache["colossus_plan"]
+        self.assertEqual(cache["cycles"], 3)
+        self.assertEqual(cache["total_artifacts"], 72)
+        self.assertEqual(cache["sample_size"], len(plan.sample))
+        self.assertIn("summary", cache)
+
+        step_history = self.evolver.state.network_cache["step_history"][self.evolver.state.cycle]
+        self.assertIn("design_colossus_expansion", step_history)
+
+    def test_design_colossus_expansion_persists_cycles_when_requested(self) -> None:
+        target = Path(self.tmp.name) / "colossus"
+        plan = self.evolver.design_colossus_expansion(
+            cycles=2,
+            cycle_size=3,
+            sample_size=2,
+            persist=True,
+            state_dir=target,
+        )
+
+        self.assertTrue(plan.persisted)
+        self.assertEqual(plan.state_directory, target)
+        files = sorted(target.glob("cycle_*.json"))
+        self.assertEqual(len(files), 2)
+        with files[0].open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+        self.assertEqual(payload["cycle"], 0)
+        self.assertEqual(len(payload["artifacts"]), 3)
+
     def test_orbital_resonance_forecast_projects_horizon(self) -> None:
         metrics = self.evolver.state.system_metrics
         metrics.network_nodes = 7

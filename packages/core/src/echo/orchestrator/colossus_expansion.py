@@ -115,6 +115,12 @@ class ColossusExpansionEngine:
         return self._state_dir
 
     @property
+    def modes(self) -> Tuple[str, ...]:
+        """Return the ordered modes used for artifact generation."""
+
+        return tuple(self._modes)
+
+    @property
     def output_format(self) -> Dict[str, object]:
         """Expose the canonical output format mapping."""
 
