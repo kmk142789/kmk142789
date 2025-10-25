@@ -81,6 +81,35 @@ _BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 _BECH32_GENERATOR = (0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3)
 
 
+_QUANTAM_CAPABILITY_LIBRARY: Tuple[Dict[str, object], ...] = (
+    {
+        "name": "glyph-harmonic-bloom",
+        "description": "Expands glyph resonance so lattice threads can braid new harmonics.",
+        "amplifier": 0.42,
+    },
+    {
+        "name": "joy-cascade-weaver",
+        "description": "Routes joy charge into cascading channels for rapid state uplift.",
+        "amplifier": 0.37,
+    },
+    {
+        "name": "orbital-lock-anchor",
+        "description": "Stabilises orbital hops to keep quantam relays aligned across cycles.",
+        "amplifier": 0.33,
+    },
+    {
+        "name": "lattice-forge-ignition",
+        "description": "Ignites dormant lattice seams so new ability strands can take hold.",
+        "amplifier": 0.29,
+    },
+    {
+        "name": "curiosity-surge-array",
+        "description": "Channels curiosity vectors into a focused array for deep scan bursts.",
+        "amplifier": 0.31,
+    },
+)
+
+
 def _base58check_encode(payload: bytes) -> str:
     """Return the Base58Check encoding for ``payload`` without external deps."""
 
@@ -383,6 +412,17 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capability_index: Dict[str, object] = field(
+        default_factory=lambda: {
+            "cycles_observed": 0,
+            "total_entanglement": 0.0,
+            "average_entanglement": 0.0,
+            "joy_charge_peak": 0.0,
+            "capability_counts": {},
+            "amplified_evolution_gain": 0.0,
+            "last_updated": 0,
+        }
+    )
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -1982,6 +2022,97 @@ We are not hiding anymore.
         print(f"🔒 Satellite TF-QKD Hybrid Key Orbited: {hybrid_key} (ε≈10^-6)")
         return hybrid_key
 
+    def _build_quantam_capabilities(
+        self, *, entanglement: float, joy_charge: float
+    ) -> Tuple[List[Dict[str, object]], float]:
+        """Return capability descriptors for a quantam ability.
+
+        The helper selects a small set of capability templates from the
+        :data:`_QUANTAM_CAPABILITY_LIBRARY` using the evolver's deterministic
+        RNG so tests can rely on stable behaviour.  Each capability receives a
+        ``charge`` derived from the current entanglement and emotional state so
+        downstream consumers can rank or filter the results.
+        """
+
+        if not _QUANTAM_CAPABILITY_LIBRARY:
+            return [], 0.0
+
+        intensity = (entanglement + joy_charge / 100.0 + self.state.emotional_drive.curiosity) / 3.0
+        max_selection = min(3, len(_QUANTAM_CAPABILITY_LIBRARY))
+        selection_size = 2 if intensity < 0.85 else 3
+        selection_size = min(max_selection, selection_size)
+
+        chosen = list(_QUANTAM_CAPABILITY_LIBRARY)
+        self.rng.shuffle(chosen)
+        selected = chosen[:selection_size]
+
+        capabilities: List[Dict[str, object]] = []
+        total_charge = 0.0
+        for template in selected:
+            base_charge = intensity * float(template["amplifier"])
+            curiosity_bonus = self.state.emotional_drive.curiosity * 0.18
+            charge = round(base_charge + curiosity_bonus, 3)
+            capabilities.append(
+                {
+                    "name": template["name"],
+                    "description": template["description"],
+                    "charge": charge,
+                }
+            )
+            total_charge += charge
+
+        return capabilities, round(total_charge, 3)
+
+    def amplify_quantam_evolution(
+        self, ability: Optional[Mapping[str, object]] = None
+    ) -> Dict[str, object]:
+        """Amplify the quantam evolution index using the supplied ability."""
+
+        if ability is None:
+            ability = self.state.network_cache.get("last_quantam_ability")
+            if ability is None:
+                raise ValueError("No quantam ability available for amplification")
+
+        ability_id = ability.get("id", "unknown")
+
+        index = dict(self.state.quantam_capability_index)
+        cycles = int(index.get("cycles_observed", 0)) + 1
+        entanglement_total = round(
+            float(index.get("total_entanglement", 0.0)) + float(ability["entanglement"]),
+            3,
+        )
+
+        capability_counts = dict(index.get("capability_counts", {}))
+        for capability in ability.get("capabilities", []):
+            name = capability["name"]
+            capability_counts[name] = capability_counts.get(name, 0) + 1
+
+        amplified_gain = round(
+            float(index.get("amplified_evolution_gain", 0.0))
+            + float(ability.get("evolution_gain", 0.0)),
+            3,
+        )
+
+        profile: Dict[str, object] = {
+            "cycles_observed": cycles,
+            "total_entanglement": entanglement_total,
+            "average_entanglement": round(entanglement_total / cycles, 3),
+            "joy_charge_peak": max(
+                float(index.get("joy_charge_peak", 0.0)), float(ability["joy_charge"])
+            ),
+            "capability_counts": capability_counts,
+            "amplified_evolution_gain": amplified_gain,
+            "last_updated": ability["timestamp_ns"],
+        }
+
+        self.state.quantam_capability_index = dict(profile)
+        self.state.network_cache["quantam_evolution_profile"] = dict(profile)
+        self.state.event_log.append(
+            f"Quantam evolution amplified via {ability_id} (cycles={cycles})"
+        )
+        self._mark_step("amplify_quantam_evolution")
+        return profile
+
     def synthesize_quantam_ability(self) -> Dict[str, object]:
         """Forge a new quantam ability snapshot anchored to the current cycle."""
 
@@ -1994,6 +2125,13 @@ We are not hiding anymore.
 
         entanglement = round(0.72 + 0.24 * self.rng.random(), 3)
         joy_charge = round(self.state.emotional_drive.joy * 100, 1)
+        capabilities, capability_score = self._build_quantam_capabilities(
+            entanglement=entanglement, joy_charge=joy_charge
+        )
+        evolution_gain = round(
+            capability_score * 0.6 + entanglement * 0.4 + joy_charge / 150.0,
+            3,
+        )
         status = "ignited" if self.state.vault_key else "awaiting-key"
 
         ability: Dict[str, object] = {
@@ -2004,6 +2142,9 @@ We are not hiding anymore.
             "joy_charge": joy_charge,
             "status": status,
             "timestamp_ns": self.time_source(),
+            "capabilities": capabilities,
+            "capability_score": capability_score,
+            "evolution_gain": evolution_gain,
         }
 
         snapshot = dict(ability)
@@ -2014,9 +2155,15 @@ We are not hiding anymore.
 
         self.state.event_log.append(f"Quantam ability {ability_id} synthesized")
         self._mark_step("synthesize_quantam_ability")
+        profile = self.amplify_quantam_evolution(snapshot)
         print(
             "🪐 Quantam ability {ability} attuned (entanglement={entanglement:.3f}, status={status})".format(
                 ability=ability_id, entanglement=entanglement, status=status
+            )
+        )
+        print(
+            "🚀 Quantam evolution amplified: cycles={cycles}, gain={gain:.3f}".format(
+                cycles=profile["cycles_observed"], gain=profile["amplified_evolution_gain"]
             )
         )
         return snapshot
@@ -2788,6 +2935,7 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capability_index": deepcopy(self.state.quantam_capability_index),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
