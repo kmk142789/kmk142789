@@ -169,7 +169,12 @@ def _base58_encode(data: bytes) -> str:
     return "1" * leading_zeroes + result
 
 
-_SCRIPT_METADATA_SENTINELS = {"WITNESS", "WITNESSES"}
+_SCRIPT_METADATA_SENTINELS = {
+    "SIGSCRIPT",
+    "SCRIPTSIG",
+    "WITNESS",
+    "WITNESSES",
+}
 
 
 def _normalise_lines(lines: Iterable[str]) -> list[str]:
