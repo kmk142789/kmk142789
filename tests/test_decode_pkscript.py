@@ -31,6 +31,16 @@ def test_decode_script_ignores_metadata_lines() -> None:
     )
 
 
+def test_decode_script_handles_literal_newline_escapes() -> None:
+    script = "OP_DUP\\nOP_HASH160\\n03b7892656a4c3df81b2f3e974f8e5ed2dc78dee\\nOP_EQUALVERIFY\\nOP_CHECKSIG"
+    decoded = decode_p2pkh_script(script)
+    assert decoded == DecodedScript(
+        address="1Lets1xxxx1use1xxxxxxxxxxxy2EaMkJ",
+        pubkey_hash="03b7892656a4c3df81b2f3e974f8e5ed2dc78dee",
+        network="mainnet",
+    )
+
+
 def test_decode_hex_script() -> None:
     script = "76a91403b7892656a4c3df81b2f3e974f8e5ed2dc78dee88ac"
     decoded = decode_p2pkh_script(script, network="mainnet")
