@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Echo Attestation Index",
+  "type": "object",
+  "properties": {
+    "version": { "type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+$" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "puzzle_id", "address", "message",
+          "signature_base64", "sha256", "signed_at_utc",
+          "sources", "verify"
+        ],
+        "properties": {
+          "puzzle_id": { "type": "integer" },
+          "address": { "type": "string" },
+          "message": { "type": "string" },
+          "signature_base64": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "signed_at_utc": { "type": "string", "format": "date-time" },
+          "sources": {
+            "type": "object",
+            "properties": {
+              "proof_doc": { "type": "string" },
+              "readme_anchor": { "type": "string" },
+              "opentimestamps": { "type": "string" }
+            }
+          },
+          "verify": {
+            "type": "object",
+            "properties": {
+              "python_bitcoinlib": { "type": "string" },
+              "bitcoin_core": { "type": "string" }
+            }
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  },
+  "required": ["version", "generated_at_utc", "entries"]
+}
