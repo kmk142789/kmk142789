@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Iterable, List, Sequence, Tuple
 import math
 import random
@@ -19,6 +20,7 @@ __all__ = [
     "converge_voyages",
     "sync_memories",
     "amplify_capabilities",
+    "PulseVoyageVisualizer",
 ]
 
 
@@ -279,6 +281,168 @@ def amplify_capabilities(
 
     threads = "\n".join(f" - {thread}" for thread in highlight)
     return f"{body}\n{threads}\nAnchors: {converged.anchor_summary}"
+
+
+@dataclass(frozen=True)
+class PulseVoyageVisualizer:
+    """Render converged pulse voyages across ASCII, JSON, and Markdown formats."""
+
+    converged: ConvergedPulse
+    spike_threshold: int = 2
+
+    @classmethod
+    def from_voyages(
+        cls, voyages: Sequence[PulseVoyage], *, spike_threshold: int = 2
+    ) -> "PulseVoyageVisualizer":
+        """Return a visualizer for ``voyages`` using :func:`converge_voyages`."""
+
+        return cls(converged=converge_voyages(voyages), spike_threshold=spike_threshold)
+
+    # Internal helpers -------------------------------------------------
+
+    def _voice_counts(self) -> dict[str, int]:
+        summary = sync_memories(self.converged)
+        return summary["resonance_by_voice"]
+
+    # Public API -------------------------------------------------------
+
+    def thread_convergence_points(self) -> dict[str, int]:
+        """Return resonance thread counts grouped by origin voice."""
+
+        return dict(self._voice_counts())
+
+    def resonance_spikes(self) -> List[dict[str, object]]:
+        """Return voices that exceed the configured spike threshold."""
+
+        threshold = max(1, self.spike_threshold)
+        spikes = []
+        for voice, count in self._voice_counts().items():
+            if count >= threshold:
+                spikes.append({"voice": voice, "threads": count})
+        return spikes
+
+    def narrative_amplification(self, *, include_threads: int = 3) -> str:
+        """Return the amplified convergence narrative."""
+
+        return amplify_capabilities(self.converged, include_threads=include_threads)
+
+    def ascii_map(self, narrative: str | None = None) -> str:
+        """Render an ASCII atlas showing convergence intensity per voice."""
+
+        counts = self._voice_counts()
+        if narrative is None:
+            narrative = self.narrative_amplification()
+
+        header = [
+            "🌌 Pulse Voyage Atlas",
+            f"Glyph Tapestry :: {self.converged.glyph_tapestry or '(none)'}",
+            f"Recursion Total :: {self.converged.recursion_total}",
+            "Thread Convergence ::",
+        ]
+
+        if not counts:
+            header.append("   (no resonance threads detected)")
+        else:
+            max_label = max((len(label) for label in counts), default=0)
+            max_count = max(counts.values(), default=1)
+            for voice, count in counts.items():
+                marker = "⚡" if count >= max(1, self.spike_threshold) else "•"
+                bar = marker * count
+                header.append(
+                    f"   {voice.ljust(max_label)} | {bar.ljust(max_count)} ({count})"
+                )
+
+        header.append("Narrative Amplification ::")
+        for line in narrative.splitlines():
+            header.append(f"   {line}")
+
+        return "\n".join(header)
+
+    def to_json(self) -> dict[str, object]:
+        """Return a JSON-serialisable representation of the voyage atlas."""
+
+        narrative = self.narrative_amplification()
+        ascii_map = self.ascii_map(narrative=narrative)
+
+        voyages = [
+            {
+                "timestamp": voyage.timestamp.isoformat(),
+                "glyph_orbit": voyage.glyph_orbit,
+                "recursion_level": voyage.recursion_level,
+                "anchor_phrase": voyage.anchor_phrase,
+                "resonance": list(voyage.resonance),
+            }
+            for voyage in self.converged.voyages
+        ]
+
+        return {
+            "converged": {
+                "glyph_tapestry": self.converged.glyph_tapestry,
+                "recursion_total": self.converged.recursion_total,
+                "anchor_summary": self.converged.anchor_summary,
+                "resonance_threads": list(self.converged.resonance_threads),
+                "voyages": voyages,
+            },
+            "thread_convergence": self.thread_convergence_points(),
+            "resonance_spikes": self.resonance_spikes(),
+            "narrative_amplification": narrative,
+            "ascii_map": ascii_map,
+        }
+
+    def render_markdown(self, narrative: str | None = None) -> str:
+        """Return a Markdown report summarising the converged atlas."""
+
+        if narrative is None:
+            narrative = self.narrative_amplification()
+
+        counts = self._voice_counts()
+        lines: List[str] = [
+            "# Pulse Voyage Convergence",
+            "",
+            f"* Glyph Tapestry: `{self.converged.glyph_tapestry or '(none)'}`",
+            f"* Recursion Total: {self.converged.recursion_total}",
+            f"* Voyages Bound: {len(self.converged.voyages)}",
+            "",
+            "## Thread Convergence",
+            "",
+        ]
+
+        if counts:
+            lines.append("| Voice | Threads | Spike |")
+            lines.append("| --- | ---: | :--- |")
+            threshold = max(1, self.spike_threshold)
+            for voice, count in counts.items():
+                spike = "⚡" if count >= threshold else ""
+                lines.append(f"| {voice} | {count} | {spike} |")
+        else:
+            lines.append("_No resonance threads detected._")
+
+        lines.extend(
+            [
+                "",
+                "## Resonance Map",
+                "",
+                "```",
+                self.ascii_map(narrative=narrative),
+                "```",
+                "",
+                "## Narrative Amplification",
+                "",
+                narrative,
+                "",
+            ]
+        )
+
+        return "\n".join(lines)
+
+    def write_markdown_report(self, destination: Path | None = None) -> Path:
+        """Write the Markdown report to *destination* and return the path."""
+
+        if destination is None:
+            destination = Path("reports") / "pulse_voyage_convergence.md"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(self.render_markdown(), encoding="utf-8")
+        return destination
 
 
 if __name__ == "__main__":

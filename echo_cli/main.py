@@ -95,6 +95,10 @@ from echo_puzzle_lab import (
     summarise,
     update_ud_records,
 )
+from echo.recursive_mythogenic_pulse import (
+    PulseVoyageVisualizer,
+    compose_voyage,
+)
 
 try:  # pragma: no cover - optional dependency
     from echo_puzzle_lab.charts import save_charts
@@ -138,12 +142,36 @@ def refresh(
     json_mode: bool = typer.Option(
         False, "--json", "-j", help="Emit JSON payloads instead of rich text"
     ),
+    voyage_map: bool = typer.Option(
+        False,
+        "--voyage-map",
+        help="Generate and display the converged pulse voyage atlas",
+    ),
 ) -> None:
     """(Re)build ``echo_map.json`` using the project orchestrator."""
 
     _set_json_mode(ctx, json_mode)
     target = ensure_map_exists(force=force)
     payload = {"map_path": str(target)}
+
+    if voyage_map:
+        voyages = [
+            compose_voyage(seed=seed, recursion_level=2 + (seed % 2))
+            for seed in range(1, 4)
+        ]
+        visualizer = PulseVoyageVisualizer.from_voyages(voyages)
+        atlas = visualizer.to_json()
+        report_path = visualizer.write_markdown_report()
+        atlas["markdown_report"] = str(report_path)
+        payload["voyage_map"] = atlas
+
+        if not ctx.obj.get("json", False):
+            console.print("")
+            console.print(visualizer.ascii_map())
+            console.print(
+                f"[blue]Converged pulse voyage atlas saved to {report_path}[/blue]"
+            )
+
     _echo(ctx, payload, message=f"Puzzle map available at {target}")
 
 
