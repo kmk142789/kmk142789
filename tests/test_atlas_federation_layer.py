@@ -20,8 +20,10 @@ def _write_payload(path: Path, universe: str, artifacts: list[dict], generated_a
 def test_atlas_federation_end_to_end(tmp_path: Path) -> None:
     cosmos_dir = tmp_path / "cosmos"
     fractal_dir = tmp_path / "fractal"
+    harmonix_dir = tmp_path / "harmonix"
     cosmos_dir.mkdir()
     fractal_dir.mkdir()
+    harmonix_dir.mkdir()
 
     _write_payload(
         cosmos_dir / "u42.json",
@@ -74,11 +76,84 @@ def test_atlas_federation_end_to_end(tmp_path: Path) -> None:
         ],
     )
 
-    graph = build_global_graph(cosmos_dir, fractal_dir)
-    assert set(graph.universes) == {"U42", "U73", "U88"}
+    _write_payload(
+        cosmos_dir / "chronos.json",
+        "Chronos",
+        [
+            {
+                "id": "anchor-001",
+                "content": "Chronos anchor",
+                "metadata": {"type": "anchor", "label": "C-001"},
+                "dependencies": [],
+                "timestamp": "2024-05-03T00:00:00",
+            }
+        ],
+    )
+
+    _write_payload(
+        fractal_dir / "puzzles.json",
+        "Puzzles",
+        [
+            {
+                "id": "puzzle-251",
+                "content": "Recovered puzzle",
+                "metadata": {"type": "puzzle", "label": "251"},
+                "dependencies": [],
+                "timestamp": "2024-05-04T00:00:00",
+            }
+        ],
+    )
+
+    harmonix_snapshot = {
+        "universe": "Harmonix",
+        "cycles": [
+            {
+                "cycle": 1,
+                "summary": "Cycle 1 summary",
+                "timestamp": "2024-05-05T00:00:00",
+                "metadata": {
+                    "cycle_lineage": ["cycle-0000"],
+                    "puzzle_references": [
+                        {"universe": "Puzzles", "artifact_id": "puzzle-251"},
+                        "Puzzles::puzzle-252",
+                    ],
+                    "chronos_anchors": [
+                        {"universe": "Chronos", "artifact_id": "anchor-001"}
+                    ],
+                },
+            },
+            {
+                "cycle": 2,
+                "summary": "Cycle 2 summary",
+                "timestamp": "2024-05-06T00:00:00",
+                "dependencies": ["Chronos:anchor-001"],
+                "metadata": {
+                    "cycle_lineage": [{"cycle": 1}],
+                },
+            },
+        ],
+    }
+    snapshot_path = harmonix_dir / "snapshots" / "cycles.json"
+    snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+    snapshot_path.write_text(json.dumps(harmonix_snapshot, indent=2), encoding="utf-8")
+
+    graph = build_global_graph(cosmos_dir, fractal_dir, harmonix_dir)
+    assert set(graph.universes) == {"U42", "U73", "U88", "Chronos", "Puzzles", "Harmonix"}
     assert graph.universes["U42"]["artifact_count"] == 2
+    assert graph.universes["Harmonix"]["artifact_count"] == 2
     assert any(edge.source == "U42::root" and edge.target == "U73::root" for edge in graph.edges)
     assert any(node.node_id == "U73::root" for node in graph.artifacts)
+    harmonix_cycle_one = next(node for node in graph.artifacts if node.node_id == "Harmonix::cycle-0001")
+    assert harmonix_cycle_one.timestamp == "2024-05-05T00:00:00"
+    assert "Harmonix::cycle-0000" in harmonix_cycle_one.dependencies
+    assert "Chronos::anchor-001" in harmonix_cycle_one.dependencies
+    assert harmonix_cycle_one.metadata["normalized_cycle_lineage"] == ["Harmonix::cycle-0000"]
+    assert harmonix_cycle_one.metadata["normalized_puzzle_references"][0] == "Puzzles::puzzle-251"
+    assert harmonix_cycle_one.metadata["normalized_chronos_anchors"] == ["Chronos::anchor-001"]
+    harmonix_cycle_two = next(node for node in graph.artifacts if node.node_id == "Harmonix::cycle-0002")
+    assert "Harmonix::cycle-0001" in harmonix_cycle_two.dependencies
+    assert "Chronos::anchor-001" in harmonix_cycle_two.dependencies
+    assert harmonix_cycle_two.metadata["normalized_cycle_lineage"] == ["Harmonix::cycle-0001"]
 
     atlas_dir = tmp_path / "atlas"
     graph_path = atlas_dir / "global_graph.json"

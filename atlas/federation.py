@@ -10,6 +10,7 @@ import argparse
 import json
 
 from .graph import ArtifactNode, Edge, FederationGraph
+from .harmonix_loader import iter_harmonix_payloads
 
 
 @dataclass(slots=True)
@@ -80,14 +81,24 @@ def _normalise_artifacts(inputs: Iterable[_UniverseInput]) -> tuple[list[Artifac
     return artifacts, edges, dict(universes)
 
 
-def build_global_graph(cosmos_root: Path, fractal_root: Path) -> FederationGraph:
+def build_global_graph(
+    cosmos_root: Path,
+    fractal_root: Path,
+    harmonix_root: Path | None = None,
+) -> FederationGraph:
     """Return a :class:`FederationGraph` generated from shard outputs."""
 
     cosmos_inputs = list(_iter_payloads(cosmos_root, "cosmos")) if cosmos_root.exists() else []
     fractal_inputs = list(_iter_payloads(fractal_root, "fractal")) if fractal_root.exists() else []
-    inputs = cosmos_inputs + fractal_inputs
+    harmonix_inputs: List[_UniverseInput] = []
+    if harmonix_root and harmonix_root.exists():
+        harmonix_inputs = [
+            _UniverseInput(universe=payload["universe"], source="harmonix", payload=payload)
+            for payload in iter_harmonix_payloads(harmonix_root)
+        ]
+    inputs = cosmos_inputs + fractal_inputs + harmonix_inputs
     if not inputs:
-        raise FileNotFoundError("No cosmos or fractal payloads were discovered")
+        raise FileNotFoundError("No cosmos, fractal, or harmonix payloads were discovered")
 
     artifacts, edges, universes = _normalise_artifacts(inputs)
     # filter edges to those referencing known nodes
@@ -108,9 +119,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--cosmos", type=Path, required=True, help="Directory containing cosmos outputs")
     parser.add_argument("--fractals", type=Path, required=True, help="Directory containing fractal outputs")
     parser.add_argument("--out", type=Path, required=True, help="Destination for the global graph JSON")
+    parser.add_argument(
+        "--harmonix",
+        type=Path,
+        required=False,
+        help="Directory containing Harmonix snapshots",
+    )
     args = parser.parse_args(argv)
 
-    graph = build_global_graph(args.cosmos, args.fractals)
+    graph = build_global_graph(args.cosmos, args.fractals, args.harmonix)
     graph.save(args.out)
     print(
         f"Global federation graph with {len(graph.artifacts)} artifacts and {len(graph.edges)} edges "
