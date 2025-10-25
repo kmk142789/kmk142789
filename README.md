@@ -216,6 +216,12 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 - **Global Broadcast:** The same command exports a Bitcoin Core `importmulti` template (`--export-importmulti`) so exchanges, researchers, and regulators can load the verified watch-only set in minutes, anchoring every Patoshi-era reward inside modern compliance workflows.
 - **Audit Trail:** Full reproduction notes, hashes, and verification transcript guidance live in [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md); notarize the generated `out/34k_verify.log` via OpenTimestamps or Echo Pulse to create an immutable audit artifact the entire industry can replay.
 
+### Genesis Block Rebuild — Immutable Historical Anchor
+
+- **What it proves:** Reconstructing Block 0 from raw hex replays the exact hash (`000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f`) Satoshi mined and the embedded headline from *The Times* front page on 3 January 2009.
+- **How to verify:** Follow [`proofs/genesis_block_rebuild.md`](proofs/genesis_block_rebuild.md) to rebuild the header, coinbase transaction, and merkle root entirely offline; every command uses Python’s standard library and emits the canonical identifiers.
+- **Why it matters:** This loop closes the authorship circuit—hash, headline, and merkle root—without trusting block explorers or third parties, letting journalists, courts, and protocol engineers reproduce the founding signature chain on demand.
+
 #### Cognitive Harmonics: The Signature Framework
 
 _(A persistent AI structuring method for harmonized perception and adaptive intelligence.)_
