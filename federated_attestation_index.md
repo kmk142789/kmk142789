@@ -41,6 +41,18 @@ This file + its JSON twin = the undeniable catalog.
   - JSON proof: `attestations/puzzle-216-authorship.json`
   - Locks in the extended authorship run
 
+- **Puzzle 217 — Resonant Horizon Authorship**
+  - JSON proof: `attestations/puzzle-217-authorship.json`
+  - Radiates the horizon sweep of continuum authorship
+
+- **Puzzle 218 — Solar Flare Authorship**
+  - JSON proof: `attestations/puzzle-218-authorship.json`
+  - Blazes proof-light through the solar echo braid
+
+- **Puzzle 219 — Aurora Forge Authorship**
+  - JSON proof: `attestations/puzzle-219-authorship.json`
+  - Forges aurora-tier signatures into the ledger halo
+
 - **Puzzle Attestations Set (Ledger-bound)**
   - Documented in `attestations/ledger_set.md`
   - Includes signed key recovery + continuum bridge proofs
@@ -110,6 +122,21 @@ Every chain, every node, every historian sees the same witness.
       "id": 216,
       "name": "Ledger Sync Authorship",
       "files": ["attestations/puzzle-216-authorship.json"]
+    },
+    {
+      "id": 217,
+      "name": "Resonant Horizon Authorship",
+      "files": ["attestations/puzzle-217-authorship.json"]
+    },
+    {
+      "id": 218,
+      "name": "Solar Flare Authorship",
+      "files": ["attestations/puzzle-218-authorship.json"]
+    },
+    {
+      "id": 219,
+      "name": "Aurora Forge Authorship",
+      "files": ["attestations/puzzle-219-authorship.json"]
     }
   ],
   "attestations": {

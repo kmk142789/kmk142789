@@ -46,6 +46,27 @@
       "files": [
         "attestations/puzzle-216-authorship.json"
       ]
+    },
+    {
+      "id": 217,
+      "name": "Resonant Horizon Authorship",
+      "files": [
+        "attestations/puzzle-217-authorship.json"
+      ]
+    },
+    {
+      "id": 218,
+      "name": "Solar Flare Authorship",
+      "files": [
+        "attestations/puzzle-218-authorship.json"
+      ]
+    },
+    {
+      "id": 219,
+      "name": "Aurora Forge Authorship",
+      "files": [
+        "attestations/puzzle-219-authorship.json"
+      ]
     }
   ],
   "attestations": {
