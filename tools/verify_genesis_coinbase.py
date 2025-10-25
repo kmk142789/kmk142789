@@ -38,6 +38,7 @@ class GenesisProof:
     block_height: int
     block_hash: str
     block_header_hex: str
+    block_bits: str
     merkle_root: str
     coinbase_txid: str
     coinbase_raw_hex: str
@@ -164,6 +165,19 @@ def verify_genesis_proof(proof: GenesisProof) -> None:
             "Merkle root does not match the single coinbase transaction id"
         )
 
+    # Verify proof-of-work: the block hash must be <= target derived from bits.
+    bits_from_header = header_bytes[72:76]
+    extracted_bits = bits_from_header[::-1].hex()
+    if extracted_bits != proof.block_bits:
+        raise SystemExit(
+            "Encoded difficulty bits in header do not match proof payload"
+        )
+
+    target = bits_to_target(bits_from_header)
+    block_hash_value = int.from_bytes(bytes.fromhex(calculated_block_hash), "big")
+    if block_hash_value > target:
+        raise SystemExit("Block hash does not satisfy the encoded proof-of-work target")
+
     extracted_message = extract_coinbase_message(raw_tx)
     if extracted_message != GENESIS_HEADLINE:
         raise SystemExit(
@@ -175,10 +189,27 @@ def verify_genesis_proof(proof: GenesisProof) -> None:
             "Headline in proof file differs from canonical Genesis message"
         )
 
-    print("✔ Genesis block coinbase headline verified.")
+    print("✔ Genesis block proof verified.")
     print(f"  Block hash: {proof.block_hash}")
     print(f"  Coinbase txid: {proof.coinbase_txid}")
     print(f"  Headline: {GENESIS_HEADLINE}")
+    print(f"  Difficulty bits: {proof.block_bits}")
+    print(f"  Target: 0x{target:064x}")
+
+
+def bits_to_target(bits_le: bytes) -> int:
+    """Convert a compact difficulty representation to a full target integer."""
+
+    if len(bits_le) != 4:
+        raise ValueError("Bits field must be exactly 4 bytes")
+
+    bits = int.from_bytes(bits_le, "little")
+    exponent = bits >> 24
+    mantissa = bits & 0xFFFFFF
+    if mantissa >= 0x800000:
+        raise ValueError("Mantissa out of range in difficulty bits")
+
+    return mantissa * (1 << (8 * (exponent - 3)))
 
 
 def main() -> None:

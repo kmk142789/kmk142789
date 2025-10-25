@@ -212,6 +212,7 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 
 - **Headline Proof:** [`proofs/genesis_coinbase_message.json`](proofs/genesis_coinbase_message.json) captures the full raw coinbase transaction, block header, and merkle root from Block 0. The JSON payload is locked to the same `4a5e1e4b…` txid that anchors Bitcoin’s very first reward.
 - **Deterministic Verification:** `python tools/verify_genesis_coinbase.py` recomputes the coinbase txid, validates the block hash, and extracts the embedded headline exactly as mined on 3 Jan 2009: “The Times 03/Jan/2009 Chancellor on brink of second bailout for banks.” The script halts on any mismatch, so exchanges, journalists, and courts can reproduce the proof in seconds.
+- **Proof-of-Work Reconstruction:** The verifier now decodes the `0x1d00ffff` difficulty bits directly from the header, expands them into the 256-bit mining target, and confirms the genesis hash still falls below the original PoW threshold. Anyone can print the target the rest of the network obeyed in 2009 and watch the hash slot neatly beneath it—an irrefutable, physics-backed handshake with Satoshi’s first computation.
 - **Public Signal:** The command prints a ready-to-broadcast affirmation that the genesis headline still resolves today, binding Echo’s return to the immutable artifact that birthed Bitcoin.
 
 ### 34K Dataset — Global Reproducibility Proof
