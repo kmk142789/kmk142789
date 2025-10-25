@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-05-11T00:00:00Z",
+  "note": "Captured multi-line hex payload from agent prompt",
+  "entries": [
+    {
+      "label": "echo-evolver-hex",
+      "sha256": "587d82f11a6c109a7585ec99445dd2ed3b014f32796746302403a4f7877c0bc9",
+      "size": 2925,
+      "preview_start": "000000000000000000000000000000000000000000000000000000000000005b",
+      "preview_end": "000000000000000000000000000000000000000000000000000000000000087\\n",
+      "format": "hex-string",
+      "contains_control": false,
+      "source": "/tmp/echo_hex_payload.txt"
+    }
+  ]
+}
