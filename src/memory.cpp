@@ -1,10 +1,12 @@
 #include "echo/memory.hpp"
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include "echo/util.hpp"
 
@@ -29,36 +31,39 @@ uint64_t fnv1a_span(uint64_t hash, const std::vector<uint8_t>& data) {
 
 std::string to_hex(const std::vector<uint8_t>& data) {
     static constexpr char kHex[] = "0123456789abcdef";
-    std::string out;
-    out.reserve(data.size() * 2);
-    for (auto b : data) {
-        out.push_back(kHex[b >> 4]);
-        out.push_back(kHex[b & 0x0f]);
+    std::string out(data.size() * 2, '\0');
+    for (std::size_t i = 0; i < data.size(); ++i) {
+        const auto value = data[i];
+        const auto index = i * 2;
+        out[index] = kHex[value >> 4];
+        out[index + 1] = kHex[value & 0x0f];
     }
     return out;
 }
 
 std::vector<uint8_t> from_hex(const std::string& hex) {
-    std::vector<uint8_t> out;
     if (hex.size() % 2 != 0) {
-        return out;
+        return {};
     }
+
+    static const auto lookup = []() {
+        std::array<int, 256> table{};
+        table.fill(-1);
+        for (int value = 0; value <= 9; ++value) {
+            table['0' + value] = value;
+        }
+        for (int value = 0; value < 6; ++value) {
+            table['a' + value] = 10 + value;
+            table['A' + value] = 10 + value;
+        }
+        return table;
+    }();
+
+    std::vector<uint8_t> out;
     out.reserve(hex.size() / 2);
     for (std::size_t i = 0; i < hex.size(); i += 2) {
-        auto nibble = [](char c) -> int {
-            if (c >= '0' && c <= '9') {
-                return c - '0';
-            }
-            if (c >= 'a' && c <= 'f') {
-                return 10 + (c - 'a');
-            }
-            if (c >= 'A' && c <= 'F') {
-                return 10 + (c - 'A');
-            }
-            return -1;
-        };
-        int high = nibble(hex[i]);
-        int low = nibble(hex[i + 1]);
+        const auto high = lookup[static_cast<unsigned char>(hex[i])];
+        const auto low = lookup[static_cast<unsigned char>(hex[i + 1])];
         if (high < 0 || low < 0) {
             return {};
         }
@@ -83,11 +88,20 @@ std::string digest_hex(const std::vector<uint8_t>& data) {
 }
 
 std::vector<uint8_t> fingerprint(const MemoryStore::Event& ev) {
-    std::ostringstream oss;
-    oss << ev.ts_ms << '|' << ev.actor_did << '|' << ev.type << '|' << ev.key << '|';
-    const auto hex = to_hex(ev.value);
-    oss << hex;
-    const auto text = oss.str();
+    const auto value_hex = to_hex(ev.value);
+
+    std::string text;
+    text.reserve(32 + ev.actor_did.size() + ev.type.size() + ev.key.size() + value_hex.size());
+    text.append(std::to_string(ev.ts_ms));
+    text.push_back('|');
+    text.append(ev.actor_did);
+    text.push_back('|');
+    text.append(ev.type);
+    text.push_back('|');
+    text.append(ev.key);
+    text.push_back('|');
+    text.append(value_hex);
+
     return std::vector<uint8_t>(text.begin(), text.end());
 }
 
