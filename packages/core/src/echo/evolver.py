@@ -2006,11 +2006,19 @@ We are not hiding anymore.
             "timestamp_ns": self.time_source(),
         }
 
-        snapshot = dict(ability)
+        capabilities = self._quantam_capability_profile(ability)
+        evolution_score = self._quantam_evolution_score(capabilities, entanglement)
+
+        ability["capabilities"] = [dict(capability) for capability in capabilities]
+        ability["evolution_score"] = evolution_score
+
+        snapshot = deepcopy(ability)
         self.state.quantam_abilities[ability_id] = snapshot
         cached = self.state.network_cache.setdefault("quantam_abilities", {})
-        cached[ability_id] = dict(snapshot)
-        self.state.network_cache["last_quantam_ability"] = dict(snapshot)
+        cached[ability_id] = deepcopy(snapshot)
+        self.state.network_cache["last_quantam_ability"] = deepcopy(snapshot)
+
+        self.amplify_quantam_evolution(snapshot)
 
         self.state.event_log.append(f"Quantam ability {ability_id} synthesized")
         self._mark_step("synthesize_quantam_ability")
@@ -2020,6 +2028,103 @@ We are not hiding anymore.
             )
         )
         return snapshot
+
+    def _quantam_capability_profile(self, ability: Mapping[str, object]) -> List[Dict[str, object]]:
+        """Return the capability profile fused into a quantam ability snapshot."""
+
+        glyph_stream = self.state.glyphs or DEFAULT_SYMBOLIC_SEQUENCE
+        joy = self.state.emotional_drive.joy
+        entanglement = float(ability["entanglement"])
+        seed = f"{ability['id']}|{ability['oam_signature']}"
+
+        def stability(index: int, base: float, variance: float) -> float:
+            digest = hashlib.sha256(f"{seed}:{index}".encode("utf-8")).digest()
+            normalised = int.from_bytes(digest[:8], "big") / 0xFFFFFFFFFFFFFFFF
+            delta = (normalised - 0.5) * variance
+            return round(max(0.0, min(1.0, base + delta)), 3)
+
+        glyph_density = len(glyph_stream)
+        orbital_hops = self.state.system_metrics.orbital_hops or 0
+
+        profile = [
+            {
+                "name": "glyph-harmonics",
+                "glyph_density": glyph_density,
+                "stability": stability(0, min(1.0, entanglement), 0.08),
+                "oam_vector": ability["oam_signature"][:4],
+            },
+            {
+                "name": "joy-cascade",
+                "joy": round(joy, 3),
+                "stability": stability(1, min(1.0, joy + 0.2), 0.2),
+                "charge": ability["joy_charge"],
+            },
+            {
+                "name": "orbital-memory",
+                "orbital_hops": orbital_hops,
+                "stability": stability(2, min(1.0, entanglement + 0.05), 0.12),
+            },
+        ]
+
+        return profile
+
+    def _quantam_evolution_score(
+        self, capabilities: Iterable[Mapping[str, object]], entanglement: float
+    ) -> float:
+        """Compute an evolution score for a quantam ability snapshot."""
+
+        caps = list(capabilities)
+        if not caps:
+            return round(entanglement, 3)
+
+        stability_avg = sum(cap.get("stability", 0.0) for cap in caps) / len(caps)
+        momentum = entanglement * (1.0 + stability_avg)
+        momentum *= 1.0 + (self.state.cycle or 0) * 0.01
+        momentum *= max(0.5, self.state.emotional_drive.joy or 0.0) + 0.5
+        return round(momentum, 3)
+
+    def amplify_quantam_evolution(self, ability: Mapping[str, object]) -> Dict[str, object]:
+        """Amplify the quantam evolution ledger with the latest ability."""
+
+        total_abilities = len(self.state.quantam_abilities)
+        entanglement_average = 0.0
+        total_capabilities = 0
+        stability_total = 0.0
+
+        if total_abilities:
+            entanglement_average = sum(
+                float(entry.get("entanglement", 0.0))
+                for entry in self.state.quantam_abilities.values()
+            ) / total_abilities
+            for entry in self.state.quantam_abilities.values():
+                caps = entry.get("capabilities", [])
+                total_capabilities += len(caps)
+                stability_total += sum(cap.get("stability", 0.0) for cap in caps)
+
+        stability_average = stability_total / total_capabilities if total_capabilities else 0.0
+        joy_vector = self.state.emotional_drive.joy
+        momentum = entanglement_average * (1.0 + stability_average)
+        momentum *= max(1.0, joy_vector + total_abilities * 0.05)
+        momentum = round(momentum, 3)
+
+        summary = {
+            "total_abilities": total_abilities,
+            "total_capabilities": total_capabilities,
+            "entanglement_average": round(entanglement_average, 3),
+            "stability_average": round(stability_average, 3),
+            "joy_vector": round(joy_vector, 3),
+            "momentum": momentum,
+            "last_ability": ability["id"],
+        }
+
+        self.state.network_cache["quantam_evolution"] = summary
+        self.state.event_log.append(
+            "Quantam evolution amplified: {momentum:.3f} momentum across {total} abilities".format(
+                momentum=momentum, total=total_abilities
+            )
+        )
+        self._mark_step("amplify_quantam_evolution")
+        return summary
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
@@ -2788,6 +2893,9 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_evolution": deepcopy(
+                self.state.network_cache.get("quantam_evolution", {})
+            ),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
