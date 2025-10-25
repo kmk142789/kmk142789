@@ -1,0 +1,54 @@
+name: Echo Colossus
+
+on:
+  push:
+    paths:
+      - 'generate_colossus.py'
+      - 'viewer/echo_colossus*'
+      - '.github/workflows/echo-colossus.yml'
+  pull_request:
+    paths:
+      - 'generate_colossus.py'
+      - 'viewer/echo_colossus*'
+      - '.github/workflows/echo-colossus.yml'
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate sample dataset
+        run: |
+          python generate_colossus.py --count 250 --root ./ci_echo_colossus
+
+      - name: Verify CLI queries
+        shell: bash
+        run: |
+          python generate_colossus.py --root ./ci_echo_colossus --query-id 1 > /tmp/query.json
+          addr=$(python - <<'PY'
+import json, pathlib
+root = pathlib.Path('ci_echo_colossus')
+record = json.loads((root / 'data/puzzles/puzzle_00001.json').read_text())
+print(record['address_base58'])
+PY
+)
+          python generate_colossus.py --root ./ci_echo_colossus --query-address "$addr" > /tmp/query_by_addr.json
+          test -s /tmp/query.json
+          test -s /tmp/query_by_addr.json
+
+      - name: Summarize outputs
+        run: |
+          ls -R ci_echo_colossus/build | head
+          python - <<'PY'
+import json, pathlib
+summary = json.loads((pathlib.Path('ci_echo_colossus') / 'build/proofs/verification_summary.json').read_text())
+print(f"Total files: {summary['total_files']}")
+print(f"Rollup SHA256: {summary['rollup_sha256']}")
+PY

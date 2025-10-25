@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Echo Colossus Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="echo_colossus.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Echo Colossus Dataset Viewer</h1>
+      <p>Browse or search the generated puzzles. Point this page at a dataset root (default: <code>./echo_colossus</code>).</p>
+    </header>
+
+    <section class="controls">
+      <label>
+        Dataset root
+        <input type="text" id="root-input" value="../echo_colossus" />
+      </label>
+      <label>
+        Search
+        <input type="search" id="search-input" placeholder="ID, address, or hash" />
+      </label>
+      <button id="load-button">Load index</button>
+    </section>
+
+    <section id="status" role="status" aria-live="polite"></section>
+
+    <section>
+      <table id="results">
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Address</th>
+            <th scope="col">Hash160</th>
+            <th scope="col">Link</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="echo_colossus.js" type="module"></script>
+</body>
+</html>
