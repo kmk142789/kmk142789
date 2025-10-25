@@ -79,6 +79,7 @@ from .meta_evolution_charter import MetaEvolutionCharter
 from .moonshot import MoonshotLens, MoonshotReport, PlanSummary, PulseSummary, WishSummary
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
+from .quantum_flux_mapper import QuantumFluxMapper, STANDARD_GATES
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
 from .temporal_ledger import PropagationWave, TemporalPropagationLedger
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
@@ -204,6 +205,8 @@ __all__ = [
     "FluxLedgerEntry",
     "FluxVector",
     "RevolutionaryFlux",
+    "QuantumFluxMapper",
+    "STANDARD_GATES",
     "QuantumSynchronizer",
     "SynchronizerReport",
     "SynchronizerSignal",
