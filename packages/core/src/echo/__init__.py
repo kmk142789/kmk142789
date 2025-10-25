@@ -85,6 +85,13 @@ from .impossible_realities import ImpossibleEvent, ImpossibleRealityEngine
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .moonshot import MoonshotLens, MoonshotReport, PlanSummary, PulseSummary, WishSummary
+from .novum_forge import (
+    NovaFragment,
+    forge_novum,
+    render_novum,
+    summarize_fragments,
+    weave_novum_series,
+)
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
@@ -231,6 +238,11 @@ __all__ = [
     "EchoPulseEngine",
     "Pulse",
     "PulseEvent",
+    "NovaFragment",
+    "forge_novum",
+    "render_novum",
+    "summarize_fragments",
+    "weave_novum_series",
     "ThoughtLogger",
     "thought_trace",
     "parse_compass_payload",
