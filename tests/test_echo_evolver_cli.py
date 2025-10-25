@@ -190,6 +190,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
             include_matrix: bool,
             include_event_summary: bool,
             event_summary_limit: int,
+            manifest_events: int,
         ) -> dict[str, object]:
             captured["kwargs"] = {
                 "enable_network": enable_network,
@@ -201,6 +202,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
                 "include_matrix": include_matrix,
                 "include_event_summary": include_event_summary,
                 "event_summary_limit": event_summary_limit,
+                "manifest_events": manifest_events,
             }
             return {
                 "summary": "Cycle 4 advanced with 14/14 steps complete (100.0% progress).",
@@ -234,8 +236,60 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "include_matrix": True,
         "include_event_summary": True,
         "event_summary_limit": 7,
+        "manifest_events": 5,
     }
 
     output = capsys.readouterr().out
     assert "Cycle 4 advanced" in output
     assert "Cycle 4 Progress" in output
+
+
+def test_main_allows_disabling_manifest_and_reflection(monkeypatch) -> None:
+    captured: Dict[str, object] = {}
+
+    class DummyEvolver:
+        amplifier = None
+
+        def advance_system(self, **kwargs):  # pragma: no cover - passthrough helper
+            captured.update(kwargs)
+            return {
+                "summary": "Cycle advanced",
+                "report": "",
+                "digest": {"cycle": 1, "progress": 1.0},
+            }
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    exit_code = evolver_main([
+        "--advance-system",
+        "--no-include-manifest",
+        "--no-include-reflection",
+    ])
+
+    assert exit_code == 0
+    assert captured["include_manifest"] is False
+    assert captured["include_reflection"] is False
+
+
+def test_main_rejects_manifest_events_without_advance(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--manifest-events", "3"])
+
+    assert excinfo.value.code == 2
+
+
+def test_main_rejects_negative_manifest_events(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--advance-system", "--manifest-events", "-1"])
+
+    assert excinfo.value.code == 2
