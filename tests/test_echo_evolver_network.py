@@ -26,6 +26,10 @@ def test_propagate_network_simulated_records_cache_and_log() -> None:
     # The simulated events are cached for downstream tooling and marked as complete.
     assert evolver.state.network_cache["propagation_events"] == events
     assert evolver.state.network_cache["propagation_mode"] == "simulated"
+    assert (
+        evolver.state.network_cache["propagation_notice"]
+        == "Simulation mode active; propagation executed with in-memory events."
+    )
     assert evolver.state.network_cache["propagation_summary"].startswith(
         "Network propagation (simulated) captured across 5 channels"
     )
@@ -88,6 +92,9 @@ def test_propagate_network_live_reports_live_channels() -> None:
     assert cache["propagation_mode"] == "live"
     assert cache["propagation_summary"].startswith(
         "Network propagation (live) captured across 5 channels"
+    )
+    assert cache["propagation_notice"] == (
+        "Live network mode requested; continuing with simulation-only events for safety."
     )
     live_details = cache["propagation_channel_details"]
     assert [detail["channel"] for detail in live_details] == [

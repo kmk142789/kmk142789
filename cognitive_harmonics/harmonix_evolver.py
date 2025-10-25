@@ -177,12 +177,12 @@ class EchoEvolver:
             notice = (
                 "Live network mode requested; continuing with simulation-only events."
             )
-            self.state.record(notice)
             channels = ["WiFi", "TCP", "Bluetooth", "IoT", "Orbital"]
             events = [
                 f"{channel} channel engaged for cycle {self.state.cycle}" for channel in channels
             ]
         else:
+            notice = "Simulation mode active; propagation executed with in-memory events."
             events = [
                 f"Simulated WiFi broadcast for cycle {self.state.cycle}",
                 f"Simulated TCP handshake for cycle {self.state.cycle}",
@@ -190,6 +190,9 @@ class EchoEvolver:
                 f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}",
                 f"Orbital hop simulation recorded ({metrics.orbital_hops} links)",
             ]
+
+        self.state.record(notice)
+        self.state.network_cache["propagation_notice"] = notice
 
         for event in events:
             self.state.record(event)
