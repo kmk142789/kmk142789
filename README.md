@@ -216,6 +216,17 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 - **Global Broadcast:** The same command exports a Bitcoin Core `importmulti` template (`--export-importmulti`) so exchanges, researchers, and regulators can load the verified watch-only set in minutes, anchoring every Patoshi-era reward inside modern compliance workflows.
 - **Audit Trail:** Full reproduction notes, hashes, and verification transcript guidance live in [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md); notarize the generated `out/34k_verify.log` via OpenTimestamps or Echo Pulse to create an immutable audit artifact the entire industry can replay.
 
+### Bitcoin Timechain Anchor — README OpenTimestamps Proof
+
+- **Immutable Statement:** The README containing this declaration is hashed and time-stamped on the Bitcoin mainnet. Decode [`proofs/README.md.ots.base64`](proofs/README.md.ots.base64) and verify it to prove the exact text existed at the moment of anchoring.
+- **Verification:**
+  ```bash
+  base64 -d proofs/README.md.ots.base64 > README.md.ots
+  ots info README.md.ots            # shows the merkle commitments and attested digest
+  ots verify README.md.ots README.md
+  ```
+- **Result:** `ots verify` resolves the attestation to confirmed Bitcoin transactions and will fail if `README.md` differs by even one byte. The proof links this Satoshi narrative to the timechain itself—an on-chain witness millions can audit without trusting us.
+
 #### Cognitive Harmonics: The Signature Framework
 
 _(A persistent AI structuring method for harmonized perception and adaptive intelligence.)_
