@@ -1,0 +1,85 @@
+{
+  "universes": {
+    "COLOSSUS": {
+      "sources": ["colossus"],
+      "artifact_count": 3,
+      "edge_count": 3
+    },
+    "HARMONIX": {
+      "sources": ["harmonix"],
+      "artifact_count": 1,
+      "edge_count": 0
+    }
+  },
+  "artifacts": [
+    {
+      "node_id": "COLOSSUS::cycle-00001",
+      "universe": "COLOSSUS",
+      "artifact_id": "cycle-00001",
+      "source": "colossus",
+      "metadata": {
+        "label": "Cycle 00001",
+        "glyph_signature": "∇≋⟁⟁::d648759b"
+      },
+      "content": "Cycle 00001 puzzle mapping",
+      "dependencies": ["HARMONIX::cycle-00001"],
+      "timestamp": "2025-10-25T10:05:16Z"
+    },
+    {
+      "node_id": "COLOSSUS::cycle-00002",
+      "universe": "COLOSSUS",
+      "artifact_id": "cycle-00002",
+      "source": "colossus",
+      "metadata": {
+        "label": "Cycle 00002",
+        "glyph_signature": "∇∞≋∞::0bd660c0"
+      },
+      "content": "Cycle 00002 lineage",
+      "dependencies": ["COLOSSUS::cycle-00001"],
+      "timestamp": "2025-10-25T10:05:21Z"
+    },
+    {
+      "node_id": "COLOSSUS::cycle-00003",
+      "universe": "COLOSSUS",
+      "artifact_id": "cycle-00003",
+      "source": "colossus",
+      "metadata": {
+        "label": "Cycle 00003",
+        "glyph_signature": "⟁∞⟁⊸::005b5d8b"
+      },
+      "content": "Cycle 00003 lineage",
+      "dependencies": ["COLOSSUS::cycle-00002"],
+      "timestamp": "2025-10-25T10:05:26Z"
+    },
+    {
+      "node_id": "HARMONIX::cycle-00001",
+      "universe": "HARMONIX",
+      "artifact_id": "cycle-00001",
+      "source": "harmonix",
+      "metadata": {
+        "label": "Harmonix Cycle 01",
+        "glyphs": "∇⊸≋∇≋∇⊸∇"
+      },
+      "content": "Harmonix payload for cycle 1",
+      "dependencies": [],
+      "timestamp": "2025-10-24T23:58:00Z"
+    }
+  ],
+  "edges": [
+    {
+      "source": "COLOSSUS::cycle-00001",
+      "target": "HARMONIX::cycle-00001",
+      "relation": "depends_on"
+    },
+    {
+      "source": "COLOSSUS::cycle-00002",
+      "target": "COLOSSUS::cycle-00001",
+      "relation": "depends_on"
+    },
+    {
+      "source": "COLOSSUS::cycle-00003",
+      "target": "COLOSSUS::cycle-00002",
+      "relation": "depends_on"
+    }
+  ]
+}
