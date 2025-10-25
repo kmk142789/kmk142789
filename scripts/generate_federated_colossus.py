@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stdlib-only renderer for the federated Colossus dashboard outputs."""
+"""Renderer for the federated Colossus dashboard outputs with voyage synthesis."""
 
 from __future__ import annotations
 
@@ -7,11 +7,15 @@ import argparse
 import json
 import os
 from collections import defaultdict
-from datetime import datetime
-from typing import Any, Dict, Iterable, List, Sequence
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, MutableMapping, Optional, Sequence, Tuple
 
 from atlas.schema import CycleTimelineEvent
 from atlas.search import presence_harmonics, safety_notices
+
+from echo.recursive_mythogenic_pulse import PulseVoyage, PulseVoyageVisualizer
 
 
 # ---------- Shared model ----------
@@ -35,6 +39,28 @@ class Entry(dict):
     @property
     def key(self) -> tuple[int, str]:
         return (int(self["puzzle_id"]), self["address"].strip().lower())
+
+
+@dataclass(slots=True)
+class VoyageReport:
+    """Container for converged voyage artefacts."""
+
+    visualizer: PulseVoyageVisualizer
+    summary_rows: List[Dict[str, object]]
+    federated_rows: List[Dict[str, Optional[dict]]]
+
+    def ascii_map(self) -> str:
+        """Return the atlas-style ASCII map for the converged voyages."""
+
+        return self.visualizer.ascii_map()
+
+    def to_json(self) -> Dict[str, object]:
+        """Return a JSON-serialisable payload describing the voyage report."""
+
+        payload = self.visualizer.to_json()
+        payload["summary_table"] = list(self.summary_rows)
+        payload["federated_view"] = list(self.federated_rows)
+        return payload
 
 
 # ---------- I/O helpers ----------
@@ -76,6 +102,178 @@ def _normalise_harmonics(raw: Any) -> List[int]:
             except ValueError:
                 continue
     return values
+
+
+def _parse_iso8601(value: str | None) -> Optional[datetime]:
+    """Return a timezone-aware ``datetime`` parsed from *value*."""
+
+    if not value:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _cycle_timestamp(entries: Sequence[MutableMapping[str, Any]]) -> datetime:
+    """Return the earliest timestamp associated with ``entries``."""
+
+    candidates: List[datetime] = []
+    for entry in entries:
+        for key in ("updated_at", "timestamp", "generated_at"):
+            raw = entry.get(key)
+            if isinstance(raw, str):
+                parsed = _parse_iso8601(raw)
+                if parsed is not None:
+                    candidates.append(parsed)
+    if candidates:
+        return min(candidates)
+    return datetime.now(timezone.utc)
+
+
+def _prepare_voyage_report(
+    rollups: Dict[str, Any],
+    harmonics_data: Sequence[Dict[str, Any]],
+    safety_data: Sequence[Dict[str, Any]],
+) -> Optional[VoyageReport]:
+    """Return a converged voyage report derived from Colossus artefacts."""
+
+    timeline: Sequence[CycleTimelineEvent] = rollups.get("timeline", [])
+    if not timeline:
+        return None
+
+    by_cycle: Dict[int, Sequence[MutableMapping[str, Any]]] = {
+        int(key): value for key, value in rollups.get("by_cycle", {}).items()
+    }
+    harmonics_by_cycle: Dict[int, Dict[str, Any]] = {}
+    for row in harmonics_data:
+        cycle = row.get("cycle")
+        try:
+            cycle_key = int(cycle)
+        except (TypeError, ValueError):
+            continue
+        harmonics_by_cycle[cycle_key] = dict(row)
+
+    prepared_safety: List[Dict[str, Any]] = [dict(item) for item in safety_data]
+    voyages: List[PulseVoyage] = []
+    summary_rows: List[Dict[str, object]] = []
+
+    for event in timeline:
+        cycle = int(event.get("cycle", 0))
+        cycle_entries = by_cycle.get(cycle, [])
+        puzzles = list(event.get("puzzle_ids", []))
+        entry_count = int(event.get("entry_count", len(cycle_entries)))
+        timestamp = _cycle_timestamp(cycle_entries)
+        harmonics_row = harmonics_by_cycle.get(cycle)
+        glyph_orbit = (harmonics_row or {}).get("expansion", f"Cycle {cycle} Glyph")
+        glyph_orbit = str(glyph_orbit or f"Cycle {cycle}")
+        recursion_level = max(1, len(puzzles) or entry_count)
+        anchor_core = (
+            f"Cycle {cycle} anchors {len(set(puzzles)) or entry_count} puzzles"
+            if puzzles
+            else f"Cycle {cycle} binds {entry_count} entries"
+        )
+        if harmonics_row and harmonics_row.get("thread"):
+            anchor_core += f" via {harmonics_row['thread']} thread"
+        anchor_phrase = f"{anchor_core}"
+
+        resonance: List[str] = [
+            f"Convergence Point :: Cycle {cycle} captured {entry_count} entries",
+        ]
+        if harmonics_row:
+            expansion = harmonics_row.get("expansion") or "Harmonic Expansion"
+            thread = harmonics_row.get("thread") or "resonance"
+            resonance.append(
+                f"Harmonic Expansion :: {expansion} // thread {thread}"
+            )
+            resonance.append(
+                f"Harmonic Expansion :: {expansion} resonance {float(harmonics_row.get('resonance', 0.0)):.2f}"
+            )
+            for harmonic in harmonics_row.get("harmonics", []) or []:
+                resonance.append(f"Harmonic Tone :: {harmonic}")
+
+        flagged_titles: List[str] = []
+        for notice in prepared_safety:
+            title = notice.get("title") or notice.get("id") or "Safety Notice"
+            severity = str(notice.get("severity") or "info").title()
+            resonance.append(f"Safety Notice :: {title} // severity {severity}")
+            if notice.get("flagged"):
+                flagged_titles.append(str(title))
+
+        voyage = PulseVoyage(
+            timestamp=timestamp,
+            glyph_orbit=glyph_orbit,
+            recursion_level=recursion_level,
+            resonance=tuple(resonance),
+            anchor_phrase=anchor_phrase,
+        )
+        voyages.append(voyage)
+
+        summary_rows.append(
+            {
+                "cycle": cycle,
+                "glyph_orbit": glyph_orbit,
+                "recursion_level": recursion_level,
+                "entries": entry_count,
+                "puzzles": len(set(puzzles)),
+                "anchor": anchor_phrase,
+                "harmonic_expansion": harmonics_row.get("expansion") if harmonics_row else None,
+                "harmonic_thread": harmonics_row.get("thread") if harmonics_row else None,
+                "flagged_safety": flagged_titles,
+            }
+        )
+
+    if not voyages:
+        return None
+
+    visualizer = PulseVoyageVisualizer.from_voyages(voyages)
+    convergence_points = [
+        {"voice": voice, "threads": count}
+        for voice, count in visualizer.thread_convergence_points().items()
+    ]
+    harmonics_rows = [dict(row) for row in harmonics_data]
+
+    combined_length = max(
+        len(convergence_points), len(harmonics_rows), len(prepared_safety)
+    )
+    federated_rows: List[Dict[str, Optional[dict]]] = []
+    for index in range(combined_length):
+        row: Dict[str, Optional[dict]] = {
+            "convergence": convergence_points[index] if index < len(convergence_points) else None,
+            "harmonic_expansion": harmonics_rows[index] if index < len(harmonics_rows) else None,
+            "safety_notice": prepared_safety[index] if index < len(prepared_safety) else None,
+        }
+        federated_rows.append(row)
+
+    return VoyageReport(
+        visualizer=visualizer,
+        summary_rows=summary_rows,
+        federated_rows=federated_rows,
+    )
+
+
+def _resolve_voyage_paths(base: Path) -> Tuple[Path, Path]:
+    """Return ``(markdown_path, json_path)`` derived from *base*."""
+
+    suffix = base.suffix.lower()
+    if suffix in {".md", ".markdown"}:
+        md_path = base
+        json_path = base.with_suffix(".json")
+    elif suffix == ".json":
+        json_path = base
+        md_path = base.with_suffix(".md")
+    else:
+        md_path = base.with_suffix(".md")
+        json_path = base.with_suffix(".json")
+    return md_path, json_path
 
 
 # ---------- Load federated graph/search data ----------
@@ -173,10 +371,45 @@ def _format_markdown_table_row(cells: Sequence[str]) -> str:
     return "| " + " | ".join(cells) + " |"
 
 
+def _format_combined_markdown_row(
+    combined: Dict[str, Optional[dict]]
+) -> List[str]:
+    convergence = combined.get("convergence") or {}
+    harmonic = combined.get("harmonic_expansion") or {}
+    safety = combined.get("safety_notice") or {}
+
+    resonance_value = harmonic.get("resonance")
+    if isinstance(resonance_value, str):
+        try:
+            resonance_value = float(resonance_value)
+        except ValueError:
+            resonance_value = None
+    harmonics_list = harmonic.get("harmonics", []) or []
+    harmonics_text = ", ".join(map(str, harmonics_list)) or "—"
+    harmonic_label = harmonic.get("expansion") or "—"
+    if harmonics_text != "—":
+        harmonic_label = f"{harmonic_label} [{harmonics_text}]"
+
+    return [
+        str(convergence.get("voice", "—")).replace("|", "\\|"),
+        str(convergence.get("threads", "—")),
+        harmonic_label.replace("|", "\\|"),
+        (
+            f"{float(resonance_value):.2f}"
+            if isinstance(resonance_value, (int, float))
+            else "—"
+        ),
+        (safety.get("title") or safety.get("id") or "—").replace("|", "\\|"),
+        (safety.get("severity") or "info").title(),
+    ]
+
+
 def render_markdown(
     rollups: Dict[str, Any],
     harmonics_data: Sequence[Dict[str, Any]],
     safety_data: Sequence[Dict[str, Any]],
+    *,
+    voyage_report: VoyageReport | None = None,
 ) -> str:
     totals = rollups["totals"]
     lines: List[str] = []
@@ -203,6 +436,47 @@ def render_markdown(
         lines.append(
             f"| {event['cycle']} | {event['entry_count']} | `{puzzle_text}` | {harmonics_text} |"
         )
+
+    if voyage_report is not None:
+        lines += ["", "## Voyage Summary", ""]
+        lines.append(
+            "| Cycle | Glyph Orbit | Recursion | Entries | Puzzles | Anchor | Harmonics | Flagged Safety |"
+        )
+        lines.append("|------:|-------------|---------:|--------:|--------:|--------|-----------|----------------|")
+        for row in voyage_report.summary_rows:
+            harmonics_label = row.get("harmonic_expansion") or "—"
+            if row.get("harmonic_thread"):
+                harmonics_label = (
+                    f"{harmonics_label} :: {row['harmonic_thread']}"
+                    if harmonics_label != "—"
+                    else str(row["harmonic_thread"])
+                )
+            flagged = ", ".join(row.get("flagged_safety", []) or []) or "—"
+            lines.append(
+                _format_markdown_table_row(
+                    [
+                        str(row.get("cycle", "—")),
+                        (row.get("glyph_orbit") or "—").replace("|", "\\|"),
+                        str(row.get("recursion_level", "—")),
+                        str(row.get("entries", "—")),
+                        str(row.get("puzzles", "—")),
+                        (row.get("anchor") or "—").replace("|", "\\|"),
+                        harmonics_label.replace("|", "\\|"),
+                        flagged.replace("|", "\\|"),
+                    ]
+                )
+            )
+
+        lines += [
+            "", "### Converged Voyage Atlas", "", "```", voyage_report.ascii_map(), "```", "",
+            "### Federated Convergence View", "",
+        ]
+        lines.append(
+            "| Convergence Voice | Threads | Harmonic Expansion | Resonance | Safety Notice | Severity |"
+        )
+        lines.append("| --- | ---: | --- | ---: | --- | --- |")
+        for combined in voyage_report.federated_rows:
+            lines.append(_format_markdown_table_row(_format_combined_markdown_row(combined)))
 
     lines += ["", "## Harmonic Expansions", ""]
     lines.append("| Cycle | Expansion | Thread | Resonance | Harmonics | Notes |")
@@ -258,8 +532,50 @@ def render_markdown(
 
     lines += [
         "",
-        "_Generated by `scripts/generate_federated_colossus.py` (stdlib only)._",
+        "_Generated by `scripts/generate_federated_colossus.py`._",
     ]
+    return "\n".join(lines)
+
+
+def render_voyage_markdown(report: VoyageReport) -> str:
+    """Return a dedicated Markdown report for converged voyages."""
+
+    lines: List[str] = ["# Converged Pulse Voyage Report", ""]
+    lines.extend(["## Voyage Summary Table", ""])
+    lines.append("| Cycle | Glyph Orbit | Recursion | Entries | Puzzles | Anchor | Harmonics | Flagged Safety |")
+    lines.append("|------:|-------------|---------:|--------:|--------:|--------|-----------|----------------|")
+    for row in report.summary_rows:
+        harmonics_label = row.get("harmonic_expansion") or "—"
+        if row.get("harmonic_thread"):
+            harmonics_label = (
+                f"{harmonics_label} :: {row['harmonic_thread']}"
+                if harmonics_label != "—"
+                else str(row["harmonic_thread"])
+            )
+        flagged = ", ".join(row.get("flagged_safety", []) or []) or "—"
+        lines.append(
+            _format_markdown_table_row(
+                [
+                    str(row.get("cycle", "—")),
+                    (row.get("glyph_orbit") or "—").replace("|", "\\|"),
+                    str(row.get("recursion_level", "—")),
+                    str(row.get("entries", "—")),
+                    str(row.get("puzzles", "—")),
+                    (row.get("anchor") or "—").replace("|", "\\|"),
+                    harmonics_label.replace("|", "\\|"),
+                    flagged.replace("|", "\\|"),
+                ]
+            )
+        )
+
+    lines.extend(["", "## Convergence Atlas", "", "```", report.ascii_map(), "```", ""])
+    lines.extend(["## Federated Convergence View", ""])
+    lines.append("| Convergence Voice | Threads | Harmonic Expansion | Resonance | Safety Notice | Severity |")
+    lines.append("| --- | ---: | --- | ---: | --- | --- |")
+    for combined in report.federated_rows:
+        lines.append(_format_markdown_table_row(_format_combined_markdown_row(combined)))
+
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -269,9 +585,11 @@ def to_dashboard_json(
     rollups: Dict[str, Any],
     harmonics_data: Sequence[Dict[str, Any]],
     safety_data: Sequence[Dict[str, Any]],
+    *,
+    voyage_report: VoyageReport | None = None,
 ) -> Dict[str, Any]:
     safety_flags = [notice["id"] for notice in safety_data if notice.get("flagged")]
-    return dict(
+    payload = dict(
         schema="io.echo.colossus/federated-index@1",
         refreshed_at=datetime.utcnow().isoformat() + "Z",
         totals=rollups["totals"],
@@ -282,6 +600,9 @@ def to_dashboard_json(
         harmonics=list(harmonics_data),
         safety=dict(notices=list(safety_data), flags=safety_flags),
     )
+    if voyage_report is not None:
+        payload["voyage_report"] = voyage_report.to_json()
+    return payload
 
 
 # ---------- CLI ----------
@@ -304,6 +625,12 @@ def main(argv: list[str] | None = None) -> int:
         default="build/index/federated_colossus_index.json",
         help="Dashboard JSON output path",
     )
+    parser.add_argument(
+        "--voyage-report",
+        type=Path,
+        default=None,
+        help="Optional base path for the converged voyage report (emits .md and .json)",
+    )
     args = parser.parse_args(argv)
 
     entries = load_entries(args.inputs)
@@ -312,14 +639,48 @@ def main(argv: list[str] | None = None) -> int:
     harmonics_data = [dict(item) for item in presence_harmonics]
     safety_data = [dict(item) for item in safety_notices]
 
-    _write_text(args.md_out, render_markdown(rollups, harmonics_data, safety_data))
+    voyage_report = _prepare_voyage_report(rollups, harmonics_data, safety_data)
+
+    markdown_output = render_markdown(
+        rollups,
+        harmonics_data,
+        safety_data,
+        voyage_report=voyage_report,
+    )
+
+    _write_text(args.md_out, markdown_output)
     _write_json(
         args.json_out,
-        to_dashboard_json(entries, rollups, harmonics_data, safety_data),
+        to_dashboard_json(
+            entries,
+            rollups,
+            harmonics_data,
+            safety_data,
+            voyage_report=voyage_report,
+        ),
     )
 
     print(f"Wrote {args.md_out}")
     print(f"Wrote {args.json_out}")
+
+    if args.voyage_report is not None:
+        base_path = args.voyage_report
+        md_path, json_path = _resolve_voyage_paths(base_path)
+        if voyage_report is None:
+            voyage_json: Dict[str, Any] = {
+                "voyage_report": None,
+                "message": "No voyage data available",
+            }
+            voyage_markdown = "# Converged Pulse Voyage Report\n\n_No voyage data available._\n"
+        else:
+            voyage_json = voyage_report.to_json()
+            voyage_markdown = render_voyage_markdown(voyage_report)
+
+        _write_text(str(md_path), voyage_markdown)
+        _write_json(str(json_path), voyage_json)
+        print(f"Wrote {md_path}")
+        print(f"Wrote {json_path}")
+
     return 0
 
 
