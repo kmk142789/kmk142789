@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import random
+import socket
+from pathlib import Path
+
+import pytest
 
 from echo.evolver import EchoEvolver
 
@@ -178,3 +182,68 @@ def test_network_propagation_snapshot_handles_empty_state() -> None:
     assert cache_snapshot["mode"] == "none"
     assert cache_snapshot["channels"] == 0
     assert cache_snapshot["timeline"] is None
+
+
+@pytest.fixture()
+def evolver_fixture(tmp_path: Path) -> EchoEvolver:
+    """Provide an evolver instance that persists artifacts within a tmp directory."""
+
+    return EchoEvolver(artifact_path=tmp_path / "cycle.echo")
+
+
+def test_propagate_network_live_mode_remains_simulated(
+    monkeypatch: pytest.MonkeyPatch,
+    evolver_fixture: EchoEvolver,
+    capfd: pytest.CaptureFixture[str],
+) -> None:
+    """Even "live" mode must avoid touching real sockets."""
+
+    socket_calls = 0
+
+    def _socket_guard(*args: object, **kwargs: object) -> None:
+        nonlocal socket_calls
+        socket_calls += 1
+        raise AssertionError("propagate_network attempted to open a socket")
+
+    monkeypatch.setattr(socket, "socket", _socket_guard, raising=True)
+
+    events = evolver_fixture.propagate_network(enable_network=True)
+
+    assert events == [
+        f"WiFi channel engaged for cycle {evolver_fixture.state.cycle}",
+        f"TCP channel engaged for cycle {evolver_fixture.state.cycle}",
+        f"Bluetooth channel engaged for cycle {evolver_fixture.state.cycle}",
+        f"IoT channel engaged for cycle {evolver_fixture.state.cycle}",
+        f"Orbital channel engaged for cycle {evolver_fixture.state.cycle}",
+    ]
+    assert socket_calls == 0, "propagate_network must not open sockets"
+
+    output = capfd.readouterr().out
+    assert "continuing with simulation-only events for safety" in output
+
+
+def test_propagate_network_simulation_path_blocks_socket_use(
+    monkeypatch: pytest.MonkeyPatch,
+    evolver_fixture: EchoEvolver,
+) -> None:
+    """Simulation mode should keep all propagation work in-memory."""
+
+    socket_calls = 0
+
+    def _socket_guard(*args: object, **kwargs: object) -> None:
+        nonlocal socket_calls
+        socket_calls += 1
+        raise AssertionError("propagate_network attempted to open a socket")
+
+    monkeypatch.setattr(socket, "socket", _socket_guard, raising=True)
+
+    events = evolver_fixture.propagate_network(enable_network=False)
+
+    assert events[:4] == [
+        "Simulated WiFi broadcast for cycle 0",
+        "Simulated TCP handshake for cycle 0",
+        "Bluetooth glyph packet staged for cycle 0",
+        "IoT trigger drafted with key N/A",
+    ]
+    assert events[4].startswith("Orbital hop simulation recorded")
+    assert socket_calls == 0, "propagate_network must remain in-memory during simulation"
