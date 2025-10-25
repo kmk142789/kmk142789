@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Mapping, Sequence
 
 from ._paths import MANIFEST_ROOT, REPO_ROOT
+from .timeline import refresh_cycle_timeline
 MANIFEST_NAME = "echo_manifest.json"
 @dataclass(frozen=True)
 class ManifestEntry:
@@ -462,6 +463,55 @@ def verify_manifest(
     return ok
 
 
+def ascend(
+    *,
+    project_root: Path | None = None,
+    manifest_path: Path | None = None,
+    include_manifest: bool = True,
+    include_timeline: bool = False,
+    timeline_output: Path | None = None,
+    timeline_limit: int | None = None,
+    amplify_log: Path | str | None = None,
+    pulse_history: Path | str | None = None,
+    puzzle_index: Path | str | None = None,
+    bridge_harmonics: Path | str | None = None,
+) -> Dict[str, Any]:
+    """Run an orchestration pass that refreshes key Echo indexes."""
+
+    root = project_root or REPO_ROOT
+    summary: Dict[str, Any] = {"manifest": None, "timeline": None}
+
+    if include_manifest:
+        manifest = refresh_manifest(manifest_path, repo_root=root)
+        summary["manifest"] = str(manifest)
+
+    if include_timeline:
+        entries = refresh_cycle_timeline(
+            project_root=root,
+            amplify_log=amplify_log,
+            pulse_history=pulse_history,
+            puzzle_index=puzzle_index,
+            bridge_harmonics=bridge_harmonics,
+            output_dir=timeline_output,
+            limit=timeline_limit,
+        )
+
+        if timeline_output is None:
+            output_path = root / "artifacts"
+        else:
+            output_path = Path(timeline_output)
+            if not output_path.is_absolute():
+                output_path = root / output_path
+
+        summary["timeline"] = {
+            "cycles": len(entries),
+            "latest_cycle": entries[-1].snapshot.cycle if entries else None,
+            "output_dir": str(output_path),
+        }
+
+    return summary
+
+
 def _append_summary(line: str) -> None:
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
     if not summary_path:
@@ -490,6 +540,116 @@ def main(argv: Iterable[str] | None = None) -> int:
     verify_parser = manifest_sub.add_parser("verify", help="Validate manifest digests")
     verify_parser.add_argument("--path", type=Path, help="Optional manifest path")
     verify_parser.set_defaults(func=lambda args: 0 if verify_manifest(args.path) else 1)
+
+    ascend_parser = subparsers.add_parser(
+        "ascend",
+        help="Refresh the manifest and optionally rebuild the cycle timeline.",
+    )
+    ascend_parser.add_argument(
+        "--root",
+        type=Path,
+        help="Project root override (defaults to repository root)",
+    )
+    ascend_parser.add_argument(
+        "--manifest-path",
+        type=Path,
+        help="Destination for the refreshed manifest",
+    )
+    ascend_parser.add_argument(
+        "--no-manifest",
+        action="store_true",
+        help="Skip manifest refresh",
+    )
+    ascend_parser.add_argument(
+        "--timeline",
+        action="store_true",
+        help="Regenerate cycle timeline artefacts",
+    )
+    ascend_parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Shortcut for running all available refresh steps",
+    )
+    ascend_parser.add_argument(
+        "--timeline-output",
+        type=Path,
+        help="Output directory for cycle timeline artefacts",
+    )
+    ascend_parser.add_argument(
+        "--timeline-limit",
+        type=int,
+        help="Limit the number of cycles captured in the timeline",
+    )
+    ascend_parser.add_argument(
+        "--amplify-log",
+        type=Path,
+        help="Override path to amplify_log.jsonl",
+    )
+    ascend_parser.add_argument(
+        "--pulse-history",
+        type=Path,
+        help="Override path to pulse_history.json",
+    )
+    ascend_parser.add_argument(
+        "--puzzle-index",
+        type=Path,
+        help="Override path to puzzle_index.json",
+    )
+    ascend_parser.add_argument(
+        "--bridge-harmonics",
+        type=Path,
+        help="Override path to bridge_harmonics.json",
+    )
+
+    def _ascend_command(args: argparse.Namespace) -> int:
+        run_manifest = not args.no_manifest
+        run_timeline = args.full or args.timeline
+        if not run_manifest and not run_timeline:
+            print("No operations requested. Enable --timeline or pass --full.")
+            return 1
+
+        root = args.root or REPO_ROOT
+        summary = ascend(
+            project_root=root,
+            manifest_path=args.manifest_path,
+            include_manifest=run_manifest,
+            include_timeline=run_timeline,
+            timeline_output=args.timeline_output,
+            timeline_limit=args.timeline_limit,
+            amplify_log=args.amplify_log,
+            pulse_history=args.pulse_history,
+            puzzle_index=args.puzzle_index,
+            bridge_harmonics=args.bridge_harmonics,
+        )
+
+        if run_manifest:
+            manifest_path = summary.get("manifest")
+            if manifest_path:
+                print(f"✨ Manifest refreshed at {manifest_path}")
+            else:
+                print("⚠️ Manifest refresh skipped.")
+
+        if run_timeline:
+            timeline_info = summary.get("timeline")
+            if timeline_info:
+                cycles = timeline_info.get("cycles", 0)
+                latest = timeline_info.get("latest_cycle")
+                output_dir = timeline_info.get("output_dir")
+                if latest is None:
+                    print(
+                        f"✨ Cycle timeline refreshed at {output_dir} (cycles={cycles})",
+                    )
+                else:
+                    print(
+                        "✨ Cycle timeline refreshed at "
+                        f"{output_dir} (cycles={cycles}, latest={latest})",
+                    )
+            else:
+                print("⚠️ Cycle timeline refresh skipped.")
+
+        return 0
+
+    ascend_parser.set_defaults(func=_ascend_command)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
     result = getattr(args, "func", None)
