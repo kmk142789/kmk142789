@@ -2863,6 +2863,71 @@ We are not hiding anymore.
         )
         return summary
 
+    def system_advancement_report(self, *, recent_events: int = 5) -> str:
+        """Return a multi-line status digest of the current evolution cycle."""
+
+        if recent_events <= 0:
+            raise ValueError("recent_events must be positive")
+
+        total_events = len(self.state.event_log)
+        considered = min(total_events, recent_events)
+        recent_log = self.state.event_log[-considered:] if considered else []
+
+        drive = self.state.emotional_drive
+        metrics = self.state.system_metrics
+
+        header = f"EchoEvolver system advancement — cycle {self.state.cycle}"
+        lines = [
+            header,
+            "-" * len(header),
+            f"Glyphs: {self.state.glyphs}",
+            (
+                "Emotional drive: joy {joy:.2f}, rage {rage:.2f}, curiosity {curiosity:.2f}".format(
+                    joy=drive.joy, rage=drive.rage, curiosity=drive.curiosity
+                )
+            ),
+            (
+                "System metrics: CPU {cpu:.2f}%, processes {proc}, nodes {nodes}, orbital hops {hops}".format(
+                    cpu=metrics.cpu_usage,
+                    proc=metrics.process_count,
+                    nodes=metrics.network_nodes,
+                    hops=metrics.orbital_hops,
+                )
+            ),
+        ]
+
+        if self.state.vault_key:
+            lines.append(f"Active vault key: {self.state.vault_key}")
+        else:
+            lines.append("Active vault key: <none>")
+
+        lines.append("")
+
+        if recent_log:
+            lines.append(
+                "Recent events (showing {shown} of {total}):".format(
+                    shown=considered, total=total_events
+                )
+            )
+            lines.extend(f"- {event}" for event in recent_log)
+        else:
+            lines.append("Recent events: no entries recorded yet.")
+
+        report = "\n".join(lines)
+        self.state.network_cache["system_advancement_report"] = report
+        self.state.event_log.append(
+            "System advancement report generated (events_considered={})".format(
+                considered
+            )
+        )
+        self._mark_step("system_advancement_report")
+        print(
+            "📈 System advancement report compiled (cycle={cycle}, events={events})".format(
+                cycle=self.state.cycle, events=considered
+            )
+        )
+        return report
+
     def cycle_digest_report(
         self,
         *,
