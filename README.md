@@ -87,6 +87,33 @@ python packages/mirror-sync/scripts/sync.py
 or trigger the scheduled GitHub Actions workflow defined in
 `.github/workflows/mirror-sync.yml`.
 
+### Federated Colossus proof pack & search
+
+Generate the latest human-readable report and machine index in one shot:
+
+```bash
+make proof-pack
+```
+
+Search the raw ledger entries with structured queries (latest entry per
+address/puzzle/cycle):
+
+```bash
+# Latest-only search across entries
+python -m atlas.search --in build/index/federated_raw.json --dedupe-latest --q "cycle:12 puzzle:131"
+
+# Or flags:
+python -m atlas.search --in build/index/federated_raw.json --cycle 12 --puzzle 131 --addr 1Feex
+```
+
+### Show, don't tell checklist
+
+- [x] Human report: `docs/federated_colossus_index.md` (cycle timelines, tables)
+- [x] Machine proof: `build/index/federated_colossus_index.json` (stable schema)
+- [x] Live dashboard: `docs/dashboard/` with filters (cycle, puzzle, address)
+- [x] Reproducibility: CI workflow logs + commit hashes → anyone can rerun
+- [x] Provenance: every entry includes digest, source, and optional glyph/harmonics tags
+
 ### Sovereign Anchoring Workflow
 
 1. **Publish + Snapshot:** Draft the Mirror.xyz post that narrates the change,
