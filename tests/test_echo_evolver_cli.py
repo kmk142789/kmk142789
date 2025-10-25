@@ -189,6 +189,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
             include_reflection: bool,
             include_matrix: bool,
             include_event_summary: bool,
+            include_propagation: bool,
             event_summary_limit: int,
             manifest_events: int,
         ) -> dict[str, object]:
@@ -201,6 +202,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
                 "include_reflection": include_reflection,
                 "include_matrix": include_matrix,
                 "include_event_summary": include_event_summary,
+                "include_propagation": include_propagation,
                 "event_summary_limit": event_summary_limit,
                 "manifest_events": manifest_events,
             }
@@ -223,6 +225,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "--include-event-summary",
         "--event-summary-limit",
         "7",
+        "--include-propagation",
     ])
 
     assert exit_code == 0
@@ -235,6 +238,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "include_reflection": True,
         "include_matrix": True,
         "include_event_summary": True,
+        "include_propagation": True,
         "event_summary_limit": 7,
         "manifest_events": 5,
     }
@@ -279,6 +283,18 @@ def test_main_rejects_manifest_events_without_advance(monkeypatch) -> None:
 
     with pytest.raises(SystemExit) as excinfo:
         evolver_main(["--manifest-events", "3"])
+
+    assert excinfo.value.code == 2
+
+
+def test_main_rejects_propagation_without_advance(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--include-propagation"])
 
     assert excinfo.value.code == 2
 
