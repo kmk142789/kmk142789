@@ -25,6 +25,9 @@ import argparse
 import json
 import subprocess
 from collections import Counter, defaultdict
+from dataclasses import dataclass
+import hashlib
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence
@@ -54,6 +57,143 @@ def _current_timestamp() -> str:
 # ---------------------------------------------------------------------------
 # Data gathering helpers
 # ---------------------------------------------------------------------------
+
+
+@dataclass
+class PuzzleEntry:
+    """Metadata extracted from an on-disk puzzle solution document."""
+
+    puzzle_id: int
+    title: str
+    address: str | None
+    sha256: str
+    path: Path
+
+
+def parse_puzzle_range(value: str) -> tuple[int, int]:
+    """Return ``(start, end)`` parsed from ``START-END`` strings."""
+
+    try:
+        start_text, end_text = value.split("-", 1)
+        start = int(start_text)
+        end = int(end_text)
+    except ValueError as exc:  # pragma: no cover - defensive guard
+        raise argparse.ArgumentTypeError("puzzle range must be formatted as START-END") from exc
+    if start <= 0 or end <= 0:
+        raise argparse.ArgumentTypeError("puzzle range values must be positive integers")
+    if end < start:
+        raise argparse.ArgumentTypeError("puzzle range end must be greater than or equal to start")
+    return start, end
+
+
+def normalise_modules(value: str) -> List[str]:
+    """Split a comma/semicolon delimited module list into tidy strings."""
+
+    separators = [",", ";"]
+    current = [value]
+    for separator in separators:
+        current = sum((segment.split(separator) for segment in current), [])
+    modules = [segment.strip() for segment in current if segment.strip()]
+    return modules
+
+
+def locate_puzzle_file(puzzle_root: Path, puzzle_id: int) -> Path | None:
+    """Return the first matching puzzle file for *puzzle_id* if present."""
+
+    candidates = [puzzle_root / f"puzzle_{puzzle_id}.md", puzzle_root / f"puzzle_{puzzle_id:05d}.md"]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _extract_title(text: str, puzzle_id: int) -> str:
+    for line in text.splitlines():
+        if line.strip().startswith("#"):
+            return line.lstrip("#").strip() or f"Puzzle {puzzle_id}"
+    return f"Puzzle {puzzle_id}"
+
+
+def _extract_terminal_code_block(text: str) -> str | None:
+    """Return the final fenced code block (single-line) from *text*."""
+
+    lines = text.splitlines()
+    blocks: List[str] = []
+    collecting = False
+    buffer: List[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            if collecting:
+                blocks.append("\n".join(buffer).strip())
+                buffer = []
+                collecting = False
+            else:
+                collecting = True
+                buffer = []
+        elif collecting:
+            buffer.append(stripped)
+    if collecting and buffer:
+        blocks.append("\n".join(buffer).strip())
+    for block in reversed(blocks):
+        if block:
+            return block.splitlines()[0].strip()
+    return None
+
+
+def load_puzzle_entry(path: Path, puzzle_id: int) -> PuzzleEntry:
+    text = path.read_text(encoding="utf-8")
+    title = _extract_title(text, puzzle_id)
+    address = _extract_terminal_code_block(text)
+    sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return PuzzleEntry(puzzle_id=puzzle_id, title=title, address=address, sha256=sha256, path=path)
+
+
+def collect_puzzle_entries(start: int, end: int, puzzle_root: Path) -> tuple[List[PuzzleEntry], List[int]]:
+    """Return resolved puzzle entries and the identifiers that were missing."""
+
+    found: List[PuzzleEntry] = []
+    missing: List[int] = []
+    if not puzzle_root.exists() or not puzzle_root.is_dir():
+        return found, list(range(start, end + 1))
+
+    for puzzle_id in range(start, end + 1):
+        candidate = locate_puzzle_file(puzzle_root, puzzle_id)
+        if candidate is None:
+            missing.append(puzzle_id)
+            continue
+        found.append(load_puzzle_entry(candidate, puzzle_id))
+    return found, missing
+
+
+def _parse_tag_distribution(lines: Sequence[str]) -> List[Dict[str, object]]:
+    """Extract tag rows from the oracle report markdown table."""
+
+    tags: List[Dict[str, object]] = []
+    iterator = iter(enumerate(lines))
+    for index, line in iterator:
+        if line.strip().lower().startswith("### tag distribution"):
+            # Skip the header separator lines
+            next(iterator, None)
+            next(iterator, None)
+            break
+    else:
+        return tags
+
+    for _, raw in iterator:
+        stripped = raw.strip()
+        if not stripped.startswith("|") or stripped.startswith("| ---"):
+            break
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if len(cells) < 3 or cells[0].lower() == "label":
+            continue
+        try:
+            baseline = float(cells[1].rstrip("%"))
+            shifted = float(cells[2].rstrip("%"))
+        except ValueError:  # pragma: no cover - defensive guard
+            continue
+        tags.append({"label": cells[0], "baseline": baseline, "shifted": shifted})
+    return tags
 
 
 def _parse_scopes(raw_scope: Optional[str]) -> List[str]:
@@ -671,7 +811,19 @@ def build_atlas_attestation(
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Echo Codex CLI")
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    weave = subparsers.add_parser("weave", help="Generate a Continuum Compass map")
+    weave.add_argument("--project", required=True, help="Project name recorded in the compass map")
+    weave.add_argument("--owner", required=True, help="Owner recorded in the compass map")
+    weave.add_argument("--inputs", nargs="+", required=True, help="Manifest or oracle report inputs")
+    weave.add_argument("--schema", default=None, help="Optional schema reference to embed in the output")
+    weave.add_argument(
+        "--emit",
+        type=Path,
+        default=None,
+        help="Destination path for the generated compass map (defaults to artifacts/compass-map.json)",
+    )
 
     forge = subparsers.add_parser("forge", help="Forge sovereign inventory artifacts")
     forge.add_argument("--sovereign-inventory", action="store_true", help="Generate the sovereign inventory payload")
@@ -727,10 +879,47 @@ def _parse_csv_option(value: Optional[str]) -> Optional[List[str]]:
     return [entry for entry in entries if entry]
 
 
+def _resolve_cli_path(value: str) -> Path:
+    candidate = Path(value)
+    if not candidate.is_absolute():
+        candidate = REPO_ROOT / candidate
+    return candidate
+
+
+def _run_weave(args: argparse.Namespace) -> None:
+    report_paths = [_resolve_cli_path(raw) for raw in args.inputs]
+    primary = report_paths[0]
+    lines = primary.read_text(encoding="utf-8").splitlines()
+    tags = _parse_tag_distribution(lines)
+
+    payload: Dict[str, object] = {
+        "project": args.project,
+        "owner": args.owner,
+        "generated_at": _current_timestamp(),
+        "inputs": [
+            str(path.relative_to(REPO_ROOT)) if path.is_relative_to(REPO_ROOT) else str(path)
+            for path in report_paths
+        ],
+        "tags": tags,
+    }
+    if args.schema:
+        payload["schema"] = args.schema
+
+    output_path = args.emit or (REPO_ROOT / "artifacts" / "compass-map.json")
+    if not output_path.is_absolute():
+        output_path = REPO_ROOT / output_path
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    print(f"Compass map generated → {output_path}")
+
+
 def main(argv: Optional[Iterable[str]] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(list(argv) if argv is not None else None)
 
+    if args.command == "weave":
+        _run_weave(args)
+        return 0
     if args.command == "ignite":
         output_path = args.output or DEFAULT_ORACLE_OUTPUT
         try:
@@ -819,14 +1008,21 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
 
 
 __all__ = [
+    "PuzzleEntry",
+    "_current_timestamp",
     "build_atlas_attestation",
     "build_inventory",
     "collect_apps",
+    "collect_puzzle_entries",
     "collect_domains",
     "collect_keys",
     "collect_repos",
     "generate_oracle_report",
+    "load_puzzle_entry",
+    "locate_puzzle_file",
     "load_continuum_manifest",
+    "normalise_modules",
+    "parse_puzzle_range",
     "simulate_weight_shift",
     "summarize_manifest",
     "main",

@@ -6,10 +6,17 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable, Iterator, Sequence, Any
 
-import pandas as pd
-from jsonschema import Draft7Validator
+try:  # pragma: no cover - optional dependency
+    import pandas as pd
+except ModuleNotFoundError:  # pragma: no cover - handled via fallback frame
+    pd = None  # type: ignore[assignment]
+
+try:  # pragma: no cover - optional dependency
+    from jsonschema import Draft7Validator
+except ModuleNotFoundError:  # pragma: no cover - handled within validate_against_schema
+    Draft7Validator = None  # type: ignore[assignment]
 from pydantic import BaseModel, Field
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +24,97 @@ DEFAULT_MAP_PATH = REPO_ROOT / "echo_map.json"
 PUZZLE_SCHEMA_PATH = REPO_ROOT / "schemas" / "echo_schema_v1.json"
 CACHE_DIR = REPO_ROOT / ".cache" / "ud"
 EXPORT_ROOT = REPO_ROOT / "exports"
+
+
+class PuzzleSeries(Sequence[Any]):
+    """Lightweight column container used when pandas is unavailable."""
+
+    def __init__(self, values: Sequence[Any]):
+        self._values = list(values)
+
+    def __len__(self) -> int:
+        return len(self._values)
+
+    def __getitem__(self, index: int) -> Any:
+        return self._values[index]
+
+    def __iter__(self) -> Iterator[Any]:
+        return iter(self._values)
+
+    def tolist(self) -> list[Any]:
+        return list(self._values)
+
+    def sum(self) -> Any:  # pragma: no cover - trivial wrapper
+        return sum(self._values)
+
+    def _bool_mask(self, expected: int) -> list[bool]:
+        mask = [bool(value) for value in self._values]
+        if len(mask) != expected:
+            raise ValueError("Boolean mask length mismatch")
+        return mask
+
+    def __invert__(self) -> "PuzzleSeries":  # pragma: no cover - convenience
+        return PuzzleSeries([not bool(value) for value in self._values])
+
+
+class PuzzleFrame:
+    """Minimal DataFrame-like container for environments without pandas."""
+
+    def __init__(self, rows: Sequence[dict[str, Any]]):
+        self._rows = [dict(row) for row in rows]
+
+    def __len__(self) -> int:
+        return len(self._rows)
+
+    def __iter__(self) -> Iterator[dict[str, Any]]:  # pragma: no cover - helper
+        return iter(self._rows)
+
+    def copy(self) -> "PuzzleFrame":
+        return PuzzleFrame(self._rows)
+
+    @property
+    def empty(self) -> bool:
+        return not self._rows
+
+    def _resolve_assignment(self, values: Any) -> list[Any]:
+        if isinstance(values, PuzzleSeries):
+            return values.tolist()
+        if isinstance(values, Sequence) and not isinstance(values, (str, bytes)):
+            return list(values)
+        # Scalar assignments broadcast to all rows
+        return [values for _ in self._rows]
+
+    def __setitem__(self, key: str, values: Any) -> None:
+        payload = self._resolve_assignment(values)
+        if self._rows and len(payload) != len(self._rows):
+            raise ValueError("Column assignment length mismatch")
+        if not self._rows:
+            self._rows = [{} for _ in payload]
+        for row, value in zip(self._rows, payload):
+            row[key] = value
+
+    def __getitem__(self, key: Any) -> Any:
+        if isinstance(key, str):
+            return PuzzleSeries([row.get(key) for row in self._rows])
+        if isinstance(key, (list, tuple)) and key and isinstance(key[0], str):
+            return PuzzleFrame([{column: row.get(column) for column in key} for row in self._rows])
+        if isinstance(key, PuzzleSeries):
+            mask = key._bool_mask(len(self._rows))
+            return self._filter_with_mask(mask)
+        if isinstance(key, Sequence) and key and isinstance(key[0], bool):
+            return self._filter_with_mask([bool(value) for value in key])
+        raise TypeError(f"Unsupported key type: {type(key)!r}")
+
+    def _filter_with_mask(self, mask: Sequence[bool]) -> "PuzzleFrame":
+        if len(mask) != len(self._rows):
+            raise ValueError("Mask length mismatch")
+        filtered = [row for row, keep in zip(self._rows, mask) if keep]
+        return PuzzleFrame(filtered)
+
+    def iterrows(self) -> Iterator[tuple[int, dict[str, Any]]]:  # pragma: no cover - console mode
+        for index, row in enumerate(self._rows):
+            yield index, dict(row)
+
 
 
 class PkScript(BaseModel):
@@ -145,6 +243,11 @@ def save_records(records: Sequence[PuzzleRecord], path: Path | None = None) -> N
 def validate_against_schema(records: Sequence[PuzzleRecord]) -> list[str]:
     """Validate entries against the JSON schema, returning human-readable errors."""
 
+    if Draft7Validator is None:
+        # When jsonschema isn't installed we fall back to trusting the Pydantic
+        # validation performed in :func:`load_records`.
+        return []
+
     with PUZZLE_SCHEMA_PATH.open("r", encoding="utf-8") as handle:
         schema = json.load(handle)
 
@@ -177,8 +280,8 @@ def _derive_address(record: PuzzleRecord) -> str | None:
         return None
 
 
-def build_dataframe(records: Sequence[PuzzleRecord]) -> pd.DataFrame:
-    """Transform the records into a :class:`~pandas.DataFrame` with helper columns."""
+def build_dataframe(records: Sequence[PuzzleRecord]):
+    """Transform the records into a tabular structure for downstream consumers."""
 
     rows: list[dict[str, object]] = []
     for record in records:
@@ -203,16 +306,40 @@ def build_dataframe(records: Sequence[PuzzleRecord]) -> pd.DataFrame:
             }
         )
 
-    frame = pd.DataFrame(rows)
-    if not frame.empty:
-        frame["Updated"] = pd.to_datetime(frame["Updated"], utc=True, errors="coerce")
-    return frame
+    if pd is not None:  # pragma: no branch - deterministic branch on dependency
+        frame = pd.DataFrame(rows)
+        if not frame.empty:
+            frame["Updated"] = pd.to_datetime(frame["Updated"], utc=True, errors="coerce")
+        return frame
+
+    return PuzzleFrame(rows)
 
 
 def summarise(records: Sequence[PuzzleRecord]) -> dict[str, object]:
     """Produce quick metrics for CLI/statistics reporting."""
 
     df = build_dataframe(records)
+
+    if pd is not None and isinstance(df, pd.DataFrame):
+        if df.empty:
+            return {
+                "total_puzzles": 0,
+                "families": {},
+                "ud_bound": {"bound": 0, "unbound": 0},
+                "mismatches": 0,
+            }
+
+        fam_counts = Counter(df["Family"]).most_common()
+        bound = int(df["UD_Bound"].sum())
+        total = int(len(df))
+        return {
+            "total_puzzles": total,
+            "families": dict(fam_counts),
+            "ud_bound": {"bound": bound, "unbound": total - bound},
+            "mismatches": int(df["Mismatch"].sum()),
+        }
+
+    # Fallback path when pandas is unavailable
     if df.empty:
         return {
             "total_puzzles": 0,
@@ -221,14 +348,14 @@ def summarise(records: Sequence[PuzzleRecord]) -> dict[str, object]:
             "mismatches": 0,
         }
 
-    fam_counts = Counter(df["Family"]).most_common()
-    bound = int(df["UD_Bound"].sum())
-    total = int(len(df))
+    families = Counter(df["Family"].tolist())
+    bound = int(sum(bool(value) for value in df["UD_Bound"]))
+    total = len(df)
     return {
         "total_puzzles": total,
-        "families": dict(fam_counts),
+        "families": dict(families.most_common()),
         "ud_bound": {"bound": bound, "unbound": total - bound},
-        "mismatches": int(df["Mismatch"].sum()),
+        "mismatches": int(sum(bool(value) for value in df["Mismatch"]))
     }
 
 
