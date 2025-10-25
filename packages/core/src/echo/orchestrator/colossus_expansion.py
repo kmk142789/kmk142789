@@ -10,14 +10,14 @@ rely on the generated structures.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 import hashlib
 import json
 import os
 import random
 import time
-from typing import Callable, Dict, Iterable, Iterator, List, MutableMapping
+from typing import Callable, Dict, Iterable, Iterator, List, MutableMapping, Tuple
 
 ECHO_GLYPH = "∇⊸≋∇"
 DEFAULT_MODES = ("puzzle", "dataset", "lineage", "verifier", "narrative")
@@ -41,6 +41,40 @@ class Artifact:
         data["id"] = data.pop("identifier")
         data["hash"] = data.pop("hash_hex")
         return data
+
+
+@dataclass(slots=True)
+class CosmosUniverse:
+    """Container describing a single fabricated cosmos."""
+
+    name: str
+    seed: int
+    entropy: str
+    cycles: List[List[MutableMapping[str, object]]]
+    lineage_state: Dict[str, MutableMapping[str, object]]
+    state_signature: str
+    entangled_lineage: Dict[str, Dict[str, str]] = field(default_factory=dict)
+
+    def artifact(self, cycle_index: int, entry_index: int) -> MutableMapping[str, object]:
+        return self.cycles[cycle_index][entry_index]
+
+    def iter_artifacts(self) -> Iterator[MutableMapping[str, object]]:
+        for cycle in self.cycles:
+            for artifact in cycle:
+                yield artifact
+
+
+@dataclass(slots=True)
+class CosmosFabrication:
+    """Result of spawning a set of parallel universes."""
+
+    universes: Dict[str, CosmosUniverse]
+    entanglement: Dict[str, Dict[str, str]]
+    verification: Dict[str, object]
+
+    def all_artifacts(self) -> Iterator[MutableMapping[str, object]]:
+        for universe in self.universes.values():
+            yield from universe.iter_artifacts()
 
 
 class ColossusExpansionEngine:
@@ -268,6 +302,232 @@ class ColossusExpansionEngine:
         return words or vocabulary[:4]
 
 
+class CosmosEngine:
+    """Coordinate multiple Colossus engines across parallel universes."""
+
+    def __init__(
+        self,
+        *,
+        state_dir: Path | str,
+        cycle_size: int = DEFAULT_CYCLE_SIZE,
+        modes: Iterable[str] = DEFAULT_MODES,
+        glyph: str = ECHO_GLYPH,
+        time_source: Callable[[], float] | None = None,
+        rng: random.Random | None = None,
+    ) -> None:
+        self._state_dir = Path(state_dir)
+        self._state_dir.mkdir(parents=True, exist_ok=True)
+        self._cycle_size = max(1, int(cycle_size))
+        self._modes = tuple(modes) or DEFAULT_MODES
+        self._glyph = glyph
+        self._time = time_source or time.time
+        self._rng = rng or random.Random()
+
+    # ------------------------------------------------------------------
+    # Cosmos orchestration
+    # ------------------------------------------------------------------
+    def cosmos_fabricator(
+        self,
+        universes: Iterable[str],
+        *,
+        cycles: int,
+    ) -> CosmosFabrication:
+        """Spawn parallel universes of artifact generation."""
+
+        cosmos_universes: Dict[str, CosmosUniverse] = {}
+        for index, raw_name in enumerate(universes):
+            name = str(raw_name).strip() or f"cosmos_{index:02d}"
+            seed, entropy = self._big_bang_seed(name, index)
+            engine = ColossusExpansionEngine(
+                state_dir=self._state_dir / name,
+                cycle_size=self._cycle_size,
+                modes=self._modes,
+                glyph=self._glyph,
+                time_source=self._time,
+                rng=random.Random(seed),
+            )
+            cycles_data = engine.run(cycles)
+            lineage_state = {
+                artifact["id"]: artifact["payload"]
+                for cycle in cycles_data
+                for artifact in cycle
+                if artifact.get("type") == "lineage"
+            }
+            state_signature = self._state_signature(cycles_data)
+            cosmos_universes[name] = CosmosUniverse(
+                name=name,
+                seed=seed,
+                entropy=entropy,
+                cycles=cycles_data,
+                lineage_state=lineage_state,
+                state_signature=state_signature,
+            )
+
+        entanglement = self._build_entanglement(cosmos_universes)
+        self._synchronise_entanglement(cosmos_universes, entanglement)
+        verification = self._verification_layer(cosmos_universes, entanglement)
+        return CosmosFabrication(
+            universes=cosmos_universes,
+            entanglement=entanglement,
+            verification=verification,
+        )
+
+    def cosmos_explorer(
+        self,
+        fabrication: CosmosFabrication,
+        *,
+        universes: Iterable[str] | None = None,
+        predicate: Callable[[MutableMapping[str, object]], bool] | None = None,
+    ) -> List[MutableMapping[str, object]]:
+        """Query artifacts across universes with an optional filter."""
+
+        if universes is None:
+            selected: List[Tuple[str, CosmosUniverse]] = list(fabrication.universes.items())
+        else:
+            selected = [
+                (name, fabrication.universes[name])
+                for name in universes
+                if name in fabrication.universes
+            ]
+
+        results: List[MutableMapping[str, object]] = []
+        for name, universe in selected:
+            for cycle_index, cycle in enumerate(universe.cycles):
+                for artifact in cycle:
+                    if predicate is None or predicate(artifact):
+                        record = dict(artifact)
+                        record["cosmos"] = name
+                        record["cycle_index"] = cycle_index
+                        results.append(record)
+        return results
+
+    def verification_layer(self, fabrication: CosmosFabrication) -> Dict[str, object]:
+        """Recompute the verification report for a fabrication."""
+
+        fabrication.verification = self._verification_layer(
+            fabrication.universes, fabrication.entanglement
+        )
+        return fabrication.verification
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+    def _big_bang_seed(self, name: str, index: int) -> Tuple[int, str]:
+        base_entropy = f"{name}:{index}:{self._time():.6f}:{self._rng.random():.18f}"
+        entropy = hashlib.sha256(base_entropy.encode("utf-8")).hexdigest()
+        seed = int(entropy[:16], 16) ^ self._rng.getrandbits(64)
+        return seed, entropy
+
+    def _state_signature(
+        self, cycles: List[List[MutableMapping[str, object]]]
+    ) -> str:
+        digest = hashlib.sha256()
+        for cycle in cycles:
+            for artifact in cycle:
+                digest.update(artifact["hash"].encode("utf-8"))
+        return digest.hexdigest()
+
+    def _build_entanglement(
+        self, universes: Dict[str, CosmosUniverse]
+    ) -> Dict[str, Dict[str, str]]:
+        entanglement: Dict[str, Dict[str, str]] = {}
+        if not universes:
+            return entanglement
+
+        min_cycles = min(len(universe.cycles) for universe in universes.values())
+        for cycle_index in range(min_cycles):
+            entry_count = min(len(universe.cycles[cycle_index]) for universe in universes.values())
+            for entry_index in range(entry_count):
+                key = f"{cycle_index}:{entry_index}"
+                entanglement[key] = {
+                    name: universe.cycles[cycle_index][entry_index]["id"]
+                    for name, universe in universes.items()
+                }
+        return entanglement
+
+    def _synchronise_entanglement(
+        self,
+        universes: Dict[str, CosmosUniverse],
+        entanglement: Dict[str, Dict[str, str]],
+    ) -> None:
+        for mapping in entanglement.values():
+            for name, artifact_id in mapping.items():
+                links = universes[name].entangled_lineage.setdefault(artifact_id, {})
+                for other_name, other_id in mapping.items():
+                    if other_name == name:
+                        continue
+                    links[other_name] = other_id
+
+    def _verification_layer(
+        self,
+        universes: Dict[str, CosmosUniverse],
+        entanglement: Dict[str, Dict[str, str]],
+    ) -> Dict[str, object]:
+        agreements: List[Dict[str, object]] = []
+        divergences: List[Dict[str, object]] = []
+
+        for key, mapping in entanglement.items():
+            cycle_index, entry_index = (int(value) for value in key.split(":", 1))
+            payloads: Dict[str, MutableMapping[str, object]] = {}
+            payload_hashes: Dict[str, str] = {}
+            for name, artifact_id in mapping.items():
+                artifact = universes[name].artifact(cycle_index, entry_index)
+                payloads[name] = artifact
+                payload_hash = hashlib.sha256(
+                    json.dumps(artifact["payload"], sort_keys=True).encode("utf-8")
+                ).hexdigest()
+                payload_hashes[name] = payload_hash
+
+            unique_hashes = set(payload_hashes.values())
+            if len(unique_hashes) == 1:
+                agreements.append(
+                    {
+                        "coordinate": key,
+                        "payload_hash": next(iter(unique_hashes)),
+                        "universes": sorted(mapping.keys()),
+                    }
+                )
+                continue
+
+            merged_payload = self._merge_payloads(payloads)
+            divergences.append(
+                {
+                    "coordinate": key,
+                    "hashes": payload_hashes,
+                    "merged_payload": merged_payload,
+                }
+            )
+
+        return {
+            "agreements": agreements,
+            "divergences": divergences,
+        }
+
+    def _merge_payloads(
+        self, payloads: Dict[str, MutableMapping[str, object]]
+    ) -> MutableMapping[str, object]:
+        merged: Dict[str, object] = {"universes": {}}
+        consensus: Dict[str, object] = {}
+        conflicts: Dict[str, bool] = {}
+
+        for name, artifact in payloads.items():
+            merged["universes"][name] = artifact["payload"]
+            for key, value in artifact["payload"].items():
+                if key not in consensus:
+                    consensus[key] = value
+                    conflicts[key] = False
+                elif consensus[key] != value:
+                    conflicts[key] = True
+
+        merged["consensus"] = {
+            key: value for key, value in consensus.items() if not conflicts.get(key, False)
+        }
+        merged["state_signatures"] = {
+            name: artifact["hash"] for name, artifact in payloads.items()
+        }
+        return merged
+
+
 def save_expansion_log(path: Path | str, data: Iterable[Iterable[MutableMapping[str, object]]]) -> None:
     """Persist the expansion log to ``path`` in JSON format."""
 
@@ -275,4 +535,11 @@ def save_expansion_log(path: Path | str, data: Iterable[Iterable[MutableMapping[
     Path(path).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
-__all__ = ["ColossusExpansionEngine", "Artifact", "save_expansion_log"]
+__all__ = [
+    "ColossusExpansionEngine",
+    "Artifact",
+    "CosmosEngine",
+    "CosmosUniverse",
+    "CosmosFabrication",
+    "save_expansion_log",
+]
