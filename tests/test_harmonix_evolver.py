@@ -1,5 +1,9 @@
 """Tests for the functional cognitive Harmonix EchoEvolver implementation."""
 
+import json
+import subprocess
+import sys
+
 from cognitive_harmonics.harmonix_evolver import EchoEvolver
 
 
@@ -54,3 +58,41 @@ def test_propagate_network_supports_live_mode() -> None:
     assert any("channel engaged" in event for event in events)
     assert any("Live network mode" in entry for entry in evolver.state.events)
     assert evolver.state.network_cache["propagation_events"] == events
+
+
+def test_run_cycles_returns_reports() -> None:
+    evolver = EchoEvolver()
+    reports = evolver.run_cycles(3)
+
+    assert [entry["cycle"] for entry in reports] == [1, 2, 3]
+    assert reports[-1]["state"]["cycle"] == 3
+    assert reports[-1]["payload"]["metadata"]["cycle"] == 3
+    # Ensure snapshots are detached and not mutated by later cycles
+    assert reports[0]["state"]["cycle"] == 1
+
+
+def test_run_cycles_requires_positive_count() -> None:
+    evolver = EchoEvolver()
+
+    try:
+        evolver.run_cycles(0)
+    except ValueError as exc:  # pragma: no cover - short negative path
+        assert "at least 1" in str(exc)
+    else:  # pragma: no cover - defensive guard if validation regresses
+        raise AssertionError("ValueError not raised for non-positive cycle count")
+
+
+def test_cli_supports_multiple_cycles() -> None:
+    cmd = [
+        sys.executable,
+        "-m",
+        "cognitive_harmonics.harmonix_evolver",
+        "--cycles",
+        "2",
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    payload = json.loads(result.stdout)
+
+    assert payload["cycles"][0]["cycle"] == 1
+    assert payload["cycles"][1]["cycle"] == 2
+    assert payload["final_state"]["cycle"] == 2

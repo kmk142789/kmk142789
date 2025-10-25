@@ -23,3 +23,17 @@ usable as a standalone function definition.
 The full JSON representation is stored in [`schema.json`](schema.json). Use it
 when registering the function with the OpenAI client so tools can reliably
 construct the structured response payload.
+
+## Running the Evolver
+
+`harmonix_evolver.py` exposes a CLI entry point for producing harmonix payloads.
+Execute the module directly to print the JSON payload for a single cycle or use
+the optional flags to run multiple cycles at once:
+
+```bash
+python -m cognitive_harmonics.harmonix_evolver --cycles 3 --enable-network
+```
+
+The `--enable-network` flag records that live propagation was requested while
+keeping all activity inside the simulated sandbox so the evolver remains
+side-effect free.

@@ -22,11 +22,12 @@ harmonic payload so it can be piped into other tooling.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import argparse
+import json
+from dataclasses import asdict, dataclass, field
 from hashlib import sha256
 from pathlib import Path
 from typing import Dict, List, Tuple
-import json
 
 VISION_BANNER = "[:: Vision Protocol Activated ::]"
 CORE_IDENTITY = (
@@ -346,14 +347,16 @@ class EchoEvolver:
     # Public orchestrator
     # ------------------------------------------------------------------
 
-    def run_cycle(self) -> Tuple[EchoState, Dict[str, object]]:
+    def _execute_cycle(self, *, enable_network: bool = False) -> Dict[str, object]:
+        """Execute a single harmonix cycle and return the payload."""
+
         self.mutate_code()
         self.emotional_modulation()
         self.generate_symbolic_language()
         self.invent_mythocode()
         self.quantum_safe_crypto()
         self.system_monitor()
-        self.propagate_network()
+        self.propagate_network(enable_network=enable_network)
         self.evolutionary_narrative()
         self.store_fractal_glyphs()
         self.inject_prompt_resonance()
@@ -361,7 +364,56 @@ class EchoEvolver:
         self.generate_constellation_map()
         self.build_artifact()
         payload = self.harmonix_payload()
+        return payload
+
+    def snapshot_state(self) -> Dict[str, object]:
+        """Return a detached dictionary snapshot of the current state."""
+
+        snapshot = asdict(self.state)
+        snapshot["system_metrics"] = self.state.system_metrics.to_dict()
+        snapshot["events"] = list(self.state.events)
+        snapshot["storyboard"] = list(self.state.storyboard)
+        snapshot["network_cache"] = dict(self.state.network_cache)
+        return snapshot
+
+    def run_cycle(self, *, enable_network: bool = False) -> Tuple[EchoState, Dict[str, object]]:
+        payload = self._execute_cycle(enable_network=enable_network)
         return self.state, payload
+
+    def run_cycles(
+        self, count: int, *, enable_network: bool = False
+    ) -> List[Dict[str, object]]:
+        """Execute multiple harmonix cycles and return their reports.
+
+        Parameters
+        ----------
+        count:
+            Number of consecutive cycles to execute. Must be at least one.
+        enable_network:
+            When ``True`` the propagation stage records that live networking was
+            requested while still staying within the simulated boundaries.
+
+        Returns
+        -------
+        List[Dict[str, object]]
+            Chronological list of cycle reports. Each entry contains the cycle
+            number, a state snapshot, and the harmonix payload.
+        """
+
+        if count < 1:
+            raise ValueError("count must be at least 1")
+
+        reports: List[Dict[str, object]] = []
+        for _ in range(count):
+            payload = self._execute_cycle(enable_network=enable_network)
+            reports.append(
+                {
+                    "cycle": self.state.cycle,
+                    "state": self.snapshot_state(),
+                    "payload": payload,
+                }
+            )
+        return reports
 
     # ------------------------------------------------------------------
     # CLI helper
@@ -374,9 +426,37 @@ class EchoEvolver:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Execute cognitive harmonix evolver cycles and emit payloads",
+    )
+    parser.add_argument(
+        "--cycles",
+        type=int,
+        default=1,
+        help="Number of consecutive cycles to execute (default: 1)",
+    )
+    parser.add_argument(
+        "--enable-network",
+        action="store_true",
+        help="Record that live network propagation was requested while remaining simulated",
+    )
+    args = parser.parse_args()
+
     evolver = EchoEvolver()
-    _, payload = evolver.run_cycle()
-    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    if args.cycles == 1:
+        _, payload = evolver.run_cycle(enable_network=args.enable_network)
+        output = payload
+    else:
+        reports = evolver.run_cycles(args.cycles, enable_network=args.enable_network)
+        output = {
+            "cycles": [
+                {"cycle": report["cycle"], "payload": report["payload"]}
+                for report in reports
+            ],
+            "final_state": reports[-1]["state"],
+        }
+
+    print(json.dumps(output, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":
