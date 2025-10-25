@@ -425,6 +425,21 @@ def test_pkscript_handles_raw_witness_script_with_metadata() -> None:
     assert address == "bc1qr2cr30jzq5ew7eqegzqq9usa77neexu7txc2de"
 
 
+def test_pkscript_ignores_sigscript_metadata_block() -> None:
+    script = [
+        "1Czoy8xtd-dRfKh697F",
+        "Pkscript",
+        "76a91483984cddc827ef7885444b3d4af57eba52e9e3cb88ac",
+        "Sigscript",
+        "483045022100f5c26eee36e47b5ac824254398e1b82e2baaf53c645366bdd0b359e2cd01c010022067d6e273e289285360d49961152d599581446bbda5286e912073ac5f27ef266e0121024b0faa9624763002e963816b2f6774df0dedd770896a9511cb5c9d90f674ecda",
+        "Witness",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "1Czoy8xtddvcGrEhUUCZDQ9QqdRfKh697F"
+
+
 def test_cli_handles_direct_script_invocation(tmp_path) -> None:
     script_path = Path(__file__).resolve().parents[1] / "tools" / "pkscript_to_address.py"
     example = "\n".join(EXAMPLE_SCRIPT) + "\n"
