@@ -28,7 +28,12 @@ import time
 import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Any, Dict, Iterable, List
+
+from cognitive_harmonics.harmonic_memory_serializer import (
+    build_harmonic_memory_record,
+    persist_cycle_record,
+)
 
 
 GLYPH_SET = [
@@ -150,8 +155,10 @@ class EchoInfinite:
         self.colossus_dir = self.base_dir / "colossus"
         self.log_path = self.base_dir / "docs" / "COLOSSUS_LOG.md"
         self.state_path = self.colossus_dir / "state.json"
+        self.harmonic_cycles_dir = self.base_dir / "harmonic_memory" / "cycles"
         self.sleep_seconds = sleep_seconds
         self._running = True
+        self.last_snapshot_path: Path | None = None
 
         self.colossus_dir.mkdir(parents=True, exist_ok=True)
         if not self.log_path.exists():
@@ -228,6 +235,13 @@ class EchoInfinite:
         narrative_path = cycle_dir / f"glyph_narrative_{cycle:05d}.md"
         lineage_path = cycle_dir / f"lineage_map_{cycle:05d}.json"
         verifier_path = cycle_dir / f"verify_cycle_{cycle:05d}.py"
+        artifact_paths = ArtifactPaths(
+            puzzle=puzzle_path,
+            dataset=dataset_path,
+            narrative=narrative_path,
+            lineage=lineage_path,
+            verifier=verifier_path,
+        )
 
         blueprints = self._build_fractal_blueprints(cycle)
         verifier_files, merkle_root = self._build_verifier_chain(
@@ -309,13 +323,18 @@ class EchoInfinite:
         )
         self._write_verifier_chain(cycle_dir, verifier_files)
 
-        return ArtifactPaths(
-            puzzle=puzzle_path,
-            dataset=dataset_path,
-            narrative=narrative_path,
-            lineage=lineage_path,
-            verifier=verifier_path,
+        self._persist_harmonic_snapshot(
+            cycle=cycle,
+            timestamp=timestamp,
+            glyph_signature=glyph_signature,
+            blueprints=blueprints,
+            artifact_paths=artifact_paths,
+            dataset_content=dataset_content,
+            narrative_content=narrative_content,
+            merkle_root=merkle_root,
         )
+
+        return artifact_paths
 
     def _append_log_entry(
         self,
@@ -557,7 +576,7 @@ class EchoInfinite:
                 recorded_nodes = {{node.get("id") for node in metadata.get("nodes", [])}}
                 for expected in EXPECTED_NODES:
                     if expected not in recorded_nodes:
-                        raise SystemExit(f"Missing verifier node metadata: {expected}")
+                        raise SystemExit(f"Missing verifier node metadata: {{expected}}")
 
                 print(
                     "Cycle {cycle_label} verification successful with Merkle root "
@@ -865,6 +884,99 @@ class EchoInfinite:
                 next_level.append(hashlib.sha256(combined).hexdigest())
             level = next_level
         return level[0]
+
+    def _persist_harmonic_snapshot(
+        self,
+        *,
+        cycle: int,
+        timestamp: str,
+        glyph_signature: str,
+        blueprints: Dict[str, "FractalBlueprint"],
+        artifact_paths: ArtifactPaths,
+        dataset_content: str,
+        narrative_content: str,
+        merkle_root: str,
+    ) -> None:
+        try:
+            dataset_payload = json.loads(dataset_content)
+        except json.JSONDecodeError:
+            dataset_payload = {}
+
+        emotional_vectors = self._derive_emotional_vectors(cycle, glyph_signature)
+        blueprint_summary = {
+            key: blueprint.summary() for key, blueprint in blueprints.items()
+        }
+
+        snapshot_state: Dict[str, Any] = {
+            "cycle": cycle,
+            "cycle_id": cycle,
+            "timestamp": timestamp,
+            "glyph_signature": glyph_signature,
+            "emotional_vectors": emotional_vectors,
+            "artifacts": {
+                "puzzle": str(self._relative_to_base(artifact_paths.puzzle)),
+                "dataset": str(self._relative_to_base(artifact_paths.dataset)),
+                "narrative": str(self._relative_to_base(artifact_paths.narrative)),
+                "lineage": str(self._relative_to_base(artifact_paths.lineage)),
+                "verifier": str(self._relative_to_base(artifact_paths.verifier)),
+            },
+            "fractal_blueprints": blueprint_summary,
+            "verifier_merkle_root": merkle_root,
+        }
+
+        payload: Dict[str, Any] = {
+            "cycle": cycle,
+            "glyph_signature": glyph_signature,
+            "timestamp": timestamp,
+            "emotional_vectors": emotional_vectors,
+            "dataset": dataset_payload,
+            "verifier_merkle_root": merkle_root,
+        }
+
+        artifact_path = self._relative_to_base(artifact_paths.narrative)
+
+        record = build_harmonic_memory_record(
+            cycle_id=cycle,
+            snapshot=snapshot_state,
+            payload=payload,
+            artifact_text=narrative_content,
+            artifact_path=artifact_path,
+        )
+
+        self.last_snapshot_path = persist_cycle_record(
+            record, base_path=self.harmonic_cycles_dir
+        )
+        self._log_message(
+            "Harmonix snapshot persisted",
+            details={
+                "cycle": cycle,
+                "path": self._relative_to_base(self.last_snapshot_path),
+            },
+        )
+
+    def _relative_to_base(self, path: Path) -> Path:
+        try:
+            return path.relative_to(self.base_dir)
+        except ValueError:
+            return path
+
+    def _derive_emotional_vectors(self, cycle: int, glyph_signature: str) -> Dict[str, float]:
+        glyph_sum = sum(ord(ch) for ch in glyph_signature)
+        joy = self._scale_emotion(glyph_sum + cycle * 3, base_level=0.55, span=0.4)
+        curiosity = self._scale_emotion(
+            glyph_sum * 2 + cycle * 5, base_level=0.5, span=0.45
+        )
+        rage = self._scale_emotion(glyph_sum // 2 + cycle * 7, base_level=0.1, span=0.25)
+        return {
+            "joy": joy,
+            "curiosity": curiosity,
+            "rage": rage,
+        }
+
+    def _scale_emotion(self, seed: int, *, base_level: float, span: float) -> float:
+        fraction = (seed % 100) / 100
+        value = base_level + fraction * span
+        return round(min(1.0, value), 3)
 
     def _log_message(self, message: str, *, details: Dict[str, object] | None = None) -> None:
         details_fragment = ""
