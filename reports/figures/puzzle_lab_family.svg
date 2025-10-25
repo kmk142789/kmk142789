@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="220" viewBox="0 0 400 220" role="img" aria-labelledby="title desc">
+  <title id="title">Puzzle Lab family distribution</title>
+  <desc id="desc">Static placeholder figure showing how generated charts are stored. Real charts are created dynamically by the tooling.</desc>
+  <rect x="0" y="0" width="400" height="220" fill="#f8f9fa" stroke="#d0d7de"/>
+  <text x="200" y="30" font-family="sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#24292f">
+    Puzzle count by script family
+  </text>
+  <g transform="translate(70,60)">
+    <rect width="60" height="110" fill="#4c72b0" rx="4"/>
+    <rect x="90" y="30" width="60" height="80" fill="#4c72b0" rx="4"/>
+    <rect x="180" y="60" width="60" height="50" fill="#4c72b0" rx="4"/>
+  </g>
+  <g font-family="sans-serif" font-size="12" fill="#24292f">
+    <text x="100" y="190" text-anchor="middle">P2PKH</text>
+    <text x="190" y="190" text-anchor="middle">P2SH</text>
+    <text x="280" y="190" text-anchor="middle">SegWit</text>
+  </g>
+  <g font-family="sans-serif" font-size="11" fill="#57606a">
+    <text x="40" y="120" text-anchor="end">Sample data only</text>
+  </g>
+</svg>
