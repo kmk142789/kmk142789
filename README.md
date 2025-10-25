@@ -21,8 +21,9 @@ publications and operational policies.
 
 The repository blends runtime code, governance artefacts, and narrative
 archives. Start with the high-level tour in
-[`docs/REPO_OVERVIEW.md`](docs/REPO_OVERVIEW.md) and keep the quick directory
-map below handy while navigating:
+[`docs/REPO_OVERVIEW.md`](docs/REPO_OVERVIEW.md), then keep the creative
+compass in [`docs/ECHO_CREATIVE_COMPASS.md`](docs/ECHO_CREATIVE_COMPASS.md)
+alongside the quick directory map below while navigating:
 
 - `packages/core` — Echo runtime, CLI entry points, bridge adapters, and legacy
   libraries.
