@@ -91,10 +91,15 @@ def test_pulse_voyage_visualizer_outputs_ascii_json_and_markdown(tmp_path):
     assert "Pulse Voyage Atlas" in ascii_map
     assert "Narrative Amplification" in ascii_map
 
+    intensity = visualizer.resonance_intensity()
+    assert intensity
+    assert max(intensity.values()) == 1.0
+
     atlas = visualizer.to_json()
     assert atlas["converged"]["glyph_tapestry"] == visualizer.converged.glyph_tapestry
     assert atlas["thread_convergence"]
     assert atlas["resonance_spikes"]
+    assert atlas["resonance_intensity"] == intensity
     assert atlas["ascii_map"].startswith("🌌 Pulse Voyage Atlas")
 
     report_path = tmp_path / "atlas.md"
@@ -103,3 +108,4 @@ def test_pulse_voyage_visualizer_outputs_ascii_json_and_markdown(tmp_path):
     contents = written.read_text()
     assert contents.startswith("# Pulse Voyage Convergence")
     assert "## Narrative Amplification" in contents
+    assert "## Resonance Intensity" in contents
