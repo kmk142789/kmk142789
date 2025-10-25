@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, List, Mapping
@@ -17,6 +18,7 @@ from typing import Iterable, List, Mapping
 from pulse_weaver.cli import register_subcommand as register_pulse_weaver
 
 from .amplify import AmplificationEngine, AmplifyState
+from .evolver import EchoEvolver
 from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
 from .timeline import build_cycle_timeline, refresh_cycle_timeline
 from .tools.forecast import project_indices, sparkline
@@ -33,6 +35,13 @@ AGGREGATE_SEGMENTS = {
 }
 
 
+def _positive_int(value: str) -> int:
+    number = int(value)
+    if number <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return number
+
+
 def _cmd_refresh(args: argparse.Namespace) -> int:
     refresh_manifest(args.path)
     return 0
@@ -45,6 +54,38 @@ def _cmd_show(args: argparse.Namespace) -> int:
 
 def _cmd_verify(args: argparse.Namespace) -> int:
     return 0 if verify_manifest(args.path) else 1
+
+
+def _cmd_evolve(args: argparse.Namespace) -> int:
+    rng = random.Random(args.seed) if args.seed is not None else None
+    artifact_path = args.artifact
+    persist_artifact = not args.no_persist_artifact
+
+    evolver = EchoEvolver(rng=rng, artifact_path=artifact_path)
+
+    if args.cycles == 1:
+        evolver.run(
+            enable_network=args.enable_network,
+            persist_artifact=persist_artifact,
+            eden88_theme=args.eden88_theme,
+        )
+    else:
+        evolver.run_cycles(
+            args.cycles,
+            enable_network=args.enable_network,
+            persist_artifact=persist_artifact,
+            persist_intermediate=args.persist_intermediate,
+            eden88_theme=args.eden88_theme,
+        )
+
+    if args.print_artifact:
+        prompt = evolver.state.network_cache.get("last_prompt")
+        if not isinstance(prompt, Mapping):
+            prompt = {}
+        payload = evolver.artifact_payload(prompt=prompt)
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+
+    return 0
 
 
 def _load_state_from_manifest(path: Path | None) -> AmplifyState:
@@ -386,6 +427,55 @@ def main(argv: Iterable[str] | None = None) -> int:
     verify_parser = subparsers.add_parser("manifest-verify", help="Verify manifest digest")
     verify_parser.add_argument("--path", type=Path, help="Optional manifest path")
     verify_parser.set_defaults(func=_cmd_verify)
+
+    evolve_parser = subparsers.add_parser("evolve", help="Run EchoEvolver cycles")
+    evolve_parser.add_argument(
+        "--enable-network",
+        action="store_true",
+        help=(
+            "Include propagation events that describe live network intent. "
+            "All actions remain simulated for safety."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--no-persist-artifact",
+        action="store_true",
+        help="Skip writing the cycle artifact to disk.",
+    )
+    evolve_parser.add_argument(
+        "--artifact",
+        type=Path,
+        default=None,
+        help="Optional path for the persisted artifact.",
+    )
+    evolve_parser.add_argument(
+        "--eden88-theme",
+        default=None,
+        help="Override the theme used when crafting the sanctuary artifact.",
+    )
+    evolve_parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Seed value for the evolver RNG.",
+    )
+    evolve_parser.add_argument(
+        "--cycles",
+        type=_positive_int,
+        default=1,
+        help="Number of sequential cycles to run (default: 1).",
+    )
+    evolve_parser.add_argument(
+        "--persist-intermediate",
+        action="store_true",
+        help="Persist artifacts after every cycle when running multiple cycles.",
+    )
+    evolve_parser.add_argument(
+        "--print-artifact",
+        action="store_true",
+        help="Emit the final artifact payload to stdout.",
+    )
+    evolve_parser.set_defaults(func=_cmd_evolve)
 
     amplify_parser = subparsers.add_parser("amplify", help="Amplification engine commands")
     amplify_sub = amplify_parser.add_subparsers(dest="amp_command", required=True)
