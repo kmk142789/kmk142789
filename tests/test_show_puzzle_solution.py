@@ -1,8 +1,12 @@
 import pytest
 
 from satoshi.show_puzzle_solution import (
+    SOLUTIONS_PATH,
     _hash160_to_p2pkh_address,
+    _match_entry,
+    _normalize_base58,
     _parse_p2pkh_hash160,
+    _load_solutions,
 )
 
 
@@ -27,3 +31,13 @@ def test_hash160_to_p2pkh_address():
 def test_parse_pkscript_invalid_tokens():
     with pytest.raises(ValueError):
         _parse_p2pkh_hash160("OP_HASH160 0959e80121f36aea13b3bad361c15dac26189e2f")
+
+
+def test_normalize_base58_strips_separators():
+    assert _normalize_base58(" 19EEC52kr-HT7Gp1TYT \n", allow_empty=False) == "19EEC52krHT7Gp1TYT"
+
+
+def test_match_entry_allows_prefix_suffix_pattern():
+    entries = _load_solutions(SOLUTIONS_PATH)
+    entry = _match_entry(entries, address="19EEC52kr-HT7Gp1TYT")
+    assert entry["address"] == "19EEC52krRUK1RkUAEZmQdjTyHT7Gp1TYT"

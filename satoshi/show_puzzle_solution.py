@@ -43,6 +43,7 @@ def _double_sha256(data: bytes) -> bytes:
 
 
 _ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+_BASE58_SEPARATORS = {" ", "\t", "\n", "\r", "-", "_"}
 
 
 def _b58encode(data: bytes) -> str:
@@ -58,6 +59,30 @@ def _b58encode(data: bytes) -> str:
     stripped = data.lstrip(b"\x00")
     pad = len(data) - len(stripped)
     return "1" * pad + "".join(reversed(enc or ["1"]))
+
+
+def _normalize_base58(value: str, *, allow_empty: bool = False) -> str:
+    """Remove non-Base58 separator characters from ``value``.
+
+    The helper accepts a handful of common separators (whitespace, ``-`` and
+    ``_``) so that partial or human-formatted addresses can be matched
+    robustly.  Any other invalid character raises ``ValueError`` as it would
+    imply the input cannot represent a Bitcoin Base58 string.
+    """
+
+    filtered = []
+    for char in value:
+        if char in _ALPHABET:
+            filtered.append(char)
+        elif char in _BASE58_SEPARATORS:
+            continue
+        else:
+            raise ValueError("Address contains invalid Base58 characters")
+
+    result = "".join(filtered)
+    if not result and not allow_empty:
+        raise ValueError("Address did not contain any Base58 characters")
+    return result
 
 
 def _hex_priv_to_wif(hex_key: str, *, compressed: bool = True, version: int = 0x80) -> str:
@@ -137,13 +162,42 @@ def _match_entry(
     hash160: Optional[str] = None,
 ) -> Dict[str, Any]:
     target_hash = hash160.lower() if hash160 else None
+
+    normalized_address: Optional[str] = None
+    prefix: Optional[str] = None
+    suffix: Optional[str] = None
+    pattern_matches = []
+
+    if address:
+        if "-" in address:
+            left, right = address.split("-", 1)
+            prefix = _normalize_base58(left, allow_empty=True)
+            suffix = _normalize_base58(right, allow_empty=True)
+            if not prefix and not suffix:
+                raise SystemExit("Address pattern must include Base58 characters.")
+        else:
+            try:
+                normalized_address = _normalize_base58(address)
+            except ValueError as exc:
+                raise SystemExit(str(exc)) from exc
+
     for entry in entries:
         if bits is not None and entry.get("bits") == bits:
             return entry
-        if address and entry.get("address") == address:
+        entry_address = entry.get("address")
+        if normalized_address and entry_address == normalized_address:
             return entry
         if target_hash and entry.get("hash160_compressed", "").lower() == target_hash:
             return entry
+        if prefix is not None and suffix is not None:
+            if entry_address.startswith(prefix) and entry_address.endswith(suffix):
+                pattern_matches.append(entry)
+
+    if pattern_matches:
+        if len(pattern_matches) == 1:
+            return pattern_matches[0]
+        raise SystemExit("Multiple entries matched the address pattern; refine the query.")
+
     raise SystemExit("Could not locate a matching puzzle entry.")
 
 
