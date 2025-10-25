@@ -146,3 +146,4 @@ public key, and the corresponding WIF-encoded private key.
 - `puzzle135.json` — Puzzle #135 authorship attestation for address `19oYXNK6EVPp36RAUUDnhUn4ZUEDAgYKiz`.
 - `puzzle140.json` — Puzzle #140 authorship attestation for address `1EtLX3JTu6aMUUv9ASwRWPCHUKFRE4nMmT`.
 - `puzzle141.json` — Puzzle #141 authorship attestation for address `1EK2HUPMXYtuKjhWUDA6gfzrZhUExDPVFh`.
+- `puzzle142.json` — Puzzle #142 authorship attestation for address `15MnK2jXPqTMURX4xC3h4mAZxyCcaWWEDD`.
