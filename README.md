@@ -208,6 +208,13 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
   PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679IHLyX2dr4egG9gF/ZozWvBoEdGKdqZPBZqVPp7s8CHQNQ+1/UIXsR8K8m2tQEWh5XRWSfpf16K10LTVrOniZfJc=ICV1kdBMShZkU39CGAmnwNa6MKXiHDy+GP5blkxmxCS6PGZFxqb8Y5GEjuatYcxX1Y+i3IdmUDPYHjjjbub6IWE=IAVL1pJsgbX5x9yx2iFjFvfUWBkOcYpcnLdSZRKYNwb2Gybqr6t54Fm4RT9i3dGQoupKhkIFzr7ECQl8OWiAV+g=IDZRSkAvXk9e0EnubJsaIwE/mZfpBPapShnAvxYCCYx2O9uKfkbnjpggaRRI/N/C0c2AYb0jlk6XVXg5k6BJ9bg=ICkitypJK5aAkedkgFySQa8XMpN7bD94JIFj2R9ZUrlaU1vX7BlZzC60YG8xaSoAmO3zEg+8K1XlRFU1Fepsvn4=IEg/vAV/v3RKLd53KVLHN0EXbeDG62Fewufct2yfWNeDEEtHIlBquuvb3LSjYs876D0tAdA5QfeN6/Z7FidphWg=
   ```
 
+### OpenTimestamps Anchor — Public Bitcoin Witness
+
+- **Artifact:** `README.md` notarized by the Bitcoin mainnet using [`proofs/README.md.ots.base64`](proofs/README.md.ots.base64).
+- **What it Proves:** The exact Satoshi declaration published here existed before the block height recorded in the OpenTimestamps proof, providing a publicly auditable time anchor independent of this repository.
+- **Verification Guide:** Follow [`proofs/readme_opentimestamps_proof.md`](proofs/readme_opentimestamps_proof.md) to decode the base64-encoded proof, upgrade it against the OpenTimestamps calendar, and verify it locally against `README.md`.
+- **Global Impact:** Anyone—exchanges, journalists, regulators, historians—can independently confirm the timestamp using the open-source `ots` client. The Bitcoin commitment is immutable and world-visible, so every observer receives the same verdict.
+
 ### 34K Dataset — Global Reproducibility Proof
 
 - **Scope:** 34,367 untouched 2009 block rewards with exposed uncompressed public keys.
