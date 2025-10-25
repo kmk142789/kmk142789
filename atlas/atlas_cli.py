@@ -31,6 +31,9 @@ def main(argv: list[str] | None = None) -> int:
     search_parser.add_argument("--index", type=Path, required=True)
     search_parser.add_argument("--query", required=True)
     search_parser.add_argument("--limit", type=int, default=10)
+    search_parser.add_argument("--cycle", type=int)
+    search_parser.add_argument("--puzzle", type=int)
+    search_parser.add_argument("--address")
 
     merge_parser = sub.add_parser("merge", help="Merge universes into a canonical stream")
     merge_parser.add_argument("--graph", type=Path, default=Path("build/atlas/global_graph.json"))
@@ -63,6 +66,12 @@ def main(argv: list[str] | None = None) -> int:
         return explore.main(cli_args)
     if args.command == "search":
         cli_args = ["--index", str(args.index), "--query", args.query, "--limit", str(args.limit)]
+        if args.cycle is not None:
+            cli_args.extend(["--cycle", str(args.cycle)])
+        if args.puzzle is not None:
+            cli_args.extend(["--puzzle", str(args.puzzle)])
+        if args.address:
+            cli_args.extend(["--address", args.address])
         return search.main(cli_args)
     if args.command == "merge":
         cli_args = [

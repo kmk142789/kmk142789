@@ -92,15 +92,19 @@ def _build_search_index(graph: FederationGraph, index_path: Path) -> None:
                 text_bits.append(json.dumps(value, sort_keys=True))
         if node.content:
             text_bits.append(node.content)
-        entries.append(
-            {
-                "node_id": node.node_id,
-                "universe": node.universe,
-                "artifact_id": node.artifact_id,
-                "timestamp": node.timestamp,
-                "text": " \n".join(text_bits),
-            }
-        )
+        entry = {
+            "node_id": node.node_id,
+            "universe": node.universe,
+            "artifact_id": node.artifact_id,
+            "timestamp": node.timestamp,
+            "text": " \n".join(text_bits),
+        }
+        harmonix = node.metadata.get("harmonix")
+        if isinstance(harmonix, dict):
+            entry["cycle"] = harmonix.get("cycle")
+            entry["puzzle_id"] = harmonix.get("puzzle_id")
+            entry["address"] = harmonix.get("address")
+        entries.append(entry)
     payload = {"version": 1, "entries": entries}
     with index_path.joinpath("index.json").open("w", encoding="utf-8") as fh:
         json.dump(payload, fh, indent=2, sort_keys=True)
