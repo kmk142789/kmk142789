@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[project]
+name = "echo-habitat"
+version = "0.1.0"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]",
+  "pydantic>=2",
+  "celery>=5",
+  "redis>=5",
+  "sqlalchemy>=2",
+  "duckdb>=1.0",
+  "numpy",
+  "scikit-learn",
+  "tiktoken",
+  "dirtyjson",
+]
