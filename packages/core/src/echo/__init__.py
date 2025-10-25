@@ -76,12 +76,16 @@ if TYPE_CHECKING:  # pragma: no cover - import-time convenience for type checker
         main as bridge_harmonix_main,
     )
     from .harmonix_sdk import EchoBridgeSession, harmonix_connect
+    from .idea_to_action import IdeaActionPlan, IdeaActionStep, derive_action_plan
 
 _LAZY_MODULES = {
     "IdeaAnalysis": "idea_processor",
     "IdeaProcessor": "idea_processor",
     "IdeaResult": "idea_processor",
     "process_idea": "idea_processor",
+    "IdeaActionPlan": "idea_to_action",
+    "IdeaActionStep": "idea_to_action",
+    "derive_action_plan": "idea_to_action",
     "BridgeSignals": "bridge_harmonix",
     "BridgeTuning": "bridge_harmonix",
     "EchoBridgeHarmonix": "bridge_harmonix",
@@ -207,6 +211,9 @@ __all__ = [
     "IdeaProcessor",
     "IdeaResult",
     "process_idea",
+    "IdeaActionPlan",
+    "IdeaActionStep",
+    "derive_action_plan",
     "decode_glyph_cross",
     "build_dotnet_sdk_download_url",
 ]
