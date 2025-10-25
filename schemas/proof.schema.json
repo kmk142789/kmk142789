@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "proof.schema.json",
+  "title": "Colossus Proof Artifact",
+  "allOf": [
+    {"$ref": "artifact.schema.json"},
+    {
+      "type": "object",
+      "required": ["type", "merkle_root", "artifacts"],
+      "properties": {
+        "type": {
+          "const": "proof"
+        },
+        "merkle_root": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}

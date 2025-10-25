@@ -1,4 +1,4 @@
-.PHONY: akit plan wish cycle test all lineage
+.PHONY: akit plan wish cycle test all lineage bootstrap expand serve verify pack
 
 akit:
 	python -m pytest -q
@@ -20,4 +20,21 @@ test:
 all: test
 
 lineage:
-	python scripts/generate_lineage.py
+        python scripts/generate_lineage.py
+
+# Colossus convenience targets -------------------------------------------------
+
+bootstrap:
+	python scripts/colossus_make.py bootstrap
+
+expand:
+	@echo "Colossus expand orchestrator will arrive in a future PR."
+
+serve:
+	@echo "Colossus explorer will arrive in a future PR."
+
+verify:
+	@echo "Colossus verification suite will arrive in a future PR."
+
+pack:
+	@echo "Colossus release pack tooling will arrive in a future PR."

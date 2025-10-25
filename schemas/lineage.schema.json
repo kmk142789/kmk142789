@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lineage.schema.json",
+  "title": "Colossus Lineage Artifact",
+  "allOf": [
+    {"$ref": "artifact.schema.json"},
+    {
+      "type": "object",
+      "required": ["nodes", "edges"],
+      "properties": {
+        "type": {
+          "const": "lineage"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "label"],
+            "properties": {
+              "id": {"type": "string"},
+              "label": {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["source", "target"],
+            "properties": {
+              "source": {"type": "string"},
+              "target": {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ]
+}
