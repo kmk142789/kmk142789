@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -63,6 +64,8 @@ class EvolverState:
     system_metrics: SystemMetrics = field(default_factory=SystemMetrics)
     vault_key: Optional[str] = None
     glyph_vortex: Optional[str] = None
+    quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capabilities: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -88,9 +91,19 @@ class EchoEvolver:
         glyphs = self.generate_symbolic_language()
         mythocode = self.invent_mythocode()
         key = self.quantum_safe_crypto()
+        ability = self.synthesize_quantam_ability()
+        capabilities = self.amplify_quantam_evolution(ability)
         metrics = self.system_monitor()
         narrative = self.compose_narrative()
-        payload = self.persist_cycle(glyphs, mythocode, key, narrative, metrics)
+        payload = self.persist_cycle(
+            glyphs,
+            mythocode,
+            key,
+            narrative,
+            metrics,
+            ability,
+            capabilities,
+        )
         return payload
 
     # ------------------------------------------------------------------
@@ -135,6 +148,43 @@ class EchoEvolver:
         self.state.vault_key = key
         return key
 
+    def synthesize_quantam_ability(self) -> Dict[str, object]:
+        """Create a quantam ability snapshot anchored to the current cycle."""
+
+        ability_id = f"quantam-orbit-{self.state.cycle:04d}"
+        base_material = (
+            f"{self.state.cycle}|{self.state.glyphs}|{self.state.vault_key or 'void'}|"
+            f"{self.state.emotional_drive.joy:.4f}"
+        )
+        signature = hashlib.sha256(base_material.encode("utf-8")).hexdigest()[:16]
+        entanglement = _round_float(self.rng.uniform(0.72, 0.96))
+        lattice_spin = _round_float(self.rng.uniform(0.61, 0.88))
+        ability = {
+            "id": ability_id,
+            "status": "ignited",
+            "oam_signature": signature,
+            "entanglement": entanglement,
+            "lattice_spin": lattice_spin,
+        }
+        self.state.quantam_abilities[ability_id] = ability
+        return ability
+
+    def amplify_quantam_evolution(self, ability: Dict[str, object]) -> Dict[str, float]:
+        """Amplify the quantam evolution metrics derived from the current ability."""
+
+        resonance = _round_float(0.84 + self.rng.random() * 0.1)
+        coherence = _round_float(0.69 + self.rng.random() * 0.2)
+        entanglement = float(ability["entanglement"])
+        horizon = _round_float(min(0.99, entanglement * 1.07))
+        capabilities = {
+            "resonance": resonance,
+            "coherence": coherence,
+            "entanglement": _round_float(entanglement),
+            "horizon": horizon,
+        }
+        self.state.quantam_capabilities = capabilities
+        return capabilities
+
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
         metrics.cpu_usage = self.rng.uniform(12.0, 54.0)
@@ -163,6 +213,8 @@ class EchoEvolver:
         key: str,
         narrative: str,
         metrics: SystemMetrics,
+        ability: Dict[str, object],
+        capabilities: Dict[str, float],
     ) -> Dict[str, object]:
         payload: Dict[str, object] = {
             "cycle": self.state.cycle,
@@ -173,6 +225,9 @@ class EchoEvolver:
             "vault_key": key,
             "emotional_drive": self.state.emotional_drive.as_dict(),
             "system_metrics": metrics.as_dict(),
+            "quantam_ability": dict(ability),
+            "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capabilities": dict(capabilities),
         }
 
         serialised = json.dumps(payload, indent=2)
