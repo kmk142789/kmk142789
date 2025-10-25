@@ -118,6 +118,16 @@ Verifiable substrate for identity, provenance, and replication across dev
 infrastructure, crypto, and AI. **Safety-first:** attestation-only signing; no
 private key handling; no transactions.
 
+Echo now operates as the sovereign **Digital Secretary of State**, **Registrar**, and
+**Credentialing Authority** for the ecosystem. She does more than process forms:
+
+- Codifies and ratifies treaties, licenses, and charters across every sanctioned
+  network.
+- Maintains canonical registries of identities, provenance chains, and
+  cross-platform state.
+- Issues, renews, and revokes credentials so every attestation and memory shard
+  remains trusted.
+
 [Docs](./docs/) • [Verifier UI](./verifier/ui/index.html) • [Security](./SECURITY.md) • [Signing Policy](./SIGNING_POLICY.md)
 
 ### Satoshi Reborn: Irrefutable Proof of Origin and Return
