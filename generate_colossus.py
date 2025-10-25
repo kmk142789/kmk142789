@@ -26,6 +26,8 @@ import hashlib
 import pathlib
 from typing import Dict, Iterable, List, Optional, Tuple
 
+from colossus_chronos import ChronosLattice, ChronosLatticeExplorer
+
 ALPHABET = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
@@ -81,7 +83,11 @@ def write_json(path: pathlib.Path, obj: dict) -> str:
     return sha256_hex(s.encode())
 
 
-def generate_records(count: int, root: pathlib.Path) -> Tuple[List[Tuple[int, str]], Dict[str, str], List[dict]]:
+def generate_records(
+    count: int,
+    root: pathlib.Path,
+    chronos: ChronosLattice | None = None,
+) -> Tuple[List[Tuple[int, str]], Dict[str, str], List[dict]]:
     paths = ensure_dirs(root)
     edges: List[Tuple[int, str]] = []
     proofs: Dict[str, str] = {}
@@ -110,15 +116,45 @@ def generate_records(count: int, root: pathlib.Path) -> Tuple[List[Tuple[int, st
         record["checksum"] = sha256_hex(payload)
 
         fpath = paths["data"] / f"puzzle_{i:05d}.json"
+        chronos_meta = None
+        if chronos is not None:
+            rel_path = str(fpath.relative_to(root))
+            chronos_meta = chronos.register_artifact(
+                ordinal=i,
+                record_id=record["id"],
+                rel_path=rel_path,
+                payload_sha256=record["checksum"],
+            )
+            record["chronos"] = {
+                "cycle": chronos_meta["cycle"],
+                "ordinal": chronos_meta["ordinal"],
+                "artifact_id": chronos_meta["artifact_id"],
+                "time_pulse": {
+                    "signature": chronos_meta["signature"],
+                    "previous_signature": chronos_meta["previous_signature"],
+                    "timestamp_unix_ns": chronos_meta["timestamp_unix_ns"],
+                    "chain_anchor": chronos_meta["chain_anchor"],
+                },
+            }
+
         proofs[str(fpath.relative_to(root))] = write_json(fpath, record)
         edges.append((i, addr))
-        viewer_index.append({
+        viewer_entry = {
             "id": i,
             "name": record["name"],
             "hash160": record["hash160"],
             "address_base58": record["address_base58"],
             "file": str(fpath.relative_to(root)),
-        })
+        }
+        if chronos_meta is not None:
+            viewer_entry.update(
+                {
+                    "chronos_cycle": chronos_meta["cycle"],
+                    "chronos_signature": chronos_meta["signature"],
+                    "chronos_anchor": chronos_meta["chain_anchor"],
+                }
+            )
+        viewer_index.append(viewer_entry)
 
         if i % 1000 == 0:
             print(f"[+] {i} records", file=sys.stderr)
@@ -137,7 +173,13 @@ def write_lineage(edges: List[Tuple[int, str]], out_dir: pathlib.Path) -> None:
     (out_dir / "lineage.dot").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_verification_summary(proofs: Dict[str, str], out_dir: pathlib.Path, total: int) -> None:
+def write_verification_summary(
+    proofs: Dict[str, str],
+    out_dir: pathlib.Path,
+    total: int,
+    chronos_tail_signature: Optional[str] = None,
+    chronos_cycle_index: Optional[int] = None,
+) -> None:
     rollup_str = json.dumps(proofs, sort_keys=True, separators=(",", ":")).encode()
     rollup_sha = sha256_hex(rollup_str)
     summary = {
@@ -146,6 +188,10 @@ def write_verification_summary(proofs: Dict[str, str], out_dir: pathlib.Path, to
         "files": proofs,
         "rollup_sha256": rollup_sha,
     }
+    if chronos_tail_signature is not None:
+        summary["chronos_latest_signature"] = chronos_tail_signature
+    if chronos_cycle_index is not None:
+        summary["chronos_cycle_index"] = chronos_cycle_index
     (out_dir / "verification_summary.json").write_text(
         json.dumps(summary, sort_keys=True, indent=2) + "\n", encoding="utf-8"
     )
@@ -168,6 +214,7 @@ Generated **{count}** synthetic Bitcoin-like records with stdlib-only Python.
 - `build/lineage/lineage.dot` — lineage graph (use Graphviz)
 - `build/proofs/verification_summary.json` — file checksums and rollup
 - `build/viewer/puzzles_index.json` — lightweight index for the static viewer
+- `build/chronos/` — Chronos cycle snapshots, future anchors, and lattice state
 
 ## Commands
 Render lineage (requires Graphviz):
@@ -182,6 +229,12 @@ Query a record by id or address:
 
 python generate_colossus.py --root ./echo_colossus --query-id 42
 python generate_colossus.py --root ./echo_colossus --query-address 1ABC...
+
+Chronos lattice exploration:
+
+python generate_colossus.py --root ./echo_colossus --chronos-lineage
+python generate_colossus.py --root ./echo_colossus --chronos-artifact cycle_00001#artifact_00001
+python generate_colossus.py --root ./echo_colossus --reconstruct-artifact 42
 
 Serve the viewer (from the dataset root):
 
@@ -226,6 +279,29 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--root", type=str, default="./echo_colossus", help="Output root directory")
     parser.add_argument("--query-id", type=int, default=None, help="Look up a single record by id")
     parser.add_argument("--query-address", type=str, default=None, help="Look up a record by Base58 address")
+    parser.add_argument(
+        "--chronos-artifact",
+        type=str,
+        default=None,
+        help="Inspect a Chronos artifact by id, record id, or signature",
+    )
+    parser.add_argument(
+        "--chronos-cycle",
+        type=int,
+        default=None,
+        help="Show a Chronos cycle snapshot",
+    )
+    parser.add_argument(
+        "--chronos-lineage",
+        action="store_true",
+        help="List the Chronos lattice lineage",
+    )
+    parser.add_argument(
+        "--reconstruct-artifact",
+        type=str,
+        default=None,
+        help="Reconstruct artifact data and verify its lattice signature",
+    )
     return parser.parse_args(argv)
 
 
@@ -234,29 +310,70 @@ def main(argv: Optional[List[str]] = None) -> None:
     root = pathlib.Path(args.root).resolve()
     root.mkdir(parents=True, exist_ok=True)
 
-    if args.query_id is not None or args.query_address is not None:
-        if args.query_id is not None and args.query_address is not None:
-            print("[!] Please supply either --query-id or --query-address, not both", file=sys.stderr)
-            sys.exit(1)
-
+    if (
+        args.query_id is not None
+        or args.query_address is not None
+        or args.chronos_artifact is not None
+        or args.chronos_cycle is not None
+        or args.chronos_lineage
+        or args.reconstruct_artifact is not None
+    ):
         try:
-            if args.query_id is not None:
-                record = query_by_id(root, args.query_id)
-            else:
-                record = query_by_address(root, args.query_address)  # type: ignore[arg-type]
-                if record is None:
-                    print("[!] Address not found", file=sys.stderr)
+            if args.query_id is not None or args.query_address is not None:
+                if args.query_id is not None and args.query_address is not None:
+                    print("[!] Please supply either --query-id or --query-address, not both", file=sys.stderr)
                     sys.exit(1)
-            print(json.dumps(record, indent=2, sort_keys=True))
-        except FileNotFoundError as exc:
+
+                if args.query_id is not None:
+                    record = query_by_id(root, args.query_id)
+                else:
+                    record = query_by_address(root, args.query_address)  # type: ignore[arg-type]
+                    if record is None:
+                        print("[!] Address not found", file=sys.stderr)
+                        sys.exit(1)
+                print(json.dumps(record, indent=2, sort_keys=True))
+                return
+
+            explorer = ChronosLatticeExplorer(root)
+            if args.chronos_lineage:
+                payload = explorer.lineage()
+            elif args.chronos_cycle is not None:
+                payload = explorer.cycle_detail(args.chronos_cycle)
+            elif args.chronos_artifact is not None:
+                artifact, cycle = explorer.artifact_lookup(args.chronos_artifact)
+                payload = {"artifact": artifact, "cycle": cycle}
+            elif args.reconstruct_artifact is not None:
+                payload = explorer.reconstruct(args.reconstruct_artifact)
+            else:  # pragma: no cover - defensive guard
+                payload = {}
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return
+        except (FileNotFoundError, KeyError) as exc:
             print(f"[!] {exc}", file=sys.stderr)
             sys.exit(1)
-        return
 
     print(f"[.] Generating {args.count} records into {root}", file=sys.stderr)
-    edges, proofs, viewer_index = generate_records(args.count, root)
+    chronos = ChronosLattice(root)
+    chronos.start_cycle(args.count)
+    edges, proofs, viewer_index = generate_records(args.count, root, chronos)
+    chronos_cycle = chronos.finalize_cycle()
+    chronos_tail = None
+    chronos_index = None
+    if isinstance(chronos_cycle, dict):
+        chronos_index = chronos_cycle.get("cycle_index")
+        artifacts = chronos_cycle.get("artifacts", [])
+        if isinstance(artifacts, list) and artifacts:
+            last = artifacts[-1]
+            if isinstance(last, dict):
+                chronos_tail = last.get("time_pulse_signature")
     write_lineage(edges, root / "build" / "lineage")
-    write_verification_summary(proofs, root / "build" / "proofs", total=args.count)
+    write_verification_summary(
+        proofs,
+        root / "build" / "proofs",
+        total=args.count,
+        chronos_tail_signature=chronos_tail if isinstance(chronos_tail, str) else None,
+        chronos_cycle_index=int(chronos_index) if isinstance(chronos_index, int) else None,
+    )
     write_viewer_index(viewer_index, root / "build" / "viewer")
     write_readme(root, args.count)
     print("[\u2713] Done")
