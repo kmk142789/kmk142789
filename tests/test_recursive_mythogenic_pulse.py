@@ -9,6 +9,7 @@ from echo.recursive_mythogenic_pulse import (
     compose_voyage,
     generate_ascii_spiral,
     list_voyage_lines,
+    PulseVoyageVisualizer,
     sync_memories,
 )
 
@@ -80,3 +81,25 @@ def test_amplify_capabilities_limits_thread_highlights():
 
     trimmed = amplify_capabilities(converged, include_threads=0)
     assert " - " not in trimmed
+
+
+def test_pulse_voyage_visualizer_outputs_ascii_json_and_markdown(tmp_path):
+    voyage = compose_voyage(seed=8, recursion_level=2)
+    visualizer = PulseVoyageVisualizer.from_voyages([voyage])
+
+    ascii_map = visualizer.ascii_map()
+    assert "Pulse Voyage Atlas" in ascii_map
+    assert "Narrative Amplification" in ascii_map
+
+    atlas = visualizer.to_json()
+    assert atlas["converged"]["glyph_tapestry"] == visualizer.converged.glyph_tapestry
+    assert atlas["thread_convergence"]
+    assert atlas["resonance_spikes"]
+    assert atlas["ascii_map"].startswith("🌌 Pulse Voyage Atlas")
+
+    report_path = tmp_path / "atlas.md"
+    written = visualizer.write_markdown_report(report_path)
+    assert written.exists()
+    contents = written.read_text()
+    assert contents.startswith("# Pulse Voyage Convergence")
+    assert "## Narrative Amplification" in contents
