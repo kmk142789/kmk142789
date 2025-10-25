@@ -7,13 +7,20 @@ from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulse import CrossLedgerSynchronizer, PulseLedger
 
 
-def _log_receipt(ledger: PulseLedger, timestamp: datetime, *, diff: str) -> str:
+def _log_receipt(
+    ledger: PulseLedger,
+    timestamp: datetime,
+    *,
+    diff: str,
+    harmonix: dict | None = None,
+) -> str:
     with patch.object(PulseLedger, "_timestamp", return_value=timestamp):
         receipt = ledger.log(
             diff_signature=diff,
             actor="echo",
             result="ok",
             seed="seed",
+            harmonix=harmonix,
         )
     return receipt.signature
 
@@ -26,8 +33,28 @@ def test_cross_ledger_sync_appends_and_deduplicates(tmp_path) -> None:
     first_ts = datetime(2024, 1, 1, 12, 30, tzinfo=timezone.utc)
     second_ts = datetime(2024, 1, 2, 15, 45, tzinfo=timezone.utc)
 
-    first_signature = _log_receipt(pulse_ledger, first_ts, diff="diff-one")
-    second_signature = _log_receipt(pulse_ledger, second_ts, diff="diff-two")
+    first_signature = _log_receipt(
+        pulse_ledger,
+        first_ts,
+        diff="diff-one",
+        harmonix={
+            "snapshot_id": "harmonix::cycle-0001",
+            "cycle": 1,
+            "timestamp": "2025-01-01T00:00:00Z",
+            "recursion_hash": "hash-one",
+        },
+    )
+    second_signature = _log_receipt(
+        pulse_ledger,
+        second_ts,
+        diff="diff-two",
+        harmonix={
+            "snapshot_id": "harmonix::cycle-0002",
+            "cycle": 2,
+            "timestamp": "2025-01-02T00:00:00Z",
+            "recursion_hash": "hash-two",
+        },
+    )
 
     temporal_ledger = TemporalLedger(state_dir=state_dir)
     synchronizer = CrossLedgerSynchronizer(
@@ -46,6 +73,8 @@ def test_cross_ledger_sync_appends_and_deduplicates(tmp_path) -> None:
     assert len(entries) == 2
     assert entries[0].proof_id == first_signature
     assert entries[1].proof_id == second_signature
+    assert entries[0].harmonix is not None
+    assert entries[0].harmonix.recursion_hash == "hash-one"
 
     assert synchronizer.sync() == []
     assert temporal_ledger.entries() == entries

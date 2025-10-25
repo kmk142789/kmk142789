@@ -24,9 +24,12 @@ import textwrap
 import time
 import hashlib
 import pathlib
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from colossus_chronos import ChronosLattice, ChronosLatticeExplorer
+
+# Tools module import is intentionally deferred in ``update_federated_index`` to
+# avoid an eager dependency during query-only invocations.
 
 ALPHABET = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
@@ -204,6 +207,52 @@ def write_viewer_index(entries: Iterable[dict], out_dir: pathlib.Path) -> None:
     )
 
 
+def update_federated_index(
+    *,
+    repo_root: pathlib.Path,
+    colossus_root: pathlib.Path,
+    output_path: pathlib.Path,
+    artifact_type: str = "glyph-reconstruction",
+    puzzle_range: Tuple[int, int] = (141, 1000),
+    federation_streams: Sequence[str] = (
+        "pulse",
+        "anchor",
+        "glyph",
+        "satoshi-reconstruction",
+    ),
+) -> None:
+    """Regenerate the federated Colossus index using the tools client."""
+
+    try:
+        from tools import colossus_index
+    except Exception as exc:  # pragma: no cover - defensive guard
+        raise RuntimeError("Unable to import tools.colossus_index") from exc
+
+    cycles = colossus_index.load_colossus_cycles(colossus_root)
+    puzzle_solutions = colossus_index.collect_puzzle_solutions(
+        puzzle_range[0], puzzle_range[1], root=repo_root / "puzzle_solutions"
+    )
+    pulse = colossus_index.load_pulse_summary(
+        repo_root / "pulse.json", repo_root / "pulse_history.json"
+    )
+    anchor = colossus_index.load_anchor_summary(
+        repo_root / "genesis_ledger" / "ledger.jsonl"
+    )
+
+    context = colossus_index.build_context(
+        artifact_type=artifact_type,
+        puzzle_range=puzzle_range,
+        federation_sources=federation_streams,
+        cycles=cycles,
+        puzzle_solutions=puzzle_solutions,
+        pulse=pulse,
+        anchor=anchor,
+    )
+    content = colossus_index.build_master_index(context)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(content, encoding="utf-8")
+
+
 def write_readme(root: pathlib.Path, count: int) -> None:
     text = f"""# Echo Colossus
 
@@ -302,6 +351,17 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         default=None,
         help="Reconstruct artifact data and verify its lattice signature",
     )
+    parser.add_argument(
+        "--federated-index",
+        type=str,
+        default="federated_colossus_index.md",
+        help="Destination for the federated Colossus index (relative to repo root unless absolute)",
+    )
+    parser.add_argument(
+        "--skip-federated-index",
+        action="store_true",
+        help="Disable federated index regeneration after dataset creation",
+    )
     return parser.parse_args(argv)
 
 
@@ -309,6 +369,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     args = parse_args(argv)
     root = pathlib.Path(args.root).resolve()
     root.mkdir(parents=True, exist_ok=True)
+    repo_root = pathlib.Path(__file__).resolve().parent
 
     if (
         args.query_id is not None
@@ -376,6 +437,15 @@ def main(argv: Optional[List[str]] = None) -> None:
     )
     write_viewer_index(viewer_index, root / "build" / "viewer")
     write_readme(root, args.count)
+    if not args.skip_federated_index:
+        index_path = pathlib.Path(args.federated_index)
+        if not index_path.is_absolute():
+            index_path = (repo_root / index_path).resolve()
+        update_federated_index(
+            repo_root=repo_root,
+            colossus_root=root,
+            output_path=index_path,
+        )
     print("[\u2713] Done")
 
 

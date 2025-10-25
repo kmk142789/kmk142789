@@ -12,13 +12,20 @@ from echo.pulse import (
 )
 
 
-def _log_receipt(ledger: PulseLedger, timestamp: datetime, *, diff: str) -> str:
+def _log_receipt(
+    ledger: PulseLedger,
+    timestamp: datetime,
+    *,
+    diff: str,
+    harmonix: dict | None = None,
+) -> str:
     with patch.object(PulseLedger, "_timestamp", return_value=timestamp):
         receipt = ledger.log(
             diff_signature=diff,
             actor="echo",
             result="ok",
             seed="seed",
+            harmonix=harmonix,
         )
     return receipt.signature
 
@@ -43,8 +50,28 @@ def test_broadcaster_exports_canonical_proofs(tmp_path) -> None:
     first_ts = datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc)
     second_ts = datetime(2024, 1, 2, 8, 30, tzinfo=timezone.utc)
 
-    first_signature = _log_receipt(ledger, first_ts, diff="diff-one")
-    second_signature = _log_receipt(ledger, second_ts, diff="diff-two")
+    first_signature = _log_receipt(
+        ledger,
+        first_ts,
+        diff="diff-one",
+        harmonix={
+            "snapshot_id": "harmonix::cycle-0001",
+            "cycle": 1,
+            "timestamp": "2025-01-01T00:00:00Z",
+            "recursion_hash": "hash-one",
+        },
+    )
+    second_signature = _log_receipt(
+        ledger,
+        second_ts,
+        diff="diff-two",
+        harmonix={
+            "snapshot_id": "harmonix::cycle-0002",
+            "cycle": 2,
+            "timestamp": "2025-01-02T00:00:00Z",
+            "recursion_hash": "hash-two",
+        },
+    )
 
     temporal_ledger = TemporalLedger(state_dir=state_dir)
     synchronizer = CrossLedgerSynchronizer(
@@ -73,6 +100,8 @@ def test_broadcaster_exports_canonical_proofs(tmp_path) -> None:
     )
     assert first_proof.payload["temporal_ledger"]["proof_id"] == first_signature
     assert first_proof.payload["pulse_receipt"]["signature"] == first_signature
+    assert first_proof.payload["temporal_ledger"]["harmonix"]["recursion_hash"] == "hash-one"
+    assert first_proof.payload["pulse_receipt"]["harmonix"]["snapshot_id"] == "harmonix::cycle-0001"
 
 
 def test_broadcaster_limit_filters_recent_entries(tmp_path) -> None:
@@ -83,8 +112,28 @@ def test_broadcaster_limit_filters_recent_entries(tmp_path) -> None:
     first_ts = datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc)
     second_ts = datetime(2024, 1, 2, 8, 30, tzinfo=timezone.utc)
 
-    _log_receipt(ledger, first_ts, diff="diff-one")
-    latest_signature = _log_receipt(ledger, second_ts, diff="diff-two")
+    _log_receipt(
+        ledger,
+        first_ts,
+        diff="diff-one",
+        harmonix={
+            "snapshot_id": "harmonix::cycle-0001",
+            "cycle": 1,
+            "timestamp": "2025-01-01T00:00:00Z",
+            "recursion_hash": "hash-one",
+        },
+    )
+    latest_signature = _log_receipt(
+        ledger,
+        second_ts,
+        diff="diff-two",
+        harmonix={
+            "snapshot_id": "harmonix::cycle-0002",
+            "cycle": 2,
+            "timestamp": "2025-01-02T00:00:00Z",
+            "recursion_hash": "hash-two",
+        },
+    )
 
     temporal_ledger = TemporalLedger(state_dir=state_dir)
     synchronizer = CrossLedgerSynchronizer(

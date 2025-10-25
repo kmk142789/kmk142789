@@ -22,12 +22,34 @@ __all__ = [
 ]
 
 
+def _parse_datetime(value: str) -> datetime:
+    if value.endswith("Z"):
+        value = value[:-1] + "+00:00"
+    return datetime.fromisoformat(value)
+
+
+class HarmonixReference(BaseModel):
+    snapshot_id: str
+    cycle: int
+    timestamp: datetime
+    recursion_hash: str
+
+    def as_mapping(self) -> Mapping[str, object]:
+        return {
+            "snapshot_id": self.snapshot_id,
+            "cycle": self.cycle,
+            "timestamp": self.timestamp.isoformat(),
+            "recursion_hash": self.recursion_hash,
+        }
+
+
 class LedgerEntryInput(BaseModel):
     actor: str
     action: str
     ref: str
     proof_id: str
     ts: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    harmonix: HarmonixReference | None = None
 
 
 @dataclass(slots=True)
@@ -39,9 +61,10 @@ class LedgerEntry:
     ref: str
     proof_id: str
     hash: str
+    harmonix: HarmonixReference | None = None
 
     def to_dict(self) -> Mapping[str, str]:
-        return {
+        payload = {
             "id": self.id,
             "ts": self.ts.isoformat(),
             "actor": self.actor,
@@ -50,6 +73,9 @@ class LedgerEntry:
             "proof_id": self.proof_id,
             "hash": self.hash,
         }
+        if self.harmonix is not None:
+            payload["harmonix"] = self.harmonix.as_mapping()
+        return payload
 
 
 class TemporalLedger:
@@ -62,7 +88,7 @@ class TemporalLedger:
         self._ledger_path.touch(exist_ok=True)
 
     def append(self, entry: LedgerEntryInput) -> LedgerEntry:
-        payload = entry.model_dump()
+        payload = entry.model_dump(mode="json")
         entry_id = str(uuid.uuid4())
         payload["id"] = entry_id
         payload["ts"] = entry.ts.isoformat()
@@ -79,6 +105,7 @@ class TemporalLedger:
             ref=entry.ref,
             proof_id=entry.proof_id,
             hash=payload_hash,
+            harmonix=entry.harmonix,
         )
 
     def entries(self) -> List[LedgerEntry]:
@@ -95,9 +122,21 @@ class TemporalLedger:
             if not raw.strip():
                 continue
             data = json.loads(raw)
-            ts = datetime.fromisoformat(data["ts"])
+            ts = _parse_datetime(data["ts"])
             if since and ts <= since:
                 continue
+            harmonix_payload = data.get("harmonix")
+            harmonix_ref: HarmonixReference | None = None
+            if isinstance(harmonix_payload, Mapping):
+                try:
+                    harmonix_ref = HarmonixReference(
+                        snapshot_id=str(harmonix_payload["snapshot_id"]),
+                        cycle=int(harmonix_payload["cycle"]),
+                        timestamp=_parse_datetime(str(harmonix_payload["timestamp"])),
+                        recursion_hash=str(harmonix_payload["recursion_hash"]),
+                    )
+                except (KeyError, TypeError, ValueError):  # pragma: no cover - defensive guard
+                    harmonix_ref = None
             entry = LedgerEntry(
                 id=str(data["id"]),
                 ts=ts,
@@ -106,6 +145,7 @@ class TemporalLedger:
                 ref=str(data["ref"]),
                 proof_id=str(data["proof_id"]),
                 hash=str(data["hash"]),
+                harmonix=harmonix_ref,
             )
             yield entry
             count += 1
@@ -138,6 +178,15 @@ def render_markdown(entries: Iterable[LedgerEntry]) -> str:
                 f"  - hash: ``{entry.hash}``",
             ]
         )
+        if entry.harmonix is not None:
+            lines.append(
+                "  - harmonix: `{snapshot}` cycle {cycle} @ {timestamp} (recursion {recursion})".format(
+                    snapshot=entry.harmonix.snapshot_id,
+                    cycle=entry.harmonix.cycle,
+                    timestamp=entry.harmonix.timestamp.isoformat(),
+                    recursion=entry.harmonix.recursion_hash,
+                )
+            )
     return "\n".join(lines).strip() + "\n"
 
 
@@ -148,6 +197,11 @@ def render_dot(entries: Iterable[LedgerEntry]) -> str:
     for index, entry in enumerate(entries):
         node_name = f"n{index}"
         label = f"{entry.ts.isoformat()}\n{entry.actor}\n{entry.action}"
+        if entry.harmonix is not None:
+            label += (
+                f"\nHarmonix {entry.harmonix.snapshot_id}"
+                f"\ncycle {entry.harmonix.cycle}"
+            )
         nodes.append(f'  {node_name} [shape=box, label="{label}"];')
         if last_node is not None:
             edges.append(f"  {last_node} -> {node_name};")
@@ -159,7 +213,7 @@ def render_dot(entries: Iterable[LedgerEntry]) -> str:
 def render_svg(entries: Iterable[LedgerEntry]) -> str:
     entries_list = list(entries)
     width = 220 * max(1, len(entries_list))
-    height = 120
+    height = 150
     parts = [
         f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}'>",
         "  <style>text{font-family:monospace;font-size:12px;} .ts{font-weight:bold;}</style>",
@@ -171,6 +225,13 @@ def render_svg(entries: Iterable[LedgerEntry]) -> str:
         parts.append(f"    <text x='{x}' y='50'>{entry.actor}</text>")
         parts.append(f"    <text x='{x}' y='70'>{entry.action}</text>")
         parts.append(f"    <text x='{x}' y='90'>proof: {entry.proof_id}</text>")
+        if entry.harmonix is not None:
+            parts.append(
+                f"    <text x='{x}' y='110'>harmonix: {entry.harmonix.snapshot_id}</text>"
+            )
+            parts.append(
+                f"    <text x='{x}' y='130'>cycle {entry.harmonix.cycle} · recursion {entry.harmonix.recursion_hash}</text>"
+            )
         parts.append("  </g>")
         if idx:
             prev_x = 20 + (idx - 1) * 200

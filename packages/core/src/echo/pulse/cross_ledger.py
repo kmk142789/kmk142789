@@ -53,6 +53,7 @@ class CrossLedgerSynchronizer:
                     ref=self._reference_for(receipt),
                     proof_id=proof_id,
                     ts=_parse_timestamp(receipt.time),
+                    harmonix=self._harmonix_payload(receipt),
                 )
             )
             existing[proof_id] = ledger_entry
@@ -62,3 +63,18 @@ class CrossLedgerSynchronizer:
     def _reference_for(self, receipt: PulseReceipt) -> str:
         seed = receipt.seed if receipt.seed else "—"
         return f"{receipt.actor}:{receipt.result}:{receipt.sha256_of_diff}:{seed}"
+
+    def _harmonix_payload(self, receipt: PulseReceipt):
+        link = receipt.harmonix
+        if link is None:
+            return None
+        try:
+            timestamp = _parse_timestamp(link.timestamp)
+        except (TypeError, ValueError):  # pragma: no cover - defensive guard
+            return None
+        return {
+            "snapshot_id": link.snapshot_id,
+            "cycle": link.cycle,
+            "timestamp": timestamp,
+            "recursion_hash": link.recursion_hash,
+        }

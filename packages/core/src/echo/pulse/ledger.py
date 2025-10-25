@@ -9,7 +9,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterator, List
+from typing import Iterator, List, Mapping, Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -18,6 +18,40 @@ from echo.modes.phantom import PhantomReporter
 
 
 _LEDGER_SECRET = b"echo-pulse-ledger-signature-v1"
+
+
+@dataclass(frozen=True)
+class HarmonixLink:
+    snapshot_id: str
+    cycle: int
+    timestamp: str
+    recursion_hash: str
+
+    def to_dict(self) -> dict:
+        return {
+            "snapshot_id": self.snapshot_id,
+            "cycle": self.cycle,
+            "timestamp": self.timestamp,
+            "recursion_hash": self.recursion_hash,
+        }
+
+    @classmethod
+    def from_mapping(cls, payload: Mapping[str, object]) -> "HarmonixLink":
+        try:
+            snapshot_id = payload["snapshot_id"]
+            cycle = payload["cycle"]
+            timestamp = payload["timestamp"]
+            recursion_hash = payload["recursion_hash"]
+        except KeyError as exc:  # pragma: no cover - defensive branch
+            raise ValueError("Harmonix link payload missing required field") from exc
+        if snapshot_id is None or timestamp is None or recursion_hash is None:
+            raise ValueError("Harmonix link payload contains null fields")
+        return cls(
+            snapshot_id=str(snapshot_id),
+            cycle=int(cycle),
+            timestamp=str(timestamp),
+            recursion_hash=str(recursion_hash),
+        )
 
 
 @dataclass(frozen=True)
@@ -30,6 +64,7 @@ class PulseReceipt:
     seed: str
     signature: str
     path: Path
+    harmonix: Optional[HarmonixLink] = None
 
     def to_dict(self, include_signature: bool = True) -> dict:
         payload = {
@@ -40,6 +75,8 @@ class PulseReceipt:
             "result": self.result,
             "seed": self.seed,
         }
+        if self.harmonix is not None:
+            payload["harmonix"] = self.harmonix.to_dict()
         if include_signature:
             payload["signature"] = self.signature
         return payload
@@ -69,7 +106,15 @@ class PulseLedger:
         filename = f"{timestamp.strftime('%H%M%S%f')}_{diff_hash[:12]}.json"
         return date_dir / filename
 
-    def log(self, *, diff_signature: str, actor: str, result: str, seed: str) -> PulseReceipt:
+    def log(
+        self,
+        *,
+        diff_signature: str,
+        actor: str,
+        result: str,
+        seed: str,
+        harmonix: Mapping[str, object] | HarmonixLink | None = None,
+    ) -> PulseReceipt:
         timestamp = self._timestamp()
         diff_hash = hashlib.sha256(diff_signature.encode("utf-8")).hexdigest()
         payload = {
@@ -80,17 +125,48 @@ class PulseLedger:
             "result": result,
             "seed": seed,
         }
+        harmonix_link: Optional[HarmonixLink] = None
+        if harmonix is not None:
+            if isinstance(harmonix, HarmonixLink):
+                harmonix_link = harmonix
+            elif isinstance(harmonix, Mapping):
+                harmonix_link = HarmonixLink.from_mapping(harmonix)
+            else:  # pragma: no cover - defensive guard
+                raise TypeError("harmonix metadata must be a mapping or HarmonixLink")
+            payload["harmonix"] = harmonix_link.to_dict()
         signature = self._signature(payload)
         path = self._receipt_path(timestamp, diff_hash)
         payload_with_signature = dict(payload)
         payload_with_signature["signature"] = signature
         path.write_text(json.dumps(payload_with_signature, indent=2, sort_keys=True), encoding="utf-8")
-        return PulseReceipt(path=path, signature=signature, **payload)
+        receipt_payload = dict(payload)
+        receipt_payload.pop("harmonix", None)
+        return PulseReceipt(path=path, signature=signature, harmonix=harmonix_link, **receipt_payload)
 
     def verify(self, receipt: PulseReceipt) -> bool:
         payload = receipt.to_dict(include_signature=False)
         expected = self._signature(payload)
         return hmac.compare_digest(expected, receipt.signature)
+
+    def _receipt_from_payload(self, path: Path, data: Mapping[str, object]) -> PulseReceipt:
+        harmonix_payload = data.get("harmonix")
+        harmonix_link: Optional[HarmonixLink] = None
+        if isinstance(harmonix_payload, Mapping):
+            try:
+                harmonix_link = HarmonixLink.from_mapping(harmonix_payload)
+            except (ValueError, TypeError):  # pragma: no cover - ignore malformed metadata
+                harmonix_link = None
+        return PulseReceipt(
+            sha256_of_diff=str(data["sha256_of_diff"]),
+            time=str(data["time"]),
+            actor=str(data["actor"]),
+            rhyme=str(data["rhyme"]),
+            result=str(data["result"]),
+            seed=str(data["seed"]),
+            signature=str(data["signature"]),
+            path=path,
+            harmonix=harmonix_link,
+        )
 
     def latest(self, limit: int | None = 5) -> List[PulseReceipt]:
         if limit is None:
@@ -101,16 +177,7 @@ class PulseLedger:
         receipts: List[PulseReceipt] = []
         for path in reversed(files):
             data = json.loads(path.read_text(encoding="utf-8"))
-            receipt = PulseReceipt(
-                sha256_of_diff=data["sha256_of_diff"],
-                time=data["time"],
-                actor=data["actor"],
-                rhyme=data["rhyme"],
-                result=data["result"],
-                seed=data["seed"],
-                signature=data["signature"],
-                path=path,
-            )
+            receipt = self._receipt_from_payload(path, data)
             receipts.append(receipt)
             if len(receipts) >= limit:
                 break
@@ -124,16 +191,14 @@ class PulseLedger:
 
         for path in sorted(self.root.rglob("*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))
-            yield PulseReceipt(
-                sha256_of_diff=data["sha256_of_diff"],
-                time=data["time"],
-                actor=data["actor"],
-                rhyme=data["rhyme"],
-                result=data["result"],
-                seed=data["seed"],
-                signature=data["signature"],
-                path=path,
-            )
+            yield self._receipt_from_payload(path, data)
+
+
+class _HarmonixLinkPayload(BaseModel):
+    snapshot_id: str
+    cycle: int
+    timestamp: str
+    recursion_hash: str
 
 
 class _LedgerLogRequest(BaseModel):
@@ -141,6 +206,7 @@ class _LedgerLogRequest(BaseModel):
     actor: str = "api"
     result: str = "success"
     seed: str
+    harmonix: Optional[_HarmonixLinkPayload] = None
 
 
 def create_app(ledger: PulseLedger | None = None) -> FastAPI:
@@ -155,6 +221,7 @@ def create_app(ledger: PulseLedger | None = None) -> FastAPI:
             actor=request.actor,
             result=request.result,
             seed=request.seed,
+            harmonix=request.harmonix.model_dump() if request.harmonix else None,
         )
         return reporter.redact(receipt.to_dict())
 
