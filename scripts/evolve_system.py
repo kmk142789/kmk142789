@@ -87,6 +87,88 @@ def build_parser() -> argparse.ArgumentParser:
             "is not written to disk."
         ),
     )
+    parser.add_argument(
+        "--advance-system",
+        action="store_true",
+        help=(
+            "Run the advance_system ritual which returns a structured payload "
+            "summarising the current cycle instead of emitting the raw artifact."
+        ),
+    )
+    parser.add_argument(
+        "--include-matrix",
+        action="store_true",
+        help=(
+            "Include the progress matrix within the advance-system payload "
+            "(requires --advance-system)."
+        ),
+    )
+    parser.add_argument(
+        "--include-event-summary",
+        action="store_true",
+        help=(
+            "Include the recent event summary within the advance-system payload "
+            "(requires --advance-system)."
+        ),
+    )
+    parser.add_argument(
+        "--include-propagation",
+        action="store_true",
+        help=(
+            "Include the propagation snapshot within the advance-system payload "
+            "(requires --advance-system)."
+        ),
+    )
+    parser.add_argument(
+        "--include-system-report",
+        action="store_true",
+        help=(
+            "Include the detailed system advancement report within the advance-"
+            "system payload (requires --advance-system)."
+        ),
+    )
+    parser.add_argument(
+        "--no-include-status",
+        action="store_true",
+        help="Exclude the status snapshot when running --advance-system.",
+    )
+    parser.add_argument(
+        "--no-include-manifest",
+        action="store_true",
+        help="Exclude the Eden88 manifest snapshot when running --advance-system.",
+    )
+    parser.add_argument(
+        "--no-include-reflection",
+        action="store_true",
+        help="Skip generating the reflective narrative during advance-system runs.",
+    )
+    parser.add_argument(
+        "--event-summary-limit",
+        type=int,
+        default=5,
+        help=(
+            "Number of events to include in the event summary when using "
+            "--include-event-summary (default: 5)."
+        ),
+    )
+    parser.add_argument(
+        "--system-report-events",
+        type=int,
+        default=5,
+        help=(
+            "Number of recent events to forward to the system advancement "
+            "report when using --include-system-report (default: 5)."
+        ),
+    )
+    parser.add_argument(
+        "--manifest-events",
+        type=int,
+        default=5,
+        help=(
+            "Number of events to embed inside the manifest snapshot when "
+            "running --advance-system (default: 5)."
+        ),
+    )
     return parser
 
 
@@ -108,12 +190,46 @@ def execute_evolution(
     cycles: int,
     persist_intermediate: bool,
     print_artifact: bool,
+    advance_system: bool,
+    include_matrix: bool,
+    include_event_summary: bool,
+    include_propagation: bool,
+    include_system_report: bool,
+    include_status: bool,
+    include_manifest: bool,
+    include_reflection: bool,
+    event_summary_limit: int,
+    system_report_events: int,
+    manifest_events: int,
 ) -> EchoEvolver:
     """Execute a full cycle and return the configured evolver instance."""
 
     evolver = create_evolver(seed=seed, artifact=artifact)
     if cycles <= 0:
         raise ValueError("cycles must be a positive integer")
+
+    if advance_system:
+        result = evolver.advance_system(
+            enable_network=enable_network,
+            persist_artifact=persist_artifact,
+            eden88_theme=eden88_theme,
+            include_manifest=include_manifest,
+            include_status=include_status,
+            include_reflection=include_reflection,
+            include_matrix=include_matrix,
+            include_event_summary=include_event_summary,
+            include_propagation=include_propagation,
+            include_system_report=include_system_report,
+            event_summary_limit=event_summary_limit,
+            manifest_events=manifest_events,
+            system_report_events=system_report_events,
+        )
+        summary = result.get("summary") if isinstance(result, dict) else None
+        if summary:
+            print(summary)
+        if print_artifact and isinstance(result, dict):
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+        return evolver
 
     if cycles == 1:
         evolver.run(
@@ -148,6 +264,27 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     if args.cycles <= 0:
         parser.error("--cycles must be a positive integer")
 
+    if args.advance_system and args.cycles != 1:
+        parser.error("--advance-system cannot be combined with --cycles")
+
+    if args.include_matrix and not args.advance_system:
+        parser.error("--include-matrix requires --advance-system")
+    if args.include_event_summary and not args.advance_system:
+        parser.error("--include-event-summary requires --advance-system")
+    if args.include_propagation and not args.advance_system:
+        parser.error("--include-propagation requires --advance-system")
+    if args.include_system_report and not args.advance_system:
+        parser.error("--include-system-report requires --advance-system")
+
+    if args.event_summary_limit <= 0 and args.advance_system and args.include_event_summary:
+        parser.error("--event-summary-limit must be positive when including the event summary")
+
+    if args.system_report_events <= 0 and args.advance_system and args.include_system_report:
+        parser.error("--system-report-events must be positive when including the system report")
+
+    if args.manifest_events < 0 and args.advance_system:
+        parser.error("--manifest-events must be non-negative")
+
     execute_evolution(
         enable_network=args.enable_network,
         persist_artifact=persist_artifact,
@@ -157,6 +294,17 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         cycles=args.cycles,
         persist_intermediate=args.persist_intermediate,
         print_artifact=args.print_artifact,
+        advance_system=args.advance_system,
+        include_matrix=args.include_matrix,
+        include_event_summary=args.include_event_summary,
+        include_propagation=args.include_propagation,
+        include_system_report=args.include_system_report,
+        include_status=not args.no_include_status,
+        include_manifest=not args.no_include_manifest,
+        include_reflection=not args.no_include_reflection,
+        event_summary_limit=args.event_summary_limit,
+        system_report_events=args.system_report_events,
+        manifest_events=args.manifest_events,
     )
 
     return 0

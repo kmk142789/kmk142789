@@ -87,3 +87,50 @@ def test_evolve_system_cli_prints_artifact_payload(tmp_path, capsys):
 
     assert payload["cycle"] == 1
     assert payload["prompt"]["title"] == "Echo Resonance"
+
+
+def test_evolve_system_cli_advances_system(tmp_path, capsys):
+    artifact = tmp_path / "advance.json"
+
+    exit_code = evolve_system.main([
+        "--seed",
+        "17",
+        "--artifact",
+        str(artifact),
+        "--advance-system",
+        "--print-artifact",
+        "--include-event-summary",
+        "--include-matrix",
+    ])
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "Cycle" in output and "advanced" in output
+    lines = output.splitlines()
+    json_start = next(
+        idx
+        for idx, line in enumerate(lines)
+        if line.lstrip() == "{" and idx + 1 < len(lines) and '"cycle"' in lines[idx + 1]
+    )
+    data = json.loads("\n".join(lines[json_start:]))
+    assert data["cycle"] == 1
+    assert "event_summary" in data
+    assert "progress_matrix" in data
+    assert artifact.exists()
+
+
+def test_evolve_system_cli_rejects_invalid_advance_flags():
+    with pytest.raises(SystemExit) as excinfo:
+        evolve_system.main(["--include-matrix"])
+
+    assert excinfo.value.code == 2
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolve_system.main([
+            "--advance-system",
+            "--include-system-report",
+            "--system-report-events",
+            "0",
+        ])
+
+    assert excinfo.value.code == 2
