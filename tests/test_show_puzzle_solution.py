@@ -55,3 +55,11 @@ def test_parse_pkscript_with_metadata_lines():
 def test_parse_pkscript_with_puzzle_65_metadata():
     script = """Puzzle #65\n18ZMbwUFL-Cbktshgpe\nPkscript\nOP_DUP\nOP_HASH160\n52e763a7ddc1aa4fa811578c491c1bc7fd570137\nOP_EQUALVERIFY\nOP_CHECKSIG"""
     assert _parse_p2pkh_hash160(script) == PUZZLE_65_HASH160
+
+
+def test_parse_pkscript_with_fragmented_opcode():
+    script = """Puzzle #97\n18ywPwj39-R12MDpDr8\nPkscript\nOP_DUP\nOP_HASH160\n578d94dc6f40fff35f91f6fba9b71c46b361dff2\nOP_EQUALVERIFY\nOP_CH\nECKSIG"""
+    assert (
+        _parse_p2pkh_hash160(script)
+        == "578d94dc6f40fff35f91f6fba9b71c46b361dff2"
+    )
