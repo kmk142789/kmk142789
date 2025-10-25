@@ -1,14 +1,88 @@
 """Typer CLI providing access to the Puzzle Lab utilities."""
 from __future__ import annotations
 
+import argparse
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, Optional
+from types import SimpleNamespace
+from typing import Callable, Iterable, Optional
 
-import typer
-from rich.console import Console
-from rich.table import Table
+try:  # pragma: no cover - optional dependency
+    import typer
+except ModuleNotFoundError:  # pragma: no cover - fallback defined below
+    typer = None  # type: ignore[assignment]
+
+TYPER_AVAILABLE = typer is not None
+
+try:  # pragma: no cover - optional dependency
+    from rich.console import Console
+    from rich.table import Table
+except ModuleNotFoundError:  # pragma: no cover - provide minimal stand-ins
+    Console = None  # type: ignore[assignment]
+    Table = None  # type: ignore[assignment]
+
+
+if not TYPER_AVAILABLE:  # pragma: no cover - executed when typer is not installed
+    class _FallbackExit(SystemExit):
+        def __init__(self, code: int = 0):
+            super().__init__(code)
+
+    class _FallbackContext:
+        def __init__(self) -> None:
+            self.obj: dict[str, object] | None = None
+
+    class _FallbackTyper:
+        def __init__(self, *_, **__):
+            self.commands: dict[str, Callable] = {}
+            self.callback_fn: Callable | None = None
+
+        def command(self, name: str | None = None):
+            def decorator(func):
+                command_name = name or func.__name__
+                self.commands[command_name] = func
+                return func
+
+            return decorator
+
+        def callback(self):
+            def decorator(func):
+                self.callback_fn = func
+                return func
+
+            return decorator
+
+        def __call__(self) -> None:
+            raise RuntimeError("Typer is unavailable in this environment")
+
+    def _option(default=None, *_, **__):
+        return default
+
+    typer = SimpleNamespace(  # type: ignore[assignment]
+        Typer=_FallbackTyper,
+        Context=_FallbackContext,
+        Option=_option,
+        Argument=_option,
+        Exit=_FallbackExit,
+        BadParameter=ValueError,
+    )
+
+if Console is None:  # pragma: no cover - executed when rich is not installed
+    class Console:  # type: ignore[override,assignment]
+        def print(self, message: object) -> None:
+            print(message)
+
+
+if Table is None:  # pragma: no cover - executed when rich is not installed
+    class Table:  # type: ignore[override,assignment]
+        def __init__(self, *_, **__):
+            self.rows: list[tuple] = []
+
+        def add_column(self, *_: object, **__: object) -> None:
+            return None
+
+        def add_row(self, *values: object) -> None:
+            self.rows.append(values)
 
 from echo_puzzle_lab import (
     build_dataframe,
@@ -21,7 +95,11 @@ from echo_puzzle_lab import (
     summarise,
     update_ud_records,
 )
-from echo_puzzle_lab.charts import save_charts
+
+try:  # pragma: no cover - optional dependency
+    from echo_puzzle_lab.charts import save_charts
+except ModuleNotFoundError:  # pragma: no cover - charts require matplotlib
+    save_charts = None  # type: ignore[assignment]
 
 app = typer.Typer(help="Puzzle Lab utilities", no_args_is_help=True)
 console = Console()
@@ -169,6 +247,8 @@ def stats(
         console.print(table)
 
     if build_charts_flag:
+        if save_charts is None:
+            raise typer.Exit(code=1)
         frame = build_dataframe(records)
         outputs = save_charts(frame, Path("reports") / "figures")
         if not ctx.obj.get("json", False):
@@ -269,4 +349,28 @@ def export(
 
 
 def main() -> None:  # pragma: no cover - console entry point
-    app()
+    if TYPER_AVAILABLE:
+        app()
+        return
+
+    parser = argparse.ArgumentParser(prog="echo_cli", description="Puzzle Lab utilities")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    stats_parser = subparsers.add_parser("stats", help="Print summary statistics")
+    stats_parser.add_argument("--build-charts", action="store_true", dest="build_charts")
+    stats_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
+    verify_parser = subparsers.add_parser("verify", help="Verify puzzle addresses")
+    verify_parser.add_argument("--puzzles", dest="puzzles")
+    verify_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
+    args = parser.parse_args()
+
+    ctx = typer.Context()  # type: ignore[call-arg]
+
+    if args.command == "stats":
+        stats(ctx, build_charts_flag=args.build_charts, json_mode=args.json_mode)
+    elif args.command == "verify":
+        verify(ctx, puzzles=args.puzzles, json_mode=args.json_mode)
+    else:  # pragma: no cover - defensive
+        parser.error(f"Unsupported command in fallback mode: {args.command}")
