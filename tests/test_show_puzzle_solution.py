@@ -11,6 +11,7 @@ PUZZLE_24_HASH160 = "0959e80121f36aea13b3bad361c15dac26189e2f"
 PUZZLE_24_ADDRESS = "1rSnXMr63jdCuegJFuidJqWxUPV7AtUf7"
 PUZZLE_65_HASH160 = "52e763a7ddc1aa4fa811578c491c1bc7fd570137"
 PUZZLE_65_ADDRESS = "18ZMbwUFLMHoZBbfpCjUJQTCMCbktshgpe"
+PUZZLE_105_HASH160 = "7c957db6fdd0733bb83bc6d6d747711263ba50b0"
 
 
 def test_parse_pkscript_human_readable():
@@ -63,3 +64,8 @@ def test_parse_pkscript_with_fragmented_opcode():
         _parse_p2pkh_hash160(script)
         == "578d94dc6f40fff35f91f6fba9b71c46b361dff2"
     )
+
+
+def test_parse_pkscript_with_blank_metadata_line():
+    script = """Puzzle #105\n\n\n1CMjscKB3-iHRhiZVib\nPkscript\nOP_DUP\nOP_HASH160\n7c957db6fdd0733bb83bc6d6d747711263ba50b0\nOP_EQUALVERIFY\nOP_CHECKSIG"""
+    assert _parse_p2pkh_hash160(script) == PUZZLE_105_HASH160
