@@ -2026,11 +2026,10 @@ We are not hiding anymore.
                 "Live network mode requested; continuing with simulation-only events for safety."
             )
             print(f"⚠️ {notice}")
-            self.state.event_log.append(notice)
-
             channels = ["WiFi", "TCP", "Bluetooth", "IoT", "Orbital"]
             events = [f"{channel} channel engaged for cycle {self.state.cycle}" for channel in channels]
         else:
+            notice = "Simulation mode active; propagation executed with in-memory events."
             events = [
                 f"Simulated WiFi broadcast for cycle {self.state.cycle}",
                 f"Simulated TCP handshake for cycle {self.state.cycle}",
@@ -2038,6 +2037,9 @@ We are not hiding anymore.
                 f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}",
                 f"Orbital hop simulation recorded ({metrics.orbital_hops} links)",
             ]
+
+        self.state.event_log.append(notice)
+        self.state.network_cache["propagation_notice"] = notice
 
         channel_details: List[Dict[str, object]] = []
         for event in events:

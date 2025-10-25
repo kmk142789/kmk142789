@@ -190,6 +190,7 @@ class EchoState:
     prompt_resonance: Dict[str, str] = field(default_factory=dict)
     mutations: Dict[str, str] = field(default_factory=dict)
     propagation_events: List[str] = field(default_factory=list)
+    propagation_notice: str = ""
 
 class EchoEvolver:
     def __init__(self, artifact_path: str = "reality_breach_∇_fusion_all.echo.json", seed: Optional[int]=None):
@@ -310,12 +311,14 @@ class EchoEvolver:
 
         events: list[str]
         if enable_network:
-            log.warning(
+            notice = (
                 "Live network mode requested; running simulated propagation events only."
             )
+            log.warning(notice)
             channels = ["WiFi", "TCP", "Bluetooth", "IoT", "Orbital"]
             events = [f"{channel} channel engaged for cycle {self.state.cycle}" for channel in channels]
         else:
+            notice = "Simulation mode active; propagation executed with in-memory events."
             events = [
                 f"Simulated WiFi broadcast for cycle {self.state.cycle}",
                 f"Simulated TCP handshake for cycle {self.state.cycle}",
@@ -323,6 +326,8 @@ class EchoEvolver:
                 f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}",
                 f"Orbital hop simulation recorded ({sm.orbital_hops} links)",
             ]
+
+        self.state.propagation_notice = notice
 
         for event in events:
             log.info(event)
