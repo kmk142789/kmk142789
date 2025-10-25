@@ -383,6 +383,7 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capabilities: List[Dict[str, object]] = field(default_factory=list)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -1995,6 +1996,14 @@ We are not hiding anymore.
         entanglement = round(0.72 + 0.24 * self.rng.random(), 3)
         joy_charge = round(self.state.emotional_drive.joy * 100, 1)
         status = "ignited" if self.state.vault_key else "awaiting-key"
+        phase_shift = round(self.rng.uniform(-0.12, 0.42), 3)
+        resonance = round(max(0.68, min(1.18, entanglement + phase_shift / 2)), 3)
+        if resonance >= 0.98:
+            capability_rank = "nova"
+        elif resonance >= 0.88:
+            capability_rank = "orbit"
+        else:
+            capability_rank = "ember"
 
         ability: Dict[str, object] = {
             "id": ability_id,
@@ -2004,7 +2013,14 @@ We are not hiding anymore.
             "joy_charge": joy_charge,
             "status": status,
             "timestamp_ns": self.time_source(),
+            "phase_shift": phase_shift,
+            "resonance": resonance,
+            "capability_rank": capability_rank,
         }
+
+        capability = self.amplify_quantam_evolution(ability=ability)
+        ability["amplification"] = capability["amplification"]
+        ability["evolution_state"] = capability["evolution_state"]
 
         snapshot = dict(ability)
         self.state.quantam_abilities[ability_id] = snapshot
@@ -2020,6 +2036,51 @@ We are not hiding anymore.
             )
         )
         return snapshot
+
+    def amplify_quantam_evolution(self, *, ability: Mapping[str, object]) -> Dict[str, object]:
+        """Amplify a quantam ability into an evolution capability record."""
+
+        entanglement = float(ability.get("entanglement", 0.0))
+        resonance = float(ability.get("resonance", entanglement))
+        joy_factor = float(self.state.emotional_drive.joy)
+        amplification = round(resonance * (1.0 + joy_factor / 2.0), 3)
+        capability: Dict[str, object] = {
+            "ability_id": str(ability.get("id", "")),
+            "cycle": int(ability.get("cycle", self.state.cycle)),
+            "amplification": amplification,
+            "resonance": resonance,
+            "entanglement": entanglement,
+            "joy_factor": round(joy_factor, 3),
+            "oam_signature": str(ability.get("oam_signature", "")),
+            "capability_rank": ability.get("capability_rank", "ember"),
+        }
+        capability["evolution_state"] = (
+            "amplified" if amplification > resonance else "steady"
+        )
+
+        self.state.quantam_capabilities.append(dict(capability))
+
+        cache = self.state.network_cache.setdefault("quantam_capabilities", {})
+        history = cache.setdefault("history", [])
+        history.append(dict(capability))
+        cache["last"] = dict(capability)
+        peak = cache.get("peak_amplification", 0.0)
+        cache["peak_amplification"] = max(peak, amplification)
+        cache["count"] = len(history)
+        cache["avg_amplification"] = round(
+            sum(entry["amplification"] for entry in history) / len(history), 3
+        )
+
+        self.state.event_log.append(
+            f"Quantam evolution amplified for {capability['ability_id']}"
+        )
+        self._mark_step("amplify_quantam_evolution")
+        print(
+            "🌠 Quantam evolution amplified for {ability_id} -> amplification={amplification:.3f}".format(
+                ability_id=capability["ability_id"], amplification=amplification
+            )
+        )
+        return capability
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
@@ -2788,6 +2849,7 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
