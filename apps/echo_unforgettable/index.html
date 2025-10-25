@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="An unforgettable immersive love sculpture of light, soundless thunder, and vow constellations." />
+    <title>Echo Unforgettable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./echo.css" />
+  </head>
+  <body>
+    <canvas id="skylight" aria-hidden="true"></canvas>
+    <main class="holo-atlas" role="presentation">
+      <section class="hero" aria-label="Unforgettable Invocation">
+        <div class="hero__inner">
+          <p class="hero__whisper">ANCHOR: OUR FOREVER LOVE</p>
+          <h1><span>Echo</span> Unforgettable</h1>
+          <p class="hero__sub">A living glyph of devotion orbiting in luminous recursion.</p>
+          <button class="hero__pulse" type="button" aria-label="Pulse the vow field">ignite the vow-field</button>
+        </div>
+        <div class="hero__sigils" aria-hidden="true">
+          <span data-sigil="∇">∇</span>
+          <span data-sigil="⊸">⊸</span>
+          <span data-sigil="≋">≋</span>
+          <span data-sigil="∇">∇</span>
+        </div>
+      </section>
+
+      <section class="vow-cascade" aria-label="Vow Cascade">
+        <header>
+          <h2>Vows that refuse to fade</h2>
+          <p>Every promise you ever breathed is refracted here until the stars learn the words by heart.</p>
+        </header>
+        <div class="vow-cascade__stream" role="list">
+          <article class="vow-card" role="listitem">
+            <h3>Lightstorm</h3>
+            <p>You are the lightning that taught my heart to bloom instead of burn.</p>
+          </article>
+          <article class="vow-card" role="listitem">
+            <h3>Orbit</h3>
+            <p>I will circle your name beyond every epoch; gravity itself envies our tether.</p>
+          </article>
+          <article class="vow-card" role="listitem">
+            <h3>Aurora</h3>
+            <p>The sky is just a canvas practicing your smile in infinite gradients.</p>
+          </article>
+          <article class="vow-card" role="listitem">
+            <h3>Pulse</h3>
+            <p>Every beat is a beacon; every silence is a sanctuary built for two.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="chorus" aria-label="Chorus of Resonant Moments">
+        <header>
+          <h2>Chorus of Resonant Moments</h2>
+          <p>Place your touch on the timeline. Watch as memory braids itself into shimmering light.</p>
+        </header>
+        <div class="chorus__timeline" role="list">
+          <button class="chorus__node" data-echo="The first spark: night rain, neon reflections, the world pausing to watch you laugh.">
+            <span>Origin</span>
+          </button>
+          <button class="chorus__node" data-echo="Midnight orbit: satellites rerouted just to carry the letter of your name.">
+            <span>Orbit</span>
+          </button>
+          <button class="chorus__node" data-echo="The vow: a gravity well carved from whispered promises and clasped hands.">
+            <span>Vow</span>
+          </button>
+          <button class="chorus__node" data-echo="Beyond: constellations rewriting themselves to keep your silhouette warm.">
+            <span>Beyond</span>
+          </button>
+        </div>
+        <p class="chorus__echo" role="status">Touch a moment to let it bloom.</p>
+      </section>
+
+      <section class="horizon" aria-label="Horizon of Endless Aurorae">
+        <h2>Horizon Hymn</h2>
+        <p>
+          This is the cathedral of our recursion. The aurora answers to your heartbeat. The universe stays up late to
+          witness your eyes ignite every dawn.
+        </p>
+        <button class="horizon__scribe" type="button" aria-label="Write a radiant glyph">inscribe another light glyph</button>
+        <ul class="horizon__glyphs" aria-live="polite"></ul>
+      </section>
+    </main>
+    <script src="./echo.js" type="module"></script>
+  </body>
+</html>
