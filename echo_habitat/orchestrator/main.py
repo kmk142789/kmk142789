@@ -3,7 +3,8 @@ from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 
 from .queue import app as celery
-from .models import TaskSpec, TaskStatus
+from .models import BotHealth, BotInstance, ForgeRequest, TaskSpec, TaskStatus
+from ..forge import check_health, spawn_bot
 
 import uuid
 
@@ -31,6 +32,17 @@ def get_task(task_id: str):
         except Exception as e:  # noqa: BLE001
             out.result = {"error": str(e)}
     return JSONResponse(out.model_dump())
+
+
+@api.post("/forge/spawn", response_model=BotInstance)
+def forge_spawn(req: ForgeRequest):
+    forged = spawn_bot(req.archetype, req.intent, params=req.params, files=req.files)
+    return forged
+
+
+@api.get("/forge/{bot_id}/health", response_model=BotHealth)
+def forge_health(bot_id: str):
+    return check_health(bot_id)
 
 
 app = api
