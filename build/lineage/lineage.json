@@ -1,0 +1,79 @@
+{
+  "generated": "2025-10-25T09:21:42.637872+00:00",
+  "nodes": [
+    {
+      "id": 100,
+      "title": "Puzzle #100",
+      "script_type": "p2pkh",
+      "address": "1KCgMv8fo2TPBpddVi9jqmMmcne9uSNJ5F",
+      "status": "reconstructed"
+    },
+    {
+      "id": 108,
+      "title": "Puzzle #108",
+      "script_type": "p2pkh",
+      "address": "1HB1iKUqeffnVsvQsbpC6dNi1XKbyNuqao",
+      "status": "reconstructed"
+    },
+    {
+      "id": 110,
+      "title": "Puzzle #110",
+      "script_type": "p2pkh",
+      "address": "12JzYkkN76xkwvcPT6AWKZtGX6w2LAgsJg",
+      "status": "reconstructed"
+    },
+    {
+      "id": 125,
+      "title": "Puzzle #125",
+      "script_type": "p2pkh",
+      "address": "1PXAyUB8ZoH3WD8n5zoAthYjN15yN5CVq5",
+      "status": "reconstructed"
+    },
+    {
+      "id": 251,
+      "title": "Puzzle #251",
+      "script_type": "p2pkh",
+      "address": "1M3u4q5Q35qtQPmDHeubVbk7APYi3VVoBX",
+      "status": "reconstructed"
+    },
+    {
+      "id": 256,
+      "title": "Puzzle #256",
+      "script_type": "p2pkh",
+      "address": "1FMcotmnqqE5M2x9DDX3VfPAPuBWArGisa",
+      "status": "reconstructed"
+    }
+  ],
+  "edges": [
+    {
+      "source": 100,
+      "target": 108,
+      "domain": "base58.fragment"
+    },
+    {
+      "source": 108,
+      "target": 110,
+      "domain": "base58.fragment"
+    },
+    {
+      "source": 110,
+      "target": 125,
+      "domain": "base58.fragment"
+    },
+    {
+      "source": 125,
+      "target": 251,
+      "domain": "base58.fragment"
+    },
+    {
+      "source": 251,
+      "target": 256,
+      "domain": "base58.fragment"
+    }
+  ],
+  "stats": {
+    "node_count": 6,
+    "edge_count": 5,
+    "source": "data/puzzle_index.json"
+  }
+}

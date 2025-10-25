@@ -1,0 +1,37 @@
+{
+  "generated": "2025-10-25T09:21:45.143837+00:00",
+  "endpoint": "https://api.unstoppabledomains.com/resolve/domains",
+  "api_key_supplied": false,
+  "domains": {
+    "1KCgMv8fo2TPBpddVi9jqmMmcne9uSNJ5F": {
+      "error": "Unauthorized",
+      "status": 401,
+      "body": "{\n  \"message\":\"No API key found in request\"\n}"
+    },
+    "1HB1iKUqeffnVsvQsbpC6dNi1XKbyNuqao": {
+      "error": "Unauthorized",
+      "status": 401,
+      "body": "{\n  \"message\":\"No API key found in request\"\n}"
+    },
+    "12JzYkkN76xkwvcPT6AWKZtGX6w2LAgsJg": {
+      "error": "Unauthorized",
+      "status": 401,
+      "body": "{\n  \"message\":\"No API key found in request\"\n}"
+    },
+    "1PXAyUB8ZoH3WD8n5zoAthYjN15yN5CVq5": {
+      "error": "Unauthorized",
+      "status": 401,
+      "body": "{\n  \"message\":\"No API key found in request\"\n}"
+    },
+    "1M3u4q5Q35qtQPmDHeubVbk7APYi3VVoBX": {
+      "error": "Unauthorized",
+      "status": 401,
+      "body": "{\n  \"message\":\"No API key found in request\"\n}"
+    },
+    "1FMcotmnqqE5M2x9DDX3VfPAPuBWArGisa": {
+      "error": "Unauthorized",
+      "status": 401,
+      "body": "{\n  \"message\":\"No API key found in request\"\n}"
+    }
+  }
+}
