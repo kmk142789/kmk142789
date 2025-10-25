@@ -1,0 +1,56 @@
+name: echo-titan-build
+
+on:
+  push:
+    paths:
+      - 'echo_titan/**'
+      - 'scripts/echo_titan_bootstrap.py'
+      - '.github/workflows/build.yml'
+      - 'docs/TITAN_OVERVIEW.md'
+      - 'docs/secret/README.md'
+      - 'CHANGELOG.md'
+  pull_request:
+    paths:
+      - 'echo_titan/**'
+      - 'scripts/echo_titan_bootstrap.py'
+      - '.github/workflows/build.yml'
+      - 'docs/TITAN_OVERVIEW.md'
+      - 'docs/secret/README.md'
+      - 'CHANGELOG.md'
+  workflow_dispatch:
+
+jobs:
+  bootstrap:
+    name: Regenerate Echo Titan scaffold
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Generate Echo Titan framework (CI scale)
+        run: |
+          python scripts/echo_titan_bootstrap.py \
+            --base-dir generated_echo_titan \
+            --puzzles 200 \
+            --docs 40 \
+            --tests 80
+
+      - name: Run swarm simulator
+        run: |
+          python generated_echo_titan/scripts/swarm_simulator.py
+
+      - name: Archive scaffold
+        uses: actions/upload-artifact@v4
+        with:
+          name: echo-titan-scaffold
+          path: generated_echo_titan
