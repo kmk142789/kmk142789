@@ -10,4 +10,5 @@ app.conf.task_queues = {
     "tester": {},
     "attestor": {},
     "storyteller": {},
+    "forge": {},
 }
