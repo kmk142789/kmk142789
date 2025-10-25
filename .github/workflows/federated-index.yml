@@ -1,0 +1,26 @@
+name: Federated Colossus Index
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'build/index/**.json'
+      - 'scripts/generate_federated_colossus.py'
+      - 'atlas/**.py'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate federated index
+        run: |
+          python scripts/generate_federated_colossus.py \
+            --in build/index/federated_raw.json \
+            --json-out build/index/federated_colossus_index.json \
+            --md-out docs/federated_colossus_index.md
+      - name: Commit artifacts
+        run: |
+          git config user.name "echo-bot"
+          git config user.email "echo@users.noreply.github.com"
+          git add docs/federated_colossus_index.md build/index/federated_colossus_index.json
+          git commit -m "chore: refresh federated index" || echo "No changes"
+          git push || true

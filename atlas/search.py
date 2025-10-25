@@ -1,11 +1,14 @@
-"""Federated search over the Atlas global graph."""
-
+"""Federated search utilities and structured filtering helpers."""
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List, Optional
 import argparse
 import json
+import shlex
+
+from .dedupe import dedupe_latest, normalize_address
+from .types import Entry
 
 
 def _load_index(path: Path) -> List[dict]:
@@ -42,7 +45,7 @@ def _matches_filters(entry: dict, *, cycle: int | None, puzzle: int | None, addr
             return False
     if address is not None:
         entry_address = entry.get("address")
-        if not isinstance(entry_address, str) or entry_address.lower() != address.lower():
+        if not isinstance(entry_address, str) or normalize_address(entry_address) != normalize_address(address):
             return False
     return True
 
@@ -73,40 +76,95 @@ def search(
     return [item[0] | {"score": item[1]} for item in ranked[:limit]]
 
 
+def filter_entries(
+    entries: List[Entry],
+    cycle: Optional[int] = None,
+    puzzle_id: Optional[int] = None,
+    address: Optional[str] = None,
+) -> List[Entry]:
+    """Filter raw entries by harmonix metadata fields."""
+
+    if address:
+        address = normalize_address(address)
+    filtered: List[Entry] = []
+    for entry in entries:
+        if cycle is not None and int(entry["cycle"]) != int(cycle):
+            continue
+        if puzzle_id is not None and int(entry["puzzle_id"]) != int(puzzle_id):
+            continue
+        if address is not None and normalize_address(entry.get("address", "")) != address:
+            continue
+        filtered.append(entry)
+    return filtered
+
+
+# Grammar: key:value pairs separated by space. Supported keys: cycle, puzzle, addr
+# Examples: "cycle:12", "puzzle:131 addr:1A1zP1...", "cycle:7 puzzle:125"
+def parse_structured(query: str) -> Dict[str, Any]:
+    cycle = puzzle = addr = None
+    for token in shlex.split(query or ""):
+        if ":" not in token:
+            continue
+        key, value = token.split(":", 1)
+        key = key.lower().strip()
+        value = value.strip()
+        if key in ("cycle", "c"):
+            cycle = int(value)
+        elif key in ("puzzle", "p", "puzzle_id"):
+            puzzle = int(value)
+        elif key in ("addr", "address", "a"):
+            addr = value
+    return dict(cycle=cycle, puzzle_id=puzzle, address=addr)
+
+
+def _read(path: str) -> List[Entry]:
+    with open(path, "r", encoding="utf-8") as handle:
+        data = json.load(handle)
+    return data["entries"] if isinstance(data, dict) and "entries" in data else data
+
+
+def _write(path: str, data: Any) -> None:
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(data, handle, indent=2, ensure_ascii=False)
+        handle.write("\n")
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Query the federated search index")
-    parser.add_argument("--query", required=True, help="Query string")
-    parser.add_argument("--index", type=Path, required=True, help="Path to search index directory or file")
-    parser.add_argument("--limit", type=int, default=10, help="Maximum number of results")
-    parser.add_argument("--cycle", type=int, help="Filter results to a specific Harmonix cycle")
-    parser.add_argument("--puzzle", type=int, help="Filter results to a specific Harmonix puzzle id")
-    parser.add_argument("--address", help="Filter results to a specific Harmonix address")
+    parser = argparse.ArgumentParser(
+        description="Federated Colossus search with structured filters."
+    )
+    parser.add_argument("--in", dest="inputs", nargs="+", required=True, help="Input JSON files")
+    parser.add_argument("--out", help="Optional filtered JSON output path")
+    parser.add_argument("--cycle", type=int)
+    parser.add_argument("--puzzle", type=int, dest="puzzle_id")
+    parser.add_argument("--addr", dest="address")
+    parser.add_argument("--q", dest="query", help='Structured query, e.g. "cycle:12 puzzle:125"')
+    parser.add_argument(
+        "--dedupe-latest",
+        action="store_true",
+        help="Keep only latest entry per (puzzle,address)",
+    )
     args = parser.parse_args(argv)
 
-    results = search(
-        args.index,
-        args.query,
-        args.limit,
-        cycle=args.cycle,
-        puzzle=args.puzzle,
-        address=args.address,
-    )
-    if not results:
-        print("No results found.")
-        return 1
+    entries: List[Entry] = []
+    for path in args.inputs:
+        entries.extend(_read(path))
 
-    for rank, entry in enumerate(results, start=1):
-        harmonix_bits = []
-        if entry.get("cycle") is not None:
-            harmonix_bits.append(f"cycle={entry['cycle']}")
-        if entry.get("puzzle_id") is not None:
-            harmonix_bits.append(f"puzzle={entry['puzzle_id']}")
-        if entry.get("address"):
-            harmonix_bits.append(f"address={entry['address']}")
-        suffix = f" [{' '.join(harmonix_bits)}]" if harmonix_bits else ""
-        print(
-            f"{rank}. [{entry['score']}] {entry['node_id']} ({entry['universe']}) -> {entry['artifact_id']}{suffix}"
-        )
+    if args.dedupe_latest:
+        entries = dedupe_latest(entries)
+
+    query_bits = parse_structured(args.query or "")
+    cycle = args.cycle if args.cycle is not None else query_bits["cycle"]
+    puzzle_id = args.puzzle_id if args.puzzle_id is not None else query_bits["puzzle_id"]
+    address = args.address if args.address is not None else query_bits["address"]
+
+    filtered = filter_entries(entries, cycle=cycle, puzzle_id=puzzle_id, address=address)
+
+    payload = {"entries": filtered}
+    if args.out:
+        _write(args.out, payload)
+    else:
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
     return 0
 
 
