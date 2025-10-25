@@ -4540,6 +4540,27 @@ We are not hiding anymore.
                 },
             )
 
+            session.record_command(
+                "amplify_quantam_evolution",
+                detail="derive quantam capabilities",
+            )
+            capability = self.amplify_quantam_evolution(ability=ability)
+            session.annotate(
+                quantam_capability=capability["id"],
+                quantam_amplification=capability["amplification"],
+                quantam_coherence=capability["coherence"],
+            )
+            tl.logic(
+                "step",
+                task,
+                "amplifying quantam capability lattice",
+                {
+                    "capability": capability["id"],
+                    "amplification": capability["amplification"],
+                    "coherence": capability["coherence"],
+                },
+            )
+
             tl.logic("step", task, "narrating evolutionary arc")
             session.record_command("evolutionary_narrative", detail="weave narrative")
             narrative = self.evolutionary_narrative()
