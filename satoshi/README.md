@@ -46,6 +46,19 @@ and a global list of unique wallets observed across the entire dataset. Point `-
 different directory to analyse an alternate collection of proofs, or use `--output` to save
 the report to disk.
 
+## Rendering canonical locking scripts
+
+Use the CLI helper to print the exact P2PKH locking script stored in
+[`puzzle_solutions.json`](puzzle_solutions.json) for a given bit-length. The default output
+matches the newline-delimited format shared in the original puzzle threads.
+
+```bash
+python -m satoshi.puzzle_script_cli 14
+```
+
+Pass `--single-line` to render a space-separated version or `--separator "\\t"` to emit a
+tab-delimited variant.
+
 ## Entries
 
 - `puzzle001.json` — Puzzle #1 authorship attestation for address `1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH`.
