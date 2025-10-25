@@ -52,6 +52,9 @@ python -m echo.echoctl cycle
 # propose next steps (requires `pip install -e .`)
 python -m echo.echoctl cycle
 
+# check continuum health status
+python -m echo.echoctl health
+
 # view plan
 python -m echo.echoctl plan
 

@@ -50,6 +50,19 @@ except ImportError:  # pragma: no cover - executed when run as script
     derive_action_plan = _IDEA.derive_action_plan  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
+    from .continuum_health import generate_continuum_health
+except ImportError:  # pragma: no cover - executed when run as script
+    _HEALTH_SPEC = importlib.util.spec_from_file_location(
+        "echo.continuum_health", (Path(__file__).resolve().parent / "continuum_health.py")
+    )
+    if _HEALTH_SPEC is None or _HEALTH_SPEC.loader is None:
+        raise
+    _HEALTH = importlib.util.module_from_spec(_HEALTH_SPEC)
+    sys.modules[_HEALTH_SPEC.name] = _HEALTH
+    _HEALTH_SPEC.loader.exec_module(_HEALTH)  # type: ignore[attr-defined]
+    generate_continuum_health = _HEALTH.generate_continuum_health  # type: ignore[attr-defined]
+
+try:  # pragma: no cover - executed when run as module
     from ._paths import DATA_ROOT, DOCS_ROOT, REPO_ROOT
 except ImportError:  # pragma: no cover - executed when run as script
     _PATHS_SPEC = importlib.util.spec_from_file_location(
@@ -131,6 +144,62 @@ def show_summary() -> None:
 
     manifest = load_manifest()
     print(summarize_wishes(manifest))
+
+
+def run_health(argv: List[str]) -> int:
+    """Inspect continuum artefacts and report health status."""
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl health",
+        description="Audit the continuum plan, wishes, and pulse history for freshness.",
+    )
+    parser.add_argument(
+        "--plan",
+        type=Path,
+        default=PLAN,
+        help="Path to the continuum plan markdown file (default: docs/NEXT_CYCLE_PLAN.md).",
+    )
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=WISH,
+        help="Path to the wish manifest JSON file (default: data/wish_manifest.json).",
+    )
+    parser.add_argument(
+        "--pulses",
+        type=Path,
+        default=PULSE_HISTORY,
+        help="Path to the pulse history JSON file (default: repo pulse_history.json).",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON instead of human-formatted text.",
+    )
+    parser.add_argument(
+        "--fail-on-warning",
+        action="store_true",
+        help="Return a non-zero exit code when warnings are present.",
+    )
+
+    options = parser.parse_args(argv)
+
+    report = generate_continuum_health(
+        options.plan,
+        options.manifest,
+        options.pulses,
+    )
+
+    if options.json:
+        print(json.dumps(report.to_dict(), indent=2))
+    else:
+        print(report.describe())
+
+    if report.status == "critical":
+        return 2
+    if report.status == "warning" and options.fail_on_warning:
+        return 1
+    return 0
 
 
 def run_idea(argv: List[str]) -> int:
@@ -367,7 +436,9 @@ def run_moonshot(argv: List[str]) -> int:
 
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
-        print("usage: echoctl [cycle|plan|summary|groundbreaking|moonshot|wish|idea] ...")
+        print(
+            "usage: echoctl [cycle|plan|summary|health|groundbreaking|moonshot|wish|idea] ..."
+        )
         return 1
     cmd = argv[1]
     if cmd == "cycle":
@@ -379,6 +450,8 @@ def main(argv: List[str]) -> int:
     if cmd == "summary":
         show_summary()
         return 0
+    if cmd == "health":
+        return run_health(argv[2:])
     if cmd == "groundbreaking":
         return run_groundbreaking(argv[2:])
     if cmd == "moonshot":
