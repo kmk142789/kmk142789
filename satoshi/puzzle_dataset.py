@@ -146,6 +146,17 @@ def find_solution_by_address(address: str) -> Optional[PuzzleSolution]:
     return None
 
 
+def generate_private_key_sequence(start: int, stop: int, *, width: int = 64) -> list[str]:
+    """Return zero-padded hexadecimal private keys for the inclusive range."""
+
+    if width <= 0:
+        raise ValueError("width must be positive")
+    if start > stop:
+        raise ValueError("start must be less than or equal to stop")
+
+    return [format(value, f"0{width}x") for value in range(start, stop + 1)]
+
+
 def _hash160(public_key_hex: str) -> str:
     """Return the HASH160 digest for the provided compressed public key."""
 
