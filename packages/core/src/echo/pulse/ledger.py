@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from echo.modes.phantom import PhantomReporter
+from echo.pulse.analytics import render_summary_table, summarize_ledger
 
 
 _LEDGER_SECRET = b"echo-pulse-ledger-signature-v1"
@@ -168,6 +169,11 @@ def create_app(ledger: PulseLedger | None = None) -> FastAPI:
 
 def _cmd_latest(args: argparse.Namespace) -> int:
     ledger = PulseLedger(root=args.root)
+    if args.summary:
+        summary = summarize_ledger(ledger, limit=args.limit)
+        print(render_summary_table(summary))
+        return 0
+
     receipts = ledger.latest(limit=args.limit)
     for receipt in receipts:
         print(json.dumps(receipt.to_dict(), indent=2))
@@ -178,6 +184,11 @@ def build_parser(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("ledger", help="Pulse ledger operations")
     parser.add_argument("--root", type=Path, default=None, help="Ledger root directory")
     parser.add_argument("--limit", type=int, default=5)
+    parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="Print a condensed summary instead of individual receipts",
+    )
     parser.set_defaults(func=_cmd_latest)
 
 
