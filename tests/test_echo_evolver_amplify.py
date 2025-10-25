@@ -73,3 +73,36 @@ def test_amplify_evolution_projects_amplification_metrics(tmp_path) -> None:
     }
     assert amplification["commit_sha"] == "test-sha"
     assert isinstance(amplification["nudges"], list)
+
+
+def test_amplify_capabilities_composes_views() -> None:
+    evolver = _build_evolver()
+    evolver.propagate_network()
+
+    bundle = evolver.amplify_capabilities(
+        resonance_factor=1.3,
+        preview_events=1,
+        include_sequence=True,
+        include_reflection=True,
+        include_propagation=True,
+    )
+
+    assert bundle["cycle"] == evolver.state.cycle
+    assert "amplified_evolution" in bundle
+    assert bundle["amplified_evolution"]["resonance_factor"] == pytest.approx(1.3)
+
+    sequence = bundle.get("sequence")
+    assert sequence is not None
+    assert sequence["description"].startswith("EchoEvolver cycle sequence")
+    assert "remaining_steps" in sequence
+
+    propagation = bundle.get("propagation")
+    assert propagation is not None
+    assert propagation["mode"] == evolver.state.network_cache["propagation_mode"]
+
+    reflection = bundle.get("reflection")
+    assert reflection is not None
+    assert reflection["cycle"] == evolver.state.cycle
+
+    cached = evolver.state.network_cache["amplified_capabilities"]
+    assert cached is bundle
