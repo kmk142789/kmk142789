@@ -18,7 +18,7 @@ the raw signatures.
 ```bash
 node bulk-key-signer.js \
   --keys path/to/wif_list.txt \
-  --message "PuzzleNN authorship by kmk142789 — attestation sha256 …" \
+  --message "Puzzle{puzzle} authorship by kmk142789 — attestation sha256 …" \
   --bitcoin \
   --out satoshi/latest_batch.json
 ```
@@ -29,7 +29,9 @@ Optional flags:
 - `--network testnet` – override the inferred WIF network when using hex keys.
 
 The output file includes a `combinedSignature` field matching the format stored in
-`puzzle-proofs/` and a `merkleRoot` value that can be published separately.
+`puzzle-proofs/` and a `merkleRoot` value that can be published separately. Message templates can
+embed placeholders such as `{puzzle}` (or the historic `PuzzleNN` token) and will be expanded to
+the current puzzle number when generating attestations.
 
 ## Inspecting stacked signatures
 

@@ -31,6 +31,35 @@ DEFAULT_MESSAGE = (
 )
 
 
+class _SafeFormatDict(dict):
+    """Dictionary that leaves unknown keys untouched when formatting."""
+
+    def __missing__(self, key: str) -> str:  # pragma: no cover - defensive
+        return "{" + key + "}"
+
+
+def _render_message(template: str, puzzle: int) -> str:
+    """Render the attestation message for a puzzle.
+
+    The function supports multiple placeholder styles so that existing scripts can either
+    provide an explicit format string (``{puzzle}``, ``{puzzle03}``, ``{puzzle02}``), or rely on
+    the historic ``PuzzleNN`` token that appears in earlier datasets.
+    """
+
+    substituted = template.replace("PuzzleNN", f"Puzzle{puzzle}")
+    mapping = _SafeFormatDict(
+        puzzle=puzzle,
+        puzzle02=f"{puzzle:02d}",
+        puzzle03=f"{puzzle:03d}",
+    )
+    try:
+        return substituted.format_map(mapping)
+    except ValueError:
+        # ``str.format`` raises ``ValueError`` when encountering a single ``'{'`` or ``'}'``.
+        # Preserve the caller-provided template in this edge case.
+        return substituted
+
+
 class AttestationError(RuntimeError):
     """Raised when generating an attestation fails."""
 
@@ -115,7 +144,8 @@ def generate_attestations(
         if target.exists() and not overwrite:
             continue
 
-        signature, public_point = _create_recoverable_signature(private_key, message)
+        rendered_message = _render_message(message, puzzle)
+        signature, public_point = _create_recoverable_signature(private_key, rendered_message)
 
         derived_address = pubkey_to_p2pkh_address(public_point, compressed=True)
         if derived_address != address:
@@ -123,7 +153,7 @@ def generate_attestations(
                 f"Derived address {derived_address} does not match recorded address {address}"
             )
 
-        payload = build_attestation(puzzle, address, signature, message)
+        payload = build_attestation(puzzle, address, signature, rendered_message)
         target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         written.append(target)
 
@@ -143,7 +173,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--message",
         default=DEFAULT_MESSAGE,
-        help="Message string to sign (default: standard attestation message)",
+        help=(
+            "Message template to sign. Use 'PuzzleNN', '{puzzle}', '{puzzle02}', or '{puzzle03}' "
+            "placeholders to insert the puzzle number (default: standard attestation message)."
+        ),
     )
     parser.add_argument(
         "--overwrite",
