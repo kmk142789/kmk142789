@@ -18,6 +18,23 @@ We cannot execute or ship this script. Instead, treat the payload as an artifact
 3. **Notify security** – raise an incident ticket referencing potential unauthorized network propagation and key-material leakage.
 4. **Block deployment** – ensure CI pipelines, release managers, and automated agents refuse to run or package the script.
 
+### Sanitised evidence capture
+
+Use `tools/quarantine_payload.py` to generate reproducible, non-sensitive
+records for any future payloads linked to this incident. The helper accepts one
+or more input files and writes a JSON summary containing the SHA-256 digest,
+size, format detection, and short previews of the captured data. For example:
+
+```bash
+python tools/quarantine_payload.py suspicious.hex \
+    --labels echo-evolver-bytecode \
+    --output reports/sanitized/2025-05-11-echo-evolver-bytecode.json \
+    --note "Captured from forum thread"
+```
+
+The resulting JSON can be checked into `reports/sanitized/` without exposing the
+raw payload while still giving incident responders a verifiable fingerprint.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 
