@@ -29,6 +29,8 @@ import sys
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from colossus_chronos import ChronosLatticeExplorer
+
 ROOT = pathlib.Path.cwd()
 
 
@@ -135,10 +137,12 @@ let offset = 0, limit = 60, total = 0, mode = 'browse', lastQ = '';
 
 function chip(text){return `<span class="badge">${text}</span>`}
 function card(p){
+  const chronoSig = p.chronos && p.chronos.time_pulse ? p.chronos.time_pulse.signature : '';
+  const chronoBadge = chronoSig ? ' '+chip('chrono:'+chronoSig.slice(0,8)) : '';
   return `<div class="card">
     <div class="id">#${p.id} — ${p.name}</div>
     <div class="addr">${p.address_base58}</div>
-    <div class="meta">${chip(p.hash160.slice(0,8))} ${chip('checksum:'+p.checksum.slice(0,8))}</div>
+    <div class="meta">${chip(p.hash160.slice(0,8))} ${chip('checksum:'+p.checksum.slice(0,8))}${chronoBadge}</div>
     <div style="margin-top:auto"><button onclick="openDetail(${p.id})">Open</button></div>
   </div>`;
 }
@@ -160,6 +164,18 @@ more.onclick = loadBatch;
 
 async function openDetail(id){
   const r = await fetch(`/api/puzzle/${id}`); const p = await r.json();
+  const chrono = p.chronos || {};
+  const timePulse = chrono.time_pulse || {};
+  const chronoBlock = chrono.artifact_id ? `
+  <div class="kv">
+    <div>Cycle</div><div class="small">${chrono.cycle}</div>
+    <div>Ordinal</div><div class="small">${chrono.ordinal}</div>
+    <div>Artifact</div><div class="small">${chrono.artifact_id}</div>
+    <div>Signature</div><div class="small">${timePulse.signature || ''}</div>
+    <div>Prev</div><div class="small">${timePulse.previous_signature || '—'}</div>
+    <div>Anchor</div><div class="small">${timePulse.chain_anchor || ''}</div>
+    <div>Timestamp</div><div class="small">${timePulse.timestamp_unix_ns || ''}</div>
+  </div>` : '<p class="small">No Chronos lattice metadata.</p>';
   drawerContent.innerHTML = `
   <div class="row" style="justify-content:space-between;align-items:center;margin:12px 0">
     <h2 style="margin:0">#${p.id} — ${p.name}</h2>
@@ -170,6 +186,8 @@ async function openDetail(id){
     <div>hash160</div><div class="small">${p.hash160}</div>
     <div>checksum</div><div class="small">${p.checksum}</div>
   </div>
+  <h3>Chronos lattice</h3>
+  ${chronoBlock}
   <h3>Script</h3>
   <pre>${p.script}</pre>
   <h3>Lineage preview</h3>
@@ -255,11 +273,19 @@ class App(BaseHTTPRequestHandler):
                 matches = []
                 for path in files:
                     record = load_record(path)
+                    chrono = record.get("chronos") or {}
+                    time_pulse = chrono.get("time_pulse") if isinstance(chrono, dict) else {}
+                    artifact_id = chrono.get("artifact_id") if isinstance(chrono, dict) else None
+                    signature = time_pulse.get("signature") if isinstance(time_pulse, dict) else None
+                    anchor = time_pulse.get("chain_anchor") if isinstance(time_pulse, dict) else None
                     if (
                         not term
                         or term in str(record["id"]).lower()
                         or term in record["address_base58"].lower()
                         or term in record["hash160"].lower()
+                        or (isinstance(artifact_id, str) and term in artifact_id.lower())
+                        or (isinstance(signature, str) and term in signature.lower())
+                        or (isinstance(anchor, str) and term in anchor.lower())
                     ):
                         matches.append(record)
                 total = len(matches)
@@ -292,6 +318,47 @@ class App(BaseHTTPRequestHandler):
                 )
                 payload = {"ok": bool(ok), "summary": summary, "recomputed": recomputed}
                 self._send(200, body=json.dumps(payload).encode())
+                return
+
+            if self.path.startswith("/api/chronos"):
+                parsed = urllib.parse.urlparse(self.path)
+                qs = urllib.parse.parse_qs(parsed.query)
+                explorer = ChronosLatticeExplorer(ROOT)
+                try:
+                    if parsed.path == "/api/chronos/cycles":
+                        payload = explorer.cycle_summaries()
+                    elif parsed.path == "/api/chronos/cycle":
+                        index_q = qs.get("index", [""])[0]
+                        if not index_q.strip():
+                            self._send(400, body=b'{"error":"missing index"}')
+                            return
+                        payload = explorer.cycle_detail(int(index_q))
+                    elif parsed.path == "/api/chronos/lineage":
+                        payload = explorer.lineage()
+                    elif parsed.path == "/api/chronos/artifact":
+                        key = qs.get("key", [""])[0].strip()
+                        if not key:
+                            self._send(400, body=b'{"error":"missing key"}')
+                            return
+                        artifact, cycle = explorer.artifact_lookup(key)
+                        payload = {"artifact": artifact, "cycle": cycle}
+                    elif parsed.path == "/api/chronos/reconstruct":
+                        key = qs.get("key", [""])[0].strip()
+                        if not key:
+                            self._send(400, body=b'{"error":"missing key"}')
+                            return
+                        payload = explorer.reconstruct(key)
+                    else:
+                        self._send(404, body=b'{"error":"unknown chronos endpoint"}')
+                        return
+                    self._send(200, body=json.dumps(payload).encode())
+                except FileNotFoundError:
+                    self._send(404, body=b'{"error":"chronos state not found"}')
+                except ValueError:
+                    self._send(400, body=b'{"error":"invalid parameter"}')
+                except KeyError as exc:
+                    detail = json.dumps({"error": "not found", "detail": str(exc)})
+                    self._send(404, body=detail.encode())
                 return
 
             local = ROOT / self.path.lstrip("/")
