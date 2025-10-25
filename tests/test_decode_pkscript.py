@@ -86,3 +86,28 @@ def test_invalid_script_raises() -> None:
         assert "five elements" in str(exc)
     else:
         raise AssertionError("expected ScriptDecodeError to be raised")
+
+
+def test_decode_p2pk_text_script() -> None:
+    script = "41\n04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f\nOP_CHECKSIG"
+    decoded = decode_p2pkh_script(script)
+    assert decoded == DecodedScript(
+        address="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+        pubkey_hash="62e907b15cbf27d5425399ebf6f0fb50ebb88f18",
+        network="mainnet",
+        script_type="p2pk",
+        pubkey="04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f",
+    )
+
+
+def test_decode_p2pk_hex_script() -> None:
+    script = (
+        "4104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4ce"
+        "f38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"
+    )
+    decoded = decode_p2pkh_script(script)
+    assert decoded.pubkey == (
+        "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f3"
+        "5504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"
+    )
+    assert decoded.address == "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
