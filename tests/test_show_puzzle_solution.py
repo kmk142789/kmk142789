@@ -69,3 +69,15 @@ def test_parse_pkscript_with_fragmented_opcode():
 def test_parse_pkscript_with_blank_metadata_line():
     script = """Puzzle #105\n\n\n1CMjscKB3-iHRhiZVib\nPkscript\nOP_DUP\nOP_HASH160\n7c957db6fdd0733bb83bc6d6d747711263ba50b0\nOP_EQUALVERIFY\nOP_CHECKSIG"""
     assert _parse_p2pkh_hash160(script) == PUZZLE_105_HASH160
+
+
+def test_cli_handles_p2pk_script(capsys):
+    script = (
+        "0400159fa21fc72ebf88b9bfbcb7ed7c3c2daf1f3b86231a43354f342de2e16dfaf112dd5c62e71e26717632c37191b105757026962caf9857de050aa732d1b354\n"
+        "OP_CHECKSIG"
+    )
+    show_puzzle_solution.main(["--pkscript", script])
+    captured = capsys.readouterr()
+    assert "Script type : P2PK" in captured.out
+    assert "Address : 1LhB4cSeiiQzT2A7i7jbTvRT4YChXEJqci" in captured.out
+    assert "Could not locate a matching puzzle entry." in captured.out
