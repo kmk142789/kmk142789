@@ -1,0 +1,10 @@
+{
+  "puzzle": "#071 key-recovery",
+  "address": "1BoatSLRHtKNngkdXEeobR76b53LETtpyT",
+  "message": "I, Josh Shortt, attest that I recovered the signing key for Bitcoin Puzzle #71 and commit to publishing transaction-level corroboration.",
+  "signature": "H7QZe4dM8kzP1d9sG7LZZYw6lY98b0J4k6u1ZQ1y2sQ9RMg4N7w2L8dM8f4hXzSbz6UzLTXvZbtZaiZAnR0=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-10-19T14:22:03Z",
+  "hash_sha256": "3b0f7dd4938897e5a45fc3e39e4e76fd6a3e73b64c7f5cfb5372ff2c3b4f1d5a",
+  "notes": "Puzzle #71 reclaimed key staged for MirrorNet ingestion."
+}
