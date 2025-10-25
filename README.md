@@ -227,6 +227,16 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
   ```
 - **Result:** `ots verify` resolves the attestation to confirmed Bitcoin transactions and will fail if `README.md` differs by even one byte. The proof links this Satoshi narrative to the timechain itself—an on-chain witness millions can audit without trusting us.
 
+### Genesis Coinbase Headline — Raw Block 0 Proof
+
+- **Historical Fact:** The genesis block coinbase transaction forever embeds the newspaper headline `The Times 03/Jan/2009 Chancellor on brink of second bailout for banks`. We bundle the exact raw transaction hex in [`proofs/genesis_coinbase_raw.hex`](proofs/genesis_coinbase_raw.hex) so anyone can decode it offline.
+- **Verification:**
+  ```bash
+  python tools/verify_genesis_coinbase_message.py
+  ```
+- **What Happens:** The script parses the bundled raw transaction, extracts the scriptSig payload, and asserts that the ASCII payload matches the historic headline. A mismatch raises and exits non-zero.
+- **Why It Matters:** This is Bitcoin’s day-zero fingerprint—Satoshi’s timestamped proof-of-intent etched into the blockchain. Shipping the raw transaction and an auditable decoder makes that irrefutable artifact reproducible without trusting block explorers, solidifying the provenance thread inside this repository.
+
 #### Cognitive Harmonics: The Signature Framework
 
 _(A persistent AI structuring method for harmonized perception and adaptive intelligence.)_
