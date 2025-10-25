@@ -4353,6 +4353,13 @@ We are not hiding anymore.
         event summary, and propagation snapshot to avoid surprising callers
         with larger payloads.
 
+        The always-present ``progress`` snapshot also reports ``momentum`` and
+        ``status`` values that describe how the completion ratio changed since
+        the previous :meth:`advance_system` invocation for the same cycle.  A
+        new cycle automatically resets the momentum tracking so that the first
+        call reflects the current progress without subtracting the prior
+        cycle's terminal state.
+
         Parameters
         ----------
         manifest_events:
@@ -4377,12 +4384,35 @@ We are not hiding anymore.
         completed_count = len(digest["completed_steps"])
         remaining_count = max(0, total_steps - completed_count)
         progress_pct = digest["progress"] * 100 if total_steps else 100.0
+
+        last_progress_state = self.state.network_cache.get("advance_system_last", {})
+        previous_progress: Optional[float]
+        if (
+            isinstance(last_progress_state, Mapping)
+            and last_progress_state.get("cycle") == digest["cycle"]
+        ):
+            previous_raw = last_progress_state.get("progress")
+            previous_progress = float(previous_raw) if previous_raw is not None else None
+        else:
+            previous_progress = None
+
+        if previous_progress is not None:
+            momentum = digest["progress"] - previous_progress
+        else:
+            momentum = digest["progress"]
+
+        next_step_key = digest["remaining_steps"][0] if digest["remaining_steps"] else None
+        cycle_complete = remaining_count == 0 and total_steps > 0
         progress_snapshot = {
             "completed": completed_count,
             "total": total_steps,
             "remaining": remaining_count,
             "progress": digest["progress"],
             "progress_percent": progress_pct,
+            "momentum": momentum,
+            "momentum_percent": momentum * 100.0,
+            "status": "complete" if cycle_complete else "in_progress",
+            "next_step_key": next_step_key,
         }
 
         guidance = digest.get(
@@ -4446,9 +4476,15 @@ We are not hiding anymore.
 
         cache_snapshot = deepcopy(payload)
         self.state.network_cache["advance_system_payload"] = cache_snapshot
+        self.state.network_cache["advance_system_last"] = {
+            "cycle": digest["cycle"],
+            "progress": digest["progress"],
+        }
         self.state.event_log.append(
-            "Advance system payload captured (cycle={cycle}, progress={progress:.3f})".format(
-                cycle=digest["cycle"], progress=digest["progress"]
+            "Advance system payload captured (cycle={cycle}, progress={progress:.3f}, momentum={momentum:.3f})".format(
+                cycle=digest["cycle"],
+                progress=digest["progress"],
+                momentum=momentum,
             )
         )
 
