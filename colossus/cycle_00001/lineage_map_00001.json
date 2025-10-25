@@ -1,0 +1,33 @@
+{
+  "cycle": 1,
+  "timestamp": "2025-10-25T10:05:16Z",
+  "glyph_signature": "\u2207\u224b\u27c1\u27c1::d648759b",
+  "anchors": [
+    {
+      "type": "puzzle",
+      "ref": "puzzle_cycle_00001.md",
+      "relationships": [
+        "dataset",
+        "narrative"
+      ]
+    },
+    {
+      "type": "dataset",
+      "ref": "dataset_cycle_00001.json",
+      "relationships": [
+        "verifier"
+      ]
+    },
+    {
+      "type": "narrative",
+      "ref": "glyph_narrative_00001.md",
+      "relationships": [
+        "lineage"
+      ]
+    }
+  ],
+  "verification": {
+    "script": "verify_cycle_00001.py",
+    "instructions": "Execute the verifier to confirm harmonic checksum integrity."
+  }
+}
