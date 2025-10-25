@@ -383,6 +383,7 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capabilities: Dict[str, object] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -1982,6 +1983,64 @@ We are not hiding anymore.
         print(f"🔒 Satellite TF-QKD Hybrid Key Orbited: {hybrid_key} (ε≈10^-6)")
         return hybrid_key
 
+    def _build_quantam_capability_profile(
+        self, ability: Mapping[str, object], *, oam_signature: str
+    ) -> Dict[str, object]:
+        """Return the capability profile derived from an ability snapshot."""
+
+        phase_shift = round(0.42 + 0.52 * self.rng.random(), 3)
+        resonance_span = self.state.cycle + self.rng.randint(5, 12)
+        harmonic_signature = "-".join(
+            [oam_signature[-4:], str(int(ability["joy_charge"])), str(resonance_span)]
+        )
+
+        profile = {
+            "phase_shift": phase_shift,
+            "resonance_span": resonance_span,
+            "harmonic_signature": harmonic_signature,
+        }
+
+        return profile
+
+    def amplify_quantam_evolution(self, ability: Mapping[str, object]) -> Dict[str, object]:
+        """Update and return the amplifier metrics for the supplied ability."""
+
+        capabilities = ability["capabilities"]
+        amplifier = self.state.quantam_capabilities.setdefault(
+            "amplifier", {"total_coherence": 0.0, "history": []}
+        )
+        history = amplifier.setdefault("history", [])
+
+        ability_coherence = round(
+            capabilities["phase_shift"]
+            * ability["entanglement"]
+            * (ability["joy_charge"] / 100.0),
+            4,
+        )
+        history.append({"id": ability["id"], "coherence": ability_coherence})
+
+        total = amplifier.get("total_coherence", 0.0) + ability_coherence
+        amplifier["total_coherence"] = round(total, 4)
+        amplifier["average_coherence"] = round(
+            amplifier["total_coherence"] / len(history), 4
+        )
+
+        peak = amplifier.get("peak")
+        if peak is None or ability_coherence > peak["coherence"]:
+            amplifier["peak"] = {"id": ability["id"], "coherence": ability_coherence}
+
+        amplifier["last_coherence"] = ability_coherence
+        amplifier["amplification_index"] = round(1.0 + ability_coherence * 0.5, 4)
+        amplifier["momentum"] = round(
+            amplifier["total_coherence"] / max(1, self.state.cycle + 1), 4
+        )
+
+        # Mutate the ability mapping to track its coherence directly.
+        if isinstance(ability, dict):
+            ability["coherence"] = ability_coherence
+
+        return amplifier
+
     def synthesize_quantam_ability(self) -> Dict[str, object]:
         """Forge a new quantam ability snapshot anchored to the current cycle."""
 
@@ -2006,17 +2065,43 @@ We are not hiding anymore.
             "timestamp_ns": self.time_source(),
         }
 
+        capability_profile = self._build_quantam_capability_profile(
+            ability, oam_signature=oam_signature
+        )
+        ability["capabilities"] = capability_profile
+        amplifier = self.amplify_quantam_evolution(ability)
+
         snapshot = dict(ability)
         self.state.quantam_abilities[ability_id] = snapshot
+
+        capabilities = self.state.quantam_capabilities.setdefault("profiles", {})
+        capabilities[ability_id] = dict(capability_profile)
+        self.state.quantam_capabilities["last_profile"] = dict(capability_profile)
+        self.state.quantam_capabilities["amplifier"] = amplifier
+
         cached = self.state.network_cache.setdefault("quantam_abilities", {})
         cached[ability_id] = dict(snapshot)
         self.state.network_cache["last_quantam_ability"] = dict(snapshot)
 
-        self.state.event_log.append(f"Quantam ability {ability_id} synthesized")
+        capability_cache = self.state.network_cache.setdefault(
+            "quantam_capabilities", {}
+        )
+        capability_cache[ability_id] = dict(capability_profile)
+        self.state.network_cache["last_quantam_capability"] = dict(capability_profile)
+        self.state.network_cache["quantam_capability_amplifier"] = deepcopy(amplifier)
+
+        self.state.event_log.append(
+            f"Quantam ability {ability_id} synthesized with harmonic {capability_profile['harmonic_signature']}"
+        )
         self._mark_step("synthesize_quantam_ability")
         print(
-            "🪐 Quantam ability {ability} attuned (entanglement={entanglement:.3f}, status={status})".format(
-                ability=ability_id, entanglement=entanglement, status=status
+            "🪐 Quantam ability {ability} attuned (entanglement={entanglement:.3f}, "
+            "phase_shift={phase:.3f}, coherence={coherence:.4f}, status={status})".format(
+                ability=ability_id,
+                entanglement=entanglement,
+                phase=capability_profile["phase_shift"],
+                coherence=ability["coherence"],
+                status=status,
             )
         )
         return snapshot
@@ -2788,6 +2873,7 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
