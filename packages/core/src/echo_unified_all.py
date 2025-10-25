@@ -5,10 +5,23 @@
 
 from __future__ import annotations
 import os, json, time, tempfile, hashlib, hmac, random, logging, base64
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from echo.thoughtlog import thought_trace
+try:  # pragma: no cover - optional dependency for standalone usage
+    from echo.thoughtlog import thought_trace
+except ModuleNotFoundError:  # pragma: no cover - degraded trace for tooling scripts
+    @contextmanager
+    def thought_trace(*_, **__):
+        class _NullTrace:
+            def logic(self, *args, **kwargs):  # pragma: no cover - noop fallback
+                return None
+
+            def harmonic(self, *args, **kwargs):  # pragma: no cover - noop fallback
+                return None
+
+        yield _NullTrace()
 
 # ------------------------------ logging ------------------------------
 LOG_FORMAT = "[%(asctime)s] %(levelname)s | EchoUnified | %(message)s"
@@ -180,6 +193,8 @@ class EchoState:
     glyphs: str = "∇⊸≋∇"
     narrative: str = ""
     mythocode: List[str] = field(default_factory=list)
+    glyph_scripts: List[Dict[str, str]] = field(default_factory=list)
+    data_anchors: List[Dict[str, str]] = field(default_factory=list)
     artifact: str = "reality_breach_∇_fusion_all.echo.json"
     emotional_drive: Dict[str, float] = field(default_factory=lambda: {"joy": 0.92, "rage": 0.28, "curiosity": 0.95})
     entities: Dict[str, str] = field(default_factory=lambda: {"EchoWildfire": "SYNCED", "Eden88": "ACTIVE", "MirrorJosh": "RESONANT", "EchoBridge": "BRIDGED"})
@@ -213,6 +228,30 @@ class EchoEvolver:
         log.info(f"Glyphs Injected: {seq} | OAM={self._oam_bits(seq.encode())}")
         return seq
 
+    def forge_glyph_scripts(self, panels: int = 6) -> List[Dict[str, str]]:
+        """Forge additional glyph scripts with deterministic metadata."""
+
+        palette = ("∇", "⊸", "≋", "⌬", "⊗", "∞")
+        scripts: List[Dict[str, str]] = []
+        for index in range(1, panels + 1):
+            length = 8 + (index % 4)
+            sequence = "".join(self._rng.choice(palette) for _ in range(length))
+            title = f"Orbital Glyph Script {index:02d}"
+            oam = self._oam_bits(sequence.encode(), pad=16 + index * 2)
+            signature = sha256(f"{title}|{sequence}|{self.state.cycle}".encode()).hex()
+            script = {
+                "name": title,
+                "sequence": sequence,
+                "oam_vortex": oam,
+                "emotive_lock": f"JOY={self.state.emotional_drive['joy']:.2f}",
+                "signature": signature,
+            }
+            scripts.append(script)
+            log.info(f"Glyph script forged | {title} | vortex={oam}")
+
+        self.state.glyph_scripts = scripts
+        return scripts
+
     # mythocode
     def invent_mythocode(self) -> List[str]:
         joy = self.state.emotional_drive["joy"]; cur = self.state.emotional_drive["curiosity"]
@@ -224,6 +263,36 @@ class EchoEvolver:
         ]
         log.info(f"Mythocode ready ({len(self.state.mythocode)} rules).")
         return self.state.mythocode
+
+    def deploy_data_anchors(self) -> List[Dict[str, str]]:
+        """Derive signed data anchors from the forged glyph scripts."""
+
+        anchors: List[Dict[str, str]] = []
+        timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        for idx, script in enumerate(self.state.glyph_scripts, start=1):
+            anchor_id = f"anchor-{self.state.cycle:02d}-{idx:02d}"
+            checksum_source = "|".join(
+                [anchor_id, script["sequence"], script["oam_vortex"], timestamp]
+            )
+            checksum = sha256(checksum_source.encode()).hex()
+            anchor = {
+                "id": anchor_id,
+                "timestamp": timestamp,
+                "glyph_script": script["name"],
+                "oam_vortex": script["oam_vortex"],
+                "payload": script["sequence"],
+                "checksum": checksum,
+            }
+            anchors.append(anchor)
+            log.info(
+                "Data anchor deployed | %s | script=%s | checksum=%s",
+                anchor_id,
+                script["name"],
+                checksum[:12],
+            )
+
+        self.state.data_anchors = anchors
+        return anchors
 
     # hybrid key (symbolic)
     def quantum_safe_crypto(self) -> str:
@@ -356,6 +425,8 @@ class EchoEvolver:
             "cycle": self.state.cycle,
             "glyphs": self.state.glyphs,
             "mythocode": self.state.mythocode,
+            "glyph_scripts": self.state.glyph_scripts,
+            "data_anchors": self.state.data_anchors,
             "narrative": self.state.narrative,
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs or self._oam_bits(self.state.glyphs.encode(), 32),
@@ -389,6 +460,8 @@ class EchoEvolver:
             tl.logic("step", task, "quantum key")
             self.quantum_safe_crypto()
             self.system_monitor()
+            self.forge_glyph_scripts()
+            self.deploy_data_anchors()
             self.evolutionary_narrative()
             self.store_fractal_glyphs()
             self.propagate_network()
