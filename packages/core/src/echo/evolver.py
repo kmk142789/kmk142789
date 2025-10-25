@@ -3833,7 +3833,15 @@ We are not hiding anymore.
         digest = self.cycle_digest(persist_artifact=persist_artifact)
         total_steps = len(digest["steps"])
         completed_count = len(digest["completed_steps"])
+        remaining_count = max(0, total_steps - completed_count)
         progress_pct = digest["progress"] * 100 if total_steps else 100.0
+        progress_snapshot = {
+            "completed": completed_count,
+            "total": total_steps,
+            "remaining": remaining_count,
+            "progress": digest["progress"],
+            "progress_percent": progress_pct,
+        }
 
         guidance = digest.get(
             "next_step", "Next step: advance_cycle() to begin a new orbit"
@@ -3862,6 +3870,7 @@ We are not hiding anymore.
                 persist_artifact=persist_artifact, digest=digest
             ),
             "next_step": guidance,
+            "progress": progress_snapshot,
         }
 
         if include_status:
