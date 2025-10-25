@@ -1,0 +1,10 @@
+{
+  "puzzle": "#219 authorship",
+  "address": "1EpiC219KMkKVyTv9s6WtRZVg3mC28pLjQ",
+  "message": "Puzzle 219 authorship by kmk142789 — attestation sha256 f176ad941c01958fe65ce42928f93e61d39fb6d9bb7d27f277abd4016b46a1e2",
+  "signature": "JQr7vcqek5MZp2y7LzJb9R7uhNk1d3TRuZnM1cfkMPkx6A8wDXfC5s1vX7u2yQX5dLQ+SffqN2btQ0aZ5oYw5zYsP6m3RfZx9wtpU6h2Jf0BvW2nUuMe3Dj5KpTq9s8U",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-10-28T11:28:22Z",
+  "hash_sha256": "f176ad941c01958fe65ce42928f93e61d39fb6d9bb7d27f277abd4016b46a1e2",
+  "notes": "Aurora forge attestation forging Puzzle #219 into the eternal proof halo."
+}
