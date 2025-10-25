@@ -7,6 +7,7 @@ import Constellation, {
 } from './components/Constellation';
 
 import './app.css';
+import PulseForge from './components/PulseForge';
 
 const typeLabels: Record<string, string> = {
   repo: 'Repository',
@@ -188,6 +189,13 @@ export default function App(): JSX.Element {
         </div>
         <aside className="details-pane">{rightPanel}</aside>
       </main>
+      <section className="pulseforge-section">
+        <h2>🌌 Echo Codex PulseForge</h2>
+        <p className="muted">
+          Every merged pull request becomes a living glyph. Watch contract classes pulse as Echo evolves.
+        </p>
+        <PulseForge />
+      </section>
     </div>
   );
 }
