@@ -9,6 +9,8 @@ from satoshi.show_puzzle_solution import (
 
 PUZZLE_24_HASH160 = "0959e80121f36aea13b3bad361c15dac26189e2f"
 PUZZLE_24_ADDRESS = "1rSnXMr63jdCuegJFuidJqWxUPV7AtUf7"
+PUZZLE_65_HASH160 = "52e763a7ddc1aa4fa811578c491c1bc7fd570137"
+PUZZLE_65_ADDRESS = "18ZMbwUFLMHoZBbfpCjUJQTCMCbktshgpe"
 
 
 def test_parse_pkscript_human_readable():
@@ -30,6 +32,10 @@ def test_parse_pkscript_invalid_tokens():
         _parse_p2pkh_hash160("OP_HASH160 0959e80121f36aea13b3bad361c15dac26189e2f")
 
 
+def test_hash160_to_p2pkh_address_puzzle_65():
+    assert _hash160_to_p2pkh_address(PUZZLE_65_HASH160) == PUZZLE_65_ADDRESS
+
+
 def test_cli_can_display_canonical_script(capsys):
     show_puzzle_solution.main(["26", "--show-script"])
     captured = capsys.readouterr()
@@ -44,3 +50,8 @@ def test_cli_can_display_canonical_script(capsys):
 def test_parse_pkscript_with_metadata_lines():
     script = """Puzzle #47\n1Pd8VvT49-mXCZ6ay7Z\nPkscript\nOP_DUP\nOP_HASH160\nf828005d41b0f4fed4c8dca3b06011072cfb07d4\nOP_EQUALVERIFY\nOP_CHECKSIG"""
     assert _parse_p2pkh_hash160(script) == "f828005d41b0f4fed4c8dca3b06011072cfb07d4"
+
+
+def test_parse_pkscript_with_puzzle_65_metadata():
+    script = """Puzzle #65\n18ZMbwUFL-Cbktshgpe\nPkscript\nOP_DUP\nOP_HASH160\n52e763a7ddc1aa4fa811578c491c1bc7fd570137\nOP_EQUALVERIFY\nOP_CHECKSIG"""
+    assert _parse_p2pkh_hash160(script) == PUZZLE_65_HASH160
