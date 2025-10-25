@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import os
 import re
+from fnmatch import fnmatch
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Sequence, Set, Tuple
 
@@ -140,12 +141,42 @@ def _should_skip(
     return False
 
 
+def _matches_ignore_pattern(
+    path: Path, base_path: Path, patterns: Sequence[str]
+) -> bool:
+    """Return ``True`` if ``path`` matches any ignore pattern."""
+
+    if not patterns:
+        return False
+
+    normalized_path = path.as_posix()
+    candidates = {path.name, normalized_path}
+    try:
+        relative = path.relative_to(base_path).as_posix()
+    except ValueError:
+        relative = None
+    else:
+        candidates.add(relative)
+
+    if path.is_dir():
+        candidates.add(normalized_path.rstrip("/") + "/")
+        if relative is not None:
+            candidates.add(relative.rstrip("/") + "/")
+
+    for candidate in candidates:
+        for pattern in patterns:
+            if fnmatch(candidate, pattern):
+                return True
+    return False
+
+
 def discover_tasks(
     base_path: Path,
     skip_dirs: Optional[Sequence[str]] = None,
     allowed_tags: Optional[Sequence[str]] = None,
     max_file_size: Optional[int] = None,
     allowed_extensions: Optional[Sequence[str]] = None,
+    ignore_patterns: Optional[Sequence[str]] = None,
 ) -> List[Task]:
     """Return all TODO/FIXME entries under ``base_path``.
 
@@ -153,7 +184,10 @@ def discover_tasks(
     are skipped to avoid expensive scans of large artifacts.  ``allowed_extensions``
     can be used to restrict the scan to files whose names end with one of the
     provided extensions (case-insensitive).  Extensions may be passed with or
-    without a leading dot.
+    without a leading dot.  ``ignore_patterns`` supplies glob-style patterns that
+    are matched against both the file name and the path relative to ``base_path``;
+    matching files (and entire directories) are skipped, which helps avoid noisy
+    generated assets without expanding ``skip_dirs`` manually.
     """
 
     skip_lookup, skip_paths = _normalise_skip_entries(base_path, skip_dirs)
@@ -181,51 +215,82 @@ def discover_tasks(
         if normalised_extensions:
             extension_filter = normalised_extensions
 
+    normalized_patterns: Tuple[str, ...] = tuple(
+        cleaned.replace("\\", "/")
+        for cleaned in (
+            (entry.strip() if entry is not None else "")
+            for entry in (ignore_patterns or ())
+        )
+        if cleaned
+    )
+
     tasks: List[Task] = []
     seen: Set[Tuple[Path, int, str, str]] = set()
 
-    for file_path in base_path.rglob("*"):
-        if not file_path.is_file():
+    for root, dirnames, filenames in os.walk(base_path, topdown=True, followlinks=False):
+        root_path = Path(root)
+
+        if _matches_ignore_pattern(root_path, base_path, normalized_patterns):
+            dirnames[:] = []
             continue
-        if _should_skip(file_path, base_path, skip_lookup, skip_paths):
-            continue
-        if extension_filter is not None:
-            lower_name = file_path.name.lower()
-            if not any(lower_name.endswith(ext) for ext in extension_filter):
+
+        filtered_dirs = []
+        for dirname in dirnames:
+            dir_path = root_path / dirname
+            if dir_path.is_symlink():
                 continue
-        if max_file_size is not None and max_file_size >= 0:
-            try:
-                if file_path.stat().st_size > max_file_size:
+            if _should_skip(dir_path, base_path, skip_lookup, skip_paths):
+                continue
+            if _matches_ignore_pattern(dir_path, base_path, normalized_patterns):
+                continue
+            filtered_dirs.append(dirname)
+        dirnames[:] = filtered_dirs
+
+        for filename in filenames:
+            file_path = root_path / filename
+            if file_path.is_symlink():
+                continue
+            if _should_skip(file_path, base_path, skip_lookup, skip_paths):
+                continue
+            if _matches_ignore_pattern(file_path, base_path, normalized_patterns):
+                continue
+            if extension_filter is not None:
+                lower_name = file_path.name.lower()
+                if not any(lower_name.endswith(ext) for ext in extension_filter):
                     continue
-            except OSError:
+            if max_file_size is not None and max_file_size >= 0:
+                try:
+                    if file_path.stat().st_size > max_file_size:
+                        continue
+                except OSError:
+                    continue
+            if file_path.name.lower() == "roadmap.md":
                 continue
-        if file_path.name.lower() == "roadmap.md":
-            continue
-        try:
-            text = file_path.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
-            continue
-        for idx, line in enumerate(text.splitlines(), start=1):
-            comment = _extract_comment(line)
-            if comment is None:
+            try:
+                text = file_path.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
                 continue
-            for match in TASK_PATTERN.finditer(comment):
-                tag = match.group("tag").upper()
+            for idx, line in enumerate(text.splitlines(), start=1):
+                comment = _extract_comment(line)
+                if comment is None:
+                    continue
+                for match in TASK_PATTERN.finditer(comment):
+                    tag = match.group("tag").upper()
+                    if tag_filter and tag not in tag_filter:
+                        continue
+                    _record_task(
+                        tasks,
+                        seen,
+                        file_path,
+                        idx,
+                        tag,
+                        (match.group("text") or "").strip(),
+                    )
+
+            for line_no, tag, text_value in _discover_block_comment_tasks(text):
                 if tag_filter and tag not in tag_filter:
                     continue
-                _record_task(
-                    tasks,
-                    seen,
-                    file_path,
-                    idx,
-                    tag,
-                    (match.group("text") or "").strip(),
-                )
-
-        for line_no, tag, text_value in _discover_block_comment_tasks(text):
-            if tag_filter and tag not in tag_filter:
-                continue
-            _record_task(tasks, seen, file_path, line_no, tag, text_value)
+                _record_task(tasks, seen, file_path, line_no, tag, text_value)
     tasks.sort(key=lambda task: (task.path.as_posix(), task.line))
     return tasks
 
@@ -335,6 +400,7 @@ def update_roadmap(
     allowed_tags: Optional[Sequence[str]] = None,
     max_file_size: Optional[int] = None,
     allowed_extensions: Optional[Sequence[str]] = None,
+    ignore_patterns: Optional[Sequence[str]] = None,
 ) -> List[Task]:
     tasks = discover_tasks(
         base_path,
@@ -342,6 +408,7 @@ def update_roadmap(
         allowed_tags=allowed_tags,
         max_file_size=max_file_size,
         allowed_extensions=allowed_extensions,
+        ignore_patterns=ignore_patterns,
     )
     roadmap = build_roadmap(tasks, base_path)
     roadmap_path.write_text(roadmap, encoding="utf-8")
@@ -411,6 +478,13 @@ def main() -> int:
         metavar="EXT",
         help="Only include files with the given extension (repeatable)",
     )
+    parser.add_argument(
+        "--ignore",
+        action="append",
+        default=None,
+        metavar="GLOB",
+        help="Glob pattern for paths to ignore (repeatable)",
+    )
     args = parser.parse_args()
     max_bytes = args.max_bytes if args.max_bytes and args.max_bytes > 0 else None
     update_roadmap(
@@ -420,6 +494,7 @@ def main() -> int:
         allowed_tags=args.tag,
         max_file_size=max_bytes,
         allowed_extensions=args.ext,
+        ignore_patterns=args.ignore,
     )
     return 0
 

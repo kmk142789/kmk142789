@@ -170,3 +170,25 @@ def test_discover_tasks_filters_extensions(tmp_path):
 
     only_txt = discover_tasks(tmp_path, allowed_extensions=["TXT"])
     assert {task.path for task in only_txt} == {txt_task}
+
+
+def test_discover_tasks_respects_ignore_patterns(tmp_path):
+    ignored_dir = tmp_path / "build" / "generated" / "module.py"
+    ignored_dir.parent.mkdir(parents=True)
+    ignored_dir.write_text("# TODO hidden\n", encoding="utf-8")
+
+    ignored_file = tmp_path / "module.generated.py"
+    ignored_file.write_text("# TODO skip file\n", encoding="utf-8")
+
+    included = tmp_path / "src" / "core.py"
+    included.parent.mkdir()
+    included.write_text("# TODO keep me\n", encoding="utf-8")
+
+    tasks = discover_tasks(
+        tmp_path,
+        ignore_patterns=["build/**", "*.generated.py"],
+    )
+
+    assert all(task.path != ignored_dir for task in tasks)
+    assert all(task.path != ignored_file for task in tasks)
+    assert any(task.path == included for task in tasks)
