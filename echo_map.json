@@ -3754,5 +3754,37 @@
     },
     "tested": true,
     "updated_at": "2025-10-25T09:36:02.645058+00:00"
+  },
+  {
+    "puzzle": 284,
+    "address": "194feknXENGw3Yefyc5abXqa1UYuRqJaco",
+    "address_family": "P2PKH",
+    "hash160": "587284b200e66073dbe5a99a89a3a63a1511441c",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 587284b200e66073dbe5a99a89a3a63a1511441c OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914587284b200e66073dbe5a99a89a3a63a1511441c88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "none",
+      "notes": ""
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "puzzle_solutions/puzzle_284.md"
+      ],
+      "commit": null,
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647900+00:00"
   }
 ]
