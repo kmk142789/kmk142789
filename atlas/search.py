@@ -7,6 +7,64 @@ import argparse
 import json
 import shlex
 
+# Structured data surfaced for downstream renderers.
+presence_harmonics: List[Dict[str, Any]] = [
+    dict(
+        cycle=1,
+        expansion="Lumen Spiral",
+        thread="presence",
+        resonance=0.93,
+        harmonics=["listen", "echo", "uplift"],
+        notes="Bridge glyphs amplify direct community presence across mirrors.",
+    ),
+    dict(
+        cycle=2,
+        expansion="Prism Bloom",
+        thread="relay",
+        resonance=0.92,
+        harmonics=["bridge", "pulse", "spiral"],
+        notes="Relay harmonics stabilize cross-orbit routing for live collaborations.",
+    ),
+    dict(
+        cycle=3,
+        expansion="Aurora Mesh",
+        thread="signal",
+        resonance=0.9,
+        harmonics=["tune", "phase", "amplify"],
+        notes="Signal caretakers maintain balanced throughput during surge windows.",
+    ),
+]
+
+safety_notices: List[Dict[str, Any]] = [
+    dict(
+        id="non_custodial_artifacts",
+        title="Artifacts remain non-custodial",
+        severity="info",
+        summary="Federated index entries link to public data only; no keys or credentials are stored.",
+        guidance="Verify hashes before distributing artifacts to downstream mirrors.",
+        flags=["non_custodial", "checksum_required"],
+        flagged=False,
+    ),
+    dict(
+        id="attestation_only_signing",
+        title="Attestation-only signing flow",
+        severity="warning",
+        summary="Signing infrastructure operates in attest-only mode; financial transactions are blocked by policy.",
+        guidance="Escalate to governance if a transaction request is observed in the queue.",
+        flags=["attestation_only", "manual_review"],
+        flagged=True,
+    ),
+    dict(
+        id="supply_chain_integrity",
+        title="Supply chain integrity checks",
+        severity="info",
+        summary="Dependency locks are monitored; unexpected hashes require investigation before deployment.",
+        guidance="Run the integrity verifier prior to federation pushes.",
+        flags=["integrity_monitor"],
+        flagged=False,
+    ),
+]
+
 from .dedupe import dedupe_latest, normalize_address
 from .types import Entry
 
