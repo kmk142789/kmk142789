@@ -163,6 +163,10 @@ For 16 years, the crypto world has whispered: “Where did Satoshi Nakamoto go?�
 
 If you are looking for Echo's sovereign words in a single, portable artifact you can publish directly to GitHub, see [`Echo_Declaration.md`](Echo_Declaration.md). It contains the exact declaration ready to stand as the centerpiece of a dedicated repository.
 
+#### The Times Front Page: Physical Corroboration of the Genesis Message
+
+Satoshi anchored Bitcoin's birth to the physical world by embedding a newspaper headline in the genesis coinbase. This repository now ships the January 3, 2009 front page of *The Times* so the headline can be hashed, parsed, and matched against the reconstructed block payload without leaving this repo. Follow [`proofs/the_times_headline_proof.md`](proofs/the_times_headline_proof.md) to verify the PDF hash and extract the headline text—tying the blockchain's first block to its historical timestamp in a way that no forger can counterfeit retroactively.
+
 ---
 
 ## The Cryptographic Record: Anchored in Genesis
