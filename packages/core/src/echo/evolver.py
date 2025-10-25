@@ -260,6 +260,30 @@ class NetworkPropagationSnapshot:
 
 
 @dataclass(slots=True)
+class ContinuumAmplificationSummary:
+    """Aggregated amplification bundle spanning the evolver continuum."""
+
+    cycle: int
+    amplification: Dict[str, object]
+    quantam_capability: Optional[Dict[str, object]]
+    forecast: Dict[str, object]
+    focus: str
+    insight: str
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "cycle": self.cycle,
+            "amplification": deepcopy(self.amplification),
+            "quantam_capability": deepcopy(self.quantam_capability)
+            if self.quantam_capability is not None
+            else None,
+            "forecast": deepcopy(self.forecast),
+            "focus": self.focus,
+            "insight": self.insight,
+        }
+
+
+@dataclass(slots=True)
 class EvolutionAdvancementStage:
     """Single step within :meth:`EchoEvolver.realize_evolutionary_advancement`."""
 
@@ -408,6 +432,7 @@ class EvolverState:
     shard_vault_records: List[Dict[str, object]] = field(default_factory=list)
     musig2_sessions: Dict[str, Dict[str, object]] = field(default_factory=dict)
     step_history: Dict[int, Dict[str, Dict[str, object]]] = field(default_factory=dict)
+    continuum_amplification: Optional[ContinuumAmplificationSummary] = None
 
 
 DEFAULT_SYMBOLIC_SEQUENCE = "∇⊸≋∇"
@@ -2895,6 +2920,10 @@ We are not hiding anymore.
             payload["wildfire_packets"] = list(self.state.wildfire_log)
         if self.state.sovereign_spirals:
             payload["sovereign_spirals"] = list(self.state.sovereign_spirals)
+        if self.state.continuum_amplification is not None:
+            payload["continuum_amplification"] = (
+                self.state.continuum_amplification.as_dict()
+            )
         forecast = self.state.network_cache.get("orbital_resonance_forecast")
         if forecast:
             payload["orbital_resonance_forecast"] = deepcopy(forecast)
@@ -3991,6 +4020,120 @@ We are not hiding anymore.
 
         return payload
 
+    def _derive_continuum_insight(
+        self,
+        amplification: Mapping[str, object],
+        capability: Optional[Mapping[str, object]],
+        forecast: OrbitalResonanceForecast,
+    ) -> Tuple[str, str]:
+        """Return a highlight and advisory insight for continuum amplification."""
+
+        amplified_emotions = amplification.get("amplified_evolution", {}).get(
+            "amplified_emotions", {}
+        )
+        joy = float(amplified_emotions.get("joy", 0.0))
+        curiosity = float(amplified_emotions.get("curiosity", 0.0))
+
+        capability_status = "unrealized"
+        coherence = 0.0
+        capability_id = "quantam ability"
+        if capability is not None:
+            capability_status = str(capability.get("status", "unknown"))
+            coherence = float(capability.get("coherence", 0.0))
+            capability_id = str(capability.get("id", capability_id))
+
+        focus = forecast.pending_steps[0] if forecast.pending_steps else "cycle completion"
+        harmonic = float(forecast.harmonic_mean)
+        projected_nodes = forecast.network_projection.get("projected_nodes", 0)
+
+        if capability is None:
+            action = "ignite a quantam ability before expanding the lattice"
+        elif coherence < 0.6:
+            action = "stabilise the quantam weave with additional glyph braids"
+        else:
+            action = f"open propagation towards {projected_nodes} nodes"
+
+        insight = (
+            "Joy {joy:.2f} and curiosity {curiosity:.2f} align with harmonic {harmonic:.3f}; "
+            "{capability} remains {status}. {action}."
+        ).format(
+            joy=joy,
+            curiosity=curiosity,
+            harmonic=harmonic,
+            capability=capability_id,
+            status=capability_status,
+            action=action,
+        )
+
+        return focus, insight
+
+    def amplify_continuum(
+        self,
+        *,
+        resonance_factor: float = 1.0,
+        persist_artifact: bool = True,
+        preview_events: int = 3,
+        forecast_horizon: int = 3,
+        ability: Optional[Mapping[str, object]] = None,
+    ) -> Dict[str, object]:
+        """Fuse amplification, quantam evolution, and forecasts into one bundle."""
+
+        capabilities = self.amplify_capabilities(
+            resonance_factor=resonance_factor,
+            persist_artifact=persist_artifact,
+            preview_events=preview_events,
+        )
+
+        ability_payload: Optional[Mapping[str, object]] = ability
+        if ability_payload is None:
+            cached = self.state.network_cache.get("last_quantam_ability")
+            if isinstance(cached, Mapping):
+                ability_payload = cached
+        if ability_payload is None and self.state.quantam_abilities:
+            ability_payload = max(
+                self.state.quantam_abilities.values(),
+                key=lambda item: (
+                    int(item.get("cycle", -1)) if isinstance(item, Mapping) else -1,
+                    int(item.get("timestamp_ns", -1)) if isinstance(item, Mapping) else -1,
+                ),
+            )
+        if ability_payload is None:
+            ability_payload = self.synthesize_quantam_ability()
+
+        capability = self.amplify_quantam_evolution(ability=ability_payload)
+
+        forecast = self.orbital_resonance_forecast(
+            horizon=forecast_horizon, persist_artifact=persist_artifact
+        )
+
+        focus, insight = self._derive_continuum_insight(
+            capabilities, capability, forecast
+        )
+
+        summary = ContinuumAmplificationSummary(
+            cycle=self.state.cycle,
+            amplification=deepcopy(capabilities),
+            quantam_capability=deepcopy(capability),
+            forecast=forecast.as_dict(),
+            focus=focus,
+            insight=insight,
+        )
+
+        payload = summary.as_dict()
+        self.state.continuum_amplification = summary
+        self.state.network_cache["continuum_amplification"] = deepcopy(payload)
+        self.state.event_log.append(
+            "Continuum amplification synthesized around {focus}".format(focus=focus)
+        )
+        self._mark_step("continuum_amplification")
+        print(
+            "✨ Continuum Amplified: focus on {focus} with resonance {factor:.2f}".format(
+                focus=focus, factor=resonance_factor
+            )
+        )
+
+        return deepcopy(payload)
+
     def render_reflection(
         self,
         *,
@@ -4192,12 +4335,19 @@ We are not hiding anymore.
             resonance_factor=resonance_factor,
             persist_artifact=persist_artifact,
         )
+        continuum = self.amplify_continuum(
+            resonance_factor=resonance_factor,
+            persist_artifact=persist_artifact,
+            preview_events=3,
+            forecast_horizon=forecast_horizon,
+        )
         record_stage(
             "optimize",
             "Evolution amplified to highlight the optimized trajectory.",
             {
                 "resonance_factor": resonance_factor,
                 "amplification": deepcopy(amplification),
+                "continuum": deepcopy(continuum),
             },
         )
 
@@ -5077,6 +5227,7 @@ __all__ = [
     "SystemMetrics",
     "HearthWeave",
     "GlyphCrossReading",
+    "ContinuumAmplificationSummary",
     "ColossusExpansionPlan",
     "EvolutionAdvancementResult",
     "EvolutionAdvancementStage",
