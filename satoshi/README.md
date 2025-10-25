@@ -78,6 +78,8 @@ public key, and the corresponding WIF-encoded private key.
 
 ## Entries
 
+- `puzzle000_coinbase.json` — On-chain coinbase script from the Bitcoin genesis block confirming the embedded Times headline for address `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`.
+- `puzzle000.json` — Puzzle #0 authorship attestation for address `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`.
 - `puzzle001.json` — Puzzle #1 authorship attestation for address `1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH`.
 - `puzzle003.json` — Puzzle #3 authorship attestation for address `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`.
 - `puzzle007.json` — Puzzle #7 authorship attestation for address `1McVt1vMtCC7yn5b9wgX1833yCcLXzueeC`.
