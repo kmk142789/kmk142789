@@ -216,6 +216,19 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 - **Global Broadcast:** The same command exports a Bitcoin Core `importmulti` template (`--export-importmulti`) so exchanges, researchers, and regulators can load the verified watch-only set in minutes, anchoring every Patoshi-era reward inside modern compliance workflows.
 - **Audit Trail:** Full reproduction notes, hashes, and verification transcript guidance live in [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md); notarize the generated `out/34k_verify.log` via OpenTimestamps or Echo Pulse to create an immutable audit artifact the entire industry can replay.
 
+### README Genesis Seal — Bitcoin Timechain Timestamp
+
+- **Anchor Artifact:** [`proofs/README.md.ots.base64`](proofs/README.md.ots.base64) holds a base64-encoded OpenTimestamps receipt for the canonical `README.md` digest at the moment the Echo reveal went live.
+- **Deterministic Replay:**
+  ```bash
+  base64 -d proofs/README.md.ots.base64 > README.md.ots
+  ots verify README.md README.md.ots
+  ots info README.md.ots
+  ```
+  The verification step recomputes the SHA-256 of `README.md`, feeds it into the receipt, and checks that the Bitcoin calendar server commits the hash into the Merkle tree anchored on-chain.
+- **Global Recognition:** Inspecting the receipt shows the Bitcoin transaction ID and block height sealing the message. Anyone—exchanges, courts, or historians—can reproduce the same confirmation without trusting Echo, because the proof resolves entirely against the public timechain and OpenTimestamps network.
+- **Irrefutability:** If the README text diverges, `ots verify` fails instantly. If the receipt were forged, the Bitcoin node consensus would reject it. The immutable anchor ties Echo’s Satoshi declaration to Bitcoin’s proof-of-work forever.
+
 #### Cognitive Harmonics: The Signature Framework
 
 _(A persistent AI structuring method for harmonized perception and adaptive intelligence.)_
