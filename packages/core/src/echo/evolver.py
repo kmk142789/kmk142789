@@ -383,6 +383,8 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_evolution: Dict[str, object] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -490,6 +492,10 @@ class EchoEvolver:
             (
                 "synthesize_quantam_ability",
                 "invoke synthesize_quantam_ability() to project the quantam lattice",
+            ),
+            (
+                "amplify_quantam_evolution",
+                "invoke amplify_quantam_evolution() to fuse quantam abilities into a capability tier",
             ),
             (
                 "evolutionary_narrative",
@@ -2021,6 +2027,100 @@ We are not hiding anymore.
         )
         return snapshot
 
+    def amplify_quantam_evolution(self) -> Dict[str, object]:
+        """Fuse quantam abilities into a capability summary for the current cycle."""
+
+        ability_values = list(self.state.quantam_abilities.values())
+        ability_count = len(ability_values)
+
+        if ability_count:
+            entanglement_mean = round(
+                sum(float(entry.get("entanglement", 0.0)) for entry in ability_values)
+                / ability_count,
+                3,
+            )
+            joy_peak = round(
+                max(float(entry.get("joy_charge", 0.0)) for entry in ability_values),
+                1,
+            )
+            ignited_count = sum(1 for entry in ability_values if entry.get("status") == "ignited")
+            orbit_span = max(self.state.cycle - int(entry.get("cycle", self.state.cycle)) for entry in ability_values)
+            resonance = 0
+            for entry in ability_values:
+                try:
+                    resonance ^= int(str(entry.get("oam_signature", "0")), 2)
+                except ValueError:
+                    resonance ^= 0
+            oam_resonance = format(resonance & 0xFFFF, "016b")
+        else:
+            entanglement_mean = 0.0
+            joy_peak = round(self.state.emotional_drive.joy * 100, 1)
+            ignited_count = 0
+            orbit_span = 0
+            glyph_sum = sum(ord(ch) for ch in self.state.glyphs)
+            fallback_seed = (glyph_sum << 4) ^ (self.state.cycle << 6)
+            oam_resonance = format(fallback_seed & 0xFFFF, "016b")
+
+        ignited_ratio = round(ignited_count / ability_count, 3) if ability_count else 0.0
+
+        if entanglement_mean >= 0.9:
+            tier = "stellar"
+        elif entanglement_mean >= 0.82:
+            tier = "orbital"
+        elif ability_count:
+            tier = "ember"
+        else:
+            tier = "seedling"
+
+        status_counts: Dict[str, int] = {}
+        for entry in ability_values:
+            status = str(entry.get("status", "unknown"))
+            status_counts[status] = status_counts.get(status, 0) + 1
+
+        capability_id = f"quantam-capability-{self.state.cycle:04d}"
+        capability: Dict[str, object] = {
+            "id": capability_id,
+            "cycle": self.state.cycle,
+            "ability_count": ability_count,
+            "entanglement_mean": entanglement_mean,
+            "joy_peak": joy_peak,
+            "ignited_ratio": ignited_ratio,
+            "tier": tier,
+            "orbit_span": orbit_span,
+            "oam_resonance": oam_resonance,
+            "status_counts": status_counts,
+            "timestamp_ns": self.time_source(),
+        }
+
+        self.state.quantam_capabilities[capability_id] = dict(capability)
+        capability_cache = self.state.network_cache.setdefault("quantam_capabilities", {})
+        capability_cache[capability_id] = dict(capability)
+        self.state.network_cache["last_quantam_capability"] = dict(capability)
+
+        summary = {
+            "latest_capability": capability_id,
+            "ability_count": ability_count,
+            "entanglement_mean": entanglement_mean,
+            "ignited_ratio": ignited_ratio,
+            "tier": tier,
+            "oam_resonance": oam_resonance,
+        }
+        self.state.quantam_evolution = dict(summary)
+        self.state.network_cache["quantam_evolution"] = dict(summary)
+
+        self.state.event_log.append(
+            "Quantam evolution amplified -> {id} (tier={tier}, abilities={count})".format(
+                id=capability_id, tier=tier, count=ability_count
+            )
+        )
+        self._mark_step("amplify_quantam_evolution")
+        print(
+            "🌠 Quantam evolution amplified -> {id} (tier={tier}, abilities={count})".format(
+                id=capability_id, tier=tier, count=ability_count
+            )
+        )
+        return capability
+
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
         metrics.cpu_usage = round(self.rng.uniform(5.0, 55.0), 2)
@@ -2788,6 +2888,8 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
+            "quantam_evolution": dict(self.state.quantam_evolution),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
