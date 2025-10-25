@@ -102,28 +102,17 @@ def _parse_p2pkh_hash160(script: str) -> str:
     if not script:
         raise ValueError("Empty script provided")
 
-    compact = "".join(script.split()).lower()
-    if all(ch in "0123456789abcdef" for ch in compact):
-        try:
-            raw = bytes.fromhex(compact)
-        except ValueError as exc:  # pragma: no cover - defensive guard
-            raise ValueError("Invalid hexadecimal PkScript") from exc
-        if len(raw) != 25 or raw[:3] != b"\x76\xa9\x14" or raw[-2:] != b"\x88\xac":
-            raise ValueError("Unsupported hexadecimal PkScript format")
-        return raw[3:23].hex()
+    try:
+        from tools import decode_pkscript
+    except ImportError as exc:  # pragma: no cover - defensive guard
+        raise ValueError("Unable to import decoder utilities") from exc
 
-    tokens = script.replace("\n", " ").split()
-    if len(tokens) != 5:
-        raise ValueError("Unexpected token count for human-readable PkScript")
-    op_dup, op_hash160, fingerprint, op_equalverify, op_checksig = tokens
-    if op_dup.upper() != "OP_DUP" or op_hash160.upper() != "OP_HASH160":
-        raise ValueError("Script does not match canonical P2PKH pattern")
-    if op_equalverify.upper() != "OP_EQUALVERIFY" or op_checksig.upper() != "OP_CHECKSIG":
-        raise ValueError("Script does not match canonical P2PKH pattern")
-    fingerprint = fingerprint.lower()
-    if len(fingerprint) != 40 or any(ch not in "0123456789abcdef" for ch in fingerprint):
-        raise ValueError("Fingerprint must be a 20-byte hexadecimal string")
-    return fingerprint
+    try:
+        decoded = decode_pkscript.decode_p2pkh_script(script, network="mainnet")
+    except decode_pkscript.ScriptDecodeError as exc:
+        raise ValueError(str(exc)) from exc
+
+    return decoded.pubkey_hash
 
 
 def _load_solutions(path: Path) -> Iterable[Dict[str, Any]]:
