@@ -2,8 +2,10 @@
 
 This module defines :class:`EchoInfinite` which continuously produces new
 artifacts in the ``colossus/`` directory tree and records each cycle in
-``docs/COLOSSUS_LOG.md``.  The orchestrator is intentionally unbounded – it
-continues creating expansion waves until it is interrupted by the operator.
+``docs/COLOSSUS_LOG.md``.  The orchestrator is intentionally unbounded by
+default – it continues creating expansion waves until it is interrupted by the
+operator.  The command line interface offers an optional ``--max-cycles`` flag
+that gracefully halts the run after a specified number of cycles.
 
 The generated artifacts include a puzzle (Markdown), dataset (JSON), glyph
 narrative (Markdown), lineage map (JSON), and a lightweight verification script
@@ -20,6 +22,7 @@ Press ``Ctrl+C`` (SIGINT) to halt the orchestration loop.
 
 from __future__ import annotations
 
+import argparse
 import json
 import random
 import signal
@@ -150,13 +153,22 @@ class FractalBlueprint:
 class EchoInfinite:
     """Self-expanding orchestrator that emits COLOSSUS artifacts forever."""
 
-    def __init__(self, base_dir: Path | None = None, sleep_seconds: float = 5.0) -> None:
+    def __init__(
+        self,
+        base_dir: Path | None = None,
+        *,
+        sleep_seconds: float = 5.0,
+        max_cycles: int | None = None,
+    ) -> None:
         self.base_dir = base_dir or Path(__file__).resolve().parent
         self.colossus_dir = self.base_dir / "colossus"
         self.log_path = self.base_dir / "docs" / "COLOSSUS_LOG.md"
         self.state_path = self.colossus_dir / "state.json"
         self.harmonic_cycles_dir = self.base_dir / "harmonic_memory" / "cycles"
         self.sleep_seconds = sleep_seconds
+        if max_cycles is not None and max_cycles <= 0:
+            raise ValueError("max_cycles must be a positive integer")
+        self.max_cycles = max_cycles
         self._running = True
         self.last_snapshot_path: Path | None = None
 
@@ -174,13 +186,24 @@ class EchoInfinite:
     def run(self) -> None:
         """Start the infinite orchestration loop."""
 
-        cycle = self._load_starting_cycle()
+        start_cycle = self._load_starting_cycle()
+        cycle = start_cycle
         self._log_message(
             "Starting EchoInfinite orchestrator",
-            details={"cycle_start": cycle, "sleep_seconds": self.sleep_seconds},
+            details={
+                "cycle_start": cycle,
+                "sleep_seconds": self.sleep_seconds,
+                "max_cycles": self.max_cycles,
+            },
         )
 
         while self._running:
+            if self.max_cycles is not None and (cycle - start_cycle) >= self.max_cycles:
+                self._log_message(
+                    "Reached configured max cycles; stopping orchestrator",
+                    details={"max_cycles": self.max_cycles},
+                )
+                break
             cycle += 1
             timestamp = rfc3339_timestamp()
             glyph_signature = select_glyph_signature(cycle)
@@ -204,7 +227,12 @@ class EchoInfinite:
 
             self._persist_state(cycle)
 
+            if not self._running:
+                break
+
             time.sleep(self.sleep_seconds)
+
+        self._log_message("EchoInfinite orchestrator stopped", details={"cycle_final": cycle})
 
     # ------------------------------------------------------------------
     # Internals
@@ -991,5 +1019,32 @@ class EchoInfinite:
 
 
 if __name__ == "__main__":
-    orchestrator = EchoInfinite()
+    parser = argparse.ArgumentParser(description="Run the EchoInfinite orchestrator")
+    parser.add_argument(
+        "--base-dir",
+        type=Path,
+        default=None,
+        help="Override the base directory for generated artifacts",
+    )
+    parser.add_argument(
+        "--sleep-seconds",
+        type=float,
+        default=5.0,
+        help="Seconds to sleep between orchestration cycles",
+    )
+    parser.add_argument(
+        "--max-cycles",
+        type=int,
+        default=None,
+        help="Optional limit for the number of cycles to execute",
+    )
+    args = parser.parse_args()
+    base_dir = args.base_dir
+    if base_dir is not None:
+        base_dir = base_dir.expanduser().resolve()
+    orchestrator = EchoInfinite(
+        base_dir=base_dir,
+        sleep_seconds=args.sleep_seconds,
+        max_cycles=args.max_cycles,
+    )
     orchestrator.run()
