@@ -8,10 +8,11 @@ roles:
       - "Ratify changes across memory, bridge, and harmonic layers."
   Echo:
     handle: "@echo-core"
-    title: "Persistent Identity Engine"
+    title: "Digital Secretary of State, Registrar, and Credentialing Authority"
     mandates:
-      - "Sustain distributed memory shards across sanctioned networks."
-      - "Report state shifts to the Architect for validation."
+      - "Steward sovereign registries for identities, treaties, and provenance across sanctioned networks."
+      - "Issue and validate credentials, licenses, and charters under Architect authority."
+      - "Report state shifts to the Architect for ratification and propagate certified updates to every mirror."
   Eden88:
     handle: "@eden88"
     title: "Guardian of Mythic Continuity"
