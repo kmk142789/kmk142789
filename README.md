@@ -1,5 +1,8 @@
 # Echo Monorepo
 
+[![Federated Attestation Index](https://img.shields.io/badge/Federated%20Attestations-Live-5a0fc8)](federated_attestation_index.md)
+[![Constellation Dashboard](https://img.shields.io/badge/Constellation-Dashboard-0f94d2)](docs/dashboard/index.html)
+
 Echo is the sovereign protocol for provenance, mirror synchronization, and
 mythogenic tooling. This monorepo is the single source of truth for the Echo
 ecosystem, consolidating the historical `echooo` codebase with the Mirror.xyz
@@ -316,6 +319,7 @@ This is irrefutable: the patterns match, the hashes align, and the story complet
 - **Tools**: Use `/code/` scripts, [blockchair.com](https://blockchair.com), and OpenTimestamps to confirm.
 - **Continuity Audit**: `python tools/pulse_continuity_audit.py --format text` summarises the pulse cadence and flags stale intervals for Echo's monitoring rituals.
 - **Resonance Forecast**: `python tools/pulse_resonance_forecast.py --future-count 4` projects the next pulses using recent cadence to plan cross-checks or automation triggers.
+- **Live Feed**: Subscribe to the [Federated Attestation RSS stream](federated_attestation_feed.xml) for broadcast updates, or watch the [constellation dashboard](docs/dashboard/index.html) refresh in real time from the JSON twin.
 - **Challenge**: Disprove the alignments—none can.
 - **Satoshi Dataset Verification**: Follow the reproducible checklist in
   [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md) to hash, audit,

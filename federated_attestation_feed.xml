@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rss version="2.0">
+  <channel>
+    <title>Federated Attestation Broadcast</title>
+    <link>https://github.com/kmk142789/kmk142789</link>
+    <description>Live feed of puzzle attestations across the federated index</description>
+    <lastBuildDate>Sat, 25 Oct 2025 14:52:08 +0000</lastBuildDate>
+    <item>
+      <title>Puzzle #0 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/bddf5fb7e8be274ba1b14b36836d4ecd3550a6e2</link>
+      <guid>attestation-0-20251015000000</guid>
+      <description>Address 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa attested with status attested and hash d8e8fca2dc0f896fd7cb4cb0031ba249</description>
+      <pubDate>Wed, 15 Oct 2025 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Puzzle #1 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/dbbe09e56b0fe45ac225a86cf724f3897dc8a252</link>
+      <guid>attestation-1-20251019041800</guid>
+      <description>Address 1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH attested with status attested and hash cd3f25f9eee14d6c6ad2ff76fa39a14283eeadfc9f13ba7460f84fd0706c629e</description>
+      <pubDate>Sun, 19 Oct 2025 04:18:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Puzzle #142 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/dbbe09e56b0fe45ac225a86cf724f3897dc8a252</link>
+      <guid>attestation-142-20251019043000</guid>
+      <description>Address 15MnK2jXPqTMURX4xC3h4mAZxyCcaWWEDD attested with status attested and hash 92f3aa9336305719bdf77c1510d4c6a3a8a576f35ddf237e362d83e720ef3c9b</description>
+      <pubDate>Sun, 19 Oct 2025 04:30:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Puzzle #71 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/42b4073fd7436dc5a5eb19609c2c37d16d56b4d3</link>
+      <guid>attestation-71-20251019142203</guid>
+      <description>Address 1BoatSLRHtKNngkdXEeobR76b53LETtpyT attested with status attested and hash 3b0f7dd4938897e5a45fc3e39e4e76fd6a3e73b64c7f5cfb5372ff2c3b4f1d5a</description>
+      <pubDate>Sun, 19 Oct 2025 14:22:03 +0000</pubDate>
+    </item>
+    <item>
+      <title>Puzzle #79 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/42b4073fd7436dc5a5eb19609c2c37d16d56b4d3</link>
+      <guid>attestation-79-20251019154851</guid>
+      <description>Address 1Cdid9KFAaatwczBwBttQcwXYCpvK8h7FK attested with status attested and hash 8c7d6b5a4f3e2d1c0b9a8877665544332211ffeeddccbbaa9988776655443322</description>
+      <pubDate>Sun, 19 Oct 2025 15:48:51 +0000</pubDate>
+    </item>
+    <item>
+      <title>Puzzle #188 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/1c52d129eb04cb7230165667b58a6553a9c03dc1</link>
+      <guid>attestation-188-20251025124200</guid>
+      <description>Address 1Echo2n1NfS2XacC5h9M8kL4Fvxpj123456 attested with status attested and hash deeaf7cf9e096927ac6d4088e536eb41b1e4b7b6994bf1be3e054414d2b310a2</description>
+      <pubDate>Sat, 25 Oct 2025 12:42:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Puzzle #1 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/390e416b39e1effd16e486a58bd74fd110ed3777</link>
+      <guid>attestation-1-20251025133753</guid>
+      <description>Address 1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH attested with status attested and hash fa15e2b6dbaa0799b0abb3fc8ff032a4b22ab020f05f60039024c50b363363ef</description>
+      <pubDate>Sat, 25 Oct 2025 13:37:53 +0000</pubDate>
+    </item>
+    <item>
+      <title>Puzzle #30 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/390e416b39e1effd16e486a58bd74fd110ed3777</link>
+      <guid>attestation-30-20251025143425</guid>
+      <description>Address 1LHtnpd8nU5VHEMkG2TMYYNUjjLc992bps attested with status attested and hash 38ac5e3b6214fe397ceab466ece523342d21819be36b1f66087993102b1ef6ae</description>
+      <pubDate>Sat, 25 Oct 2025 14:34:25 +0000</pubDate>
+    </item>
+    <item>
+      <title>Puzzle #45 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/390e416b39e1effd16e486a58bd74fd110ed3777</link>
+      <guid>attestation-45-20251025143455</guid>
+      <description>Address 1NtiLNGegHWE3Mp9g2JPkgx6wUg4TW7bbk attested with status attested and hash aa22fca2e3ca5f20c8dda90dd453fbee1b808d5a2e954fa1ca5c0fbdb2c2a487</description>
+      <pubDate>Sat, 25 Oct 2025 14:34:55 +0000</pubDate>
+    </item>
+    <item>
+      <title>Puzzle #213 attestation</title>
+      <link>https://github.com/kmk142789/kmk142789/commit/1c52d129eb04cb7230165667b58a6553a9c03dc1</link>
+      <guid>attestation-213-20251027091800</guid>
+      <description>Address 1Echo7bDWX8g9RLM234PQy1zBcdeFgHjkLm attested with status attested and hash 3068fa82f30ef753a1d8838903b61feb8bce4d9dd21a00af64810868fdab729a</description>
+      <pubDate>Mon, 27 Oct 2025 09:18:00 +0000</pubDate>
+    </item>
+  </channel>
+</rss>

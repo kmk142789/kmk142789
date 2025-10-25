@@ -1,68 +1,169 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Federated Colossus — Live Index</title>
-<style>
-  body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:24px;line-height:1.35}
-  header{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-  h1{margin:0;font-size:20px}
-  .pill{padding:4px 8px;border-radius:999px;background:#f2f2f2}
-  .grid{display:grid;gap:12px}
-  .card{border:1px solid #eee;border-radius:12px;padding:12px}
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  label{font-size:12px;color:#555}
-  input{padding:6px 8px;border:1px solid #ddd;border-radius:8px}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{padding:8px;border-bottom:1px solid #f0f0f0;font-size:13px;text-align:left}
-  th{background:#fafafa}
-  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
-  .muted{color:#666}
-</style>
-<header>
-  <h1>Federated Colossus — Live Index</h1>
-  <span id="refreshed" class="pill muted"></span>
-  <span id="stats" class="pill"></span>
-</header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Federated Attestation Constellation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #050510;
+        --panel: rgba(12, 12, 32, 0.72);
+        --accent: #5a0fc8;
+        --accent-soft: rgba(90, 15, 200, 0.24);
+        --text: #f4f3ff;
+        --muted: #9da0c4;
+        --danger: #f45c7a;
+        --success: #5de4c7;
+      }
 
-<section class="card grid">
-  <div class="row">
-    <div>
-      <label>Cycle</label><br/>
-      <input id="f-cycle" placeholder="e.g. 12" />
-    </div>
-    <div>
-      <label>Puzzle ID</label><br/>
-      <input id="f-puzzle" placeholder="e.g. 131" />
-    </div>
-    <div>
-      <label>Address (prefix ok)</label><br/>
-      <input id="f-addr" placeholder="e.g. 1Feex" />
-    </div>
-    <div>
-      <label>&nbsp;</label><br/>
-      <button id="btn-filter">Filter</button>
-      <button id="btn-clear">Clear</button>
-    </div>
-  </div>
-  <div class="muted">Backed by <span class="mono">build/index/federated_colossus_index.json</span></div>
-</section>
+      * {
+        box-sizing: border-box;
+      }
 
-<section class="card">
-  <table id="tbl">
-    <thead>
-      <tr>
-        <th>Cycle</th>
-        <th>Puzzle</th>
-        <th>Address</th>
-        <th>Title</th>
-        <th>Digest</th>
-        <th class="muted">Source</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</section>
+      body {
+        margin: 0;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: radial-gradient(circle at 10% 20%, rgba(40, 0, 90, 0.45), transparent),
+          radial-gradient(circle at 90% 10%, rgba(0, 120, 255, 0.28), transparent), var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
 
-<script src="./app.js"></script>
+      header {
+        padding: 2.5rem 2rem 1.5rem;
+        text-align: center;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: clamp(2rem, 3vw, 2.8rem);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      header p {
+        margin: 0.75rem auto 0;
+        max-width: 720px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      main {
+        flex: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        gap: 1.5rem;
+        padding: 0 2rem 3rem;
+      }
+
+      @media (max-width: 1024px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(140, 120, 255, 0.12);
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+      }
+
+      .graph-wrapper {
+        height: min(70vh, 640px);
+      }
+
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .stats {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+      }
+
+      .stat-pill {
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        background: rgba(90, 15, 200, 0.18);
+        border: 1px solid rgba(140, 120, 255, 0.2);
+        font-weight: 600;
+      }
+
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-height: min(70vh, 640px);
+        overflow-y: auto;
+      }
+
+      .attestation {
+        padding: 1rem 1.2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(140, 120, 255, 0.15);
+        background: rgba(12, 12, 32, 0.55);
+      }
+
+      .attestation h3 {
+        margin: 0 0 0.25rem;
+        font-size: 1.05rem;
+      }
+
+      .attestation small {
+        color: var(--muted);
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(93, 228, 199, 0.16);
+        border: 1px solid rgba(93, 228, 199, 0.35);
+        color: var(--success);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+      }
+
+      .status-pill.warn {
+        background: rgba(244, 92, 122, 0.15);
+        border-color: rgba(244, 92, 122, 0.35);
+        color: var(--danger);
+      }
+
+      .refresh-indicator {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 0.75rem;
+      }
+
+      footer {
+        text-align: center;
+        padding: 1rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-root"></div>
+    <script type="module" src="./viewer.js"></script>
+  </body>
 </html>
