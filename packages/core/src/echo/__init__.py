@@ -51,6 +51,7 @@ from .cosmic_mnemonic_forge import (
 )
 from .dotnet_sdk import build_dotnet_sdk_download_url
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
+from .echo_visionary_kernel import BitwisePixelEngine, EchoVisionaryKernel, WorkerBot
 from .evolver import (
     EchoEvolver,
     EmotionalDrive,
@@ -197,7 +198,9 @@ __all__ = [
     "BridgeConfig",
     "BridgeEmitter",
     "BridgeState",
+    "BitwisePixelEngine",
     "EchoNexusPortal",
+    "EchoVisionaryKernel",
     "ImpossibleEvent",
     "ImpossibleRealityEngine",
     "DecentralizedAutonomyEngine",
@@ -228,6 +231,7 @@ __all__ = [
     "EchoResonanceEngine",
     "HarmonicConfig",
     "HarmonicsAI",
+    "WorkerBot",
     "StabilityScore",
     "resolve_apps",
     "resolve_domains",
