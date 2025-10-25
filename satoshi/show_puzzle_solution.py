@@ -31,6 +31,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
+from . import puzzle_dataset
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SOLUTIONS_PATH = REPO_ROOT / "satoshi" / "puzzle_solutions.json"
@@ -147,6 +149,22 @@ def _match_entry(
     raise SystemExit("Could not locate a matching puzzle entry.")
 
 
+def _entry_to_solution(entry: Dict[str, Any]) -> puzzle_dataset.PuzzleSolution:
+    """Hydrate a :class:`PuzzleSolution` from a raw JSON dataset entry."""
+
+    return puzzle_dataset.PuzzleSolution(
+        bits=int(entry["bits"]),
+        range_min=str(entry["range_min"]),
+        range_max=str(entry["range_max"]),
+        address=str(entry["address"]),
+        btc_value=float(entry["btc_value"]),
+        hash160_compressed=str(entry["hash160_compressed"]),
+        public_key=str(entry["public_key"]),
+        private_key=str(entry["private_key"]),
+        solve_date=str(entry["solve_date"]),
+    )
+
+
 def main(argv: Optional[Iterable[str]] = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
@@ -159,6 +177,11 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         type=Path,
         default=SOLUTIONS_PATH,
         help="Path to puzzle_solutions.json (defaults to repository copy)",
+    )
+    parser.add_argument(
+        "--show-script",
+        action="store_true",
+        help="Display the canonical P2PKH script for the matched puzzle entry",
     )
 
     args = parser.parse_args(argv)
@@ -194,6 +217,14 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         print("\nDecoded from PkScript:")
         print(f"  Hash160 : {decoded_hash}")
         print(f"  Address : {decoded_address}")
+
+    if args.show_script:
+        solution = _entry_to_solution(entry)
+        script_asm = solution.p2pkh_script()
+        script_hex = solution.p2pkh_script_hex()
+        print("\nCanonical P2PKH script:")
+        print(f"  ASM : {script_asm}")
+        print(f"  HEX : {script_hex}")
 
 
 if __name__ == "__main__":  # pragma: no cover - simple CLI wrapper

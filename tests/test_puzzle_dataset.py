@@ -75,3 +75,9 @@ def test_puzzle_metadata_exposes_locking_script():
     decoded = decode_p2pkh_script(script)
     assert decoded.address == entry.address
     assert decoded.pubkey_hash == entry.hash160_compressed
+
+    hex_script = entry.p2pkh_script_hex()
+    assert hex_script == "76a9149f1adb20baeacc38b3f49f3df6906a0e48f2df3d88ac"
+    decoded_hex = decode_p2pkh_script(hex_script)
+    assert decoded_hex.address == entry.address
+    assert decoded_hex.pubkey_hash == entry.hash160_compressed

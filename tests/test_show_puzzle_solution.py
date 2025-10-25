@@ -1,5 +1,6 @@
 import pytest
 
+from satoshi import show_puzzle_solution
 from satoshi.show_puzzle_solution import (
     _hash160_to_p2pkh_address,
     _parse_p2pkh_hash160,
@@ -27,3 +28,14 @@ def test_hash160_to_p2pkh_address():
 def test_parse_pkscript_invalid_tokens():
     with pytest.raises(ValueError):
         _parse_p2pkh_hash160("OP_HASH160 0959e80121f36aea13b3bad361c15dac26189e2f")
+
+
+def test_cli_can_display_canonical_script(capsys):
+    show_puzzle_solution.main(["26", "--show-script"])
+    captured = capsys.readouterr()
+    assert "Canonical P2PKH script:" in captured.out
+    assert (
+        "ASM : OP_DUP OP_HASH160 bfebb73562d4541b32a02ba664d140b5a574792f"
+        " OP_EQUALVERIFY OP_CHECKSIG"
+    ) in captured.out
+    assert "HEX : 76a914bfebb73562d4541b32a02ba664d140b5a574792f88ac" in captured.out
