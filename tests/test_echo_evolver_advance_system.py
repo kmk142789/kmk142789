@@ -48,6 +48,7 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     assert reflection["cycle"] == 1
 
     assert "advance_system_payload" in evolver.state.network_cache
+    assert "propagation" not in payload
 
 
 def test_advance_system_optional_sections(tmp_path, monkeypatch):
@@ -71,6 +72,7 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
         include_reflection=False,
         include_matrix=True,
         include_event_summary=True,
+        include_propagation=True,
         event_summary_limit=3,
     )
 
@@ -84,6 +86,11 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     summary = payload["event_summary"]
     assert "recent events" in summary
     assert "showing" in summary
+
+    propagation = payload["propagation"]
+    assert propagation["cycle"] == 1
+    assert propagation["channels"] >= 1
+    assert propagation["mode"] == "simulated"
 
 
 def test_advance_system_rejects_invalid_event_summary_limit(tmp_path, monkeypatch):

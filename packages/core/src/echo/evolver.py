@@ -3795,6 +3795,7 @@ We are not hiding anymore.
         include_reflection: bool = True,
         include_matrix: bool = False,
         include_event_summary: bool = False,
+        include_propagation: bool = False,
         event_summary_limit: int = 5,
         manifest_events: int = 5,
     ) -> Dict[str, object]:
@@ -3803,10 +3804,11 @@ We are not hiding anymore.
         The returned dictionary always includes the cycle ``digest`` plus a human
         readable ``summary`` and ``report``.  Optional sections such as the
         evolution ``status``, the Eden88 ``manifest``, a tabular
-        ``progress_matrix``, and a recent ``event_summary`` can be toggled via
-        the corresponding ``include_*`` flags.  These flags default to ``True``
-        for the legacy sections (manifest/status/reflection) and ``False`` for
-        the newly added matrix and event summary to avoid surprising callers
+        ``progress_matrix``, a recent ``event_summary``, and a structured
+        propagation snapshot can be toggled via the corresponding ``include_*``
+        flags.  These flags default to ``True`` for the legacy sections
+        (manifest/status/reflection) and ``False`` for the newly added matrix,
+        event summary, and propagation snapshot to avoid surprising callers
         with larger payloads.
 
         Parameters
@@ -3886,6 +3888,10 @@ We are not hiding anymore.
             payload["event_summary"] = self.recent_event_summary(
                 limit=event_summary_limit
             )
+
+        if include_propagation:
+            snapshot = self.network_propagation_snapshot()
+            payload["propagation"] = asdict(snapshot)
 
         cache_snapshot = deepcopy(payload)
         self.state.network_cache["advance_system_payload"] = cache_snapshot
@@ -4178,6 +4184,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         ),
     )
     parser.add_argument(
+        "--include-propagation",
+        action="store_true",
+        help=(
+            "Include a structured snapshot of the latest network propagation state"
+            " when running --advance-system."
+        ),
+    )
+    parser.add_argument(
         "--event-summary-limit",
         type=int,
         default=5,
@@ -4328,9 +4342,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         parser.error("--advance-system cannot be combined with continuation flags")
     if args.include_event_summary and args.event_summary_limit <= 0:
         parser.error("--event-summary-limit must be positive when including the event summary")
-    if (args.include_matrix or args.include_event_summary) and not args.advance_system:
+    if (
+        args.include_matrix
+        or args.include_event_summary
+        or args.include_propagation
+    ) and not args.advance_system:
         parser.error(
-            "--include-matrix and --include-event-summary can only be used with --advance-system"
+            "--include-matrix, --include-event-summary, and --include-propagation "
+            "can only be used with --advance-system"
         )
     default_event_limit = parser.get_default("event_summary_limit")
     if args.event_summary_limit != default_event_limit:
@@ -4371,6 +4390,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             include_reflection=args.include_reflection,
             include_matrix=args.include_matrix,
             include_event_summary=args.include_event_summary,
+            include_propagation=args.include_propagation,
             event_summary_limit=args.event_summary_limit,
             manifest_events=args.manifest_events,
         )
