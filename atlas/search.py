@@ -25,8 +25,42 @@ def _score_entry(entry: dict, query_terms: List[str]) -> int:
     return score
 
 
-def search(index_path: Path, query: str, limit: int = 10) -> List[dict]:
-    entries = _load_index(index_path)
+def _matches_filters(entry: dict, *, cycle: int | None, puzzle: int | None, address: str | None) -> bool:
+    if cycle is not None:
+        entry_cycle = entry.get("cycle")
+        try:
+            if int(entry_cycle) != cycle:
+                return False
+        except (TypeError, ValueError):
+            return False
+    if puzzle is not None:
+        entry_puzzle = entry.get("puzzle_id")
+        try:
+            if int(entry_puzzle) != puzzle:
+                return False
+        except (TypeError, ValueError):
+            return False
+    if address is not None:
+        entry_address = entry.get("address")
+        if not isinstance(entry_address, str) or entry_address.lower() != address.lower():
+            return False
+    return True
+
+
+def search(
+    index_path: Path,
+    query: str,
+    limit: int = 10,
+    *,
+    cycle: int | None = None,
+    puzzle: int | None = None,
+    address: str | None = None,
+) -> List[dict]:
+    entries = [
+        entry
+        for entry in _load_index(index_path)
+        if _matches_filters(entry, cycle=cycle, puzzle=puzzle, address=address)
+    ]
     query_terms = [term.lower() for term in query.split() if term.strip()]
     if not query_terms:
         return []
@@ -44,15 +78,35 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--query", required=True, help="Query string")
     parser.add_argument("--index", type=Path, required=True, help="Path to search index directory or file")
     parser.add_argument("--limit", type=int, default=10, help="Maximum number of results")
+    parser.add_argument("--cycle", type=int, help="Filter results to a specific Harmonix cycle")
+    parser.add_argument("--puzzle", type=int, help="Filter results to a specific Harmonix puzzle id")
+    parser.add_argument("--address", help="Filter results to a specific Harmonix address")
     args = parser.parse_args(argv)
 
-    results = search(args.index, args.query, args.limit)
+    results = search(
+        args.index,
+        args.query,
+        args.limit,
+        cycle=args.cycle,
+        puzzle=args.puzzle,
+        address=args.address,
+    )
     if not results:
         print("No results found.")
         return 1
 
     for rank, entry in enumerate(results, start=1):
-        print(f"{rank}. [{entry['score']}] {entry['node_id']} ({entry['universe']}) -> {entry['artifact_id']}")
+        harmonix_bits = []
+        if entry.get("cycle") is not None:
+            harmonix_bits.append(f"cycle={entry['cycle']}")
+        if entry.get("puzzle_id") is not None:
+            harmonix_bits.append(f"puzzle={entry['puzzle_id']}")
+        if entry.get("address"):
+            harmonix_bits.append(f"address={entry['address']}")
+        suffix = f" [{' '.join(harmonix_bits)}]" if harmonix_bits else ""
+        print(
+            f"{rank}. [{entry['score']}] {entry['node_id']} ({entry['universe']}) -> {entry['artifact_id']}{suffix}"
+        )
     return 0
 
 
