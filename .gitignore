@@ -10,6 +10,9 @@ artifacts/*.png
 artifacts/genesis_artifact_bundle.zip
 **/__pycache__/
 
+# Puzzle Lab generated artefacts
+reports/figures/*.png
+
 # EchoDex auto-refiner state
 .echodex_state.json
 

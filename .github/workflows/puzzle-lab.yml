@@ -1,0 +1,45 @@
+name: Puzzle Lab CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    paths:
+      - "**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+          pip install ruff
+      - name: Lint
+        run: ruff check apps echo_cli echo_puzzle_lab tests/test_puzzle_lab.py
+      - name: Run tests
+        run: pytest -q
+      - name: Build charts
+        run: python -m echo_cli stats --build-charts -j
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: puzzle-lab-reports
+          path: |
+            reports/echo_substrate_overview.md
+            reports/figures/*
+          if-no-files-found: warn
+      - name: Upload exports
+        uses: actions/upload-artifact@v4
+        with:
+          name: puzzle-lab-exports
+          path: exports/*.jsonl
+          if-no-files-found: ignore
