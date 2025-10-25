@@ -86,3 +86,18 @@ def test_invalid_script_raises() -> None:
         assert "five elements" in str(exc)
     else:
         raise AssertionError("expected ScriptDecodeError to be raised")
+
+
+def test_decode_p2pk_script_returns_derived_address() -> None:
+    pubkey = (
+        "04001a23137d302f70eb0f78af6009262c85588562c1ba5e214052506393d36cb654af995cbba0c6a4"
+        "6533da7da895047965e619dd0c862bf340d2f235b330169b"
+    )
+    script = f"{pubkey} OP_CHECKSIG"
+
+    decoded = decode_p2pkh_script(script)
+
+    assert decoded.script_type == "p2pk"
+    assert decoded.pubkey == pubkey.lower()
+    assert decoded.pubkey_hash == "37277ab3ad1c32e2a166045bd1591d95f6e1c1d1"
+    assert decoded.address == "162dTd1RGztAFZ9YMmFZEpKuz3vFQ1DpgA"

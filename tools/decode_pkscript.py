@@ -14,7 +14,7 @@ import argparse
 import re
 import string
 from dataclasses import dataclass
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
@@ -48,10 +48,11 @@ class ScriptDecodeError(ValueError):
 @dataclass(frozen=True)
 class DecodedScript:
     address: str
-    pubkey_hash: str
+    pubkey_hash: Optional[str]
     network: str
     script_type: str = "p2pkh"
     witness_version: int | None = None
+    pubkey: Optional[str] = None
 
 
 def _base58check_encode(payload: bytes) -> str:
@@ -70,6 +71,13 @@ def _sha256(data: bytes) -> bytes:
     import hashlib
 
     return hashlib.sha256(data).digest()
+
+
+def _hash160(data: bytes) -> bytes:
+    import hashlib
+
+    sha = hashlib.sha256(data).digest()
+    return hashlib.new("ripemd160", sha).digest()
 
 
 def _bech32_polymod(values: Iterable[int]) -> int:
@@ -143,6 +151,18 @@ def _tokens_from_hex(script: str) -> List[str]:
     raw = bytes.fromhex(_strip_comments(script).strip().replace(" ", ""))
     if len(raw) < 4:
         raise ScriptDecodeError("hex script too short to decode")
+
+    # Pay-to-pubkey: <pubkey> OP_CHECKSIG (payload length 33 or 65 bytes)
+    if raw[-1] == 0xAC and raw[0] in {0x21, 0x41}:
+        push_len = raw[0]
+        if len(raw) != push_len + 2:
+            raise ScriptDecodeError("unexpected hex script length for canonical P2PK")
+        pubkey = raw[1 : 1 + push_len]
+        if len(pubkey) not in {33, 65}:
+            raise ScriptDecodeError("unexpected pubkey length for P2PK script")
+        if pubkey[0] not in {0x02, 0x03, 0x04}:
+            raise ScriptDecodeError("unsupported public key prefix for P2PK script")
+        return [pubkey.hex(), "OP_CHECKSIG"]
 
     # Legacy P2PKH: OP_DUP OP_HASH160 <20-byte hash> OP_EQUALVERIFY OP_CHECKSIG
     if raw[0] == 0x76 and raw[1] == 0xA9:
@@ -311,6 +331,50 @@ def decode_p2pkh_script(script: str, network: str = "mainnet") -> DecodedScript:
         tokens = _normalize_tokens(script)
 
     upper_tokens = [token.upper() for token in tokens]
+    if (
+        upper_tokens
+        and upper_tokens[-1] == "OP_CHECKSIG"
+        and len(tokens) >= 2
+        and not any(tok.startswith("OP") for tok in upper_tokens[:-1])
+    ):
+        payload_tokens = tokens[:-1]
+        hex_parts: List[str] = []
+        for token in payload_tokens:
+            stripped = token.strip()
+            if not stripped:
+                continue
+            cleaned = stripped.lower()
+            if cleaned.startswith("0x"):
+                cleaned = cleaned[2:]
+            if not cleaned:
+                continue
+            if all(ch in string.hexdigits for ch in cleaned):
+                hex_parts.append(cleaned)
+                continue
+            if cleaned.isdigit():
+                # Treat standalone length declarations ("65") as push markers.
+                continue
+            raise ScriptDecodeError(f"unexpected token before OP_CHECKSIG: {token}")
+
+        pubkey_hex = "".join(hex_parts)
+        if len(pubkey_hex) not in {66, 130}:
+            raise ScriptDecodeError("P2PK public key must be 33 or 65 bytes long")
+        if pubkey_hex[:2] not in {"02", "03", "04"}:
+            raise ScriptDecodeError("unsupported public key prefix for P2PK script")
+
+        pubkey_bytes = bytes.fromhex(pubkey_hex)
+        payload_bytes = _hash160(pubkey_bytes)
+        prefix = params["p2pkh_prefix"]
+        address = _base58check_encode(prefix + payload_bytes)
+        return DecodedScript(
+            address=address,
+            pubkey_hash=payload_bytes.hex(),
+            network=network,
+            script_type="p2pk",
+            witness_version=None,
+            pubkey=pubkey_hex,
+        )
+
     if upper_tokens and upper_tokens[0] in {"OP_0", "0"}:
         if len(tokens) < 2:
             raise ScriptDecodeError("witness program must follow OP_0")

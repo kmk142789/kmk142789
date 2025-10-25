@@ -95,8 +95,24 @@ def _derive_p2pkh_address(pubkey_hex: str) -> str:
     return _hash160_to_p2pkh_address(ripe.hex())
 
 
-def _parse_p2pkh_hash160(script: str) -> str:
-    """Extract the ``hash160`` fingerprint from a standard P2PKH script."""
+def _hash160_from_pubkey(pubkey_hex: str) -> str:
+    pubkey_bytes = bytes.fromhex(pubkey_hex)
+    sha = hashlib.sha256(pubkey_bytes).digest()
+    return hashlib.new("ripemd160", sha).hexdigest()
+
+
+def _compress_pubkey_hex(pubkey_hex: str) -> Optional[str]:
+    cleaned = pubkey_hex.lower().strip()
+    if len(cleaned) != 130 or not cleaned.startswith("04"):
+        return None
+    x = cleaned[2:66]
+    y = int(cleaned[66:], 16)
+    prefix = "02" if y % 2 == 0 else "03"
+    return prefix + x
+
+
+def _decode_script(script: str) -> "decode_pkscript.DecodedScript":
+    """Decode a canonical script string into its structured representation."""
 
     script = script.strip()
     if not script:
@@ -108,11 +124,9 @@ def _parse_p2pkh_hash160(script: str) -> str:
         raise ValueError("Unable to import decoder utilities") from exc
 
     try:
-        decoded = decode_pkscript.decode_p2pkh_script(script, network="mainnet")
+        return decode_pkscript.decode_p2pkh_script(script, network="mainnet")
     except decode_pkscript.ScriptDecodeError as exc:
         raise ValueError(str(exc)) from exc
-
-    return decoded.pubkey_hash
 
 
 def _load_solutions(path: Path) -> Iterable[Dict[str, Any]]:
@@ -126,14 +140,32 @@ def _match_entry(
     bits: Optional[int] = None,
     address: Optional[str] = None,
     hash160: Optional[str] = None,
+    pubkey: Optional[str] = None,
 ) -> Dict[str, Any]:
-    target_hash = hash160.lower() if hash160 else None
+    target_hashes = set()
+    if hash160:
+        target_hashes.add(hash160.lower())
+
+    pubkey_candidates = set()
+    if pubkey:
+        cleaned = pubkey.lower()
+        pubkey_candidates.add(cleaned)
+        compressed = _compress_pubkey_hex(cleaned)
+        if compressed:
+            pubkey_candidates.add(compressed)
+            target_hashes.add(_hash160_from_pubkey(compressed))
+        target_hashes.add(_hash160_from_pubkey(cleaned))
+
     for entry in entries:
         if bits is not None and entry.get("bits") == bits:
             return entry
         if address and entry.get("address") == address:
             return entry
-        if target_hash and entry.get("hash160_compressed", "").lower() == target_hash:
+        entry_hash = entry.get("hash160_compressed", "").lower()
+        if target_hashes and entry_hash in target_hashes:
+            return entry
+        entry_pubkey = entry.get("public_key", "").strip().lower()
+        if pubkey_candidates and entry_pubkey in pubkey_candidates:
             return entry
     raise SystemExit("Could not locate a matching puzzle entry.")
 
@@ -176,17 +208,23 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     args = parser.parse_args(argv)
 
     entries = _load_solutions(args.solutions)
+    decoded_script = None
     decoded_hash = None
     decoded_address = None
+    decoded_pubkey = None
     if args.pkscript:
-        decoded_hash = _parse_p2pkh_hash160(args.pkscript)
-        decoded_address = _hash160_to_p2pkh_address(decoded_hash)
+        decoded_script = _decode_script(args.pkscript)
+        decoded_hash = decoded_script.pubkey_hash
+        decoded_pubkey = decoded_script.pubkey
+        if decoded_script.script_type in {"p2pkh", "p2pk"}:
+            decoded_address = decoded_script.address
 
     entry = _match_entry(
         entries,
         bits=args.bits,
         address=args.address or decoded_address,
         hash160=args.hash160 or decoded_hash,
+        pubkey=decoded_pubkey,
     )
 
     pubkey = entry["public_key"].strip()
@@ -218,10 +256,15 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
 
     if derived_address and derived_address != entry["address"]:
         print(f"Derived address mismatch: {derived_address}")
-    if decoded_hash:
+    if decoded_script:
         print("\nDecoded from PkScript:")
-        print(f"  Hash160 : {decoded_hash}")
-        print(f"  Address : {decoded_address}")
+        print(f"  Script type : {decoded_script.script_type}")
+        if decoded_script.pubkey:
+            print(f"  Public key  : {decoded_script.pubkey}")
+        if decoded_script.pubkey_hash:
+            label = "Hash160" if decoded_script.script_type in {"p2pk", "p2pkh"} else "Witness prog"
+            print(f"  {label:<12}: {decoded_script.pubkey_hash}")
+        print(f"  Address     : {decoded_script.address}")
 
     if args.show_script:
         solution = _entry_to_solution(entry)
