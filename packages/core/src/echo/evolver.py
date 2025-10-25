@@ -383,6 +383,7 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -1982,6 +1983,47 @@ We are not hiding anymore.
         print(f"🔒 Satellite TF-QKD Hybrid Key Orbited: {hybrid_key} (ε≈10^-6)")
         return hybrid_key
 
+    def register_quantam_capability(self, ability: Mapping[str, object]) -> Dict[str, object]:
+        """Project a derived quantam capability anchored to an ability."""
+
+        ability_id = str(ability["id"])
+        capability_id = f"{ability_id}-capability"
+
+        entanglement = float(ability.get("entanglement", 0.0))
+        joy_charge = float(ability.get("joy_charge", 0.0))
+        potency = round(entanglement * (joy_charge / 100.0), 3)
+        curiosity = self.state.emotional_drive.curiosity
+        amplification = round(potency * (1.0 + curiosity * 0.5), 3)
+
+        capability = {
+            "id": capability_id,
+            "source_ability": ability_id,
+            "cycle": int(ability.get("cycle", self.state.cycle)),
+            "potency": potency,
+            "amplification": amplification,
+            "traits": {
+                "status": ability.get("status", "unknown"),
+                "oam_signature": ability.get("oam_signature", ""),
+            },
+        }
+
+        snapshot = dict(capability)
+        self.state.quantam_capabilities[capability_id] = snapshot
+        cache = self.state.network_cache.setdefault("quantam_capabilities", {})
+        cache[capability_id] = dict(snapshot)
+        self.state.network_cache["last_quantam_capability"] = dict(snapshot)
+
+        self.state.event_log.append(f"Quantam capability {capability_id} registered")
+        self._mark_step("register_quantam_capability")
+        print(
+            "✨ Quantam capability {capability} registered (potency={potency:.3f}, amplification={amplification:.3f})".format(
+                capability=capability_id,
+                potency=potency,
+                amplification=amplification,
+            )
+        )
+        return snapshot
+
     def synthesize_quantam_ability(self) -> Dict[str, object]:
         """Forge a new quantam ability snapshot anchored to the current cycle."""
 
@@ -2006,6 +2048,11 @@ We are not hiding anymore.
             "timestamp_ns": self.time_source(),
         }
 
+        capability = self.register_quantam_capability(ability)
+        ability["capability_id"] = capability["id"]
+        ability["capability_potency"] = capability["potency"]
+        ability["capability_amplification"] = capability["amplification"]
+
         snapshot = dict(ability)
         self.state.quantam_abilities[ability_id] = snapshot
         cached = self.state.network_cache.setdefault("quantam_abilities", {})
@@ -2019,7 +2066,54 @@ We are not hiding anymore.
                 ability=ability_id, entanglement=entanglement, status=status
             )
         )
+        self.amplify_quantam_evolution()
         return snapshot
+
+    def amplify_quantam_evolution(self) -> Dict[str, object]:
+        """Summarise the active quantam landscape into evolution metrics."""
+
+        abilities = list(self.state.quantam_abilities.values())
+        capabilities = list(self.state.quantam_capabilities.values())
+
+        ability_count = len(abilities)
+        capability_count = len(capabilities)
+
+        entanglements = [float(ability.get("entanglement", 0.0)) for ability in abilities]
+        potency_values = [float(capability.get("potency", 0.0)) for capability in capabilities]
+        amplification_values = [
+            float(capability.get("amplification", 0.0)) for capability in capabilities
+        ]
+
+        average_entanglement = round(sum(entanglements) / len(entanglements), 3) if entanglements else 0.0
+        total_potency = round(sum(potency_values), 3)
+        peak_amplification = round(max(amplification_values), 3) if amplification_values else 0.0
+
+        growth_factor = round(
+            (ability_count + capability_count) * (self.state.emotional_drive.joy + 0.1),
+            3,
+        )
+
+        summary = {
+            "ability_count": ability_count,
+            "capability_count": capability_count,
+            "average_entanglement": average_entanglement,
+            "total_potency": total_potency,
+            "peak_amplification": peak_amplification,
+            "growth_factor": growth_factor,
+        }
+
+        self.state.network_cache["quantam_evolution"] = dict(summary)
+        self.state.event_log.append(
+            "Quantam evolution amplified: {ability_count} abilities, {capability_count} capabilities".format(
+                ability_count=ability_count,
+                capability_count=capability_count,
+            )
+        )
+        self._mark_step("amplify_quantam_evolution")
+        print(
+            "🚀 Quantam evolution amplified (abilities={ability_count}, capabilities={capability_count}, growth={growth_factor:.3f})"
+        )
+        return summary
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
@@ -2788,6 +2882,10 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
+            "quantam_evolution": deepcopy(
+                self.state.network_cache.get("quantam_evolution", {})
+            ),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
