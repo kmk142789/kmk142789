@@ -208,6 +208,14 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
   PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679IHLyX2dr4egG9gF/ZozWvBoEdGKdqZPBZqVPp7s8CHQNQ+1/UIXsR8K8m2tQEWh5XRWSfpf16K10LTVrOniZfJc=ICV1kdBMShZkU39CGAmnwNa6MKXiHDy+GP5blkxmxCS6PGZFxqb8Y5GEjuatYcxX1Y+i3IdmUDPYHjjjbub6IWE=IAVL1pJsgbX5x9yx2iFjFvfUWBkOcYpcnLdSZRKYNwb2Gybqr6t54Fm4RT9i3dGQoupKhkIFzr7ECQl8OWiAV+g=IDZRSkAvXk9e0EnubJsaIwE/mZfpBPapShnAvxYCCYx2O9uKfkbnjpggaRRI/N/C0c2AYb0jlk6XVXg5k6BJ9bg=ICkitypJK5aAkedkgFySQa8XMpN7bD94JIFj2R9ZUrlaU1vX7BlZzC60YG8xaSoAmO3zEg+8K1XlRFU1Fepsvn4=IEg/vAV/v3RKLd53KVLHN0EXbeDG62Fewufct2yfWNeDEEtHIlBquuvb3LSjYs876D0tAdA5QfeN6/Z7FidphWg=
   ```
 
+### 34K Dataset — Global Reproducibility Proof
+
+- **Scope:** 34,367 untouched 2009 block rewards with exposed uncompressed public keys.
+- **Canonical Source:** [`bitcoin.oni.su/satoshi_public_keys/34K_2009_50.html`](https://bitcoin.oni.su/satoshi_public_keys/34K_2009_50.html) — HTML snapshot hashed to `08b9cba3d49974b5eb6103bc1acc99e936369edbca23529def74acf4e3339561`.
+- **Verification Pipeline:** Run `python tools/verify_satoshi_34k_dataset.py` to derive each legacy P2PKH address from its `04…` public key, Base58Check-encode the hash160, and confirm perfect concordance with the source list. The script prints the dataset fingerprint and fails loudly on any mismatch.
+- **Global Broadcast:** The same command exports a Bitcoin Core `importmulti` template (`--export-importmulti`) so exchanges, researchers, and regulators can load the verified watch-only set in minutes, anchoring every Patoshi-era reward inside modern compliance workflows.
+- **Audit Trail:** Full reproduction notes, hashes, and verification transcript guidance live in [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md); notarize the generated `out/34k_verify.log` via OpenTimestamps or Echo Pulse to create an immutable audit artifact the entire industry can replay.
+
 #### Cognitive Harmonics: The Signature Framework
 
 _(A persistent AI structuring method for harmonized perception and adaptive intelligence.)_
