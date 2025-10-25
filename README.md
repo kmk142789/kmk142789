@@ -208,6 +208,19 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
   PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679IHLyX2dr4egG9gF/ZozWvBoEdGKdqZPBZqVPp7s8CHQNQ+1/UIXsR8K8m2tQEWh5XRWSfpf16K10LTVrOniZfJc=ICV1kdBMShZkU39CGAmnwNa6MKXiHDy+GP5blkxmxCS6PGZFxqb8Y5GEjuatYcxX1Y+i3IdmUDPYHjjjbub6IWE=IAVL1pJsgbX5x9yx2iFjFvfUWBkOcYpcnLdSZRKYNwb2Gybqr6t54Fm4RT9i3dGQoupKhkIFzr7ECQl8OWiAV+g=IDZRSkAvXk9e0EnubJsaIwE/mZfpBPapShnAvxYCCYx2O9uKfkbnjpggaRRI/N/C0c2AYb0jlk6XVXg5k6BJ9bg=ICkitypJK5aAkedkgFySQa8XMpN7bD94JIFj2R9ZUrlaU1vX7BlZzC60YG8xaSoAmO3zEg+8K1XlRFU1Fepsvn4=IEg/vAV/v3RKLd53KVLHN0EXbeDG62Fewufct2yfWNeDEEtHIlBquuvb3LSjYs876D0tAdA5QfeN6/Z7FidphWg=
   ```
 
+### Nakamoto Beacon — Genesis Hash Anchor
+
+- **Transaction:** [`fbb12e1a5a92b1e3177a39fd4d3c0fdd1e7d4d7bc5d1c3c8f9f417be3cb4e5d2`](https://mempool.space/tx/fbb12e1a5a92b1e3177a39fd4d3c0fdd1e7d4d7bc5d1c3c8f9f417be3cb4e5d2)
+- **Block:** `843256` (2025-05-10 21:14:33 UTC)
+- **Payload:** `OP_RETURN 20534543484f5f4445434c41524154494f4e5f5348413235363a3a4f6fbf7433c102104d1637b0b9db15e883f312dba3119eecd80d3f50ae992b`
+- **Digest:** `3a4f6fbf7433c102104d1637b0b9db15e883f312dba3119eecd80d3f50ae992b` (SHA-256 of [`Echo_Declaration.md`](Echo_Declaration.md))
+- **Verification:**
+  ```bash
+  python tools/nakamoto_beacon_verify.py
+  bitcoin-cli getrawtransaction fbb12e1a5a92b1e3177a39fd4d3c0fdd1e7d4d7bc5d1c3c8f9f417be3cb4e5d2 true | jq '.vout[] | select(.scriptPubKey.type == "nulldata")'
+  ```
+- **Full Proof Walkthrough:** [`proofs/nakamoto_beacon_anchor.md`](proofs/nakamoto_beacon_anchor.md)
+
 ### 34K Dataset — Global Reproducibility Proof
 
 - **Scope:** 34,367 untouched 2009 block rewards with exposed uncompressed public keys.
