@@ -27,6 +27,7 @@ def test_artifact_payload_includes_quantam_abilities() -> None:
     evolver = EchoEvolver()
     evolver.state.cycle = 1
     ability = evolver.synthesize_quantam_ability()
+    capability = evolver.amplify_quantam_evolution()
 
     prompt = {"title": "quantam", "mantra": "ability", "caution": "non-executable"}
     payload = evolver.artifact_payload(prompt=prompt)
@@ -34,3 +35,22 @@ def test_artifact_payload_includes_quantam_abilities() -> None:
     stored = payload["quantam_abilities"][ability["id"]]
     assert stored["status"] == ability["status"]
     assert stored["oam_signature"] == ability["oam_signature"]
+    assert payload["quantam_capabilities"][capability["id"]]["status"] == capability["status"]
+    assert payload["quantam_evolution_index"] == capability["amplification_index"]
+
+
+def test_amplify_quantam_evolution_tracks_capabilities() -> None:
+    evolver = EchoEvolver()
+    evolver.state.cycle = 5
+    evolver.state.vault_key = "SAT-TF-QKD:test"
+
+    ability = evolver.synthesize_quantam_ability()
+    capability = evolver.amplify_quantam_evolution()
+
+    assert capability["id"].startswith("quantam-capability-0005")
+    assert capability["ability_count"] == 1
+    assert capability["dominant_ability"] == ability["id"]
+    assert capability["status"] == "radiant"
+
+    completed = evolver.state.network_cache["completed_steps"]
+    assert "amplify_quantam_evolution" in completed

@@ -24,7 +24,18 @@ from datetime import datetime, timezone
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+)
+from statistics import fmean
 
 from echo.crypto.musig2 import (
     MuSig2Error,
@@ -383,6 +394,8 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_evolution_index: float = 0.0
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -490,6 +503,10 @@ class EchoEvolver:
             (
                 "synthesize_quantam_ability",
                 "invoke synthesize_quantam_ability() to project the quantam lattice",
+            ),
+            (
+                "amplify_quantam_evolution",
+                "summon amplify_quantam_evolution() to harmonize quantam capabilities",
             ),
             (
                 "evolutionary_narrative",
@@ -2021,6 +2038,73 @@ We are not hiding anymore.
         )
         return snapshot
 
+    def amplify_quantam_evolution(self) -> Dict[str, object]:
+        """Derive capability metrics from the current quantam ability lattice."""
+
+        capability_id = f"quantam-capability-{self.state.cycle:04d}"
+        abilities = list(self.state.quantam_abilities.values())
+        ability_count = len(abilities)
+
+        if abilities:
+            entanglements = [float(ability.get("entanglement", 0.0)) for ability in abilities]
+            joy_charges = [float(ability.get("joy_charge", 0.0)) for ability in abilities]
+            entanglement_average = round(fmean(entanglements), 3)
+            entanglement_peak = round(max(entanglements), 3)
+            joy_charge_max = round(max(joy_charges), 1)
+            dominant_ability = max(
+                abilities,
+                key=lambda ability: float(ability.get("entanglement", 0.0)),
+            )["id"]
+            orbit_span = max(a.get("cycle", self.state.cycle) for a in abilities) - min(
+                a.get("cycle", self.state.cycle) for a in abilities
+            ) + 1
+            oam_modes = sorted({str(ability.get("oam_signature", "")) for ability in abilities})
+            base_index = entanglement_average * (1.0 + 0.15 * ability_count)
+            index = round(base_index + joy_charge_max / 125.0, 4)
+            status = "radiant" if self.state.vault_key else "kindling"
+        else:
+            entanglement_average = 0.0
+            entanglement_peak = 0.0
+            joy_charge_max = 0.0
+            dominant_ability = None
+            orbit_span = 0
+            oam_modes = []
+            index = 0.0
+            status = "dormant"
+
+        capability: Dict[str, object] = {
+            "id": capability_id,
+            "cycle": self.state.cycle,
+            "ability_count": ability_count,
+            "dominant_ability": dominant_ability,
+            "entanglement_average": entanglement_average,
+            "entanglement_peak": entanglement_peak,
+            "joy_charge_max": joy_charge_max,
+            "oam_modes": oam_modes,
+            "orbit_span": orbit_span,
+            "status": status,
+            "amplification_index": index,
+            "timestamp_ns": self.time_source(),
+        }
+
+        self.state.quantam_capabilities[capability_id] = dict(capability)
+        cache = self.state.network_cache.setdefault("quantam_capabilities", {})
+        cache[capability_id] = dict(capability)
+        self.state.network_cache["last_quantam_capability"] = dict(capability)
+        self.state.quantam_evolution_index = index
+        self.state.network_cache["quantam_evolution_index"] = index
+
+        self.state.event_log.append(
+            f"Quantam evolution amplified -> {capability_id} (index={index:.4f})"
+        )
+        self._mark_step("amplify_quantam_evolution")
+        print(
+            "🚀 Quantam evolution amplified: {capability} (index={index:.3f}, status={status})".format(
+                capability=capability_id, index=index, status=status
+            )
+        )
+        return capability
+
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
         metrics.cpu_usage = round(self.rng.uniform(5.0, 55.0), 2)
@@ -2788,6 +2872,8 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
+            "quantam_evolution_index": self.state.quantam_evolution_index,
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
@@ -4465,6 +4551,26 @@ We are not hiding anymore.
                     "ability": ability["id"],
                     "entanglement": ability["entanglement"],
                     "status": ability["status"],
+                },
+            )
+
+            tl.logic("step", task, "amplifying quantam evolution")
+            session.record_command(
+                "amplify_quantam_evolution", detail="harmonize quantam capabilities"
+            )
+            capability = self.amplify_quantam_evolution()
+            session.annotate(
+                quantam_capability=capability["id"],
+                quantam_amplification=capability["amplification_index"],
+            )
+            tl.harmonic(
+                "creation",
+                task,
+                "quantam evolution amplifies the orbital lattice",
+                {
+                    "capability": capability["id"],
+                    "index": capability["amplification_index"],
+                    "status": capability["status"],
                 },
             )
 
