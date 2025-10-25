@@ -18,7 +18,15 @@ def _load_latest(path: Path) -> dict | None:
     nodes = payload.get("nodes") or []
     if not nodes:
         return None
-    return max(nodes, key=lambda entry: (entry.get("cycle", 0), entry.get("puzzle", 0)))
+    def sort_key(entry: dict) -> tuple[int, str, int]:
+        created = entry.get("created_at") or ""
+        return (
+            int(entry.get("cycle", 0)),
+            created,
+            int(entry.get("puzzle", 0)),
+        )
+
+    return max(nodes, key=sort_key)
 
 
 def _format_status(entry: dict, *, base_url: str) -> str:

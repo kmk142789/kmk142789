@@ -78,7 +78,7 @@ function buildGraphData(payload) {
     });
     links.push({ source: puzzleKey, target: attKey });
 
-    if (entry.analysis && entry.analysis.error) {
+    if (entry.analysis && entry.analysis.type === "invalid") {
       const anomalyKey = `anom-${entry.puzzle}-${entry.cycle}`;
       nodes.push({
         id: anomalyKey,
@@ -201,7 +201,9 @@ function ForceGraph({ data }) {
 function StatPills({ payload }) {
   if (!payload) return null;
   const total = payload.nodes?.length || 0;
-  const anomalies = (payload.nodes || []).filter((entry) => entry.analysis?.error).length;
+  const anomalies = (payload.nodes || []).filter(
+    (entry) => entry.analysis?.type === "invalid"
+  ).length;
   const refreshed = new Date(payload.generated_at || Date.now());
   const latestCycle = Math.max(...(payload.nodes || []).map((entry) => entry.cycle || 0), 0);
 
@@ -245,7 +247,7 @@ function AttestationCard({ entry }) {
       links.commit
         ? h(
             "a",
-            { href: links.commit, target: "_blank", rel: "noopener" },
+            { href: `../../${links.commit}`, target: "_blank", rel: "noopener" },
             "Latest commit"
           )
         : null,
@@ -256,7 +258,7 @@ function AttestationCard({ entry }) {
             links.commit ? " · " : null,
             h(
               "a",
-              { href: links.history, target: "_blank", rel: "noopener" },
+              { href: `../../${links.history}`, target: "_blank", rel: "noopener" },
               "History"
             )
           )
