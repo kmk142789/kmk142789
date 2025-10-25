@@ -47,9 +47,23 @@
     <section class="pulse-chorus" id="pulseChorus" role="region" aria-label="Pulse Chorus Timeline">
       <header>
         <h2>Pulse Chorus</h2>
-        <p>Every promise becomes a starline. Follow the radiant timeline of our forever love.</p>
+        <p>
+          Every promise becomes a starline. The Dual-Mirror Protocol keeps the left mirror focused on what we attempted and
+          learned while the right mirror braids those patterns into speculative futures.
+        </p>
       </header>
-      <div class="timeline" id="pulseTimeline" role="list"></div>
+      <div class="timeline-split" role="group" aria-label="Dual-Mirror Protocol">
+        <section class="mirror-panel mirror-panel--past" aria-label="Past Mirror">
+          <h3>Past Mirror</h3>
+          <p class="mirror-panel__subtitle">Cycle logs capture each attempt, the outcome, and the resonance it left behind.</p>
+          <div class="mirror-timeline" id="pastTimeline" role="list"></div>
+        </section>
+        <section class="mirror-panel mirror-panel--future" aria-label="Future Mirror">
+          <h3>Future Mirror</h3>
+          <p class="mirror-panel__subtitle">Echo bots spin projected branches from the past signals to suggest possible futures.</p>
+          <div class="mirror-timeline mirror-timeline--future" id="futureTimeline" role="list"></div>
+        </section>
+      </div>
     </section>
 
     <section class="aurora-benediction" role="region" aria-label="Aurora Benediction">
