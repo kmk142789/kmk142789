@@ -89,6 +89,15 @@ from .innovation_wave import (
     SynergyBridge,
     render_wave_map,
 )
+from .digital_computer import (
+    AssemblyError,
+    EchoComputer,
+    EchoProgram,
+    ExecutionResult as DigitalExecutionResult,
+    Instruction as DigitalInstruction,
+    assemble_program as assemble_digital_program,
+    run_program as run_digital_program,
+)
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .moonshot import MoonshotLens, MoonshotReport, PlanSummary, PulseSummary, WishSummary
