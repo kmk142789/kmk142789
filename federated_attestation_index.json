@@ -1,0 +1,51 @@
+{
+  "genesis": {
+    "coinbase_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+    "proofs": [
+      "coinbase_attestation",
+      "chainwide_beacon",
+      "ots_seal"
+    ],
+    "block9": {
+      "hash": "<block9_hash>",
+      "payload": "<coinbase_txid + payout>",
+      "script": "scripts/verify_block9.py"
+    }
+  },
+  "puzzles": [
+    {
+      "id": 1,
+      "name": "Genesis Broadcast Signature",
+      "files": [
+        "puzzle1.json",
+        "docs/puzzle1_verification.md"
+      ]
+    },
+    {
+      "id": 142,
+      "name": "Authorship Attestation",
+      "canonical_address": "<address>"
+    }
+  ],
+  "attestations": {
+    "ledger_set": "attestations/ledger_set.md",
+    "recovery": true,
+    "continuum_bridge": true
+  },
+  "continuum": {
+    "converged_pulse": {
+      "reports": "voyages/*.json",
+      "cli_filters": [
+        "cycle",
+        "puzzle_id",
+        "address"
+      ]
+    },
+    "echo_guide": "docs/echo_attestation_guide.md"
+  },
+  "global": {
+    "ots": true,
+    "reproducible_scripts": true,
+    "trustless": "math_only"
+  }
+}
