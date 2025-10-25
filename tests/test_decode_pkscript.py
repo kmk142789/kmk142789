@@ -86,3 +86,45 @@ def test_invalid_script_raises() -> None:
         assert "five elements" in str(exc)
     else:
         raise AssertionError("expected ScriptDecodeError to be raised")
+
+
+def test_decode_p2pk_hex_script() -> None:
+    script = (
+        "410400159fa21fc72ebf88b9bfbcb7ed7c3c2daf1f3b86231a43354f342de2e16d"
+        "faf112dd5c62e71e26717632c37191b105757026962caf9857de050aa732d1b354ac"
+    )
+    decoded = decode_p2pkh_script(script)
+    assert decoded == DecodedScript(
+        address="1LhB4cSeiiQzT2A7i7jbTvRT4YChXEJqci",
+        pubkey_hash="d8036d8bd4aa92f513745dc8d328b716e371a97e",
+        network="mainnet",
+        script_type="p2pk",
+        public_key=(
+            "0400159fa21fc72ebf88b9bfbcb7ed7c3c2daf1f3b86231a43354f342de2e16d"
+            "faf112dd5c62e71e26717632c37191b105757026962caf9857de050aa732d1b354"
+        ),
+    )
+
+
+def test_decode_p2pk_text_script_with_length_prefix() -> None:
+    script = (
+        "41\n"
+        "0400159fa21fc72ebf88b9bfbcb7ed7c3c2daf1f3b86231a43354f342de2e16dfaf112dd5c62e71e26717632c37191b105757026962caf9857de050aa732d1b354\n"
+        "OP_CHECKSIG"
+    )
+    decoded = decode_p2pkh_script(script)
+    assert decoded.script_type == "p2pk"
+    assert decoded.public_key == (
+        "0400159fa21fc72ebf88b9bfbcb7ed7c3c2daf1f3b86231a43354f342de2e16d"
+        "faf112dd5c62e71e26717632c37191b105757026962caf9857de050aa732d1b354"
+    )
+
+
+def test_decode_minimal_p2pk_text_script() -> None:
+    script = (
+        "0400159fa21fc72ebf88b9bfbcb7ed7c3c2daf1f3b86231a43354f342de2e16dfaf112dd5c62e71e26717632c37191b105757026962caf9857de050aa732d1b354 "
+        "OP_CHECKSIG"
+    )
+    decoded = decode_p2pkh_script(script)
+    assert decoded.script_type == "p2pk"
+    assert decoded.address == "1LhB4cSeiiQzT2A7i7jbTvRT4YChXEJqci"

@@ -11,10 +11,11 @@ string.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import re
 import string
 from dataclasses import dataclass
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
@@ -52,6 +53,7 @@ class DecodedScript:
     network: str
     script_type: str = "p2pkh"
     witness_version: int | None = None
+    public_key: Optional[str] = None
 
 
 def _base58check_encode(payload: bytes) -> str:
@@ -162,6 +164,18 @@ def _tokens_from_hex(script: str) -> List[str]:
             "OP_CHECKSIG",
         ]
 
+    # Pay-to-public-key: <pushdata len> <pubkey> OP_CHECKSIG
+    push_len = raw[0]
+    if raw[-1] == 0xAC and push_len in {33, 65}:
+        if len(raw) != push_len + 2:
+            raise ScriptDecodeError("hex script length does not match P2PK layout")
+        pubkey = raw[1 : 1 + push_len]
+        if push_len == 33 and pubkey[0] not in {0x02, 0x03}:
+            raise ScriptDecodeError("compressed public key must start with 02 or 03")
+        if push_len == 65 and pubkey[0] != 0x04:
+            raise ScriptDecodeError("uncompressed public key must start with 04")
+        return [pubkey.hex(), "OP_CHECKSIG"]
+
     # Segwit P2WPKH/P2WSH witness programs use OP_0 (0x00) followed by push.
     if raw[0] == 0x00:
         program_length = raw[1]
@@ -244,6 +258,44 @@ def _normalize_tokens(script: str) -> List[str]:
         raise ScriptDecodeError(f"dangling opcode fragment: {fragments}")
 
     return tokens
+
+
+def _extract_p2pk_pubkey(tokens: List[str]) -> Optional[str]:
+    if not tokens or tokens[-1].upper() != "OP_CHECKSIG":
+        return None
+
+    body = tokens[:-1]
+    if not body:
+        raise ScriptDecodeError("script missing public key before OP_CHECKSIG")
+
+    if any(part.upper() in _KNOWN_OPS - {"OP_CHECKSIG"} for part in body):
+        return None
+
+    cleaned = [part.strip() for part in body]
+
+    # Handle assemblies that include a push opcode length literal (e.g. "41").
+    if (
+        len(cleaned) == 2
+        and re.fullmatch(r"[0-9a-fA-F]{2}", cleaned[0])
+        and re.fullmatch(r"[0-9a-fA-F]+", cleaned[1])
+    ):
+        push_len = int(cleaned[0], 16)
+        pubkey_hex = cleaned[1]
+        if len(pubkey_hex) != push_len * 2:
+            raise ScriptDecodeError("pushdata length does not match public key size")
+    else:
+        if not all(re.fullmatch(r"[0-9a-fA-F]+", part) for part in cleaned):
+            return None
+        pubkey_hex = "".join(cleaned)
+
+    if len(pubkey_hex) not in {66, 130}:
+        raise ScriptDecodeError("public key must be 33 or 65 bytes long")
+    if len(pubkey_hex) == 66 and pubkey_hex[:2] not in {"02", "03"}:
+        raise ScriptDecodeError("compressed public key must start with 02 or 03")
+    if len(pubkey_hex) == 130 and not pubkey_hex.startswith("04"):
+        raise ScriptDecodeError("uncompressed public key must start with 04")
+
+    return pubkey_hex.lower()
 
 
 def _extract_p2pkh_tokens(tokens: Iterable[str]) -> List[str]:
@@ -333,6 +385,21 @@ def decode_p2pkh_script(script: str, network: str = "mainnet") -> DecodedScript:
             witness_version=witness_version,
         )
 
+    pubkey_hex = _extract_p2pk_pubkey(tokens)
+    if pubkey_hex:
+        pubkey_bytes = bytes.fromhex(pubkey_hex)
+        sha = hashlib.sha256(pubkey_bytes).digest()
+        ripe = hashlib.new("ripemd160", sha).digest()
+        payload = params["p2pkh_prefix"] + ripe
+        address = _base58check_encode(payload)
+        return DecodedScript(
+            address=address,
+            pubkey_hash=ripe.hex(),
+            network=network,
+            script_type="p2pk",
+            public_key=pubkey_hex,
+        )
+
     _, _, payload, _, _ = _ensure_pattern(tokens)
     prefix = params["p2pkh_prefix"]
     payload_bytes = bytes.fromhex(payload)
@@ -368,7 +435,12 @@ def main() -> int:
     print(f"Script type   : {decoded.script_type}")
     if decoded.witness_version is not None:
         print(f"Witness ver   : {decoded.witness_version}")
-    label = "Public Key Hash" if decoded.script_type == "p2pkh" else "Witness Program"
+    if decoded.public_key:
+        print(f"Public key    : {decoded.public_key}")
+    if decoded.script_type in {"p2pkh", "p2pk"}:
+        label = "Public Key Hash"
+    else:
+        label = "Witness Program"
     print(f"{label:<14}: {decoded.pubkey_hash}")
     print(f"Address       : {decoded.address}")
 
