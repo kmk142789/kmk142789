@@ -10,7 +10,7 @@ import textwrap
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List, Sequence
+from typing import Dict, Iterable, List, Sequence, Tuple
 
 
 @dataclass
@@ -38,6 +38,201 @@ class ContinuumManifest:
     visualize_hint: str
 
 
+@dataclass
+class PuzzleEntry:
+    """Metadata extracted from an on-disk puzzle solution document."""
+
+    puzzle_id: int
+    title: str
+    address: str | None
+    sha256: str
+    path: Path
+
+
+def parse_puzzle_range(value: str) -> Tuple[int, int]:
+    """Return ``(start, end)`` parsed from ``START-END`` strings."""
+
+    try:
+        start_text, end_text = value.split("-", 1)
+        start = int(start_text)
+        end = int(end_text)
+    except ValueError as exc:  # pragma: no cover - defensive guard
+        raise argparse.ArgumentTypeError("puzzle range must be formatted as START-END") from exc
+    if start <= 0 or end <= 0:
+        raise argparse.ArgumentTypeError("puzzle range values must be positive integers")
+    if end < start:
+        raise argparse.ArgumentTypeError("puzzle range end must be greater than or equal to start")
+    return start, end
+
+
+def normalise_modules(value: str) -> List[str]:
+    """Split a comma/semicolon delimited module list into tidy strings."""
+
+    separators = [",", ";"]
+    current = [value]
+    for separator in separators:
+        current = sum((segment.split(separator) for segment in current), [])
+    modules = [segment.strip() for segment in current if segment.strip()]
+    return modules
+
+
+def locate_puzzle_file(puzzle_root: Path, puzzle_id: int) -> Path | None:
+    """Return the first matching puzzle file for *puzzle_id* if present."""
+
+    candidates = [puzzle_root / f"puzzle_{puzzle_id}.md", puzzle_root / f"puzzle_{puzzle_id:05d}.md"]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def extract_title(text: str, puzzle_id: int) -> str:
+    for line in text.splitlines():
+        if line.strip().startswith("#"):
+            return line.lstrip("#").strip() or f"Puzzle {puzzle_id}"
+    return f"Puzzle {puzzle_id}"
+
+
+def extract_terminal_code_block(text: str) -> str | None:
+    """Return the final fenced code block (single-line) from *text*."""
+
+    lines = text.splitlines()
+    blocks: List[str] = []
+    collecting = False
+    buffer: List[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            if collecting:
+                blocks.append("\n".join(buffer).strip())
+                buffer = []
+                collecting = False
+            else:
+                collecting = True
+                buffer = []
+        elif collecting:
+            buffer.append(stripped)
+    if collecting and buffer:
+        blocks.append("\n".join(buffer).strip())
+    for block in reversed(blocks):
+        if block:
+            return block.splitlines()[0].strip()
+    return None
+
+
+def load_puzzle_entry(path: Path, puzzle_id: int) -> PuzzleEntry:
+    text = path.read_text(encoding="utf-8")
+    title = extract_title(text, puzzle_id)
+    address = extract_terminal_code_block(text)
+    sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return PuzzleEntry(puzzle_id=puzzle_id, title=title, address=address, sha256=sha256, path=path)
+
+
+def collect_puzzle_entries(start: int, end: int, puzzle_root: Path) -> Tuple[List[PuzzleEntry], List[int]]:
+    """Return resolved puzzle entries and the identifiers that were missing."""
+
+    found: List[PuzzleEntry] = []
+    missing: List[int] = []
+    if not puzzle_root.exists() or not puzzle_root.is_dir():
+        return found, list(range(start, end + 1))
+    for puzzle_id in range(start, end + 1):
+        candidate = locate_puzzle_file(puzzle_root, puzzle_id)
+        if candidate is None:
+            missing.append(puzzle_id)
+            continue
+        found.append(load_puzzle_entry(candidate, puzzle_id))
+    return found, missing
+
+
+def collapse_ranges(numbers: Sequence[int]) -> List[Tuple[int, int]]:
+    if not numbers:
+        return []
+    sorted_numbers = sorted(numbers)
+    ranges: List[Tuple[int, int]] = []
+    start = prev = sorted_numbers[0]
+    for number in sorted_numbers[1:]:
+        if number == prev + 1:
+            prev = number
+            continue
+        ranges.append((start, prev))
+        start = prev = number
+    ranges.append((start, prev))
+    return ranges
+
+
+def format_range(value: Tuple[int, int]) -> str:
+    start, end = value
+    return str(start) if start == end else f"{start}-{end}"
+
+
+def render_federated_index(
+    *,
+    start: int,
+    end: int,
+    artifact_type: str,
+    modules: Sequence[str],
+    puzzle_root: Path,
+    entries: Sequence[PuzzleEntry],
+    missing: Sequence[int],
+) -> str:
+    """Render the federated colossus index as Markdown."""
+
+    timestamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    total = end - start + 1
+    module_text = ", ".join(modules) if modules else "∅"
+    lines: List[str] = []
+    lines.append("# Federated Colossus Index")
+    lines.append("")
+    lines.append(f"- **Artifact Type**: {artifact_type}")
+    lines.append(f"- **Puzzle Range**: {start}–{end}")
+    lines.append(f"- **Modules**: {module_text}")
+    lines.append(f"- **Puzzle Root**: `{puzzle_root}`")
+    lines.append(f"- **Generated**: {timestamp}")
+    lines.append(f"- **Entries Resolved**: {len(entries)} / {total}")
+    lines.append("")
+    if modules:
+        lines.append("## Modules")
+        lines.append("")
+        for module in modules:
+            lines.append(f"- {module}")
+        lines.append("")
+    lines.append("## Puzzle Summary")
+    lines.append("")
+    lines.append("| Puzzle | Title | Address | SHA256 |")
+    lines.append("| --- | --- | --- | --- |")
+    if entries:
+        for entry in entries:
+            title = entry.title.replace("|", "\\|")
+            address = (entry.address or "—").replace("|", "\\|")
+            short_hash = f"{entry.sha256[:12]}…"
+            lines.append(f"| {entry.puzzle_id} | {title} | {address} | `{short_hash}` |")
+    else:
+        lines.append("| — | — | — | — |")
+    lines.append("")
+    if missing:
+        ranges = ", ".join(format_range(value) for value in collapse_ranges(missing))
+        lines.append("## Missing Puzzles")
+        lines.append("")
+        lines.append(f"The following puzzle identifiers were not located: {ranges}.")
+        lines.append("")
+    for entry in entries:
+        lines.append(f"### Puzzle {entry.puzzle_id}")
+        lines.append("")
+        lines.append(f"- **Title**: {entry.title}")
+        if entry.address:
+            lines.append(f"- **Derived Address**: `{entry.address}`")
+        else:
+            lines.append("- **Derived Address**: _not detected in source document_")
+        try:
+            rel_path = entry.path.relative_to(puzzle_root)
+        except ValueError:
+            rel_path = entry.path
+        lines.append(f"- **Source**: `{rel_path}`")
+        lines.append(f"- **SHA256**: `{entry.sha256}`")
+        lines.append("")
+    return "\n".join(lines).strip() + "\n"
+
+
 def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="codex")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -60,6 +255,22 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     output_group = weave.add_mutually_exclusive_group(required=True)
     output_group.add_argument("--output", dest="output", help="Destination HTML file")
     output_group.add_argument("--emit", dest="output", help="Destination artifact file")
+    federate = sub.add_parser("federate-colossus", help="Assemble a federated puzzle index")
+    federate.add_argument(
+        "--puzzle-range",
+        required=True,
+        type=parse_puzzle_range,
+        metavar="START-END",
+        help="Inclusive puzzle identifier range (e.g. 141-1000)",
+    )
+    federate.add_argument("--artifact-type", required=True, help="Label describing the generated artifact")
+    federate.add_argument("--modules", required=True, help="Comma or semicolon delimited module list")
+    federate.add_argument("--output", required=True, help="Destination Markdown file for the index")
+    federate.add_argument(
+        "--puzzle-root",
+        default="puzzle_solutions",
+        help="Directory containing puzzle solution markdown files",
+    )
     return parser.parse_args(argv)
 
 
@@ -575,10 +786,31 @@ def run_weave(args: argparse.Namespace) -> None:
         print(f"Balance board generated → {output_path}")
 
 
+def run_federate_colossus(args: argparse.Namespace) -> None:
+    start, end = args.puzzle_range
+    modules = normalise_modules(args.modules)
+    puzzle_root = Path(args.puzzle_root)
+    entries, missing = collect_puzzle_entries(start, end, puzzle_root)
+    content = render_federated_index(
+        start=start,
+        end=end,
+        artifact_type=args.artifact_type,
+        modules=modules,
+        puzzle_root=puzzle_root,
+        entries=entries,
+        missing=missing,
+    )
+    output_path = Path(args.output)
+    output_path.write_text(content, encoding="utf-8")
+    print(f"Federated colossus index generated → {output_path}")
+
+
 def main(argv: Iterable[str] | None = None) -> None:
     args = parse_args(argv)
     if args.command == "weave":
         run_weave(args)
+    elif args.command == "federate-colossus":
+        run_federate_colossus(args)
     else:
         raise SystemExit(f"Unsupported command: {args.command}")
 
