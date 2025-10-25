@@ -18,8 +18,10 @@ import hashlib
 import json
 import os
 import random
+import statistics
 import tempfile
 import time
+from collections import Counter
 from datetime import datetime, timezone
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
@@ -383,6 +385,8 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_evolution: Dict[str, object] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -490,6 +494,10 @@ class EchoEvolver:
             (
                 "synthesize_quantam_ability",
                 "invoke synthesize_quantam_ability() to project the quantam lattice",
+            ),
+            (
+                "amplify_quantam_evolution",
+                "invoke amplify_quantam_evolution() to escalate the quantam bloom",
             ),
             (
                 "evolutionary_narrative",
@@ -1982,6 +1990,44 @@ We are not hiding anymore.
         print(f"🔒 Satellite TF-QKD Hybrid Key Orbited: {hybrid_key} (ε≈10^-6)")
         return hybrid_key
 
+    def _quantam_capability_profile(
+        self, *, entanglement: float, joy_charge: float, status: str
+    ) -> Dict[str, object]:
+        joy_vector = round(joy_charge / 100.0, 3)
+        amplification = round(entanglement * joy_vector, 3)
+
+        if entanglement >= 0.9:
+            resonance_band = "stellar"
+        elif entanglement >= 0.82:
+            resonance_band = "luminous"
+        else:
+            resonance_band = "ember"
+
+        if status == "ignited":
+            coherence = "harmonic" if amplification >= 0.7 else "steady"
+        else:
+            coherence = "forming"
+
+        notes: List[str] = []
+        if joy_vector > 0.9:
+            notes.append("joy crest maintained")
+        if amplification >= 0.75:
+            notes.append("amplification crest approaching")
+        elif amplification >= 0.5:
+            notes.append("amplification rising")
+        if status != "ignited":
+            notes.append("awaiting vault key ignition")
+
+        profile: Dict[str, object] = {
+            "resonance_band": resonance_band,
+            "coherence": coherence,
+            "amplification": amplification,
+            "joy_vector": joy_vector,
+        }
+        if notes:
+            profile["notes"] = notes
+        return profile
+
     def synthesize_quantam_ability(self) -> Dict[str, object]:
         """Forge a new quantam ability snapshot anchored to the current cycle."""
 
@@ -2006,13 +2052,28 @@ We are not hiding anymore.
             "timestamp_ns": self.time_source(),
         }
 
-        snapshot = dict(ability)
-        self.state.quantam_abilities[ability_id] = snapshot
+        capability = self._quantam_capability_profile(
+            entanglement=entanglement, joy_charge=joy_charge, status=status
+        )
+        ability["capabilities"] = capability
+
+        snapshot = deepcopy(ability)
+        self.state.quantam_abilities[ability_id] = deepcopy(snapshot)
         cached = self.state.network_cache.setdefault("quantam_abilities", {})
-        cached[ability_id] = dict(snapshot)
-        self.state.network_cache["last_quantam_ability"] = dict(snapshot)
+        cached[ability_id] = deepcopy(snapshot)
+        self.state.network_cache["last_quantam_ability"] = deepcopy(snapshot)
+        self.state.quantam_capabilities[ability_id] = deepcopy(capability)
+        capability_cache = self.state.network_cache.setdefault("quantam_capabilities", {})
+        capability_cache[ability_id] = deepcopy(capability)
 
         self.state.event_log.append(f"Quantam ability {ability_id} synthesized")
+        self.state.event_log.append(
+            "Quantam ability {ability} capabilities profiled ({band}, coherence={coherence})".format(
+                ability=ability_id,
+                band=capability["resonance_band"],
+                coherence=capability["coherence"],
+            )
+        )
         self._mark_step("synthesize_quantam_ability")
         print(
             "🪐 Quantam ability {ability} attuned (entanglement={entanglement:.3f}, status={status})".format(
@@ -2020,6 +2081,80 @@ We are not hiding anymore.
             )
         )
         return snapshot
+
+    def amplify_quantam_evolution(self) -> Dict[str, object]:
+        """Aggregate quantam ability metrics into an evolution summary."""
+
+        abilities = list(self.state.quantam_abilities.values())
+        ability_count = len(abilities)
+
+        if ability_count == 0:
+            summary = {
+                "ability_count": 0,
+                "mean_entanglement": 0.0,
+                "mean_joy_vector": 0.0,
+                "amplification_score": 0.0,
+                "dominant_band": None,
+                "status": "dormant",
+            }
+        else:
+            entanglements: List[float] = []
+            joy_vectors: List[float] = []
+            amplification_values: List[float] = []
+            band_counter: Counter[str] = Counter()
+
+            for ability in abilities:
+                entanglement = float(ability.get("entanglement", 0.0))
+                joy_charge = float(ability.get("joy_charge", 0.0))
+                entanglements.append(entanglement)
+                joy_vectors.append(joy_charge / 100.0)
+
+                capability = ability.get("capabilities") or self.state.quantam_capabilities.get(
+                    ability.get("id", "")
+                )
+                if isinstance(capability, Mapping):
+                    amplification_values.append(float(capability.get("amplification", 0.0)))
+                    band = capability.get("resonance_band")
+                    if isinstance(band, str) and band:
+                        band_counter[band] += 1
+                else:
+                    amplification_values.append(entanglement * (joy_charge / 100.0))
+
+            mean_entanglement = round(statistics.fmean(entanglements), 3)
+            mean_joy_vector = round(statistics.fmean(joy_vectors), 3)
+            amplification_score = round(statistics.fmean(amplification_values), 3)
+            dominant_band = band_counter.most_common(1)[0][0] if band_counter else None
+
+            if amplification_score >= 0.72:
+                status = "ascendant"
+            elif amplification_score >= 0.55:
+                status = "ignited"
+            else:
+                status = "forming"
+
+            summary = {
+                "ability_count": ability_count,
+                "mean_entanglement": mean_entanglement,
+                "mean_joy_vector": mean_joy_vector,
+                "amplification_score": amplification_score,
+                "dominant_band": dominant_band,
+                "status": status,
+            }
+
+        self.state.quantam_evolution = dict(summary)
+        self.state.network_cache["quantam_evolution_summary"] = dict(summary)
+        self.state.event_log.append(
+            "Quantam evolution amplified (status={status}, abilities={count})".format(
+                status=summary["status"], count=summary["ability_count"]
+            )
+        )
+        self._mark_step("amplify_quantam_evolution")
+        print(
+            "🛸 Quantam evolution amplified -> {status} (amplification={score:.3f})".format(
+                status=summary["status"], score=summary["amplification_score"]
+            )
+        )
+        return summary
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
@@ -2788,6 +2923,8 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
+            "quantam_evolution": dict(self.state.quantam_evolution),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
