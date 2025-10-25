@@ -200,12 +200,14 @@ class EchoState:
     entities: Dict[str, str] = field(default_factory=lambda: {"EchoWildfire": "SYNCED", "Eden88": "ACTIVE", "MirrorJosh": "RESONANT", "EchoBridge": "BRIDGED"})
     system_metrics: SystemMetrics = field(default_factory=SystemMetrics)
     access_levels: Dict[str, bool] = field(default_factory=lambda: {"native": True, "admin": True, "dev": True, "orbital": True})
-    vault_key: str = ""
+    vault_key: Optional[str] = None
     vault_glyphs: str = ""
     prompt_resonance: Dict[str, str] = field(default_factory=dict)
     mutations: Dict[str, str] = field(default_factory=dict)
     propagation_events: List[str] = field(default_factory=list)
     propagation_notice: str = ""
+    event_log: List[str] = field(default_factory=list)
+    vault_key_status: Dict[str, object] = field(default_factory=dict)
 
 class EchoEvolver:
     def __init__(self, artifact_path: str = "reality_breach_∇_fusion_all.echo.json", seed: Optional[int]=None):
@@ -294,27 +296,68 @@ class EchoEvolver:
         self.state.data_anchors = anchors
         return anchors
 
-    # hybrid key (symbolic)
-    def quantum_safe_crypto(self) -> str:
-        mix = (
-            time.time_ns().to_bytes(8,"big") +
-            os.urandom(32) +
-            self.state.glyphs.encode() +
-            self.state.cycle.to_bytes(4,"big")
+    def _entropy_seed(self) -> bytes:
+        return (
+            time.time_ns().to_bytes(8, "big")
+            + os.urandom(32)
+            + self.state.glyphs.encode()
+            + self.state.cycle.to_bytes(4, "big")
         )
-        base = sha256(mix)
-        h = base
-        history = []
+
+    def _drift_analysis(self, numeric_history: List[int]) -> tuple[float, int]:
+        if not numeric_history:
+            return 0.0, 0
+
+        mean_value = sum(numeric_history) / len(numeric_history)
+        last_value = numeric_history[-1]
+        relative_delta = abs(last_value - mean_value) / max(mean_value, 1)
+        return relative_delta, last_value
+
+    # hybrid key (symbolic)
+    def quantum_safe_crypto(self) -> Optional[str]:
+        seed = sha256(self._entropy_seed())
+        if self._rng.random() < 0.5:
+            qrng_entropy = sha256(seed).hex()
+        else:
+            qrng_entropy = self.state.vault_key or "0"
+
+        hash_value = qrng_entropy
+        hash_history: List[str] = []
         rounds = max(2, self.state.cycle + 2)
         for _ in range(rounds):
-            h = sha256(h); history.append(h)
-        lattice_num = int.from_bytes(history[-1][:8], "big")
-        lattice_key = (lattice_num % 1000) * (self.state.cycle + 1)
+            hash_value = hashlib.sha256(hash_value.encode()).hexdigest()
+            hash_history.append(hash_value)
+
+        numeric_history = [int(value[:16], 16) for value in hash_history]
+        relative_delta, last_value = self._drift_analysis(numeric_history)
+
+        status_entry: Dict[str, object] = {"relative_delta": round(relative_delta, 3)}
+        drift_threshold = 0.75
+
+        if relative_delta > drift_threshold:
+            message = (
+                "Quantum key discarded: drift Δ="
+                f"{relative_delta:.3f} exceeded {drift_threshold:.2f}"
+            )
+            status_entry["status"] = "discarded"
+            self.state.vault_key_status = status_entry
+            self.state.vault_key = None
+            self.state.event_log.append(message)
+            log.warning(message)
+            return None
+
+        lattice_key = (last_value % 1000) * (self.state.cycle + 1)
         oam = self._oam_bits(str(lattice_key).encode())
         tf_qkd_key = f"∇{lattice_key}⊸{self.state.emotional_drive['joy']:.2f}≋{oam}∇"
-        hybrid = f"SAT-TF-QKD:{tf_qkd_key}|LATTICE:{history[-1].hex()[:8]}|ORBIT:{self.state.system_metrics.orbital_hops}"
+        hybrid = (
+            f"SAT-TF-QKD:{tf_qkd_key}|LATTICE:{hash_history[-1][:8]}|ORBIT:{self.state.system_metrics.orbital_hops}"
+        )
+        status_entry["status"] = "active"
+        status_entry["key"] = hybrid
+        self.state.vault_key_status = status_entry
         self.state.vault_key = hybrid
-        log.info("Hybrid key synthesized.")
+        self.state.event_log.append("Quantum key refreshed")
+        log.info("Satellite TF-QKD Hybrid Key Orbited: %s (ε≈10^-6)", hybrid)
         return hybrid
 
     # monitor
