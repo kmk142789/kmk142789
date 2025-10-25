@@ -612,6 +612,16 @@ The helper mirrors the ``EchoEvolver.run`` sequence and surfaces common
 toggles such as ``--enable-network`` and ``--no-persist-artifact`` so you can
 experiment with different modes from the command line.
 
+To regenerate the consolidated Bitcoin puzzle index and companion reports, run:
+
+```bash
+python scripts/echo_orchestrate.py --refresh
+```
+
+Include ``--with-ud`` when Unstoppable Domains credentials are available to
+augment the report with on-chain domain bindings. The CLI gracefully skips the
+lookup when no credentials are configured.
+
 ```bash
 idea-processor "EchoEvolver weaves radiant glyphs across the satellite lattice"
 ```

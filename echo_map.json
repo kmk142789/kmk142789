@@ -1,24 +1,3758 @@
 [
   {
-    "btc_address": "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4",
-    "hash160": "a58708aa98ad35c889bb36d8049bf9e9cacfd02a",
-    "message": "UNSTOPPABLE_API_KEY environment variable not set.",
-    "multi_chain": {},
-    "puzzle_id": 127,
-    "resolved_domain": null,
-    "resolved_domains": [],
-    "script_type": "p2pkh",
-    "status": "api_key_missing"
+    "puzzle": 1,
+    "address": "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH",
+    "address_family": "P2PKH",
+    "hash160": "751e76e8199196d454941c45d1b3a323f1433bd6",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 751e76e8199196d454941c45d1b3a323f1433bd6 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914751e76e8199196d454941c45d1b3a323f1433bd688ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '4rm9KBzDn7KprQz8' from clue '1BgGZ9tcN-7SZ26SAMH'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_001.md"
+      ],
+      "commit": "9bc636cb58c432dd5fb0134e969dc318e4e912f4",
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.641786+00:00"
   },
   {
-    "btc_address": "1MZ2L1gFrCtkkn6DnTT2e4PFUTHw9gNwaj",
+    "puzzle": 2,
+    "address": "1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb",
+    "address_family": "P2PKH",
+    "hash160": "7dd65592d0ab2fe0d0257d571abf032cd9db93dc",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 7dd65592d0ab2fe0d0257d571abf032cd9db93dc OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9147dd65592d0ab2fe0d0257d571abf032cd9db93dc88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'Cn2y1SdiUMohaKUi' from clue '1CUNEBjYr-4wpP326Lb'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_002.md"
+      ],
+      "commit": "3b3992d6667e9011896543164f07296ce0273611",
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.641878+00:00"
+  },
+  {
+    "puzzle": 4,
+    "address": "1EhqbyUMvvs7BfL8goY6qcPbD6YKfPqb7e",
+    "address_family": "P2PKH",
+    "hash160": "9652d86bedf43ad264362e6e6eba6eb764508127",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 9652d86bedf43ad264362e6e6eba6eb764508127 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9149652d86bedf43ad264362e6e6eba6eb76450812788ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'vs7BfL8goY6qcPbD' from clue '1EhqbyUMv-6YKfPqb7e'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_004.md"
+      ],
+      "commit": "8aa81c01941fbaec58203fccebeb417316a40ce6",
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642045+00:00"
+  },
+  {
+    "puzzle": 5,
+    "address": "1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k",
+    "address_family": "P2PKH",
+    "hash160": "8f9dff39a81ee4abcbad2ad8bafff090415a2be8",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 8f9dff39a81ee4abcbad2ad8bafff090415a2be8 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9148f9dff39a81ee4abcbad2ad8bafff090415a2be888ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '27W5zoXg8TRdcSRq' from clue '1E6NuFjCi-84zJeBW3k'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_005.md"
+      ],
+      "commit": "6b09c478b5f089ddf6a75a343d75bba0101dabe4",
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642104+00:00"
+  },
+  {
+    "puzzle": 6,
+    "address": "1PitScNLyp2HCygzadCh7FveTnfmpPbfp8",
+    "address_family": "P2PKH",
+    "hash160": "f93ec34e9e34a8f8ff7d600cdad83047b1bcb45c",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 f93ec34e9e34a8f8ff7d600cdad83047b1bcb45c OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f93ec34e9e34a8f8ff7d600cdad83047b1bcb45c88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'p2HCygzadCh7FveT' from clue '1PitScNLy-nfmpPbfp8'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_006.md"
+      ],
+      "commit": "c49241adb97b6d3082f13a26e2fea2fa58f1c541",
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642146+00:00"
+  },
+  {
+    "puzzle": 7,
+    "address": "1McVt1vMtCC7yn5b9wgX1833yCcLXzueeC",
+    "address_family": "P2PKH",
+    "hash160": "e2192e8a7dd8dd1c88321959b477968b941aa973",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 e2192e8a7dd8dd1c88321959b477968b941aa973 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914e2192e8a7dd8dd1c88321959b477968b941aa97388ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'CC7yn5b9wgX1833y' from clue '1McVt1vMt-CcLXzueeC'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_007.md"
+      ],
+      "commit": "6651313de78a21facd0d045fff813f9850ad5fe2",
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642186+00:00"
+  },
+  {
+    "puzzle": 8,
+    "address": "1M92tSqNmQLYw33fuBvjmeadirh1ysMBxK",
+    "address_family": "P2PKH",
+    "hash160": "dce76b2613052ea012204404a97b3c25eac31715",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 dce76b2613052ea012204404a97b3c25eac31715 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914dce76b2613052ea012204404a97b3c25eac3171588ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'QLYw33fuBvjmeadi' from clue '1M92tSqNm-rh1ysMBxK'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1M92tSqNmQLYw33fuBvjmeadirh1ysMBxK.md"
+      ],
+      "commit": "658e154dbf9e1ce3b5751effcad0d920f6ec4799",
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647566+00:00"
+  },
+  {
+    "puzzle": 9,
+    "address": "1CQFwcjw1dwhtkVWBttNLDtqL7ivBonGPV",
+    "address_family": "P2PKH",
+    "hash160": "7d0f6c64afb419bbd7e971e943d7404b0e0daab4",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 7d0f6c64afb419bbd7e971e943d7404b0e0daab4 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9147d0f6c64afb419bbd7e971e943d7404b0e0daab488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'dwhtkVWBttNLDtqL' from clue '1CQFwcjw1-7ivBonGPV'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_009.md"
+      ],
+      "commit": "4c467b47cb05bb8bd02967e7e12682298a5d5be2",
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642223+00:00"
+  },
+  {
+    "puzzle": 10,
+    "address": "1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe",
+    "address_family": "P2PKH",
+    "hash160": "d7729816650e581d7462d52ad6f732da0e2ec93b",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914d7729816650e581d7462d52ad6f732da0e2ec93b88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'wwgXRtmVUvTVrraq' from clue '1LeBZP5QC-PUokyLHqe'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe.md"
+      ],
+      "commit": "1185ef2fc3195fcebaa11e751b65fa4d0d08679d",
+      "pr": "#10"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647530+00:00"
+  },
+  {
+    "puzzle": 11,
+    "address": "1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu",
+    "address_family": "P2PKH",
+    "hash160": "f8c698da3164ef8fa4258692d118cc9a902c5acc",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 f8c698da3164ef8fa4258692d118cc9a902c5acc OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f8c698da3164ef8fa4258692d118cc9a902c5acc88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '3Z314JrQn5TNiys8' from clue '1PgQVLmst-Hc38TcXJu'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_011.md"
+      ],
+      "commit": "00160d12f32f2158662dda637184cb3314a6e921",
+      "pr": "#11"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642268+00:00"
+  },
+  {
+    "puzzle": 12,
+    "address": "1DBaumZxUkM4qMQRt2LVWyFJq5kDtSZQot",
+    "address_family": "P2PKH",
+    "hash160": "85a1f9ba4da24c24e582d9b891dacbd1b043f971",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 85a1f9ba4da24c24e582d9b891dacbd1b043f971 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91485a1f9ba4da24c24e582d9b891dacbd1b043f97188ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'kM4qMQRt2LVWyFJq' from clue '1DBaumZxU-5kDtSZQot'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_012.md"
+      ],
+      "commit": "448f22ce290cbf30b5612e55907295a4be6ae789",
+      "pr": "#12"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642306+00:00"
+  },
+  {
+    "puzzle": 13,
+    "address": "1Pie8JkxBT6MGPz9Nvi3fsPkr2D8q3GBc1",
+    "address_family": "P2PKH",
+    "hash160": "f932d0188616c964416b91fb9cf76ba9790a921e",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 f932d0188616c964416b91fb9cf76ba9790a921e OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f932d0188616c964416b91fb9cf76ba9790a921e88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'T6MGPz9Nvi3fsPkr' from clue '1Pie8JkxB-2D8q3GBc1'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_013.md"
+      ],
+      "commit": "06c2ce03e28c5fce9fe99c8353b84a45e608c8dc",
+      "pr": "#13"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642342+00:00"
+  },
+  {
+    "puzzle": 16,
+    "address": "1BDyrQ6WoF8VN3g9SAS1iKZcPzFfnDVieY",
+    "address_family": "P2PKH",
+    "hash160": "7025b4efb3ff42eb4d6d71fab6b53b4f4967e3dd",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9147025b4efb3ff42eb4d6d71fab6b53b4f4967e3dd88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'F8VN3g9SAS1iKZcP' from clue '1BDyrQ6Wo-zFfnDVieY'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1BDyrQ6WoF8VN3g9SAS1iKZcPzFfnDVieY.md"
+      ],
+      "commit": "c30f611fc6f8c75ee606580b5bd5db721056371e",
+      "pr": "#16"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647206+00:00"
+  },
+  {
+    "puzzle": 17,
+    "address": "1HduPEXZRdG26SUT5Yk83mLkPyjnZuJ7Bm",
+    "address_family": "P2PKH",
+    "hash160": "b67cb6edeabc0c8b927c9ea327628e7aa63e2d52",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 b67cb6edeabc0c8b927c9ea327628e7aa63e2d52 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914b67cb6edeabc0c8b927c9ea327628e7aa63e2d5288ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'dG26SUT5Yk83mLkP' from clue '1HduPEXZR-yjnZuJ7Bm'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_017.md"
+      ],
+      "commit": "3e5f2508da5a6f3b517b063ff048bbc02ca2fc58",
+      "pr": "#17"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642378+00:00"
+  },
+  {
+    "puzzle": 19,
+    "address": "1NWmZRpHH4XSPwsW6dsS3nrNWfL1yrJj4w",
+    "address_family": "P2PKH",
+    "hash160": "ebfbe6819fcdebab061732ce91df7d586a037dee",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 ebfbe6819fcdebab061732ce91df7d586a037dee OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914ebfbe6819fcdebab061732ce91df7d586a037dee88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '4XSPwsW6dsS3nrNW' from clue '1NWmZRpHH-fL1yrJj4w'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_019.md"
+      ],
+      "commit": "9ac5105140700f6ca39c953ac867c7bd3f351fb2",
+      "pr": "#19"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642456+00:00"
+  },
+  {
+    "puzzle": 20,
+    "address": "1HsMJxNiV7TLxmoF6uJNkydxPFDog4NQum",
+    "address_family": "P2PKH",
+    "hash160": "b907c3a2a3b27789dfb509b730dd47703c272868",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 b907c3a2a3b27789dfb509b730dd47703c272868 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914b907c3a2a3b27789dfb509b730dd47703c27286888ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '7TLxmoF6uJNkydxP' from clue '1HsMJxNiV-FDog4NQum'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_020.md"
+      ],
+      "commit": "2d793788a659dcc28cf39620b29d9ddca4c80ddd",
+      "pr": "#20"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642511+00:00"
+  },
+  {
+    "puzzle": 21,
+    "address": "14oFNXucftsHiUMY8uctg6N487riuyXs4h",
+    "address_family": "P2PKH",
+    "hash160": "29a78213caa9eea824acf08022ab9dfc83414f56",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 29a78213caa9eea824acf08022ab9dfc83414f56 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91429a78213caa9eea824acf08022ab9dfc83414f5688ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'tsHiUMY8uctg6N48' from clue '14oFNXucf-7riuyXs4h'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle021.md"
+      ],
+      "commit": "cdfe278c519fe44d60cb48a7f806d1d0e5ac88a1",
+      "pr": "#21"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645099+00:00"
+  },
+  {
+    "puzzle": 22,
+    "address": "1CfZWK1QTQE3eS9qn61dQjV89KDjZzfNcv",
+    "address_family": "P2PKH",
+    "hash160": "7ff45303774ef7a52fffd8011981034b258cb86b",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9147ff45303774ef7a52fffd8011981034b258cb86b88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'QE3eS9qn61dQjV89' from clue '1CfZWK1QT-KDjZzfNcv'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1CfZWK1QTQE3eS9qn61dQjV89KDjZzfNcv.md"
+      ],
+      "commit": "66274350763e98349f217f95d83dc0e723d926bf",
+      "pr": "#22"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647304+00:00"
+  },
+  {
+    "puzzle": 25,
+    "address": "15JhYXn6Mx3oF4Y7PcTAv2wVVAuCFFQNiP",
+    "address_family": "P2PKH",
+    "hash160": "2f396b29b27324300d0c59b17c3abc1835bd3dbb",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 2f396b29b27324300d0c59b17c3abc1835bd3dbb OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9142f396b29b27324300d0c59b17c3abc1835bd3dbb88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "none",
+      "notes": ""
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/puzzle025_solution.md"
+      ],
+      "commit": "61ea7556205bbe2ffa7245dcc48cae70b08031ac",
+      "pr": "#25"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647910+00:00"
+  },
+  {
+    "puzzle": 27,
+    "address": "128z5d7nN7PkCuX5qoA4Ys6pmxUYnEy86k",
+    "address_family": "P2PKH",
+    "hash160": "0c7aaf6caa7e5424b63d317f0f8f1f9fa40d5560",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 0c7aaf6caa7e5424b63d317f0f8f1f9fa40d5560 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9140c7aaf6caa7e5424b63d317f0f8f1f9fa40d556088ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '7PkCuX5qoA4Ys6pm' from clue '128z5d7nN-xUYnEy86k'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle027.md"
+      ],
+      "commit": "4ecab8a08bf371ec466fd773d9dd15135d9f81b4",
+      "pr": "#27"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645135+00:00"
+  },
+  {
+    "puzzle": 29,
+    "address": "19EEC52krRUK1RkUAEZmQdjTyHT7Gp1TYT",
+    "address_family": "P2PKH",
+    "hash160": "5a416cc9148f4a377b672c8ae5d3287adaafadec",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 5a416cc9148f4a377b672c8ae5d3287adaafadec OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9145a416cc9148f4a377b672c8ae5d3287adaafadec88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'RUK1RkUAEZmQdjTy' from clue '19EEC52kr-HT7Gp1TYT'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle029.md"
+      ],
+      "commit": "7c4bb25fbd437839097b84e5a28e2f2a2a493f07",
+      "pr": "#29"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645171+00:00"
+  },
+  {
+    "puzzle": 30,
+    "address": "1LHtnpd8nU5VHEMkG2TMYYNUjjLc992bps",
+    "address_family": "P2PKH",
+    "hash160": "d39c4704664e1deb76c9331e637564c257d68a08",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 d39c4704664e1deb76c9331e637564c257d68a08 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914d39c4704664e1deb76c9331e637564c257d68a0888ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'U5VHEMkG2TMYYNUj' from clue '1LHtnpd8n-jLc992bps'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_030.md"
+      ],
+      "commit": "c1afb9d1f54bb902d23ff3f8549d8c54cf58e57d",
+      "pr": "#30"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642565+00:00"
+  },
+  {
+    "puzzle": 31,
+    "address": "1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE",
+    "address_family": "P2PKH",
+    "hash160": "d805f6f251f7479ebd853b3d0f4b9b2656d92f1d",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 d805f6f251f7479ebd853b3d0f4b9b2656d92f1d OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914d805f6f251f7479ebd853b3d0f4b9b2656d92f1d88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "none",
+      "notes": ""
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_d805f6f251f7479ebd853b3d0f4b9b2656d92f1d.md"
+      ],
+      "commit": "4da276547ccc7e6a300c4cdb6e1a396a2027ecfd",
+      "pr": "#31"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647835+00:00"
+  },
+  {
+    "puzzle": 32,
+    "address": "1FRoHA9xewq7DjrZ1psWJVeTer8gHRqEvR",
+    "address_family": "P2PKH",
+    "hash160": "9e42601eeaedc244e15f17375adb0e2cd08efdc9",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 9e42601eeaedc244e15f17375adb0e2cd08efdc9 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9149e42601eeaedc244e15f17375adb0e2cd08efdc988ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'wq7DjrZ1psWJVeTe' from clue '1FRoHA9xe-r8gHRqEvR'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_032.md"
+      ],
+      "commit": "f3a66accb0b64e80df34fc6db1299cb2b2d36765",
+      "pr": "#32"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642611+00:00"
+  },
+  {
+    "puzzle": 34,
+    "address": "1PWABE7oUahG2AFFQhhvViQovnCr4rEv7Q",
+    "address_family": "P2PKH",
+    "hash160": "f6d67d7983bf70450f295c9cb828daab265f1bfa",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 f6d67d7983bf70450f295c9cb828daab265f1bfa OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f6d67d7983bf70450f295c9cb828daab265f1bfa88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'ahG2AFFQhhvViQov' from clue '1PWABE7oU-nCr4rEv7Q'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_034.md"
+      ],
+      "commit": "1483c26879f277d9c0fdefa2be8122c5c7227b9c",
+      "pr": "#34"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642657+00:00"
+  },
+  {
+    "puzzle": 36,
+    "address": "1Be2UF9NLfyLFbtm3TCbmuocc9N1Kduci1",
+    "address_family": "P2PKH",
+    "hash160": "74b1e012be1521e5d8d75e745a26ced845ea3d37",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 74b1e012be1521e5d8d75e745a26ced845ea3d37 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91474b1e012be1521e5d8d75e745a26ced845ea3d3788ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'fyLFbtm3TCbmuocc' from clue '1Be2UF9NL-9N1Kduci1'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_036.md"
+      ],
+      "commit": "e7250484db090869236bb163d2c74d54b61f6425",
+      "pr": "#36"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642702+00:00"
+  },
+  {
+    "puzzle": 37,
+    "address": "14iXhn8bGajVWegZHJ18vJLHhntcpL4dex",
+    "address_family": "P2PKH",
+    "hash160": "28c30fb9118ed1da72e7c4f89c0164756e8a021d",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 28c30fb9118ed1da72e7c4f89c0164756e8a021d OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91428c30fb9118ed1da72e7c4f89c0164756e8a021d88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'ajVWegZHJ18vJLHh' from clue '14iXhn8bG-ntcpL4dex'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_037.md",
+        "reports/pkscript_14iXhn8bGajVWegZHJ18vJLHhntcpL4dex.md"
+      ],
+      "commit": "38ba683131704c6544e4ecee4cc451e828724999",
+      "pr": "#37"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642939+00:00"
+  },
+  {
+    "puzzle": 38,
+    "address": "1HBtApAFA9B2YZw3G2YKSMCtb3dVnjuNe2",
+    "address_family": "P2PKH",
+    "hash160": "b190e2d40cfdeee2cee072954a2be89e7ba39364",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 b190e2d40cfdeee2cee072954a2be89e7ba39364 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914b190e2d40cfdeee2cee072954a2be89e7ba3936488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '9B2YZw3G2YKSMCtb' from clue '1HBtApAFA-3dVnjuNe2'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle038.md"
+      ],
+      "commit": "d5186bab17b44cc987c1d84f77a3c63517587816",
+      "pr": "#38"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645206+00:00"
+  },
+  {
+    "puzzle": 39,
+    "address": "122AJhKLEfkFBaGAd84pLp1kfE7xK3GdT8",
+    "address_family": "P2PKH",
+    "hash160": "0b304f2a79a027270276533fe1ed4eff30910876",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 0b304f2a79a027270276533fe1ed4eff30910876 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9140b304f2a79a027270276533fe1ed4eff3091087688ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'fkFBaGAd84pLp1kf' from clue '122AJhKLE-E7xK3GdT8'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_039.md"
+      ],
+      "commit": "3358911367c10f7547e47102374ab634f7182989",
+      "pr": "#39"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.642999+00:00"
+  },
+  {
+    "puzzle": 40,
+    "address": "1EeAxcprB2PpCnr34VfZdFrkUWuxyiNEFv",
+    "address_family": "P2PKH",
+    "hash160": "95a156cd21b4a69de969eb6716864f4c8b82a82a",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91495a156cd21b4a69de969eb6716864f4c8b82a82a88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '2PpCnr34VfZdFrkU' from clue '1EeAxcprB-WuxyiNEFv'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1EeAxcprB2PpCnr34VfZdFrkUWuxyiNEFv.md"
+      ],
+      "commit": "b8046120872f1031f01d215a898900d15c3de5b9",
+      "pr": "#40"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647353+00:00"
+  },
+  {
+    "puzzle": 41,
+    "address": "1L5sU9qvJeuwQUdt4y1eiLmquFxKjtHr3E",
+    "address_family": "P2PKH",
+    "hash160": "d1562eb37357f9e6fc41cb2359f4d3eda4032329",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 d1562eb37357f9e6fc41cb2359f4d3eda4032329 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914d1562eb37357f9e6fc41cb2359f4d3eda403232988ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'euwQUdt4y1eiLmqu' from clue '1L5sU9qvJ-FxKjtHr3E'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_041.md"
+      ],
+      "commit": "f05f37d48bbb86559e814bdac365c1d043cc6c3e",
+      "pr": "#41"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643041+00:00"
+  },
+  {
+    "puzzle": 42,
+    "address": "1E32GPWgDyeyQac4aJxm9HVoLrrEYPnM4N",
+    "address_family": "P2PKH",
+    "hash160": "8efb85f9c5b5db2d55973a04128dc7510075ae23",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 8efb85f9c5b5db2d55973a04128dc7510075ae23 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9148efb85f9c5b5db2d55973a04128dc7510075ae2388ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'yeyQac4aJxm9HVoL' from clue '1E32GPWgD-rrEYPnM4N'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle042.md"
+      ],
+      "commit": "43e28523bf40a3971f40af611f9273b20849819b",
+      "pr": "#42"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645241+00:00"
+  },
+  {
+    "puzzle": 43,
+    "address": "1PiFuqGpG8yGM5v6rNHWS3TjsG6awgEGA1",
+    "address_family": "P2PKH",
+    "hash160": "f92044c7924e5525c61207972c253c9fc9f086f7",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 f92044c7924e5525c61207972c253c9fc9f086f7 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f92044c7924e5525c61207972c253c9fc9f086f788ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '8yGM5v6rNHWS3Tjs' from clue '1PiFuqGpG-G6awgEGA1'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle043.md"
+      ],
+      "commit": "f473d7e6e78f103689df160a32f86a347650e830",
+      "pr": "#43"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645275+00:00"
+  },
+  {
+    "puzzle": 44,
+    "address": "1CkR2uS7LmFwc3T2jV8C1BhWb5mQaoxedF",
+    "address_family": "P2PKH",
+    "hash160": "80df54e1f612f2fc5bdc05c9d21a83aa8d20791e",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 80df54e1f612f2fc5bdc05c9d21a83aa8d20791e OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91480df54e1f612f2fc5bdc05c9d21a83aa8d20791e88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'mFwc3T2jV8C1BhWb' from clue '1CkR2uS7L-5mQaoxedF'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle044.md"
+      ],
+      "commit": "341316f0b65ee7ff66ed9cdbfef5c2b03e2c235e",
+      "pr": "#44"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645643+00:00"
+  },
+  {
+    "puzzle": 45,
+    "address": "1NtiLNGegHWE3Mp9g2JPkgx6wUg4TW7bbk",
+    "address_family": "P2PKH",
+    "hash160": "f0225bfc68a6e17e87cd8b5e60ae3be18f120753",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 f0225bfc68a6e17e87cd8b5e60ae3be18f120753 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f0225bfc68a6e17e87cd8b5e60ae3be18f12075388ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'HWE3Mp9g2JPkgx6w' from clue '1NtiLNGeg-Ug4TW7bbk'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_045.md",
+        "reports/pkscript_1NtiLNGegHWE3Mp9g2JPkgx6wUg4TW7bbk.md"
+      ],
+      "commit": "509d901e2766b136986256331c2ba9d632d9a911",
+      "pr": "#45"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643101+00:00"
+  },
+  {
+    "puzzle": 48,
+    "address": "1DFYhaB2J9q1LLZJWKTnscPWos9VBqDHzv",
+    "address_family": "P2PKH",
+    "hash160": "8661cb56d9df0a61f01328b55af7e56a3fe7a2b2",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 8661cb56d9df0a61f01328b55af7e56a3fe7a2b2 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9148661cb56d9df0a61f01328b55af7e56a3fe7a2b288ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '9q1LLZJWKTnscPWo' from clue '1DFYhaB2J-s9VBqDHzv'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_048.md"
+      ],
+      "commit": "c84eac6dccb05116cf23235fb4ac45a20cc142d6",
+      "pr": "#48"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643142+00:00"
+  },
+  {
+    "puzzle": 49,
+    "address": "12CiUhYVTTH33w3SPUBqcpMoqnApAV4WCF",
+    "address_family": "P2PKH",
+    "hash160": "0d2f533966c6578e1111978ca698f8add7fffdf3",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 0d2f533966c6578e1111978ca698f8add7fffdf3 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9140d2f533966c6578e1111978ca698f8add7fffdf388ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'TH33w3SPUBqcpMoq' from clue '12CiUhYVT-nApAV4WCF'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle049.md",
+        "reports/pkscript_12CiUhYVTTH33w3SPUBqcpMoqnApAV4WCF.md"
+      ],
+      "commit": "9690f0e5b52f2ee1227eba1125174e0c0ac5b96c",
+      "pr": "#49"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645708+00:00"
+  },
+  {
+    "puzzle": 51,
+    "address": "1NpnQyZ7x24ud82b7WiRNvPm6N8bqGQnaS",
+    "address_family": "P2PKH",
+    "hash160": "ef6419cffd7fad7027994354eb8efae223c2dbe7",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 ef6419cffd7fad7027994354eb8efae223c2dbe7 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914ef6419cffd7fad7027994354eb8efae223c2dbe788ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '24ud82b7WiRNvPm6' from clue '1NpnQyZ7x-N8bqGQnaS'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle051.md"
+      ],
+      "commit": "f9c834b146e6c0adcb89407ed20d745546504bd9",
+      "pr": "#51"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645750+00:00"
+  },
+  {
+    "puzzle": 52,
+    "address": "15z9c9sVpu6fwNiK7dMAFgMYSK4GqsGZim",
+    "address_family": "P2PKH",
+    "hash160": "36af659edbe94453f6344e920d143f1778653ae7",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 36af659edbe94453f6344e920d143f1778653ae7 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91436af659edbe94453f6344e920d143f1778653ae788ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'u6fwNiK7dMAFgMYS' from clue '15z9c9sVp-K4GqsGZim'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_052.md"
+      ],
+      "commit": "f2f74ec53b0f90e311fdad28416611cb7d6eecee",
+      "pr": "#52"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643177+00:00"
+  },
+  {
+    "puzzle": 53,
+    "address": "15K1YKJMiJ4fpesTVUcByoz334rHmknxmT",
+    "address_family": "P2PKH",
+    "hash160": "2f4870ef54fa4b048c1365d42594cc7d3d269551",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 2f4870ef54fa4b048c1365d42594cc7d3d269551 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9142f4870ef54fa4b048c1365d42594cc7d3d26955188ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'J4fpesTVUcByoz33' from clue '15K1YKJMi-4rHmknxmT'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle053.md"
+      ],
+      "commit": "d91d63ba2eea4c871204b9f7c33b9f43485bf868",
+      "pr": "#53"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645786+00:00"
+  },
+  {
+    "puzzle": 55,
+    "address": "1LzhS3k3e9Ub8i2W1V8xQFdB8n2MYCHPCa",
+    "address_family": "P2PKH",
+    "hash160": "db53d9bbd1f3a83b094eeca7dd970bd85b492fa2",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 db53d9bbd1f3a83b094eeca7dd970bd85b492fa2 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914db53d9bbd1f3a83b094eeca7dd970bd85b492fa288ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '9Ub8i2W1V8xQFdB8' from clue '1LzhS3k3e-n2MYCHPCa'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle055.md"
+      ],
+      "commit": "f17a19ac9b3311aa7a3253c996dbef9b25e26839",
+      "pr": "#55"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645861+00:00"
+  },
+  {
+    "puzzle": 56,
+    "address": "17aPYR1m6pVAacXg1PTDDU7XafvK1dxvhi",
+    "address_family": "P2PKH",
+    "hash160": "48214c5969ae9f43f75070cea1e2cb41d5bdcccd",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 48214c5969ae9f43f75070cea1e2cb41d5bdcccd OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91448214c5969ae9f43f75070cea1e2cb41d5bdcccd88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'pVAacXg1PTDDU7Xa' from clue '17aPYR1m6-fvK1dxvhi'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle056.md"
+      ],
+      "commit": "276773eb2f96619f738a4d0bfa700c7f42e3872b",
+      "pr": "#56"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645913+00:00"
+  },
+  {
+    "puzzle": 57,
+    "address": "15c9mPGLku1HuW9LRtBf4jcHVpBUt8txKz",
+    "address_family": "P2PKH",
+    "hash160": "328660ef43f66abe2653fa178452a5dfc594c2a1",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 328660ef43f66abe2653fa178452a5dfc594c2a1 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914328660ef43f66abe2653fa178452a5dfc594c2a188ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'u1HuW9LRtBf4jcHV' from clue '15c9mPGLk-pBUt8txKz'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle057.md"
+      ],
+      "commit": "736602be1dbe86f7ca117f442e5dd6332e15a0bc",
+      "pr": "#57"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646028+00:00"
+  },
+  {
+    "puzzle": 58,
+    "address": "1Dn8NF8qDyyfHMktmuoQLGyjWmZXgvosXf",
+    "address_family": "P2PKH",
+    "hash160": "8c2a6071f89c90c4dab5ab295d7729d1b54ea60f",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 8c2a6071f89c90c4dab5ab295d7729d1b54ea60f OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9148c2a6071f89c90c4dab5ab295d7729d1b54ea60f88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'yyfHMktmuoQLGyjW' from clue '1Dn8NF8qD-mZXgvosXf'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle058.md"
+      ],
+      "commit": "7bb399338d192f473203da6605cfea9780bdd896",
+      "pr": "#58"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646070+00:00"
+  },
+  {
+    "puzzle": 59,
+    "address": "1HAX2n9Uruu9YDt4cqRgYcvtGvZj1rbUyt",
+    "address_family": "P2PKH",
+    "hash160": "b14ed3146f5b2c9bde1703deae9ef33af8110210",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 b14ed3146f5b2c9bde1703deae9ef33af8110210 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914b14ed3146f5b2c9bde1703deae9ef33af811021088ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'uu9YDt4cqRgYcvtG' from clue '1HAX2n9Ur-vZj1rbUyt'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle059.md"
+      ],
+      "commit": "387f519632b66e84a9fe6db7b47f305b8a7ae83d",
+      "pr": "#59"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646136+00:00"
+  },
+  {
+    "puzzle": 60,
+    "address": "1Kn5h2qpgw9mWE5jKpk8PP4qvvJ1QVy8su",
+    "address_family": "P2PKH",
+    "hash160": "cdf8e5c7503a9d22642e3ecfc87817672787b9c5",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 cdf8e5c7503a9d22642e3ecfc87817672787b9c5 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914cdf8e5c7503a9d22642e3ecfc87817672787b9c588ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'w9mWE5jKpk8PP4qv' from clue '1Kn5h2qpg-vJ1QVy8su'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle060.md"
+      ],
+      "commit": "002082939a6759d130ba5876d4e6a188f1c322ed",
+      "pr": "#60"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646178+00:00"
+  },
+  {
+    "puzzle": 61,
+    "address": "1AVJKwzs9AskraJLGHAZPiaZcrpDr1U6AB",
+    "address_family": "P2PKH",
+    "hash160": "68133e19b2dfb9034edf9830a200cfdf38c90cbd",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 68133e19b2dfb9034edf9830a200cfdf38c90cbd OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91468133e19b2dfb9034edf9830a200cfdf38c90cbd88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'AskraJLGHAZPiaZc' from clue '1AVJKwzs9-rpDr1U6AB'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle061.md"
+      ],
+      "commit": "8a010a6c86f8b3e3fa7392e2e9ea1bf9a4230b8f",
+      "pr": "#61"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646225+00:00"
+  },
+  {
+    "puzzle": 62,
+    "address": "1Me6EfpwZK5kQziBwBfvLiHjaPGxCKLoJi",
+    "address_family": "P2PKH",
+    "hash160": "e26646db84b0602f32b34b5a62ca3cae1f91b779",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 e26646db84b0602f32b34b5a62ca3cae1f91b779 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914e26646db84b0602f32b34b5a62ca3cae1f91b77988ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'K5kQziBwBfvLiHja' from clue '1Me6EfpwZ-PGxCKLoJi'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle062.md"
+      ],
+      "commit": "8a55a69fda4a0dc97c52bc2d58b1e4cd56f4506e",
+      "pr": "#62"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646278+00:00"
+  },
+  {
+    "puzzle": 63,
+    "address": "1NpYjtLira16LfGbGwZJ5JbDPh3ai9bjf4",
+    "address_family": "P2PKH",
+    "hash160": "ef58afb697b094423ce90721fbb19a359ef7c50e",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 ef58afb697b094423ce90721fbb19a359ef7c50e OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914ef58afb697b094423ce90721fbb19a359ef7c50e88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'a16LfGbGwZJ5JbDP' from clue '1NpYjtLir-h3ai9bjf4'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle063.md"
+      ],
+      "commit": "90e7325bfbe74fe00529e1e2d337ad75767514c4",
+      "pr": "#63"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646315+00:00"
+  },
+  {
+    "puzzle": 64,
+    "address": "16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN",
+    "address_family": "P2PKH",
+    "hash160": "3ee4133d991f52fdf6a25c9834e0745ac74248a4",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 3ee4133d991f52fdf6a25c9834e0745ac74248a4 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9143ee4133d991f52fdf6a25c9834e0745ac74248a488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'xb7CHZyqBP8qca9d' from clue '16jY7qLJn-51gAjyXQN'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN.md"
+      ],
+      "commit": "64d042995166eaad2a67ffe68626534df2bb789c",
+      "pr": "#64"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646938+00:00"
+  },
+  {
+    "puzzle": 66,
+    "address": "13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so",
+    "address_family": "P2PKH",
+    "hash160": "20d45a6a762535700ce9e0b216e31994335db8a5",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 20d45a6a762535700ce9e0b216e31994335db8a5 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91420d45a6a762535700ce9e0b216e31994335db8a588ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'Vsc2S7ZTZnP2G4un' from clue '13zb1hQbW-dNNpdh5so'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle066.md"
+      ],
+      "commit": "038b35484508307096bff53e57258df47cfc2d80",
+      "pr": "#66"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646350+00:00"
+  },
+  {
+    "puzzle": 67,
+    "address": "1BY8GQbnueYofwSuFAT3USAhGjPrkxDdW9",
+    "address_family": "P2PKH",
+    "hash160": "739437bb3dd6d1983e66629c5f08c70e52769371",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 739437bb3dd6d1983e66629c5f08c70e52769371 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914739437bb3dd6d1983e66629c5f08c70e5276937188ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'eYofwSuFAT3USAhG' from clue '1BY8GQbnu-jPrkxDdW9'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle067.md"
+      ],
+      "commit": "98904aecb5a725416084d0321c592d2661d494ec",
+      "pr": "#67"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646386+00:00"
+  },
+  {
+    "puzzle": 68,
+    "address": "1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ",
+    "address_family": "P2PKH",
+    "hash160": "e0b8a2baee1b77fc703455f39d51477451fc8cfc",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 e0b8a2baee1b77fc703455f39d51477451fc8cfc OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914e0b8a2baee1b77fc703455f39d51477451fc8cfc88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'N6iKKEsbzRUAYFrY' from clue '1MVDYgVaS-JadLYZvvZ'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle068.md"
+      ],
+      "commit": "f676f376a6ad9dd30b8274ec07d92ff78aa8d43a",
+      "pr": "#68"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646421+00:00"
+  },
+  {
+    "puzzle": 69,
+    "address": "19vkiEajfhuZ8bs8Zu2jgmC6oqZbWqhxhG",
+    "address_family": "P2PKH",
+    "hash160": "61eb8a50c86b0584bb727dd65bed8d2400d6d5aa",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 61eb8a50c86b0584bb727dd65bed8d2400d6d5aa OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91461eb8a50c86b0584bb727dd65bed8d2400d6d5aa88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'huZ8bs8Zu2jgmC6o' from clue '19vkiEajf-qZbWqhxhG'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle069.md"
+      ],
+      "commit": "e18c4febbc0779681aa50899f08fd24ae79987be",
+      "pr": "#69"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646456+00:00"
+  },
+  {
+    "puzzle": 70,
+    "address": "19YZECXj3SxEZMoUeJ1yiPsw8xANe7M7QR",
+    "address_family": "P2PKH",
+    "hash160": "5db8cda53a6a002db10365967d7f85d19e171b10",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9145db8cda53a6a002db10365967d7f85d19e171b1088ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'SxEZMoUeJ1yiPsw8' from clue '19YZECXj3-xANe7M7QR'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_19YZECXj3SxEZMoUeJ1yiPsw8xANe7M7QR.md"
+      ],
+      "commit": "56ea06349c89b56cf6323606ece6dfccc26a5684",
+      "pr": "#70"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646985+00:00"
+  },
+  {
+    "puzzle": 75,
+    "address": "1J36UjUByGroXcCvmj13U6uwaVv9caEeAt",
+    "address_family": "P2PKH",
+    "hash160": "badf8b0d34289e679ec65c6c61d3a974353be5cf",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 badf8b0d34289e679ec65c6c61d3a974353be5cf OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914badf8b0d34289e679ec65c6c61d3a974353be5cf88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'GroXcCvmj13U6uwa' from clue '1J36UjUBy-Vv9caEeAt'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_075.md"
+      ],
+      "commit": "5d6df5a50f6f475de03c992ed7e9bf7b051fed91",
+      "pr": "#75"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643213+00:00"
+  },
+  {
+    "puzzle": 79,
+    "address": "1ARk8HWJMn8js8tQmGUJeQHjSE7KRkn2t8",
+    "address_family": "P2PKH",
+    "hash160": "67671d5490c272e3ab7ddd34030d587738df33da",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 67671d5490c272e3ab7ddd34030d587738df33da OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91467671d5490c272e3ab7ddd34030d587738df33da88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'n8js8tQmGUJeQHjS' from clue '1ARk8HWJM-E7KRkn2t8'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_079.md"
+      ],
+      "commit": "409e06c025ef34d7805a5de9e57c9f799b74bc56",
+      "pr": "#79"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643304+00:00"
+  },
+  {
+    "puzzle": 80,
+    "address": "1BCf6rHUW6m3iH2ptsvnjgLruAiPQQepLe",
+    "address_family": "P2PKH",
+    "hash160": "6fe5a36eef0684af0b91f3b6cfc972d68c4f6fab",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9146fe5a36eef0684af0b91f3b6cfc972d68c4f6fab88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '6m3iH2ptsvnjgLru' from clue '1BCf6rHUW-AiPQQepLe'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1BCf6rHUW6m3iH2ptsvnjgLruAiPQQepLe.md"
+      ],
+      "commit": "1e057b5927e6cb9cb5846e990318ec389349eed7",
+      "pr": "#80"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647140+00:00"
+  },
+  {
+    "puzzle": 81,
+    "address": "15qsCm78whspNQFydGJQk5rexzxTQopnHZ",
+    "address_family": "P2PKH",
+    "hash160": "351e605fac813965951ba433b7c2956bf8ad95ce",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 351e605fac813965951ba433b7c2956bf8ad95ce OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914351e605fac813965951ba433b7c2956bf8ad95ce88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'hspNQFydGJQk5rex' from clue '15qsCm78w-zxTQopnHZ'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_081.md"
+      ],
+      "commit": "c07a99e015477334d90268a54ed70fe037825f22",
+      "pr": "#81"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643362+00:00"
+  },
+  {
+    "puzzle": 82,
+    "address": "13zYrYhhJxp6Ui1VV7pqa5WDhNWM45ARAC",
+    "address_family": "P2PKH",
+    "hash160": "20d28d4e87543947c7e4913bcdceaa16e2f8f061",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 20d28d4e87543947c7e4913bcdceaa16e2f8f061 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91420d28d4e87543947c7e4913bcdceaa16e2f8f06188ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'xp6Ui1VV7pqa5WDh' from clue '13zYrYhhJ-NWM45ARAC'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_082.md"
+      ],
+      "commit": "cbe6c67ec7a4654c8c235989d5ff36463b356165",
+      "pr": "#82"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643415+00:00"
+  },
+  {
+    "puzzle": 89,
+    "address": "19QciEHbGVNY4hrhfKXmcBBCrJSBZ6TaVt",
+    "address_family": "P2PKH",
+    "hash160": "5c3862203d1e44ab3af441503e22db97b1c5097e",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 5c3862203d1e44ab3af441503e22db97b1c5097e OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9145c3862203d1e44ab3af441503e22db97b1c5097e88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'VNY4hrhfKXmcBBCr' from clue '19QciEHbG-JSBZ6TaVt'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_089.md"
+      ],
+      "commit": "382033351847fe53e8f577403bc76b268a2797f2",
+      "pr": "#89"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643467+00:00"
+  },
+  {
+    "puzzle": 91,
+    "address": "1EzVHtmbN4fs4MiNk3ppEnKKhsmXYJ4s74",
+    "address_family": "P2PKH",
+    "hash160": "9978f61b92d16c5f1a463a0995df70da1f7a7d2a",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 9978f61b92d16c5f1a463a0995df70da1f7a7d2a OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9149978f61b92d16c5f1a463a0995df70da1f7a7d2a88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '4fs4MiNk3ppEnKKh' from clue '1EzVHtmbN-smXYJ4s74'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_091.md"
+      ],
+      "commit": "8be8eade0532e5020011b2c8b335140e20219b24",
+      "pr": "#91"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643507+00:00"
+  },
+  {
+    "puzzle": 92,
+    "address": "1AE8NzzgKE7Yhz7BWtAcAAxiFMbPo82NB5",
+    "address_family": "P2PKH",
+    "hash160": "6534b31208fe6e100d29f9c9c75aac8bf06fbb38",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 6534b31208fe6e100d29f9c9c75aac8bf06fbb38 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9146534b31208fe6e100d29f9c9c75aac8bf06fbb3888ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'E7Yhz7BWtAcAAxiF' from clue '1AE8NzzgK-MbPo82NB5'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_092.md"
+      ],
+      "commit": "ae377948c3971f6770e0c199b78e335823353162",
+      "pr": "#92"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643558+00:00"
+  },
+  {
+    "puzzle": 93,
+    "address": "17Q7tuG2JwFFU9rXVj3uZqRtioH3mx2Jad",
+    "address_family": "P2PKH",
+    "hash160": "463013cd41279f2fd0c31d0a16db3972bfffac8d",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 463013cd41279f2fd0c31d0a16db3972bfffac8d OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914463013cd41279f2fd0c31d0a16db3972bfffac8d88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'wFFU9rXVj3uZqRti' from clue '17Q7tuG2J-oH3mx2Jad'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_093.md"
+      ],
+      "commit": "485b0a7e87b890d18c2cf0dda7f565c028209be1",
+      "pr": "#93"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643633+00:00"
+  },
+  {
+    "puzzle": 94,
+    "address": "1K6xGMUbs6ZTXBnhw1pippqwK6wjBWtNpL",
+    "address_family": "P2PKH",
+    "hash160": "c6927a00970d0165327d0a6db7950f05720c295c",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914c6927a00970d0165327d0a6db7950f05720c295c88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '6ZTXBnhw1pippqwK' from clue '1K6xGMUbs-6wjBWtNpL'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1K6xGMUbs6ZTXBnhw1pippqwK6wjBWtNpL.md"
+      ],
+      "commit": "f020d154d4afdcabc36c2e8a27aa27dc74624b21",
+      "pr": "#94"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647484+00:00"
+  },
+  {
+    "puzzle": 95,
+    "address": "19eVSDuizydXxhohGh8Ki9WY9KsHdSwoQC",
+    "address_family": "P2PKH",
+    "hash160": "5ed822125365274262191d2b77e88d436dd56d88",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 5ed822125365274262191d2b77e88d436dd56d88 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9145ed822125365274262191d2b77e88d436dd56d8888ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'ydXxhohGh8Ki9WY9' from clue '19eVSDuiz-KsHdSwoQC'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_095.md"
+      ],
+      "commit": "7d0c555f858dbbcd92cfcaa6fe0d6052fc203b9d",
+      "pr": "#95"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643690+00:00"
+  },
+  {
+    "puzzle": 96,
+    "address": "15ANYzzCp5BFHcCnVFzXqyibpzgPLWaD8b",
+    "address_family": "P2PKH",
+    "hash160": "2da63cbd251d23c7b633cb287c09e6cf888b3fe4",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9142da63cbd251d23c7b633cb287c09e6cf888b3fe488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '5BFHcCnVFzXqyibp' from clue '15ANYzzCp-zgPLWaD8b'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_15ANYzzCp5BFHcCnVFzXqyibpzgPLWaD8b.md"
+      ],
+      "commit": "696aeaab83a6385cc1a4a1ff978b72f8665a68f6",
+      "pr": "#96"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646903+00:00"
+  },
+  {
+    "puzzle": 98,
+    "address": "1CaBVPrwUxbQYYswu32w7Mj4HR4maNoJSX",
+    "address_family": "P2PKH",
+    "hash160": "7eefddd979a1d6bb6f29757a1f463579770ba566",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 7eefddd979a1d6bb6f29757a1f463579770ba566 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9147eefddd979a1d6bb6f29757a1f463579770ba56688ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'xbQYYswu32w7Mj4H' from clue '1CaBVPrwU-R4maNoJSX'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_098.md"
+      ],
+      "commit": "9d0ebae5b43f4ef0edc8e98647980a518c30f6d4",
+      "pr": "#98"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643729+00:00"
+  },
+  {
+    "puzzle": 99,
+    "address": "1JWnE6p6UN7ZJBN7TtcbNDoRcjFtuDWoNL",
+    "address_family": "P2PKH",
+    "hash160": "c01bf430a97cbcdaedddba87ef4ea21c456cebdb",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 c01bf430a97cbcdaedddba87ef4ea21c456cebdb OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914c01bf430a97cbcdaedddba87ef4ea21c456cebdb88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'N7ZJBN7TtcbNDoRc' from clue '1JWnE6p6U-jFtuDWoNL'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1JWnE6p6UN7ZJBN7TtcbNDoRcjFtuDWoNL.md"
+      ],
+      "commit": "594c447a79160b333cea46d405e7276ad9387c1c",
+      "pr": "#99"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647391+00:00"
+  },
+  {
+    "puzzle": 100,
+    "address": "1KCgMv8fo2TPBpddVi9jqmMmcne9uSNJ5F",
+    "address_family": "P2PKH",
+    "hash160": "c7a7b23f6bd98b8aaf527beb724dda9460b1bc6e",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 c7a7b23f6bd98b8aaf527beb724dda9460b1bc6e OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914c7a7b23f6bd98b8aaf527beb724dda9460b1bc6e88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '2TPBpddVi9jqmMmc' from clue '1KCgMv8fo-ne9uSNJ5F'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle100.md",
+        "reports/pkscript_1KCgMv8fo2TPBpddVi9jqmMmcne9uSNJ5F.md"
+      ],
+      "commit": "8f89d2685c0a0b67bd7b669e43c2468b58abaac9",
+      "pr": "#100"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646490+00:00"
+  },
+  {
+    "puzzle": 101,
+    "address": "1CKCVdbDJasYmhswB6HKZHEAnNaDpK7W4n",
+    "address_family": "P2PKH",
+    "hash160": "7c1a77205c03b9909663b2034faa0b544e6bc96b",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 7c1a77205c03b9909663b2034faa0b544e6bc96b OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9147c1a77205c03b9909663b2034faa0b544e6bc96b88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'asYmhswB6HKZHEAn' from clue '1CKCVdbDJ-NaDpK7W4n'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle101.md"
+      ],
+      "commit": "81391b156dad5998e7f5c25e2a11d1724f543120",
+      "pr": "#101"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646532+00:00"
+  },
+  {
+    "puzzle": 102,
+    "address": "1PXv28YxmYMaB8zxrKeZBW8dt2HK7RkRPX",
+    "address_family": "P2PKH",
+    "hash160": "f72b812932f6d7102233971d65cec0a22b89e136",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 f72b812932f6d7102233971d65cec0a22b89e136 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f72b812932f6d7102233971d65cec0a22b89e13688ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'YMaB8zxrKeZBW8dt' from clue '1PXv28Yxm-2HK7RkRPX'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle102.md"
+      ],
+      "commit": "6d61e4d4291eefaaef293353bcae895d1208b3c4",
+      "pr": "#102"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646572+00:00"
+  },
+  {
+    "puzzle": 103,
+    "address": "1AcAmB6jmtU6AiEcXkmiNE9TNVPsj9DULf",
+    "address_family": "P2PKH",
+    "hash160": "695fd6dcf33f47166b25de968b2932b351b0afc4",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914695fd6dcf33f47166b25de968b2932b351b0afc488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'tU6AiEcXkmiNE9TN' from clue '1AcAmB6jm-VPsj9DULf'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1AcAmB6jmtU6AiEcXkmiNE9TNVPsj9DULf.md"
+      ],
+      "commit": "f279f7e782c94dd92c70587c739d3ec5ca6df4f2",
+      "pr": "#103"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647084+00:00"
+  },
+  {
+    "puzzle": 104,
+    "address": "1EQJvpsmhazYCcKX5Au6AZmZKRnzarMVZu",
+    "address_family": "P2PKH",
+    "hash160": "93022af9a38f3ebb0c3f15dd1c83f8fadaf64e74",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 93022af9a38f3ebb0c3f15dd1c83f8fadaf64e74 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91493022af9a38f3ebb0c3f15dd1c83f8fadaf64e7488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'azYCcKX5Au6AZmZK' from clue '1EQJvpsmh-RnzarMVZu'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_104.md",
+        "reports/pkscript_1EQJvpsmhazYCcKX5Au6AZmZKRnzarMVZu.md"
+      ],
+      "commit": "183f9ec78f75f24158479aa023e84eddec517cf6",
+      "pr": "#104"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643766+00:00"
+  },
+  {
+    "puzzle": 106,
+    "address": "18KsfuHuzQaBTNLASyj15hy4LuqPUo1FNB",
+    "address_family": "P2PKH",
+    "hash160": "505aaa63a5e209dfb90cee683a8e227a8c278e47",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 505aaa63a5e209dfb90cee683a8e227a8c278e47 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914505aaa63a5e209dfb90cee683a8e227a8c278e4788ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'QaBTNLASyj15hy4L' from clue '18KsfuHuz-uqPUo1FNB'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle106.md"
+      ],
+      "commit": "7b76d9fde929439df6cb73469ee25c3711cc3d38",
+      "pr": "#106"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646614+00:00"
+  },
+  {
+    "puzzle": 107,
+    "address": "15EJFC5ZTs9nhsdvSUeBXjLAuYq3SWaxTc",
+    "address_family": "P2PKH",
+    "hash160": "2e644e46b042ffa86da35c54d7275f1abe6d4911",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 2e644e46b042ffa86da35c54d7275f1abe6d4911 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9142e644e46b042ffa86da35c54d7275f1abe6d491188ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 's9nhsdvSUeBXjLAu' from clue '15EJFC5ZT-Yq3SWaxTc'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_107.md",
+        "satoshi/puzzle-solutions/puzzle107.md"
+      ],
+      "commit": "4362567ac2dae611881336082bdb311660161777",
+      "pr": "#107"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643820+00:00"
+  },
+  {
+    "puzzle": 108,
+    "address": "1HB1iKUqeffnVsvQsbpC6dNi1XKbyNuqao",
+    "address_family": "P2PKH",
+    "hash160": "b166c44f12c7fc565f37ff6288ee64e0f0ec9a0b",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 b166c44f12c7fc565f37ff6288ee64e0f0ec9a0b OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914b166c44f12c7fc565f37ff6288ee64e0f0ec9a0b88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'ffnVsvQsbpC6dNi1' from clue '1HB1iKUqe-XKbyNuqao'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "satoshi/puzzle-solutions/puzzle108.md"
+      ],
+      "commit": "b1447ed7d99efce846b537b1dc486f60745fcf84",
+      "pr": "#108"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646673+00:00"
+  },
+  {
+    "puzzle": 109,
+    "address": "1GvgAXVCbA8FBjXfWiAms4ytFeJcKsoyhL",
+    "address_family": "P2PKH",
+    "hash160": "aeb0a0197442d4ade8ef41442d557b0e22b85ac0",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 aeb0a0197442d4ade8ef41442d557b0e22b85ac0 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914aeb0a0197442d4ade8ef41442d557b0e22b85ac088ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'A8FBjXfWiAms4ytF' from clue '1GvgAXVCb-eJcKsoyhL'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_109.md",
+        "satoshi/puzzle-solutions/puzzle109.md"
+      ],
+      "commit": "85edf41a82154104ede53a503f6057542fd0bb6f",
+      "pr": "#109"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643860+00:00"
+  },
+  {
+    "puzzle": 110,
+    "address": "12JzYkkN76xkwvcPT6AWKZtGX6w2LAgsJg",
+    "address_family": "P2PKH",
+    "hash160": "0e5f3c406397442996825fd395543514fd06f207",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 0e5f3c406397442996825fd395543514fd06f207 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9140e5f3c406397442996825fd395543514fd06f20788ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '6xkwvcPT6AWKZtGX' from clue '12JzYkkN7-6w2LAgsJg'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/puzzles/puzzle-110.md"
+      ],
+      "commit": "bb05e4c5c9315b6a5ad7098a8dedfba41856391a",
+      "pr": "#110"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644933+00:00"
+  },
+  {
+    "puzzle": 111,
+    "address": "1824ZJQ7nKJ9QFTRBqn7z7dHV5EGpzUpH3",
+    "address_family": "P2PKH",
+    "hash160": "4cfc43fe12a330c8164251e38c0c0c3c84cf86f6",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 4cfc43fe12a330c8164251e38c0c0c3c84cf86f6 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9144cfc43fe12a330c8164251e38c0c0c3c84cf86f688ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'KJ9QFTRBqn7z7dHV' from clue '1824ZJQ7n-5EGpzUpH3'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_111.md",
+        "satoshi/puzzle-solutions/puzzle111.md",
+        "reports/pkscript_1824ZJQ7nKJ9QFTRBqn7z7dHV5EGpzUpH3.md"
+      ],
+      "commit": "ef20d4f5e44e6f9f17351a442582e3b006ee2925",
+      "pr": "#111"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643916+00:00"
+  },
+  {
+    "puzzle": 112,
+    "address": "18A7NA9FTsnJxWgkoFfPAFbQzuQxpRtCos",
+    "address_family": "P2PKH",
+    "hash160": "4e81efec43c5195aeca0e3877664330418b8e48e",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 4e81efec43c5195aeca0e3877664330418b8e48e OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9144e81efec43c5195aeca0e3877664330418b8e48e88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'snJxWgkoFfPAFbQz' from clue '18A7NA9FT-uQxpRtCos'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_112.md"
+      ],
+      "commit": "9d4a9d3bd95dd8342b8bec5c27534ea350482714",
+      "pr": "#112"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.643965+00:00"
+  },
+  {
+    "puzzle": 113,
+    "address": "1NeGn21dUDDeqFQ63xb2SpgUuXuBLA4WT4",
+    "address_family": "P2PKH",
+    "hash160": "ed673389e4b12925316f9166d56d701829e53cf8",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 ed673389e4b12925316f9166d56d701829e53cf8 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914ed673389e4b12925316f9166d56d701829e53cf888ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'DDeqFQ63xb2SpgUu' from clue '1NeGn21dU-XuBLA4WT4'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_113.md"
+      ],
+      "commit": "42b0ddc92333b753b745dca8e52b015463ba2b10",
+      "pr": "#113"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644002+00:00"
+  },
+  {
+    "puzzle": 114,
+    "address": "174SNxfqpdMGYy5YQcfLbSTK3MRNZEePoy",
+    "address_family": "P2PKH",
+    "hash160": "42773005f9594cd16b10985d428418acb7f352ec",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 42773005f9594cd16b10985d428418acb7f352ec OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91442773005f9594cd16b10985d428418acb7f352ec88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'dMGYy5YQcfLbSTK3' from clue '174SNxfqp-MRNZEePoy'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_114.md"
+      ],
+      "commit": "8bd6fc2193a20c667cb748e127ccf961d98a022d",
+      "pr": "#114"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644057+00:00"
+  },
+  {
+    "puzzle": 115,
+    "address": "1NLbHuJebVwUZ1XqDjsAyfTRUPwDQbemfv",
+    "address_family": "P2PKH",
+    "hash160": "ea0f2b7576bd098921fce9bfebe37f6383e639a4",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 ea0f2b7576bd098921fce9bfebe37f6383e639a4 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914ea0f2b7576bd098921fce9bfebe37f6383e639a488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'VwUZ1XqDjsAyfTRU' from clue '1NLbHuJeb-PwDQbemfv'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_115.md"
+      ],
+      "commit": "659b0775b902aff531c3b37406e491c4b059e2ca",
+      "pr": "#115"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644097+00:00"
+  },
+  {
+    "puzzle": 116,
+    "address": "1MnJ6hdhvK37VLmqcdEwqC3iFxyWH2PHUV",
+    "address_family": "P2PKH",
+    "hash160": "e3f381c34a20da049779b44cae0417c7fb2898d0",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 e3f381c34a20da049779b44cae0417c7fb2898d0 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914e3f381c34a20da049779b44cae0417c7fb2898d088ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'K37VLmqcdEwqC3iF' from clue '1MnJ6hdhv-xyWH2PHUV'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1MnJ6hdhvK37VLmqcdEwqC3iFxyWH2PHUV.md"
+      ],
+      "commit": "3b5caab5d765c9b6f99081b11208ca698709d0ec",
+      "pr": "#116"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647637+00:00"
+  },
+  {
+    "puzzle": 117,
+    "address": "1KNRfGWw7Q9Rmwsc6NT5zsdvEb9M2Wkj5Z",
+    "address_family": "P2PKH",
+    "hash160": "c97f9591e28687be1c4d972e25be7c372a3221b4",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 c97f9591e28687be1c4d972e25be7c372a3221b4 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914c97f9591e28687be1c4d972e25be7c372a3221b488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'Q9Rmwsc6NT5zsdvE' from clue '1KNRfGWw7-b9M2Wkj5Z'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_117.md"
+      ],
+      "commit": "a7921d424881ba48f5d15631b830798009b5b278",
+      "pr": "#117"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644133+00:00"
+  },
+  {
+    "puzzle": 118,
+    "address": "1PJZPzvGX19a7twf5HyD2VvNiPdHLzm9F6",
+    "address_family": "P2PKH",
+    "hash160": "f4a4e1c11a5bbbd2fc139d221825407c66e0b8b4",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 f4a4e1c11a5bbbd2fc139d221825407c66e0b8b4 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f4a4e1c11a5bbbd2fc139d221825407c66e0b8b488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '19a7twf5HyD2VvNi' from clue '1PJZPzvGX-PdHLzm9F6'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_118.md"
+      ],
+      "commit": "b30cfd05e36384e25350f3e46a3b96925b31ed9f",
+      "pr": "#118"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644169+00:00"
+  },
+  {
+    "puzzle": 119,
+    "address": "1GuBBhf61rnvRe4K8zu8vdQB3kHzwFqSy7",
+    "address_family": "P2PKH",
+    "hash160": "ae6804b35c82f47f8b0a42d8c5e514fe5ef0a883",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 ae6804b35c82f47f8b0a42d8c5e514fe5ef0a883 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914ae6804b35c82f47f8b0a42d8c5e514fe5ef0a88388ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'rnvRe4K8zu8vdQB3' from clue '1GuBBhf61-kHzwFqSy7'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_119.md"
+      ],
+      "commit": "7f2b7b0da346c841c57597ac84c2f9e99d3c6995",
+      "pr": "#119"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644205+00:00"
+  },
+  {
+    "puzzle": 120,
+    "address": "17s2b9ksz5y7abUm92cHwG8jEPCzK3dLnT",
+    "address_family": "P2PKH",
+    "hash160": "4b46e10a541aeec6be3fac709c256fb7da69308e",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 4b46e10a541aeec6be3fac709c256fb7da69308e OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9144b46e10a541aeec6be3fac709c256fb7da69308e88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '5y7abUm92cHwG8jE' from clue '17s2b9ksz-PCzK3dLnT'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_120.md"
+      ],
+      "commit": "b4349649f22853a44361d4de88426adc42a60d0e",
+      "pr": "#120"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644241+00:00"
+  },
+  {
+    "puzzle": 121,
+    "address": "1GDSuiThEV64c166LUFC9uDcVdGjqkxKyh",
+    "address_family": "P2PKH",
+    "hash160": "a6e4818537e42f7b3f021daa810367dad4dda16f",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 a6e4818537e42f7b3f021daa810367dad4dda16f OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914a6e4818537e42f7b3f021daa810367dad4dda16f88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'V64c166LUFC9uDcV' from clue '1GDSuiThE-dGjqkxKyh'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_121.md"
+      ],
+      "commit": "15a62585eb81f2c2df776406ffa28aa0af94a4be",
+      "pr": "#121"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644277+00:00"
+  },
+  {
+    "puzzle": 122,
+    "address": "1Me3ASYt5JCTAK2XaC32RMeH34PdprrfDx",
+    "address_family": "P2PKH",
+    "hash160": "e263b62ea294b9650615a13b926e75944c823990",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 e263b62ea294b9650615a13b926e75944c823990 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914e263b62ea294b9650615a13b926e75944c82399088ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'JCTAK2XaC32RMeH3' from clue '1Me3ASYt5-4PdprrfDx'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1Me3ASYt5JCTAK2XaC32RMeH34PdprrfDx.md"
+      ],
+      "commit": "029d4bc452291a5b7bfa1be6cc5b713e794cc516",
+      "pr": "#122"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647602+00:00"
+  },
+  {
+    "puzzle": 123,
+    "address": "1CdufMQL892A69KXgv6UNBD17ywWqYpKut",
+    "address_family": "P2PKH",
+    "hash160": "7fa4515066ba6905f894b2078f9af7b1379169cf",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 7fa4515066ba6905f894b2078f9af7b1379169cf OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9147fa4515066ba6905f894b2078f9af7b1379169cf88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "none",
+      "notes": ""
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "puzzle_solutions/puzzle_123.md"
+      ],
+      "commit": "172ee5e7d5ca410f30294b2af9a94aa043da3408",
+      "pr": "#123"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646712+00:00"
+  },
+  {
+    "puzzle": 125,
+    "address": "1PXAyUB8ZoH3WD8n5zoAthYjN15yN5CVq5",
+    "address_family": "P2PKH",
+    "hash160": "f7079256aa027dc437cbb539f955472416725fc8",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 f7079256aa027dc437cbb539f955472416725fc8 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f7079256aa027dc437cbb539f955472416725fc888ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'oH3WD8n5zoAthYjN' from clue '1PXAyUB8Z-15yN5CVq5'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1PXAyUB8ZoH3WD8n5zoAthYjN15yN5CVq5.md"
+      ],
+      "commit": "dba7215d59e49815635be5610e3d63e3d6d01542",
+      "pr": "#125"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647672+00:00"
+  },
+  {
+    "puzzle": 126,
+    "address": "1AWCLZAjKbV1P7AHvaPNCKiB7ZWVDMxFiz",
+    "address_family": "P2PKH",
+    "hash160": "683ea8a1ef06eada90556017d44323b5c04e00f1",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 683ea8a1ef06eada90556017d44323b5c04e00f1 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914683ea8a1ef06eada90556017d44323b5c04e00f188ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "none",
+      "notes": ""
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "puzzle_solutions/puzzle_126.md"
+      ],
+      "commit": "31ca1f8593f7b92b88a63439fd49d3b1f09a4831",
+      "pr": "#126"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646749+00:00"
+  },
+  {
+    "puzzle": 127,
+    "address": "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4",
+    "address_family": "P2PKH",
+    "hash160": "a58708aa98ad35c889bb36d8049bf9e9cacfd02a",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 a58708aa98ad35c889bb36d8049bf9e9cacfd02a OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914a58708aa98ad35c889bb36d8049bf9e9cacfd02a88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '86sThN3SSt3GrHu1' from clue '1G6EFyBRU-sA7w7nzi4'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "puzzle_solutions/puzzle_127.md"
+      ],
+      "commit": "e4e7de08af719a494d1d41602d36f64e4c6cefb4",
+      "pr": "#127"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646784+00:00"
+  },
+  {
+    "puzzle": 128,
+    "address": "1MZ2L1gFrCtkkn6DnTT2e4PFUTHw9gNwaj",
+    "address_family": "P2PKH",
     "hash160": "e170ef514689d7230da362a0c121a07723550512",
-    "message": "UNSTOPPABLE_API_KEY environment variable not set.",
-    "multi_chain": {},
-    "puzzle_id": 128,
-    "resolved_domain": null,
-    "resolved_domains": [],
-    "script_type": "p2pkh",
-    "status": "api_key_missing"
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 e170ef514689d7230da362a0c121a07723550512 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914e170ef514689d7230da362a0c121a0772355051288ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'Ctkkn6DnTT2e4PFU' from clue '1MZ2L1gFr-THw9gNwaj'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "puzzle_solutions/puzzle_128.md"
+      ],
+      "commit": "d56f65d7e56b5b300a7780a2ea143bcf271cf534",
+      "pr": "#128"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646819+00:00"
+  },
+  {
+    "puzzle": 129,
+    "address": "1EdAw4EMkXUU8R3QdeesjWNSW5chSg5ev6",
+    "address_family": "P2PKH",
+    "hash160": "9570e68f5fad1b67f9ed9fea078fe9ef4767815b",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 9570e68f5fad1b67f9ed9fea078fe9ef4767815b OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9149570e68f5fad1b67f9ed9fea078fe9ef4767815b88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'XUU8R3QdeesjWNSW' from clue '1EdAw4EMk-5chSg5ev6'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "puzzle_solutions/puzzle_129.md"
+      ],
+      "commit": "9784223731f31cb577e794def195a6af0002e2fa",
+      "pr": "#129"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.646855+00:00"
+  },
+  {
+    "puzzle": 158,
+    "address": "19z6waranEf8CcP8FqNgdwUe1QRxvUNKBG",
+    "address_family": "P2PKH",
+    "hash160": "628dacebb0faa7f81670e174ca4c8a95a7e37029",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 628dacebb0faa7f81670e174ca4c8a95a7e37029 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914628dacebb0faa7f81670e174ca4c8a95a7e3702988ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'Ef8CcP8FqNgdwUe1' from clue '19z6waran-QRxvUNKBG'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_158.md"
+      ],
+      "commit": "a9f55444dd0983b10a1ea70a5f90c4b7ef83dda6",
+      "pr": "#158"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644313+00:00"
+  },
+  {
+    "puzzle": 159,
+    "address": "14u4nA5sugaswb6SZgn5av2vuChdMnD9E5",
+    "address_family": "P2PKH",
+    "hash160": "2ac1295b4e54b3f15bb0a99f84018d2082495645",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 2ac1295b4e54b3f15bb0a99f84018d2082495645 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9142ac1295b4e54b3f15bb0a99f84018d208249564588ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'gaswb6SZgn5av2vu' from clue '14u4nA5su-ChdMnD9E5'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_159.md",
+        "reports/pkscript_14u4nA5sugaswb6SZgn5av2vuChdMnD9E5.md"
+      ],
+      "commit": "56383faec677ea14b9b0f9d080136e964531c595",
+      "pr": "#159"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644349+00:00"
+  },
+  {
+    "puzzle": 160,
+    "address": "1NBC8uXJy1GiJ6drkiZa1WuKn51ps7EPTv",
+    "address_family": "P2PKH",
+    "hash160": "e84818e1bf7f699aa6e28ef9edfb582099099292",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 e84818e1bf7f699aa6e28ef9edfb582099099292 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914e84818e1bf7f699aa6e28ef9edfb58209909929288ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '1GiJ6drkiZa1WuKn' from clue '1NBC8uXJy-51ps7EPTv'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_160.md"
+      ],
+      "commit": "55f1cdbaf37e35fddf35d25567cce50e9eec1259",
+      "pr": "#160"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644390+00:00"
+  },
+  {
+    "puzzle": 161,
+    "address": "1JkqBQcC4tHcb1JfdCH6nrWYwTPGznHANh",
+    "address_family": "P2PKH",
+    "hash160": "c2c43e2b16f53c713bc00307140eaae188413544",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 c2c43e2b16f53c713bc00307140eaae188413544 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914c2c43e2b16f53c713bc00307140eaae18841354488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'tHcb1JfdCH6nrWYw' from clue '1JkqBQcC4-TPGznHANh'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_161.md"
+      ],
+      "commit": "8d42e7dfd082d713211717d0268219c1b9d222cc",
+      "pr": "#161"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644445+00:00"
+  },
+  {
+    "puzzle": 162,
+    "address": "17DTUTXUcUYEgrr5GhivxYei4Lrs1xMnS2",
+    "address_family": "P2PKH",
+    "hash160": "442bd85a46d4acd7b082c1d731fb13c8474ffa6f",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 442bd85a46d4acd7b082c1d731fb13c8474ffa6f OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914442bd85a46d4acd7b082c1d731fb13c8474ffa6f88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'UYEgrr5GhivxYei4' from clue '17DTUTXUc-Lrs1xMnS2'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_162.md",
+        "reports/pkscript_17DTUTXUcUYEgrr5GhivxYei4Lrs1xMnS2.md"
+      ],
+      "commit": "236a5d7e351bb85bc8ce044d610555abc05e15f5",
+      "pr": "#162"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644560+00:00"
+  },
+  {
+    "puzzle": 163,
+    "address": "1H6e7SLxv6ZUbuAaZpeUdVNfh3cKBWJRmx",
+    "address_family": "P2PKH",
+    "hash160": "b093122f7fb36d11c9f2c80cff2971fba7c9c1ff",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 b093122f7fb36d11c9f2c80cff2971fba7c9c1ff OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914b093122f7fb36d11c9f2c80cff2971fba7c9c1ff88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '6ZUbuAaZpeUdVNfh' from clue '1H6e7SLxv-3cKBWJRmx'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_163.md",
+        "reports/pkscript_1H6e7SLxv6ZUbuAaZpeUdVNfh3cKBWJRmx.md"
+      ],
+      "commit": "49166c7606c4f0e21d63367726615f4333537a59",
+      "pr": "#163"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644611+00:00"
+  },
+  {
+    "puzzle": 164,
+    "address": "1LjQKurNtEDgMdqeCoWRFhHp1FPnLU77Q4",
+    "address_family": "P2PKH",
+    "hash160": "d86f54f73e343d76dd7401639e427d828ba31eab",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 d86f54f73e343d76dd7401639e427d828ba31eab OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914d86f54f73e343d76dd7401639e427d828ba31eab88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'EDgMdqeCoWRFhHp1' from clue '1LjQKurNt-FPnLU77Q4'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_164.md"
+      ],
+      "commit": "079a3fea43e345b0f3c9832cba1c7c5889a5d65a",
+      "pr": "#164"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644649+00:00"
+  },
+  {
+    "puzzle": 165,
+    "address": "1F7ZjibYug9bLW3YvkkwBZLrhfLtNjgYrX",
+    "address_family": "P2PKH",
+    "hash160": "9acf9573eb7b4376beca979cfa769f0677cfd949",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 9acf9573eb7b4376beca979cfa769f0677cfd949 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9149acf9573eb7b4376beca979cfa769f0677cfd94988ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'g9bLW3YvkkwBZLrh' from clue '1F7ZjibYu-fLtNjgYrX'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_165.md"
+      ],
+      "commit": "514044cf5df85d33f28fd05e387df8e362f1bff8",
+      "pr": "#165"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644713+00:00"
+  },
+  {
+    "puzzle": 166,
+    "address": "12BtvPaamiBCpXmoDrsCxAa1b6hMRnASZ4",
+    "address_family": "P2PKH",
+    "hash160": "0d07a05f7687824fb4dd4a160ddbdc3808655004",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 0d07a05f7687824fb4dd4a160ddbdc3808655004 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9140d07a05f7687824fb4dd4a160ddbdc380865500488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'iBCpXmoDrsCxAa1b' from clue '12BtvPaam-6hMRnASZ4'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_166.md"
+      ],
+      "commit": "f3e783a49a1ea1b998d1ae8792aae6ab5bef2a1d",
+      "pr": "#166"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644754+00:00"
+  },
+  {
+    "puzzle": 167,
+    "address": "1AvLwGpkwTZH4qiwy1L4v6TuWXLMNrATN5",
+    "address_family": "P2PKH",
+    "hash160": "6ccfd1cdb43788738536e11e247b0ce31c093f0f",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 6ccfd1cdb43788738536e11e247b0ce31c093f0f OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9146ccfd1cdb43788738536e11e247b0ce31c093f0f88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'TZH4qiwy1L4v6TuW' from clue '1AvLwGpkw-XLMNrATN5'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_167.md"
+      ],
+      "commit": "91b811b525f857093abadfd98a16aa47db8786ea",
+      "pr": "#167"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644790+00:00"
+  },
+  {
+    "puzzle": 168,
+    "address": "1PojqbbzJHnn1X2mv6DCECNLUaD2nMssDp",
+    "address_family": "P2PKH",
+    "hash160": "fa29a9264b9c18fa5925e38d201934ed89e64dd6",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 fa29a9264b9c18fa5925e38d201934ed89e64dd6 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914fa29a9264b9c18fa5925e38d201934ed89e64dd688ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'Hnn1X2mv6DCECNLU' from clue '1PojqbbzJ-aD2nMssDp'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1PojqbbzJHnn1X2mv6DCECNLUaD2nMssDp.md"
+      ],
+      "commit": "fd2d65819a54766730b47d9a5fbb783b937f5594",
+      "pr": "#168"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647709+00:00"
+  },
+  {
+    "puzzle": 169,
+    "address": "1G3uazv67BcKRmPFvgvX4ijBTa2898cvCm",
+    "address_family": "P2PKH",
+    "hash160": "a5169d8bc79e8cc94a36246de6bde7596cc9f4bb",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 a5169d8bc79e8cc94a36246de6bde7596cc9f4bb OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914a5169d8bc79e8cc94a36246de6bde7596cc9f4bb88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'BcKRmPFvgvX4ijBT' from clue '1G3uazv67-a2898cvCm'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_169.md"
+      ],
+      "commit": "823e2f6242a8a3646e1a667eaeb4c1f9ddbe475d",
+      "pr": "#169"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644825+00:00"
+  },
+  {
+    "puzzle": 170,
+    "address": "1EW9W5sGdxVDxAtjRbCjgkZNtPH8ZzikeP",
+    "address_family": "P2PKH",
+    "hash160": "941ccb7383109b47b841044c9f865785676b0918",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 941ccb7383109b47b841044c9f865785676b0918 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914941ccb7383109b47b841044c9f865785676b091888ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'xVDxAtjRbCjgkZNt' from clue '1EW9W5sGd-PH8ZzikeP'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_170.md"
+      ],
+      "commit": "f84e45dd553edc95b1ac8698610d4a4f8ca40609",
+      "pr": "#170"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644861+00:00"
+  },
+  {
+    "puzzle": 250,
+    "address": "1Ruu3JwvGeSmhQV9GzWAnyLCz6g3evmTY",
+    "address_family": "P2PKH",
+    "hash160": "04b623b48cc42741d0c9ec3b1fa297664bcec49b",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91404b623b48cc42741d0c9ec3b1fa297664bcec49b88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'eSmhQV9GzWAnyLC' from clue '1Ruu3JwvG-z6g3evmTY'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1Ruu3JwvGeSmhQV9GzWAnyLCz6g3evmTY.md"
+      ],
+      "commit": "661502ccf0c71d7883d4a1f21acf086175bce74e",
+      "pr": "#250"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647754+00:00"
+  },
+  {
+    "puzzle": 251,
+    "address": "1M3u4q5Q35qtQPmDHeubVbk7APYi3VVoBX",
+    "address_family": "P2PKH",
+    "hash160": "dbeecf6406c1569a483a88e35ed349a521a414ca",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 dbeecf6406c1569a483a88e35ed349a521a414ca OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914dbeecf6406c1569a483a88e35ed349a521a414ca88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered '5qtQPmDHeubVbk7A' from clue '1M3u4q5Q3-PYi3VVoBX'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/puzzles/puzzle-251.md"
+      ],
+      "commit": "de455f3bc8f9f59c8f72c1e65bececb1c446db30",
+      "pr": "#251"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644988+00:00"
+  },
+  {
+    "puzzle": 252,
+    "address": "1CaTxB3YwmXZkDnTK4rRvq61SRqs48xmui",
+    "address_family": "P2PKH",
+    "hash160": "7efd9baf1d6e21bd5f920e7e9e468b5a45ec92c7",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 7efd9baf1d6e21bd5f920e7e9e468b5a45ec92c7 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9147efd9baf1d6e21bd5f920e7e9e468b5a45ec92c788ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'mXZkDnTK4rRvq61S' from clue '1CaTxB3Yw-Rqs48xmui'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_7efd9baf1d6e21bd5f920e7e9e468b5a45ec92c7.md"
+      ],
+      "commit": "b4e6b29e96678aa34ac7378b6e0af74c48c7d774",
+      "pr": "#252"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647799+00:00"
+  },
+  {
+    "puzzle": 253,
+    "address": "1JqRqUPHHcQu2yrr8JZzxSYDx2jbZxEqFj",
+    "address_family": "P2PKH",
+    "hash160": "c3a2d618736baf0d5df7d81d5b8235cf8a266448",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914c3a2d618736baf0d5df7d81d5b8235cf8a26644888ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'cQu2yrr8JZzxSYDx' from clue '1JqRqUPHH-2jbZxEqFj'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/pkscript_1JqRqUPHHcQu2yrr8JZzxSYDx2jbZxEqFj.md"
+      ],
+      "commit": "eba5281bf33fa20256b089a8f8189ac4eacc5f0c",
+      "pr": "#253"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647437+00:00"
+  },
+  {
+    "puzzle": 254,
+    "address": "1NKkjFvXmovmjwgUujw655n3BbEvnncyza",
+    "address_family": "P2PKH",
+    "hash160": "e9e6a1ad0ddaf3c372e2e1eae83c8cf9f9163b3a",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 e9e6a1ad0ddaf3c372e2e1eae83c8cf9f9163b3a OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914e9e6a1ad0ddaf3c372e2e1eae83c8cf9f9163b3a88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'ovmjwgUujw655n3B' from clue '1NKkjFvXm-bEvnncyza'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/Puzzle_254.md"
+      ],
+      "commit": "4575bc15a44724945736c30fe15c4ebcccd3323d",
+      "pr": "#254"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.644897+00:00"
+  },
+  {
+    "puzzle": 255,
+    "address": "17PEUvQmgqPkkvRkMowoR1wRDXYzre4b9Z",
+    "address_family": "P2PKH",
+    "hash160": "460528d920ce045d9f6fc319182960707b248064",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 460528d920ce045d9f6fc319182960707b248064 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914460528d920ce045d9f6fc319182960707b24806488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "none",
+      "notes": ""
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "reports/puzzle-255.md"
+      ],
+      "commit": "5cb370c0e03bcb78c969e59496c0b6d4b1dce5bf",
+      "pr": "#255"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.647874+00:00"
+  },
+  {
+    "puzzle": 256,
+    "address": "1FMcotmnqqE5M2x9DDX3VfPAPuBWArGisa",
+    "address_family": "P2PKH",
+    "hash160": "9d77f8bcfd56b6a095703aae85bbe003a9cff5eb",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 9d77f8bcfd56b6a095703aae85bbe003a9cff5eb OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9149d77f8bcfd56b6a095703aae85bbe003a9cff5eb88ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "Base58Check-infix-restore",
+      "notes": "Recovered 'qE5M2x9DDX3VfPAP' from clue '1FMcotmnq-uBWArGisa'"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "docs/puzzles/puzzle-256.md"
+      ],
+      "commit": "6c8a28f41f94054c28a717a787ac4926949193c1",
+      "pr": "#256"
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.645058+00:00"
   }
 ]
