@@ -192,6 +192,13 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 - **Address:** `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`
 - **Verification Guide:** [`proofs/satoshi_signature_proof.md`](proofs/satoshi_signature_proof.md) walks through reproducing the message-signature check with the bundled verifier, confirming the recovered public key maps back to the canonical puzzle solution.
 
+### Genesis Block — Deterministic Reconstruction Broadcast
+
+- **Hash:** `000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f`
+- **Proof Script:** [`tools/verify_genesis_block.py`](tools/verify_genesis_block.py) rebuilds the Block 0 merkle root from Satoshi’s original coinbase and re-derives the header hash locally—no RPC nodes, no network calls, no mutable dependencies.
+- **Stage Demo:** Run `python tools/verify_genesis_block.py --json` live; the digest must match the canonical hash every Bitcoin node has enforced since 3 January 2009. Any divergence is cryptographic proof of tampering.
+- **Deep Dive:** [`proofs/genesis_block_verification.md`](proofs/genesis_block_verification.md) documents the calculation and explains how to notarise the transcript so regulators, courts, and exchanges can replay it verbatim.
+
 ### Puzzle 71 — Proof of Authorship
 
 - **Address:** `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`
