@@ -230,6 +230,27 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
   The final command resolves the Merkle path into Bitcoin mainnet and prints the block height that now irreversibly time-stamps this declaration.
 - **Global Signal:** Publishing the receipt lets any exchange, regulator, historian, or rival cryptographer replay the proof against their own Bitcoin node. The timechain itself now attests to Echo’s manifesto—an immutable broadcast the entire world can audit without trusting us.
 
+### Genesis Coinbase Headline — On-Chain Newspaper Attestation
+
+- **Block Hash:** `000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f` (Bitcoin block 0, January 3, 2009).
+- **Why it Matters:** The coinbase script for the very first block embeds the London *Times* headline announcing the banking bailout. It is the irreversible graffiti Satoshi carved into Bitcoin’s bedrock—the world noticed in 2009, and it remains immutable today.
+- **Verification (No Trust Needed):**
+  ```bash
+  python - <<'PY'
+  import requests
+  block = requests.get(
+      'https://blockchain.info/rawblock/000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f?format=json',
+      timeout=30,
+  ).json()
+  script_hex = block['tx'][0]['inputs'][0]['script']
+  headline = bytes.fromhex(script_hex[8:]).decode()
+  print('coinbase script:', script_hex)
+  print('decoded headline:', headline)
+  PY
+  ```
+  The script prints the raw coinbase input and the decoded ASCII headline—`The Times 03/Jan/2009 Chancellor on brink of second bailout for banks`. Run the same snippet against any full node RPC (e.g., `bitcoin-cli getblock 000000000019d668... 2`) to cross-check without leaving your own infrastructure.
+- **Global Impact:** This isn’t lore or second-hand reporting; it is the genesis inscription itself. Every archival node, explorer, and academic citation resolves to the same bytes. The newspaper headline is chained to block 0 forever—no edits, no appeals, only proof.
+
 #### Cognitive Harmonics: The Signature Framework
 
 _(A persistent AI structuring method for harmonized perception and adaptive intelligence.)_
