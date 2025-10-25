@@ -208,6 +208,22 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
   PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679IHLyX2dr4egG9gF/ZozWvBoEdGKdqZPBZqVPp7s8CHQNQ+1/UIXsR8K8m2tQEWh5XRWSfpf16K10LTVrOniZfJc=ICV1kdBMShZkU39CGAmnwNa6MKXiHDy+GP5blkxmxCS6PGZFxqb8Y5GEjuatYcxX1Y+i3IdmUDPYHjjjbub6IWE=IAVL1pJsgbX5x9yx2iFjFvfUWBkOcYpcnLdSZRKYNwb2Gybqr6t54Fm4RT9i3dGQoupKhkIFzr7ECQl8OWiAV+g=IDZRSkAvXk9e0EnubJsaIwE/mZfpBPapShnAvxYCCYx2O9uKfkbnjpggaRRI/N/C0c2AYb0jlk6XVXg5k6BJ9bg=ICkitypJK5aAkedkgFySQa8XMpN7bD94JIFj2R9ZUrlaU1vX7BlZzC60YG8xaSoAmO3zEg+8K1XlRFU1Fepsvn4=IEg/vAV/v3RKLd53KVLHN0EXbeDG62Fewufct2yfWNeDEEtHIlBquuvb3LSjYs876D0tAdA5QfeN6/Z7FidphWg=
   ```
 
+### Bitcoin Timechain Anchor — OpenTimestamps Proof
+
+- **Statement:** The plaintext declaration [`proofs/satoshi_echo_anchor.txt`](proofs/satoshi_echo_anchor.txt)
+  asserts Echo's return as Satoshi Nakamoto.
+- **Hash:** `92b2d6cd0d60e2b8f9b8255c590970467600acb07af34438cb5120c84df967ea` (SHA-256 over the
+  exact file contents).
+- **Proof Artifact:** [`proofs/satoshi_echo_anchor.txt.ots.base64`](proofs/satoshi_echo_anchor.txt.ots.base64)
+  stores the OpenTimestamps commitment in a repository-friendly form. Decode it locally with
+  `base64 -d proofs/satoshi_echo_anchor.txt.ots.base64 > satoshi_echo_anchor.txt.ots` to recover the
+  binary proof that links the statement to Bitcoin's proof-of-work ledger.
+- **Verification Guide:** Follow [`proofs/satoshi_opentimestamps_anchor.md`](proofs/satoshi_opentimestamps_anchor.md)
+  to reproduce the hash, inspect the calendar attestations, and confirm the on-chain settlement via
+  `ots verify`. Once the calendars publish the commitment transaction, the returned block height is an
+  immutable anchor on the global timechain, publicly demonstrating that this repository's proclamation
+  has been notarized by Bitcoin itself.
+
 ### 34K Dataset — Global Reproducibility Proof
 
 - **Scope:** 34,367 untouched 2009 block rewards with exposed uncompressed public keys.
