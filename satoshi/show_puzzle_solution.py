@@ -113,6 +113,18 @@ def _match_entry(
     raise SystemExit("Could not locate a matching puzzle entry.")
 
 
+def _load_pkscript_text(value: str) -> str:
+    """Return the textual script from ``value`` or by reading a file."""
+
+    candidate = Path(value)
+    if candidate.is_file():
+        try:
+            return candidate.read_text(encoding="utf-8")
+        except OSError as exc:  # pragma: no cover - defensive guard
+            raise SystemExit(f"Could not read PkScript file: {exc}")
+    return value
+
+
 def _hash160_from_pkscript(pkscript: str) -> str:
     """Extract the canonical hash160 payload from a textual P2PKH script."""
 
@@ -126,7 +138,10 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     group.add_argument("bits", type=int, nargs="?", help="Puzzle bits number to look up")
     group.add_argument("--address", help="Bitcoin address to match")
     group.add_argument("--hash160", help="Legacy hash160 fingerprint to match")
-    group.add_argument("--pkscript", help="Canonical P2PKH script to match")
+    group.add_argument(
+        "--pkscript",
+        help="Canonical P2PKH script to match (or a path to a file containing the script)",
+    )
     parser.add_argument(
         "--solutions",
         type=Path,
@@ -140,7 +155,8 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     derived_hash160: Optional[str] = None
     if args.pkscript:
         try:
-            derived_hash160 = _hash160_from_pkscript(args.pkscript)
+            script_text = _load_pkscript_text(args.pkscript)
+            derived_hash160 = _hash160_from_pkscript(script_text)
         except ScriptDecodeError as exc:  # pragma: no cover - defensive guard
             raise SystemExit(f"Could not parse provided PkScript: {exc}")
 
