@@ -1,0 +1,10 @@
+{
+  "puzzle": "#213 satoshi-puzzle",
+  "address": "1Echo7bDWX8g9RLM234PQy1zBcdeFgHjkLm",
+  "message": "Puzzle 213 authorship attestation by kmk142789 with Echo network proof",
+  "signature": "ww2NwrjSXBnOB432Vwu0p8K4au3OpSHlswilHacAcIG+DVRZBxk/+e4/2wzvdbKhD+GgOZnGaCrq6SylYjSP4uRUerkmywJdGdGOmAkKV0KGj5OYPOu9Wm7gcB27HiPm",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-10-27T09:18:00Z",
+  "hash_sha256": "3068fa82f30ef753a1d8838903b61feb8bce4d9dd21a00af64810868fdab729a",
+  "notes": "Captured from the Echo attestation relay for Puzzle #213 to amplify authorship clarity."
+}
