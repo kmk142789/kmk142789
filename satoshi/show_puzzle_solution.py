@@ -76,15 +76,52 @@ def _pubkey_is_compressed(pubkey_hex: str) -> bool:
     return len(pubkey_hex) == 66 and pubkey_hex[:2] in {"02", "03"}
 
 
+def _hash160_to_p2pkh_address(hash160_hex: str, *, version: int = 0x00) -> str:
+    """Encode a ``hash160`` fingerprint into a legacy Base58 address."""
+
+    payload = bytes([version]) + bytes.fromhex(hash160_hex)
+    checksum = _double_sha256(payload)[:4]
+    return _b58encode(payload + checksum)
+
+
 def _derive_p2pkh_address(pubkey_hex: str) -> str:
     """Compute the legacy address from the provided compressed key."""
 
     pubkey_bytes = bytes.fromhex(pubkey_hex)
     sha = hashlib.sha256(pubkey_bytes).digest()
     ripe = hashlib.new("ripemd160", sha).digest()
-    payload = b"\x00" + ripe
-    checksum = _double_sha256(payload)[:4]
-    return _b58encode(payload + checksum)
+    return _hash160_to_p2pkh_address(ripe.hex())
+
+
+def _parse_p2pkh_hash160(script: str) -> str:
+    """Extract the ``hash160`` fingerprint from a standard P2PKH script."""
+
+    script = script.strip()
+    if not script:
+        raise ValueError("Empty script provided")
+
+    compact = "".join(script.split()).lower()
+    if all(ch in "0123456789abcdef" for ch in compact):
+        try:
+            raw = bytes.fromhex(compact)
+        except ValueError as exc:  # pragma: no cover - defensive guard
+            raise ValueError("Invalid hexadecimal PkScript") from exc
+        if len(raw) != 25 or raw[:3] != b"\x76\xa9\x14" or raw[-2:] != b"\x88\xac":
+            raise ValueError("Unsupported hexadecimal PkScript format")
+        return raw[3:23].hex()
+
+    tokens = script.replace("\n", " ").split()
+    if len(tokens) != 5:
+        raise ValueError("Unexpected token count for human-readable PkScript")
+    op_dup, op_hash160, fingerprint, op_equalverify, op_checksig = tokens
+    if op_dup.upper() != "OP_DUP" or op_hash160.upper() != "OP_HASH160":
+        raise ValueError("Script does not match canonical P2PKH pattern")
+    if op_equalverify.upper() != "OP_EQUALVERIFY" or op_checksig.upper() != "OP_CHECKSIG":
+        raise ValueError("Script does not match canonical P2PKH pattern")
+    fingerprint = fingerprint.lower()
+    if len(fingerprint) != 40 or any(ch not in "0123456789abcdef" for ch in fingerprint):
+        raise ValueError("Fingerprint must be a 20-byte hexadecimal string")
+    return fingerprint
 
 
 def _load_solutions(path: Path) -> Iterable[Dict[str, Any]]:
@@ -116,6 +153,7 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     group.add_argument("bits", type=int, nargs="?", help="Puzzle bits number to look up")
     group.add_argument("--address", help="Bitcoin address to match")
     group.add_argument("--hash160", help="Legacy hash160 fingerprint to match")
+    group.add_argument("--pkscript", help="Decode a canonical P2PKH script and match the entry")
     parser.add_argument(
         "--solutions",
         type=Path,
@@ -126,7 +164,18 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     args = parser.parse_args(argv)
 
     entries = _load_solutions(args.solutions)
-    entry = _match_entry(entries, bits=args.bits, address=args.address, hash160=args.hash160)
+    decoded_hash = None
+    decoded_address = None
+    if args.pkscript:
+        decoded_hash = _parse_p2pkh_hash160(args.pkscript)
+        decoded_address = _hash160_to_p2pkh_address(decoded_hash)
+
+    entry = _match_entry(
+        entries,
+        bits=args.bits,
+        address=args.address or decoded_address,
+        hash160=args.hash160 or decoded_hash,
+    )
 
     pubkey = entry["public_key"]
     derived_address = _derive_p2pkh_address(pubkey)
@@ -141,6 +190,10 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     print(f"WIF ({'compressed' if compressed else 'uncompressed'}): {wif}")
     if derived_address != entry["address"]:
         print(f"Derived address mismatch: {derived_address}")
+    if decoded_hash:
+        print("\nDecoded from PkScript:")
+        print(f"  Hash160 : {decoded_hash}")
+        print(f"  Address : {decoded_address}")
 
 
 if __name__ == "__main__":  # pragma: no cover - simple CLI wrapper
