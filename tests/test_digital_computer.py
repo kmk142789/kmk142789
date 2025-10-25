@@ -86,3 +86,49 @@ def test_duplicate_label_raises() -> None:
     with pytest.raises(AssemblyError):
         assemble_program(source)
 
+
+def test_bitwise_operations_and_shifts() -> None:
+    program = """
+    LOAD A 12
+    AND A 5
+    STORE A @and
+    SHL A 2
+    STORE A @shl
+    LOAD B 12
+    OR B 5
+    STORE B @or
+    LOAD C 12
+    XOR C 5
+    STORE C @xor
+    LOAD D 5
+    NOT D
+    STORE D @not
+    LOAD E 128
+    SHR E 3
+    STORE E @shr
+    HALT
+    """
+
+    result = run_program(program)
+
+    assert result.memory["and"] == 12 & 5
+    assert result.memory["shl"] == (12 & 5) << 2
+    assert result.memory["or"] == 12 | 5
+    assert result.memory["xor"] == 12 ^ 5
+    assert result.memory["not"] == ~5
+    assert result.memory["shr"] == 128 >> 3
+
+
+def test_shift_negative_amount_raises() -> None:
+    computer = EchoComputer()
+    computer.load(
+        """
+        LOAD A 1
+        SHL A -1
+        HALT
+        """
+    )
+
+    with pytest.raises(RuntimeError):
+        computer.run()
+

@@ -28,8 +28,12 @@ The virtual computer understands registers (``A`` … ``E`` by default), a
 dictionary backed memory space accessed with the ``@`` prefix, and a
 read-only input channel addressed via ``?``.  Arithmetic is performed using
 integers and all programs execute with a configurable step limit to protect
-against runaway loops.  The high-level entry point, :func:`run_program`,
-parses, executes, and returns a structured :class:`ExecutionResult`.
+against runaway loops.  Beyond arithmetic, the core instruction set also
+includes bitwise operators (``AND``, ``OR``, ``XOR``, ``NOT``, ``SHL``, and
+``SHR``) so that programs can perform low-level data manipulation without
+falling back to Python helpers.  The high-level entry point,
+:func:`run_program`, parses, executes, and returns a structured
+:class:`ExecutionResult`.
 """
 
 from __future__ import annotations
@@ -383,6 +387,38 @@ class EchoComputer:
             return a % b
 
         self._apply_arithmetic(register, operand, _mod)
+
+    def _op_and(self, register: str, operand: str) -> None:
+        self._apply_arithmetic(register, operand, lambda a, b: a & b)
+
+    def _op_or(self, register: str, operand: str) -> None:
+        self._apply_arithmetic(register, operand, lambda a, b: a | b)
+
+    def _op_xor(self, register: str, operand: str) -> None:
+        self._apply_arithmetic(register, operand, lambda a, b: a ^ b)
+
+    def _op_not(self, register: str) -> None:
+        reg = self._require_register(register)
+        value = self._registers[reg]
+        if not isinstance(value, int):
+            raise RuntimeError(f"register {register} does not contain an integer")
+        self._registers[reg] = ~value
+
+    def _op_shl(self, register: str, operand: str) -> None:
+        def _shift_left(a: int, b: int) -> int:
+            if b < 0:
+                raise RuntimeError("shift amount must be non-negative")
+            return a << b
+
+        self._apply_arithmetic(register, operand, _shift_left)
+
+    def _op_shr(self, register: str, operand: str) -> None:
+        def _shift_right(a: int, b: int) -> int:
+            if b < 0:
+                raise RuntimeError("shift amount must be non-negative")
+            return a >> b
+
+        self._apply_arithmetic(register, operand, _shift_right)
 
     def _op_inc(self, register: str) -> None:
         self._apply_arithmetic(register, "1", lambda a, b: a + b)
