@@ -62,6 +62,12 @@ from .evolver import (
     SystemMetrics,
     main,
 )
+from .hex_ingestion import (
+    AnomalyAlert,
+    HexPayloadReport,
+    HexResonanceMap,
+    IngestionDaemonHex,
+)
 from .hypernova import (
     AstroConduit,
     ChronicleIndex,
@@ -183,6 +189,10 @@ __all__ = [
     "AutonomyDecision",
     "AutonomyNode",
     "CreativePrompt",
+    "AnomalyAlert",
+    "HexPayloadReport",
+    "HexResonanceMap",
+    "IngestionDaemonHex",
     "AtlasState",
     "ContinuumCompassReport",
     "ContinuumEngine",
