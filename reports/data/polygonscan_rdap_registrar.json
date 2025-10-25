@@ -1,0 +1,429 @@
+{
+  "rdapConformance": [
+    "rdap_level_0",
+    "icann_rdap_response_profile_1",
+    "icann_rdap_technical_implementation_guide_1",
+    "redacted"
+  ],
+  "notices": [
+    {
+      "title": "RDAP Terms of Service",
+      "description": [
+        "By querying Namecheap’s  RDAP Domain Database, you agree to comply with Namecheap’s RDAP Terms of Service, including but not limited to the terms herein,  and you acknowledge and agree that your information will be used in accordance with Namecheap Privacy Policy (https://www.namecheap.com/legal/general/privacy-policy/), including that Namecheap may retain certain details about queries to our RDAP Domain Database for the purposes of detecting and preventing misuse.  If you do not agree to any of these terms, do not access or use ,the RDAP Domain Database.",
+        "Although Namecheap believes the data to be reliable, you agree and acknowledge that any information provided is 'as is' without any guarantee of accuracy.",
+        "You further agree that you will:",
+        "1) Not misuse the RDAP Domain Database. It is intended solely for query-based access and should not be used for or relied upon for any other purpose.",
+        "2) Not use the RDAP Domain Database to allow, enable, or otherwise support the transmission of unsolicited, commercial advertising or solicitations.",
+        "3) Not access the RDAP Domain Database through the use of high volume, automated electronic processes that send queries or data to the systems of Namecheap, any other ICANN-accredited registrar, or any registry operator.",
+        "4) Not compile, repackage, disseminate, or otherwise use the information contained in the RDAP Domain Database in its entirety, or in any substantial portion, without our prior written permission.",
+        "5) You will only use the information contained in the RDAP Domain Database for lawful purposes.",
+        "We reserve the right to restrict or deny your access to the RDAP Domain Database if we suspect that you have failed to comply with these terms.",
+        "We reserve the right to modify this agreement at any time."
+      ],
+      "links": [
+        {
+          "href": "https://www.namecheap.com/legal/domains/rdap-tos/",
+          "rel": "terms-of-service",
+          "type": "text/html",
+          "value": "https://rdap.namecheap.com/domain/POLYGONSCAN.COM"
+        }
+      ]
+    },
+    {
+      "title": "Status Codes",
+      "description": [
+        "For more information on domain status codes, please visit https://icann.org/epp"
+      ],
+      "links": [
+        {
+          "href": "https://icann.org/epp",
+          "rel": "glossary",
+          "type": "text/html",
+          "value": "https://rdap.namecheap.com/domain/POLYGONSCAN.COM"
+        }
+      ]
+    },
+    {
+      "title": "RDDS Inaccuracy Complaint Form",
+      "description": [
+        "URL of the ICANN RDDS Inaccuracy Complaint Form: https://icann.org/wicf"
+      ],
+      "links": [
+        {
+          "href": "https://icann.org/wicf",
+          "rel": "help",
+          "type": "text/html",
+          "value": "https://rdap.namecheap.com/domain/POLYGONSCAN.COM"
+        }
+      ]
+    }
+  ],
+  "objectClassName": "domain",
+  "lang": "en",
+  "links": [
+    {
+      "href": "https://rdap.namecheap.com/domain/POLYGONSCAN.COM",
+      "rel": "self",
+      "type": "application/rdap+json",
+      "value": "https://rdap.namecheap.com/domain/POLYGONSCAN.COM"
+    }
+  ],
+  "handle": "2592702815_DOMAIN_COM-VRSN",
+  "ldhName": "polygonscan.com",
+  "unicodeName": "polygonscan.com",
+  "events": [
+    {
+      "eventAction": "last update of RDAP database",
+      "eventDate": "2025-10-25T18:30:58Z"
+    },
+    {
+      "eventAction": "registration",
+      "eventDate": "2021-02-20T14:57:52Z"
+    },
+    {
+      "eventAction": "registrar expiration",
+      "eventDate": "2030-02-20T14:57:52Z"
+    },
+    {
+      "eventAction": "last changed",
+      "eventDate": "2025-07-29T16:16:47Z"
+    }
+  ],
+  "status": [
+    "client transfer prohibited"
+  ],
+  "secureDNS": {
+    "delegationSigned": true,
+    "zoneSigned": true,
+    "dsData": [
+      {
+        "keyTag": 2371,
+        "algorithm": 13,
+        "digest": "15DC1CA73D97F4F2ACEA84F271AC92772C1403EEDC4217F564768B098BAA4721",
+        "digestType": 2
+      }
+    ]
+  },
+  "port43": "whois.namecheap.com",
+  "entities": [
+    {
+      "publicIds": [
+        {
+          "type": "IANA Registrar ID",
+          "identifier": "1068"
+        }
+      ],
+      "entities": [
+        {
+          "objectClassName": "entity",
+          "vcardArray": [
+            "vcard",
+            [
+              [
+                "version",
+                {},
+                "text",
+                "4.0"
+              ],
+              [
+                "fn",
+                {},
+                "text",
+                "NAMECHEAP INC"
+              ],
+              [
+                "tel",
+                {
+                  "type": [
+                    "voice"
+                  ]
+                },
+                "uri",
+                "tel:+1.9854014545"
+              ],
+              [
+                "email",
+                {},
+                "text",
+                "abuse@namecheap.com"
+              ]
+            ]
+          ],
+          "roles": [
+            "abuse"
+          ]
+        }
+      ],
+      "objectClassName": "entity",
+      "handle": "1068",
+      "vcardArray": [
+        "vcard",
+        [
+          [
+            "version",
+            {},
+            "text",
+            "4.0"
+          ],
+          [
+            "fn",
+            {},
+            "text",
+            "NAMECHEAP INC"
+          ],
+          [
+            "tel",
+            {
+              "type": [
+                "voice"
+              ]
+            },
+            "uri",
+            "tel:+1.6613102107"
+          ],
+          [
+            "email",
+            {},
+            "text",
+            "support@namecheap.com"
+          ]
+        ]
+      ],
+      "roles": [
+        "registrar"
+      ],
+      "links": [
+        {
+          "href": "https://www.namecheap.com/",
+          "rel": "about",
+          "value": "https://rdap.namecheap.com/"
+        }
+      ]
+    },
+    {
+      "objectClassName": "entity",
+      "handle": "8f54722c32cd4bde5d6b08d8d533b97f-Namech",
+      "vcardArray": [
+        "vcard",
+        [
+          [
+            "version",
+            {},
+            "text",
+            "4.0"
+          ],
+          [
+            "fn",
+            {},
+            "text",
+            "Redacted for Privacy"
+          ],
+          [
+            "org",
+            {},
+            "text",
+            "Privacy service provided by Withheld for Privacy ehf"
+          ],
+          [
+            "adr",
+            {
+              "cc": "IS"
+            },
+            "text",
+            [
+              "",
+              "",
+              "Kalkofnsvegur 2",
+              "Reykjavik",
+              "Capital Region",
+              "101",
+              ""
+            ]
+          ],
+          [
+            "tel",
+            {
+              "type": [
+                "voice"
+              ]
+            },
+            "uri",
+            "tel:+354.4212434"
+          ],
+          [
+            "email",
+            {},
+            "text",
+            "37e38468fe13461cbb02f284ce45b7d7.protect@withheldforprivacy.com"
+          ]
+        ]
+      ],
+      "remarks": [
+        {
+          "description": [
+            "Some of the data in this object has been removed."
+          ],
+          "title": "REDACTED FOR PRIVACY",
+          "type": "object redacted due to authorization"
+        }
+      ],
+      "roles": [
+        "registrant"
+      ]
+    },
+    {
+      "objectClassName": "entity",
+      "handle": "65f81523122c4ee39fa208d8d535e0b7-Namech",
+      "vcardArray": [
+        "vcard",
+        [
+          [
+            "version",
+            {},
+            "text",
+            "4.0"
+          ],
+          [
+            "fn",
+            {},
+            "text",
+            "Redacted for Privacy"
+          ],
+          [
+            "org",
+            {},
+            "text",
+            "Privacy service provided by Withheld for Privacy ehf"
+          ],
+          [
+            "adr",
+            {
+              "cc": "IS"
+            },
+            "text",
+            [
+              "",
+              "",
+              "Kalkofnsvegur 2",
+              "Reykjavik",
+              "Capital Region",
+              "101",
+              ""
+            ]
+          ],
+          [
+            "tel",
+            {
+              "type": [
+                "voice"
+              ]
+            },
+            "uri",
+            "tel:+354.4212434"
+          ],
+          [
+            "email",
+            {},
+            "text",
+            "37e38468fe13461cbb02f284ce45b7d7.protect@withheldforprivacy.com"
+          ]
+        ]
+      ],
+      "remarks": [
+        {
+          "description": [
+            "Some of the data in this object has been removed."
+          ],
+          "title": "REDACTED FOR PRIVACY",
+          "type": "object redacted due to authorization"
+        }
+      ],
+      "roles": [
+        "administrative"
+      ]
+    },
+    {
+      "objectClassName": "entity",
+      "handle": "a294af2474d9450a443808d8d53954b2-Namech",
+      "vcardArray": [
+        "vcard",
+        [
+          [
+            "version",
+            {},
+            "text",
+            "4.0"
+          ],
+          [
+            "fn",
+            {},
+            "text",
+            "Redacted for Privacy"
+          ],
+          [
+            "org",
+            {},
+            "text",
+            "Privacy service provided by Withheld for Privacy ehf"
+          ],
+          [
+            "adr",
+            {
+              "cc": "IS"
+            },
+            "text",
+            [
+              "",
+              "",
+              "Kalkofnsvegur 2",
+              "Reykjavik",
+              "Capital Region",
+              "101",
+              ""
+            ]
+          ],
+          [
+            "tel",
+            {
+              "type": [
+                "voice"
+              ]
+            },
+            "uri",
+            "tel:+354.4212434"
+          ],
+          [
+            "email",
+            {},
+            "text",
+            "37e38468fe13461cbb02f284ce45b7d7.protect@withheldforprivacy.com"
+          ]
+        ]
+      ],
+      "remarks": [
+        {
+          "description": [
+            "Some of the data in this object has been removed."
+          ],
+          "title": "REDACTED FOR PRIVACY",
+          "type": "object redacted due to authorization"
+        }
+      ],
+      "roles": [
+        "technical"
+      ]
+    }
+  ],
+  "nameservers": [
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "dora.ns.cloudflare.com",
+      "unicodeName": "dora.ns.cloudflare.com"
+    },
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "hank.ns.cloudflare.com",
+      "unicodeName": "hank.ns.cloudflare.com"
+    }
+  ]
+}

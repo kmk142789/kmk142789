@@ -1,0 +1,187 @@
+{
+  "objectClassName": "domain",
+  "handle": "2592702815_DOMAIN_COM-VRSN",
+  "ldhName": "POLYGONSCAN.COM",
+  "links": [
+    {
+      "value": "https://rdap.verisign.com/com/v1/domain/POLYGONSCAN.COM",
+      "rel": "self",
+      "href": "https://rdap.verisign.com/com/v1/domain/POLYGONSCAN.COM",
+      "type": "application/rdap+json"
+    },
+    {
+      "value": "https://rdap.namecheap.com/domain/POLYGONSCAN.COM",
+      "rel": "related",
+      "href": "https://rdap.namecheap.com/domain/POLYGONSCAN.COM",
+      "type": "application/rdap+json"
+    }
+  ],
+  "status": [
+    "client transfer prohibited"
+  ],
+  "entities": [
+    {
+      "objectClassName": "entity",
+      "handle": "1068",
+      "roles": [
+        "registrar"
+      ],
+      "links": [
+        {
+          "href": "http://www.namecheap.com",
+          "type": "text/html",
+          "value": "https://rdap.namecheap.com/",
+          "rel": "about"
+        }
+      ],
+      "publicIds": [
+        {
+          "type": "IANA Registrar ID",
+          "identifier": "1068"
+        }
+      ],
+      "vcardArray": [
+        "vcard",
+        [
+          [
+            "version",
+            {},
+            "text",
+            "4.0"
+          ],
+          [
+            "fn",
+            {},
+            "text",
+            "NameCheap, Inc."
+          ]
+        ]
+      ],
+      "entities": [
+        {
+          "objectClassName": "entity",
+          "roles": [
+            "abuse"
+          ],
+          "vcardArray": [
+            "vcard",
+            [
+              [
+                "version",
+                {},
+                "text",
+                "4.0"
+              ],
+              [
+                "fn",
+                {},
+                "text",
+                ""
+              ],
+              [
+                "tel",
+                {
+                  "type": "voice"
+                },
+                "uri",
+                "tel:+1.6613102107"
+              ],
+              [
+                "email",
+                {},
+                "text",
+                "abuse@namecheap.com"
+              ]
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "eventAction": "registration",
+      "eventDate": "2021-02-20T14:57:52Z"
+    },
+    {
+      "eventAction": "expiration",
+      "eventDate": "2030-02-20T14:57:52Z"
+    },
+    {
+      "eventAction": "last changed",
+      "eventDate": "2025-07-29T16:16:47Z"
+    },
+    {
+      "eventAction": "last update of RDAP database",
+      "eventDate": "2025-10-25T18:31:22Z"
+    }
+  ],
+  "secureDNS": {
+    "delegationSigned": true,
+    "dsData": [
+      {
+        "keyTag": 2371,
+        "algorithm": 13,
+        "digestType": 2,
+        "digest": "15DC1CA73D97F4F2ACEA84F271AC92772C1403EEDC4217F564768B098BAA4721"
+      }
+    ]
+  },
+  "nameservers": [
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "DORA.NS.CLOUDFLARE.COM"
+    },
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "HANK.NS.CLOUDFLARE.COM"
+    }
+  ],
+  "rdapConformance": [
+    "rdap_level_0",
+    "icann_rdap_technical_implementation_guide_1",
+    "icann_rdap_response_profile_1"
+  ],
+  "notices": [
+    {
+      "title": "Terms of Service",
+      "description": [
+        "Service subject to Terms of Use."
+      ],
+      "links": [
+        {
+          "href": "https://www.verisign.com/domain-names/registration-data-access-protocol/terms-service/index.xhtml",
+          "type": "text/html",
+          "value": "https://rdap.verisign.com/com/v1/domain/polygonscan.com?jcard=1",
+          "rel": "terms-of-service"
+        }
+      ]
+    },
+    {
+      "title": "Status Codes",
+      "description": [
+        "For more information on domain status codes, please visit https://icann.org/epp"
+      ],
+      "links": [
+        {
+          "href": "https://icann.org/epp",
+          "type": "text/html"
+        }
+      ]
+    },
+    {
+      "title": "RDDS Inaccuracy Complaint Form",
+      "description": [
+        "URL of the ICANN RDDS Inaccuracy Complaint Form: https://icann.org/wicf"
+      ],
+      "links": [
+        {
+          "href": "https://icann.org/wicf",
+          "type": "text/html",
+          "value": "https://rdap.verisign.com/com/v1/domain/polygonscan.com?jcard=1",
+          "rel": "help"
+        }
+      ]
+    }
+  ]
+}
