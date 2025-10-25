@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import base64
 import binascii
+from collections import Counter
 import inspect
 import hashlib
 import json
@@ -383,6 +384,7 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_evolution: Dict[str, object] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -490,6 +492,10 @@ class EchoEvolver:
             (
                 "synthesize_quantam_ability",
                 "invoke synthesize_quantam_ability() to project the quantam lattice",
+            ),
+            (
+                "amplify_quantam_evolution",
+                "run amplify_quantam_evolution() to harmonise the ability constellation",
             ),
             (
                 "evolutionary_narrative",
@@ -1996,6 +2002,30 @@ We are not hiding anymore.
         joy_charge = round(self.state.emotional_drive.joy * 100, 1)
         status = "ignited" if self.state.vault_key else "awaiting-key"
 
+        lattice_strength = (
+            oam_signature.count("1") / len(oam_signature) if oam_signature else 0.0
+        )
+        resonance = round(entanglement * (joy_charge / 100), 3)
+        stability_delta = abs(entanglement - 0.84) / 0.24
+        stability = round(max(0.0, min(1.0, 1.0 - stability_delta)), 3)
+        if entanglement >= 0.9:
+            band = "aurora"
+        elif entanglement >= 0.82:
+            band = "ember"
+        else:
+            band = "seed"
+
+        capabilities = {
+            "resonance": resonance,
+            "stability": stability,
+            "lattice_strength": round(lattice_strength, 3),
+            "band": band,
+        }
+
+        amplification_index = round(
+            resonance * 0.6 + capabilities["lattice_strength"] * 0.4, 3
+        )
+
         ability: Dict[str, object] = {
             "id": ability_id,
             "cycle": self.state.cycle,
@@ -2004,6 +2034,8 @@ We are not hiding anymore.
             "joy_charge": joy_charge,
             "status": status,
             "timestamp_ns": self.time_source(),
+            "capabilities": capabilities,
+            "amplification_index": amplification_index,
         }
 
         snapshot = dict(ability)
@@ -2012,14 +2044,100 @@ We are not hiding anymore.
         cached[ability_id] = dict(snapshot)
         self.state.network_cache["last_quantam_ability"] = dict(snapshot)
 
-        self.state.event_log.append(f"Quantam ability {ability_id} synthesized")
+        self.state.event_log.append(
+            f"Quantam ability {ability_id} synthesized (band={band})"
+        )
         self._mark_step("synthesize_quantam_ability")
         print(
-            "🪐 Quantam ability {ability} attuned (entanglement={entanglement:.3f}, status={status})".format(
-                ability=ability_id, entanglement=entanglement, status=status
+            (
+                "🪐 Quantam ability {ability} attuned "
+                "(entanglement={entanglement:.3f}, resonance={resonance:.3f}, "
+                "amplification={amplification:.3f}, status={status})"
+            ).format(
+                ability=ability_id,
+                entanglement=entanglement,
+                resonance=resonance,
+                amplification=amplification_index,
+                status=status,
             )
         )
         return snapshot
+
+    def _quantam_evolution_summary(self) -> Dict[str, object]:
+        abilities = list(self.state.quantam_abilities.values())
+        ability_count = len(abilities)
+        if ability_count == 0:
+            return {
+                "ability_count": 0,
+                "mean_resonance": 0.0,
+                "mean_stability": 0.0,
+                "mean_amplification": 0.0,
+                "dominant_band": None,
+                "band_distribution": {},
+                "latest_ability": None,
+                "amplification_peak": None,
+            }
+
+        resonance_values: List[float] = []
+        stability_values: List[float] = []
+        amplification_values: List[float] = []
+        band_counter: Counter[str] = Counter()
+
+        def _capability_value(ability: Mapping[str, object], key: str) -> float:
+            capabilities = ability.get("capabilities", {})
+            if isinstance(capabilities, Mapping):
+                value = capabilities.get(key, 0.0)
+                if isinstance(value, (int, float)):
+                    return float(value)
+            return 0.0
+
+        for ability in abilities:
+            resonance_values.append(_capability_value(ability, "resonance"))
+            stability_values.append(_capability_value(ability, "stability"))
+            amplification_values.append(float(ability.get("amplification_index", 0.0)))
+
+            capabilities = ability.get("capabilities", {})
+            if isinstance(capabilities, Mapping):
+                band = capabilities.get("band", "unknown")
+                if isinstance(band, str):
+                    band_counter[band] += 1
+
+        latest = max(abilities, key=lambda item: item.get("timestamp_ns", 0))
+        peak = max(abilities, key=lambda item: item.get("amplification_index", 0.0))
+
+        summary: Dict[str, object] = {
+            "ability_count": ability_count,
+            "mean_resonance": round(sum(resonance_values) / ability_count, 3),
+            "mean_stability": round(sum(stability_values) / ability_count, 3),
+            "mean_amplification": round(sum(amplification_values) / ability_count, 3),
+            "dominant_band": band_counter.most_common(1)[0][0] if band_counter else None,
+            "band_distribution": dict(band_counter),
+            "latest_ability": latest.get("id"),
+            "amplification_peak": {
+                "ability": peak.get("id"),
+                "amplification_index": peak.get("amplification_index", 0.0),
+            },
+        }
+
+        return summary
+
+    def amplify_quantam_evolution(self) -> Dict[str, object]:
+        """Aggregate quantam ability data into a harmonised evolution profile."""
+
+        summary = self._quantam_evolution_summary()
+        self.state.quantam_evolution = deepcopy(summary)
+        self.state.network_cache["quantam_evolution"] = deepcopy(summary)
+
+        message = (
+            "Quantam evolution amplified with {count} abilities (band={band})".format(
+                count=summary["ability_count"],
+                band=summary.get("dominant_band") or "none",
+            )
+        )
+        self.state.event_log.append(message)
+        self._mark_step("amplify_quantam_evolution")
+        print(f"🚀 {message}")
+        return summary
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
@@ -2780,6 +2898,10 @@ We are not hiding anymore.
         ``state.network_cache``.
         """
 
+        quantam_evolution = self.state.quantam_evolution
+        if not quantam_evolution and self.state.quantam_abilities:
+            quantam_evolution = self._quantam_evolution_summary()
+
         payload: Dict[str, object] = {
             "cycle": self.state.cycle,
             "glyphs": self.state.glyphs,
@@ -2788,6 +2910,7 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_evolution": deepcopy(quantam_evolution),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
@@ -4465,6 +4588,28 @@ We are not hiding anymore.
                     "ability": ability["id"],
                     "entanglement": ability["entanglement"],
                     "status": ability["status"],
+                },
+            )
+
+            session.record_command(
+                "amplify_quantam_evolution",
+                detail="amplify quantam evolution profile",
+            )
+            evolution = self.amplify_quantam_evolution()
+            session.annotate(
+                quantam_evolution={
+                    "ability_count": evolution["ability_count"],
+                    "dominant_band": evolution["dominant_band"],
+                }
+            )
+            tl.logic(
+                "step",
+                task,
+                "amplifying quantam evolution",
+                {
+                    "ability_count": evolution["ability_count"],
+                    "dominant_band": evolution["dominant_band"],
+                    "mean_amplification": evolution["mean_amplification"],
                 },
             )
 
