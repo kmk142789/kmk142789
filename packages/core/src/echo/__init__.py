@@ -41,6 +41,14 @@ from .continuum_insights import (
     compute_source_momentum,
     compute_tag_momentum,
 )
+from .cosmic_mnemonic_forge import (
+    MnemonicConstellation,
+    MnemonicThread,
+    forge_constellation,
+    list_constellation_lines,
+    merge_constellations,
+    render_constellation,
+)
 from .dotnet_sdk import build_dotnet_sdk_download_url
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .evolver import (
@@ -158,6 +166,8 @@ __all__ = [
     "ContinuumManifest",
     "ContinuumPlaybackEngine",
     "MomentumInsight",
+    "MnemonicConstellation",
+    "MnemonicThread",
     "compute_source_momentum",
     "compute_tag_momentum",
     "BridgeConfig",
@@ -236,6 +246,10 @@ __all__ = [
     "IdeaActionStep",
     "derive_action_plan",
     "decode_glyph_cross",
+    "forge_constellation",
+    "list_constellation_lines",
+    "merge_constellations",
+    "render_constellation",
     "build_dotnet_sdk_download_url",
     "AstroConduit",
     "ChronicleIndex",
