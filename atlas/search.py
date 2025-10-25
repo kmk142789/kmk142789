@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 import argparse
 import json
 import shlex
+import re
 
 # Structured data surfaced for downstream renderers.
 presence_harmonics: List[Dict[str, Any]] = [
@@ -86,7 +87,38 @@ def _score_entry(entry: dict, query_terms: List[str]) -> int:
     return score
 
 
-def _matches_filters(entry: dict, *, cycle: int | None, puzzle: int | None, address: str | None) -> bool:
+class AddressMatcher:
+    """Case-insensitive matcher supporting substring + regex semantics."""
+
+    __slots__ = ("_raw", "_regex", "_needle")
+
+    def __init__(self, text: str) -> None:
+        self._raw = text
+        regex: re.Pattern[str] | None
+        try:
+            regex = re.compile(text, re.IGNORECASE)
+        except re.error:
+            regex = None
+        self._regex = regex
+        self._needle = normalize_address(text)
+
+    def matches(self, candidate: object) -> bool:
+        if not isinstance(candidate, str):
+            return False
+        if self._regex is not None:
+            return bool(self._regex.search(candidate))
+        if not self._needle:
+            return True
+        return self._needle in normalize_address(candidate)
+
+
+def _matches_filters(
+    entry: dict,
+    *,
+    cycle: int | None,
+    puzzle: int | None,
+    address: AddressMatcher | None,
+) -> bool:
     if cycle is not None:
         entry_cycle = entry.get("cycle")
         try:
@@ -102,8 +134,8 @@ def _matches_filters(entry: dict, *, cycle: int | None, puzzle: int | None, addr
         except (TypeError, ValueError):
             return False
     if address is not None:
-        entry_address = entry.get("address")
-        if not isinstance(entry_address, str) or normalize_address(entry_address) != normalize_address(address):
+        entry_address = entry.get("address") or entry.get("address_normalized")
+        if not address.matches(entry_address):
             return False
     return True
 
@@ -117,14 +149,18 @@ def search(
     puzzle: int | None = None,
     address: str | None = None,
 ) -> List[dict]:
+    address_matcher = AddressMatcher(address) if address else None
     entries = [
         entry
         for entry in _load_index(index_path)
-        if _matches_filters(entry, cycle=cycle, puzzle=puzzle, address=address)
+        if _matches_filters(entry, cycle=cycle, puzzle=puzzle, address=address_matcher)
     ]
     query_terms = [term.lower() for term in query.split() if term.strip()]
     if not query_terms:
-        return []
+        if cycle is None and puzzle is None and address is None:
+            return []
+        limited = entries[:limit]
+        return [entry | {"score": 0} for entry in limited]
     ranked = [
         (entry, _score_entry(entry, query_terms))
         for entry in entries
@@ -142,15 +178,14 @@ def filter_entries(
 ) -> List[Entry]:
     """Filter raw entries by harmonix metadata fields."""
 
-    if address:
-        address = normalize_address(address)
+    matcher = AddressMatcher(address) if address else None
     filtered: List[Entry] = []
     for entry in entries:
         if cycle is not None and int(entry["cycle"]) != int(cycle):
             continue
         if puzzle_id is not None and int(entry["puzzle_id"]) != int(puzzle_id):
             continue
-        if address is not None and normalize_address(entry.get("address", "")) != address:
+        if matcher is not None and not matcher.matches(entry.get("address", "")):
             continue
         filtered.append(entry)
     return filtered

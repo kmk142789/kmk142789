@@ -26,6 +26,8 @@ def _sample_entry(cycle: int, puzzle_id: int) -> Entry:
             "source": f"puzzle_{puzzle_id:05d}.md",
             "updated_at": datetime(2024, 1, 1, tzinfo=timezone.utc).isoformat(),
             "harmonics": [1, 2, 3],
+            "script": "OP_DUP OP_HASH160 deadbeefdeadbeefdeadbeefdeadbeefdeadbeef OP_EQUALVERIFY OP_CHECKSIG",
+            "tags": ["echo", "colossus"],
         }
     )
 
@@ -66,6 +68,7 @@ def test_prepare_voyage_report_generates_summary() -> None:
 
     markdown = render_markdown(rollups, harmonics, safety, voyage_report=voyage_report)
     assert "## Voyage Summary" in markdown
+    assert "| Cycle | Entries | Puzzle IDs | Derived Scripts | Addresses | Echo Tags |" in markdown
     dedicated = render_voyage_markdown(voyage_report)
     assert "Converged Pulse Voyage Report" in dedicated
 
@@ -78,6 +81,8 @@ def test_prepare_voyage_report_generates_summary() -> None:
     )
     assert "voyage_report" in dashboard
     assert dashboard["voyage_report"]["summary_table"][0]["cycle"] == 1
+    assert "structured_filters" in dashboard
+    assert dashboard["structured_filters"][0]["puzzles"]
 
 
 def test_cli_emits_voyage_report(tmp_path: Path) -> None:

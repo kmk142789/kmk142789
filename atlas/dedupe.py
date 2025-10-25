@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 import argparse
 import hashlib
 import json
+import re
 
 from .graph import ArtifactNode, FederationGraph
 from .types import Entry
@@ -58,6 +59,93 @@ def _fingerprint(node: ArtifactNode) -> str:
     return hashlib.sha256(serialised.encode("utf-8")).hexdigest()
 
 
+def _coerce_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return None
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+_CYCLE_PATTERNS = (
+    re.compile(r"cycle[-_]?([0-9]{1,6})", re.IGNORECASE),
+    re.compile(r"c(?:ycle)?\s*([0-9]{1,6})", re.IGNORECASE),
+)
+
+
+def _extract_cycle(node: ArtifactNode) -> int | None:
+    for key in ("cycle", "cycle_id", "cycle_number"):
+        value = node.metadata.get(key)
+        coerced = _coerce_int(value)
+        if coerced is not None:
+            return coerced
+    label = node.metadata.get("label")
+    for candidate in (node.artifact_id, label if isinstance(label, str) else ""):
+        if not isinstance(candidate, str):
+            continue
+        for pattern in _CYCLE_PATTERNS:
+            match = pattern.search(candidate)
+            if match:
+                text = match.group(1)
+                try:
+                    return int(text.lstrip("0") or "0")
+                except ValueError:
+                    continue
+    return None
+
+
+_PUZZLE_PATTERNS = (
+    re.compile(r"puzzle[-_#]?([0-9]{1,6})", re.IGNORECASE),
+    re.compile(r"harmonix[-_]?([0-9]{1,6})", re.IGNORECASE),
+)
+
+
+def _extract_puzzle_id(node: ArtifactNode) -> int | None:
+    for key in ("puzzle_id", "puzzle", "puzzle_number"):
+        value = node.metadata.get(key)
+        coerced = _coerce_int(value)
+        if coerced is not None:
+            return coerced
+    for candidate in (node.artifact_id, node.metadata.get("label")):
+        if not isinstance(candidate, str):
+            continue
+        for pattern in _PUZZLE_PATTERNS:
+            match = pattern.search(candidate)
+            if match:
+                text = match.group(1)
+                try:
+                    return int(text.lstrip("0") or "0")
+                except ValueError:
+                    continue
+    harmonix = node.metadata.get("harmonix")
+    if isinstance(harmonix, dict):
+        return _coerce_int(harmonix.get("puzzle_id"))
+    return None
+
+
+def _extract_address(node: ArtifactNode) -> str | None:
+    metadata_candidates = (
+        "address",
+        "btc_address",
+        "puzzle_address",
+        "destination",
+        "wallet",
+    )
+    for key in metadata_candidates:
+        value = node.metadata.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    harmonix = node.metadata.get("harmonix")
+    if isinstance(harmonix, dict):
+        value = harmonix.get("address")
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
 def build_dedupe_index(graph: FederationGraph) -> DedupeIndex:
     """Build a :class:`DedupeIndex` from *graph*."""
 
@@ -102,9 +190,25 @@ def _build_search_index(graph: FederationGraph, index_path: Path) -> None:
         }
         harmonix = node.metadata.get("harmonix")
         if isinstance(harmonix, dict):
-            entry["cycle"] = harmonix.get("cycle")
-            entry["puzzle_id"] = harmonix.get("puzzle_id")
-            entry["address"] = harmonix.get("address")
+            if harmonix.get("cycle") is not None:
+                entry["cycle"] = harmonix.get("cycle")
+            if harmonix.get("puzzle_id") is not None:
+                entry["puzzle_id"] = harmonix.get("puzzle_id")
+            if harmonix.get("address"):
+                entry["address"] = harmonix.get("address")
+
+        cycle = _extract_cycle(node)
+        if cycle is not None:
+            entry["cycle"] = cycle
+
+        puzzle_id = _extract_puzzle_id(node)
+        if puzzle_id is not None:
+            entry["puzzle_id"] = puzzle_id
+
+        address = _extract_address(node)
+        if address:
+            entry["address"] = address
+            entry["address_normalized"] = normalize_address(address)
         entries.append(entry)
     payload = {"version": 1, "entries": entries}
     with index_path.joinpath("index.json").open("w", encoding="utf-8") as fh:
