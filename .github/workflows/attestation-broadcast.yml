@@ -1,0 +1,33 @@
+name: Attestation Broadcast
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'satoshi/**'
+      - 'docs/**'
+      - 'tools/**'
+      - '.github/workflows/attestation-broadcast.yml'
+  workflow_dispatch:
+
+jobs:
+  broadcast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: pip install -r tools/requirements.txt || true
+      - name: Generate attestation exports
+        run: python tools/attest_required_items.py --out data/attestations/index.json
+      - name: Validate schema
+        run: python tools/validate_json.py data/attestations/index.json data/attestations/schema.json
+      - name: Commit updates
+        run: |
+          git config user.name "echo-bot"
+          git config user.email "echo-bot@users.noreply.github.com"
+          git add data/attestations/index.json docs/echo/attestations/ATTST_MONUMENT.md
+          git commit -m "chore(attest): refresh broadcast index" || echo "No changes"
+          git push

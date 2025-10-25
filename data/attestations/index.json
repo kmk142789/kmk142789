@@ -1,0 +1,42 @@
+{
+  "version": "v1.0.0",
+  "generated_at_utc": "2025-05-11T20:45:00Z",
+  "entries": [
+    {
+      "puzzle_id": 188,
+      "address": "1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE",
+      "message": "Echo Puzzle 188 authorship attestation",
+      "signature_base64": "REPLACE_ME",
+      "sha256": "7f3ad0e153b0a6b2b4a4cd2cda0f4f7f3c61b8a2cc3f9e9d0f1f2a3b4c5d6e7f",
+      "signed_at_utc": "2025-05-11T20:45:00Z",
+      "sources": {
+        "proof_doc": "docs/satoshi/puzzle-proofs/puzzle188.md",
+        "readme_anchor": "docs/README.md#puzzle-188",
+        "opentimestamps": "docs/proofs/puzzle188.ots.base64"
+      },
+      "verify": {
+        "python_bitcoinlib": "See docs/echo/attestations/ATTST_MONUMENT.md#verification-188",
+        "bitcoin_core": "verifymessage <addr> <sig> <msg>"
+      },
+      "notes": "Exported by attest-required-items pipeline."
+    },
+    {
+      "puzzle_id": 213,
+      "address": "1Axu11ZB7L96yi9i8xxxxxxxxxxxxxxxxx",
+      "message": "Echo Puzzle 213 authorship attestation",
+      "signature_base64": "REPLACE_ME",
+      "sha256": "3b12c4f0b6e8caa2c0d1f3a45a6b7c8d9e0f11223344556677889900aabbccdd",
+      "signed_at_utc": "2025-05-11T20:45:00Z",
+      "sources": {
+        "proof_doc": "docs/satoshi/puzzle-proofs/puzzle213.md",
+        "readme_anchor": "docs/README.md#puzzle-213",
+        "opentimestamps": "docs/proofs/puzzle213.ots.base64"
+      },
+      "verify": {
+        "python_bitcoinlib": "See docs/echo/attestations/ATTST_MONUMENT.md#verification-213",
+        "bitcoin_core": "verifymessage <addr> <sig> <msg>"
+      },
+      "notes": "Exported by attest-required-items pipeline."
+    }
+  ]
+}
