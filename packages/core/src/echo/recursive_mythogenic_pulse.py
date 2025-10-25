@@ -321,6 +321,19 @@ class PulseVoyageVisualizer:
                 spikes.append({"voice": voice, "threads": count})
         return spikes
 
+    def resonance_intensity(self) -> dict[str, float]:
+        """Return normalised intensity values per resonance voice."""
+
+        counts = self._voice_counts()
+        if not counts:
+            return {}
+
+        peak = max(counts.values()) or 1
+        return {
+            voice: round(count / peak, 3)
+            for voice, count in counts.items()
+        }
+
     def narrative_amplification(self, *, include_threads: int = 3) -> str:
         """Return the amplified convergence narrative."""
 
@@ -385,6 +398,7 @@ class PulseVoyageVisualizer:
             },
             "thread_convergence": self.thread_convergence_points(),
             "resonance_spikes": self.resonance_spikes(),
+            "resonance_intensity": self.resonance_intensity(),
             "narrative_amplification": narrative,
             "ascii_map": ascii_map,
         }
@@ -416,6 +430,22 @@ class PulseVoyageVisualizer:
                 lines.append(f"| {voice} | {count} | {spike} |")
         else:
             lines.append("_No resonance threads detected._")
+
+        intensity = self.resonance_intensity()
+        lines.extend(
+            [
+                "",
+                "## Resonance Intensity",
+                "",
+            ]
+        )
+        if intensity:
+            lines.append("| Voice | Intensity |")
+            lines.append("| --- | ---: |")
+            for voice, value in intensity.items():
+                lines.append(f"| {voice} | {value:.3f} |")
+        else:
+            lines.append("_No resonance intensity recorded._")
 
         lines.extend(
             [
