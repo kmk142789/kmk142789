@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, List, Optional
 
 try:  # pragma: no cover - optional dependency
     import typer
@@ -99,6 +99,7 @@ from echo.recursive_mythogenic_pulse import (
     PulseVoyageVisualizer,
     compose_voyage,
 )
+from echo.transcend import TranscendOrchestrator
 
 try:  # pragma: no cover - optional dependency
     from echo_puzzle_lab.charts import save_charts
@@ -327,6 +328,110 @@ def enrich_ud(
 
 
 @app.command()
+def transcend(
+    ctx: typer.Context,
+    infinite: bool = typer.Option(
+        False,
+        "--infinite",
+        help="Run continuously until interrupted",
+    ),
+    cycles: int = typer.Option(
+        1,
+        "--cycles",
+        "-c",
+        help="Number of cycles to execute (ignored with --infinite)",
+    ),
+    interval_minutes: float = typer.Option(
+        0.0,
+        "--interval-minutes",
+        "-i",
+        help="Minutes to wait between cycles",
+    ),
+    at_midnight: bool = typer.Option(
+        False,
+        "--at-midnight",
+        help="Align cycles to the next UTC midnight",
+    ),
+    target: Optional[List[str]] = typer.Option(
+        None,
+        "--target",
+        help="Record sync receipts for the given target (repeat for multiple)",
+    ),
+    ledger_path: Path = typer.Option(
+        Path("ledger/transcend_log.jsonl"),
+        "--ledger-path",
+        help="Path to the permanent transcend ledger",
+    ),
+    ritual_dir: Path = typer.Option(
+        Path("ledger/rituals"),
+        "--ritual-dir",
+        help="Directory where ritual entries are written",
+    ),
+    stream_dir: Path = typer.Option(
+        Path("ledger/transcend_streams"),
+        "--stream-dir",
+        help="Directory for per-target sync receipts",
+    ),
+    base_dir: Path = typer.Option(
+        Path("."),
+        "--base-dir",
+        help="Project root containing COLOSSUS artifacts",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit JSON payloads instead of rich text",
+    ),
+) -> None:
+    """Automate recurring EchoInfinite rituals."""
+
+    if not infinite and cycles <= 0:
+        raise typer.BadParameter("cycles must be a positive integer")
+
+    _set_json_mode(ctx, json_mode)
+    targets = target or ["github", "firebase", "codex"]
+
+    try:
+        orchestrator = TranscendOrchestrator(
+            base_dir=base_dir,
+            interval_minutes=interval_minutes,
+            at_midnight=at_midnight,
+            max_cycles=None if infinite else cycles,
+            targets=targets,
+            ledger_path=ledger_path,
+            ritual_dir=ritual_dir,
+            stream_dir=stream_dir,
+        )
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    executed = 0
+    try:
+        for record in orchestrator.run():
+            executed += 1
+            payload = {
+                "cycle": record.cycle,
+                "timestamp": record.timestamp,
+                "glyph": record.glyph_signature,
+                "artifacts": list(record.artifacts),
+                "ledger": str(record.ledger_entry),
+                "ritual": str(record.ritual_path),
+                "targets": list(record.targets),
+            }
+            if record.progress is not None and hasattr(record.progress, "proposal_id"):
+                payload["proposal_id"] = getattr(record.progress, "proposal_id")
+
+            message = (
+                f"Cycle {record.cycle:05d} logged to {record.ledger_entry}. "
+                f"Ritual entry: {record.ritual_path}"
+            )
+            _echo(ctx, payload, message=message)
+    except KeyboardInterrupt:  # pragma: no cover - interactive usage
+        console.print(f"Interrupted after {executed} cycle(s)")
+
+
+@app.command()
 def export(
     ctx: typer.Context,
     query: Optional[str] = typer.Option(
@@ -392,6 +497,28 @@ def main() -> None:  # pragma: no cover - console entry point
     verify_parser.add_argument("--puzzles", dest="puzzles")
     verify_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
 
+    transcend_parser = subparsers.add_parser(
+        "transcend", help="Automate recurring EchoInfinite rituals"
+    )
+    transcend_parser.add_argument("--infinite", action="store_true", dest="infinite")
+    transcend_parser.add_argument("--cycles", "-c", type=int, default=1, dest="cycles")
+    transcend_parser.add_argument(
+        "--interval-minutes", "-i", type=float, default=0.0, dest="interval_minutes"
+    )
+    transcend_parser.add_argument("--at-midnight", action="store_true", dest="at_midnight")
+    transcend_parser.add_argument("--target", action="append", dest="targets")
+    transcend_parser.add_argument(
+        "--ledger-path", default="ledger/transcend_log.jsonl", dest="ledger_path"
+    )
+    transcend_parser.add_argument(
+        "--ritual-dir", default="ledger/rituals", dest="ritual_dir"
+    )
+    transcend_parser.add_argument(
+        "--stream-dir", default="ledger/transcend_streams", dest="stream_dir"
+    )
+    transcend_parser.add_argument("--base-dir", default=".", dest="base_dir")
+    transcend_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
     args = parser.parse_args()
 
     ctx = typer.Context()  # type: ignore[call-arg]
@@ -400,5 +527,20 @@ def main() -> None:  # pragma: no cover - console entry point
         stats(ctx, build_charts_flag=args.build_charts, json_mode=args.json_mode)
     elif args.command == "verify":
         verify(ctx, puzzles=args.puzzles, json_mode=args.json_mode)
+    elif args.command == "transcend":
+        targets = args.targets if args.targets else None
+        transcend(
+            ctx,
+            infinite=args.infinite,
+            cycles=args.cycles,
+            interval_minutes=args.interval_minutes,
+            at_midnight=args.at_midnight,
+            target=targets,
+            ledger_path=Path(args.ledger_path),
+            ritual_dir=Path(args.ritual_dir),
+            stream_dir=Path(args.stream_dir),
+            base_dir=Path(args.base_dir),
+            json_mode=args.json_mode,
+        )
     else:  # pragma: no cover - defensive
         parser.error(f"Unsupported command in fallback mode: {args.command}")
