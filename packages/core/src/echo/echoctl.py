@@ -37,6 +37,19 @@ except ImportError:  # pragma: no cover - executed when run as script
     summarize_wishes = _INSIGHTS.summarize_wishes  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
+    from .idea_to_action import derive_action_plan
+except ImportError:  # pragma: no cover - executed when run as script
+    _IDEA_SPEC = importlib.util.spec_from_file_location(
+        "echo.idea_to_action", (Path(__file__).resolve().parent / "idea_to_action.py")
+    )
+    if _IDEA_SPEC is None or _IDEA_SPEC.loader is None:
+        raise
+    _IDEA = importlib.util.module_from_spec(_IDEA_SPEC)
+    sys.modules[_IDEA_SPEC.name] = _IDEA
+    _IDEA_SPEC.loader.exec_module(_IDEA)  # type: ignore[attr-defined]
+    derive_action_plan = _IDEA.derive_action_plan  # type: ignore[attr-defined]
+
+try:  # pragma: no cover - executed when run as module
     from ._paths import DATA_ROOT, DOCS_ROOT, REPO_ROOT
 except ImportError:  # pragma: no cover - executed when run as script
     _PATHS_SPEC = importlib.util.spec_from_file_location(
@@ -118,6 +131,40 @@ def show_summary() -> None:
 
     manifest = load_manifest()
     print(summarize_wishes(manifest))
+
+
+def run_idea(argv: List[str]) -> int:
+    """Convert a free-form idea into a concrete action plan."""
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl idea",
+        description="Analyse an idea and emit actionable next steps.",
+    )
+    parser.add_argument("idea", help="Idea text to analyse. Use quotes to preserve spaces.")
+    parser.add_argument("--steps", type=int, default=3, help="Maximum number of steps to generate.")
+    parser.add_argument("--seed", type=int, help="Optional RNG seed for deterministic recommendations.")
+    parser.add_argument("--json", action="store_true", help="Emit JSON instead of Markdown output.")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional file path to persist the Markdown output.",
+    )
+
+    options = parser.parse_args(argv)
+
+    plan = derive_action_plan(options.idea, max_steps=options.steps, rng_seed=options.seed)
+
+    if options.output:
+        options.output.parent.mkdir(parents=True, exist_ok=True)
+        options.output.write_text(plan.to_markdown(), encoding="utf-8")
+        print(f"📝 idea plan saved to {options.output}", file=sys.stderr)
+
+    if options.json:
+        print(json.dumps(plan.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        print(plan.to_markdown())
+
+    return 0
 
 
 def _resolve_groundbreaking():
@@ -320,7 +367,7 @@ def run_moonshot(argv: List[str]) -> int:
 
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
-        print("usage: echoctl [cycle|plan|summary|groundbreaking|moonshot|wish] ...")
+        print("usage: echoctl [cycle|plan|summary|groundbreaking|moonshot|wish|idea] ...")
         return 1
     cmd = argv[1]
     if cmd == "cycle":
@@ -336,6 +383,8 @@ def main(argv: List[str]) -> int:
         return run_groundbreaking(argv[2:])
     if cmd == "moonshot":
         return run_moonshot(argv[2:])
+    if cmd == "idea":
+        return run_idea(argv[2:])
     if cmd == "wish":
         if len(argv) < 4:
             print("usage: echoctl wish <wisher> <desire> [catalyst,...]")

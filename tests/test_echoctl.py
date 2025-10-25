@@ -78,3 +78,20 @@ def test_groundbreaking_command_outputs_json(tmp_path, monkeypatch):
     payload = json.loads(result.stdout)
     assert payload["imprint"]["contributions"]
     assert payload["threads"]
+
+
+def test_idea_command_outputs_markdown(monkeypatch):
+    monkeypatch.setenv("PYTHONPATH", str(ROOT))
+    result = run(
+        [
+            "idea",
+            "EchoEvolver channels glyph joy into artifacts",
+            "--steps",
+            "2",
+            "--seed",
+            "5",
+        ]
+    )
+
+    assert "Idea to Action Plan" in result.stdout
+    assert "Recommended Steps" in result.stdout
