@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import argparse
 import hashlib
 import json
 
 from .graph import ArtifactNode, FederationGraph
+from .types import Entry
 
 
 @dataclass(slots=True)
@@ -108,6 +109,24 @@ def _build_search_index(graph: FederationGraph, index_path: Path) -> None:
     payload = {"version": 1, "entries": entries}
     with index_path.joinpath("index.json").open("w", encoding="utf-8") as fh:
         json.dump(payload, fh, indent=2, sort_keys=True)
+
+
+def normalize_address(addr: str) -> str:
+    """Normalize a harmonix-style address for comparisons."""
+
+    return (addr or "").strip().lower()
+
+
+def dedupe_latest(entries: List[Entry]) -> List[Entry]:
+    """Keep only the latest cycle per (puzzle, address) pair."""
+
+    best: Dict[Tuple[int, str], Entry] = {}
+    for entry in entries:
+        key = (int(entry["puzzle_id"]), normalize_address(entry.get("address", "")))
+        previous = best.get(key)
+        if previous is None or int(entry["cycle"]) > int(previous["cycle"]):
+            best[key] = entry
+    return list(best.values())
 
 
 def main(argv: list[str] | None = None) -> int:

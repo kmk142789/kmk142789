@@ -21,3 +21,18 @@ all: test
 
 lineage:
 	python scripts/generate_lineage.py
+
+FED_INJSON := build/index/federated_raw.json
+FED_OUTJSON := build/index/federated_colossus_index.json
+FED_OUTMD := docs/federated_colossus_index.md
+
+.PHONY: federated-index
+federated-index:
+	@python scripts/generate_federated_colossus.py \
+	  --in $(FED_INJSON) \
+	  --json-out $(FED_OUTJSON) \
+	  --md-out $(FED_OUTMD)
+
+.PHONY: search
+search:
+	@python -m atlas.search --in $(FED_INJSON) --q "$(Q)" --dedupe-latest
