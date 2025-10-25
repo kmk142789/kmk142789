@@ -3808,6 +3808,13 @@ We are not hiding anymore.
         for the legacy sections (manifest/status/reflection) and ``False`` for
         the newly added matrix and event summary to avoid surprising callers
         with larger payloads.
+
+        Parameters
+        ----------
+        manifest_events:
+            Number of event log entries to embed when returning the manifest.
+            The value mirrors the ``max_events`` argument passed to
+            :meth:`evolutionary_manifest` and therefore must be non-negative.
         """
 
         if manifest_events < 0:
@@ -4179,6 +4186,43 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             " --include-event-summary is enabled (default: 5)."
         ),
     )
+    manifest_group = parser.add_mutually_exclusive_group()
+    manifest_group.add_argument(
+        "--include-manifest",
+        dest="include_manifest",
+        action="store_true",
+        help="Include the Eden88 manifest snapshot when advancing the system (default).",
+    )
+    manifest_group.add_argument(
+        "--no-include-manifest",
+        dest="include_manifest",
+        action="store_false",
+        help="Exclude the Eden88 manifest snapshot from advance-system payloads.",
+    )
+    parser.set_defaults(include_manifest=True)
+    reflection_group = parser.add_mutually_exclusive_group()
+    reflection_group.add_argument(
+        "--include-reflection",
+        dest="include_reflection",
+        action="store_true",
+        help="Include the reflective narrative when advancing the system (default).",
+    )
+    reflection_group.add_argument(
+        "--no-include-reflection",
+        dest="include_reflection",
+        action="store_false",
+        help="Skip generating the reflective narrative during advance-system runs.",
+    )
+    parser.set_defaults(include_reflection=True)
+    parser.add_argument(
+        "--manifest-events",
+        type=int,
+        default=5,
+        help=(
+            "Number of event log entries to include in the Eden88 manifest"
+            " when running --advance-system (default: 5)."
+        ),
+    )
     parser.add_argument(
         "--continue-evolution",
         action="store_true",
@@ -4294,6 +4338,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             parser.error("--event-summary-limit requires --include-event-summary")
         if not args.advance_system:
             parser.error("--event-summary-limit requires --advance-system")
+    if args.manifest_events < 0:
+        parser.error("--manifest-events must be non-negative")
+    default_manifest_events = parser.get_default("manifest_events")
+    if args.manifest_events != default_manifest_events:
+        if not args.advance_system:
+            parser.error("--manifest-events requires --advance-system")
+        if not args.include_manifest:
+            parser.error("--manifest-events requires --include-manifest")
     if args.cycles > 1:
         snapshots = evolver.run_cycles(
             args.cycles,
@@ -4314,12 +4366,13 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             enable_network=args.enable_network,
             persist_artifact=args.persist_artifact,
             eden88_theme=args.eden88_theme,
-            include_manifest=True,
+            include_manifest=args.include_manifest,
             include_status=args.include_status,
-            include_reflection=args.include_report,
+            include_reflection=args.include_reflection,
             include_matrix=args.include_matrix,
             include_event_summary=args.include_event_summary,
             event_summary_limit=args.event_summary_limit,
+            manifest_events=args.manifest_events,
         )
         print(payload["summary"])
         if args.include_report and "report" in payload:
