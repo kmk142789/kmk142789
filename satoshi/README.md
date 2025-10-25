@@ -59,6 +59,16 @@ python -m satoshi.puzzle_script_cli 14
 Pass `--single-line` to render a space-separated version or `--separator "\\t"` to emit a
 tab-delimited variant.
 
+## Inspecting puzzle solutions
+
+``show_puzzle_solution.py`` provides a more detailed lookup utility that
+prints the address, public key, private key, and WIF encoding for the
+selected entry in ``puzzle_solutions.json``.  Invoke the tool with either
+the puzzle ``bits`` value, the full Bitcoin address, or the 20-byte
+hash160 fingerprint.  Address queries may include hyphen-delimited
+wildcards (for example ``187swFMjz-FTNVQFDiu``) which makes it easier to
+cross-reference partially redacted strings found in puzzle listings.
+
 ## Entries
 
 - `puzzle001.json` — Puzzle #1 authorship attestation for address `1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH`.

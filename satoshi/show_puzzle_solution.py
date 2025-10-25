@@ -5,7 +5,9 @@ particular entry from ``puzzle_solutions.json`` and display the core
 details in a human friendly format.  It also derives the legacy Base58
 address and the Wallet Import Format (WIF) encoding for the stored
 private key so that the record can be compared against on-chain
-metadata such as the provided PkScript.
+metadata such as the provided PkScript.  Address lookups understand
+hyphen-separated wildcards, allowing partially redacted strings such as
+``187swFMjz-FTNVQFDiu`` to resolve to their canonical entry.
 
 Example usage:
 
@@ -28,6 +30,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
@@ -129,6 +132,21 @@ def _load_solutions(path: Path) -> Iterable[Dict[str, Any]]:
         return json.load(handle)
 
 
+def _address_matches_query(candidate: str, query: str) -> bool:
+    """Return ``True`` when *candidate* matches the provided *query*.
+
+    The helper accepts hyphen characters (``-``) inside *query* as wildcards
+    that can expand to any sequence of characters, allowing callers to supply
+    partially-redacted addresses such as ``187swFMjz-FTNVQFDiu``.
+    """
+
+    if "-" not in query:
+        return candidate == query
+
+    pattern = "^" + re.escape(query).replace("\\-", ".*") + "$"
+    return re.match(pattern, candidate) is not None
+
+
 def _match_entry(
     entries: Iterable[Dict[str, Any]],
     *,
@@ -140,7 +158,7 @@ def _match_entry(
     for entry in entries:
         if bits is not None and entry.get("bits") == bits:
             return entry
-        if address and entry.get("address") == address:
+        if address and _address_matches_query(entry.get("address", ""), address):
             return entry
         if target_hash and entry.get("hash160_compressed", "").lower() == target_hash:
             return entry
