@@ -6,11 +6,14 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import hashlib
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, MutableMapping, Optional, Sequence, Tuple
+from urllib.parse import quote
+from xml.sax.saxutils import escape
 
 from atlas.schema import CycleTimelineEvent
 from atlas.search import presence_harmonics, safety_notices
@@ -388,7 +391,170 @@ def compute_rollups(entries: List[Entry]) -> Dict[str, Any]:
     )
 
 
+def _github_history_links(entry: Entry) -> Dict[str, str]:
+    """Return a mapping of history links for *entry*.
+
+    If explicit URLs are provided in the payload, prefer them. Otherwise,
+    synthesize commit and pull request links relative to the repository.
+    """
+
+    history: Dict[str, str] = {}
+    payload = entry.get("history") if isinstance(entry.get("history"), dict) else {}
+
+    for key in ("commit", "commits", "pull_request", "pr"):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            history[key] = value.strip()
+
+    source = entry.get("source")
+    if isinstance(source, str) and source.strip():
+        encoded = quote(source.strip())
+        history.setdefault(
+            "commits",
+            f"https://github.com/kmk142789/kmk142789/commits/main/{encoded}",
+        )
+
+    pr_number = entry.get("pr_number") or entry.get("pr") or payload.get("number")
+    if isinstance(pr_number, str):
+        pr_number = pr_number.strip().lstrip("#")
+        if pr_number.isdigit():
+            pr_number = int(pr_number)
+    if isinstance(pr_number, int):
+        history.setdefault(
+            "pr",
+            f"https://github.com/kmk142789/kmk142789/pull/{pr_number}",
+        )
+
+    return history
+
+
+def _authorship_metadata(entry: Entry) -> Dict[str, str]:
+    """Return normalised authorship metadata for *entry*."""
+
+    metadata: Dict[str, str] = {}
+    candidate = entry.get("authorship")
+    if isinstance(candidate, dict):
+        metadata.update({k: str(v) for k, v in candidate.items() if v})
+
+    for key in ("signature", "ledger_anchor", "witness"):
+        value = entry.get(key)
+        if isinstance(value, str) and value.strip():
+            metadata.setdefault(key, value.strip())
+
+    return {k: v for k, v in metadata.items() if v}
+
+
+def _prepare_constellations(entries: Sequence[Entry]) -> List[Dict[str, Any]]:
+    """Return puzzle constellation nodes rendered for downstream emitters."""
+
+    constellations: List[Dict[str, Any]] = []
+    for entry in sorted(entries, key=lambda item: (item["puzzle_id"], item["cycle"])):
+        history = _github_history_links(entry)
+        authorship = _authorship_metadata(entry)
+
+        status_text = str(entry.get("status") or "attested").strip().lower()
+        status_icon = {
+            "attested": "✅",
+            "pending": "🕘",
+            "revoked": "⚠️",
+            "breach": "🔔",
+        }.get(status_text, "⭐")
+
+        node = dict(
+            puzzle=int(entry["puzzle_id"]),
+            cycle=int(entry["cycle"]),
+            address=entry.get("address"),
+            status=status_text,
+            status_icon=status_icon,
+            history=history,
+            script=entry.get("script") or entry.get("locking_script") or entry.get("pk_script"),
+            digest=entry.get("digest"),
+            title=entry.get("title"),
+            narrative=entry.get("narrative"),
+            authorship=authorship,
+            updated_at=entry.get("updated_at"),
+        )
+
+        if entry.get("anomalies"):
+            node["anomalies"] = list(entry.get("anomalies"))
+
+        constellations.append(node)
+
+    return constellations
+
+
 # ---------- Markdown emitter ----------
+def _render_constellation_markdown(nodes: Sequence[Dict[str, Any]]) -> List[str]:
+    """Return Markdown lines describing the proof constellations."""
+
+    if not nodes:
+        return ["_No attestation constellations available._", ""]
+
+    lines: List[str] = []
+    for node in nodes:
+        title = node.get("title") or "Attestation"
+        puzzle = node.get("puzzle")
+        address = node.get("address") or "—"
+        cycle = node.get("cycle")
+        status_icon = node.get("status_icon", "")
+        status = node.get("status", "attested").replace("_", " ").title()
+        script = node.get("script") or "—"
+        digest = node.get("digest") or "—"
+
+        pr_url = None
+        pr_label = None
+        commits_url = None
+
+        history = node.get("history") or {}
+        if isinstance(history, dict):
+            for key in ("pr", "pull_request"):
+                value = history.get(key)
+                if isinstance(value, str) and value.strip():
+                    pr_url = value.strip()
+                    number = value.strip().rstrip("/").split("/")[-1]
+                    pr_label = f"#{number}" if number.isdigit() else value.strip()
+                    break
+            for key in ("commits", "commit"):
+                value = history.get(key)
+                if isinstance(value, str) and value.strip():
+                    commits_url = value.strip()
+                    break
+
+        lines.append(f"### Puzzle #{puzzle} {title}")
+        lines.append(f"- Address: `{address}`")
+        lines.append(f"- Status: {status_icon} {status}")
+        lines.append(f"- Cycle: {cycle}")
+        if commits_url:
+            lines.append(f"- Commits: [{commits_url}]({commits_url})")
+        if pr_url:
+            lines.append(f"- PR: [{pr_label}]({pr_url})")
+        lines.append(f"- Digest: `{digest}`")
+        lines.append(f"- PKScript: `{script}`")
+        lines.append("")
+
+        authorship = node.get("authorship") or {}
+        narrative = node.get("narrative")
+        details: List[str] = []
+        if authorship:
+            for key, value in authorship.items():
+                pretty = key.replace("_", " ").title()
+                details.append(f"- {pretty}: `{value}`")
+        if narrative:
+            details.append("")
+            details.append(narrative)
+
+        if details:
+            lines.append("<details>")
+            lines.append("<summary>Authorship Metadata</summary>")
+            lines.append("")
+            lines.extend(details)
+            lines.append("")
+            lines.append("</details>")
+            lines.append("")
+
+    return lines
+
+
 def _format_markdown_table_row(cells: Sequence[str]) -> str:
     return "| " + " | ".join(cells) + " |"
 
@@ -431,14 +597,19 @@ def render_markdown(
     harmonics_data: Sequence[Dict[str, Any]],
     safety_data: Sequence[Dict[str, Any]],
     *,
+    entries: Sequence[Entry] | None = None,
+    constellations: Sequence[Dict[str, Any]] | None = None,
+    refreshed_at: datetime | None = None,
     voyage_report: VoyageReport | None = None,
 ) -> str:
+    constellations = list(constellations or [])
     totals = rollups["totals"]
+    refreshed_at = refreshed_at or datetime.utcnow()
     lines: List[str] = []
     lines += [
         "# Federated Colossus Index",
         "",
-        f"*Last refreshed:* {datetime.utcnow().isoformat()}Z",
+        f"*Last refreshed:* {refreshed_at.isoformat()}Z",
         "",
         "## Summary",
         "",
@@ -447,8 +618,13 @@ def render_markdown(
         f"- **Puzzles:** {totals['puzzles']}",
         f"- **Addresses:** {totals['addresses']}",
         "",
+        "## Hyperlinked Proof Constellations",
+        "",
+    ]
+    lines.extend(_render_constellation_markdown(constellations))
+    lines += [
         "## Cycle Timeline",
-        "", 
+        "",
         "| Cycle | Entries | Puzzle IDs | Derived Scripts | Addresses | Echo Tags |",
         "|------:|--------:|------------|-----------------|-----------|-----------|",
     ]
@@ -676,7 +852,9 @@ def to_dashboard_json(
     rollups: Dict[str, Any],
     harmonics_data: Sequence[Dict[str, Any]],
     safety_data: Sequence[Dict[str, Any]],
+    constellations: Sequence[Dict[str, Any]] | None = None,
     *,
+    refreshed_at: datetime | None = None,
     voyage_report: VoyageReport | None = None,
 ) -> Dict[str, Any]:
     safety_flags = [notice["id"] for notice in safety_data if notice.get("flagged")]
@@ -685,9 +863,10 @@ def to_dashboard_json(
         harmonics_data,
         voyage_report=voyage_report,
     )
+    refreshed_at = refreshed_at or datetime.utcnow()
     payload = dict(
         schema="io.echo.colossus/federated-index@1",
-        refreshed_at=datetime.utcnow().isoformat() + "Z",
+        refreshed_at=refreshed_at.isoformat() + "Z",
         totals=rollups["totals"],
         entries=entries,
         by_cycle=rollups["by_cycle"],
@@ -696,10 +875,110 @@ def to_dashboard_json(
         harmonics=list(harmonics_data),
         safety=dict(notices=list(safety_data), flags=safety_flags),
         structured_filters=structured_filters,
+        constellations=list(constellations or []),
     )
     if voyage_report is not None:
         payload["voyage_report"] = voyage_report.to_json()
     return payload
+
+
+def _render_atom_feed(
+    constellations: Sequence[Dict[str, Any]],
+    refreshed_at: datetime,
+    limit: int = 24,
+) -> str:
+    """Return an Atom feed describing the latest attestation constellations."""
+
+    feed_id = "tag:kmk142789.github.io,2025:federated-colossus"
+    updated_text = refreshed_at.isoformat() + "Z"
+    latest = sorted(
+        constellations,
+        key=lambda node: (
+            int(node.get("cycle", 0) or 0),
+            str(node.get("digest") or ""),
+        ),
+        reverse=True,
+    )[:limit]
+
+    lines = [
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>",
+        '<feed xmlns="http://www.w3.org/2005/Atom">',
+        f"  <id>{feed_id}</id>",
+        "  <title>Federated Colossus Attestations</title>",
+        f"  <updated>{updated_text}</updated>",
+        "  <author><name>kmk142789</name></author>",
+    ]
+
+    for node in latest:
+        puzzle = node.get("puzzle")
+        address = node.get("address") or "unknown"
+        title = node.get("title") or "Attestation"
+        status_icon = node.get("status_icon", "")
+        status = node.get("status", "attested")
+        cycle = node.get("cycle")
+        updated = node.get("updated_at") or updated_text
+        narrative = node.get("narrative") or ""
+        digest = node.get("digest") or ""
+
+        history = node.get("history") or {}
+        link = (
+            history.get("pr")
+            or history.get("pull_request")
+            or history.get("commits")
+            or history.get("commit")
+            or "https://github.com/kmk142789/kmk142789"
+        )
+
+        entry_id = f"{feed_id}:{puzzle}:{address}"
+        summary = narrative or (
+            f"{status_icon} Puzzle #{puzzle} cycle {cycle} attestation {status}"
+        )
+
+        lines.extend(
+            [
+                "  <entry>",
+                f"    <id>{escape(entry_id)}</id>",
+                f"    <title>{escape(status_icon + ' ' + title)}</title>",
+                f"    <link href=\"{escape(link)}\" />",
+                f"    <updated>{escape(str(updated))}</updated>",
+                f"    <summary>{escape(summary)}</summary>",
+                f"    <content type=\"html\">{escape(f'Address {address} · Digest {digest}')}</content>",
+                "  </entry>",
+            ]
+        )
+
+    lines.append("</feed>")
+    return "\n".join(lines) + "\n"
+
+
+def _update_verification_log(
+    log_path: Path,
+    json_path: Path,
+    rollups: Dict[str, Any],
+) -> None:
+    """Hash *json_path* and append verification metadata to *log_path*."""
+
+    os.makedirs(log_path.parent, exist_ok=True)
+    payload = json_path.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    cycles = [int(key) for key in rollups.get("by_cycle", {}).keys()]
+    current_cycle = max(cycles) if cycles else 0
+    timestamp = datetime.utcnow().isoformat() + "Z"
+
+    previous_hash: Optional[str] = None
+    if log_path.exists():
+        with open(log_path, "r", encoding="utf-8") as handle:
+            for line in handle:
+                stripped = line.strip()
+                if not stripped:
+                    continue
+                previous_hash = stripped.split(" hash=")[-1]
+
+    with open(log_path, "a", encoding="utf-8") as handle:
+        handle.write(f"{timestamp} cycle={current_cycle} hash={digest}\n")
+
+    if previous_hash and previous_hash != digest:
+        print("🔔 Continuum Breach: federated index hash drift detected")
 
 
 # ---------- CLI ----------
@@ -723,6 +1002,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Dashboard JSON output path",
     )
     parser.add_argument(
+        "--feed-out",
+        default="docs/feed/federated-colossus.xml",
+        help="Atom feed output path",
+    )
+    parser.add_argument(
         "--voyage-report",
         type=Path,
         default=None,
@@ -735,13 +1019,18 @@ def main(argv: list[str] | None = None) -> int:
     rollups = compute_rollups(entries)
     harmonics_data = [dict(item) for item in presence_harmonics]
     safety_data = [dict(item) for item in safety_notices]
+    constellations = _prepare_constellations(entries)
 
     voyage_report = _prepare_voyage_report(rollups, harmonics_data, safety_data)
+    refreshed_at = datetime.utcnow()
 
     markdown_output = render_markdown(
         rollups,
         harmonics_data,
         safety_data,
+        entries=entries,
+        constellations=constellations,
+        refreshed_at=refreshed_at,
         voyage_report=voyage_report,
     )
 
@@ -753,12 +1042,23 @@ def main(argv: list[str] | None = None) -> int:
             rollups,
             harmonics_data,
             safety_data,
+            constellations,
+            refreshed_at=refreshed_at,
             voyage_report=voyage_report,
         ),
     )
 
     print(f"Wrote {args.md_out}")
     print(f"Wrote {args.json_out}")
+
+    if args.feed_out:
+        feed_text = _render_atom_feed(constellations, refreshed_at)
+        _write_text(args.feed_out, feed_text)
+        print(f"Wrote {args.feed_out}")
+
+    verification_log = Path("verification.log")
+    _update_verification_log(verification_log, Path(args.json_out), rollups)
+    print(f"Testing ritual complete → {verification_log}")
 
     if args.voyage_report is not None:
         base_path = args.voyage_report

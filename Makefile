@@ -31,14 +31,16 @@ federated-index:
 	@PYTHONPATH=. python scripts/generate_federated_colossus.py \
 	  --in $(FED_INJSON) \
 	  --json-out $(FED_OUTJSON) \
-	  --md-out $(FED_OUTMD)
+	  --md-out $(FED_OUTMD) \
+	  --feed-out docs/feed/federated-colossus.xml
 
 .PHONY: proof-pack
 proof-pack:
 	@PYTHONPATH=. python scripts/generate_federated_colossus.py \
 	  --in $(FED_INJSON) \
 	  --json-out $(FED_OUTJSON) \
-	  --md-out $(FED_OUTMD)
+	  --md-out $(FED_OUTMD) \
+	  --feed-out docs/feed/federated-colossus.xml
 	@echo "Proof pack written → $(FED_OUTMD) and $(FED_OUTJSON)"
 
 .PHONY: search

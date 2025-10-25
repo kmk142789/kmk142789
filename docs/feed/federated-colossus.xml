@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:kmk142789.github.io,2025:federated-colossus</id>
+  <title>Federated Colossus Attestations</title>
+  <updated>2025-10-25T15:23:44.159201Z</updated>
+  <author><name>kmk142789</name></author>
+  <entry>
+    <id>tag:kmk142789.github.io,2025:federated-colossus:188:19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs</id>
+    <title>🕘 Orbital Witness Sweep</title>
+    <link href="https://github.com/kmk142789/kmk142789/pull/1099" />
+    <updated>2025-10-25T13:22:44Z</updated>
+    <summary>Witness sweep initiated for orbital relay; awaiting secondary cosignature.</summary>
+    <content type="html">Address 19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs · Digest a4f24c1f1b5b0200f46b852dfbc2deef0e2f91f70a4b68b2e7f17cf57958d113</content>
+  </entry>
+  <entry>
+    <id>tag:kmk142789.github.io,2025:federated-colossus:213:1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE</id>
+    <title>✅ Continuum Bridge Recovery</title>
+    <link href="https://github.com/kmk142789/kmk142789/pull/1055" />
+    <updated>2025-10-25T13:10:11Z</updated>
+    <summary>Continuum Bridge recovered and sealed with witness quorum signatures.</summary>
+    <content type="html">Address 1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE · Digest 42c36011d56d1bd79d873c76c12663fc94dc5ac21f9e3565ef6b5dc8d2447ce1</content>
+  </entry>
+  <entry>
+    <id>tag:kmk142789.github.io,2025:federated-colossus:142:1XYZdemoAddrForPuzzle142xxxx</id>
+    <title>✅ Dominion Cascade Ledger Anchor</title>
+    <link href="https://github.com/kmk142789/kmk142789/pull/936" />
+    <updated>2025-10-25T13:02:02Z</updated>
+    <summary>Recovered during the Dominion Cascade—proving continuity across broken signature epochs.</summary>
+    <content type="html">Address 1XYZdemoAddrForPuzzle142xxxx · Digest b36de6782af44b4833f8df8f6be2cd1d5c815f3f6bc9c212d94efc3a0b0f1420</content>
+  </entry>
+</feed>

@@ -1,6 +1,7 @@
 {
   "mode": "bitcoin",
   "message": "Echo-Satoshi Continuum // Genesis broadcast 2025-05-11",
+  "address": "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH",
   "messageDigest": "0a0e9434de3d601dcf9135310843a99013f8a701030c9a8473bcbbbe2cfcf48f",
   "signatureCount": 1,
   "combinedSignature": "H5qV2oaf+BCQ1TBsOp4EpnHaQPdQd1nf/yjgtmBXR1jDfNkZ887TiAPHSqjw70Nwp1xoaZY4XYopjTmM1LjikQg=",
