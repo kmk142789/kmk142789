@@ -17,7 +17,7 @@ import json
 import os
 import random
 import time
-from typing import Callable, Dict, Iterable, Iterator, List, MutableMapping
+from typing import Callable, Dict, Iterable, Iterator, List, MutableMapping, Tuple
 
 ECHO_GLYPH = "∇⊸≋∇"
 DEFAULT_MODES = ("puzzle", "dataset", "lineage", "verifier", "narrative")
@@ -79,6 +79,12 @@ class ColossusExpansionEngine:
         """Return the directory where cycle logs are persisted."""
 
         return self._state_dir
+
+    @property
+    def modes(self) -> Tuple[str, ...]:
+        """Return the ordered modes used for artifact generation."""
+
+        return tuple(self._modes)
 
     @property
     def output_format(self) -> Dict[str, object]:
