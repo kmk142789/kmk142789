@@ -35,6 +35,11 @@ python tools/quarantine_payload.py suspicious.hex \
 The resulting JSON can be checked into `reports/sanitized/` without exposing the
 raw payload while still giving incident responders a verifiable fingerprint.
 
+Latest capture: `reports/sanitized/2025-05-11-echo-evolver-hex-window.json`
+summarises the multi-line hexadecimal block supplied through the EchoEvolver
+prompt chain. The digest anchors the suspicious content without reintroducing
+the raw bytes into the repository, keeping the incident record auditable.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 
