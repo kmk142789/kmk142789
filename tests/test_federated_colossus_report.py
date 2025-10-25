@@ -77,6 +77,7 @@ def test_generate_federated_colossus_report(tmp_path: Path) -> None:
             "cycle": 1,
             "timestamp": "2025-10-25T10:05:16Z",
             "glyph_signature": "∇≋⟁⟁::d648759b",
+            "harmonics": [1, 2, 3],
         },
     )
     _write_json(
@@ -167,6 +168,7 @@ def test_generate_federated_colossus_report(tmp_path: Path) -> None:
     assert payload["search_index"]["entries"] == 2
     assert len(payload["cycles"]) == 2
     cycle_one = next(item for item in payload["cycles"] if item["cycle"] == 1)
+    assert cycle_one["harmonics"] == [1, 2, 3]
     assert cycle_one["harmonix"]["glyphs"] == "∇⊸≋∇"
     assert cycle_one["search_hits"] == ["U1::cycle-glyph"]
     assert payload["addresses"] == [

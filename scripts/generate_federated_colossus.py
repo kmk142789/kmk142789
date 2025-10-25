@@ -9,7 +9,9 @@ import os
 import sys
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Sequence
+
+from atlas.schema import CycleTimelineEvent
 
 
 # ---------- Shared model ----------
@@ -27,6 +29,7 @@ class Entry(dict):
       - tags (List[str])
       - lineage (List[int])  # parent cycles or branch ids
       - updated_at (str ISO8601)
+      - harmonics (List[int])
     """
 
     @property
@@ -53,6 +56,28 @@ def _write_text(path: str, text: str) -> None:
         handle.write(text)
 
 
+# ---------- Normalisation helpers ----------
+def _normalise_harmonics(raw: Any) -> List[int]:
+    values: List[int] = []
+    if not isinstance(raw, list):
+        return values
+    for item in raw:
+        if isinstance(item, bool):  # bool is a subclass of int
+            continue
+        if isinstance(item, (int, float)):
+            values.append(int(item))
+            continue
+        if isinstance(item, str):
+            text = item.strip()
+            if not text:
+                continue
+            try:
+                values.append(int(text))
+            except ValueError:
+                continue
+    return values
+
+
 # ---------- Load federated graph/search data ----------
 def load_entries(paths: Iterable[str]) -> List[Entry]:
     """Accept JSON files containing entries or a map with an ``entries`` key."""
@@ -70,6 +95,7 @@ def load_entries(paths: Iterable[str]) -> List[Entry]:
             raw.setdefault("tags", [])
             raw.setdefault("lineage", [])
             raw.setdefault("updated_at", datetime.utcnow().isoformat() + "Z")
+            raw["harmonics"] = _normalise_harmonics(raw.get("harmonics", []))
             raw["cycle"] = int(raw["cycle"])
             raw["puzzle_id"] = int(raw["puzzle_id"])
             raw["address"] = str(raw["address"])
@@ -89,6 +115,12 @@ def dedupe(entries: List[Entry]) -> List[Entry]:
 
 
 # ---------- Aggregations ----------
+def _summarise_harmonics(values: Sequence[int]) -> str:
+    if not values:
+        return "—"
+    return f"{len(values)} values (min={min(values)}, max={max(values)})"
+
+
 def compute_rollups(entries: List[Entry]) -> Dict[str, Any]:
     by_cycle: Dict[int, List[Entry]] = defaultdict(list)
     by_puzzle: Dict[int, List[Entry]] = defaultdict(list)
@@ -98,6 +130,24 @@ def compute_rollups(entries: List[Entry]) -> Dict[str, Any]:
         by_cycle[entry["cycle"]].append(entry)
         by_puzzle[entry["puzzle_id"]].append(entry)
         by_address[entry["address"].lower()].append(entry)
+
+    timeline: List[CycleTimelineEvent] = []
+    for cycle, group in sorted(by_cycle.items()):
+        puzzles = sorted({entry["puzzle_id"] for entry in group})
+        harmonics: List[int] = []
+        for entry in group:
+            candidate = entry.get("harmonics", [])
+            if candidate:
+                harmonics = list(candidate)
+                break
+        timeline.append(
+            CycleTimelineEvent(
+                cycle=cycle,
+                entry_count=len(group),
+                puzzle_ids=puzzles,
+                harmonics=harmonics,
+            )
+        )
 
     return dict(
         totals=dict(
@@ -114,6 +164,7 @@ def compute_rollups(entries: List[Entry]) -> Dict[str, Any]:
             str(puzzle): sorted(group, key=lambda item: (item["cycle"], item["address"]))
             for puzzle, group in sorted(by_puzzle.items())
         },
+        timeline=timeline,
     )
 
 
@@ -135,13 +186,14 @@ def render_markdown(rollups: Dict[str, Any]) -> str:
         "",
         "## Cycle Timeline",
         "",
-        "| Cycle | Entries | Puzzle IDs |",
-        "|------:|--------:|------------|",
+        "| Cycle | Entries | Puzzle IDs | Harmonics |",
+        "|------:|--------:|------------|-----------|",
     ]
-    for cycle, entries in rollups["by_cycle"].items():
-        puzzles = sorted({entry["puzzle_id"] for entry in entries})
+    for event in rollups["timeline"]:
+        puzzle_text = ", ".join(map(str, event["puzzle_ids"])) or "—"
+        harmonics_text = _summarise_harmonics(event["harmonics"])
         lines.append(
-            f"| {cycle} | {len(entries)} | `{', '.join(map(str, puzzles))}` |"
+            f"| {event['cycle']} | {event['entry_count']} | `{puzzle_text}` | {harmonics_text} |"
         )
 
     lines += ["", "## Puzzle → Address Table", ""]
@@ -172,6 +224,7 @@ def to_dashboard_json(entries: List[Entry], rollups: Dict[str, Any]) -> Dict[str
         entries=entries,
         by_cycle=rollups["by_cycle"],
         by_puzzle=rollups["by_puzzle"],
+        timeline=rollups["timeline"],
     )
 
 
