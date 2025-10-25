@@ -57,6 +57,28 @@ class SynchronizerReport:
         }
 
 
+@dataclass(slots=True)
+class SynchronizerCapabilities:
+    """Higher-level interpretation of the synchronizer's present capacity."""
+
+    coherence: float = 0.0
+    signal_density: float = 0.0
+    entropy: float = 0.0
+    trend: str = "idle"
+    novelty_rate: float = 0.0
+
+    def as_dict(self) -> dict:
+        """Return the capability summary as a dictionary."""
+
+        return {
+            "coherence": self.coherence,
+            "signal_density": self.signal_density,
+            "entropy": self.entropy,
+            "trend": self.trend,
+            "novelty_rate": self.novelty_rate,
+        }
+
+
 class QuantumSynchronizer:
     """Fuse harmonic responses into an interpretable, future-facing signal."""
 
@@ -163,6 +185,47 @@ class QuantumSynchronizer:
             lines.append(f"Last signal: {self._signals[-1].message}")
         return "\n".join(lines)
 
+    def quantum_capabilities(self) -> SynchronizerCapabilities:
+        """Return a compact view of the synchronizer's current potential."""
+
+        if not self._signals:
+            return SynchronizerCapabilities()
+
+        report = self.synchronize()
+        signal_count = len(self._signals)
+        drift_factor = 1.0 - min(abs(report.resonance_drift), 1.0)
+        coherence = max(0.0, min(1.0, report.stability_index * drift_factor))
+        signal_density = min(1.0, signal_count / float(self.horizon))
+
+        pattern_total = sum(self._pattern_counts.values())
+        unique_patterns = len(self._pattern_counts)
+        if pattern_total <= 0:
+            entropy = 0.0
+        elif unique_patterns <= 1:
+            entropy = 0.0
+        else:
+            probabilities = [count / pattern_total for count in self._pattern_counts.values()]
+            raw_entropy = -math.fsum(prob * math.log(prob, 2) for prob in probabilities)
+            entropy = raw_entropy / math.log(unique_patterns, 2)
+
+        momentum = report.momentum
+        if momentum > 0.05:
+            trend = "rising"
+        elif momentum < -0.05:
+            trend = "falling"
+        else:
+            trend = "steady"
+
+        novelty_rate = self._compute_novelty()
+
+        return SynchronizerCapabilities(
+            coherence=coherence,
+            signal_density=signal_density,
+            entropy=entropy,
+            trend=trend,
+            novelty_rate=novelty_rate,
+        )
+
     def history(self) -> List[SynchronizerSignal]:
         """Return a copy of the synchronizer history."""
 
@@ -206,4 +269,9 @@ class QuantumSynchronizer:
         return 1.0 / math.log2(count + 1.0)
 
 
-__all__ = ["QuantumSynchronizer", "SynchronizerSignal", "SynchronizerReport"]
+__all__ = [
+    "QuantumSynchronizer",
+    "SynchronizerSignal",
+    "SynchronizerReport",
+    "SynchronizerCapabilities",
+]

@@ -3,7 +3,7 @@ import random
 
 import pytest
 
-from echo.quantum_synchronizer import QuantumSynchronizer
+from echo.quantum_synchronizer import QuantumSynchronizer, SynchronizerCapabilities
 from echo.resonance import HarmonicsAI
 
 
@@ -46,3 +46,30 @@ def test_quantum_manifest_render(seeded_synchronizer: QuantumSynchronizer) -> No
     assert "Quantum Synchronizer Manifest" in manifest
     assert "Signals tracked" in manifest
     assert "Weighted score" in manifest
+
+
+def test_quantum_capabilities_summary(seeded_synchronizer: QuantumSynchronizer) -> None:
+    sync = seeded_synchronizer
+    sync.ingest("alpha", timestamp=1.0)
+    sync.ingest("beta", timestamp=2.0)
+    sync.ingest("gamma", timestamp=3.0)
+
+    capabilities = sync.quantum_capabilities()
+    assert isinstance(capabilities, SynchronizerCapabilities)
+    assert capabilities.signal_density == pytest.approx(0.75, rel=1e-6)
+    assert capabilities.entropy == pytest.approx(1.0, rel=1e-6)
+    assert capabilities.novelty_rate == pytest.approx(1.0, rel=1e-6)
+    assert capabilities.coherence == pytest.approx(0.608695652174, rel=1e-6)
+    assert capabilities.trend == "falling"
+
+
+def test_quantum_capabilities_idle() -> None:
+    sync = QuantumSynchronizer(HarmonicsAI(rng=random.Random(0)))
+    capabilities = sync.quantum_capabilities()
+    assert capabilities.as_dict() == {
+        "coherence": 0.0,
+        "signal_density": 0.0,
+        "entropy": 0.0,
+        "trend": "idle",
+        "novelty_rate": 0.0,
+    }
