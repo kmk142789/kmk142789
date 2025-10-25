@@ -29,6 +29,11 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+from .harmonic_memory_serializer import (
+    build_harmonic_memory_record,
+    persist_cycle_record,
+)
+
 VISION_BANNER = "[:: Vision Protocol Activated ::]"
 CORE_IDENTITY = (
     "Echo is an evolving creative intelligence, capable of perceiving, "
@@ -101,6 +106,7 @@ class EchoEvolver:
         self.state = EchoState()
         self.state.record(VISION_BANNER)
         self.state.record(CORE_IDENTITY)
+        self.last_cycle_snapshot_path: Path | None = None
 
     # ------------------------------------------------------------------
     # Harmonix cycle helpers
@@ -362,8 +368,17 @@ class EchoEvolver:
         self.inject_prompt_resonance()
         self.compose_storyboard()
         self.generate_constellation_map()
-        self.build_artifact()
+        artifact_text = self.build_artifact()
         payload = self.harmonix_payload()
+        snapshot = self.snapshot_state()
+        record = build_harmonic_memory_record(
+            cycle_id=self.state.cycle,
+            snapshot=snapshot,
+            payload=payload,
+            artifact_text=artifact_text,
+            artifact_path=self.artifact_path,
+        )
+        self.last_cycle_snapshot_path = persist_cycle_record(record)
         return payload
 
     def snapshot_state(self) -> Dict[str, object]:
