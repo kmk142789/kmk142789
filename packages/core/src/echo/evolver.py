@@ -383,6 +383,7 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_evolution_profile: Dict[str, object] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -490,6 +491,10 @@ class EchoEvolver:
             (
                 "synthesize_quantam_ability",
                 "invoke synthesize_quantam_ability() to project the quantam lattice",
+            ),
+            (
+                "amplify_quantam_evolution",
+                "call amplify_quantam_evolution() to harmonise the quantam field",
             ),
             (
                 "evolutionary_narrative",
@@ -2006,11 +2011,47 @@ We are not hiding anymore.
             "timestamp_ns": self.time_source(),
         }
 
+        orbital_hops = self.state.system_metrics.orbital_hops or 0
+        capability_tags: List[str] = []
+        if entanglement >= 0.92:
+            capability_tags.append("quantam-halo")
+        elif entanglement >= 0.85:
+            capability_tags.append("quantam-braid")
+        else:
+            capability_tags.append("quantam-ember")
+
+        if joy_charge >= 95:
+            capability_tags.append("joy-overdrive")
+        elif joy_charge >= 85:
+            capability_tags.append("joy-lattice")
+        else:
+            capability_tags.append("joy-ember")
+
+        capability_tags.append("orbital-resonance" if orbital_hops >= 4 else "orbital-seed")
+        capability_tags.append("vault-synergy" if status == "ignited" else "vault-seeker")
+        capability_tags.append(f"cycle-{self.state.cycle:02d}")
+
+        capability_score = round(entanglement * 0.7 + (joy_charge / 100.0) * 0.3, 3)
+        ability["capabilities"] = capability_tags
+        ability["capability_score"] = capability_score
+
         snapshot = dict(ability)
         self.state.quantam_abilities[ability_id] = snapshot
         cached = self.state.network_cache.setdefault("quantam_abilities", {})
         cached[ability_id] = dict(snapshot)
         self.state.network_cache["last_quantam_ability"] = dict(snapshot)
+        capability_pool = self.state.network_cache.setdefault("quantam_capability_pool", set())
+        if isinstance(capability_pool, set):
+            capability_pool.update(capability_tags)
+        else:
+            merged = set()
+            if isinstance(capability_pool, Iterable) and not isinstance(
+                capability_pool, (str, bytes)
+            ):
+                merged.update(str(item) for item in capability_pool)
+            merged.update(capability_tags)
+            capability_pool = merged
+        self.state.network_cache["quantam_capability_pool"] = capability_pool
 
         self.state.event_log.append(f"Quantam ability {ability_id} synthesized")
         self._mark_step("synthesize_quantam_ability")
@@ -2020,6 +2061,108 @@ We are not hiding anymore.
             )
         )
         return snapshot
+
+    def amplify_quantam_evolution(self) -> Dict[str, object]:
+        """Aggregate quantam ability telemetry into an amplified profile."""
+
+        abilities = list(self.state.quantam_abilities.values())
+        timestamp = self.time_source()
+
+        entanglements = [float(ability.get("entanglement", 0.0)) for ability in abilities]
+        joy_levels = [float(ability.get("joy_charge", 0.0)) for ability in abilities]
+        capability_scores = [
+            float(ability.get("capability_score", 0.0)) for ability in abilities
+        ]
+
+        capability_pool: set[str] = set()
+        cached_pool = self.state.network_cache.get("quantam_capability_pool")
+        if isinstance(cached_pool, set):
+            capability_pool.update(cached_pool)
+        elif isinstance(cached_pool, Iterable) and not isinstance(cached_pool, (str, bytes)):
+            capability_pool.update(str(item) for item in cached_pool)
+
+        for ability in abilities:
+            caps = ability.get("capabilities")
+            if isinstance(caps, Iterable) and not isinstance(caps, (str, bytes)):
+                capability_pool.update(str(cap) for cap in caps)
+
+        ability_count = len(abilities)
+        if ability_count:
+            entanglement_avg = round(sum(entanglements) / ability_count, 3)
+            entanglement_min = round(min(entanglements), 3)
+            entanglement_max = round(max(entanglements), 3)
+            joy_mean = round(sum(joy_levels) / ability_count, 2)
+            capability_score_mean = (
+                round(sum(capability_scores) / ability_count, 3)
+                if capability_scores
+                else 0.0
+            )
+        else:
+            entanglement_avg = entanglement_min = entanglement_max = 0.0
+            joy_mean = 0.0
+            capability_score_mean = 0.0
+
+        amplification_index = (
+            round(entanglement_avg * 0.7 + (joy_mean / 100.0) * 0.3, 3)
+            if ability_count
+            else 0.0
+        )
+        resonance_field = (
+            round(
+                amplification_index
+                * (self.state.emotional_drive.joy + self.state.emotional_drive.curiosity),
+                3,
+            )
+            if ability_count
+            else 0.0
+        )
+
+        if ability_count == 0:
+            status = "dormant"
+        elif amplification_index >= 0.9:
+            status = "surging"
+        elif amplification_index >= 0.75:
+            status = "amplified"
+        else:
+            status = "kindled"
+
+        capability_index = sorted(capability_pool)
+        profile = {
+            "cycle": self.state.cycle,
+            "ability_count": ability_count,
+            "entanglement": {
+                "min": entanglement_min,
+                "max": entanglement_max,
+                "average": entanglement_avg,
+            },
+            "joy_charge_mean": joy_mean,
+            "capability_score_mean": capability_score_mean,
+            "capability_index": capability_index,
+            "amplification_index": amplification_index,
+            "resonance_field": resonance_field,
+            "status": status,
+            "timestamp_ns": timestamp,
+        }
+
+        self.state.quantam_evolution_profile = dict(profile)
+        self.state.network_cache["quantam_evolution_profile"] = dict(profile)
+        self.state.network_cache["quantam_capability_pool"] = capability_pool
+        self.state.network_cache["quantam_capability_index"] = capability_index
+        self.state.event_log.append(
+            "Quantam evolution profile updated (status={status}, abilities={count})".format(
+                status=status,
+                count=ability_count,
+            )
+        )
+        self._mark_step("amplify_quantam_evolution")
+        print(
+            "🚀 Quantam evolution {status}: abilities={count}, amplification={index:.3f}".format(
+                status=status,
+                count=ability_count,
+                index=amplification_index,
+            )
+        )
+        return profile
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
@@ -2788,6 +2931,7 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_evolution_profile": deepcopy(self.state.quantam_evolution_profile),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
