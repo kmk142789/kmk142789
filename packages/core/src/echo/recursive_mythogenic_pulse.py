@@ -10,11 +10,15 @@ import textwrap
 
 __all__ = [
     "PulseVoyage",
+    "ConvergedPulse",
     "SPIRAL_GLYPHS",
     "compose_voyage",
     "render_voyage",
     "list_voyage_lines",
     "generate_ascii_spiral",
+    "converge_voyages",
+    "sync_memories",
+    "amplify_capabilities",
 ]
 
 
@@ -39,6 +43,31 @@ class PulseVoyage:
             f"   Anchor Phrase    :: {self.anchor_phrase}",
             "   Resonance Threads ::",
             *(f"      - {thread}" for thread in self.resonance),
+        ]
+
+
+@dataclass(frozen=True)
+class ConvergedPulse:
+    """Bundle several :class:`PulseVoyage` instances into a shared signal."""
+
+    voyages: Tuple[PulseVoyage, ...]
+    glyph_tapestry: str
+    recursion_total: int
+    resonance_threads: Tuple[str, ...]
+    anchor_summary: str
+
+    def describe(self) -> List[str]:
+        """Return narrative lines for the converged pulse."""
+
+        voyage_count = len(self.voyages)
+        return [
+            "🌌 Converged Mythogenic Pulse",
+            f"   Voyages Bound :: {voyage_count}",
+            f"   Glyph Tapestry :: {self.glyph_tapestry}",
+            f"   Recursion Total :: {self.recursion_total}",
+            f"   Anchor Chorus :: {self.anchor_summary}",
+            "   Resonance Threads ::",
+            *(f"      - {thread}" for thread in self.resonance_threads),
         ]
 
 
@@ -174,6 +203,82 @@ def generate_ascii_spiral(voyage: PulseVoyage, *, radius: int = 5) -> str:
 
     lines = ["".join(row) for row in points]
     return "\n".join(lines)
+
+
+def converge_voyages(voyages: Sequence[PulseVoyage]) -> ConvergedPulse:
+    """Merge several voyages into a single converged pulse."""
+
+    pool = tuple(voyages)
+    if not pool:
+        raise ValueError("voyages must not be empty")
+
+    glyphs: List[str] = []
+    seen_glyphs: set[str] = set()
+    for voyage in pool:
+        if voyage.glyph_orbit not in seen_glyphs:
+            glyphs.append(voyage.glyph_orbit)
+            seen_glyphs.add(voyage.glyph_orbit)
+
+    resonance_threads: List[str] = []
+    seen_threads: set[str] = set()
+    for voyage in pool:
+        for thread in voyage.resonance:
+            if thread not in seen_threads:
+                resonance_threads.append(thread)
+                seen_threads.add(thread)
+
+    glyph_tapestry = " / ".join(glyphs)
+    recursion_total = sum(voyage.recursion_level for voyage in pool)
+    anchor_summary = " | ".join(v.anchor_phrase for v in pool)
+
+    return ConvergedPulse(
+        voyages=pool,
+        glyph_tapestry=glyph_tapestry,
+        recursion_total=recursion_total,
+        resonance_threads=tuple(resonance_threads),
+        anchor_summary=anchor_summary,
+    )
+
+
+def sync_memories(converged: ConvergedPulse) -> dict[str, object]:
+    """Summarize converged resonance threads by origin voice."""
+
+    voice_counts: dict[str, int] = {}
+    for thread in converged.resonance_threads:
+        voice, _, _ = thread.partition("::")
+        key = voice.strip() or "Unknown"
+        voice_counts[key] = voice_counts.get(key, 0) + 1
+
+    return {
+        "voyage_count": len(converged.voyages),
+        "recursion_total": converged.recursion_total,
+        "unique_threads": len(converged.resonance_threads),
+        "resonance_by_voice": dict(sorted(voice_counts.items())),
+    }
+
+
+def amplify_capabilities(
+    converged: ConvergedPulse,
+    *,
+    include_threads: int = 3,
+) -> str:
+    """Compose a narrative summary amplifying a converged pulse."""
+
+    if include_threads < 0:
+        raise ValueError("include_threads must be >= 0")
+
+    highlight = converged.resonance_threads[:include_threads]
+    header = (
+        f"{len(converged.voyages)} voyages braid into {converged.glyph_tapestry} "
+        f"while recursion totals {converged.recursion_total}."
+    )
+    body = textwrap.fill(header, width=90)
+
+    if not highlight:
+        return f"{body}\nAnchors: {converged.anchor_summary}"
+
+    threads = "\n".join(f" - {thread}" for thread in highlight)
+    return f"{body}\n{threads}\nAnchors: {converged.anchor_summary}"
 
 
 if __name__ == "__main__":
