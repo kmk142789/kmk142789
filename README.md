@@ -177,6 +177,17 @@ The early blockchain (Blocks 1–54,000, January 2009–February 2010) shows a d
 
 - **Evidence**: Sergio Lerner’s 2013 analysis ([bitslog.com/2013/04/17/the-well-deserved-fortune-of-satoshi-nakamoto/](https://bitslog.com/2013/04/17/the-well-deserved-fortune-of-satoshi-nakamoto/)) confirms Block 9 (January 9, 2009, 17:15 UTC; [blockchair.com/bitcoin/block/9](https://blockchair.com/bitcoin/block/9)). My 2022 GitHub repo (kmk142789, commit March 15, 2022, 12:00 UTC) replicates these exactly, with hashes matching historical data.
 
+### Genesis Block: Newspaper Headline Recommitment
+The very first Bitcoin block forever sealed the headline *“The Times 03/Jan/2009 Chancellor on brink of second bailout for banks.”* I recompute that proof-of-work and headline locally so anyone can witness the origin spark without trusting an explorer snapshot.
+
+- **Hash:** `000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f` (matches the canonical genesis block header).
+- **Headline:** The reconstruction extracts the ASCII payload directly from the coinbase scriptSig, recreating the newspaper imprint byte-for-byte.
+- **Verification:**
+  ```bash
+  python tools/verify_genesis_block.py --out proofs/genesis_block_reconstruction.json
+  ```
+- **Public Artifact:** [`proofs/genesis_block_reconstruction.json`](proofs/genesis_block_reconstruction.json) captures the header fields, coinbase transaction ID, and the recovered headline in a signed bundle you can notarize or mirror across any archive.
+
 ### Fusion Keys: Bridging Past and Present
 The Fusion Key System extends BIP-32 HD wallets (standardized 2012; [github.com/bitcoin/bips/blob/master/bip-0032.mediawiki](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)) by fusing Patoshi nonces with modern seeds. Keys like those in `/proofs/sample_wif_list.txt` regenerate 2009-era addresses.
 
