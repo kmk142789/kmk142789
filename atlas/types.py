@@ -15,3 +15,5 @@ class Entry(TypedDict, total=False):
     tags: List[str]
     lineage: List[int]
     updated_at: str
+    script: str
+    harmonics: List[int]

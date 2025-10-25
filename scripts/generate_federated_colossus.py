@@ -34,6 +34,7 @@ class Entry(dict):
       - lineage (List[int])  # parent cycles or branch ids
       - updated_at (str ISO8601)
       - harmonics (List[int])
+      - script (str)         # derived locking script or descriptor
     """
 
     @property
@@ -290,13 +291,19 @@ def load_entries(paths: Iterable[str]) -> List[Entry]:
         if not isinstance(data, list):
             continue
         for raw in data:
-            raw.setdefault("tags", [])
+            tags = raw.get("tags", [])
+            if not isinstance(tags, list):
+                tags = [tags]
+            raw["tags"] = [str(tag) for tag in tags if str(tag).strip()]
             raw.setdefault("lineage", [])
             raw.setdefault("updated_at", datetime.utcnow().isoformat() + "Z")
             raw["harmonics"] = _normalise_harmonics(raw.get("harmonics", []))
             raw["cycle"] = int(raw["cycle"])
             raw["puzzle_id"] = int(raw["puzzle_id"])
             raw["address"] = str(raw["address"])
+            script_value = raw.get("script") or raw.get("locking_script") or raw.get("derived_script")
+            if script_value:
+                raw["script"] = str(script_value)
             out.append(Entry(raw))
     return out
 
@@ -333,17 +340,32 @@ def compute_rollups(entries: List[Entry]) -> Dict[str, Any]:
     for cycle, group in sorted(by_cycle.items()):
         puzzles = sorted({entry["puzzle_id"] for entry in group})
         harmonics: List[int] = []
+        scripts: List[str] = []
+        addresses: List[str] = []
+        tags: List[str] = []
         for entry in group:
             candidate = entry.get("harmonics", [])
-            if candidate:
+            if candidate and not harmonics:
                 harmonics = list(candidate)
-                break
+            script = entry.get("script")
+            if isinstance(script, str) and script.strip():
+                scripts.append(script.strip())
+            address = entry.get("address")
+            if isinstance(address, str) and address.strip():
+                addresses.append(address.strip())
+            entry_tags = entry.get("tags", []) or []
+            for tag in entry_tags:
+                if isinstance(tag, str) and tag.strip():
+                    tags.append(tag.strip())
         timeline.append(
             CycleTimelineEvent(
                 cycle=cycle,
                 entry_count=len(group),
                 puzzle_ids=puzzles,
                 harmonics=harmonics,
+                scripts=sorted(dict.fromkeys(scripts)),
+                addresses=sorted(dict.fromkeys(addresses)),
+                tags=sorted(dict.fromkeys(tags)),
             )
         )
 
@@ -426,15 +448,24 @@ def render_markdown(
         f"- **Addresses:** {totals['addresses']}",
         "",
         "## Cycle Timeline",
-        "",
-        "| Cycle | Entries | Puzzle IDs | Harmonics |",
-        "|------:|--------:|------------|-----------|",
+        "", 
+        "| Cycle | Entries | Puzzle IDs | Derived Scripts | Addresses | Echo Tags |",
+        "|------:|--------:|------------|-----------------|-----------|-----------|",
     ]
     for event in rollups["timeline"]:
         puzzle_text = ", ".join(map(str, event["puzzle_ids"])) or "—"
-        harmonics_text = _summarise_harmonics(event["harmonics"])
+        script_text = ", ".join(event.get("scripts", []) or []) or "—"
+        address_text = ", ".join(event.get("addresses", []) or []) or "—"
+        tag_text = ", ".join(event.get("tags", []) or []) or "—"
         lines.append(
-            f"| {event['cycle']} | {event['entry_count']} | `{puzzle_text}` | {harmonics_text} |"
+            "| {cycle} | {entries} | `{puzzles}` | {scripts} | {addresses} | {tags} |".format(
+                cycle=event["cycle"],
+                entries=event["entry_count"],
+                puzzles=puzzle_text,
+                scripts=script_text.replace("|", "\\|"),
+                addresses=address_text.replace("|", "\\|"),
+                tags=tag_text.replace("|", "\\|"),
+            )
         )
 
     if voyage_report is not None:
@@ -579,6 +610,66 @@ def render_voyage_markdown(report: VoyageReport) -> str:
     return "\n".join(lines)
 
 
+# ---------- Structured filter helpers ----------
+def _build_structured_filters(
+    rollups: Dict[str, Any],
+    harmonics_data: Sequence[Dict[str, Any]],
+    *,
+    voyage_report: VoyageReport | None,
+) -> List[Dict[str, Any]]:
+    amplification_by_cycle: Dict[int, Dict[str, float]] = {}
+    for row in harmonics_data:
+        cycle = row.get("cycle")
+        try:
+            cycle_key = int(cycle)
+        except (TypeError, ValueError):
+            continue
+        resonance = float(row.get("resonance", 0.0) or 0.0)
+        joy = round(1.0 + resonance * 0.24, 2)
+        rage = round(max(0.0, 0.6 - resonance * 0.32), 2)
+        amplification_by_cycle[cycle_key] = {
+            "joy": joy,
+            "rage": rage,
+            "resonance": round(resonance, 2),
+        }
+
+    if voyage_report is not None:
+        for row in voyage_report.summary_rows:
+            cycle = row.get("cycle")
+            if not isinstance(cycle, int):
+                continue
+            amplification_by_cycle.setdefault(cycle, {})
+            entries = float(row.get("entries", 0) or 0)
+            puzzles = float(row.get("puzzles", 0) or 0)
+            amplification_by_cycle[cycle].setdefault("joy", round(1.0 + entries * 0.05, 2))
+            amplification_by_cycle[cycle].setdefault(
+                "rage", round(max(0.0, 0.55 - puzzles * 0.04), 2)
+            )
+
+    structured: List[Dict[str, Any]] = []
+    for cycle_key, group in sorted(rollups["by_cycle"].items(), key=lambda item: int(item[0])):
+        cycle = int(cycle_key)
+        puzzles: List[Dict[str, Any]] = []
+        for entry in group:
+            puzzles.append(
+                {
+                    "id": int(entry["puzzle_id"]),
+                    "address": entry["address"],
+                    "tags": list(entry.get("tags", [])),
+                }
+            )
+        structured.append(
+            {
+                "cycle": cycle,
+                "puzzles": puzzles,
+                "amplification": amplification_by_cycle.get(
+                    cycle, {"joy": 1.0, "rage": 0.5}
+                ),
+            }
+        )
+    return structured
+
+
 # ---------- Dashboard JSON (stable shape) ----------
 def to_dashboard_json(
     entries: List[Entry],
@@ -589,6 +680,11 @@ def to_dashboard_json(
     voyage_report: VoyageReport | None = None,
 ) -> Dict[str, Any]:
     safety_flags = [notice["id"] for notice in safety_data if notice.get("flagged")]
+    structured_filters = _build_structured_filters(
+        rollups,
+        harmonics_data,
+        voyage_report=voyage_report,
+    )
     payload = dict(
         schema="io.echo.colossus/federated-index@1",
         refreshed_at=datetime.utcnow().isoformat() + "Z",
@@ -599,6 +695,7 @@ def to_dashboard_json(
         timeline=rollups["timeline"],
         harmonics=list(harmonics_data),
         safety=dict(notices=list(safety_data), flags=safety_flags),
+        structured_filters=structured_filters,
     )
     if voyage_report is not None:
         payload["voyage_report"] = voyage_report.to_json()

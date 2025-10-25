@@ -25,6 +25,14 @@ class TestAtlasSearchHelpers(unittest.TestCase):
         results = filter_entries(SAMPLE, cycle=2, puzzle_id=130, address="1aaa")
         self.assertEqual(len(results), 1)
 
+    def test_filter_address_substring(self) -> None:
+        results = filter_entries(SAMPLE, address="1A")
+        self.assertEqual(len(results), 2)
+
+    def test_filter_address_regex(self) -> None:
+        results = filter_entries(SAMPLE, address="^1b")
+        self.assertEqual(len(results), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
