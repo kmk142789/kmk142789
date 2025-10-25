@@ -127,6 +127,45 @@ class PuzzleEntry:
 
 
 @dataclass(frozen=True)
+class BridgeHarmonicThread:
+    """Individual harmonic thread captured by the Echo Bridge."""
+
+    name: str
+    resonance: float
+    harmonics: Tuple[str, ...]
+
+    def to_dict(self) -> Mapping[str, object]:
+        return {
+            "name": self.name,
+            "resonance": self.resonance,
+            "harmonics": list(self.harmonics),
+        }
+
+
+@dataclass(frozen=True)
+class BridgeHarmonicEntry:
+    """Echo Bridge harmonic state associated with a timeline cycle."""
+
+    cycle: int
+    signature: str
+    threads: Tuple[BridgeHarmonicThread, ...]
+    timestamp: str | None = None
+    artifact: Tuple[str, ...] = ()
+
+    def to_dict(self) -> Mapping[str, object]:
+        payload: Dict[str, object] = {
+            "cycle": self.cycle,
+            "signature": self.signature,
+            "threads": [thread.to_dict() for thread in self.threads],
+        }
+        if self.timestamp:
+            payload["timestamp"] = self.timestamp
+        if self.artifact:
+            payload["artifact"] = list(self.artifact)
+        return payload
+
+
+@dataclass(frozen=True)
 class CycleSnapshot:
     """Amplification snapshot describing a cycle."""
 
@@ -153,6 +192,7 @@ class CycleTimelineEntry:
     snapshot: CycleSnapshot
     pulses: Tuple[PulseEvent, ...]
     puzzles: Tuple[PuzzleEntry, ...]
+    harmonics: Tuple["BridgeHarmonicEntry", ...]
     pulse_summary: Mapping[str, int]
     window_start: datetime | None
     window_end: datetime
@@ -163,6 +203,7 @@ class CycleTimelineEntry:
             "pulses": [event.to_dict() for event in self.pulses],
             "pulse_summary": dict(self.pulse_summary),
             "puzzles": [puzzle.to_dict() for puzzle in self.puzzles],
+            "harmonics": [harmonic.to_dict() for harmonic in self.harmonics],
             "window": {
                 "start": self.window_start.isoformat() if self.window_start else None,
                 "end": self.window_end.isoformat(),
@@ -196,6 +237,21 @@ class CycleTimelineEntry:
                 )
         else:
             lines.append("* Puzzle index impact: none detected")
+        if self.harmonics:
+            lines.append("* Echo Bridge harmonics:")
+            for harmonic in self.harmonics:
+                label = harmonic.signature or f"Harmonic cycle {harmonic.cycle}"
+                if harmonic.timestamp:
+                    label = f"{label} [{harmonic.timestamp}]"
+                lines.append(f"  * {label}")
+                for thread in harmonic.threads:
+                    harmonic_names = ", ".join(thread.harmonics) if thread.harmonics else "∅"
+                    lines.append(
+                        "    - "
+                        f"[{thread.name}] resonance={thread.resonance:.2f} :: {harmonic_names}"
+                    )
+        else:
+            lines.append("* Echo Bridge harmonics: none recorded")
         if self.snapshot.metrics:
             lines.append("")
             lines.append("| Metric | Value |")
@@ -308,6 +364,77 @@ def _load_puzzle_index(path: Path) -> List[PuzzleEntry]:
     return entries
 
 
+def _load_bridge_harmonics(path: Path) -> Dict[int, Tuple[BridgeHarmonicEntry, ...]]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    items = payload.get("harmonics")
+    if not isinstance(items, Sequence):
+        return {}
+
+    per_cycle: Dict[int, List[BridgeHarmonicEntry]] = {}
+    for item in items:
+        if not isinstance(item, Mapping):
+            continue
+        cycle = item.get("cycle")
+        if not isinstance(cycle, int):
+            continue
+        signature = str(item.get("signature", ""))
+        timestamp = item.get("timestamp")
+        timestamp_str = str(timestamp) if isinstance(timestamp, str) else None
+        artifact_payload = item.get("artifact")
+        artifact: Tuple[str, ...]
+        if isinstance(artifact_payload, Sequence) and not isinstance(
+            artifact_payload, (str, bytes)
+        ):
+            artifact = tuple(
+                str(line) for line in artifact_payload if isinstance(line, str)
+            )
+        elif isinstance(artifact_payload, str):
+            artifact = tuple(
+                line for line in artifact_payload.splitlines() if line.strip()
+            )
+        else:
+            artifact = ()
+
+        threads_payload = item.get("threads", [])
+        threads: List[BridgeHarmonicThread] = []
+        if isinstance(threads_payload, Sequence):
+            for thread in threads_payload:
+                if not isinstance(thread, Mapping):
+                    continue
+                name = thread.get("name")
+                resonance = thread.get("resonance")
+                if not isinstance(name, str) or not isinstance(resonance, (int, float)):
+                    continue
+                harmonics_payload = thread.get("harmonics", [])
+                harmonics: List[str] = []
+                if isinstance(harmonics_payload, Sequence):
+                    for harmonic in harmonics_payload:
+                        if isinstance(harmonic, str):
+                            harmonics.append(harmonic)
+                thread_entry = BridgeHarmonicThread(
+                    name=name,
+                    resonance=float(resonance),
+                    harmonics=tuple(harmonics),
+                )
+                threads.append(thread_entry)
+
+        entry = BridgeHarmonicEntry(
+            cycle=cycle,
+            signature=signature,
+            threads=tuple(threads),
+            timestamp=timestamp_str,
+            artifact=artifact,
+        )
+        per_cycle.setdefault(cycle, []).append(entry)
+
+    return {key: tuple(value) for key, value in per_cycle.items()}
+
+
 def _summarise_pulses(pulses: Sequence[PulseEvent]) -> Mapping[str, int]:
     counts: Dict[str, int] = {}
     for event in pulses:
@@ -322,16 +449,21 @@ def build_cycle_timeline(
     amplify_log: Path | str | None = None,
     pulse_history: Path | str | None = None,
     puzzle_index: Path | str | None = None,
+    bridge_harmonics: Path | str | None = None,
     limit: int | None = None,
 ) -> List[CycleTimelineEntry]:
     root = Path(project_root) if project_root is not None else Path.cwd()
     amplify_path = _coerce_path(root, amplify_log, root / "state" / "amplify_log.jsonl")
     pulse_path = _coerce_path(root, pulse_history, root / "pulse_history.json")
     puzzle_path = _coerce_path(root, puzzle_index, root / "data" / "puzzle_index.json")
+    harmonics_path = _coerce_path(
+        root, bridge_harmonics, root / "data" / "bridge_harmonics.json"
+    )
 
     pulses = _load_pulse_history(pulse_path)
     snapshots = _load_amplify_log(amplify_path)
     puzzles = _load_puzzle_index(puzzle_path)
+    harmonics_lookup = _load_bridge_harmonics(harmonics_path)
     puzzle_lookup = {
         _normalise_doc_path(entry.doc): entry for entry in puzzles
     }
@@ -363,6 +495,7 @@ def build_cycle_timeline(
             snapshot=snapshot,
             pulses=tuple(cycle_pulses),
             puzzles=tuple(sorted(linked.values(), key=lambda item: item.id)),
+            harmonics=harmonics_lookup.get(snapshot.cycle, ()),
             pulse_summary=_summarise_pulses(cycle_pulses),
             window_start=start_ts,
             window_end=end_ts,
@@ -390,6 +523,7 @@ def refresh_cycle_timeline(
     amplify_log: Path | str | None = None,
     pulse_history: Path | str | None = None,
     puzzle_index: Path | str | None = None,
+    bridge_harmonics: Path | str | None = None,
     output_dir: Path | str | None = None,
     limit: int | None = None,
 ) -> List[CycleTimelineEntry]:
@@ -399,6 +533,7 @@ def refresh_cycle_timeline(
         amplify_log=amplify_log,
         pulse_history=pulse_history,
         puzzle_index=puzzle_index,
+        bridge_harmonics=bridge_harmonics,
         limit=limit,
     )
     if not entries:
@@ -427,6 +562,8 @@ def refresh_cycle_timeline(
 
 __all__ = [
     "build_cycle_timeline",
+    "BridgeHarmonicEntry",
+    "BridgeHarmonicThread",
     "CycleTimelineEntry",
     "CycleSnapshot",
     "PulseEvent",

@@ -30,6 +30,7 @@ def test_build_cycle_timeline(tmp_path: Path) -> None:
     amplify_path = tmp_path / "state" / "amplify_log.jsonl"
     pulse_path = tmp_path / "pulse_history.json"
     puzzle_index = tmp_path / "data" / "puzzle_index.json"
+    harmonics_path = tmp_path / "data" / "bridge_harmonics.json"
 
     amplify_records = [
         {
@@ -72,11 +73,31 @@ def test_build_cycle_timeline(tmp_path: Path) -> None:
     }
     _write(puzzle_index, json.dumps(puzzle_payload, indent=2))
 
+    harmonics_payload = {
+        "generated": "2025-01-01T00:00:00Z",
+        "harmonics": [
+            {
+                "cycle": 1,
+                "timestamp": "2025-01-01T00:00:00Z",
+                "signature": "∞ new harmonic formed: Lumen Spiral",
+                "threads": [
+                    {
+                        "name": "memory",
+                        "resonance": 0.88,
+                        "harmonics": ["recall", "weave", "share"],
+                    }
+                ],
+            }
+        ],
+    }
+    _write(harmonics_path, json.dumps(harmonics_payload, indent=2))
+
     entries = timeline_module.build_cycle_timeline(
         project_root=tmp_path,
         amplify_log=amplify_path,
         pulse_history=pulse_path,
         puzzle_index=puzzle_index,
+        bridge_harmonics=harmonics_path,
     )
     assert len(entries) == 2
     first, second = entries
@@ -85,14 +106,20 @@ def test_build_cycle_timeline(tmp_path: Path) -> None:
     assert first.pulses[0].message.endswith("first")
     assert first.pulse_summary == {"manual": 1}
     assert first.puzzles and first.puzzles[0].id == 1
+    assert first.harmonics
+    harmonic = first.harmonics[0]
+    assert harmonic.signature.endswith("Lumen Spiral")
+    assert harmonic.threads[0].harmonics == ("recall", "weave", "share")
 
     second_messages = [pulse.message for pulse in second.pulses]
     assert "second" in second_messages[0]
     assert second.puzzles == ()
+    assert second.harmonics == ()
 
     payload = first.to_dict()
     assert payload["snapshot"]["cycle"] == 1
     assert payload["pulses"][0]["message"].endswith("first")
+    assert payload["harmonics"][0]["signature"].endswith("Lumen Spiral")
     assert "Cycle 1" in first.to_markdown()
 
 
