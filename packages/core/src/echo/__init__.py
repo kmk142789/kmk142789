@@ -82,6 +82,13 @@ from .hypernova import (
     ScoreFragment,
 )
 from .impossible_realities import ImpossibleEvent, ImpossibleRealityEngine
+from .innovation_wave import (
+    InnovationSpark,
+    InnovationWave,
+    InnovationWaveReport,
+    SynergyBridge,
+    render_wave_map,
+)
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .moonshot import MoonshotLens, MoonshotReport, PlanSummary, PulseSummary, WishSummary
