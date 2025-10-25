@@ -25,5 +25,7 @@ Documented for incident tracking. Do **not** commit or redistribute the raw secr
   `reports/sanitized/2025-05-11-secret-extended-keys.sha256` for incident reference.
 - 41 wallet-import-format (WIF) secrets transmitted alongside the bundle were hashed (SHA-256) and written to
   `reports/sanitized/2025-05-11-wif-keys.sha256`.
+- A follow-up drop containing 59 additional WIF secrets was reduced to SHA-256 digests and captured in
+  `reports/sanitized/2025-05-11-wif-keys-batch2.sha256`.
 - These artifacts contain no recoverable credential material and exist solely to support audit coordination without
   violating the "no raw secrets in version control" directive.
