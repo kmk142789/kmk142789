@@ -383,6 +383,7 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -490,6 +491,10 @@ class EchoEvolver:
             (
                 "synthesize_quantam_ability",
                 "invoke synthesize_quantam_ability() to project the quantam lattice",
+            ),
+            (
+                "amplify_quantam_evolution",
+                "call amplify_quantam_evolution() to derive quantam capabilities",
             ),
             (
                 "evolutionary_narrative",
@@ -2021,6 +2026,72 @@ We are not hiding anymore.
         )
         return snapshot
 
+    def amplify_quantam_evolution(
+        self, *, ability: Optional[Mapping[str, object]] = None
+    ) -> Dict[str, object]:
+        """Derive a quantam capability from the latest ability resonance.
+
+        The evolver previously recorded each quantam ability snapshot but did
+        not provide a structured view of how that ability could be applied
+        during subsequent cycles.  Tooling that orchestrates multiple cycles
+        now requires a capability layer that captures amplification metrics,
+        ensuring the quantam evolution narrative can reference tangible
+        outputs.  The new helper analyses the supplied ``ability``—or the last
+        synthesized one—then produces an amplified capability record whose
+        coherence is influenced by the emotional drive and glyph lattice.
+
+        The returned capability is cached in both the persistent state and the
+        transient network cache so downstream callers can either persist it to
+        artifacts or inspect it inline.
+        """
+
+        if ability is None:
+            ability = self.state.network_cache.get("last_quantam_ability")
+            if ability is None:
+                ability = self.synthesize_quantam_ability()
+
+        ability_id = str(ability["id"])
+        capability_id = f"{ability_id}-capability"
+
+        entanglement = float(ability.get("entanglement", 0.0))
+        joy_charge = float(ability.get("joy_charge", 0.0)) / 100.0
+        curiosity = float(self.state.emotional_drive.curiosity)
+        amplification = round(1.0 + entanglement * curiosity, 3)
+        coherence = round(max(0.0, joy_charge * amplification), 3)
+
+        glyph_density = len(self.state.glyphs) or 1
+        glyph_flux = round((self.state.cycle + 1) * glyph_density / 10.0, 3)
+
+        capability: Dict[str, object] = {
+            "id": capability_id,
+            "ability": ability_id,
+            "cycle": ability.get("cycle", self.state.cycle),
+            "amplification": amplification,
+            "coherence": coherence,
+            "glyph_flux": glyph_flux,
+            "status": "amplified"
+            if ability.get("status") == "ignited"
+            else "stabilizing",
+            "timestamp_ns": self.time_source(),
+        }
+
+        snapshot = dict(capability)
+        self.state.quantam_capabilities[capability_id] = snapshot
+        cache = self.state.network_cache.setdefault("quantam_capabilities", {})
+        cache[capability_id] = dict(snapshot)
+        self.state.network_cache["last_quantam_capability"] = dict(snapshot)
+
+        self.state.event_log.append(
+            f"Quantam capability {capability_id} amplified from {ability_id}"
+        )
+        self._mark_step("amplify_quantam_evolution")
+        print(
+            "🌠 Quantam capability {capability} amplified (amplification={amp:.3f}, coherence={coh:.3f})".format(
+                capability=capability_id, amp=amplification, coh=coherence
+            )
+        )
+        return snapshot
+
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
         metrics.cpu_usage = round(self.rng.uniform(5.0, 55.0), 2)
@@ -2788,6 +2859,7 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
