@@ -22,6 +22,13 @@ from typing import List, MutableMapping, Optional, Sequence
 REPO_ROOT = Path(__file__).resolve().parents[1]
 COLOSSUS_ROOT = REPO_ROOT / "colossus"
 PUZZLE_SOLUTIONS_ROOT = REPO_ROOT / "puzzle_solutions"
+
+# Only a subset of the historic Bitcoin puzzles have been reconstructed and
+# vetted within the Colossus index.  The attestation set begins with puzzle 200
+# and later entries, so we suppress older files when building the summary even
+# if they fall within the caller provided range.  This keeps the generated
+# tables aligned with the human curated ``colossus_master_index`` output.
+MIN_DOCUMENTED_PUZZLE = 200
 PULSE_PATH = REPO_ROOT / "pulse.json"
 PULSE_HISTORY_PATH = REPO_ROOT / "pulse_history.json"
 LEDGER_PATH = REPO_ROOT / "genesis_ledger" / "ledger.jsonl"
@@ -230,12 +237,13 @@ def collect_puzzle_solutions(min_puzzle: int, max_puzzle: int, root: Path = PUZZ
     if not root.exists():
         return []
     summaries: List[PuzzleSolutionSummary] = []
+    effective_min = max(min_puzzle, MIN_DOCUMENTED_PUZZLE)
     for path in root.glob("puzzle_*.md"):
         match = re.search(r"puzzle_(\d+)\.md$", path.name)
         if not match:
             continue
         puzzle_id = int(match.group(1))
-        if puzzle_id < min_puzzle or puzzle_id > max_puzzle:
+        if puzzle_id < effective_min or puzzle_id > max_puzzle:
             continue
         text = path.read_text(encoding="utf-8")
         hash_match = _HASH160_RE.search(text)

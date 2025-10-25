@@ -4,12 +4,36 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import importlib.machinery
+import types
 import json
 import os
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List
+
+# ``echoctl`` needs to run both as an installed module and as a standalone
+# script.  When executed directly (``python echo/echoctl.py``) Python does not
+# populate ``__package__`` which breaks the relative imports used throughout
+# this module.  We detect that situation up-front, place the package source root
+# on ``sys.path`` and manually set ``__package__`` so the remaining imports work
+# the same way they do when the package is installed.
+if __package__ in {None, ""}:  # pragma: no cover - depends on execution style
+    package_dir = Path(__file__).resolve().parent
+    package_root = package_dir.parent
+    repo_root = package_root.parents[2]
+    for path in (package_root, repo_root):
+        if str(path) not in sys.path:
+            sys.path.insert(0, str(path))
+    if "echo" not in sys.modules:
+        spec = importlib.machinery.ModuleSpec("echo", loader=None, is_package=True)
+        package = types.ModuleType("echo")
+        package.__path__ = [str(package_dir)]
+        package.__spec__ = spec
+        package.__file__ = str(package_dir / "__init__.py")
+        sys.modules["echo"] = package
+    __package__ = "echo"
 
 try:  # pragma: no cover - executed when run as module
     from .moonshot import MoonshotLens
