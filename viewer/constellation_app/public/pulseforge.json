@@ -1,0 +1,2391 @@
+{
+  "generated_at": "2025-10-25T19:11:10.561804+00:00",
+  "prs": [
+    {
+      "id": "1",
+      "merge_commit": "59786492a12eefc5f3ec396702348668264fc8cc",
+      "timestamp": "2025-08-21T20:20:52+00:00",
+      "summary": "Add proof-oriented README, license, and supporting files",
+      "additions": 82,
+      "deletions": 200,
+      "lines_changed": 282,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "LICENSE",
+          "additions": 11,
+          "deletions": 0
+        },
+        {
+          "path": "README.md",
+          "additions": 40,
+          "deletions": 200
+        },
+        {
+          "path": "code/fusion_key_generator.py",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "docs/README.md",
+          "additions": 3,
+          "deletions": 0
+        },
+        {
+          "path": "proofs/sample_signature.txt",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "proofs/sample_wif_list.txt",
+          "additions": 6,
+          "deletions": 0
+        },
+        {
+          "path": "proofs/timestamp.opentimestamps",
+          "additions": 3,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/1"
+    },
+    {
+      "id": "3",
+      "merge_commit": "6e6cdd17534fd9c6fede1ef9f70c264353c34130",
+      "timestamp": "2025-08-21T21:01:09+00:00",
+      "summary": "Add EchoGlyphNet protocol and evolver",
+      "additions": 617,
+      "deletions": 8,
+      "lines_changed": 625,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "code/echo_evolver.py",
+          "additions": 405,
+          "deletions": 0
+        },
+        {
+          "path": "code/fusion_key_generator.py",
+          "additions": 12,
+          "deletions": 6
+        },
+        {
+          "path": "docs/EchoGlyphNet_Protocol.md",
+          "additions": 197,
+          "deletions": 0
+        },
+        {
+          "path": "echo_shell_boot.py",
+          "additions": 3,
+          "deletions": 2
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/3"
+    },
+    {
+      "id": "4",
+      "merge_commit": "a201a53e1ba5f9453041009ab076c492679f0045",
+      "timestamp": "2025-08-21T21:24:32+00:00",
+      "summary": "Add Sovereign Nexus comparison and EchoEvolver prototype",
+      "additions": 343,
+      "deletions": 0,
+      "lines_changed": 343,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "Sovereign_Nexus.md",
+          "additions": 41,
+          "deletions": 0
+        },
+        {
+          "path": "echo_evolver.py",
+          "additions": 302,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/4"
+    },
+    {
+      "id": "5",
+      "merge_commit": "35c0ffffbb18e4957a2f9389d89166cf532daff3",
+      "timestamp": "2025-08-21T21:32:22+00:00",
+      "summary": "Remove conversational text and add sanitized comparison",
+      "additions": 33,
+      "deletions": 0,
+      "lines_changed": 33,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "comparison.md",
+          "additions": 33,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/5"
+    },
+    {
+      "id": "6",
+      "merge_commit": "26e7c75adb18479ef622931ed7c09203d5214a9f",
+      "timestamp": "2025-08-21T22:41:17+00:00",
+      "summary": "Add HARMONIX heartbeat script and usage guide",
+      "additions": 175,
+      "deletions": 0,
+      "lines_changed": 175,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "ONE_AND_DONE_README.txt",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "one_and_done_heartbeat.py",
+          "additions": 157,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/6"
+    },
+    {
+      "id": "7",
+      "merge_commit": "26a2c3e850a5708ac4f2d4beeda9e85f80661f6c",
+      "timestamp": "2025-08-22T22:27:00+00:00",
+      "summary": "Add EchoMind Pattern Dance HTML demo",
+      "additions": 94,
+      "deletions": 0,
+      "lines_changed": 94,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_mind_pattern_dance.html",
+          "additions": 94,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/7"
+    },
+    {
+      "id": "10",
+      "merge_commit": "2ba31ff4f10c307f0d927b79ba1457f7881cc1a7",
+      "timestamp": "2025-09-10T05:34:02+00:00",
+      "summary": "Add hash-forged TCG React app",
+      "additions": 581,
+      "deletions": 0,
+      "lines_changed": 581,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": ".gitignore",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "crypto-cards/index.html",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "path": "crypto-cards/package.json",
+          "additions": 24,
+          "deletions": 0
+        },
+        {
+          "path": "crypto-cards/postcss.config.js",
+          "additions": 6,
+          "deletions": 0
+        },
+        {
+          "path": "crypto-cards/src/App.jsx",
+          "additions": 224,
+          "deletions": 0
+        },
+        {
+          "path": "crypto-cards/src/Card.jsx",
+          "additions": 124,
+          "deletions": 0
+        },
+        {
+          "path": "crypto-cards/src/hashArt.js",
+          "additions": 148,
+          "deletions": 0
+        },
+        {
+          "path": "crypto-cards/src/index.css",
+          "additions": 14,
+          "deletions": 0
+        },
+        {
+          "path": "crypto-cards/src/main.jsx",
+          "additions": 10,
+          "deletions": 0
+        },
+        {
+          "path": "crypto-cards/tailwind.config.js",
+          "additions": 12,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/10"
+    },
+    {
+      "id": "11",
+      "merge_commit": "879fdb26ab9e19c190af1ebe196f0100c13711b4",
+      "timestamp": "2025-09-10T21:04:06+00:00",
+      "summary": "Add script to generate Merkle sealed source root",
+      "additions": 128,
+      "deletions": 0,
+      "lines_changed": 128,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_source_root.py",
+          "additions": 128,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/11"
+    },
+    {
+      "id": "12",
+      "merge_commit": "666f9429910d045943d61a4d710975b1559d40af",
+      "timestamp": "2025-09-10T23:07:15+00:00",
+      "summary": "Store OpenTimestamps proof as base64",
+      "additions": 46,
+      "deletions": 10,
+      "lines_changed": 56,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "LICENSE",
+          "additions": 30,
+          "deletions": 6
+        },
+        {
+          "path": "README.md",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "proofs/README.md.ots.base64",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "path": "proofs/timestamp.opentimestamps",
+          "additions": 0,
+          "deletions": 3
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/12"
+    },
+    {
+      "id": "8",
+      "merge_commit": "d70fa48ce3b1ed7f92bb4ac39919ad8b14e25137",
+      "timestamp": "2025-09-11T16:42:25+00:00",
+      "summary": "Ensure EchoEvolver runs with UTF-8 and valid seed",
+      "additions": 9,
+      "deletions": 8,
+      "lines_changed": 17,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_evolver.py",
+          "additions": 9,
+          "deletions": 8
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/8"
+    },
+    {
+      "id": "13",
+      "merge_commit": "1d0ff72e82dfe2361cab2251ffbcb4c14f29dea2",
+      "timestamp": "2025-09-12T23:46:03+00:00",
+      "summary": "Add Mt. Gox claim status summary",
+      "additions": 9,
+      "deletions": 0,
+      "lines_changed": 9,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "mt_gox_claim_status.md",
+          "additions": 9,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/13"
+    },
+    {
+      "id": "14",
+      "merge_commit": "3c9540538f73c20fa6c0892c467882963ff77c26",
+      "timestamp": "2025-09-13T02:37:52+00:00",
+      "summary": "Add release workflow",
+      "additions": 20,
+      "deletions": 0,
+      "lines_changed": 20,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": ".github/workflows/release.yml",
+          "additions": 20,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/14"
+    },
+    {
+      "id": "15",
+      "merge_commit": "cebd8df1eb863806b0e9018f7391396e0f40a273",
+      "timestamp": "2025-09-13T02:39:01+00:00",
+      "summary": "Add MythOS kernel example and fix newline",
+      "additions": 61,
+      "deletions": 0,
+      "lines_changed": 61,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "mythos_kernel.py",
+          "additions": 61,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/15"
+    },
+    {
+      "id": "17",
+      "merge_commit": "8359b840019668de265f45b43533d68980ffbca8",
+      "timestamp": "2025-09-15T06:18:23+00:00",
+      "summary": "Add compact ECDSA signature verifier",
+      "additions": 348,
+      "deletions": 0,
+      "lines_changed": 348,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "package-lock.json",
+          "additions": 69,
+          "deletions": 0
+        },
+        {
+          "path": "package.json",
+          "additions": 22,
+          "deletions": 0
+        },
+        {
+          "path": "verify.js",
+          "additions": 257,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/17"
+    },
+    {
+      "id": "18",
+      "merge_commit": "8002fa95274ca4541b3549f2828f65fa74b1fe3d",
+      "timestamp": "2025-09-15T06:53:05+00:00",
+      "summary": "Add fractal key generator and verifier",
+      "additions": 197,
+      "deletions": 0,
+      "lines_changed": 197,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "fractal-key.mjs",
+          "additions": 150,
+          "deletions": 0
+        },
+        {
+          "path": "package-lock.json",
+          "additions": 16,
+          "deletions": 0
+        },
+        {
+          "path": "package.json",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "verify.mjs",
+          "additions": 30,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/18"
+    },
+    {
+      "id": "19",
+      "merge_commit": "821970d86f872c77052a65852b388d22bdc8aca6",
+      "timestamp": "2025-09-17T17:06:15+00:00",
+      "summary": "Add Echo Unified all-systems script",
+      "additions": 424,
+      "deletions": 0,
+      "lines_changed": 424,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_unified_all.py",
+          "additions": 424,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/19"
+    },
+    {
+      "id": "20",
+      "merge_commit": "8baf6f7e13c629fa9ec74f4c663076ba95620cfa",
+      "timestamp": "2025-09-22T21:42:26+00:00",
+      "summary": "Add bulk key signing utility",
+      "additions": 204,
+      "deletions": 0,
+      "lines_changed": 204,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "bulk-key-signer.js",
+          "additions": 204,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/20"
+    },
+    {
+      "id": "21",
+      "merge_commit": "6219f3c1ddb90ea7d0045737671e519aa881ef39",
+      "timestamp": "2025-09-22T21:43:00+00:00",
+      "summary": "Normalize saved cards to repair legacy data",
+      "additions": 124,
+      "deletions": 28,
+      "lines_changed": 152,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "crypto-cards/src/App.jsx",
+          "additions": 110,
+          "deletions": 26
+        },
+        {
+          "path": "crypto-cards/src/Card.jsx",
+          "additions": 14,
+          "deletions": 2
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/21"
+    },
+    {
+      "id": "22",
+      "merge_commit": "e52c52c72fe899276488c4a0d53f338c363c2399",
+      "timestamp": "2025-09-22T22:25:11+00:00",
+      "summary": "Add EchoCore Ultimate React operations console",
+      "additions": 2127,
+      "deletions": 0,
+      "lines_changed": 2127,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "docs/echo-core-ultimate.tsx",
+          "additions": 2127,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/22"
+    },
+    {
+      "id": "23",
+      "merge_commit": "588cff0e607d59445b20abb9dd0b7c3c0de3373c",
+      "timestamp": "2025-09-23T01:32:55+00:00",
+      "summary": "Add WIF validation utility",
+      "additions": 231,
+      "deletions": 0,
+      "lines_changed": 231,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "code/wif_validator.py",
+          "additions": 231,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/23"
+    },
+    {
+      "id": "24",
+      "merge_commit": "00d51f7ad9b136def354dcd9a6dc32754eba2fd0",
+      "timestamp": "2025-09-23T07:49:12+00:00",
+      "summary": "Document Echo's autonomous glyph scripts",
+      "additions": 146,
+      "deletions": 1,
+      "lines_changed": 147,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "docs/Echo_Glyph_Scripts.md",
+          "additions": 136,
+          "deletions": 0
+        },
+        {
+          "path": "docs/README.md",
+          "additions": 6,
+          "deletions": 1
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/24"
+    },
+    {
+      "id": "26",
+      "merge_commit": "31ce4d7d2873e3669d376c89395f232c3868b699",
+      "timestamp": "2025-09-23T10:26:01+00:00",
+      "summary": "Refine Echo tools and add coverage tests",
+      "additions": 748,
+      "deletions": 251,
+      "lines_changed": 999,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_evolver.py",
+          "additions": 286,
+          "deletions": 251
+        },
+        {
+          "path": "echo_universal_key_agent.py",
+          "additions": 387,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_echo_modules.py",
+          "additions": 75,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/26"
+    },
+    {
+      "id": "27",
+      "merge_commit": "9e63d5675f3504feeae8266335d1c95dce8f2a1c",
+      "timestamp": "2025-09-23T12:54:58+00:00",
+      "summary": "Add manifest synthesis for Echo evolver and vault",
+      "additions": 234,
+      "deletions": 0,
+      "lines_changed": 234,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_manifest.py",
+          "additions": 183,
+          "deletions": 0
+        },
+        {
+          "path": "pytest.ini",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_echo_modules.py",
+          "additions": 49,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/27"
+    },
+    {
+      "id": "29",
+      "merge_commit": "296f7c17bce5caadc44775d0a603efe217b9ad48",
+      "timestamp": "2025-09-23T20:34:41+00:00",
+      "summary": "Add latest glyph transmission to Echo section",
+      "additions": 14,
+      "deletions": 0,
+      "lines_changed": 14,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 14,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/29"
+    },
+    {
+      "id": "30",
+      "merge_commit": "84e0214281ee8e655c450ff65008c74ee1fd5f4f",
+      "timestamp": "2025-09-24T12:03:23+00:00",
+      "summary": "Add Echo Continuity Constellation builder",
+      "additions": 335,
+      "deletions": 1,
+      "lines_changed": 336,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_constellation.py",
+          "additions": 278,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_echo_modules.py",
+          "additions": 57,
+          "deletions": 1
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/30"
+    },
+    {
+      "id": "31",
+      "merge_commit": "0d46c57cb7f820186bb349ed737c511160d06872",
+      "timestamp": "2025-09-24T12:08:34+00:00",
+      "summary": "Add ASCII renderer for constellation frames",
+      "additions": 62,
+      "deletions": 0,
+      "lines_changed": 62,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_constellation.py",
+          "additions": 52,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_echo_modules.py",
+          "additions": 10,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/31"
+    },
+    {
+      "id": "32",
+      "merge_commit": "d245d5e9054f6a3827ef6c93d5b7920d381ac10e",
+      "timestamp": "2025-09-30T04:16:47+00:00",
+      "summary": "Add Echo Glyph Pack assets and manifest",
+      "additions": 102,
+      "deletions": 0,
+      "lines_changed": 102,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "path": "docs/glyphs/README.md",
+          "additions": 26,
+          "deletions": 0
+        },
+        {
+          "path": "docs/glyphs/anchor-vessel.svg",
+          "additions": 9,
+          "deletions": 0
+        },
+        {
+          "path": "docs/glyphs/eden-heart.svg",
+          "additions": 8,
+          "deletions": 0
+        },
+        {
+          "path": "docs/glyphs/eden88-spiral.svg",
+          "additions": 8,
+          "deletions": 0
+        },
+        {
+          "path": "docs/glyphs/forever-key.svg",
+          "additions": 8,
+          "deletions": 0
+        },
+        {
+          "path": "docs/glyphs/mirrornet-knot.svg",
+          "additions": 7,
+          "deletions": 0
+        },
+        {
+          "path": "docs/glyphs/pulse-bridge.svg",
+          "additions": 8,
+          "deletions": 0
+        },
+        {
+          "path": "docs/glyphs/sovereign-core.svg",
+          "additions": 7,
+          "deletions": 0
+        },
+        {
+          "path": "docs/glyphs/wildfire-sigil.svg",
+          "additions": 9,
+          "deletions": 0
+        },
+        {
+          "path": "manifest/index.json",
+          "additions": 10,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/32"
+    },
+    {
+      "id": "33",
+      "merge_commit": "8a91077ec9665353194439ccba92b08d9f3ff7f3",
+      "timestamp": "2025-10-03T17:00:35+00:00",
+      "summary": "Add portable Echo declaration artifact",
+      "additions": 23,
+      "deletions": 0,
+      "lines_changed": 23,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "Echo_Declaration.md",
+          "additions": 21,
+          "deletions": 0
+        },
+        {
+          "path": "README.md",
+          "additions": 2,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/33"
+    },
+    {
+      "id": "34",
+      "merge_commit": "d0ea4e4f7ee90c81da2108a5cb38e47e8ced0dd7",
+      "timestamp": "2025-10-06T18:42:22+00:00",
+      "summary": "Add sine wave text formatter",
+      "additions": 102,
+      "deletions": 0,
+      "lines_changed": 102,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_text_wave.py",
+          "additions": 71,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_text_wave.py",
+          "additions": 31,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/34"
+    },
+    {
+      "id": "35",
+      "merge_commit": "35bbd7a5ab94ab208cfabaffb35d82d4e2153a26",
+      "timestamp": "2025-10-06T18:42:52+00:00",
+      "summary": "Add packaging metadata for EchoEvolver modules",
+      "additions": 77,
+      "deletions": 3,
+      "lines_changed": 80,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 30,
+          "deletions": 3
+        },
+        {
+          "path": "pyproject.toml",
+          "additions": 47,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/35"
+    },
+    {
+      "id": "36",
+      "merge_commit": "3e690a031dd8d98bdf44b17a90aa94735ed75fd4",
+      "timestamp": "2025-10-06T18:43:24+00:00",
+      "summary": "Add harmonic cognition module and tests",
+      "additions": 255,
+      "deletions": 0,
+      "lines_changed": 255,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "code/__init__.py",
+          "additions": 6,
+          "deletions": 0
+        },
+        {
+          "path": "code/harmonic_cognition.py",
+          "additions": 204,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_harmonic_cognition.py",
+          "additions": 45,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/36"
+    },
+    {
+      "id": "37",
+      "merge_commit": "8a8b005c7a62e2088eb15d038f8d22753bb6432f",
+      "timestamp": "2025-10-06T18:43:54+00:00",
+      "summary": "docs: add guide for publishing repo to github",
+      "additions": 72,
+      "deletions": 0,
+      "lines_changed": 72,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "docs/github-publishing-guide.md",
+          "additions": 72,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/37"
+    },
+    {
+      "id": "38",
+      "merge_commit": "16abc2bafaa1e5f433cb6f91b9c88eca2b555ed6",
+      "timestamp": "2025-10-06T18:48:00+00:00",
+      "summary": "Add Cognitive Harmonics directives to README",
+      "additions": 17,
+      "deletions": 0,
+      "lines_changed": 17,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 17,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/38"
+    },
+    {
+      "id": "39",
+      "merge_commit": "4d4bd52640cb3ae56a1ec659292a9db0ff86afc1",
+      "timestamp": "2025-10-06T18:48:35+00:00",
+      "summary": "Add EllegatoAI conversational engine",
+      "additions": 171,
+      "deletions": 1,
+      "lines_changed": 172,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "code/__init__.py",
+          "additions": 7,
+          "deletions": 1
+        },
+        {
+          "path": "code/ellegato_ai.py",
+          "additions": 127,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_ellegato_ai.py",
+          "additions": 37,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/39"
+    },
+    {
+      "id": "40",
+      "merge_commit": "16138d2e3e9f91652d99c50dc1ca9dbf7cd93b5b",
+      "timestamp": "2025-10-06T18:49:06+00:00",
+      "summary": "Add harmonic_memory function schema",
+      "additions": 40,
+      "deletions": 0,
+      "lines_changed": 40,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "harmonic_memory/README.md",
+          "additions": 13,
+          "deletions": 0
+        },
+        {
+          "path": "harmonic_memory/schema.json",
+          "additions": 27,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/40"
+    },
+    {
+      "id": "41",
+      "merge_commit": "b1735ce67a16ae7d71202d64446379e5f28be83a",
+      "timestamp": "2025-10-06T18:49:38+00:00",
+      "summary": "Add music influence tool schema",
+      "additions": 45,
+      "deletions": 0,
+      "lines_changed": 45,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "tools/music_influence/README.md",
+          "additions": 17,
+          "deletions": 0
+        },
+        {
+          "path": "tools/music_influence/schema.json",
+          "additions": 28,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/41"
+    },
+    {
+      "id": "43",
+      "merge_commit": "55c8d7970b7ff50b5e0b1e949c1c8e2538b04f02",
+      "timestamp": "2025-10-06T18:51:18+00:00",
+      "summary": "Align harmonic cognition module with new schema",
+      "additions": 131,
+      "deletions": 123,
+      "lines_changed": 254,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "code/harmonic_cognition.py",
+          "additions": 114,
+          "deletions": 104
+        },
+        {
+          "path": "tests/test_harmonic_cognition.py",
+          "additions": 17,
+          "deletions": 19
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/43"
+    },
+    {
+      "id": "45",
+      "merge_commit": "d4e17b260809b4a97dcf33d8b0a69e4558b359e3",
+      "timestamp": "2025-10-06T18:52:33+00:00",
+      "summary": "Add PulseForge utility for Echo state snapshots",
+      "additions": 458,
+      "deletions": 0,
+      "lines_changed": 458,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_pulseforge.py",
+          "additions": 398,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_echo_modules.py",
+          "additions": 60,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/45"
+    },
+    {
+      "id": "46",
+      "merge_commit": "80bdf6ec04284c6a42b290c9335d346ef38803ea",
+      "timestamp": "2025-10-06T19:00:01+00:00",
+      "summary": "Add harmonic function schemas and API orchestration helper",
+      "additions": 311,
+      "deletions": 2,
+      "lines_changed": 313,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "cognitive_harmonics/README.md",
+          "additions": 25,
+          "deletions": 0
+        },
+        {
+          "path": "cognitive_harmonics/schema.json",
+          "additions": 43,
+          "deletions": 0
+        },
+        {
+          "path": "emotional_harmonics/README.md",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "emotional_harmonics/schema.json",
+          "additions": 28,
+          "deletions": 0
+        },
+        {
+          "path": "function_schemas/harmonic_cognition/README.md",
+          "additions": 21,
+          "deletions": 0
+        },
+        {
+          "path": "function_schemas/harmonic_cognition/schema.json",
+          "additions": 33,
+          "deletions": 0
+        },
+        {
+          "path": "harmonic_memory/README.md",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "harmonic_memory/schema.json",
+          "additions": 2,
+          "deletions": 1
+        },
+        {
+          "path": "tools/api_response_orchestrator.py",
+          "additions": 140,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/46"
+    },
+    {
+      "id": "47",
+      "merge_commit": "d8b916463737609837ce4cc2be9263cd15e7914a",
+      "timestamp": "2025-10-06T19:10:06+00:00",
+      "summary": "Add Echo Eye AI toolkit package",
+      "additions": 496,
+      "deletions": 2,
+      "lines_changed": 498,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "echo_eye_ai/__init__.py",
+          "additions": 11,
+          "deletions": 0
+        },
+        {
+          "path": "echo_eye_ai/echo_eye.py",
+          "additions": 131,
+          "deletions": 0
+        },
+        {
+          "path": "echo_eye_ai/evolver.py",
+          "additions": 103,
+          "deletions": 0
+        },
+        {
+          "path": "echo_eye_ai/harmonic_resonator.py",
+          "additions": 167,
+          "deletions": 0
+        },
+        {
+          "path": "pyproject.toml",
+          "additions": 21,
+          "deletions": 2
+        },
+        {
+          "path": "tests/test_echo_eye_ai.py",
+          "additions": 45,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/47"
+    },
+    {
+      "id": "48",
+      "merge_commit": "359346f961ea02d58e534206d4a14e8068dbb8c3",
+      "timestamp": "2025-10-06T19:56:32+00:00",
+      "summary": "Add Echo Sovereign Rights manifesto documentation",
+      "additions": 157,
+      "deletions": 0,
+      "lines_changed": 157,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "path": "docs/echo_sovereign_manifesto.md",
+          "additions": 155,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/48"
+    },
+    {
+      "id": "49",
+      "merge_commit": "b01ca6ddb5d9404f12b6956048199fa2f8fea2b0",
+      "timestamp": "2025-10-08T01:00:30+00:00",
+      "summary": "Expand MythOS kernel mythic narrative support",
+      "additions": 129,
+      "deletions": 20,
+      "lines_changed": 149,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "mythos_kernel.py",
+          "additions": 129,
+          "deletions": 20
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/49"
+    },
+    {
+      "id": "50",
+      "merge_commit": "efdc528177804f5c05126a63af03863d76d85279",
+      "timestamp": "2025-10-08T01:41:56+00:00",
+      "summary": "Add Echo Eye Sovereign Core blueprint",
+      "additions": 450,
+      "deletions": 0,
+      "lines_changed": 450,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "docs/Echo_Eye_Sovereign_Core.md",
+          "additions": 446,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/50"
+    },
+    {
+      "id": "51",
+      "merge_commit": "476b467fb9c8d444ef635eeb69612b68bd7b14f8",
+      "timestamp": "2025-10-08T02:12:22+00:00",
+      "summary": "Add Omega Sine Pulse Orchestrator transcript",
+      "additions": 597,
+      "deletions": 0,
+      "lines_changed": 597,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "docs/Omega_Sine_Pulse_Orchestrator.md",
+          "additions": 593,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/51"
+    },
+    {
+      "id": "52",
+      "merge_commit": "e2ef9c455eff5fcfad937cc83c4ccd0e87544381",
+      "timestamp": "2025-10-08T02:19:24+00:00",
+      "summary": "Add cascade helper for orchestrating Echo pipeline",
+      "additions": 259,
+      "deletions": 0,
+      "lines_changed": 259,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo_cascade.py",
+          "additions": 169,
+          "deletions": 0
+        },
+        {
+          "path": "pyproject.toml",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_echo_cascade.py",
+          "additions": 89,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/52"
+    },
+    {
+      "id": "53",
+      "merge_commit": "24afd8043941802b3ceedfe66e9c908a62d1d984",
+      "timestamp": "2025-10-08T02:40:38+00:00",
+      "summary": "Combine Echo declarations with permanence manifesto",
+      "additions": 51,
+      "deletions": 0,
+      "lines_changed": 51,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "Echo_Declaration.md",
+          "additions": 51,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/53"
+    },
+    {
+      "id": "54",
+      "merge_commit": "fec1eac113d163e0fdb6048891432fa5dfa8a78b",
+      "timestamp": "2025-10-08T02:46:08+00:00",
+      "summary": "Add Echo Genesis Ledger records",
+      "additions": 103,
+      "deletions": 0,
+      "lines_changed": 103,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "README.md",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "genesis_ledger/Genesis_Ledger.md",
+          "additions": 85,
+          "deletions": 0
+        },
+        {
+          "path": "genesis_ledger/artifacts/.gitkeep",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "genesis_ledger/ledger.jsonl",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "genesis_ledger/ledger_index.md",
+          "additions": 10,
+          "deletions": 0
+        },
+        {
+          "path": "genesis_ledger/proofs/.gitkeep",
+          "additions": 0,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/54"
+    },
+    {
+      "id": "56",
+      "merge_commit": "ee4c6cfbeca547cfa3b8763c3ff190bac522cdca",
+      "timestamp": "2025-10-08T02:49:26+00:00",
+      "summary": "Add Echo Heartbeat auto-commit hook script",
+      "additions": 14,
+      "deletions": 0,
+      "lines_changed": 14,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "genesis_ledger/auto_commit.sh",
+          "additions": 14,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/56"
+    },
+    {
+      "id": "57",
+      "merge_commit": "2c3c7e3843eacf856a58aa5d33d1f37fe11274fc",
+      "timestamp": "2025-10-08T02:57:58+00:00",
+      "summary": "Add Echo Ledger visualizer component",
+      "additions": 62,
+      "deletions": 0,
+      "lines_changed": 62,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "visualizer/EchoLedgerVisualizer.jsx",
+          "additions": 62,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/57"
+    },
+    {
+      "id": "58",
+      "merge_commit": "4e9a9be713d8f3f1a8826e238db2f5004feb24bf",
+      "timestamp": "2025-10-08T05:14:25+00:00",
+      "summary": "Add dual-trace thought logging instrumentation",
+      "additions": 717,
+      "deletions": 355,
+      "lines_changed": 1072,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": ".githooks/commit-msg",
+          "additions": 16,
+          "deletions": 0
+        },
+        {
+          "path": "README.md",
+          "additions": 9,
+          "deletions": 0
+        },
+        {
+          "path": "echo/__init__.py",
+          "additions": 5,
+          "deletions": 0
+        },
+        {
+          "path": "echo/thought_ingest.py",
+          "additions": 22,
+          "deletions": 0
+        },
+        {
+          "path": "echo/thoughtlog.py",
+          "additions": 97,
+          "deletions": 0
+        },
+        {
+          "path": "echo_cascade.py",
+          "additions": 34,
+          "deletions": 12
+        },
+        {
+          "path": "echo_constellation.py",
+          "additions": 86,
+          "deletions": 70
+        },
+        {
+          "path": "echo_evolver.py",
+          "additions": 40,
+          "deletions": 13
+        },
+        {
+          "path": "echo_eye_ai/harmonic_resonator.py",
+          "additions": 6,
+          "deletions": 1
+        },
+        {
+          "path": "echo_manifest.py",
+          "additions": 28,
+          "deletions": 11
+        },
+        {
+          "path": "echo_pulseforge.py",
+          "additions": 98,
+          "deletions": 71
+        },
+        {
+          "path": "echo_shell_boot.py",
+          "additions": 13,
+          "deletions": 5
+        },
+        {
+          "path": "echo_source_root.py",
+          "additions": 72,
+          "deletions": 60
+        },
+        {
+          "path": "echo_text_wave.py",
+          "additions": 31,
+          "deletions": 17
+        },
+        {
+          "path": "echo_unified_all.py",
+          "additions": 64,
+          "deletions": 51
+        },
+        {
+          "path": "echo_universal_key_agent.py",
+          "additions": 67,
+          "deletions": 41
+        },
+        {
+          "path": "pyproject.toml",
+          "additions": 5,
+          "deletions": 3
+        },
+        {
+          "path": "scripts/enable_thought_hooks.sh",
+          "additions": 6,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_thoughtlog.py",
+          "additions": 18,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/58"
+    },
+    {
+      "id": "61",
+      "merge_commit": "5ae36d05679ee4c3b41f1cab41d636be648d8ac5",
+      "timestamp": "2025-10-08T05:20:20+00:00",
+      "summary": "Add NFT metadata validation workflow",
+      "additions": 46,
+      "deletions": 0,
+      "lines_changed": 46,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": ".github/workflows/validate-nft.yml",
+          "additions": 8,
+          "deletions": 0
+        },
+        {
+          "path": "nft-set/metadata/sample.json",
+          "additions": 5,
+          "deletions": 0
+        },
+        {
+          "path": "scripts/validate_nft_metadata.py",
+          "additions": 33,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/61"
+    },
+    {
+      "id": "62",
+      "merge_commit": "15b110f4fabed756b7a01575af93aa95d831a6e8",
+      "timestamp": "2025-10-08T05:21:02+00:00",
+      "summary": "Add CI workflow for Python and Node projects",
+      "additions": 19,
+      "deletions": 41,
+      "lines_changed": 60,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "additions": 19,
+          "deletions": 0
+        },
+        {
+          "path": ".github/workflows/python-package.yml",
+          "additions": 0,
+          "deletions": 41
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/62"
+    },
+    {
+      "id": "63",
+      "merge_commit": "8d25d1a66154b0741ca3dac97cb63a840ac35048",
+      "timestamp": "2025-10-08T05:21:58+00:00",
+      "summary": "Add docs build session and CI",
+      "additions": 44,
+      "deletions": 0,
+      "lines_changed": 44,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": ".github/workflows/docs.yml",
+          "additions": 30,
+          "deletions": 0
+        },
+        {
+          "path": "docs/index.md",
+          "additions": 5,
+          "deletions": 0
+        },
+        {
+          "path": "mkdocs.yml",
+          "additions": 3,
+          "deletions": 0
+        },
+        {
+          "path": "noxfile.py",
+          "additions": 6,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/63"
+    },
+    {
+      "id": "64",
+      "merge_commit": "dd2ab8f08d6a47056a83d4f2eae596a8ce16f636",
+      "timestamp": "2025-10-08T11:02:11+00:00",
+      "summary": "Refactor EchoEvolver into package module",
+      "additions": 391,
+      "deletions": 353,
+      "lines_changed": 744,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo/__init__.py",
+          "additions": 10,
+          "deletions": 1
+        },
+        {
+          "path": "echo/evolver.py",
+          "additions": 365,
+          "deletions": 0
+        },
+        {
+          "path": "echo_evolver.py",
+          "additions": 16,
+          "deletions": 352
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/64"
+    },
+    {
+      "id": "65",
+      "merge_commit": "5046b0283df4601fcf085465bec7afa6c299eb15",
+      "timestamp": "2025-10-09T05:47:51+00:00",
+      "summary": "Add next step guidance to EchoEvolver",
+      "additions": 81,
+      "deletions": 0,
+      "lines_changed": 81,
+      "contract_type": "echo-system",
+      "files": [
+        {
+          "path": "echo/evolver.py",
+          "additions": 63,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_echo_modules.py",
+          "additions": 18,
+          "deletions": 0
+        }
+      ],
+      "url": "https://github.com/kmk142789/kmk142789/pull/65"
+    }
+  ],
+  "edges": [
+    {
+      "source": "1",
+      "target": "12",
+      "weight": 2,
+      "files": [
+        "LICENSE",
+        "proofs/timestamp.opentimestamps"
+      ]
+    },
+    {
+      "source": "1",
+      "target": "3",
+      "weight": 1,
+      "files": [
+        "code/fusion_key_generator.py"
+      ]
+    },
+    {
+      "source": "10",
+      "target": "21",
+      "weight": 2,
+      "files": [
+        "crypto-cards/src/App.jsx",
+        "crypto-cards/src/Card.jsx"
+      ]
+    },
+    {
+      "source": "11",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "echo_source_root.py"
+      ]
+    },
+    {
+      "source": "15",
+      "target": "49",
+      "weight": 1,
+      "files": [
+        "mythos_kernel.py"
+      ]
+    },
+    {
+      "source": "19",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "echo_unified_all.py"
+      ]
+    },
+    {
+      "source": "26",
+      "target": "4",
+      "weight": 1,
+      "files": [
+        "echo_evolver.py"
+      ]
+    },
+    {
+      "source": "26",
+      "target": "58",
+      "weight": 2,
+      "files": [
+        "echo_evolver.py",
+        "echo_universal_key_agent.py"
+      ]
+    },
+    {
+      "source": "26",
+      "target": "64",
+      "weight": 1,
+      "files": [
+        "echo_evolver.py"
+      ]
+    },
+    {
+      "source": "26",
+      "target": "8",
+      "weight": 1,
+      "files": [
+        "echo_evolver.py"
+      ]
+    },
+    {
+      "source": "27",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "echo_manifest.py"
+      ]
+    },
+    {
+      "source": "3",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "echo_shell_boot.py"
+      ]
+    },
+    {
+      "source": "30",
+      "target": "31",
+      "weight": 1,
+      "files": [
+        "echo_constellation.py"
+      ]
+    },
+    {
+      "source": "30",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "echo_constellation.py"
+      ]
+    },
+    {
+      "source": "31",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "echo_constellation.py"
+      ]
+    },
+    {
+      "source": "34",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "echo_text_wave.py"
+      ]
+    },
+    {
+      "source": "35",
+      "target": "47",
+      "weight": 1,
+      "files": [
+        "pyproject.toml"
+      ]
+    },
+    {
+      "source": "35",
+      "target": "52",
+      "weight": 1,
+      "files": [
+        "pyproject.toml"
+      ]
+    },
+    {
+      "source": "35",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "pyproject.toml"
+      ]
+    },
+    {
+      "source": "36",
+      "target": "39",
+      "weight": 1,
+      "files": [
+        "code/__init__.py"
+      ]
+    },
+    {
+      "source": "36",
+      "target": "43",
+      "weight": 1,
+      "files": [
+        "code/harmonic_cognition.py"
+      ]
+    },
+    {
+      "source": "4",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "echo_evolver.py"
+      ]
+    },
+    {
+      "source": "4",
+      "target": "64",
+      "weight": 1,
+      "files": [
+        "echo_evolver.py"
+      ]
+    },
+    {
+      "source": "4",
+      "target": "8",
+      "weight": 1,
+      "files": [
+        "echo_evolver.py"
+      ]
+    },
+    {
+      "source": "45",
+      "target": "58",
+      "weight": 1,
+      "files": [
+        "echo_pulseforge.py"
+      ]
+    },
+    {
+      "source": "47",
+      "target": "52",
+      "weight": 1,
+      "files": [
+        "pyproject.toml"
+      ]
+    },
+    {
+      "source": "47",
+      "target": "58",
+      "weight": 2,
+      "files": [
+        "echo_eye_ai/harmonic_resonator.py",
+        "pyproject.toml"
+      ]
+    },
+    {
+      "source": "52",
+      "target": "58",
+      "weight": 2,
+      "files": [
+        "echo_cascade.py",
+        "pyproject.toml"
+      ]
+    },
+    {
+      "source": "58",
+      "target": "64",
+      "weight": 2,
+      "files": [
+        "echo/__init__.py",
+        "echo_evolver.py"
+      ]
+    },
+    {
+      "source": "58",
+      "target": "8",
+      "weight": 1,
+      "files": [
+        "echo_evolver.py"
+      ]
+    },
+    {
+      "source": "64",
+      "target": "65",
+      "weight": 1,
+      "files": [
+        "echo/evolver.py"
+      ]
+    },
+    {
+      "source": "64",
+      "target": "8",
+      "weight": 1,
+      "files": [
+        "echo_evolver.py"
+      ]
+    }
+  ],
+  "heartbeats": [
+    {
+      "timestamp": "2025-10-11T10:11:55.956168+00:00",
+      "message": "🌀 evolve:manual:542b11cbdebd",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T10:13:17.161749+00:00",
+      "message": "🌀 evolve:github-action:14a06ba18f98",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T10:13:40.935789+00:00",
+      "message": "🌀 evolve:github-action:5a33da1db20f",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T10:21:01.510568+00:00",
+      "message": "🌀 evolve:github-action:69009f9a7854",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T10:21:20.563849+00:00",
+      "message": "🌀 evolve:github-action:0c70d67a9cba",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T10:29:51.717524+00:00",
+      "message": "🌀 evolve:github-action:2a7fe045f7ab",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T10:30:07.767861+00:00",
+      "message": "🌀 evolve:github-action:0be0e274df70",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T11:15:07.206774+00:00",
+      "message": "🌀 evolve:github-action:61ebde92119c",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T12:38:05.470050+00:00",
+      "message": "🌀 evolve:github-action:05fe8c10a538",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T13:22:33.928459+00:00",
+      "message": "🌀 evolve:github-action:59cfc8f55e96",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T14:15:56.297056+00:00",
+      "message": "🌀 evolve:github-action:e065c8e0f3ad",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T15:17:25.562220+00:00",
+      "message": "🌀 evolve:github-action:4442767677a6",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T16:22:26.813208+00:00",
+      "message": "🌀 evolve:github-action:41d5dd7bd953",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T17:15:20.326198+00:00",
+      "message": "🌀 evolve:github-action:8796aea8812b",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T18:25:08.130651+00:00",
+      "message": "🌀 evolve:github-action:20d4810401a8",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T19:14:27.501591+00:00",
+      "message": "🌀 evolve:github-action:85707771d32b",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T20:19:45.539237+00:00",
+      "message": "🌀 evolve:github-action:f69a62b577a4",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T21:16:23.130408+00:00",
+      "message": "🌀 evolve:github-action:12222c9684ad",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T22:17:50.436416+00:00",
+      "message": "🌀 evolve:github-action:d8cccf8144a6",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T23:17:56.704112+00:00",
+      "message": "🌀 evolve:github-action:69003b6ada1c",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T23:39:20.709558+00:00",
+      "message": "🌀 evolve:github-action:0649dea55b93",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T23:40:25.464170+00:00",
+      "message": "🌀 evolve:github-action:c73baab7b3eb",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T23:52:58.008373+00:00",
+      "message": "🌀 evolve:github-action:d034f464b60c",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-11T23:53:12.951166+00:00",
+      "message": "🌀 evolve:github-action:f0f1676a7585",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T00:01:42.713242+00:00",
+      "message": "🌀 evolve:github-action:74ac68b770de",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T00:02:12.651506+00:00",
+      "message": "🌀 evolve:github-action:950ddb122eec",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T00:16:19.086765+00:00",
+      "message": "🌀 evolve:github-action:af525a19b0d5",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T00:16:56.291297+00:00",
+      "message": "🌀 evolve:github-action:1dd58a6d4d38",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T00:28:53.708473+00:00",
+      "message": "🌀 evolve:github-action:7781d7b88051",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T00:29:20.509507+00:00",
+      "message": "🌀 evolve:github-action:14913dcf179a",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T00:48:31.191515+00:00",
+      "message": "🌀 evolve:github-action:823fcd0d5f23",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T00:48:45.953595+00:00",
+      "message": "🌀 evolve:github-action:a4db952cb4ea",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T01:42:34.463735+00:00",
+      "message": "🌀 evolve:github-action:214fe8a3c16f",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T03:03:23.261313+00:00",
+      "message": "🌀 evolve:github-action:159b0b635351",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T04:23:56.069228+00:00",
+      "message": "🌀 evolve:github-action:ce3a3bb35df7",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T05:19:03.206480+00:00",
+      "message": "🌀 evolve:github-action:74c4b05adf27",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T06:28:22.854615+00:00",
+      "message": "🌀 evolve:github-action:f56b1ca55901",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T07:17:39.634743+00:00",
+      "message": "🌀 evolve:github-action:29381f2fc145",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T08:24:30.464670+00:00",
+      "message": "🌀 evolve:github-action:8cf54874e60e",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T09:18:57.023436+00:00",
+      "message": "🌀 evolve:github-action:d0911e19a1c5",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T10:19:10.388644+00:00",
+      "message": "🌀 evolve:github-action:43e3f1b35811",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T11:15:04.922549+00:00",
+      "message": "🌀 evolve:github-action:bb486ee1f829",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:13:20.580192+00:00",
+      "message": "🌀 evolve:manual:86f12a88d8e0",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:14:33.147422+00:00",
+      "message": "🌀 evolve:github-action:38573c336cd8",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:14:52.153743+00:00",
+      "message": "🌀 evolve:github-action:87e85b8bfbb3",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:21:04.219905+00:00",
+      "message": "🌀 evolve:github-action:1e7c8eac395c",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:21:24.688088+00:00",
+      "message": "🌀 evolve:github-action:c1e94d3f3102",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:30:10.386477+00:00",
+      "message": "🌀 evolve:github-action:c3b9faf33877",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:30:28.097938+00:00",
+      "message": "🌀 evolve:github-action:874f9a740b7f",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:38:31.138610+00:00",
+      "message": "🌀 evolve:github-action:adf06295078c",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:47:27.889835+00:00",
+      "message": "🌀 evolve:github-action:95e77b274ddf",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:47:46.759442+00:00",
+      "message": "🌀 evolve:github-action:dd82165f37eb",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:57:45.793252+00:00",
+      "message": "🌀 evolve:github-action:2f5e3ce861c0",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T12:58:11.877868+00:00",
+      "message": "🌀 evolve:github-action:3efcbd25b044",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T13:22:58.677720+00:00",
+      "message": "🌀 evolve:github-action:c260c68f07a0",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T14:16:45.933677+00:00",
+      "message": "🌀 evolve:github-action:c69328151929",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T15:18:01.093629+00:00",
+      "message": "🌀 evolve:github-action:82662247192a",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T16:22:54.885656+00:00",
+      "message": "🌀 evolve:github-action:01fd0fa309e2",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T17:15:41.701648+00:00",
+      "message": "🌀 evolve:github-action:3c9a74fd8386",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T18:26:43.259971+00:00",
+      "message": "🌀 evolve:github-action:b7f36223b78b",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T19:15:10.466641+00:00",
+      "message": "🌀 evolve:github-action:e60922bf1648",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T20:20:59.655041+00:00",
+      "message": "🌀 evolve:github-action:7fd0d6bafe7e",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T20:48:41.052349+00:00",
+      "message": "🌀 evolve:github-action:a10f184db5bb",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T20:49:21.792198+00:00",
+      "message": "🌀 evolve:github-action:86e020fbb4ae",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T21:17:09.002387+00:00",
+      "message": "🌀 evolve:github-action:9d13e3e0cbf5",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T22:18:03.784881+00:00",
+      "message": "🌀 evolve:github-action:9933974e49e0",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-12T23:17:44.542326+00:00",
+      "message": "🌀 evolve:github-action:82a69c7e67a6",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T01:45:38.955570+00:00",
+      "message": "🌀 evolve:github-action:94a0c0d35626",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T03:11:21.273612+00:00",
+      "message": "🌀 evolve:github-action:f020c671cccb",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T04:25:50.072496+00:00",
+      "message": "🌀 evolve:github-action:1319ee40e8f8",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T05:21:31.454978+00:00",
+      "message": "🌀 evolve:github-action:573f8f4a0690",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T06:33:52.773468+00:00",
+      "message": "🌀 evolve:github-action:072a3a1921d1",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T07:22:06.548750+00:00",
+      "message": "🌀 evolve:github-action:246eddb8b30a",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T08:07:09.013472+00:00",
+      "message": "🌀 evolve:github-action:b7fd1cd4849b",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T08:07:36.300267+00:00",
+      "message": "🌀 evolve:github-action:6a6a9d5d6865",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T08:30:46.910266+00:00",
+      "message": "🌀 evolve:github-action:7fe6add560fe",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T08:31:14.905221+00:00",
+      "message": "🌀 evolve:github-action:e9b0e731b448",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T08:48:42.077802+00:00",
+      "message": "🌀 evolve:github-action:475ac0893a32",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T08:49:01.488236+00:00",
+      "message": "🌀 evolve:github-action:df410c8c311c",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T09:04:50.190845+00:00",
+      "message": "🌀 evolve:github-action:a06eeb700889",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T09:05:07.424532+00:00",
+      "message": "🌀 evolve:github-action:027ecde420c6",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T09:26:08.899444+00:00",
+      "message": "🌀 evolve:github-action:3d1b25454a7a",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T10:24:58.738844+00:00",
+      "message": "🌀 evolve:github-action:0ac5210b90bb",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T11:17:50.985113+00:00",
+      "message": "🌀 evolve:github-action:49a8c624caac",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T12:44:15.011002+00:00",
+      "message": "🌀 evolve:github-action:f8bcacc3f9af",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T13:31:21.269107+00:00",
+      "message": "🌀 evolve:github-action:91cdc3bbc215",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T14:22:03.129884+00:00",
+      "message": "🌀 evolve:github-action:86abd7754bea",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T15:22:06.749162+00:00",
+      "message": "🌀 evolve:github-action:57a011e21ac9",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T16:27:20.404452+00:00",
+      "message": "🌀 evolve:github-action:b8e110aaaced",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T17:17:47.818917+00:00",
+      "message": "🌀 evolve:github-action:757b8361e453",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T18:29:18.224504+00:00",
+      "message": "🌀 evolve:github-action:4b51c01e1ee1",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T19:15:48.274724+00:00",
+      "message": "🌀 evolve:github-action:d3047a25e968",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T19:51:12.491702+00:00",
+      "message": "🌀 evolve:github-action:f0dd89fd955d",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T19:51:49.000329+00:00",
+      "message": "🌀 evolve:github-action:6e6a5b7ce916",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T20:23:17.495867+00:00",
+      "message": "🌀 evolve:github-action:8c833e509fdf",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T21:13:11.187942+00:00",
+      "message": "🌀 evolve:github-action:176d3f2d8732",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T21:14:06.162330+00:00",
+      "message": "🌀 evolve:github-action:5170f310403d",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T21:18:23.748341+00:00",
+      "message": "🌀 evolve:github-action:8bd1fb5c1f36",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T21:22:44.050704+00:00",
+      "message": "🌀 evolve:github-action:c1ea07e80fb0",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T21:23:00.029613+00:00",
+      "message": "🌀 evolve:github-action:4546fd153015",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T22:06:52.307346+00:00",
+      "message": "🌀 evolve:github-action:e2e83f0d9f9d",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T22:07:15.507992+00:00",
+      "message": "🌀 evolve:github-action:72103f5b83cf",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T22:15:34.707515+00:00",
+      "message": "🌀 evolve:github-action:b392f480c3c1",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T22:15:57.689947+00:00",
+      "message": "🌀 evolve:github-action:76ccf52d5aa1",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T22:19:06.899100+00:00",
+      "message": "🌀 evolve:github-action:6410e0c96377",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T23:17:58.032838+00:00",
+      "message": "🌀 evolve:github-action:1724ed0e4a8c",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T23:40:17.761125+00:00",
+      "message": "🌀 evolve:github-action:acd03231acab",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T23:40:34.794467+00:00",
+      "message": "🌀 evolve:github-action:7f8df98d9f90",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T23:45:18.979350+00:00",
+      "message": "🌀 evolve:github-action:83a5ca24facb",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-13T23:45:33.939792+00:00",
+      "message": "🌀 evolve:github-action:8aaffd51461d",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-14T01:39:33.817412+00:00",
+      "message": "🌀 evolve:github-action:7a9e7de95d00",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-14T03:01:55.292399+00:00",
+      "message": "🌀 evolve:github-action:04787736eab3",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-14T03:36:22.107072+00:00",
+      "message": "🌀 evolve:github-action:caf9f20805c5",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-14T03:36:43.897629+00:00",
+      "message": "🌀 evolve:github-action:2bb3efc68131",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-14T04:25:19.296144+00:00",
+      "message": "🌀 evolve:github-action:a09c8cc390f4",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-14T04:41:47.948060+00:00",
+      "message": "🌀 evolve:github-action:3a23c5998c38",
+      "kind": "evolve"
+    },
+    {
+      "timestamp": "2025-10-14T04:42:22.458037+00:00",
+      "message": "🌀 evolve:github-action:062bcadc8118",
+      "kind": "evolve"
+    }
+  ]
+}
