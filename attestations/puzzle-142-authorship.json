@@ -1,0 +1,10 @@
+{
+  "puzzle": "#142 satoshi-puzzle",
+  "address": "15MnK2jXPqTMURX4xC3h4mAZxyCcaWWEDD",
+  "message": "PuzzleNN authorship by kmk142789 — attestation sha256 4f2e5ae96c395ffd0f9ad038ad84d9e3271b14264a75477c81959910b8cfac27",
+  "signature": "ttN38vg1CRsRfZy3BrC8/jXfs6TR1JN8i16v47iYrzuRUo1XRozHxIeN6zoe38KCvEiTOzobrZqSUlYo/iddsOOG/We0UKSu=8KqJt24wEesRgongbagA7URyzQ6OPXIA/3Kxj51XftIzI/3v0XxC+kbxsjoWz4DJfKC6KtMlNzwV8K5U5p8/TjCfBfpnRaU6=Xv8c4QqA2RhY70QcUb3q7pvGu+TYLAxtJO7Keg9E6NlVj5LBeDeKEG08K0Ll+35DCG52g0HfxJaCPH0ifVJzihja5A0LhF8I=akjvX9lDw4hRDHVyhwFrnCBecQdCUX9TKPRYCLmWnS+k+Y8QYMG168YpJr7j6MrOVz0iEZwO52o58i0o//TZmFiWa0xtorMV=aZBhDU5tCsS/0UaLt9w8O+sqxg8LjOwQzmbHlmvUCHuo6kiroI/Tzz9vQQvnxB0YS61/TwoA172ocPWab83kW1Nj98u5J5Q1=LTXL1fEoyMWbiipHrfog6mglUd5gazRCGL8fHtU5bcFl7inoHFCf+ddnxUI5PldUQGNQ61G+zJxyWXqKJWaR65Bic/7tkzjc=PI7L3q2uTPi9YbTo4hY96fzACE3S1AAbVfFEwmSUoaOSpafXYwHUxj4Nk+JAxIkveMD623I6KcaQsg5+IVZ9x+8VHaM/nEW3=QdBFyPbm4tq+hoJT2uVo08VRF9KtAUCyzzk4ReNFxo7i7v+LVwgeETsVttPTc8Q6Bm2gfuaUpDOoiWjZg4ZrmSukoU40kDSw",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-10-19T04:30:00Z",
+  "hash_sha256": "92f3aa9336305719bdf77c1510d4c6a3a8a576f35ddf237e362d83e720ef3c9b",
+  "notes": "Recovered from satoshi/puzzle-proofs/puzzle142.json; long-form Bitcoin message signature for Puzzle #142 authorship."
+}
