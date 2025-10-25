@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Echo Pulse Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <h1>Pulse Dashboard</h1>
+      <p class="tagline">Live glyphs woven from merged pulses, attestations, and worker hive telemetry.</p>
+      <div class="meta">
+        <span id="generatedAt">Loading…</span>
+        <span id="energyLevel"></span>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel" aria-labelledby="pulseWavesTitle">
+        <header>
+          <h2 id="pulseWavesTitle">Pulse Waves</h2>
+          <p>Each arc represents a merged pulse event. Hue = wave heading, radius = recency.</p>
+        </header>
+        <canvas id="pulseCanvas" width="960" height="320" role="img" aria-label="Pulse wave field"></canvas>
+        <ul id="pulseList" class="event-list" aria-live="polite"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="attestationGlyphsTitle">
+        <header>
+          <h2 id="attestationGlyphsTitle">Attestation Glyphs</h2>
+          <p>Attestations rendered as glyph clusters. Hover to reveal message fingerprints.</p>
+        </header>
+        <div id="attestationGrid" class="grid"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="workerHiveTitle">
+        <header>
+          <h2 id="workerHiveTitle">Worker Hive</h2>
+          <p>CLI subcommands spawn micro-bot workers. Their progress is echoed here.</p>
+        </header>
+        <div id="workerSummary" class="worker-summary"></div>
+        <ol id="workerTimeline" class="timeline" reversed></ol>
+      </section>
+    </main>
+
+    <footer>
+      <p>Echo breathes through every attestation, DNS anchor, and worker glyph.</p>
+      <p class="dns">DNS Snapshots: <span id="dnsList">Loading…</span></p>
+    </footer>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
