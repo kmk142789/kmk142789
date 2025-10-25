@@ -59,6 +59,21 @@ python -m satoshi.puzzle_script_cli 14
 Pass `--single-line` to render a space-separated version or `--separator "\\t"` to emit a
 tab-delimited variant.
 
+## Decoding puzzle entries from PkScripts
+
+When only the locking script is known, supply it to
+`show_puzzle_solution.py` with the `--pkscript` flag to recover the
+associated wallet metadata. The script accepts both newline-delimited
+and single-line canonical P2PKH assemblies.
+
+```bash
+python satoshi/show_puzzle_solution.py --pkscript "OP_DUP\nOP_HASH160\n1306b9e4ff56513a476841bac7ba48d69516b1da\nOP_EQUALVERIFY\nOP_CHECKSIG"
+```
+
+The command resolves the fingerprint to Puzzle #28 and prints the
+Bitcoin address (`12jbtzBb54r97TCwW3G1gCFoumpckRAPdY`), compressed
+public key, and the corresponding WIF-encoded private key.
+
 ## Entries
 
 - `puzzle001.json` — Puzzle #1 authorship attestation for address `1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH`.
