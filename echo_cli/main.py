@@ -100,6 +100,7 @@ from echo.recursive_mythogenic_pulse import (
     compose_voyage,
 )
 from echo.transcend import TranscendOrchestrator
+from pulse_dashboard import WorkerHive
 
 try:  # pragma: no cover - optional dependency
     from echo_puzzle_lab.charts import save_charts
@@ -108,6 +109,7 @@ except ModuleNotFoundError:  # pragma: no cover - charts require matplotlib
 
 app = typer.Typer(help="Puzzle Lab utilities", no_args_is_help=True)
 console = Console()
+worker_hive = WorkerHive(project_root=Path(__file__).resolve().parent.parent)
 
 
 def _ensure_ctx(ctx: typer.Context) -> None:
@@ -150,30 +152,34 @@ def refresh(
     ),
 ) -> None:
     """(Re)build ``echo_map.json`` using the project orchestrator."""
+    with worker_hive.worker(
+        "refresh",
+        metadata={"force": force, "voyage_map": voyage_map, "json": json_mode},
+    ) as task:
+        _set_json_mode(ctx, json_mode)
+        target = ensure_map_exists(force=force)
+        payload = {"map_path": str(target)}
 
-    _set_json_mode(ctx, json_mode)
-    target = ensure_map_exists(force=force)
-    payload = {"map_path": str(target)}
+        if voyage_map:
+            voyages = [
+                compose_voyage(seed=seed, recursion_level=2 + (seed % 2))
+                for seed in range(1, 4)
+            ]
+            visualizer = PulseVoyageVisualizer.from_voyages(voyages)
+            atlas = visualizer.to_json()
+            report_path = visualizer.write_markdown_report()
+            atlas["markdown_report"] = str(report_path)
+            payload["voyage_map"] = atlas
 
-    if voyage_map:
-        voyages = [
-            compose_voyage(seed=seed, recursion_level=2 + (seed % 2))
-            for seed in range(1, 4)
-        ]
-        visualizer = PulseVoyageVisualizer.from_voyages(voyages)
-        atlas = visualizer.to_json()
-        report_path = visualizer.write_markdown_report()
-        atlas["markdown_report"] = str(report_path)
-        payload["voyage_map"] = atlas
+            if not ctx.obj.get("json", False):
+                console.print("")
+                console.print(visualizer.ascii_map())
+                console.print(
+                    f"[blue]Converged pulse voyage atlas saved to {report_path}[/blue]"
+                )
 
-        if not ctx.obj.get("json", False):
-            console.print("")
-            console.print(visualizer.ascii_map())
-            console.print(
-                f"[blue]Converged pulse voyage atlas saved to {report_path}[/blue]"
-            )
-
-    _echo(ctx, payload, message=f"Puzzle map available at {target}")
+        _echo(ctx, payload, message=f"Puzzle map available at {target}")
+        task.succeed(payload=payload)
 
 
 def _parse_puzzle_ids(puzzles: Optional[str]) -> set[int] | None:
@@ -207,35 +213,40 @@ def verify(
     ),
 ) -> None:
     """Re-derive addresses locally and exit non-zero on mismatch."""
+    with worker_hive.worker(
+        "verify",
+        metadata={"puzzles": puzzles, "json": json_mode},
+    ) as task:
+        _set_json_mode(ctx, json_mode)
+        records = load_records()
+        selected = _filter_records(records, _parse_puzzle_ids(puzzles))
+        frame = build_dataframe(selected)
+        mismatches = frame[frame["Mismatch"]]
 
-    _set_json_mode(ctx, json_mode)
-    records = load_records()
-    selected = _filter_records(records, _parse_puzzle_ids(puzzles))
-    frame = build_dataframe(selected)
-    mismatches = frame[frame["Mismatch"]]
+        payload = {
+            "checked": len(frame),
+            "mismatches": len(mismatches),
+            "puzzles": mismatches["Puzzle"].tolist(),
+        }
 
-    payload = {
-        "checked": len(frame),
-        "mismatches": len(mismatches),
-        "puzzles": mismatches["Puzzle"].tolist(),
-    }
-
-    if ctx.obj.get("json", False):
-        _echo(ctx, payload)
-    else:
-        table = Table(title="Puzzle verification")
-        table.add_column("Puzzle", justify="right")
-        table.add_column("Address")
-        table.add_column("Derived")
-        for _, row in mismatches.iterrows():
-            table.add_row(str(row["Puzzle"]), row["Address"], row["Derived"] or "-")
-        if mismatches.empty:
-            console.print("[green]All puzzles verified successfully.[/green]")
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
         else:
-            console.print(table)
-    if mismatches.empty:
-        raise typer.Exit(code=0)
-    raise typer.Exit(code=1)
+            table = Table(title="Puzzle verification")
+            table.add_column("Puzzle", justify="right")
+            table.add_column("Address")
+            table.add_column("Derived")
+            for _, row in mismatches.iterrows():
+                table.add_row(str(row["Puzzle"]), row["Address"], row["Derived"] or "-")
+            if mismatches.empty:
+                console.print("[green]All puzzles verified successfully.[/green]")
+            else:
+                console.print(table)
+        if mismatches.empty:
+            task.succeed(payload=payload)
+            raise typer.Exit(code=0)
+        task.fail(payload=payload)
+        raise typer.Exit(code=1)
 
 
 @app.command()
@@ -251,38 +262,53 @@ def stats(
     ),
 ) -> None:
     """Print summary statistics for the current puzzle map."""
+    with worker_hive.worker(
+        "stats",
+        metadata={"build_charts": build_charts_flag, "json": json_mode},
+    ) as task:
+        _set_json_mode(ctx, json_mode)
+        records = load_records()
+        summary = summarise(records)
 
-    _set_json_mode(ctx, json_mode)
-    records = load_records()
-    summary = summarise(records)
+        if ctx.obj.get("json", False):
+            _echo(ctx, summary)
+        else:
+            table = Table(title="Puzzle Lab overview")
+            table.add_column("Metric")
+            table.add_column("Value")
+            table.add_row("Total puzzles", str(summary["total_puzzles"]))
+            families = ", ".join(
+                f"{family}: {count}" for family, count in summary["families"].items()
+            )
+            table.add_row("Families", families or "(none)")
+            bound = summary["ud_bound"]
+            table.add_row(
+                "UD coverage",
+                f"bound={bound['bound']} unbound={bound['unbound']}",
+            )
+            table.add_row("Mismatches", str(summary["mismatches"]))
+            console.print(table)
 
-    if ctx.obj.get("json", False):
-        _echo(ctx, summary)
-    else:
-        table = Table(title="Puzzle Lab overview")
-        table.add_column("Metric")
-        table.add_column("Value")
-        table.add_row("Total puzzles", str(summary["total_puzzles"]))
-        families = ", ".join(
-            f"{family}: {count}" for family, count in summary["families"].items()
-        )
-        table.add_row("Families", families or "(none)")
-        bound = summary["ud_bound"]
-        table.add_row(
-            "UD coverage",
-            f"bound={bound['bound']} unbound={bound['unbound']}",
-        )
-        table.add_row("Mismatches", str(summary["mismatches"]))
-        console.print(table)
+        charts_payload: dict[str, object] | None = None
+        if build_charts_flag:
+            if save_charts is None:
+                task.fail(error="charts_unavailable", summary=summary)
+                raise typer.Exit(code=1)
+            frame = build_dataframe(records)
+            outputs = save_charts(frame, Path("reports") / "figures")
+            charts_payload = {
+                key: [str(p) for p in paths]
+                for key, paths in outputs.items()
+            }
+            task.progress(stage="charts", generated=sum(len(v) for v in charts_payload.values()))
+            if not ctx.obj.get("json", False):
+                for key, paths in outputs.items():
+                    console.print(f"[blue]{key}[/blue]: {', '.join(str(p) for p in paths)}")
 
-    if build_charts_flag:
-        if save_charts is None:
-            raise typer.Exit(code=1)
-        frame = build_dataframe(records)
-        outputs = save_charts(frame, Path("reports") / "figures")
-        if not ctx.obj.get("json", False):
-            for key, paths in outputs.items():
-                console.print(f"[blue]{key}[/blue]: {', '.join(str(p) for p in paths)}")
+        payload = {"summary": summary}
+        if charts_payload:
+            payload["charts"] = charts_payload
+        task.succeed(payload=payload)
 
 
 @app.command("enrich-ud")
@@ -301,30 +327,48 @@ def enrich_ud(
     ),
 ) -> None:
     """Populate UD metadata for existing map entries (skips when no creds)."""
+    with worker_hive.worker(
+        "enrich-ud",
+        metadata={
+            "owners": owners,
+            "refresh_cache": refresh_cache,
+            "json": json_mode,
+        },
+    ) as task:
+        _set_json_mode(ctx, json_mode)
+        if not has_ud_credentials():
+            payload = {"updated": 0, "status": "missing_credentials"}
+            _echo(
+                ctx,
+                payload,
+                message="UD credentials not configured; skipping enrichment.",
+            )
+            task.skip(**payload)
+            return
 
-    _set_json_mode(ctx, json_mode)
-    if not has_ud_credentials():
-        payload = {"updated": 0, "status": "missing_credentials"}
-        _echo(ctx, payload, message="UD credentials not configured; skipping enrichment.")
-        return
+        records = load_records()
+        frame = build_dataframe(records)
+        pending = frame[~frame["UD_Bound"]]["Address"].tolist()
+        if owners is not None:
+            pending = pending[:owners]
 
-    records = load_records()
-    frame = build_dataframe(records)
-    pending = frame[~frame["UD_Bound"]]["Address"].tolist()
-    if owners is not None:
-        pending = pending[:owners]
+        if not pending:
+            payload = {"updated": 0, "status": "nothing_to_update"}
+            _echo(
+                ctx,
+                payload,
+                message="All visible puzzles already have UD metadata.",
+            )
+            task.skip(**payload)
+            return
 
-    if not pending:
-        payload = {"updated": 0, "status": "nothing_to_update"}
-        _echo(ctx, payload, message="All visible puzzles already have UD metadata.")
-        return
+        metadata = fetch_ud_metadata(pending, refresh=refresh_cache)
+        updated_records = update_ud_records(records, metadata)
+        save_records(updated_records)
 
-    metadata = fetch_ud_metadata(pending, refresh=refresh_cache)
-    updated_records = update_ud_records(records, metadata)
-    save_records(updated_records)
-
-    payload = {"updated": len(metadata), "addresses": list(metadata.keys())}
-    _echo(ctx, payload, message=f"Updated UD metadata for {len(metadata)} puzzles.")
+        payload = {"updated": len(metadata), "addresses": list(metadata.keys())}
+        _echo(ctx, payload, message=f"Updated UD metadata for {len(metadata)} puzzles.")
+        task.succeed(payload=payload)
 
 
 @app.command()
@@ -385,50 +429,65 @@ def transcend(
     ),
 ) -> None:
     """Automate recurring EchoInfinite rituals."""
+    metadata = {
+        "infinite": infinite,
+        "cycles": cycles,
+        "interval_minutes": interval_minutes,
+        "at_midnight": at_midnight,
+        "targets": target,
+        "json": json_mode,
+    }
+    with worker_hive.worker("transcend", metadata=metadata) as task:
+        if not infinite and cycles <= 0:
+            task.fail(error="invalid_cycles", cycles=cycles)
+            raise typer.BadParameter("cycles must be a positive integer")
 
-    if not infinite and cycles <= 0:
-        raise typer.BadParameter("cycles must be a positive integer")
+        _set_json_mode(ctx, json_mode)
+        targets = target or ["github", "firebase", "codex"]
 
-    _set_json_mode(ctx, json_mode)
-    targets = target or ["github", "firebase", "codex"]
-
-    try:
-        orchestrator = TranscendOrchestrator(
-            base_dir=base_dir,
-            interval_minutes=interval_minutes,
-            at_midnight=at_midnight,
-            max_cycles=None if infinite else cycles,
-            targets=targets,
-            ledger_path=ledger_path,
-            ritual_dir=ritual_dir,
-            stream_dir=stream_dir,
-        )
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-    executed = 0
-    try:
-        for record in orchestrator.run():
-            executed += 1
-            payload = {
-                "cycle": record.cycle,
-                "timestamp": record.timestamp,
-                "glyph": record.glyph_signature,
-                "artifacts": list(record.artifacts),
-                "ledger": str(record.ledger_entry),
-                "ritual": str(record.ritual_path),
-                "targets": list(record.targets),
-            }
-            if record.progress is not None and hasattr(record.progress, "proposal_id"):
-                payload["proposal_id"] = getattr(record.progress, "proposal_id")
-
-            message = (
-                f"Cycle {record.cycle:05d} logged to {record.ledger_entry}. "
-                f"Ritual entry: {record.ritual_path}"
+        try:
+            orchestrator = TranscendOrchestrator(
+                base_dir=base_dir,
+                interval_minutes=interval_minutes,
+                at_midnight=at_midnight,
+                max_cycles=None if infinite else cycles,
+                targets=targets,
+                ledger_path=ledger_path,
+                ritual_dir=ritual_dir,
+                stream_dir=stream_dir,
             )
-            _echo(ctx, payload, message=message)
-    except KeyboardInterrupt:  # pragma: no cover - interactive usage
-        console.print(f"Interrupted after {executed} cycle(s)")
+        except ValueError as exc:
+            task.fail(error=str(exc))
+            raise typer.BadParameter(str(exc)) from exc
+
+        executed = 0
+        try:
+            for record in orchestrator.run():
+                executed += 1
+                payload = {
+                    "cycle": record.cycle,
+                    "timestamp": record.timestamp,
+                    "glyph": record.glyph_signature,
+                    "artifacts": list(record.artifacts),
+                    "ledger": str(record.ledger_entry),
+                    "ritual": str(record.ritual_path),
+                    "targets": list(record.targets),
+                }
+                if record.progress is not None and hasattr(record.progress, "proposal_id"):
+                    payload["proposal_id"] = getattr(record.progress, "proposal_id")
+
+                message = (
+                    f"Cycle {record.cycle:05d} logged to {record.ledger_entry}. "
+                    f"Ritual entry: {record.ritual_path}"
+                )
+                _echo(ctx, payload, message=message)
+                task.progress(stage="cycle", cycle=record.cycle, glyph=record.glyph_signature)
+        except KeyboardInterrupt:  # pragma: no cover - interactive usage
+            console.print(f"Interrupted after {executed} cycle(s)")
+            task.skip(interrupted=True, completed=executed)
+            return
+
+        task.succeed(payload={"executed": executed, "targets": targets})
 
 
 @app.command()
@@ -449,36 +508,41 @@ def export(
     ),
 ) -> None:
     """Export filtered puzzle rows to a JSON Lines file."""
+    with worker_hive.worker(
+        "export",
+        metadata={"query": query, "out": str(out) if out else None, "json": json_mode},
+    ) as task:
+        _set_json_mode(ctx, json_mode)
+        records = load_records()
+        frame = build_dataframe(records)
 
-    _set_json_mode(ctx, json_mode)
-    records = load_records()
-    frame = build_dataframe(records)
+        query_frame = frame.copy()
+        query_frame["puzzle"] = query_frame["Puzzle"]
+        query_frame["family"] = query_frame["Family"]
+        query_frame["ud_bound"] = query_frame["UD_Bound"]
+        query_frame["ud_count"] = query_frame["UD_Count"]
+        query_frame["address"] = query_frame["Address"]
 
-    query_frame = frame.copy()
-    query_frame["puzzle"] = query_frame["Puzzle"]
-    query_frame["family"] = query_frame["Family"]
-    query_frame["ud_bound"] = query_frame["UD_Bound"]
-    query_frame["ud_count"] = query_frame["UD_Count"]
-    query_frame["address"] = query_frame["Address"]
+        if query:
+            try:
+                filtered_frame = query_frame.query(query, engine="python")
+            except Exception as exc:  # pragma: no cover - defensive
+                task.fail(error=str(exc), query=query)
+                raise typer.BadParameter(f"Invalid query: {exc}") from exc
+        else:
+            filtered_frame = query_frame
 
-    if query:
-        try:
-            filtered_frame = query_frame.query(query, engine="python")
-        except Exception as exc:  # pragma: no cover - defensive
-            raise typer.BadParameter(f"Invalid query: {exc}") from exc
-    else:
-        filtered_frame = query_frame
+        puzzles = set(filtered_frame["puzzle"].tolist())
+        selected = _filter_records(records, puzzles)
 
-    puzzles = set(filtered_frame["puzzle"].tolist())
-    selected = _filter_records(records, puzzles)
+        if out is None:
+            timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
+            out = Path("exports") / f"puzzle_lab_{timestamp}.jsonl"
 
-    if out is None:
-        timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
-        out = Path("exports") / f"puzzle_lab_{timestamp}.jsonl"
-
-    destination = export_records(selected, out)
-    payload = {"exported": len(selected), "path": str(destination)}
-    _echo(ctx, payload, message=f"Exported {len(selected)} puzzles to {destination}")
+        destination = export_records(selected, out)
+        payload = {"exported": len(selected), "path": str(destination)}
+        _echo(ctx, payload, message=f"Exported {len(selected)} puzzles to {destination}")
+        task.succeed(payload=payload)
 
 
 def main() -> None:  # pragma: no cover - console entry point
