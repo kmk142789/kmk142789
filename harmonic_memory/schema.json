@@ -6,21 +6,154 @@
     "properties": {
       "user_music_preference": {
         "type": "string",
-        "description": "Favorite genres influencing AI response structure: classical, jazz, electronic, ambient, metal."
+        "description": "Favorite genres influencing AI response structure alongside the active cycle markers."
       },
       "lyrical_complexity": {
         "type": "string",
-        "description": "Determines lyrical depth of AI’s musical responses: minimal, poetic, intricate."
+        "description": "Compact summary of narrative density, event count, and payload fingerprints for the cycle."
       },
       "adaptive_evolution": {
         "type": "boolean",
         "description": "If true, AI continuously refines responses based on cumulative interaction."
+      },
+      "cycle_snapshot": {
+        "type": "object",
+        "description": "Structured record of an EchoEvolver cycle including puzzle metadata and checksums.",
+        "properties": {
+          "cycle_id": {
+            "type": "integer",
+            "description": "Sequential identifier for the cycle being recorded."
+          },
+          "puzzle": {
+            "type": "object",
+            "properties": {
+              "puzzle_id": {
+                "type": "string",
+                "description": "Human-friendly identifier for the solved Bitcoin puzzle."
+              },
+              "bits": {
+                "type": "integer",
+                "description": "Bit-length of the puzzle wallet."
+              },
+              "address": {
+                "type": "string",
+                "description": "Derived Base58Check address for the puzzle wallet."
+              },
+              "hash160": {
+                "type": "string",
+                "description": "HASH160 fingerprint associated with the public key."
+              },
+              "solve_date": {
+                "type": "string",
+                "description": "Date the puzzle was solved."
+              },
+              "btc_value": {
+                "type": "number",
+                "description": "Nominal BTC value tied to the puzzle wallet."
+              },
+              "range": {
+                "type": "object",
+                "properties": {
+                  "min": {"type": "string"},
+                  "max": {"type": "string"}
+                },
+                "required": ["min", "max"],
+                "additionalProperties": false
+              },
+              "public_key": {
+                "type": "string",
+                "description": "Compressed public key solving the puzzle wallet."
+              },
+              "checksums": {
+                "type": "object",
+                "properties": {
+                  "address_sha256": {
+                    "type": "string",
+                    "description": "SHA-256 checksum of the Base58Check address."
+                  },
+                  "hash160_sha256": {
+                    "type": "string",
+                    "description": "SHA-256 checksum of the HASH160 digest."
+                  }
+                },
+                "required": ["address_sha256", "hash160_sha256"],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "puzzle_id",
+              "bits",
+              "address",
+              "hash160",
+              "solve_date",
+              "btc_value",
+              "range",
+              "public_key",
+              "checksums"
+            ],
+            "additionalProperties": false
+          },
+          "state": {
+            "type": "object",
+            "description": "Detached EchoEvolver state snapshot.",
+            "additionalProperties": true
+          },
+          "payload": {
+            "type": "object",
+            "description": "Harmonix payload emitted for the cycle.",
+            "additionalProperties": true
+          },
+          "artifact": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Filesystem path of the textual artifact summarising the cycle."
+              },
+              "body": {
+                "type": "string",
+                "description": "Full textual artifact captured for the cycle."
+              }
+            },
+            "required": ["path", "body"],
+            "additionalProperties": false
+          },
+          "checksums": {
+            "type": "object",
+            "properties": {
+              "state_sha256": {
+                "type": "string",
+                "description": "SHA-256 checksum of the cycle state snapshot."
+              },
+              "payload_sha256": {
+                "type": "string",
+                "description": "SHA-256 checksum of the cycle payload."
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "description": "SHA-256 checksum of the textual artifact."
+              }
+            },
+            "required": ["state_sha256", "payload_sha256", "artifact_sha256"],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "cycle_id",
+          "puzzle",
+          "state",
+          "payload",
+          "artifact",
+          "checksums"
+        ],
+        "additionalProperties": false
       }
     },
     "required": [
       "user_music_preference",
       "lyrical_complexity",
-      "adaptive_evolution"
+      "adaptive_evolution",
+      "cycle_snapshot"
     ],
     "additionalProperties": false
   },
