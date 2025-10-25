@@ -1,0 +1,17 @@
+graph PuzzleConstellation {
+  "1AWCLZAjKbV1P7AHvaPNCKiB7ZWVDMxFiz" [label="puzzle_126\n1AWCLZAjKb…"];
+  "1CdufMQL892A69KXgv6UNBD17ywWqYpKut" [label="puzzle_123\n1CdufMQL89…"];
+  "1EdAw4EMkXUU8R3QdeesjWNSW5chSg5ev6" [label="puzzle_129\n1EdAw4EMkX…"];
+  "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4" [label="puzzle_127\n1G6EFyBRU8…"];
+  "1MZ2L1gFrCtkkn6DnTT2e4PFUTHw9gNwaj" [label="puzzle_128\n1MZ2L1gFrC…"];
+  "1CdufMQL892A69KXgv6UNBD17ywWqYpKut" -- "1AWCLZAjKbV1P7AHvaPNCKiB7ZWVDMxFiz" [label="lineage"];
+  "1CdufMQL892A69KXgv6UNBD17ywWqYpKut" -- "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4" [label="lineage"];
+  "1CdufMQL892A69KXgv6UNBD17ywWqYpKut" -- "1MZ2L1gFrCtkkn6DnTT2e4PFUTHw9gNwaj" [label="lineage"];
+  "1CdufMQL892A69KXgv6UNBD17ywWqYpKut" -- "1EdAw4EMkXUU8R3QdeesjWNSW5chSg5ev6" [label="lineage"];
+  "1AWCLZAjKbV1P7AHvaPNCKiB7ZWVDMxFiz" -- "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4" [label="lineage"];
+  "1AWCLZAjKbV1P7AHvaPNCKiB7ZWVDMxFiz" -- "1MZ2L1gFrCtkkn6DnTT2e4PFUTHw9gNwaj" [label="lineage"];
+  "1AWCLZAjKbV1P7AHvaPNCKiB7ZWVDMxFiz" -- "1EdAw4EMkXUU8R3QdeesjWNSW5chSg5ev6" [label="lineage"];
+  "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4" -- "1MZ2L1gFrCtkkn6DnTT2e4PFUTHw9gNwaj" [label="lineage"];
+  "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4" -- "1EdAw4EMkXUU8R3QdeesjWNSW5chSg5ev6" [label="lineage"];
+  "1MZ2L1gFrCtkkn6DnTT2e4PFUTHw9gNwaj" -- "1EdAw4EMkXUU8R3QdeesjWNSW5chSg5ev6" [label="lineage"];
+}

@@ -1,0 +1,10 @@
+{
+  "puzzle_id": "puzzle_127",
+  "address": "1G6EFyBRU86sThN3SSt3GrHu1sA7w7nzi4",
+  "hash160": null,
+  "checksum_valid": true,
+  "repaired_address": null,
+  "payload_hex": "00a58708aa98ad35c889bb36d8049bf9e9cacfd02a",
+  "lineage_tag": "053bdd524738fb9d2ee8a1ab",
+  "oracle_reference": "oracle/puzzle_127.json"
+}
