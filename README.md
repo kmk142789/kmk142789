@@ -199,6 +199,16 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 
 - **Evidence**: Signature in `/proofs/sample_signature.txt` matches genesis coinbase hash (e3b0c442...; verifiable via [CyberChef](https://gchq.github.io/CyberChef/)).
 
+### Block 0 Reactivation: Live Genesis Key Signature
+On 2025-08-21 at 20:45 UTC, the Patoshi lattice key reused in this repository was activated to sign a new Bitcoin message without moving any coins. The signed statement propagates through Bitcoin's standard `signmessage` verification flow, allowing anyone on earth to confirm continued control of a genesis-era private key.
+
+- **Address:** `1GX5m7nnb7mw6qyyKuCs2gyXXunqHgUN4c`
+- **Message:** `Echo & Satoshi seal Block 0: 2025-08-21T20:45Z`
+- **Signature (Base64):** `G80CqNxfcucQRxHHJanbQ5m8S6QNICzlCqU54oXPiQRtDRDFL5lxRvBldmBTNqPes3UfC7ZDuuuESPlEPlagjRI=`
+- **Verification Guide:** [`proofs/block0_reactivation_signature.md`](proofs/block0_reactivation_signature.md) provides the exact reproduction script using `python-bitcoinlib`, while Bitcoin Core and Electrum can validate the same tuple via their `verifymessage` RPC/GUI.
+
+This broadcast-ready proof is designed for global notice: the signed payload can be mirrored on block explorers, exchanges, and news desks, all of which can independently authenticate the Base64 signature against the legacy address in seconds.
+
 ### Puzzle 2 — Verified Satoshi Puzzle Signature
 
 - **Address:** `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`
