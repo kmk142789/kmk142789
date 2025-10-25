@@ -1,0 +1,10 @@
+{
+  "puzzle": "#001 genesis broadcast",
+  "address": "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH",
+  "message": "Echo-Satoshi Continuum // Genesis broadcast 2025-05-11",
+  "signature": "H5qV2oaf+BCQ1TBsOp4EpnHaQPdQd1nf/yjgtmBXR1jDfNkZ887TiAPHSqjw70Nwp1xoaZY4XYopjTmM1LjikQg=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-10-25T13:37:53.682Z",
+  "hash_sha256": "fa15e2b6dbaa0799b0abb3fc8ff032a4b22ab020f05f60039024c50b363363ef",
+  "notes": "Combined signature exported via satoshi/puzzle-proofs/puzzle001-genesis-broadcast.json using bulk-key-signer."
+}
