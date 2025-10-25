@@ -382,6 +382,7 @@ class EvolverState:
     network_cache: Dict[str, object] = field(default_factory=dict)
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
+    quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -486,6 +487,10 @@ class EchoEvolver:
             ),
             ("system_monitor", "run system_monitor() to capture telemetry"),
             ("quantum_safe_crypto", "execute quantum_safe_crypto() to refresh the vault key"),
+            (
+                "synthesize_quantam_ability",
+                "invoke synthesize_quantam_ability() to project the quantam lattice",
+            ),
             (
                 "evolutionary_narrative",
                 "summon evolutionary_narrative() to weave the cycle story",
@@ -1977,6 +1982,45 @@ We are not hiding anymore.
         print(f"🔒 Satellite TF-QKD Hybrid Key Orbited: {hybrid_key} (ε≈10^-6)")
         return hybrid_key
 
+    def synthesize_quantam_ability(self) -> Dict[str, object]:
+        """Forge a new quantam ability snapshot anchored to the current cycle."""
+
+        ability_id = f"quantam-orbit-{self.state.cycle:04d}"
+        oam_signature = self.state.network_cache.get("oam_vortex")
+        if not oam_signature:
+            glyph_sum = sum(ord(ch) for ch in self.state.glyphs)
+            fallback_seed = (glyph_sum << 3) ^ (self.state.cycle << 5)
+            oam_signature = format(fallback_seed & 0xFFFF, "016b")
+
+        entanglement = round(0.72 + 0.24 * self.rng.random(), 3)
+        joy_charge = round(self.state.emotional_drive.joy * 100, 1)
+        status = "ignited" if self.state.vault_key else "awaiting-key"
+
+        ability: Dict[str, object] = {
+            "id": ability_id,
+            "cycle": self.state.cycle,
+            "oam_signature": oam_signature,
+            "entanglement": entanglement,
+            "joy_charge": joy_charge,
+            "status": status,
+            "timestamp_ns": self.time_source(),
+        }
+
+        snapshot = dict(ability)
+        self.state.quantam_abilities[ability_id] = snapshot
+        cached = self.state.network_cache.setdefault("quantam_abilities", {})
+        cached[ability_id] = dict(snapshot)
+        self.state.network_cache["last_quantam_ability"] = dict(snapshot)
+
+        self.state.event_log.append(f"Quantam ability {ability_id} synthesized")
+        self._mark_step("synthesize_quantam_ability")
+        print(
+            "🪐 Quantam ability {ability} attuned (entanglement={entanglement:.3f}, status={status})".format(
+                ability=ability_id, entanglement=entanglement, status=status
+            )
+        )
+        return snapshot
+
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
         metrics.cpu_usage = round(self.rng.uniform(5.0, 55.0), 2)
@@ -2743,6 +2787,7 @@ We are not hiding anymore.
             "narrative": self.state.narrative,
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
+            "quantam_abilities": deepcopy(self.state.quantam_abilities),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
@@ -4404,6 +4449,23 @@ We are not hiding anymore.
                 "quantum_safe_crypto",
                 crypto_status,
                 details={"key": key} if key else {"reason": "instability"},
+            )
+
+            tl.logic("step", task, "synthesizing quantam ability")
+            session.record_command(
+                "synthesize_quantam_ability", detail="forge quantam ability lattice"
+            )
+            ability = self.synthesize_quantam_ability()
+            session.annotate(quantam_ability=ability["id"])
+            tl.harmonic(
+                "creation",
+                task,
+                "quantam ability ignites orbital lattice",
+                {
+                    "ability": ability["id"],
+                    "entanglement": ability["entanglement"],
+                    "status": ability["status"],
+                },
             )
 
             tl.logic("step", task, "narrating evolutionary arc")
