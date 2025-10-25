@@ -1,68 +1,182 @@
 <!doctype html>
 <html lang="en">
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Federated Colossus — Live Index</title>
-<style>
-  body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:24px;line-height:1.35}
-  header{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-  h1{margin:0;font-size:20px}
-  .pill{padding:4px 8px;border-radius:999px;background:#f2f2f2}
-  .grid{display:grid;gap:12px}
-  .card{border:1px solid #eee;border-radius:12px;padding:12px}
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  label{font-size:12px;color:#555}
-  input{padding:6px 8px;border:1px solid #ddd;border-radius:8px}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{padding:8px;border-bottom:1px solid #f0f0f0;font-size:13px;text-align:left}
-  th{background:#fafafa}
-  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
-  .muted{color:#666}
-</style>
-<header>
-  <h1>Federated Colossus — Live Index</h1>
-  <span id="refreshed" class="pill muted"></span>
-  <span id="stats" class="pill"></span>
-</header>
-
-<section class="card grid">
-  <div class="row">
-    <div>
-      <label>Cycle</label><br/>
-      <input id="f-cycle" placeholder="e.g. 12" />
-    </div>
-    <div>
-      <label>Puzzle ID</label><br/>
-      <input id="f-puzzle" placeholder="e.g. 131" />
-    </div>
-    <div>
-      <label>Address (prefix ok)</label><br/>
-      <input id="f-addr" placeholder="e.g. 1Feex" />
-    </div>
-    <div>
-      <label>&nbsp;</label><br/>
-      <button id="btn-filter">Filter</button>
-      <button id="btn-clear">Clear</button>
-    </div>
-  </div>
-  <div class="muted">Backed by <span class="mono">build/index/federated_colossus_index.json</span></div>
-</section>
-
-<section class="card">
-  <table id="tbl">
-    <thead>
-      <tr>
-        <th>Cycle</th>
-        <th>Puzzle</th>
-        <th>Address</th>
-        <th>Title</th>
-        <th>Digest</th>
-        <th class="muted">Source</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</section>
-
-<script src="./app.js"></script>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Federated Colossus — Live Index</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        margin: 0;
+        background: radial-gradient(circle at top, #0f172a 0%, #020617 35%, #030712 100%);
+        color: #e2e8f0;
+        min-height: 100vh;
+      }
+      .page {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 32px 24px 64px;
+        display: grid;
+        gap: 24px;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 20px;
+      }
+      .summary-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      }
+      .summary-card {
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(94, 234, 212, 0.18);
+        border-radius: 14px;
+        padding: 12px 16px;
+        display: grid;
+        gap: 4px;
+      }
+      .summary-card span {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+      }
+      .summary-card strong {
+        font-size: 22px;
+        color: #f8fafc;
+      }
+      .card {
+        background: rgba(15, 23, 42, 0.78);
+        border: 1px solid rgba(59, 130, 246, 0.22);
+        border-radius: 18px;
+        padding: 20px 24px;
+        box-shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 12px;
+      }
+      label {
+        font-size: 13px;
+        color: #cbd5f5;
+        display: grid;
+        gap: 6px;
+      }
+      input {
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: rgba(15, 23, 42, 0.65);
+        color: #e2e8f0;
+      }
+      input:focus {
+        outline: none;
+        border-color: rgba(94, 234, 212, 0.6);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+      }
+      button {
+        padding: 9px 16px;
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, #2563eb, #10b981);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      .filter-actions {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+      }
+      .muted {
+        color: #94a3b8;
+      }
+      .error {
+        color: #f87171;
+        margin-top: 8px;
+      }
+      .force-graph {
+        width: 100%;
+        height: 420px;
+        background: radial-gradient(circle at center, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.3));
+        border-radius: 18px;
+        border: 1px solid rgba(59, 130, 246, 0.22);
+      }
+      .fg-label {
+        font-size: 10px;
+        fill: #cbd5f5;
+        pointer-events: none;
+      }
+      .table-wrapper {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid rgba(59, 130, 246, 0.18);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        background: rgba(15, 23, 42, 0.6);
+      }
+      th, td {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+        text-align: left;
+      }
+      th {
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        color: #94a3b8;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      @media (max-width: 720px) {
+        .header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .filters {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        button {
+          width: 100%;
+        }
+        .filter-actions {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script type="text/babel" src="./app.jsx"></script>
+  </body>
 </html>

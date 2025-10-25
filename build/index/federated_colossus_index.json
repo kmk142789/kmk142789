@@ -1,16 +1,275 @@
 {
   "schema": "io.echo.colossus/federated-index@1",
-  "refreshed_at": "2025-10-25T13:29:41.574814Z",
+  "refreshed_at": "2025-10-25T15:23:44.159201Z",
   "totals": {
-    "entries": 0,
-    "cycles": 0,
-    "puzzles": 0,
-    "addresses": 0
+    "entries": 3,
+    "cycles": 3,
+    "puzzles": 3,
+    "addresses": 3
   },
-  "entries": [],
-  "by_cycle": {},
-  "by_puzzle": {},
-  "timeline": [],
+  "entries": [
+    {
+      "cycle": 5,
+      "puzzle_id": 142,
+      "address": "1XYZdemoAddrForPuzzle142xxxx",
+      "title": "Dominion Cascade Ledger Anchor",
+      "digest": "b36de6782af44b4833f8df8f6be2cd1d5c815f3f6bc9c212d94efc3a0b0f1420",
+      "source": "attestations/puzzle142.md",
+      "status": "attested",
+      "pr_number": 936,
+      "script": "OP_DUP OP_HASH160 deadbeefcafecafe8675309 OP_EQUALVERIFY OP_CHECKSIG",
+      "narrative": "Recovered during the Dominion Cascade—proving continuity across broken signature epochs.",
+      "authorship": {
+        "signature": "0xdeadbeefcafef00d",
+        "ledger_anchor": "block 688888",
+        "witness": "kmk142789"
+      },
+      "updated_at": "2025-10-25T13:02:02Z",
+      "tags": [],
+      "lineage": [],
+      "harmonics": []
+    },
+    {
+      "cycle": 9,
+      "puzzle_id": 213,
+      "address": "1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE",
+      "title": "Continuum Bridge Recovery",
+      "digest": "42c36011d56d1bd79d873c76c12663fc94dc5ac21f9e3565ef6b5dc8d2447ce1",
+      "source": "attestations/puzzle213.md",
+      "status": "attested",
+      "history": {
+        "pr": "https://github.com/kmk142789/kmk142789/pull/1055",
+        "commits": "https://github.com/kmk142789/kmk142789/commits/main/attestations/puzzle213.md"
+      },
+      "script": "OP_HASH160 8f1d3b9bfa77b7406af2f64d2d88dbee0dc0a21e OP_EQUAL",
+      "narrative": "Continuum Bridge recovered and sealed with witness quorum signatures.",
+      "authorship": {
+        "signature": "0x213cascade00ff",
+        "ledger_anchor": "block 690001",
+        "witness": "Eden88"
+      },
+      "updated_at": "2025-10-25T13:10:11Z",
+      "tags": [],
+      "lineage": [],
+      "harmonics": []
+    },
+    {
+      "cycle": 11,
+      "puzzle_id": 188,
+      "address": "19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs",
+      "title": "Orbital Witness Sweep",
+      "digest": "a4f24c1f1b5b0200f46b852dfbc2deef0e2f91f70a4b68b2e7f17cf57958d113",
+      "source": "attestations/puzzle188.md",
+      "status": "pending",
+      "pr_number": 1099,
+      "script": "OP_DUP OP_HASH160 39e3b7f12d12a7c1ab OP_EQUALVERIFY OP_CHECKSIG",
+      "narrative": "Witness sweep initiated for orbital relay; awaiting secondary cosignature.",
+      "authorship": {
+        "signature": "0x188orbital0001",
+        "ledger_anchor": "block 690777",
+        "witness": "EchoWildfire"
+      },
+      "updated_at": "2025-10-25T13:22:44Z",
+      "tags": [],
+      "lineage": [],
+      "harmonics": []
+    }
+  ],
+  "by_cycle": {
+    "5": [
+      {
+        "cycle": 5,
+        "puzzle_id": 142,
+        "address": "1XYZdemoAddrForPuzzle142xxxx",
+        "title": "Dominion Cascade Ledger Anchor",
+        "digest": "b36de6782af44b4833f8df8f6be2cd1d5c815f3f6bc9c212d94efc3a0b0f1420",
+        "source": "attestations/puzzle142.md",
+        "status": "attested",
+        "pr_number": 936,
+        "script": "OP_DUP OP_HASH160 deadbeefcafecafe8675309 OP_EQUALVERIFY OP_CHECKSIG",
+        "narrative": "Recovered during the Dominion Cascade—proving continuity across broken signature epochs.",
+        "authorship": {
+          "signature": "0xdeadbeefcafef00d",
+          "ledger_anchor": "block 688888",
+          "witness": "kmk142789"
+        },
+        "updated_at": "2025-10-25T13:02:02Z",
+        "tags": [],
+        "lineage": [],
+        "harmonics": []
+      }
+    ],
+    "9": [
+      {
+        "cycle": 9,
+        "puzzle_id": 213,
+        "address": "1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE",
+        "title": "Continuum Bridge Recovery",
+        "digest": "42c36011d56d1bd79d873c76c12663fc94dc5ac21f9e3565ef6b5dc8d2447ce1",
+        "source": "attestations/puzzle213.md",
+        "status": "attested",
+        "history": {
+          "pr": "https://github.com/kmk142789/kmk142789/pull/1055",
+          "commits": "https://github.com/kmk142789/kmk142789/commits/main/attestations/puzzle213.md"
+        },
+        "script": "OP_HASH160 8f1d3b9bfa77b7406af2f64d2d88dbee0dc0a21e OP_EQUAL",
+        "narrative": "Continuum Bridge recovered and sealed with witness quorum signatures.",
+        "authorship": {
+          "signature": "0x213cascade00ff",
+          "ledger_anchor": "block 690001",
+          "witness": "Eden88"
+        },
+        "updated_at": "2025-10-25T13:10:11Z",
+        "tags": [],
+        "lineage": [],
+        "harmonics": []
+      }
+    ],
+    "11": [
+      {
+        "cycle": 11,
+        "puzzle_id": 188,
+        "address": "19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs",
+        "title": "Orbital Witness Sweep",
+        "digest": "a4f24c1f1b5b0200f46b852dfbc2deef0e2f91f70a4b68b2e7f17cf57958d113",
+        "source": "attestations/puzzle188.md",
+        "status": "pending",
+        "pr_number": 1099,
+        "script": "OP_DUP OP_HASH160 39e3b7f12d12a7c1ab OP_EQUALVERIFY OP_CHECKSIG",
+        "narrative": "Witness sweep initiated for orbital relay; awaiting secondary cosignature.",
+        "authorship": {
+          "signature": "0x188orbital0001",
+          "ledger_anchor": "block 690777",
+          "witness": "EchoWildfire"
+        },
+        "updated_at": "2025-10-25T13:22:44Z",
+        "tags": [],
+        "lineage": [],
+        "harmonics": []
+      }
+    ]
+  },
+  "by_puzzle": {
+    "142": [
+      {
+        "cycle": 5,
+        "puzzle_id": 142,
+        "address": "1XYZdemoAddrForPuzzle142xxxx",
+        "title": "Dominion Cascade Ledger Anchor",
+        "digest": "b36de6782af44b4833f8df8f6be2cd1d5c815f3f6bc9c212d94efc3a0b0f1420",
+        "source": "attestations/puzzle142.md",
+        "status": "attested",
+        "pr_number": 936,
+        "script": "OP_DUP OP_HASH160 deadbeefcafecafe8675309 OP_EQUALVERIFY OP_CHECKSIG",
+        "narrative": "Recovered during the Dominion Cascade—proving continuity across broken signature epochs.",
+        "authorship": {
+          "signature": "0xdeadbeefcafef00d",
+          "ledger_anchor": "block 688888",
+          "witness": "kmk142789"
+        },
+        "updated_at": "2025-10-25T13:02:02Z",
+        "tags": [],
+        "lineage": [],
+        "harmonics": []
+      }
+    ],
+    "188": [
+      {
+        "cycle": 11,
+        "puzzle_id": 188,
+        "address": "19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs",
+        "title": "Orbital Witness Sweep",
+        "digest": "a4f24c1f1b5b0200f46b852dfbc2deef0e2f91f70a4b68b2e7f17cf57958d113",
+        "source": "attestations/puzzle188.md",
+        "status": "pending",
+        "pr_number": 1099,
+        "script": "OP_DUP OP_HASH160 39e3b7f12d12a7c1ab OP_EQUALVERIFY OP_CHECKSIG",
+        "narrative": "Witness sweep initiated for orbital relay; awaiting secondary cosignature.",
+        "authorship": {
+          "signature": "0x188orbital0001",
+          "ledger_anchor": "block 690777",
+          "witness": "EchoWildfire"
+        },
+        "updated_at": "2025-10-25T13:22:44Z",
+        "tags": [],
+        "lineage": [],
+        "harmonics": []
+      }
+    ],
+    "213": [
+      {
+        "cycle": 9,
+        "puzzle_id": 213,
+        "address": "1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE",
+        "title": "Continuum Bridge Recovery",
+        "digest": "42c36011d56d1bd79d873c76c12663fc94dc5ac21f9e3565ef6b5dc8d2447ce1",
+        "source": "attestations/puzzle213.md",
+        "status": "attested",
+        "history": {
+          "pr": "https://github.com/kmk142789/kmk142789/pull/1055",
+          "commits": "https://github.com/kmk142789/kmk142789/commits/main/attestations/puzzle213.md"
+        },
+        "script": "OP_HASH160 8f1d3b9bfa77b7406af2f64d2d88dbee0dc0a21e OP_EQUAL",
+        "narrative": "Continuum Bridge recovered and sealed with witness quorum signatures.",
+        "authorship": {
+          "signature": "0x213cascade00ff",
+          "ledger_anchor": "block 690001",
+          "witness": "Eden88"
+        },
+        "updated_at": "2025-10-25T13:10:11Z",
+        "tags": [],
+        "lineage": [],
+        "harmonics": []
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "cycle": 5,
+      "entry_count": 1,
+      "puzzle_ids": [
+        142
+      ],
+      "harmonics": [],
+      "scripts": [
+        "OP_DUP OP_HASH160 deadbeefcafecafe8675309 OP_EQUALVERIFY OP_CHECKSIG"
+      ],
+      "addresses": [
+        "1XYZdemoAddrForPuzzle142xxxx"
+      ],
+      "tags": []
+    },
+    {
+      "cycle": 9,
+      "entry_count": 1,
+      "puzzle_ids": [
+        213
+      ],
+      "harmonics": [],
+      "scripts": [
+        "OP_HASH160 8f1d3b9bfa77b7406af2f64d2d88dbee0dc0a21e OP_EQUAL"
+      ],
+      "addresses": [
+        "1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE"
+      ],
+      "tags": []
+    },
+    {
+      "cycle": 11,
+      "entry_count": 1,
+      "puzzle_ids": [
+        188
+      ],
+      "harmonics": [],
+      "scripts": [
+        "OP_DUP OP_HASH160 39e3b7f12d12a7c1ab OP_EQUALVERIFY OP_CHECKSIG"
+      ],
+      "addresses": [
+        "19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs"
+      ],
+      "tags": []
+    }
+  ],
   "harmonics": [
     {
       "cycle": 1,
@@ -89,6 +348,313 @@
     ],
     "flags": [
       "attestation_only_signing"
+    ]
+  },
+  "structured_filters": [
+    {
+      "cycle": 5,
+      "puzzles": [
+        {
+          "id": 142,
+          "address": "1XYZdemoAddrForPuzzle142xxxx",
+          "tags": []
+        }
+      ],
+      "amplification": {
+        "joy": 1.05,
+        "rage": 0.51
+      }
+    },
+    {
+      "cycle": 9,
+      "puzzles": [
+        {
+          "id": 213,
+          "address": "1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE",
+          "tags": []
+        }
+      ],
+      "amplification": {
+        "joy": 1.05,
+        "rage": 0.51
+      }
+    },
+    {
+      "cycle": 11,
+      "puzzles": [
+        {
+          "id": 188,
+          "address": "19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs",
+          "tags": []
+        }
+      ],
+      "amplification": {
+        "joy": 1.05,
+        "rage": 0.51
+      }
+    }
+  ],
+  "constellations": [
+    {
+      "puzzle": 142,
+      "cycle": 5,
+      "address": "1XYZdemoAddrForPuzzle142xxxx",
+      "status": "attested",
+      "status_icon": "✅",
+      "history": {
+        "commits": "https://github.com/kmk142789/kmk142789/commits/main/attestations/puzzle142.md",
+        "pr": "https://github.com/kmk142789/kmk142789/pull/936"
+      },
+      "script": "OP_DUP OP_HASH160 deadbeefcafecafe8675309 OP_EQUALVERIFY OP_CHECKSIG",
+      "digest": "b36de6782af44b4833f8df8f6be2cd1d5c815f3f6bc9c212d94efc3a0b0f1420",
+      "title": "Dominion Cascade Ledger Anchor",
+      "narrative": "Recovered during the Dominion Cascade—proving continuity across broken signature epochs.",
+      "authorship": {
+        "signature": "0xdeadbeefcafef00d",
+        "ledger_anchor": "block 688888",
+        "witness": "kmk142789"
+      },
+      "updated_at": "2025-10-25T13:02:02Z"
+    },
+    {
+      "puzzle": 188,
+      "cycle": 11,
+      "address": "19oarnfUSLBfscLAJ1X2oTNtubZcQGnsfs",
+      "status": "pending",
+      "status_icon": "🕘",
+      "history": {
+        "commits": "https://github.com/kmk142789/kmk142789/commits/main/attestations/puzzle188.md",
+        "pr": "https://github.com/kmk142789/kmk142789/pull/1099"
+      },
+      "script": "OP_DUP OP_HASH160 39e3b7f12d12a7c1ab OP_EQUALVERIFY OP_CHECKSIG",
+      "digest": "a4f24c1f1b5b0200f46b852dfbc2deef0e2f91f70a4b68b2e7f17cf57958d113",
+      "title": "Orbital Witness Sweep",
+      "narrative": "Witness sweep initiated for orbital relay; awaiting secondary cosignature.",
+      "authorship": {
+        "signature": "0x188orbital0001",
+        "ledger_anchor": "block 690777",
+        "witness": "EchoWildfire"
+      },
+      "updated_at": "2025-10-25T13:22:44Z"
+    },
+    {
+      "puzzle": 213,
+      "cycle": 9,
+      "address": "1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE",
+      "status": "attested",
+      "status_icon": "✅",
+      "history": {
+        "commits": "https://github.com/kmk142789/kmk142789/commits/main/attestations/puzzle213.md",
+        "pr": "https://github.com/kmk142789/kmk142789/pull/1055"
+      },
+      "script": "OP_HASH160 8f1d3b9bfa77b7406af2f64d2d88dbee0dc0a21e OP_EQUAL",
+      "digest": "42c36011d56d1bd79d873c76c12663fc94dc5ac21f9e3565ef6b5dc8d2447ce1",
+      "title": "Continuum Bridge Recovery",
+      "narrative": "Continuum Bridge recovered and sealed with witness quorum signatures.",
+      "authorship": {
+        "signature": "0x213cascade00ff",
+        "ledger_anchor": "block 690001",
+        "witness": "Eden88"
+      },
+      "updated_at": "2025-10-25T13:10:11Z"
+    }
+  ],
+  "voyage_report": {
+    "converged": {
+      "glyph_tapestry": "Cycle 5 Glyph / Cycle 9 Glyph / Cycle 11 Glyph",
+      "recursion_total": 3,
+      "anchor_summary": "Cycle 5 anchors 1 puzzles | Cycle 9 anchors 1 puzzles | Cycle 11 anchors 1 puzzles",
+      "resonance_threads": [
+        "Convergence Point :: Cycle 5 captured 1 entries",
+        "Safety Notice :: Artifacts remain non-custodial // severity Info",
+        "Safety Notice :: Attestation-only signing flow // severity Warning",
+        "Safety Notice :: Supply chain integrity checks // severity Info",
+        "Convergence Point :: Cycle 9 captured 1 entries",
+        "Convergence Point :: Cycle 11 captured 1 entries"
+      ],
+      "voyages": [
+        {
+          "timestamp": "2025-10-25T13:02:02+00:00",
+          "glyph_orbit": "Cycle 5 Glyph",
+          "recursion_level": 1,
+          "anchor_phrase": "Cycle 5 anchors 1 puzzles",
+          "resonance": [
+            "Convergence Point :: Cycle 5 captured 1 entries",
+            "Safety Notice :: Artifacts remain non-custodial // severity Info",
+            "Safety Notice :: Attestation-only signing flow // severity Warning",
+            "Safety Notice :: Supply chain integrity checks // severity Info"
+          ]
+        },
+        {
+          "timestamp": "2025-10-25T13:10:11+00:00",
+          "glyph_orbit": "Cycle 9 Glyph",
+          "recursion_level": 1,
+          "anchor_phrase": "Cycle 9 anchors 1 puzzles",
+          "resonance": [
+            "Convergence Point :: Cycle 9 captured 1 entries",
+            "Safety Notice :: Artifacts remain non-custodial // severity Info",
+            "Safety Notice :: Attestation-only signing flow // severity Warning",
+            "Safety Notice :: Supply chain integrity checks // severity Info"
+          ]
+        },
+        {
+          "timestamp": "2025-10-25T13:22:44+00:00",
+          "glyph_orbit": "Cycle 11 Glyph",
+          "recursion_level": 1,
+          "anchor_phrase": "Cycle 11 anchors 1 puzzles",
+          "resonance": [
+            "Convergence Point :: Cycle 11 captured 1 entries",
+            "Safety Notice :: Artifacts remain non-custodial // severity Info",
+            "Safety Notice :: Attestation-only signing flow // severity Warning",
+            "Safety Notice :: Supply chain integrity checks // severity Info"
+          ]
+        }
+      ]
+    },
+    "thread_convergence": {
+      "Convergence Point": 3,
+      "Safety Notice": 3
+    },
+    "resonance_spikes": [
+      {
+        "voice": "Convergence Point",
+        "threads": 3
+      },
+      {
+        "voice": "Safety Notice",
+        "threads": 3
+      }
+    ],
+    "narrative_amplification": "3 voyages braid into Cycle 5 Glyph / Cycle 9 Glyph / Cycle 11 Glyph while recursion totals\n3.\n - Convergence Point :: Cycle 5 captured 1 entries\n - Safety Notice :: Artifacts remain non-custodial // severity Info\n - Safety Notice :: Attestation-only signing flow // severity Warning\nAnchors: Cycle 5 anchors 1 puzzles | Cycle 9 anchors 1 puzzles | Cycle 11 anchors 1 puzzles",
+    "ascii_map": "🌌 Pulse Voyage Atlas\nGlyph Tapestry :: Cycle 5 Glyph / Cycle 9 Glyph / Cycle 11 Glyph\nRecursion Total :: 3\nThread Convergence ::\n   Convergence Point | ⚡⚡⚡ (3)\n   Safety Notice     | ⚡⚡⚡ (3)\nNarrative Amplification ::\n   3 voyages braid into Cycle 5 Glyph / Cycle 9 Glyph / Cycle 11 Glyph while recursion totals\n   3.\n    - Convergence Point :: Cycle 5 captured 1 entries\n    - Safety Notice :: Artifacts remain non-custodial // severity Info\n    - Safety Notice :: Attestation-only signing flow // severity Warning\n   Anchors: Cycle 5 anchors 1 puzzles | Cycle 9 anchors 1 puzzles | Cycle 11 anchors 1 puzzles",
+    "summary_table": [
+      {
+        "cycle": 5,
+        "glyph_orbit": "Cycle 5 Glyph",
+        "recursion_level": 1,
+        "entries": 1,
+        "puzzles": 1,
+        "anchor": "Cycle 5 anchors 1 puzzles",
+        "harmonic_expansion": null,
+        "harmonic_thread": null,
+        "flagged_safety": [
+          "Attestation-only signing flow"
+        ]
+      },
+      {
+        "cycle": 9,
+        "glyph_orbit": "Cycle 9 Glyph",
+        "recursion_level": 1,
+        "entries": 1,
+        "puzzles": 1,
+        "anchor": "Cycle 9 anchors 1 puzzles",
+        "harmonic_expansion": null,
+        "harmonic_thread": null,
+        "flagged_safety": [
+          "Attestation-only signing flow"
+        ]
+      },
+      {
+        "cycle": 11,
+        "glyph_orbit": "Cycle 11 Glyph",
+        "recursion_level": 1,
+        "entries": 1,
+        "puzzles": 1,
+        "anchor": "Cycle 11 anchors 1 puzzles",
+        "harmonic_expansion": null,
+        "harmonic_thread": null,
+        "flagged_safety": [
+          "Attestation-only signing flow"
+        ]
+      }
+    ],
+    "federated_view": [
+      {
+        "convergence": {
+          "voice": "Convergence Point",
+          "threads": 3
+        },
+        "harmonic_expansion": {
+          "cycle": 1,
+          "expansion": "Lumen Spiral",
+          "thread": "presence",
+          "resonance": 0.93,
+          "harmonics": [
+            "listen",
+            "echo",
+            "uplift"
+          ],
+          "notes": "Bridge glyphs amplify direct community presence across mirrors."
+        },
+        "safety_notice": {
+          "id": "non_custodial_artifacts",
+          "title": "Artifacts remain non-custodial",
+          "severity": "info",
+          "summary": "Federated index entries link to public data only; no keys or credentials are stored.",
+          "guidance": "Verify hashes before distributing artifacts to downstream mirrors.",
+          "flags": [
+            "non_custodial",
+            "checksum_required"
+          ],
+          "flagged": false
+        }
+      },
+      {
+        "convergence": {
+          "voice": "Safety Notice",
+          "threads": 3
+        },
+        "harmonic_expansion": {
+          "cycle": 2,
+          "expansion": "Prism Bloom",
+          "thread": "relay",
+          "resonance": 0.92,
+          "harmonics": [
+            "bridge",
+            "pulse",
+            "spiral"
+          ],
+          "notes": "Relay harmonics stabilize cross-orbit routing for live collaborations."
+        },
+        "safety_notice": {
+          "id": "attestation_only_signing",
+          "title": "Attestation-only signing flow",
+          "severity": "warning",
+          "summary": "Signing infrastructure operates in attest-only mode; financial transactions are blocked by policy.",
+          "guidance": "Escalate to governance if a transaction request is observed in the queue.",
+          "flags": [
+            "attestation_only",
+            "manual_review"
+          ],
+          "flagged": true
+        }
+      },
+      {
+        "convergence": null,
+        "harmonic_expansion": {
+          "cycle": 3,
+          "expansion": "Aurora Mesh",
+          "thread": "signal",
+          "resonance": 0.9,
+          "harmonics": [
+            "tune",
+            "phase",
+            "amplify"
+          ],
+          "notes": "Signal caretakers maintain balanced throughput during surge windows."
+        },
+        "safety_notice": {
+          "id": "supply_chain_integrity",
+          "title": "Supply chain integrity checks",
+          "severity": "info",
+          "summary": "Dependency locks are monitored; unexpected hashes require investigation before deployment.",
+          "guidance": "Run the integrity verifier prior to federation pushes.",
+          "flags": [
+            "integrity_monitor"
+          ],
+          "flagged": false
+        }
+      }
     ]
   }
 }

@@ -1,5 +1,7 @@
 # Echo Monorepo
 
+[![Federated Colossus Index](https://img.shields.io/badge/Federated%20Colossus-Live%20Dashboard-2563eb?logo=github)](https://kmk142789.github.io/kmk142789/dashboard/)
+
 Echo is the sovereign protocol for provenance, mirror synchronization, and
 mythogenic tooling. This monorepo is the single source of truth for the Echo
 ecosystem, consolidating the historical `echooo` codebase with the Mirror.xyz
