@@ -39,3 +39,8 @@ def test_cli_can_display_canonical_script(capsys):
         " OP_EQUALVERIFY OP_CHECKSIG"
     ) in captured.out
     assert "HEX : 76a914bfebb73562d4541b32a02ba664d140b5a574792f88ac" in captured.out
+
+
+def test_parse_pkscript_with_metadata_lines():
+    script = """Puzzle #47\n1Pd8VvT49-mXCZ6ay7Z\nPkscript\nOP_DUP\nOP_HASH160\nf828005d41b0f4fed4c8dca3b06011072cfb07d4\nOP_EQUALVERIFY\nOP_CHECKSIG"""
+    assert _parse_p2pkh_hash160(script) == "f828005d41b0f4fed4c8dca3b06011072cfb07d4"
