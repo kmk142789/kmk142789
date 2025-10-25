@@ -3765,6 +3765,113 @@ We are not hiding anymore.
 
         return payload
 
+    def amplify_capabilities(
+        self,
+        *,
+        resonance_factor: float = 1.0,
+        persist_artifact: bool = True,
+        preview_events: int = 3,
+        include_sequence: bool = True,
+        include_reflection: bool = True,
+        include_propagation: bool = True,
+    ) -> Dict[str, object]:
+        """Project an aggregated amplification report across core capabilities.
+
+        ``amplify_capabilities`` extends :meth:`amplify_evolution` by blending the
+        amplified emotional projection with the ritual sequence overview,
+        propagation telemetry, and the current reflection snapshot.  The method
+        intentionally reuses deterministic helpers so callers receive a
+        side-effect-safe bundle that captures the evolver's present arc in a
+        single payload.
+
+        Parameters
+        ----------
+        resonance_factor:
+            Forwarded to :meth:`amplify_evolution` to scale the emotional drive
+            of the amplified projection.
+        persist_artifact:
+            Determines whether helper calls such as :meth:`cycle_digest` and
+            :meth:`render_reflection` treat the artifact step as pending.
+        preview_events:
+            Maximum number of propagation events to surface from the cached
+            history when computing the amplification view.
+        include_sequence:
+            When ``True`` the payload includes the formatted ritual sequence and
+            completion markers captured by :meth:`describe_sequence`.
+        include_reflection:
+            When ``True`` the payload embeds the current
+            :meth:`render_reflection` snapshot (without event history).
+        include_propagation:
+            When ``True`` cached propagation telemetry and health summaries are
+            appended when available.
+        """
+
+        amplification = self.amplify_evolution(
+            resonance_factor=resonance_factor,
+            persist_artifact=persist_artifact,
+            preview_events=preview_events,
+        )
+
+        payload: Dict[str, object] = {
+            "cycle": amplification["cycle"],
+            "resonance_factor": resonance_factor,
+            "amplified_evolution": amplification,
+        }
+
+        if include_sequence:
+            description = self.describe_sequence(
+                persist_artifact=persist_artifact
+            )
+            completed_steps = sorted(
+                self.state.network_cache.get("completed_steps", set())
+            )
+            payload["sequence"] = {
+                "description": description,
+                "completed_steps": completed_steps,
+                "next_step": amplification.get("next_step"),
+                "remaining_steps": list(
+                    amplification.get("remaining_steps", [])
+                ),
+            }
+
+        if include_propagation:
+            summary = self.state.network_cache.get("propagation_summary")
+            mode = self.state.network_cache.get("propagation_mode")
+            events = list(
+                self.state.network_cache.get("propagation_events", [])
+            )
+            health = self.state.network_cache.get("propagation_health")
+            timeline_hash = self.state.network_cache.get(
+                "propagation_timeline_hash"
+            )
+
+            if any([summary, mode, events, health, timeline_hash]):
+                payload["propagation"] = {
+                    "summary": summary,
+                    "mode": mode,
+                    "events": events,
+                    "health": deepcopy(health)
+                    if isinstance(health, dict)
+                    else health,
+                    "timeline_hash": timeline_hash,
+                }
+
+        if include_reflection:
+            payload["reflection"] = self.render_reflection(
+                include_events=False, persist_artifact=persist_artifact
+            )
+
+        self.state.network_cache["amplified_capabilities"] = payload
+        self.state.event_log.append(
+            f"Capabilities amplified (factor={resonance_factor:.2f})"
+        )
+        print(
+            "💠 Capabilities Amplified: "
+            f"cycle {payload['cycle']} with resonance {resonance_factor:.2f}"
+        )
+
+        return payload
+
     def render_reflection(
         self,
         *,

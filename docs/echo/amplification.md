@@ -56,6 +56,16 @@ Running `echo amplify now` twice without code changes produces identical
 JSON output; the engine reuses the existing timestamp when the metrics and
 commit hash are unchanged.
 
+## Capability Amplification Bundle
+
+When the full evolver context is required, call
+`EchoEvolver.amplify_capabilities`. The helper wraps the baseline
+`amplify_evolution` projection with the current ritual sequence description,
+cached propagation telemetry, and the latest reflection snapshot.  Automated
+systems can forward the bundled payload to dashboards or secondary agents to
+reason about emotional drive, remaining steps, network health, and narrative
+state without triggering any new side effects.
+
 ## CI Troubleshooting
 
 Continuous integration enforces `echo amplify gate --min 70`.  When the
