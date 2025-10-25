@@ -12,12 +12,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install -r requirements.txt || true
-      - run: make constellation || true
-      - run: python scripts/oracle.py || true
-      - run: python scripts/verify_proof.py || true
-      - run: python scripts/domain_bridge.py || true
-      - run: python scripts/swarm.py || true
+      - run: pip install -r requirements.txt
+      - run: make constellation
+      - run: python scripts/oracle.py
+      - run: python scripts/verify_proof.py
+      - run: python scripts/domain_bridge.py
+      - run: python scripts/swarm.py
       - name: Self-healing attempt
         if: failure()
         run: |

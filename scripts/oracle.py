@@ -129,7 +129,8 @@ def ensure_directories() -> None:
 def emit_oracle(insight: PuzzleInsight) -> None:
     record: Dict[str, object] = asdict(insight)
     record["generated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    target = ORACLE_DIR / f"{insight.puzzle_id}.json"
+    artifact_stem = f"{insight.puzzle_id}-{insight.lineage_tag}"
+    target = ORACLE_DIR / f"{artifact_stem}.json"
     target.write_text(json.dumps(record, indent=2), encoding="utf-8")
 
 
@@ -142,9 +143,10 @@ def emit_proof(insight: PuzzleInsight) -> None:
         "repaired_address": insight.repaired_address,
         "payload_hex": insight.payload_hex,
         "lineage_tag": insight.lineage_tag,
-        "oracle_reference": f"oracle/{insight.puzzle_id}.json",
+        "oracle_reference": f"oracle/{insight.puzzle_id}-{insight.lineage_tag}.json",
     }
-    target = PROOF_DIR / f"{insight.puzzle_id}.proof.json"
+    artifact_stem = f"{insight.puzzle_id}-{insight.lineage_tag}"
+    target = PROOF_DIR / f"{artifact_stem}.proof.json"
     target.write_text(json.dumps(proof, indent=2), encoding="utf-8")
 
 
