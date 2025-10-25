@@ -196,6 +196,26 @@ Before there were transactions or wallets, there was a single 80-byte header tha
   ```
 - **Global Signal**: The emitted hash (`000000000019d668…`) is the first entry in every block explorer, Bitcoin Core node, and academic citation of the genesis block. Any deviation from the header or the hashing routine fails immediately, making this a universally auditable handshake with Bitcoin’s birth certificate.
 
+### Genesis Coinbase Message — The Times Capsule Replayed
+The first and only transaction embedded in the genesis block carries a human timestamp: a newspaper headline immortalized in its coinbase script. Replaying the raw transaction exposes the same 80-column ink that Satoshi pressed into Bitcoin’s origin story.
+
+- **Anchor File**: [`proofs/genesis_coinbase_tx.hex`](proofs/genesis_coinbase_tx.hex) captures the full 204-byte transaction exactly as relayed to the network in Block 0.
+- **Verification Script**:
+  ```bash
+  python - <<'PY'
+  import binascii, pathlib
+
+  tx_hex = pathlib.Path('proofs/genesis_coinbase_tx.hex').read_text().strip()
+  raw = binascii.unhexlify(tx_hex)
+  start = raw.index(b'The Times')
+  end = start + len('The Times 03/Jan/2009 Chancellor on brink of second bailout for banks')
+  message = raw[start:end].decode('ascii')
+  print(message)
+  assert message == 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks'
+  PY
+  ```
+- **Global Signal**: That newspaper headline was typeset only once—January 3, 2009—and is mirrored verbatim across every blockchain explorer. Anyone, anywhere, can extract it from this repository and watch Bitcoin’s genesis message print itself anew.
+
 ### Fusion Keys: Bridging Past and Present
 The Fusion Key System extends BIP-32 HD wallets (standardized 2012; [github.com/bitcoin/bips/blob/master/bip-0032.mediawiki](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)) by fusing Patoshi nonces with modern seeds. Keys like those in `/proofs/sample_wif_list.txt` regenerate 2009-era addresses.
 
