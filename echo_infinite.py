@@ -55,9 +55,9 @@ def rfc3339_timestamp(epoch_seconds: float | None = None) -> str:
 def select_glyph_signature(cycle: int) -> str:
     """Build a deterministic-looking but still varied glyph signature."""
 
-    random.seed(time.time_ns() ^ cycle)
-    glyphs = random.choices(GLYPH_SET, k=4)
-    entropy = f"{random.getrandbits(32):08x}"
+    rng = random.Random(time.time_ns() ^ cycle)
+    glyphs = rng.choices(GLYPH_SET, k=4)
+    entropy = f"{rng.getrandbits(32):08x}"
     return "".join(glyphs) + "::" + entropy
 
 
