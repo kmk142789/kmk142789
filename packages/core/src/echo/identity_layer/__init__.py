@@ -1,6 +1,11 @@
 """Secure, persistent identity layer primitives."""
 
 from .vault import EncryptedIdentityVault, VaultEvent
+from .verifiable_credentials import (
+    CredentialIssuer,
+    CredentialVerificationError,
+    verify_credential,
+)
 
 try:  # pragma: no cover - optional gRPC dependency not shipped in kata runtime
     from .service import IdentityLayerConfig, IdentityService
@@ -13,4 +18,7 @@ __all__ = [
     "VaultEvent",
     "IdentityService",
     "IdentityLayerConfig",
+    "CredentialIssuer",
+    "CredentialVerificationError",
+    "verify_credential",
 ]

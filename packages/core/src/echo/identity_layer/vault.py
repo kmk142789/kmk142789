@@ -99,7 +99,10 @@ class EncryptedIdentityVault:
     # Public API
     # ------------------------------------------------------------------
     def list_keys(self) -> List[Dict[str, object]]:
-        return list(self._state.get("keys", []))
+        records = list(self._state.get("keys", []))
+        for entry in records:
+            self._ensure_verification_key(entry)
+        return records
 
     def get_key(self, *, chain: str, account: int, index: int, change: int = 0) -> Optional[Dict[str, object]]:
         for entry in self.list_keys():
@@ -110,6 +113,15 @@ class EncryptedIdentityVault:
                 and derivation.get("index") == index
                 and derivation.get("change") == change
             ):
+                return entry
+        return None
+
+    def get_key_by_did(self, did: str) -> Optional[Dict[str, object]]:
+        """Return the key entry associated with ``did`` if present."""
+
+        for entry in self.list_keys():
+            if entry.get("did") == did:
+                self._ensure_verification_key(entry)
                 return entry
         return None
 
@@ -125,6 +137,7 @@ class EncryptedIdentityVault:
     ) -> Dict[str, object]:
         existing = self.get_key(chain=chain, account=account, index=index, change=change)
         if existing:
+            self._ensure_verification_key(existing)
             return existing
         key_entry = self._derive_key_entry(
             chain=chain,
@@ -316,6 +329,9 @@ class EncryptedIdentityVault:
             "did": did,
             "public_key_b64": base64.b64encode(addr_ctx.PublicKey().RawCompressed().ToBytes()).decode("ascii"),
             "secret_key_b64": base64.b64encode(addr_ctx.PrivateKey().Raw().ToBytes()).decode("ascii"),
+            "verification_public_key_b64": base64.b64encode(
+                signing.SigningKey(addr_ctx.PrivateKey().Raw().ToBytes()).verify_key._key
+            ).decode("ascii"),
             "extended_public_key": addr_ctx.PublicKey().ToExtended(),
             "extended_private_key": addr_ctx.PrivateKey().ToExtended(),
             "derivation": {
@@ -328,6 +344,18 @@ class EncryptedIdentityVault:
             "metadata": metadata,
         }
         return entry
+
+    def _ensure_verification_key(self, entry: Dict[str, object]) -> None:
+        if "verification_public_key_b64" in entry:
+            return
+        secret_b64 = entry.get("secret_key_b64")
+        if not isinstance(secret_b64, str):
+            return
+        secret = base64.b64decode(secret_b64)
+        entry["verification_public_key_b64"] = base64.b64encode(
+            signing.SigningKey(secret).verify_key._key
+        ).decode("ascii")
+        self._persist()
 
     def _make_did(self, chain: str, account: int, index: int, change: int) -> str:
         return f"did:echo:{chain}:{account}:{change}:{index}:{base64.urlsafe_b64encode(os.urandom(6)).decode('ascii')}"
