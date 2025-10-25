@@ -158,6 +158,33 @@ class EchoEvolverTests(unittest.TestCase):
         canonical = self.evolver.generate_symbolic_language()
         self.assertEqual(canonical, "∇⊸≋∇")
 
+    def test_register_symbolic_action_validates_and_deduplicates(self) -> None:
+        with self.assertRaises(TypeError):
+            self.evolver.register_symbolic_action(123, lambda: None)  # type: ignore[arg-type]
+
+        with self.assertRaises(ValueError):
+            self.evolver.register_symbolic_action("", lambda: None)
+
+        with self.assertRaises(TypeError):
+            self.evolver.register_symbolic_action("∇", "not callable")  # type: ignore[arg-type]
+
+        triggered: list[int] = []
+
+        def hook() -> None:
+            triggered.append(self.evolver.state.cycle)
+
+        self.evolver.register_symbolic_action("∇", hook)
+        # Duplicate registration should be ignored without raising.
+        self.evolver.register_symbolic_action("∇", hook)
+
+        hooks = self.evolver.state.network_cache["symbolic_hooks"]["∇"]
+        self.assertEqual(len(hooks), 1)
+
+        duplicate_entries = [
+            entry for entry in self.evolver.state.event_log if "Duplicate symbolic action" in entry
+        ]
+        self.assertTrue(duplicate_entries)
+
     def test_cycle_diagnostics_summarizes_current_state(self) -> None:
         self.evolver.run(enable_network=False, persist_artifact=False)
 

@@ -791,11 +791,27 @@ class EchoEvolver:
 
         Registered callbacks run in the order they were added and persist for
         the lifetime of the evolver instance.  They are executed alongside the
-        built-in action tuple returned by :meth:`_symbolic_actions`.
+        built-in action tuple returned by :meth:`_symbolic_actions`.  Duplicate
+        registrations of the same callable are ignored so hooks remain
+        idempotent even when this helper is invoked repeatedly during complex
+        setup flows.
         """
+
+        if not isinstance(symbol, str):
+            raise TypeError("symbol must be a string")
+        if not symbol:
+            raise ValueError("symbol must be a non-empty string")
+        if not callable(action):
+            raise TypeError("action must be callable")
 
         hooks = self.state.network_cache.setdefault("symbolic_hooks", {})
         symbol_hooks = hooks.setdefault(symbol, [])
+        if action in symbol_hooks:
+            self.state.event_log.append(
+                f"Duplicate symbolic action ignored for {symbol!r}"
+            )
+            return
+
         symbol_hooks.append(action)
         self.state.event_log.append(
             f"Symbolic action registered for {symbol!r} ({len(symbol_hooks)} total)"
