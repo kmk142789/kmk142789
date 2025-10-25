@@ -160,6 +160,11 @@ The Harmonix signer and Echo Evolve engine generate ECDSA secp256k1 signatures (
 
 - **Evidence**: Signature in `/proofs/sample_signature.txt` matches genesis coinbase hash (e3b0c442...; verifiable via [CyberChef](https://gchq.github.io/CyberChef/)).
 
+### Puzzle 2 — Verified Satoshi Puzzle Signature
+
+- **Address:** `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`
+- **Verification Guide:** [`proofs/satoshi_signature_proof.md`](proofs/satoshi_signature_proof.md) walks through reproducing the message-signature check with the bundled verifier, confirming the recovered public key maps back to the canonical puzzle solution.
+
 ### Puzzle 71 — Proof of Authorship
 
 - **Address:** `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`
