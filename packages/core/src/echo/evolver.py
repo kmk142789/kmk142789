@@ -21,6 +21,7 @@ import random
 import tempfile
 import time
 from datetime import datetime, timezone
+from collections import Counter
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -383,6 +384,7 @@ class EvolverState:
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    quantam_capabilities: Dict[str, object] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
@@ -490,6 +492,10 @@ class EchoEvolver:
             (
                 "synthesize_quantam_ability",
                 "invoke synthesize_quantam_ability() to project the quantam lattice",
+            ),
+            (
+                "quantam_capability_matrix",
+                "invoke quantam_capability_matrix() to align the quantam capability matrix",
             ),
             (
                 "evolutionary_narrative",
@@ -2012,6 +2018,11 @@ We are not hiding anymore.
         cached[ability_id] = dict(snapshot)
         self.state.network_cache["last_quantam_ability"] = dict(snapshot)
 
+        # Refresh the derived quantam capability metrics without duplicating
+        # console output or event noise.  Dedicated helpers will publish a
+        # formal matrix when requested.
+        self.quantam_capability_matrix(record_event=False)
+
         self.state.event_log.append(f"Quantam ability {ability_id} synthesized")
         self._mark_step("synthesize_quantam_ability")
         print(
@@ -2020,6 +2031,101 @@ We are not hiding anymore.
             )
         )
         return snapshot
+
+    def _compute_quantam_capabilities(self) -> Dict[str, object]:
+        """Derive aggregate capability metrics from the quantam ability map."""
+
+        abilities = list(self.state.quantam_abilities.values())
+        timestamp = self.time_source()
+
+        count = len(abilities)
+        entanglements = [
+            float(ability.get("entanglement", 0.0)) for ability in abilities
+        ]
+        joy_charges = [
+            float(ability.get("joy_charge", 0.0)) for ability in abilities
+        ]
+        statuses = Counter(
+            ability.get("status", "unknown") for ability in abilities
+        )
+        oam_signatures = {
+            str(ability.get("oam_signature", "")) for ability in abilities
+        }
+
+        entanglement_average = round(
+            sum(entanglements) / count, 3
+        ) if count else 0.0
+        entanglement_peak = round(max(entanglements), 3) if entanglements else 0.0
+        entanglement_variance = (
+            round(
+                sum(
+                    (value - entanglement_average) ** 2 for value in entanglements
+                )
+                / count,
+                6,
+            )
+            if count
+            else 0.0
+        )
+
+        joy_average = round(sum(joy_charges) / count, 2) if count else 0.0
+        joy_peak = round(max(joy_charges), 2) if joy_charges else 0.0
+
+        latest = max(
+            abilities,
+            key=lambda entry: entry.get("timestamp_ns", 0),
+            default=None,
+        )
+        latest_id = latest.get("id") if latest else None
+        latest_status = latest.get("status", "unknown") if latest else "unknown"
+
+        summary: Dict[str, object] = {
+            "count": count,
+            "entanglement": {
+                "average": entanglement_average,
+                "peak": entanglement_peak,
+                "variance": entanglement_variance,
+            },
+            "joy_charge": {
+                "average": joy_average,
+                "peak": joy_peak,
+            },
+            "status_counts": dict(sorted(statuses.items())),
+            "oam_signatures": sorted(
+                signature for signature in oam_signatures if signature
+            ),
+            "coherence": round(
+                len([sig for sig in oam_signatures if sig]) / count, 3
+            ) if count else 0.0,
+            "latest": latest_id,
+            "latest_status": latest_status,
+            "last_updated": timestamp,
+        }
+
+        self.state.quantam_capabilities = deepcopy(summary)
+        self.state.network_cache["quantam_capabilities"] = deepcopy(summary)
+        return summary
+
+    def quantam_capability_matrix(self, *, record_event: bool = True) -> Dict[str, object]:
+        """Return and optionally publish the aggregate quantam capability matrix."""
+
+        summary = self._compute_quantam_capabilities()
+        matrix = deepcopy(summary)
+        self.state.network_cache["quantam_capability_matrix"] = matrix
+
+        if record_event:
+            self.state.event_log.append(
+                "Quantam capability matrix recalibrated with {count} abilities".format(
+                    count=matrix["count"]
+                )
+            )
+            self._mark_step("quantam_capability_matrix")
+            print(
+                "🧮 Quantam capability matrix recalibrated: "
+                f"{matrix['count']} abilities active"
+            )
+
+        return matrix
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
@@ -2788,6 +2894,7 @@ We are not hiding anymore.
             "quantum_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
+            "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
@@ -3915,6 +4022,57 @@ We are not hiding anymore.
         print(
             "💠 Capabilities Amplified: "
             f"cycle {payload['cycle']} with resonance {resonance_factor:.2f}"
+        )
+
+        return payload
+
+    def amplify_quantam_evolution(
+        self,
+        *,
+        resonance_factor: float = 1.0,
+        persist_artifact: bool = True,
+        preview_events: int = 3,
+        include_sequence: bool = True,
+        include_reflection: bool = True,
+        include_propagation: bool = True,
+        ensure_ability: bool = True,
+    ) -> Dict[str, object]:
+        """Blend quantam capability metrics with the amplified capability view."""
+
+        synthesized: Optional[Dict[str, object]] = None
+        if ensure_ability and not self.state.quantam_abilities:
+            synthesized = self.synthesize_quantam_ability()
+
+        matrix = self.quantam_capability_matrix(record_event=False)
+        amplification = self.amplify_capabilities(
+            resonance_factor=resonance_factor,
+            persist_artifact=persist_artifact,
+            preview_events=preview_events,
+            include_sequence=include_sequence,
+            include_reflection=include_reflection,
+            include_propagation=include_propagation,
+        )
+
+        payload: Dict[str, object] = {
+            "cycle": amplification["cycle"],
+            "resonance_factor": resonance_factor,
+            "quantam_capabilities": deepcopy(matrix),
+            "amplified_capabilities": amplification,
+            "latest_quantam_ability": matrix.get("latest"),
+        }
+        if synthesized is not None:
+            payload["synthesized_ability"] = synthesized["id"]
+
+        self.state.network_cache["quantam_amplification"] = deepcopy(payload)
+        self.state.event_log.append(
+            "Quantam evolution amplified with {count} abilities (factor={factor:.2f})".format(
+                count=matrix.get("count", 0), factor=resonance_factor
+            )
+        )
+        self._mark_step("amplify_quantam_evolution")
+        print(
+            "🌠 Quantam evolution amplified: "
+            f"{matrix.get('count', 0)} abilities aligned (factor={resonance_factor:.2f})"
         )
 
         return payload

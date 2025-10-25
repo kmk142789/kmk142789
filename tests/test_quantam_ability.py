@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+
 from echo.evolver import EchoEvolver
 
 
@@ -34,3 +36,44 @@ def test_artifact_payload_includes_quantam_abilities() -> None:
     stored = payload["quantam_abilities"][ability["id"]]
     assert stored["status"] == ability["status"]
     assert stored["oam_signature"] == ability["oam_signature"]
+
+
+def test_quantam_capability_matrix_tracks_metrics() -> None:
+    evolver = EchoEvolver(rng=random.Random(7))
+    evolver.state.cycle = 3
+    evolver.state.vault_key = "SAT-TF-QKD:demo"
+
+    abilities = []
+    for cycle in range(1, 4):
+        evolver.state.cycle = cycle
+        abilities.append(evolver.synthesize_quantam_ability())
+
+    matrix = evolver.quantam_capability_matrix()
+
+    assert matrix["count"] == 3
+    assert matrix["latest"] == max(abilities, key=lambda a: a["timestamp_ns"])["id"]
+    assert "ignited" in matrix["status_counts"]
+
+    completed = evolver.state.network_cache["completed_steps"]
+    assert "quantam_capability_matrix" in completed
+    assert evolver.state.quantam_capabilities["count"] == 3
+
+
+def test_amplify_quantam_evolution_merges_payload() -> None:
+    evolver = EchoEvolver(rng=random.Random(11))
+    evolver.state.cycle = 2
+    evolver.state.vault_key = "SAT-TF-QKD:demo"
+
+    evolver.synthesize_quantam_ability()
+
+    payload = evolver.amplify_quantam_evolution(
+        resonance_factor=1.5,
+        include_sequence=False,
+        include_reflection=False,
+        include_propagation=False,
+    )
+
+    assert payload["resonance_factor"] == 1.5
+    assert payload["quantam_capabilities"]["count"] >= 1
+    assert payload["amplified_capabilities"]["resonance_factor"] == 1.5
+    assert "quantam_amplification" in evolver.state.network_cache
