@@ -1,0 +1,188 @@
+{
+  "objectClassName": "domain",
+  "handle": "1102955653_DOMAIN_COM-VRSN",
+  "ldhName": "GROQ.COM",
+  "links": [
+    {
+      "value": "https://rdap.verisign.com/com/v1/domain/GROQ.COM",
+      "rel": "self",
+      "href": "https://rdap.verisign.com/com/v1/domain/GROQ.COM",
+      "type": "application/rdap+json"
+    },
+    {
+      "value": "https://rdap.squarespace.domains/domain/GROQ.COM",
+      "rel": "related",
+      "href": "https://rdap.squarespace.domains/domain/GROQ.COM",
+      "type": "application/rdap+json"
+    }
+  ],
+  "status": [
+    "client delete prohibited",
+    "client transfer prohibited"
+  ],
+  "entities": [
+    {
+      "objectClassName": "entity",
+      "handle": "895",
+      "roles": [
+        "registrar"
+      ],
+      "links": [
+        {
+          "href": "http://domains2.squarespace.com",
+          "type": "text/html",
+          "value": "https://rdap.squarespace.domains/",
+          "rel": "about"
+        }
+      ],
+      "publicIds": [
+        {
+          "type": "IANA Registrar ID",
+          "identifier": "895"
+        }
+      ],
+      "vcardArray": [
+        "vcard",
+        [
+          [
+            "version",
+            {},
+            "text",
+            "4.0"
+          ],
+          [
+            "fn",
+            {},
+            "text",
+            "Squarespace Domains II LLC"
+          ]
+        ]
+      ],
+      "entities": [
+        {
+          "objectClassName": "entity",
+          "roles": [
+            "abuse"
+          ],
+          "vcardArray": [
+            "vcard",
+            [
+              [
+                "version",
+                {},
+                "text",
+                "4.0"
+              ],
+              [
+                "fn",
+                {},
+                "text",
+                ""
+              ],
+              [
+                "tel",
+                {
+                  "type": "voice"
+                },
+                "uri",
+                "tel:+1.6466935324"
+              ],
+              [
+                "email",
+                {},
+                "text",
+                "abuse-complaints@squarespace.com"
+              ]
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "eventAction": "registration",
+      "eventDate": "2007-07-22T13:05:26Z"
+    },
+    {
+      "eventAction": "expiration",
+      "eventDate": "2026-07-22T13:05:26Z"
+    },
+    {
+      "eventAction": "last changed",
+      "eventDate": "2025-04-10T17:22:13Z"
+    },
+    {
+      "eventAction": "last update of RDAP database",
+      "eventDate": "2025-10-25T19:20:52Z"
+    }
+  ],
+  "secureDNS": {
+    "delegationSigned": false
+  },
+  "nameservers": [
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "NS-CLOUD-D1.GOOGLEDOMAINS.COM"
+    },
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "NS-CLOUD-D2.GOOGLEDOMAINS.COM"
+    },
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "NS-CLOUD-D3.GOOGLEDOMAINS.COM"
+    },
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "NS-CLOUD-D4.GOOGLEDOMAINS.COM"
+    }
+  ],
+  "rdapConformance": [
+    "rdap_level_0",
+    "icann_rdap_technical_implementation_guide_1",
+    "icann_rdap_response_profile_1"
+  ],
+  "notices": [
+    {
+      "title": "Terms of Service",
+      "description": [
+        "Service subject to Terms of Use."
+      ],
+      "links": [
+        {
+          "href": "https://www.verisign.com/domain-names/registration-data-access-protocol/terms-service/index.xhtml",
+          "type": "text/html",
+          "value": "https://rdap.verisign.com/com/v1/domain/groq.com",
+          "rel": "terms-of-service"
+        }
+      ]
+    },
+    {
+      "title": "Status Codes",
+      "description": [
+        "For more information on domain status codes, please visit https://icann.org/epp"
+      ],
+      "links": [
+        {
+          "href": "https://icann.org/epp",
+          "type": "text/html"
+        }
+      ]
+    },
+    {
+      "title": "RDDS Inaccuracy Complaint Form",
+      "description": [
+        "URL of the ICANN RDDS Inaccuracy Complaint Form: https://icann.org/wicf"
+      ],
+      "links": [
+        {
+          "href": "https://icann.org/wicf",
+          "type": "text/html",
+          "value": "https://rdap.verisign.com/com/v1/domain/groq.com",
+          "rel": "help"
+        }
+      ]
+    }
+  ]
+}

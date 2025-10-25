@@ -5,7 +5,8 @@
 - **Registrar**: Squarespace Domains II LLC (IANA ID 895)
 - **Creation Date**: 2007-07-22T13:05:26Z
 - **Expiration Date**: 2026-07-22T13:05:26Z (registry + registrar)
-- **Last Updated**: 2025-04-10T17:22:13Z (registrar + RDAP database)
+- **Last Updated**: 2025-04-10T17:22:13Z (registrar)
+- **RDAP Refresh**: 2025-10-25T19:20:39Z (registry) / 2025-04-10T17:22:13Z (registrar)
 - **Status**: `client delete prohibited`, `client transfer prohibited`
 - **Nameservers**: `ns-cloud-d1.googledomains.com`, `ns-cloud-d2.googledomains.com`, `ns-cloud-d3.googledomains.com`, `ns-cloud-d4.googledomains.com`
 - **DNSSEC**: Not delegation signed (no DS records published)
@@ -19,4 +20,5 @@
 
 ## References
 
+- [`reports/data/groq_rdap_registry.json`](data/groq_rdap_registry.json)
 - [`reports/data/groq_rdap_registrar.json`](data/groq_rdap_registrar.json)
