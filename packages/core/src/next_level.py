@@ -145,11 +145,15 @@ def discover_tasks(
     skip_dirs: Optional[Sequence[str]] = None,
     allowed_tags: Optional[Sequence[str]] = None,
     max_file_size: Optional[int] = None,
+    allowed_extensions: Optional[Sequence[str]] = None,
 ) -> List[Task]:
     """Return all TODO/FIXME entries under ``base_path``.
 
     When ``max_file_size`` is provided, files larger than the threshold (in bytes)
-    are skipped to avoid expensive scans of large artifacts.
+    are skipped to avoid expensive scans of large artifacts.  ``allowed_extensions``
+    can be used to restrict the scan to files whose names end with one of the
+    provided extensions (case-insensitive).  Extensions may be passed with or
+    without a leading dot.
     """
 
     skip_lookup, skip_paths = _normalise_skip_entries(base_path, skip_dirs)
@@ -162,6 +166,21 @@ def discover_tasks(
             if tag
         }
 
+    extension_filter: Optional[Set[str]] = None
+    if allowed_extensions:
+        normalised_extensions = set()
+        for entry in allowed_extensions:
+            if not entry:
+                continue
+            candidate = entry.strip().lower()
+            if not candidate:
+                continue
+            if not candidate.startswith("."):
+                candidate = "." + candidate
+            normalised_extensions.add(candidate)
+        if normalised_extensions:
+            extension_filter = normalised_extensions
+
     tasks: List[Task] = []
     seen: Set[Tuple[Path, int, str, str]] = set()
 
@@ -170,6 +189,10 @@ def discover_tasks(
             continue
         if _should_skip(file_path, base_path, skip_lookup, skip_paths):
             continue
+        if extension_filter is not None:
+            lower_name = file_path.name.lower()
+            if not any(lower_name.endswith(ext) for ext in extension_filter):
+                continue
         if max_file_size is not None and max_file_size >= 0:
             try:
                 if file_path.stat().st_size > max_file_size:
@@ -311,12 +334,14 @@ def update_roadmap(
     skip_dirs: Optional[Sequence[str]] = None,
     allowed_tags: Optional[Sequence[str]] = None,
     max_file_size: Optional[int] = None,
+    allowed_extensions: Optional[Sequence[str]] = None,
 ) -> List[Task]:
     tasks = discover_tasks(
         base_path,
         skip_dirs=skip_dirs,
         allowed_tags=allowed_tags,
         max_file_size=max_file_size,
+        allowed_extensions=allowed_extensions,
     )
     roadmap = build_roadmap(tasks, base_path)
     roadmap_path.write_text(roadmap, encoding="utf-8")
@@ -379,6 +404,13 @@ def main() -> int:
         metavar="N",
         help="Skip files larger than N bytes when scanning",
     )
+    parser.add_argument(
+        "--ext",
+        action="append",
+        default=None,
+        metavar="EXT",
+        help="Only include files with the given extension (repeatable)",
+    )
     args = parser.parse_args()
     max_bytes = args.max_bytes if args.max_bytes and args.max_bytes > 0 else None
     update_roadmap(
@@ -387,6 +419,7 @@ def main() -> int:
         skip_dirs=args.skip,
         allowed_tags=args.tag,
         max_file_size=max_bytes,
+        allowed_extensions=args.ext,
     )
     return 0
 

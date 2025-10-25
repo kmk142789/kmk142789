@@ -156,3 +156,17 @@ def test_discover_tasks_accepts_absolute_skip_paths(tmp_path):
     tasks = discover_tasks(tmp_path, skip_dirs=[str(nested.parent)])
     assert all(task.path != nested for task in tasks)
     assert any(task.path == keep for task in tasks)
+
+
+def test_discover_tasks_filters_extensions(tmp_path):
+    py_task = tmp_path / "module.py"
+    py_task.write_text("# TODO keep python\n", encoding="utf-8")
+
+    txt_task = tmp_path / "notes.txt"
+    txt_task.write_text("# TODO keep text\n", encoding="utf-8")
+
+    only_py = discover_tasks(tmp_path, allowed_extensions=[".py"])
+    assert {task.path for task in only_py} == {py_task}
+
+    only_txt = discover_tasks(tmp_path, allowed_extensions=["TXT"])
+    assert {task.path for task in only_txt} == {txt_task}
