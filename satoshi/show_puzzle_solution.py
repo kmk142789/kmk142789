@@ -189,18 +189,34 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
         hash160=args.hash160 or decoded_hash,
     )
 
-    pubkey = entry["public_key"]
-    derived_address = _derive_p2pkh_address(pubkey)
-    compressed = _pubkey_is_compressed(pubkey)
-    wif = _hex_priv_to_wif(entry["private_key"], compressed=compressed)
+    pubkey = entry["public_key"].strip()
+    private_key = entry["private_key"].strip()
+
+    derived_address = None
+    compressed: Optional[bool] = None
+    if pubkey:
+        derived_address = _derive_p2pkh_address(pubkey)
+        compressed = _pubkey_is_compressed(pubkey)
 
     print(f"Puzzle bits   : {entry['bits']}")
     print(f"Address       : {entry['address']}")
     print(f"Hash160       : {entry['hash160_compressed']}")
-    print(f"Public key    : {pubkey}")
-    print(f"Private key   : {entry['private_key']}")
-    print(f"WIF ({'compressed' if compressed else 'uncompressed'}): {wif}")
-    if derived_address != entry["address"]:
+    print(f"Public key    : {pubkey or '(unavailable)'}")
+    print(f"Private key   : {private_key or '(unavailable)'}")
+
+    if private_key:
+        wif_compressed = compressed if compressed is not None else True
+        wif = _hex_priv_to_wif(private_key, compressed=wif_compressed)
+        label = "compressed" if wif_compressed else "uncompressed"
+        print(f"WIF ({label}): {wif}")
+    else:
+        if compressed is None:
+            print("WIF           : (unavailable)")
+        else:
+            label = "compressed" if compressed else "uncompressed"
+            print(f"WIF ({label}): (unavailable)")
+
+    if derived_address and derived_address != entry["address"]:
         print(f"Derived address mismatch: {derived_address}")
     if decoded_hash:
         print("\nDecoded from PkScript:")
