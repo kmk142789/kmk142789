@@ -1,0 +1,19 @@
+{
+  "issuer": "did:web:kmk142789.github.io:little-footsteps-bank",
+  "lastUpdated": "2025-05-11T00:00:00Z",
+  "recognizedCredentials": [
+    "LittleFootstepsChildcareVoucher",
+    "LittleFootstepsParentID",
+    "LittleFootstepsStaffLicense"
+  ],
+  "descriptions": {
+    "LittleFootstepsChildcareVoucher": "Digital childcare voucher that unlocks subsidized hours for families enrolled in Little Footsteps.",
+    "LittleFootstepsParentID": "Identity credential attesting to a verified caregiver relationship and enrollment status.",
+    "LittleFootstepsStaffLicense": "Professional license attesting to background checks and childcare certification for staff."
+  },
+  "policies": {
+    "revocation": "Ledger entry is appended to the transparency ledger and corresponding credential status endpoint is updated.",
+    "refresh": "Childcare vouchers are refreshed every 90 days based on updated donation pool balance.",
+    "governance": "Updates require multi-sig approval recorded in the transparency ledger."
+  }
+}
