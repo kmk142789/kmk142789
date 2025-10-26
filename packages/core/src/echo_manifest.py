@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional
 
@@ -159,8 +160,13 @@ def build_manifest(
 ) -> EchoManifest:
     """Combine the vault contents and evolver state into a digestible manifest."""
 
-    propagation_events = state.network_cache.get("propagation_events")
-    channel_count = len(propagation_events) if isinstance(propagation_events, list) else 0
+    propagation_events_cache = state.network_cache.get("propagation_events")
+    if isinstance(propagation_events_cache, Sequence) and not isinstance(
+        propagation_events_cache, (str, bytes)
+    ):
+        channel_count = len(tuple(propagation_events_cache))
+    else:
+        channel_count = 0
     oam_vortex = state.network_cache.get("oam_vortex")
 
     task = "echo_manifest.build_manifest"
