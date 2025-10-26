@@ -58,3 +58,12 @@ def test_detects_generated_secret_extended_keys() -> None:
         generated = "secret-extended-key-main1" + "".join(rng.choice(alphabet) for _ in range(length))
         matches = collect_matches(generated)
         assert "secret_extended_key" in matches
+
+
+def test_detects_japanese_bip39_mnemonic() -> None:
+    sample = (
+        "あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　"
+        "あいこくしん　あいこくしん　あいこくしん　あいこくしん　あいこくしん　あおぞら"
+    )
+    matches = collect_matches(sample)
+    assert "mnemonic_like" in matches
