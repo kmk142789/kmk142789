@@ -22,6 +22,7 @@ node apps/little_footsteps/vc_issuer/server.js
 | Method | Path | Description |
 | ------ | ---- | ----------- |
 | `GET` | `/healthz` | Service status and DID identifier |
+| `POST` | `/donations/intake` | Record a BTC/ETH/Stripe/PayPal donation, emit a VC, and log telemetry |
 | `POST` | `/ledger/events` | Append a donation, credit, or payout to the transparency ledger |
 | `GET` | `/ledger/events` | Retrieve the most recent ledger events |
 | `GET` | `/metrics/totals` | Aggregate inflow/outflow totals for the current day |
@@ -34,3 +35,13 @@ All endpoints emit structured logs such as:
 ```
 
 Pipe these logs into Promtail, Vector, or another collector to expose them in Grafana or alerting systems.
+
+### Donation intake receipts
+
+The donation intake endpoint automatically:
+
+- Appends receipt records to `state/little_footsteps/donation_receipts.jsonl` (override with `DONATION_RECEIPTS_LOG_PATH`).
+- Streams telemetry-friendly events to `state/little_footsteps/dashboard/donations.jsonl` (override with `DONATION_TELEMETRY_LOG_PATH`).
+- Issues a `DonationReceiptCredential` verifiable credential signed with the Ed25519 key configured for the issuer.
+
+Each request can provide either `amount` (decimal string, e.g. `"0.05"`) or `amount_minor` (base units such as satoshis or wei). Supply `method` with one of `btc`, `eth`, `stripe`, or `paypal`, alongside any transaction metadata you want persisted to the ledger.
