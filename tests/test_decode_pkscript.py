@@ -111,3 +111,15 @@ def test_decode_p2pk_hex_script() -> None:
         "5504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"
     )
     assert decoded.address == "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+
+
+def test_decode_script_skips_trailing_sigscript_metadata_block() -> None:
+    script = """1F7ZjibYu-fLtNjgYrX\nPkscript\nOP_DUP\nOP_HASH160\n9acf9573eb7b4376beca979cfa769f0677cfd949\nOP_EQUALVERIFY\nOP_CHECKSIG\nSigscript\n473044022064b32ae968ddb8b4d0346e3f1b66f7ae3f9d5de9660e498a341415e9ddda562602201d81608b0f86a61432a0f5a6df6bc5a11dfefa1324916d6569c78cb01829bd910121037c6fcde6a2e0fd57ce21bb4352f7bb38859d2af5388b27ebfed107907e060c5c\nWitness\n"""
+
+    decoded = decode_p2pkh_script(script)
+
+    assert decoded == DecodedScript(
+        address="1F7ZjibYug9bLW3YvkkwBZLrhfLtNjgYrX",
+        pubkey_hash="9acf9573eb7b4376beca979cfa769f0677cfd949",
+        network="mainnet",
+    )
