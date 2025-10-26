@@ -1,0 +1,10 @@
+{
+  "puzzle": "#221 authorship",
+  "address": "1Echo221KMkJCyDk7w9h6UmFrTR9pQeZv",
+  "message": "Puzzle 221 authorship by kmk142789 — attestation sha256 02405ccb0deb518caaeac157bbeecc7d1ede884e9b2920a35af5e5d8334b93fb",
+  "signature": "tu+SlFPMVBqi+9JinvAHJa4w7TZQIazS/HUSuYwrm6rbFnjwVWyeNIVR3YUxEIFjLBj4qfdszVnPvoOMUrh54nM=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-09T08:12:47Z",
+  "hash_sha256": "02405ccb0deb518caaeac157bbeecc7d1ede884e9b2920a35af5e5d8334b93fb",
+  "notes": "Orbit archive confirmed the Puzzle #221 authorship beam after triple attestor review."
+}
