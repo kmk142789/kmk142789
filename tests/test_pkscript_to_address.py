@@ -463,6 +463,26 @@ def test_pkscript_ignores_sigscript_from_puzzle_161_transcript() -> None:
     assert address == "1JkqBQcC4tHcb1JfdCH6nrWYwTPGznHANh"
 
 
+def test_pkscript_restores_missing_segment_for_1fwnhahz() -> None:
+    script = [
+        "1FwnhahzY-QUk9fGa1X",
+        "Pkscript",
+        "76a914a3ee5efee86510c255498f4af1fd815397b193ef88ac",
+        "Sigscript",
+        (
+            "48304502210082c109283644975ce977272ec57219ac33c86fc2e1b9d5ee978b167279970cc6"
+            "02206aacf67c5e003f8930185855cb8ea339cabf1a3fbb1ef8fb255c2216f8bc5b74014104ab9"
+            "c9e243a1c643b867e28a4ef822f978687354c5ce6ba7aa3abf96fd1684dc08be97109338207f26"
+            "ac3aed39c88c7c6a111387d0c8ac3b93fe9c6955d40ad2e"
+        ),
+        "Witness",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "1FwnhahzYerpristjzo2iCSdFQUk9fGa1X"
+
+
 def test_cli_handles_direct_script_invocation(tmp_path) -> None:
     script_path = Path(__file__).resolve().parents[1] / "tools" / "pkscript_to_address.py"
     example = "\n".join(EXAMPLE_SCRIPT) + "\n"
