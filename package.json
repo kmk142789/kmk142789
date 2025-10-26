@@ -9,7 +9,8 @@
   "scripts": {
     "test": "node verify.js",
     "echo-helper": "node tools/echo-helper.js",
-    "create:lil-footsteps-wallet": "node --loader ts-node/esm scripts/createLilFootstepsWallet.ts"
+    "create:lil-footsteps-wallet": "node --loader ts-node/esm scripts/createLilFootstepsWallet.ts",
+    "transparency:api": "node apps/transparency.bank/api/server.mjs"
   },
   "keywords": [],
   "author": "",
