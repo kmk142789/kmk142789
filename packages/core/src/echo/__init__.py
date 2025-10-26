@@ -125,6 +125,7 @@ from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .quantum_flux_mapper import QuantumFluxMapper, STANDARD_GATES
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
+from .spectral_canvas import PaletteColor, SpectralCanvas, generate_palette
 from .temporal_ledger import PropagationWave, TemporalPropagationLedger
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
 from .self_sustaining_loop import DecisionResult, ProgressResult, SelfSustainingLoop
