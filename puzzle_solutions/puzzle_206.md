@@ -1,13 +1,13 @@
 # Puzzle #206 Solution
 
-- **Provided hash160**: `054907e50b2feceb0b75f850fd764c197844fea0`
+- **Provided hash160**: `4db4e34b23a0ce800f9e9769fa9dcf892bdad2d1`
 - **Bitcoin network version byte**: `0x00` (for a P2PKH mainnet address)
-- **Payload**: `00 05 49 07 e5 0b 2f ec eb 0b 75 f8 50 fd 76 4c 19 78 44 fe a0`
-- **Checksum**: First four bytes of `SHA256(SHA256(payload))`
-- **Base58Check encoding**: `1UwsEPMF1NZTWJAuymsLVJpqetBZ3Q9sJ`
+- **Payload**: `00 4d b4 e3 4b 23 a0 ce 80 0f 9e 97 69 fa 9d cf 89 2b da d2 d1`
+- **Checksum**: First four bytes of `SHA256(SHA256(payload))` → `08 2f 01 68`
+- **Base58Check encoding**: `185sj5ef4mciis29Z9E4nv1k6jpzDHENrK`
 
 Therefore, the completed Bitcoin address for the given locking script is:
 
 ```
-1UwsEPMF1NZTWJAuymsLVJpqetBZ3Q9sJ
+185sj5ef4mciis29Z9E4nv1k6jpzDHENrK
 ```
