@@ -52,6 +52,8 @@ __all__ = [
     "EchoComputer",
     "run_program",
     "AssemblyError",
+    "EvolutionCycle",
+    "evolve_program",
 ]
 
 
@@ -90,6 +92,15 @@ class ExecutionResult:
 
 class AssemblyError(ValueError):
     """Raised when the assembly language encounters invalid input."""
+
+
+@dataclass(frozen=True)
+class EvolutionCycle:
+    """Represents the outcome of a single evolution cycle."""
+
+    cycle: int
+    inputs: Mapping[str, int | str]
+    result: ExecutionResult
 
 
 def assemble_program(source: str) -> EchoProgram:
@@ -475,4 +486,56 @@ def run_program(
     computer = EchoComputer()
     computer.load(source)
     return computer.run(inputs=inputs, trace=trace)
+
+
+def evolve_program(
+    program: EchoProgram | str | Sequence[Instruction],
+    *,
+    input_series: Iterable[Mapping[str, int | str]],
+    max_steps: int = 1024,
+) -> List[EvolutionCycle]:
+    """Run ``program`` across ``input_series`` and collect cycle results.
+
+    The helper offers a higher-level orchestration primitive for experiments
+    that need to repeatedly execute the same assembly program with varied
+    inputs.  It mirrors the "evolution" terminology used throughout the Echo
+    project by treating each execution as a cycle and returning a structured
+    report describing how the virtual computer responded.
+
+    Parameters
+    ----------
+    program:
+        The program to execute.  This can be a raw assembly string,
+        pre-assembled :class:`EchoProgram`, or a sequence of
+        :class:`Instruction` instances.
+    input_series:
+        Iterable of input mappings for each cycle.  Each mapping is converted
+        to a plain ``dict`` before execution to avoid leaking references back
+        to the caller.
+    max_steps:
+        Optional override for the per-cycle execution limit.
+
+    Returns
+    -------
+    List[EvolutionCycle]
+        Ordered sequence of cycle reports, one per entry provided via
+        ``input_series``.
+    """
+
+    computer = EchoComputer(max_steps=max_steps)
+    computer.load(program)
+
+    cycles: List[EvolutionCycle] = []
+    for cycle_index, inputs in enumerate(input_series, start=1):
+        prepared_inputs = {str(key): value for key, value in dict(inputs).items()}
+        result = computer.run(inputs=prepared_inputs)
+        cycles.append(
+            EvolutionCycle(
+                cycle=cycle_index,
+                inputs=dict(prepared_inputs),
+                result=result,
+            )
+        )
+
+    return cycles
 
