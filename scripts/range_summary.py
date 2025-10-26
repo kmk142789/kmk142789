@@ -83,12 +83,16 @@ class AllocationSummary:
 
 
 def summarise_ranges(lines: Iterable[str]) -> AllocationSummary:
-    """Parse and validate a collection of textual range definitions."""
+    """Parse and validate a collection of textual range definitions.
+
+    Comment lines beginning with ``#`` and empty lines are ignored so callers
+    can annotate range files without breaking validation.
+    """
 
     allocations: List[RangeAllocation] = []
     for raw_line in lines:
         stripped = raw_line.strip()
-        if not stripped:
+        if not stripped or stripped.startswith("#"):
             continue
         allocation = parse_range_line(stripped)
         validate_allocation(allocation)

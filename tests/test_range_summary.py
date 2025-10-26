@@ -44,3 +44,17 @@ def test_summarise_ranges_computes_totals(tmp_path):
     assert summary.count == 2
     assert summary.chunk_size == CHUNK_SIZE
     assert summary.total_values == 2 * CHUNK_SIZE
+
+
+def test_summarise_ranges_skips_comments():
+    lines = [
+        "# Puzzle #71 coverage",
+        "760d4ba70000000000:760d4ba70fffffffff",
+        "",
+        "7eacd77af000000000:7eacd77affffffffff",
+    ]
+
+    summary = summarise_ranges(lines)
+
+    assert summary.count == 2
+    assert summary.total_values == 2 * CHUNK_SIZE
