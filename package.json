@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "node verify.js",
-    "echo-helper": "node tools/echo-helper.js"
+    "echo-helper": "node tools/echo-helper.js",
+    "create:lil-footsteps-wallet": "node --loader ts-node/esm scripts/createLilFootstepsWallet.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,11 @@
     "sql.js": "^1.11.0",
     "noble-secp256k1": "^1.2.14",
     "node-fetch": "^3.3.2",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "ethers": "^6.13.2"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
   }
 }
