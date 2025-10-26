@@ -38,17 +38,17 @@ def test_summarise_puzzle71_ranges() -> None:
     ranges = load_range_file(path)
     summary = summarise_ranges(ranges)
 
-    assert summary.count == 68
-    assert summary.range_min == int("407580f0f000000000", 16)
-    assert summary.range_max == int("7fcef3823fffffffff", 16)
+    assert summary.count == 60
+    assert summary.range_min == int("41f811ff8000000000", 16)
+    assert summary.range_max == int("7f8082b2bfffffffff", 16)
     assert summary.unique_widths == (1 << 36,)
     assert summary.bit_lengths == (71,)
     assert summary.puzzle_bits == 71
     assert summary.puzzle_min == 1 << 70
     assert summary.puzzle_max == (1 << 71) - 1
-    assert summary.total_keys == 68 * (1 << 36)
-    assert summary.coverage_ratio == pytest.approx(3.958120942115784e-09)
+    assert summary.total_keys == 60 * (1 << 36)
+    assert summary.coverage_ratio == pytest.approx(3.4924596548080444e-09)
 
     report = format_summary(summary)
-    assert "Total ranges: 68" in report
+    assert "Total ranges: 60" in report
     assert "Inferred puzzle bits: 71" in report
