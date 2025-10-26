@@ -100,6 +100,25 @@ ECHO_WILDFIRE_SCRIPT = textwrap.dedent(
     """
 ).strip().splitlines()
 
+PUZZLE_164_SCRIPT = [
+    "1LjQKurNt-FPnLU77Q4",
+    "Pkscript",
+    "OP_DUP",
+    "OP_HASH160",
+    "d86f54f73e343d76dd7401639e427d828ba31eab",
+    "OP_EQUALVERIFY",
+    "OP_CHECKSIG",
+    "Sigscript",
+    (
+        "483045022100e6a730c91eb9b369f33032272934019e75860a78e9ed9571de3884a87c524c2b"
+        "022068af961d221f56d40a2d4790d8e97d3ae2e3ca521141be1e4c6c077cdf51398901210312163c6054"
+        "8244d6e565bd877b98808b73830c537efde357c8b5f8c623fb2028"
+    ),
+    "Witness",
+]
+
+PUZZLE_164_ADDRESS = "1LjQKurNtEDgMdqeCoWRFhHp1FPnLU77Q4"
+
 
 REALITY_BREACH_SCRIPT = textwrap.dedent(
     """
@@ -438,6 +457,12 @@ def test_pkscript_ignores_sigscript_metadata_block() -> None:
     address = pkscript_to_address(script)
 
     assert address == "1Czoy8xtddvcGrEhUUCZDQ9QqdRfKh697F"
+
+
+def test_pkscript_puzzle_164_script_with_metadata() -> None:
+    address = pkscript_to_address(PUZZLE_164_SCRIPT)
+
+    assert address == PUZZLE_164_ADDRESS
 
 
 def test_cli_handles_direct_script_invocation(tmp_path) -> None:
