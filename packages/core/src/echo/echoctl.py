@@ -74,6 +74,19 @@ except ImportError:  # pragma: no cover - executed when run as script
     derive_action_plan = _IDEA.derive_action_plan  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
+    from .inspiration import forge_inspiration
+except ImportError:  # pragma: no cover - executed when run as script
+    _INSPIRE_SPEC = importlib.util.spec_from_file_location(
+        "echo.inspiration", (Path(__file__).resolve().parent / "inspiration.py")
+    )
+    if _INSPIRE_SPEC is None or _INSPIRE_SPEC.loader is None:
+        raise
+    _INSPIRE = importlib.util.module_from_spec(_INSPIRE_SPEC)
+    sys.modules[_INSPIRE_SPEC.name] = _INSPIRE
+    _INSPIRE_SPEC.loader.exec_module(_INSPIRE)  # type: ignore[attr-defined]
+    forge_inspiration = _INSPIRE.forge_inspiration  # type: ignore[attr-defined]
+
+try:  # pragma: no cover - executed when run as module
     from .continuum_health import generate_continuum_health
 except ImportError:  # pragma: no cover - executed when run as script
     _HEALTH_SPEC = importlib.util.spec_from_file_location(
@@ -256,6 +269,58 @@ def run_idea(argv: List[str]) -> int:
         print(json.dumps(plan.to_dict(), ensure_ascii=False, indent=2))
     else:
         print(plan.to_markdown())
+
+    return 0
+
+
+def run_inspire(argv: List[str]) -> int:
+    """Forge a short burst of inspiration sparks."""
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl inspire",
+        description="Generate evocative sparks for a given theme.",
+    )
+    parser.add_argument(
+        "theme",
+        nargs="?",
+        default="Echo",
+        help="Theme to anchor the sparks (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--lines",
+        type=int,
+        default=4,
+        help="Number of sparks to generate (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        help="Optional RNG seed for repeatable output.",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit JSON instead of Markdown output.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional file path to persist the Markdown output.",
+    )
+
+    options = parser.parse_args(argv)
+
+    pulse = forge_inspiration(options.theme, lines=options.lines, rng_seed=options.seed)
+
+    if options.output:
+        options.output.parent.mkdir(parents=True, exist_ok=True)
+        options.output.write_text(pulse.to_markdown(), encoding="utf-8")
+        print(f"✨ inspiration saved to {options.output}", file=sys.stderr)
+
+    if options.json:
+        print(json.dumps(pulse.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        print(pulse.to_markdown())
 
     return 0
 
@@ -461,7 +526,7 @@ def run_moonshot(argv: List[str]) -> int:
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
         print(
-            "usage: echoctl [cycle|plan|summary|health|groundbreaking|moonshot|wish|idea] ..."
+            "usage: echoctl [cycle|plan|summary|health|groundbreaking|moonshot|wish|idea|inspire] ..."
         )
         return 1
     cmd = argv[1]
@@ -482,6 +547,8 @@ def main(argv: List[str]) -> int:
         return run_moonshot(argv[2:])
     if cmd == "idea":
         return run_idea(argv[2:])
+    if cmd == "inspire":
+        return run_inspire(argv[2:])
     if cmd == "wish":
         if len(argv) < 4:
             print("usage: echoctl wish <wisher> <desire> [catalyst,...]")
