@@ -1,13 +1,13 @@
 # Puzzle #202 Solution
 
-- **Provided hash160**: `5aee20366a5523246e1c43dc48462878b0d4806e`
+- **Provided hash160**: `cc0fb2448dd304aa407d1705e5cf55b11052bbae`
 - **Bitcoin network version byte**: `0x00` (P2PKH on mainnet)
-- **Payload**: `00 5a ee 20 36 6a 55 23 24 6e 1c 43 dc 48 46 28 78 b0 d4 80 6e`
+- **Payload**: `00 cc 0f b2 44 8d d3 04 aa 40 7d 17 05 e5 cf 55 b1 10 52 bb ae`
 - **Checksum**: First four bytes of `SHA256(SHA256(payload))`
-- **Base58Check encoding**: `19Ho5YB6y8qRCdUMxWpXqrm8N4AKAq7ZWS`
+- **Base58Check encoding**: `1KbyejfHFG7rtoEB1GrRA2HY3EHWMGPYoh`
 
 Therefore the complete address that satisfies the given locking script is:
 
 ```
-19Ho5YB6y8qRCdUMxWpXqrm8N4AKAq7ZWS
+1KbyejfHFG7rtoEB1GrRA2HY3EHWMGPYoh
 ```
