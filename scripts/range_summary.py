@@ -27,8 +27,8 @@ class RangeAllocation:
 def parse_range_line(line: str) -> RangeAllocation:
     """Parse a line containing a colon separated hexadecimal range."""
 
-    raw = line.strip()
-    if not raw or raw.startswith("#"):
+    raw = line.split("#", maxsplit=1)[0].strip()
+    if not raw:
         raise ValueError("Range lines must contain start:end hexadecimal pairs")
 
     try:
@@ -85,8 +85,8 @@ class AllocationSummary:
 def summarise_ranges(lines: Iterable[str]) -> AllocationSummary:
     """Parse and validate a collection of textual range definitions.
 
-    Comment lines beginning with ``#`` and empty lines are ignored so callers
-    can annotate range files without breaking validation.
+    Comment lines beginning with ``#`` and inline fragments after ``#`` are
+    ignored so callers can annotate range files without breaking validation.
     """
 
     allocations: List[RangeAllocation] = []
@@ -94,7 +94,7 @@ def summarise_ranges(lines: Iterable[str]) -> AllocationSummary:
         stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        allocation = parse_range_line(stripped)
+        allocation = parse_range_line(raw_line)
         validate_allocation(allocation)
         allocations.append(allocation)
 

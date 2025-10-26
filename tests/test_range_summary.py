@@ -16,6 +16,15 @@ def test_parse_range_line_roundtrip():
     assert allocation.size == CHUNK_SIZE
 
 
+def test_parse_range_line_ignores_inline_comment():
+    allocation = parse_range_line(
+        "760d4ba70000000000:760d4ba70fffffffff  # leading sweep"
+    )
+
+    assert allocation.start == int("760d4ba70000000000", 16)
+    assert allocation.end == int("760d4ba70fffffffff", 16)
+
+
 def test_parse_range_line_rejects_invalid_format():
     with pytest.raises(ValueError):
         parse_range_line("6bd8b4d55000000000")
@@ -49,7 +58,7 @@ def test_summarise_ranges_computes_totals(tmp_path):
 def test_summarise_ranges_skips_comments():
     lines = [
         "# Puzzle #71 coverage",
-        "760d4ba70000000000:760d4ba70fffffffff",
+        "760d4ba70000000000:760d4ba70fffffffff  # daily batch",
         "",
         "7eacd77af000000000:7eacd77affffffffff",
     ]
