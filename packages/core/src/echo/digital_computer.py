@@ -40,7 +40,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import shlex
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from .thoughtlog import thought_trace
 
@@ -168,6 +168,7 @@ class EchoComputer:
         self._pc = 0
         self._halted = False
         self._output: List[str] = []
+        self._opcode_handlers = self._initialise_opcode_handlers()
 
     @property
     def registers(self) -> Mapping[str, int | str]:
@@ -280,17 +281,23 @@ class EchoComputer:
         opcode = instruction.opcode
         operands = instruction.operands
 
-        if opcode == "HALT":
-            self._halted = True
-            return
-        if opcode == "NOP":
-            return
-
-        handler_name = f"_op_{opcode.lower()}"
-        handler = getattr(self, handler_name, None)
+        handler = self._opcode_handlers.get(opcode)
         if handler is None:
             raise RuntimeError(f"unsupported opcode: {opcode}")
         handler(*operands)
+
+    def _initialise_opcode_handlers(self) -> Dict[str, Callable[..., None]]:
+        """Build and cache opcode handlers for fast dispatch during execution."""
+
+        handlers: Dict[str, Callable[..., None]] = {}
+        for attr_name in dir(self.__class__):
+            if not attr_name.startswith("_op_"):
+                continue
+            opcode = attr_name[4:].upper()
+            method = getattr(self, attr_name)
+            if callable(method):
+                handlers[opcode] = method  # type: ignore[assignment]
+        return handlers
 
     def _require_register(self, name: str) -> str:
         if name not in self._registers:
@@ -447,6 +454,12 @@ class EchoComputer:
             self._registers[reg] = 1
         else:
             self._registers[reg] = 0
+
+    def _op_halt(self, *operands: str) -> None:
+        self._halted = True
+
+    def _op_nop(self, *operands: str) -> None:
+        return
 
     def _op_jmp(self, target: str) -> None:
         self._jump(target)
