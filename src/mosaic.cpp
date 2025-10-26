@@ -101,6 +101,22 @@ std::vector<MosaicShard> TemporalMosaic::shards() const {
         shards.push_back(shard);
     }
 
+    for (const auto& [name, trend] : report_.metric_trends) {
+        if (!std::isfinite(trend)) {
+            continue;
+        }
+        const double magnitude = std::tanh(std::abs(trend));
+        if (magnitude < 1e-6) {
+            continue;
+        }
+        MosaicShard shard;
+        shard.key = "metric-trend:" + name;
+        shard.weight = normalize(0.25 + 0.75 * magnitude);
+        const double direction = trend >= 0.0 ? 1.0 : -1.0;
+        shard.emphasis = normalize(0.5 + 0.4 * direction * magnitude);
+        shards.push_back(shard);
+    }
+
     if (!report_.lineage_breaks.empty()) {
         MosaicShard shard;
         shard.key = "lineage:fracture";

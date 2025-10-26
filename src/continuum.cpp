@@ -302,6 +302,8 @@ LineageReport Continuum::analyze_lineage(
     std::size_t linear_transitions = 0;
     std::size_t tempo_consistent_edges = 0;
     bool genesis_parent_break = false;
+    std::map<std::string, double> first_metric_values;
+    std::map<std::string, double> last_metric_values;
     for (const auto& manifest : manifests) {
         if (!report.earliest_start_ms ||
             manifest.start_ms < *report.earliest_start_ms) {
@@ -375,6 +377,10 @@ LineageReport Continuum::analyze_lineage(
         }
 
         for (const auto& [metric_key, metric_value] : manifest.metrics) {
+            if (first_metric_values.find(metric_key) == first_metric_values.end()) {
+                first_metric_values.emplace(metric_key, metric_value);
+            }
+            last_metric_values[metric_key] = metric_value;
             auto& summary = report.metrics[metric_key];
             summary.samples += 1;
             summary.total += metric_value;
@@ -402,6 +408,13 @@ LineageReport Continuum::analyze_lineage(
     } else {
         report.continuity_score = genesis_parent_break ? 0.0 : 1.0;
         report.tempo_consistency = 1.0;
+    }
+
+    for (const auto& [metric_key, first_value] : first_metric_values) {
+        const auto last_it = last_metric_values.find(metric_key);
+        if (last_it != last_metric_values.end()) {
+            report.metric_trends[metric_key] = last_it->second - first_value;
+        }
     }
 
     return report;

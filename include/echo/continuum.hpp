@@ -50,6 +50,7 @@ struct LineageReport {
     double continuity_score{1.0};
     double tempo_consistency{1.0};
     std::map<std::string, MetricSummary> metrics;
+    std::map<std::string, double> metric_trends;
 };
 
 // Continuum = epoch manager + lineage verification
