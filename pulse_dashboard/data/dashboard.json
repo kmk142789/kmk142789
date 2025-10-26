@@ -1368,7 +1368,7 @@
       "token": "9bf0701ec9"
     }
   ],
-  "generated_at": "2025-10-25T19:13:44.344530+00:00",
+  "generated_at": "2025-10-26T02:56:00.139209+00:00",
   "glyph_cycle": {
     "cycles": [
       {
@@ -1381,6 +1381,416 @@
       }
     ],
     "energy": 108.46
+  },
+  "public_impact_explorer": {
+    "generated_at": "2025-10-26T02:56:00.152242+00:00",
+    "impact_metrics": {
+      "current_cycle": {
+        "child_development": {
+          "early_literacy_sessions": 42,
+          "health_referrals": 7,
+          "screenings_completed": 18
+        },
+        "cycle": 16,
+        "families_served": 24,
+        "hours_of_childcare": 1080,
+        "job_placements": 5,
+        "notes": "Focus this cycle on overnight care pilots for hospital and hospitality shift workers."
+      },
+      "data_sources": [
+        "NonprofitBank ledger mirrored from on-chain events",
+        "Caregiver scheduling platform exports",
+        "Parent onboarding and exit interviews",
+        "Provider feedback surveys"
+      ],
+      "equity_breakdown": {
+        "disabilities_supported": 14,
+        "languages": {
+          "english": 0.58,
+          "haitian_creole": 0.07,
+          "others": 0.06,
+          "spanish": 0.29
+        },
+        "zip_codes": {
+          "11207": 0.22,
+          "11208": 0.16,
+          "11212": 0.15,
+          "11221": 0.11,
+          "11233": 0.18,
+          "other": 0.18
+        }
+      },
+      "history": [
+        {
+          "caregiver_wages_paid_usd": 39600,
+          "families_served": 36,
+          "hours_of_childcare": 1470,
+          "job_placements": 8,
+          "period": "2024-Q4"
+        },
+        {
+          "caregiver_wages_paid_usd": 48200,
+          "families_served": 48,
+          "hours_of_childcare": 1980,
+          "job_placements": 11,
+          "period": "2025-Q1"
+        },
+        {
+          "caregiver_wages_paid_usd": 51200,
+          "families_served": 54,
+          "hours_of_childcare": 2310,
+          "job_placements": 12,
+          "period": "2025-Q2"
+        }
+      ],
+      "last_updated": "2025-05-10T18:30:00Z",
+      "totals": {
+        "caregiver_wages_paid_usd": 187400,
+        "families_served": 162,
+        "hours_of_childcare": 6840,
+        "job_placements": 41
+      },
+      "trend": {
+        "caregiver_wages_paid_usd": {
+          "change": 3000.0,
+          "latest": 51200.0,
+          "pct_change": 6.22,
+          "previous": 48200.0
+        },
+        "families_served": {
+          "change": 6.0,
+          "latest": 54.0,
+          "pct_change": 12.5,
+          "previous": 48.0
+        },
+        "hours_of_childcare": {
+          "change": 330.0,
+          "latest": 2310.0,
+          "pct_change": 16.67,
+          "previous": 1980.0
+        },
+        "job_placements": {
+          "change": 1.0,
+          "latest": 12.0,
+          "pct_change": 9.09,
+          "previous": 11.0
+        }
+      }
+    },
+    "stakeholder_voice": {
+      "parent_advisory_council": {
+        "charter": "Quarterly council of Lil Footsteps parents that co-designs childcare services, reviews impact data, and nominates policy priorities.",
+        "current_members": [
+          {
+            "borough": "Brooklyn",
+            "languages": [
+              "English",
+              "Spanish"
+            ],
+            "name": "Alicia Ramos",
+            "start_date": "2024-10-01"
+          },
+          {
+            "borough": "Bronx",
+            "languages": [
+              "English"
+            ],
+            "name": "Kira Johnson",
+            "start_date": "2024-07-01"
+          },
+          {
+            "borough": "Queens",
+            "languages": [
+              "English",
+              "Haitian Creole"
+            ],
+            "name": "Talia Desmoines",
+            "start_date": "2025-01-01"
+          }
+        ],
+        "feedback_channels": [
+          "Bi-weekly Signal check-ins moderated by the Parent Liaison",
+          "Anonymous suggestion locker collected at the daycare campus",
+          "Post-session public summaries archived in docs/parent_council_summaries"
+        ],
+        "last_published_summary": {
+          "date": "2025-04-05",
+          "path": "docs/parent_council_summaries/2025-04.md",
+          "themes": [
+            "Extended evening care for hospitality workers",
+            "Spanish-language onboarding improvements",
+            "Child wellness screenings and referral warm hand-offs"
+          ]
+        },
+        "meeting_cadence": {
+          "format": "hybrid",
+          "frequency": "quarterly",
+          "location": "Mosaic Cooperative Hub + encrypted video bridge",
+          "next_session": "2025-07-18T22:00:00Z"
+        },
+        "membership": {
+          "compensation": {
+            "childcare_provided": true,
+            "stipend_usd": 250,
+            "transportation_reimbursement": true
+          },
+          "seats": 9,
+          "selection_process": "Participants nominated by case managers and voted in by active families using ranked-choice ballots.",
+          "term_months": 12
+        }
+      },
+      "provider_feedback_loop": {
+        "office_hours": {
+          "agenda": [
+            "Payroll reconciliation support",
+            "Bulk supply procurement updates",
+            "Curriculum and trauma-informed care training requests"
+          ],
+          "cadence": "biweekly",
+          "host": "Operations Steward",
+          "next_session": "2025-05-20T16:00:00-04:00"
+        },
+        "shared_services": [
+          {
+            "description": "Consolidated orders for diapers, wipes, snacks, and cleaning supplies with 18% cost savings to date.",
+            "name": "Bulk Purchasing Co-op",
+            "status": "live"
+          },
+          {
+            "description": "Partnership with Cooley Pro Bono to answer compliance questions within 48 hours.",
+            "name": "Legal & Licensing Hotline",
+            "status": "pilot"
+          },
+          {
+            "description": "Working with the local child development center to offer quarterly workshops for caregivers.",
+            "name": "Trauma-Informed Care Training",
+            "status": "design"
+          }
+        ],
+        "surveys": {
+          "last_sent": "2025-04-22",
+          "response_rate": 0.82,
+          "top_themes": [
+            "Need for extended evening coverage",
+            "Desire for bilingual classroom aides",
+            "Request for improved mental health supports"
+          ],
+          "upcoming_changes": [
+            "Launching anonymous pulse surveys using VC wallet opt-in",
+            "Publishing quarterly synthesis with anonymized quotes"
+          ]
+        }
+      }
+    },
+    "treasury": {
+      "ledger": {
+        "balance_eth": 1.95,
+        "balance_wei": 1950000000000000000,
+        "deposit_count": 3,
+        "donor_addresses": [
+          "0xDonorAlpha111111111111111111111111111111",
+          "0xDonorBeacon222222222222222222222222222222",
+          "0xDonorCascade333333333333333333333333333333"
+        ],
+        "donor_count": 3,
+        "last_deposit_at": "2025-04-04T21:20:00+00:00",
+        "last_payout_at": "2025-04-10T21:20:00+00:00",
+        "payout_addresses": [
+          "0xLilFootstepsTreasury"
+        ],
+        "payout_count": 2,
+        "payout_recipient_count": 1,
+        "timeline": [
+          {
+            "actor": "0xDonorAlpha111111111111111111111111111111",
+            "amount_eth": 1.5,
+            "amount_wei": 1500000000000000000,
+            "balance_eth": 1.5,
+            "balance_wei": 1500000000000000000,
+            "timestamp": "2025-03-01T00:00:00+00:00",
+            "tx_hash": "0xabc123000000000000000000000000000000000000000000000000000001",
+            "type": "deposit"
+          },
+          {
+            "actor": "0xDonorBeacon222222222222222222222222222222",
+            "amount_eth": 0.75,
+            "amount_wei": 750000000000000000,
+            "balance_eth": 2.25,
+            "balance_wei": 2250000000000000000,
+            "timestamp": "2025-03-15T00:00:00+00:00",
+            "tx_hash": "0xabc123000000000000000000000000000000000000000000000000000002",
+            "type": "deposit"
+          },
+          {
+            "actor": "0xLilFootstepsTreasury",
+            "amount_eth": 0.9,
+            "amount_wei": 900000000000000000,
+            "balance_eth": 1.35,
+            "balance_wei": 1350000000000000000,
+            "timestamp": "2025-03-29T00:00:00+00:00",
+            "tx_hash": "0xabc123000000000000000000000000000000000000000000000000000010",
+            "type": "payout"
+          },
+          {
+            "actor": "0xDonorCascade333333333333333333333333333333",
+            "amount_eth": 1.2,
+            "amount_wei": 1200000000000000000,
+            "balance_eth": 2.55,
+            "balance_wei": 2550000000000000000,
+            "timestamp": "2025-04-04T21:20:00+00:00",
+            "tx_hash": "0xabc123000000000000000000000000000000000000000000000000000003",
+            "type": "deposit"
+          },
+          {
+            "actor": "0xLilFootstepsTreasury",
+            "amount_eth": 0.6,
+            "amount_wei": 600000000000000000,
+            "balance_eth": 1.95,
+            "balance_wei": 1950000000000000000,
+            "timestamp": "2025-04-10T21:20:00+00:00",
+            "tx_hash": "0xabc123000000000000000000000000000000000000000000000000000011",
+            "type": "payout"
+          }
+        ],
+        "total_deposits_eth": 3.45,
+        "total_deposits_wei": 3450000000000000000,
+        "total_payouts_eth": 1.5,
+        "total_payouts_wei": 1500000000000000000
+      },
+      "policy": {
+        "auto_balance_rules": {
+          "max_single_trade_usd": 15000,
+          "min_threshold_pct": 5,
+          "rebalance_day": "sunday",
+          "safe_executor": "0xLilFootstepsTreasuryBalancer5555555555555555555555"
+        },
+        "current_reserves": [
+          {
+            "addresses": [
+              "0xLilFootstepsUSDCVault1111111111111111111111"
+            ],
+            "amount_usd": 42000.0,
+            "custodian": "Circle MPC Treasury",
+            "symbol": "USDC"
+          },
+          {
+            "addresses": [
+              "0xLilFootstepsGUSDSafe2222222222222222222222"
+            ],
+            "amount_usd": 28000.0,
+            "custodian": "Gemini Institutional",
+            "symbol": "GUSD"
+          },
+          {
+            "addresses": [
+              "0xLilFootstepsUSDPVault3333333333333333333333"
+            ],
+            "amount_usd": 19000.0,
+            "custodian": "Paxos Trust",
+            "symbol": "USDP"
+          },
+          {
+            "addresses": [
+              "0xLilFootstepsDAIReserve4444444444444444444444"
+            ],
+            "amount_usd": 7000.0,
+            "custodian": "Gnosis Safe Guardian",
+            "symbol": "DAI"
+          }
+        ],
+        "diversity_score": 92.5,
+        "emergency_reserve": {
+          "current_ratio": 0.1875,
+          "current_usd": 18000.0,
+          "guardians": [
+            "Echo Treasury Steward",
+            "Parent Council Liaison",
+            "Operations Lead",
+            "External Auditor"
+          ],
+          "multisig_threshold": "4-of-6",
+          "status": "meets_target",
+          "target_ratio": 0.12,
+          "vault": "Lil Footsteps Emergency Safe"
+        },
+        "notes": "Diversified reserve across regulated and decentralized rails with automated balancing and emergency runway protections.",
+        "runway_weeks": 11.71,
+        "targets": [
+          {
+            "action": "decrease",
+            "actual_pct": 43.75,
+            "amount_usd": 42000.0,
+            "delta_pct": -3.75,
+            "symbol": "USDC",
+            "target_pct": 40.0
+          },
+          {
+            "action": "hold",
+            "actual_pct": 29.17,
+            "amount_usd": 28000.0,
+            "delta_pct": 0.83,
+            "symbol": "GUSD",
+            "target_pct": 30.0
+          },
+          {
+            "action": "hold",
+            "actual_pct": 19.79,
+            "amount_usd": 19000.0,
+            "delta_pct": 0.21,
+            "symbol": "USDP",
+            "target_pct": 20.0
+          },
+          {
+            "action": "increase",
+            "actual_pct": 7.29,
+            "amount_usd": 7000.0,
+            "delta_pct": 2.71,
+            "symbol": "DAI",
+            "target_pct": 10.0
+          }
+        ],
+        "total_reserves_usd": 96000.0,
+        "updated_at": "2025-05-12T14:00:00Z",
+        "yield_programs": [
+          {
+            "allocation_usd": 20000,
+            "apy": 0.045,
+            "name": "Circle Yield",
+            "risk_notes": "Principal guaranteed notes backed by short-term U.S. Treasuries.",
+            "status": "active",
+            "type": "offchain_treasury"
+          },
+          {
+            "allocation_usd": 12000,
+            "apy": 0.038,
+            "name": "Compound Treasury",
+            "risk_notes": "Regulated lender with audited financial statements and monthly attestations.",
+            "status": "approved",
+            "type": "offchain_treasury"
+          },
+          {
+            "allocation_usd": 6000,
+            "apy": 0.056,
+            "name": "Aave GHO Vault",
+            "risk_notes": "Program capped at 10% of treasury; monitored by on-chain alerts and safety committee.",
+            "status": "pilot",
+            "type": "defi"
+          }
+        ]
+      }
+    },
+    "upcoming_engagements": [
+      {
+        "context": "Operations Steward",
+        "name": "Provider Office Hours",
+        "scheduled_for": "2025-05-20T16:00:00-04:00"
+      },
+      {
+        "context": "Mosaic Cooperative Hub + encrypted video bridge",
+        "name": "Parent Advisory Council",
+        "scheduled_for": "2025-07-18T22:00:00+00:00"
+      }
+    ]
   },
   "pulses": [
     {

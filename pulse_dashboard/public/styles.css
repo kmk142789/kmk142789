@@ -198,6 +198,151 @@ main {
   position: relative;
 }
 
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.impact-card {
+  background: rgba(17, 12, 42, 0.8);
+  border: 1px solid rgba(16, 221, 255, 0.22);
+  border-radius: 16px;
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 240px;
+}
+
+.impact-card h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #fdfcff;
+}
+
+.impact-content {
+  display: grid;
+  gap: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+}
+
+.impact-content .stat-list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.impact-content .stat {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.impact-content .stat span:first-child {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.impact-content .stat span:last-child {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.allocation-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.allocation-table th,
+.allocation-table td {
+  text-align: left;
+  padding: 0.4rem 0.45rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.allocation-table tr:last-child td {
+  border-bottom: none;
+}
+
+.allocation-table th {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.allocation-table .action-increase {
+  color: #4ade80;
+}
+
+.allocation-table .action-decrease {
+  color: #f97316;
+}
+
+.impact-content .equity-grid {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.impact-content .equity-grid span {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+}
+
+.impact-engagements {
+  margin-top: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.impact-engagements h3 {
+  margin-bottom: 0.8rem;
+}
+
+.engagement-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.engagement-list li {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.placeholder {
+  color: rgba(255, 255, 255, 0.55);
+  font-style: italic;
+}
+
+.impact-note {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 720px) {
+  .impact-card {
+    min-height: auto;
+  }
+}
+
 .timeline li::before {
   content: '';
   position: absolute;

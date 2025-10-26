@@ -32,6 +32,7 @@ function renderDashboard(payload) {
   renderAttestationGlyphs(payload.attestations || []);
   renderWorkerHive(payload.worker_hive || { events: [] });
   renderDns(payload.dns_snapshots || []);
+  renderImpactExplorer(payload.public_impact_explorer || {});
 }
 
 function renderPulseWaves(pulses) {
@@ -181,6 +182,251 @@ function renderDns(entries) {
     .join(' • ');
 }
 
+function renderImpactExplorer(explorer) {
+  const treasuryContainer = document.getElementById('treasurySummary');
+  const metricsContainer = document.getElementById('impactMetrics');
+  const voiceContainer = document.getElementById('stakeholderVoice');
+  const engagementList = document.getElementById('engagementList');
+  if (!treasuryContainer || !metricsContainer || !voiceContainer || !engagementList) {
+    return;
+  }
+
+  renderTreasurySummary(treasuryContainer, explorer.treasury || {});
+  renderImpactMetrics(metricsContainer, explorer.impact_metrics || {});
+  renderStakeholderVoice(voiceContainer, explorer.stakeholder_voice || {});
+  renderEngagements(engagementList, explorer.upcoming_engagements || []);
+}
+
+function renderTreasurySummary(container, treasury) {
+  container.innerHTML = '';
+  const ledger = treasury.ledger || {};
+  const policy = treasury.policy || {};
+
+  if (!Object.keys(ledger).length && !Object.keys(policy).length) {
+    container.innerHTML = '<p class="placeholder">No treasury data yet.</p>';
+    return;
+  }
+
+  const statList = document.createElement('div');
+  statList.className = 'stat-list';
+
+  const stats = [
+    ['Balance', `${formatEth(ledger.balance_eth)} ETH`],
+    ['Deposits', `${formatEth(ledger.total_deposits_eth || 0)} ETH`],
+    ['Payouts', `${formatEth(ledger.total_payouts_eth || 0)} ETH`],
+    ['Unique Donors', formatNumber(ledger.donor_count || (ledger.donor_addresses || []).length || 0)],
+    [
+      'Unique Recipients',
+      formatNumber(ledger.payout_recipient_count || (ledger.payout_addresses || []).length || 0),
+    ],
+  ];
+
+  stats.forEach(([label, value]) => {
+    const row = document.createElement('div');
+    row.className = 'stat';
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = label;
+    const valueSpan = document.createElement('span');
+    valueSpan.textContent = value;
+    row.appendChild(labelSpan);
+    row.appendChild(valueSpan);
+    statList.appendChild(row);
+  });
+
+  container.appendChild(statList);
+
+  if (Array.isArray(policy.targets) && policy.targets.length) {
+    const table = document.createElement('table');
+    table.className = 'allocation-table';
+    table.innerHTML = '<tr><th>Asset</th><th>Target</th><th>Actual</th><th>Δ</th></tr>';
+    policy.targets.forEach((target) => {
+      const row = document.createElement('tr');
+      const delta = Number(target.delta_pct || 0);
+      const actionClass = delta > 0 ? 'action-increase' : delta < 0 ? 'action-decrease' : '';
+      row.innerHTML = `
+        <td>${target.symbol}</td>
+        <td>${formatPercent(target.target_pct)}</td>
+        <td>${formatPercent(target.actual_pct)}</td>
+        <td class="${actionClass}">${delta.toFixed(2)}%</td>
+      `;
+      table.appendChild(row);
+    });
+    container.appendChild(table);
+  }
+
+  if (policy.emergency_reserve && policy.emergency_reserve.current_ratio !== undefined) {
+    const emergency = policy.emergency_reserve;
+    const note = document.createElement('p');
+    note.className = 'impact-note';
+    note.textContent = `Emergency reserve ${formatPercent(emergency.current_ratio * 100)} of treasury (target ${formatPercent(
+      (emergency.target_ratio || 0) * 100,
+    )}).`;
+    container.appendChild(note);
+  }
+
+  if (policy.runway_weeks) {
+    const runway = document.createElement('p');
+    runway.className = 'impact-note';
+    runway.textContent = `Projected runway: ${policy.runway_weeks} weeks.`;
+    container.appendChild(runway);
+  }
+}
+
+function renderImpactMetrics(container, metrics) {
+  container.innerHTML = '';
+  if (!Object.keys(metrics).length) {
+    container.innerHTML = '<p class="placeholder">No childcare metrics published yet.</p>';
+    return;
+  }
+
+  const totals = metrics.totals || {};
+  const totalsList = document.createElement('div');
+  totalsList.className = 'stat-list';
+  [
+    ['Families Served', formatNumber(totals.families_served || 0)],
+    ['Hours of Care', formatNumber(totals.hours_of_childcare || 0)],
+    ['Job Placements', formatNumber(totals.job_placements || 0)],
+    ['Caregiver Wages', formatCurrency(totals.caregiver_wages_paid_usd || 0)],
+  ].forEach(([label, value]) => {
+    const row = document.createElement('div');
+    row.className = 'stat';
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = label;
+    const valueSpan = document.createElement('span');
+    valueSpan.textContent = value;
+    row.appendChild(labelSpan);
+    row.appendChild(valueSpan);
+    totalsList.appendChild(row);
+  });
+  container.appendChild(totalsList);
+
+  if (metrics.current_cycle) {
+    const cycle = metrics.current_cycle;
+    const cycleBlock = document.createElement('div');
+    cycleBlock.className = 'impact-note';
+    const notes = cycle.notes ? ` — ${cycle.notes}` : '';
+    cycleBlock.textContent = `Cycle ${cycle.cycle}: ${formatNumber(
+      cycle.families_served || 0,
+    )} families • ${formatNumber(cycle.hours_of_childcare || 0)} hours • ${formatNumber(
+      cycle.job_placements || 0,
+    )} job matches${notes}`;
+    container.appendChild(cycleBlock);
+  }
+
+  if (metrics.history && metrics.history.length) {
+    const historyGrid = document.createElement('div');
+    historyGrid.className = 'equity-grid';
+    metrics.history.slice(-3).forEach((entry) => {
+      const period = entry.period || 'Period';
+      const span = document.createElement('span');
+      span.innerHTML = `${period} <strong>${formatNumber(entry.families_served || 0)} families • ${formatNumber(
+        entry.hours_of_childcare || 0,
+      )} hrs</strong>`;
+      historyGrid.appendChild(span);
+    });
+    container.appendChild(historyGrid);
+  }
+
+  if (metrics.equity_breakdown) {
+    const equity = metrics.equity_breakdown;
+    const equityGrid = document.createElement('div');
+    equityGrid.className = 'equity-grid';
+    if (equity.languages) {
+      const languages = Object.entries(equity.languages).map(
+        ([language, value]) => `${language}: ${formatPercent(value * 100)}`,
+      );
+      const span = document.createElement('span');
+      span.textContent = `Languages • ${languages.join(' • ')}`;
+      equityGrid.appendChild(span);
+    }
+    if (equity.zip_codes) {
+      const span = document.createElement('span');
+      span.textContent = `Top ZIPs • ${Object.entries(equity.zip_codes)
+        .slice(0, 4)
+        .map(([zip, value]) => `${zip}: ${formatPercent(value * 100)}`)
+        .join(' • ')}`;
+      equityGrid.appendChild(span);
+    }
+    if (equity.disabilities_supported !== undefined) {
+      const span = document.createElement('span');
+      span.textContent = `Children with disabilities supported • ${formatNumber(equity.disabilities_supported)}`;
+      equityGrid.appendChild(span);
+    }
+    container.appendChild(equityGrid);
+  }
+
+  if (metrics.data_sources && metrics.data_sources.length) {
+    const sources = document.createElement('p');
+    sources.className = 'impact-note';
+    sources.textContent = `Sources: ${metrics.data_sources.join(', ')}`;
+    container.appendChild(sources);
+  }
+}
+
+function renderStakeholderVoice(container, voice) {
+  container.innerHTML = '';
+  if (!Object.keys(voice).length) {
+    container.innerHTML = '<p class="placeholder">Stakeholder programs will appear here once configured.</p>';
+    return;
+  }
+
+  const parent = voice.parent_advisory_council || {};
+  if (Object.keys(parent).length) {
+    const parentBlock = document.createElement('div');
+    parentBlock.className = 'impact-note';
+    const nextSession = parent.meeting_cadence && parent.meeting_cadence.next_session;
+    parentBlock.textContent = `Parent Advisory Council — next session ${formatDateTime(nextSession)} (${(parent.meeting_cadence &&
+      parent.meeting_cadence.location) || 'location TBA'})`;
+    container.appendChild(parentBlock);
+    if (parent.last_published_summary) {
+      const summary = document.createElement('p');
+      summary.className = 'impact-note';
+      summary.textContent = `Latest summary (${parent.last_published_summary.date}): ${parent.last_published_summary.themes.join(
+        ', ',
+      )}`;
+      container.appendChild(summary);
+    }
+  }
+
+  const provider = voice.provider_feedback_loop || {};
+  if (Object.keys(provider).length) {
+    const providerBlock = document.createElement('div');
+    providerBlock.className = 'impact-note';
+    const nextOffice = provider.office_hours && provider.office_hours.next_session;
+    providerBlock.textContent = `Provider Office Hours — ${formatDateTime(nextOffice)} with ${(provider.office_hours &&
+      provider.office_hours.host) || 'team'}`;
+    container.appendChild(providerBlock);
+    if (provider.surveys && provider.surveys.top_themes) {
+      const surveys = document.createElement('p');
+      surveys.className = 'impact-note';
+      surveys.textContent = `Survey themes: ${provider.surveys.top_themes.join(', ')}`;
+      container.appendChild(surveys);
+    }
+  }
+}
+
+function renderEngagements(list, engagements) {
+  list.innerHTML = '';
+  if (!engagements.length) {
+    const item = document.createElement('li');
+    item.className = 'placeholder';
+    item.textContent = 'No engagements scheduled yet.';
+    list.appendChild(item);
+    return;
+  }
+
+  engagements.forEach((engagement) => {
+    const item = document.createElement('li');
+    const title = document.createElement('strong');
+    title.textContent = engagement.name || 'Engagement';
+    const detail = document.createElement('div');
+    detail.textContent = `${formatDateTime(engagement.scheduled_for)} • ${engagement.context || 'TBA'}`;
+    item.appendChild(title);
+    item.appendChild(detail);
+    list.appendChild(item);
+  });
+}
+
 function hashToAngle(hash, index = 0) {
   if (!hash) return (index * Math.PI) / 6;
   const slice = hash.slice(index % (hash.length - 6 || 1), index % (hash.length - 6 || 1) + 6);
@@ -238,6 +484,40 @@ function formatRelativeTime(timestamp) {
   }
   const days = Math.round(diff / 86400);
   return `${days} day${days === 1 ? '' : 's'} ago`;
+}
+
+function formatEth(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return '0.000';
+  return number.toFixed(3);
+}
+
+function formatNumber(value) {
+  const number = Number(value || 0);
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(number);
+}
+
+function formatCurrency(value) {
+  const number = Number(value || 0);
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(number);
+}
+
+function formatPercent(value) {
+  const number = Number(value || 0);
+  return `${number.toFixed(2)}%`;
+}
+
+function formatDateTime(value) {
+  if (!value) return 'TBA';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 loadDashboard();

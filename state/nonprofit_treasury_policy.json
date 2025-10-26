@@ -1,0 +1,105 @@
+{
+  "updated_at": "2025-05-12T14:00:00Z",
+  "stablecoin_targets": [
+    {
+      "symbol": "USDC",
+      "target_pct": 40,
+      "network": "Ethereum",
+      "notes": "Primary settlement asset with deep liquidity and direct USD on/off ramps."
+    },
+    {
+      "symbol": "GUSD",
+      "target_pct": 30,
+      "network": "Ethereum",
+      "notes": "Gemini-regulated reserve providing New York DFS oversight."
+    },
+    {
+      "symbol": "USDP",
+      "target_pct": 20,
+      "network": "Ethereum",
+      "notes": "Paxos-issued reserve with robust attestations and short-term Treasury backing."
+    },
+    {
+      "symbol": "DAI",
+      "target_pct": 10,
+      "network": "Ethereum",
+      "notes": "Community-aligned decentralized collateral pool capped at 10% for risk management."
+    }
+  ],
+  "current_reserves": {
+    "USDC": {
+      "amount_usd": 42000,
+      "addresses": [
+        "0xLilFootstepsUSDCVault1111111111111111111111"
+      ],
+      "custodian": "Circle MPC Treasury"
+    },
+    "GUSD": {
+      "amount_usd": 28000,
+      "addresses": [
+        "0xLilFootstepsGUSDSafe2222222222222222222222"
+      ],
+      "custodian": "Gemini Institutional"
+    },
+    "USDP": {
+      "amount_usd": 19000,
+      "addresses": [
+        "0xLilFootstepsUSDPVault3333333333333333333333"
+      ],
+      "custodian": "Paxos Trust"
+    },
+    "DAI": {
+      "amount_usd": 7000,
+      "addresses": [
+        "0xLilFootstepsDAIReserve4444444444444444444444"
+      ],
+      "custodian": "Gnosis Safe Guardian"
+    }
+  },
+  "operating_burn_usd_weekly": 8200,
+  "emergency_reserve": {
+    "target_ratio": 0.12,
+    "current_usd": 18000,
+    "multisig_threshold": "4-of-6",
+    "vault": "Lil Footsteps Emergency Safe",
+    "guardians": [
+      "Echo Treasury Steward",
+      "Parent Council Liaison",
+      "Operations Lead",
+      "External Auditor"
+    ]
+  },
+  "yield_programs": [
+    {
+      "name": "Circle Yield",
+      "type": "offchain_treasury",
+      "status": "active",
+      "allocation_usd": 20000,
+      "apy": 0.045,
+      "risk_notes": "Principal guaranteed notes backed by short-term U.S. Treasuries."
+    },
+    {
+      "name": "Compound Treasury",
+      "type": "offchain_treasury",
+      "status": "approved",
+      "allocation_usd": 12000,
+      "apy": 0.038,
+      "risk_notes": "Regulated lender with audited financial statements and monthly attestations."
+    },
+    {
+      "name": "Aave GHO Vault",
+      "type": "defi",
+      "status": "pilot",
+      "allocation_usd": 6000,
+      "apy": 0.056,
+      "risk_notes": "Program capped at 10% of treasury; monitored by on-chain alerts and safety committee."
+    }
+  ],
+  "auto_balance_rules": {
+    "rebalance_day": "sunday",
+    "min_threshold_pct": 5,
+    "max_single_trade_usd": 15000,
+    "safe_executor": "0xLilFootstepsTreasuryBalancer5555555555555555555555"
+  },
+  "notes": "Diversified reserve across regulated and decentralized rails with automated balancing and emergency runway protections."
+}

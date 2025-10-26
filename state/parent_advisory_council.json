@@ -1,0 +1,53 @@
+{
+  "charter": "Quarterly council of Lil Footsteps parents that co-designs childcare services, reviews impact data, and nominates policy priorities.",
+  "membership": {
+    "seats": 9,
+    "term_months": 12,
+    "selection_process": "Participants nominated by case managers and voted in by active families using ranked-choice ballots.",
+    "compensation": {
+      "stipend_usd": 250,
+      "childcare_provided": true,
+      "transportation_reimbursement": true
+    }
+  },
+  "current_members": [
+    {
+      "name": "Alicia Ramos",
+      "borough": "Brooklyn",
+      "languages": ["English", "Spanish"],
+      "start_date": "2024-10-01"
+    },
+    {
+      "name": "Kira Johnson",
+      "borough": "Bronx",
+      "languages": ["English"],
+      "start_date": "2024-07-01"
+    },
+    {
+      "name": "Talia Desmoines",
+      "borough": "Queens",
+      "languages": ["English", "Haitian Creole"],
+      "start_date": "2025-01-01"
+    }
+  ],
+  "meeting_cadence": {
+    "frequency": "quarterly",
+    "next_session": "2025-07-18T22:00:00Z",
+    "format": "hybrid",
+    "location": "Mosaic Cooperative Hub + encrypted video bridge"
+  },
+  "feedback_channels": [
+    "Bi-weekly Signal check-ins moderated by the Parent Liaison",
+    "Anonymous suggestion locker collected at the daycare campus",
+    "Post-session public summaries archived in docs/parent_council_summaries"
+  ],
+  "last_published_summary": {
+    "date": "2025-04-05",
+    "path": "docs/parent_council_summaries/2025-04.md",
+    "themes": [
+      "Extended evening care for hospitality workers",
+      "Spanish-language onboarding improvements",
+      "Child wellness screenings and referral warm hand-offs"
+    ]
+  }
+}

@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Mapping
 
+from .impact import PublicImpactExplorer
+
 
 @dataclass(slots=True)
 class PulseDashboardPaths:
@@ -64,6 +66,7 @@ class PulseDashboardBuilder:
             "worker_hive": self._load_worker_events(),
         }
         payload["glyph_cycle"] = self._build_glyph_cycle(payload)
+        payload["public_impact_explorer"] = PublicImpactExplorer(self._paths.root).build()
         return payload
 
     def write(self, data: Mapping[str, object] | None = None, *, path: Path | str | None = None) -> Path:

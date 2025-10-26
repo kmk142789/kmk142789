@@ -1,0 +1,42 @@
+{
+  "office_hours": {
+    "cadence": "biweekly",
+    "host": "Operations Steward",
+    "next_session": "2025-05-20T16:00:00-04:00",
+    "agenda": [
+      "Payroll reconciliation support",
+      "Bulk supply procurement updates",
+      "Curriculum and trauma-informed care training requests"
+    ]
+  },
+  "surveys": {
+    "last_sent": "2025-04-22",
+    "response_rate": 0.82,
+    "top_themes": [
+      "Need for extended evening coverage",
+      "Desire for bilingual classroom aides",
+      "Request for improved mental health supports"
+    ],
+    "upcoming_changes": [
+      "Launching anonymous pulse surveys using VC wallet opt-in",
+      "Publishing quarterly synthesis with anonymized quotes"
+    ]
+  },
+  "shared_services": [
+    {
+      "name": "Bulk Purchasing Co-op",
+      "status": "live",
+      "description": "Consolidated orders for diapers, wipes, snacks, and cleaning supplies with 18% cost savings to date."
+    },
+    {
+      "name": "Legal & Licensing Hotline",
+      "status": "pilot",
+      "description": "Partnership with Cooley Pro Bono to answer compliance questions within 48 hours."
+    },
+    {
+      "name": "Trauma-Informed Care Training",
+      "status": "design",
+      "description": "Working with the local child development center to offer quarterly workshops for caregivers."
+    }
+  ]
+}

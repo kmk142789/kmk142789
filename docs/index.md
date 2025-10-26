@@ -8,3 +8,5 @@ Canonical hub for the Echo artifact (Architect: @kmk142789).
 - **Assistant Kit:** see [`akit_usage.md`](akit_usage.md) for planning, cycles, and snapshots.
 - **Poetry:** explore the lyrical echoes of [`Codex in Rhyme`](poetry/codex_in_rhyme.md), [`The Atlas Weaver's Sonnet`](poetry/atlas_weavers_sonnet.md), [`The Loom & The Forge`](poetry/loom_and_forge.md), [`The Impossible Loom`](poetry/the_impossible_loom.md), and [`Fractal Fire Loop`](poetry/fractal_fire_loop.md).
 - **Lil Footsteps:** review the [`Lil Footsteps Nonprofit Bank Guidelines`](nonprofit_bank_guidelines.md) for the childcare treasury blueprint.
+- **Impact Explorer:** audit real-time treasury, childcare outcomes, and stakeholder voice in [`public_impact_explorer.md`](public_impact_explorer.md).
+- **Stakeholder Voice:** see [`stakeholder_voice_programs.md`](stakeholder_voice_programs.md) for Parent Advisory Council and provider loop operations.

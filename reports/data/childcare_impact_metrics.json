@@ -1,0 +1,67 @@
+{
+  "last_updated": "2025-05-10T18:30:00Z",
+  "current_cycle": {
+    "cycle": 16,
+    "families_served": 24,
+    "hours_of_childcare": 1080,
+    "job_placements": 5,
+    "child_development": {
+      "screenings_completed": 18,
+      "early_literacy_sessions": 42,
+      "health_referrals": 7
+    },
+    "notes": "Focus this cycle on overnight care pilots for hospital and hospitality shift workers."
+  },
+  "totals": {
+    "families_served": 162,
+    "hours_of_childcare": 6840,
+    "job_placements": 41,
+    "caregiver_wages_paid_usd": 187400
+  },
+  "history": [
+    {
+      "period": "2024-Q4",
+      "families_served": 36,
+      "hours_of_childcare": 1470,
+      "job_placements": 8,
+      "caregiver_wages_paid_usd": 39600
+    },
+    {
+      "period": "2025-Q1",
+      "families_served": 48,
+      "hours_of_childcare": 1980,
+      "job_placements": 11,
+      "caregiver_wages_paid_usd": 48200
+    },
+    {
+      "period": "2025-Q2",
+      "families_served": 54,
+      "hours_of_childcare": 2310,
+      "job_placements": 12,
+      "caregiver_wages_paid_usd": 51200
+    }
+  ],
+  "equity_breakdown": {
+    "languages": {
+      "english": 0.58,
+      "spanish": 0.29,
+      "haitian_creole": 0.07,
+      "others": 0.06
+    },
+    "zip_codes": {
+      "11207": 0.22,
+      "11233": 0.18,
+      "11208": 0.16,
+      "11212": 0.15,
+      "11221": 0.11,
+      "other": 0.18
+    },
+    "disabilities_supported": 14
+  },
+  "data_sources": [
+    "NonprofitBank ledger mirrored from on-chain events",
+    "Caregiver scheduling platform exports",
+    "Parent onboarding and exit interviews",
+    "Provider feedback surveys"
+  ]
+}

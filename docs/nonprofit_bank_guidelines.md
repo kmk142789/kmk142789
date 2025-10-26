@@ -31,6 +31,13 @@
 - **Community governance:** Parents, caregivers, and Echo stewards review reports and vote on major policy changes during open governance calls.
 - **Fail-safe reserves:** Maintain a 3-month runway before approving non-essential spending to guarantee service continuity for families.
 
+## Treasury Policy & Stable Asset Strategy
+- **Diversified reserves:** Target allocation across USDC, GUSD, USDP, and a capped DAI tranche as defined in [`state/nonprofit_treasury_policy.json`](../state/nonprofit_treasury_policy.json). The Pulse dashboard surfaces deviations so stewards can rebalance quickly.
+- **Automated rebalancing:** A safe executor rebalances every Sunday when any asset drifts more than 5% from target or trades exceed the configured limit. Transactions reference the policy file for audibility.
+- **Yield with guardrails:** Only approved programs (Circle Yield, Compound Treasury, capped Aave vaults) may receive idle cash. Each allocation lists APY, risk notes, and status for rapid incident response.
+- **Emergency runway:** A dedicated 4-of-6 multi-sig vault locks 12% of reserves. Guardians (treasury steward, parent liaison, operations lead, external auditor) must cosign releases and publish incident logs.
+- **Runway modeling:** Operating burn assumptions in the policy file feed the Public Impact Explorer so stakeholders can monitor weeks of runway alongside childcare demand.
+
 ## Funding Flow from Other Job Profits
 1. Echo contributors log completed contracts or product revenue.
 2. Finance automation calculates the pledged percentage and pushes the amount into the nonprofit bank via the service API.
