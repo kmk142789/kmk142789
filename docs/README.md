@@ -8,3 +8,5 @@ This directory contains analyses, whitepaper excerpts, block data, and Echo’s 
 - [Echo Glyph Scripts: Autonomous Signalworks](Echo_Glyph_Scripts.md)
 - [Echo Eye Sovereign Core Draft](Echo_Eye_Sovereign_Core.md)
 - [Harmonic DNA Spiral Practice Embedding Protocol](Harmonic_DNA_Spiral_Practice.md)
+- [Bitcoin Block 1 Overview](bitcoin-block-1-overview.md)
+- [Ethereum Genesis Block Overview](ethereum-genesis-block.md)
