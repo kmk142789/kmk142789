@@ -1,0 +1,171 @@
+{
+  "treasury_strategy": {
+    "stablecoin_allocations": [
+      {"asset": "USDC", "percentage": 0.45, "custodian": "Multi-sig cold storage"},
+      {"asset": "USDP", "percentage": 0.25, "custodian": "Smart contract vault"},
+      {"asset": "GUSD", "percentage": 0.20, "custodian": "Regulated trust"},
+      {"asset": "DAI", "percentage": 0.10, "custodian": "On-chain reserve"}
+    ],
+    "yield_programs": [
+      {
+        "name": "Circle Yield",
+        "rate": 0.041,
+        "status": "active",
+        "coverage": "Short-term treasuries custodied by Circle"
+      },
+      {
+        "name": "Aave GHO Market",
+        "rate": 0.032,
+        "status": "pilot",
+        "coverage": "Capped at 15% of liquid treasury"
+      }
+    ],
+    "emergency_reserve_policy": {
+      "percentage_locked": 0.08,
+      "multi_sig_threshold": 4,
+      "review_cadence": "monthly"
+    }
+  },
+  "digital_identity": {
+    "wallet_program": {
+      "provider": "Web3Auth",
+      "parents_onboarded": 96,
+      "custodial_opt_in_rate": 0.61
+    },
+    "vc_wallet_app": {
+      "platform": "Progressive Web App",
+      "features": [
+        "Tap-to-verify QR codes",
+        "Bilingual onboarding",
+        "Offline cache with auto-sync"
+      ]
+    },
+    "qr_entry_points": [
+      {"location": "Lil Footsteps main campus", "active": true},
+      {"location": "Night Owl Childcare", "active": true},
+      {"location": "Community college satellite", "active": false}
+    ]
+  },
+  "partnerships": {
+    "employers": [
+      {
+        "name": "Harbor Health",
+        "program": "Night shift childcare",
+        "contribution_usd": 12000,
+        "notes": "Matches employee donations 2:1"
+      },
+      {
+        "name": "Metro Transit",
+        "program": "Commute stipends",
+        "contribution_usd": 6500,
+        "notes": "Covers late-night driver childcare"
+      }
+    ],
+    "social_services": [
+      {
+        "name": "Community Housing Alliance",
+        "integration": "Credential sharing via API",
+        "status": "active"
+      }
+    ],
+    "unions": [
+      {
+        "name": "Local 404 Care Workers",
+        "program": "Emergency back-up slots",
+        "status": "design"
+      }
+    ],
+    "education_partners": [
+      {
+        "name": "Riverbend Community College",
+        "program": "Student parent childcare pass",
+        "status": "live"
+      }
+    ]
+  },
+  "storytelling": {
+    "documentary_series": {
+      "episodes_released": 3,
+      "distribution": ["YouTube", "Community screenings"],
+      "focus": "Parent and caregiver journeys"
+    },
+    "transparency_reports": {
+      "cadence": "quarterly",
+      "last_published": "2024-04-30"
+    },
+    "policy_briefs": [
+      {
+        "title": "Childcare access without DHS dependency",
+        "published": "2024-03-12",
+        "link": "reports/policy_brief_childcare_access.pdf"
+      }
+    ]
+  },
+  "sustainability": {
+    "recurring_donation_integrations": ["Stripe", "Plaid", "Direct smart contract allowances"],
+    "grant_matching_pool": {
+      "balance_usd": 28000,
+      "matching_ratio": "2:1 for parent-led funds"
+    },
+    "treasury_forecast": {
+      "model": "Monte Carlo",
+      "coverage_months": 9
+    }
+  },
+  "ethical_guardrails": {
+    "ethics_committee": {
+      "members": 7,
+      "meeting_cadence": "bi-monthly",
+      "latest_decision": "Adopted trauma-informed caregiver charter"
+    },
+    "transparent_compensation": {
+      "public_dashboard": "docs/compensation_overview.md",
+      "last_update": "2024-05-25"
+    },
+    "non_discrimination_policy": {
+      "link": "docs/policies/non_discrimination.md",
+      "training_completion_rate": 0.94
+    }
+  },
+  "resilience": {
+    "disaster_recovery": {
+      "backup_region": "eu-west-2",
+      "storage": ["IPFS", "Filecoin", "Arweave"],
+      "last_drill": "2024-05-12"
+    },
+    "communications": {
+      "primary": "Matrix",
+      "fallback": ["Signal", "SMS tree"],
+      "status": "tested"
+    },
+    "delegation_protocols": {
+      "treasury_signers": 5,
+      "quorum": 3,
+      "documentation": "docs/treasury_delegation.md"
+    }
+  },
+  "legal": {
+    "jurisdiction_plan": ["US", "Canada", "Mexico"],
+    "policy_watchlist": ["State childcare ratios", "Worker classification guidance"],
+    "dao_wrapper": {
+      "structure": "Wyoming DAO LLC",
+      "status": "filed"
+    }
+  },
+  "culture": {
+    "annual_summit": {
+      "format": "hybrid",
+      "next_date": "2024-10-05",
+      "themes": ["Economic mobility", "Caregiver wellness"]
+    },
+    "appreciation_program": {
+      "monthly_award": "Star Caregiver tokens",
+      "benefits": ["Mental health stipend", "Professional development credit"]
+    },
+    "community_rituals": [
+      "Monthly gratitude circle",
+      "Quarterly open mic",
+      "Seasonal visioning workshop"
+    ]
+  }
+}

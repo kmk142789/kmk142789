@@ -1368,7 +1368,7 @@
       "token": "9bf0701ec9"
     }
   ],
-  "generated_at": "2025-10-25T19:13:44.344530+00:00",
+  "generated_at": "2025-10-26T03:12:05.165243+00:00",
   "glyph_cycle": {
     "cycles": [
       {
@@ -1381,6 +1381,460 @@
       }
     ],
     "energy": 108.46
+  },
+  "impact_explorer": {
+    "community_voice": {
+      "parent_advisory_council": {
+        "latest_meeting": {
+          "actions": [
+            "Launch weekend training stipend for caregivers completing trauma-informed coursework.",
+            "Add bilingual intake flow to the VC wallet app by next cycle.",
+            "Pilot mentorship pairs between veteran and new parents."
+          ],
+          "date": "2024-05-18",
+          "summary": "Parents prioritized trauma-informed caregiver training and flagged need for more Spanish-language onboarding.",
+          "support": {
+            "childcare_hours": 12,
+            "stipend_usd": 150
+          }
+        },
+        "meeting_cadence": "quarterly",
+        "members": [
+          {
+            "district": "Sunrise",
+            "focus": "Bilingual programming",
+            "name": "Alejandra V."
+          },
+          {
+            "district": "Harbor",
+            "focus": "Shift-worker coverage",
+            "name": "Imani K."
+          },
+          {
+            "district": "North Loop",
+            "focus": "Disability inclusion",
+            "name": "Noah R."
+          }
+        ],
+        "upcoming_listening_session": {
+          "date": "2024-07-27",
+          "location": "Lil Footsteps hub",
+          "theme": "Transportation and late-night coverage"
+        }
+      },
+      "provider_feedback": {
+        "office_hours": {
+          "cadence": "bi-weekly",
+          "facilitator": "Operations Circle",
+          "next_session": "2024-06-15T18:00:00Z"
+        },
+        "shared_services": [
+          {
+            "description": "Monthly aggregated orders for supplies with 18% cost savings across providers.",
+            "name": "Collective Procurement",
+            "status": "active"
+          },
+          {
+            "description": "Provides contract templates and hotline hours for employment law questions.",
+            "name": "Legal Navigator",
+            "status": "pilot"
+          }
+        ],
+        "surveys": {
+          "latest_sent": "2024-05-30",
+          "response_rate": 0.82,
+          "top_requests": [
+            "Bulk purchase of diapers and snacks",
+            "Shared legal review for updated municipal compliance",
+            "Expanded access to substitute caregiver pool"
+          ]
+        }
+      }
+    },
+    "financials": {
+      "assets": {
+        "GUSD": {
+          "balance": 3600.0,
+          "disbursed": 0.0,
+          "donations": 3600.0
+        },
+        "USDC": {
+          "balance": 5800.0,
+          "disbursed": 1800.0,
+          "donations": 7600.0
+        },
+        "USDP": {
+          "balance": 3250.0,
+          "disbursed": 950.0,
+          "donations": 4200.0
+        }
+      },
+      "events": [
+        {
+          "amount_usd": 5100.0,
+          "asset": "USDC",
+          "beneficiary": null,
+          "id": "donation-2024-06-04",
+          "memo": "Q2 pledge",
+          "source": "Recurring Guardians",
+          "timestamp": "2024-06-04T16:20:00+00:00",
+          "tx_hash": "0xfff666",
+          "type": "donation"
+        },
+        {
+          "amount_usd": 950.0,
+          "asset": "USDP",
+          "beneficiary": "Night Owl Childcare",
+          "id": "disbursement-2024-06-02",
+          "memo": "Weekend care staffing",
+          "source": "Emergency Reserve",
+          "timestamp": "2024-06-02T12:00:00+00:00",
+          "tx_hash": "0xeee555",
+          "type": "disbursement"
+        },
+        {
+          "amount_usd": 3600.0,
+          "asset": "GUSD",
+          "beneficiary": null,
+          "id": "donation-2024-05-28",
+          "memo": "Scholarship sprint",
+          "source": "Community Nodes",
+          "timestamp": "2024-05-28T08:05:00+00:00",
+          "tx_hash": "0xddd444",
+          "type": "donation"
+        },
+        {
+          "amount_usd": 1800.0,
+          "asset": "USDC",
+          "beneficiary": "Lil Footsteps Cooperative",
+          "id": "disbursement-2024-05-20",
+          "memo": "Payroll batch",
+          "source": "Lil Footsteps Ops",
+          "timestamp": "2024-05-20T19:30:00+00:00",
+          "tx_hash": "0xccc333",
+          "type": "disbursement"
+        },
+        {
+          "amount_usd": 4200.0,
+          "asset": "USDP",
+          "beneficiary": null,
+          "id": "donation-2024-05-09",
+          "memo": "Nurse shift coverage",
+          "source": "Employer Match Pool",
+          "timestamp": "2024-05-09T14:10:00+00:00",
+          "tx_hash": "0xbbb222",
+          "type": "donation"
+        },
+        {
+          "amount_usd": 2500.0,
+          "asset": "USDC",
+          "beneficiary": null,
+          "id": "donation-2024-04-15",
+          "memo": "Cycle 8 general fund",
+          "source": "Donor Collective",
+          "timestamp": "2024-04-15T17:45:00+00:00",
+          "tx_hash": "0xaaa111",
+          "type": "donation"
+        }
+      ],
+      "rolling_30_days": {
+        "disbursed": 0.0,
+        "donations": 0.0
+      },
+      "sources": {
+        "Community Nodes": {
+          "balance": 3600.0,
+          "disbursed": 0.0,
+          "donations": 3600.0
+        },
+        "Donor Collective": {
+          "balance": 2500.0,
+          "disbursed": 0.0,
+          "donations": 2500.0
+        },
+        "Emergency Reserve": {
+          "balance": -950.0,
+          "disbursed": 950.0,
+          "donations": 0.0
+        },
+        "Employer Match Pool": {
+          "balance": 4200.0,
+          "disbursed": 0.0,
+          "donations": 4200.0
+        },
+        "Lil Footsteps Ops": {
+          "balance": -1800.0,
+          "disbursed": 1800.0,
+          "donations": 0.0
+        },
+        "Recurring Guardians": {
+          "balance": 5100.0,
+          "disbursed": 0.0,
+          "donations": 5100.0
+        }
+      },
+      "totals": {
+        "balance": 12650.0,
+        "disbursed": 2750.0,
+        "donations": 15400.0
+      }
+    },
+    "generated_at": "2025-10-26T03:12:05.184538+00:00",
+    "impact_metrics": {
+      "childcare_hours": {
+        "average_per_family": 32,
+        "last_30_days": 720,
+        "total": 4860
+      },
+      "credential_verifications": {
+        "active_credentials": 87,
+        "last_30_days": 18,
+        "total": 104
+      },
+      "families_served": {
+        "cycle_goal": 150,
+        "last_30_days": 24,
+        "total": 132
+      },
+      "job_placements": {
+        "last_30_days": 6,
+        "retention_rate": 0.92,
+        "total": 41
+      },
+      "provider_capacity": {
+        "active_providers": 19,
+        "licensed_slots": 152,
+        "utilization_rate": 0.84
+      },
+      "story_highlights": [
+        "Three caregivers completed their early-childhood credentials using DAO stipends.",
+        "Lil Footsteps expanded weekend coverage to two additional neighborhoods.",
+        "Emergency reserve unlocked 38 nights of respite care during hospital rotations."
+      ]
+    },
+    "operations": {
+      "culture": {
+        "annual_summit": {
+          "format": "hybrid",
+          "next_date": "2024-10-05",
+          "themes": [
+            "Economic mobility",
+            "Caregiver wellness"
+          ]
+        },
+        "appreciation_program": {
+          "benefits": [
+            "Mental health stipend",
+            "Professional development credit"
+          ],
+          "monthly_award": "Star Caregiver tokens"
+        },
+        "community_rituals": [
+          "Monthly gratitude circle",
+          "Quarterly open mic",
+          "Seasonal visioning workshop"
+        ]
+      },
+      "digital_identity": {
+        "qr_entry_points": [
+          {
+            "active": true,
+            "location": "Lil Footsteps main campus"
+          },
+          {
+            "active": true,
+            "location": "Night Owl Childcare"
+          },
+          {
+            "active": false,
+            "location": "Community college satellite"
+          }
+        ],
+        "vc_wallet_app": {
+          "features": [
+            "Tap-to-verify QR codes",
+            "Bilingual onboarding",
+            "Offline cache with auto-sync"
+          ],
+          "platform": "Progressive Web App"
+        },
+        "wallet_program": {
+          "custodial_opt_in_rate": 0.61,
+          "parents_onboarded": 96,
+          "provider": "Web3Auth"
+        }
+      },
+      "ethical_guardrails": {
+        "ethics_committee": {
+          "latest_decision": "Adopted trauma-informed caregiver charter",
+          "meeting_cadence": "bi-monthly",
+          "members": 7
+        },
+        "non_discrimination_policy": {
+          "link": "docs/policies/non_discrimination.md",
+          "training_completion_rate": 0.94
+        },
+        "transparent_compensation": {
+          "last_update": "2024-05-25",
+          "public_dashboard": "docs/compensation_overview.md"
+        }
+      },
+      "legal": {
+        "dao_wrapper": {
+          "status": "filed",
+          "structure": "Wyoming DAO LLC"
+        },
+        "jurisdiction_plan": [
+          "US",
+          "Canada",
+          "Mexico"
+        ],
+        "policy_watchlist": [
+          "State childcare ratios",
+          "Worker classification guidance"
+        ]
+      },
+      "partnerships": {
+        "education_partners": [
+          {
+            "name": "Riverbend Community College",
+            "program": "Student parent childcare pass",
+            "status": "live"
+          }
+        ],
+        "employers": [
+          {
+            "contribution_usd": 12000,
+            "name": "Harbor Health",
+            "notes": "Matches employee donations 2:1",
+            "program": "Night shift childcare"
+          },
+          {
+            "contribution_usd": 6500,
+            "name": "Metro Transit",
+            "notes": "Covers late-night driver childcare",
+            "program": "Commute stipends"
+          }
+        ],
+        "social_services": [
+          {
+            "integration": "Credential sharing via API",
+            "name": "Community Housing Alliance",
+            "status": "active"
+          }
+        ],
+        "unions": [
+          {
+            "name": "Local 404 Care Workers",
+            "program": "Emergency back-up slots",
+            "status": "design"
+          }
+        ]
+      },
+      "resilience": {
+        "communications": {
+          "fallback": [
+            "Signal",
+            "SMS tree"
+          ],
+          "primary": "Matrix",
+          "status": "tested"
+        },
+        "delegation_protocols": {
+          "documentation": "docs/treasury_delegation.md",
+          "quorum": 3,
+          "treasury_signers": 5
+        },
+        "disaster_recovery": {
+          "backup_region": "eu-west-2",
+          "last_drill": "2024-05-12",
+          "storage": [
+            "IPFS",
+            "Filecoin",
+            "Arweave"
+          ]
+        }
+      },
+      "storytelling": {
+        "documentary_series": {
+          "distribution": [
+            "YouTube",
+            "Community screenings"
+          ],
+          "episodes_released": 3,
+          "focus": "Parent and caregiver journeys"
+        },
+        "policy_briefs": [
+          {
+            "link": "reports/policy_brief_childcare_access.pdf",
+            "published": "2024-03-12",
+            "title": "Childcare access without DHS dependency"
+          }
+        ],
+        "transparency_reports": {
+          "cadence": "quarterly",
+          "last_published": "2024-04-30"
+        }
+      },
+      "sustainability": {
+        "grant_matching_pool": {
+          "balance_usd": 28000,
+          "matching_ratio": "2:1 for parent-led funds"
+        },
+        "recurring_donation_integrations": [
+          "Stripe",
+          "Plaid",
+          "Direct smart contract allowances"
+        ],
+        "treasury_forecast": {
+          "coverage_months": 9,
+          "model": "Monte Carlo"
+        }
+      },
+      "treasury_strategy": {
+        "emergency_reserve_policy": {
+          "multi_sig_threshold": 4,
+          "percentage_locked": 0.08,
+          "review_cadence": "monthly"
+        },
+        "stablecoin_allocations": [
+          {
+            "asset": "USDC",
+            "custodian": "Multi-sig cold storage",
+            "percentage": 0.45
+          },
+          {
+            "asset": "USDP",
+            "custodian": "Smart contract vault",
+            "percentage": 0.25
+          },
+          {
+            "asset": "GUSD",
+            "custodian": "Regulated trust",
+            "percentage": 0.2
+          },
+          {
+            "asset": "DAI",
+            "custodian": "On-chain reserve",
+            "percentage": 0.1
+          }
+        ],
+        "yield_programs": [
+          {
+            "coverage": "Short-term treasuries custodied by Circle",
+            "name": "Circle Yield",
+            "rate": 0.041,
+            "status": "active"
+          },
+          {
+            "coverage": "Capped at 15% of liquid treasury",
+            "name": "Aave GHO Market",
+            "rate": 0.032,
+            "status": "pilot"
+          }
+        ]
+      }
+    }
   },
   "pulses": [
     {

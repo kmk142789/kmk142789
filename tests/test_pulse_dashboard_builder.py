@@ -60,6 +60,7 @@ def test_builder_collects_signals(tmp_path: Path) -> None:
     assert payload["dns_snapshots"] == [{"domain": "example.com", "token": "token"}]
     assert payload["worker_hive"]["total"] == 2
     assert payload["glyph_cycle"]["energy"] > 0
+    assert payload["impact_explorer"]["financials"]["totals"]["donations"] == 0.0
 
 
 @pytest.mark.parametrize(
