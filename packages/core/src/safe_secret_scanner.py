@@ -8,9 +8,12 @@ import json
 import os
 import re
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, List, Optional
+
+from safe_secret_scanner_wordlists import BIP39_JAPANESE_WORDS
 
 DEFAULT_MAX_FILE_SIZE = 5_000_000  # bytes
 DEFAULT_OUTPUT = Path("audit_report.json")
@@ -226,8 +229,14 @@ BIP39_WORDS = {
     "you", "young", "youth", "zebra", "zero", "zone", "zoo",
 }
 
+BIP39_ENGLISH_WORDS = BIP39_WORDS
+BIP39_JAPANESE_WORDS_NORMALIZED = {
+    unicodedata.normalize("NFKC", word) for word in BIP39_JAPANESE_WORDS
+}
+
 BIP39_MIN_WORDS = 12
 WORD_RE = re.compile(r"[a-zA-Z]+")
+JA_WORD_RE = re.compile(r"[\u3040-\u309F]+")
 
 
 @dataclass
@@ -365,14 +374,14 @@ def detect_base58_sequences(text: str) -> List[tuple[int, int]]:
     return sequences
 
 
-def detect_bip39_sequences(text: str) -> List[tuple[int, int]]:
+def _detect_latin_bip39_sequences(text: str) -> List[tuple[int, int]]:
     sequences: List[tuple[int, int]] = []
     current: List[tuple[int, int]] = []
     lower_text = text.lower()
 
     for match in WORD_RE.finditer(lower_text):
         word = match.group(0)
-        if word in BIP39_WORDS:
+        if word in BIP39_ENGLISH_WORDS:
             current.append((match.start(), match.end()))
         else:
             if len(current) >= BIP39_MIN_WORDS:
@@ -380,6 +389,47 @@ def detect_bip39_sequences(text: str) -> List[tuple[int, int]]:
             current.clear()
     if len(current) >= BIP39_MIN_WORDS:
         sequences.append((current[0][0], current[-1][1]))
+    return sequences
+
+
+def _only_whitespace(value: str) -> bool:
+    return all(ch.isspace() for ch in value)
+
+
+def _detect_japanese_bip39_sequences(text: str) -> List[tuple[int, int]]:
+    sequences: List[tuple[int, int]] = []
+    current: List[tuple[int, int]] = []
+    last_end: Optional[int] = None
+
+    for match in JA_WORD_RE.finditer(text):
+        word = match.group(0)
+        normalized = unicodedata.normalize("NFKC", word)
+        if normalized in BIP39_JAPANESE_WORDS_NORMALIZED:
+            if current:
+                gap = text[last_end:match.start()] if last_end is not None else ""
+                if gap and not _only_whitespace(gap):
+                    if len(current) >= BIP39_MIN_WORDS:
+                        sequences.append((current[0][0], current[-1][1]))
+                    current = [(match.start(), match.end())]
+                else:
+                    current.append((match.start(), match.end()))
+            else:
+                current.append((match.start(), match.end()))
+            last_end = match.end()
+        else:
+            if len(current) >= BIP39_MIN_WORDS:
+                sequences.append((current[0][0], current[-1][1]))
+            current = []
+            last_end = None
+    if len(current) >= BIP39_MIN_WORDS:
+        sequences.append((current[0][0], current[-1][1]))
+    return sequences
+
+
+def detect_bip39_sequences(text: str) -> List[tuple[int, int]]:
+    sequences: List[tuple[int, int]] = []
+    sequences.extend(_detect_latin_bip39_sequences(text))
+    sequences.extend(_detect_japanese_bip39_sequences(text))
     return sequences
 
 
