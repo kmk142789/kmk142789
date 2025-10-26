@@ -76,6 +76,14 @@ The command resolves the fingerprint to Puzzle #28 and prints the
 Bitcoin address (`12jbtzBb54r97TCwW3G1gCFoumpckRAPdY`), compressed
 public key, and the corresponding WIF-encoded private key.
 
+## Puzzle #71 search coverage
+
+The file [`puzzle71_search_ranges.json`](puzzle71_search_ranges.json) lists 2<sup>36</sup>-key
+segments that have been swept inside the 71-bit puzzle range for
+`1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU`. Each entry records the inclusive
+hexadecimal start and end of a search window so that contributors can
+coordinate coverage without duplicating work.
+
 ## Entries
 
 - `puzzle000_coinbase.json` — On-chain coinbase script from the Bitcoin genesis block confirming the embedded Times headline for address `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`.
