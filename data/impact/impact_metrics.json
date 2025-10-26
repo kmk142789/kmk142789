@@ -1,0 +1,32 @@
+{
+  "families_served": {
+    "total": 132,
+    "last_30_days": 24,
+    "cycle_goal": 150
+  },
+  "childcare_hours": {
+    "total": 4860,
+    "last_30_days": 720,
+    "average_per_family": 32
+  },
+  "job_placements": {
+    "total": 41,
+    "last_30_days": 6,
+    "retention_rate": 0.92
+  },
+  "credential_verifications": {
+    "total": 104,
+    "last_30_days": 18,
+    "active_credentials": 87
+  },
+  "provider_capacity": {
+    "active_providers": 19,
+    "licensed_slots": 152,
+    "utilization_rate": 0.84
+  },
+  "story_highlights": [
+    "Three caregivers completed their early-childhood credentials using DAO stipends.",
+    "Lil Footsteps expanded weekend coverage to two additional neighborhoods.",
+    "Emergency reserve unlocked 38 nights of respite care during hospital rotations."
+  ]
+}

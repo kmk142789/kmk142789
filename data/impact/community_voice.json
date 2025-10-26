@@ -1,0 +1,56 @@
+{
+  "parent_advisory_council": {
+    "members": [
+      {"name": "Alejandra V.", "district": "Sunrise", "focus": "Bilingual programming"},
+      {"name": "Imani K.", "district": "Harbor", "focus": "Shift-worker coverage"},
+      {"name": "Noah R.", "district": "North Loop", "focus": "Disability inclusion"}
+    ],
+    "meeting_cadence": "quarterly",
+    "latest_meeting": {
+      "date": "2024-05-18",
+      "summary": "Parents prioritized trauma-informed caregiver training and flagged need for more Spanish-language onboarding.",
+      "actions": [
+        "Launch weekend training stipend for caregivers completing trauma-informed coursework.",
+        "Add bilingual intake flow to the VC wallet app by next cycle.",
+        "Pilot mentorship pairs between veteran and new parents."
+      ],
+      "support": {
+        "stipend_usd": 150,
+        "childcare_hours": 12
+      }
+    },
+    "upcoming_listening_session": {
+      "date": "2024-07-27",
+      "theme": "Transportation and late-night coverage",
+      "location": "Lil Footsteps hub"
+    }
+  },
+  "provider_feedback": {
+    "office_hours": {
+      "cadence": "bi-weekly",
+      "facilitator": "Operations Circle",
+      "next_session": "2024-06-15T18:00:00Z"
+    },
+    "surveys": {
+      "latest_sent": "2024-05-30",
+      "response_rate": 0.82,
+      "top_requests": [
+        "Bulk purchase of diapers and snacks",
+        "Shared legal review for updated municipal compliance",
+        "Expanded access to substitute caregiver pool"
+      ]
+    },
+    "shared_services": [
+      {
+        "name": "Collective Procurement",
+        "status": "active",
+        "description": "Monthly aggregated orders for supplies with 18% cost savings across providers."
+      },
+      {
+        "name": "Legal Navigator",
+        "status": "pilot",
+        "description": "Provides contract templates and hotline hours for employment law questions."
+      }
+    ]
+  }
+}
