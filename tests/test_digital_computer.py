@@ -7,7 +7,9 @@ import pytest
 from echo.digital_computer import (
     AssemblyError,
     EchoComputer,
+    EvolutionCycle,
     assemble_program,
+    evolve_program,
     run_program,
 )
 
@@ -131,4 +133,24 @@ def test_shift_negative_amount_raises() -> None:
 
     with pytest.raises(RuntimeError):
         computer.run()
+
+
+def test_evolve_program_generates_cycle_reports() -> None:
+    program = """
+    LOAD A ?value
+    STORE A @result
+    PRINT @result
+    HALT
+    """
+
+    cycles = evolve_program(
+        program,
+        input_series=[{"value": 2}, {"value": 7}],
+    )
+
+    assert [cycle.cycle for cycle in cycles] == [1, 2]
+    assert all(isinstance(cycle, EvolutionCycle) for cycle in cycles)
+    assert [cycle.result.memory["result"] for cycle in cycles] == [2, 7]
+    assert cycles[1].result.output == ("7",)
+    assert cycles[0].inputs["value"] == 2
 
