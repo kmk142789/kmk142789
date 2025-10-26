@@ -177,6 +177,23 @@ _SCRIPT_METADATA_SENTINELS = {
 }
 
 
+_METADATA_LABELS = {
+    "TYPE",
+    "SCRIPTPUBKEYASM",
+    "SCRIPTPUBKEYHEX",
+    "SPENDINGTX",
+    "SPENDINGTRANSACTION",
+    "TRANSACTION",
+    "TRANSACTIONID",
+}
+
+
+def _normalise_metadata_token(line: str) -> str:
+    """Return ``line`` uppercased with punctuation removed."""
+
+    return "".join(char for char in line.upper() if char.isalnum())
+
+
 def _normalise_lines(lines: Iterable[str]) -> list[str]:
     normalised: list[str] = []
     for line in lines:
@@ -190,6 +207,30 @@ def _normalise_lines(lines: Iterable[str]) -> list[str]:
         sentinel = cleaned.split()[0].rstrip(":").upper()
         if sentinel in _SCRIPT_METADATA_SENTINELS:
             break
+
+        upper = cleaned.upper()
+
+        if upper.startswith("OP_"):
+            normalised.extend(token for token in cleaned.split() if token)
+            continue
+
+        metadata_token = _normalise_metadata_token(cleaned)
+
+        if (
+            metadata_token in _METADATA_LABELS
+            or metadata_token.startswith("SPENTBY")
+            or metadata_token.startswith("INBLOCK")
+            or metadata_token.startswith("BLOCK")
+            or metadata_token.startswith("TXID")
+            or metadata_token.startswith("V0P2")
+            or metadata_token.startswith("V1P2")
+            or metadata_token.startswith("P2PKH")
+            or metadata_token.startswith("P2SH")
+            or metadata_token.startswith("P2WPKH")
+            or metadata_token.startswith("P2WSH")
+            or metadata_token.startswith("P2TR")
+        ):
+            continue
 
         normalised.append(cleaned)
 
@@ -281,12 +322,38 @@ def _is_hex_string(value: str) -> bool:
 
 def _collect_hex_tokens(tokens: list[str]) -> tuple[str, int]:
     collected: list[str] = []
+    consumed = 0
+    expected_bytes: int | None = None
+
     for token in tokens:
+        upper = token.upper()
+
+        if upper.startswith("OP_PUSHBYTES_"):
+            consumed += 1
+            length_fragment = upper.split("_")[-1]
+            if length_fragment.isdigit():
+                expected_bytes = int(length_fragment)
+            continue
+
+        if upper.startswith("OP_PUSHDATA"):
+            consumed += 1
+            length_fragment = upper[10:]
+            if length_fragment.isdigit():
+                expected_bytes = int(length_fragment)
+            continue
+
         if _is_hex_string(token):
             collected.append(token)
-        else:
-            break
-    return "".join(collected), len(collected)
+            consumed += 1
+
+            if expected_bytes is not None and len("".join(collected)) >= expected_bytes * 2:
+                break
+
+            continue
+
+        break
+
+    return "".join(collected), consumed
 
 
 def _decode_raw_script(hex_tokens: list[str]) -> tuple[str, str, int | None] | None:
@@ -469,8 +536,14 @@ def _pkscript_to_hash(
             if not program_hex:
                 raise PkScriptError("witness program must follow the version opcode")
 
-            if consumed != len(sequence) - 1:
-                raise PkScriptError("unexpected tokens after witness program")
+            remaining_tokens = sequence[1 + consumed :]
+
+            duplicate: tuple[str, str, int | None] | None = None
+            if remaining_tokens:
+                try:
+                    duplicate = _decode_raw_script(list(remaining_tokens))
+                except PkScriptError:
+                    duplicate = None
 
             if len(program_hex) % 2 != 0:
                 raise PkScriptError("witness program must be an even number of hex digits")
@@ -480,21 +553,35 @@ def _pkscript_to_hash(
             except ValueError as exc:
                 raise PkScriptError("witness program must be hexadecimal") from exc
 
+            expected_type: str | None = None
             if len(program) == 20:
                 if witness_version != 0:
                     raise PkScriptError(
                         "unsupported witness program for given version"
                     )
-                return "p2wpkh", program_hex, witness_version, expected_address
-            if len(program) == 32:
+                expected_type = "p2wpkh"
+            elif len(program) == 32:
                 if witness_version == 0:
-                    return "p2wsh", program_hex, witness_version, expected_address
-                if witness_version == 1:
-                    return "p2tr", program_hex, witness_version, expected_address
+                    expected_type = "p2wsh"
+                elif witness_version == 1:
+                    expected_type = "p2tr"
+            else:
+                raise PkScriptError(
+                    "unsupported witness program length for address conversion"
+                )
 
-            raise PkScriptError(
-                "unsupported witness program length for address conversion"
-            )
+            if expected_type is None:
+                raise PkScriptError(
+                    "unsupported witness program for given version"
+                )
+
+            if remaining_tokens:
+                if not duplicate or duplicate[0] != expected_type or duplicate[1] != program_hex.lower() or duplicate[2] != witness_version:
+                    raise PkScriptError(
+                        "unexpected tokens after witness program"
+                    )
+
+            return expected_type, program_hex, witness_version, expected_address
 
     raise PkScriptError("unsupported script layout for address conversion")
 

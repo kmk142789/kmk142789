@@ -64,6 +64,18 @@ P2WPKH_SPLIT_PROGRAM_SCRIPT = [
 ]
 
 
+EXPLORER_P2WPKH_SCRIPT = [
+    "Type",
+    "V0_P2WPKH",
+    "scriptPubKey (asm)",
+    "OP_0 OP_PUSHBYTES_20 6ab144413eb1a1e352422f3e6eb0b56ad2f8b838",
+    "scriptPubKey (hex)",
+    "00146ab144413eb1a1e352422f3e6eb0b56ad2f8b838",
+    "Spending tx",
+    "Spent by 8160ce342025b9141b9dfc398936449f3c04de41de13818c6ef245707285a4b2:0 in block #916418",
+]
+
+
 TAPROOT_PROGRAM = (
     "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
 )
@@ -274,6 +286,12 @@ def test_p2wpkh_allows_split_witness_program_tokens() -> None:
     address = pkscript_to_address(P2WPKH_SPLIT_PROGRAM_SCRIPT)
 
     assert address == "bc1qc3vcs6y800usugw7xcrrs2cety0eg7s73gprks"
+
+
+def test_p2wpkh_allows_explorer_metadata_tokens() -> None:
+    address = pkscript_to_address(EXPLORER_P2WPKH_SCRIPT)
+
+    assert address == "bc1qd2c5gsf7kxs7x5jz9ulxav94dtf03wpcet8sdg"
 
 
 def test_p2tr_script_is_supported() -> None:
