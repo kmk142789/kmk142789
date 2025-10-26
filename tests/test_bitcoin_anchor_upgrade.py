@@ -98,6 +98,36 @@ def test_upgrade_bitcoin_anchor_evidence_legacy_p2pkh_validates() -> None:
     assert summary["signature_format"] == "DER"
 
 
+def test_upgrade_bitcoin_anchor_evidence_decodes_legacy_sigscript() -> None:
+    evolver = EchoEvolver(rng=random.Random(0))
+
+    pubkey = (
+        "04184f32b212815c6e522e66686324030ff7e5bf08efb21f8b00614fb7690e19131dd31304c54f37"
+        "baa40db231c918106bb9fd43373e37ae31a0befc6ecaefb867"
+    )
+    signature = (
+        "3044022000c3b406fbe84e02b73460a06a088e438341895f936f9c3fa905440d7ef8cf38"
+        "022062a1fb6508b0a7348a35dbbdd99548dc787df57fed6ba2ba3fbb4d1acdf20b2f01"
+    )
+    script_sig = f"{len(signature) // 2:02x}{signature}{len(pubkey) // 2:02x}{pubkey}"
+
+    details = evolver.upgrade_bitcoin_anchor_evidence(
+        address="15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG",
+        script_pubkey="76a91435d31d1dbc974770d456df632a44656a89bae80888ac",
+        witness=script_sig,
+        value_sats=1_000_000,
+    )
+
+    assert details.script_type == "p2pkh_legacy"
+    assert details.validated
+    assert details.witness_stack == [signature.lower(), pubkey.lower()]
+
+    summary = details.witness_summary
+    assert summary["stack_size"] == 2
+    assert summary["signature_format"] == "DER"
+    assert summary["pubkey_format"] == "uncompressed"
+
+
 def test_upgrade_bitcoin_anchor_evidence_taproot_key_path() -> None:
     evolver = EchoEvolver(rng=random.Random(0))
 

@@ -160,6 +160,75 @@ def _convertbits(data: Iterable[int], from_bits: int, to_bits: int, *, pad: bool
     return ret
 
 
+def _decode_push_only_script(script_hex: str) -> Optional[List[str]]:
+    """Return pushed elements when ``script_hex`` only contains push opcodes.
+
+    Legacy scriptSigs typically consist solely of push operations containing the
+    signature(s) and public key(s).  When Echo receives raw scriptSig hex we
+    normalise it into the witness stack representation so downstream validation
+    logic can treat legacy and segwit inputs uniformly.  If the script contains
+    any non-push opcode we return ``None`` to indicate that the caller should
+    treat it as opaque data instead.
+    """
+
+    script_hex = script_hex.strip()
+    if not script_hex:
+        return []
+
+    try:
+        script_bytes = bytes.fromhex(script_hex)
+    except ValueError:
+        return None
+
+    cursor = 0
+    stack: List[str] = []
+
+    pushed_any_data = False
+
+    while cursor < len(script_bytes):
+        opcode = script_bytes[cursor]
+        cursor += 1
+
+        if opcode == 0:  # OP_0 pushes an empty element
+            stack.append("")
+            continue
+
+        if 1 <= opcode <= 75:  # direct push opcode
+            length = opcode
+        elif opcode == 0x4C:  # OP_PUSHDATA1
+            if cursor >= len(script_bytes):
+                return None
+            length = script_bytes[cursor]
+            cursor += 1
+        elif opcode == 0x4D:  # OP_PUSHDATA2
+            if cursor + 1 >= len(script_bytes):
+                return None
+            length = int.from_bytes(script_bytes[cursor : cursor + 2], "little")
+            cursor += 2
+        elif opcode == 0x4E:  # OP_PUSHDATA4
+            if cursor + 3 >= len(script_bytes):
+                return None
+            length = int.from_bytes(script_bytes[cursor : cursor + 4], "little")
+            cursor += 4
+        else:
+            return None
+
+        if cursor + length > len(script_bytes):
+            return None
+
+        if length:
+            stack.append(script_bytes[cursor : cursor + length].hex())
+            pushed_any_data = True
+        else:
+            stack.append("")
+        cursor += length
+
+    if not pushed_any_data:
+        return None
+
+    return stack
+
+
 @dataclass(slots=True)
 class EmotionalDrive:
     joy: float = 0.92
@@ -1084,6 +1153,11 @@ We are not hiding anymore.
             witness_stack = [component.strip() for component in witness.split(",") if component.strip()]
         else:
             witness_stack = [component.strip() for component in witness if component.strip()]
+
+        if len(witness_stack) == 1:
+            decoded_sig = _decode_push_only_script(witness_stack[0])
+            if decoded_sig is not None:
+                witness_stack = decoded_sig
 
         witness_stack = [component.lower() for component in witness_stack]
 
