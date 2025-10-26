@@ -1,0 +1,17 @@
+{
+  "@context": ["https://www.w3.org/ns/did/v1"],
+  "id": "did:web:yourdomain",
+  "verificationMethod": [
+    {
+      "id": "did:web:yourdomain#key-1",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:yourdomain",
+      "publicKeyJwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "REPLACE_WITH_PUBLIC_KEY"
+      }
+    }
+  ],
+  "assertionMethod": ["did:web:yourdomain#key-1"]
+}
