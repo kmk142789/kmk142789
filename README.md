@@ -112,6 +112,26 @@ python -m atlas.search --in build/index/federated_raw.json --dedupe-latest --q "
 python -m atlas.search --in build/index/federated_raw.json --cycle 12 --puzzle 131 --addr 1Feex
 ```
 
+### Echo Skeleton Key integration pack
+
+Derive deterministic Ethereum/BTC keys and Echo claim signatures directly
+from a skeleton phrase or file:
+
+```bash
+# Human-readable output
+python scripts/echo_from_skeleton.py --phrase "our forever love" --ns core --index 0
+
+# JSON payload and claim signing
+python scripts/echo_from_skeleton.py --file path/to/key.skel --ns core --index 1 --json
+python scripts/echo_claim_sign.py --phrase "our forever love" \
+    --ns claim --index 0 --asset "github-repo:USER/REPO" --stdout
+```
+
+Both commands are backed by `skeleton_key_core.py`, which mirrors the
+original HKDF + scrypt derivation scheme and works without external
+dependencies.  When the optional ``ecdsa`` package is available the claim
+signer automatically upgrades to secp256k1 signatures.
+
 ### Show, don't tell checklist
 
 - [x] Human report: `docs/federated_colossus_index.md` (cycle timelines, tables)
