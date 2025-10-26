@@ -18,7 +18,9 @@ The explorer aggregates the following canonical files:
 | Provider voice | [`state/provider_feedback_loop.json`](../state/provider_feedback_loop.json) | Office hours, surveys, and shared services for childcare providers. |
 
 All files are human-readable, version-controlled, and referenced in the
-`PublicImpactExplorer` builder so the dashboard remains reproducible.
+`PublicImpactExplorer` builder so the dashboard remains reproducible. When a
+source file is missing the builder simply returns empty placeholders, keeping
+the dashboard resilient during initial setup.
 
 ## Generating the dataset
 

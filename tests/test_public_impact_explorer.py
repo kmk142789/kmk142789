@@ -103,6 +103,7 @@ def test_public_impact_explorer_compiles_snapshot(tmp_path: Path) -> None:
     assert pytest.approx(ledger["balance_eth"], rel=1e-6) == 1.2
     assert ledger["deposit_count"] == 2
     assert ledger["payout_count"] == 1
+    assert ledger["timeline"][0]["balance_eth"] == pytest.approx(1.0)
 
     policy_snapshot = treasury["policy"]
     assert policy_snapshot["diversity_score"] == pytest.approx(100.0)
@@ -117,3 +118,19 @@ def test_public_impact_explorer_compiles_snapshot(tmp_path: Path) -> None:
     assert len(engagements) == 2
     assert engagements[0]["name"] == "Provider Office Hours"
     assert engagements[1]["name"] == "Parent Advisory Council"
+
+
+def test_public_impact_explorer_handles_missing_inputs(tmp_path: Path) -> None:
+    explorer = PublicImpactExplorer(tmp_path)
+    dataset = explorer.build()
+
+    treasury = dataset["treasury"]
+    assert treasury["ledger"]["balance_eth"] == 0.0
+    assert treasury["policy"]["targets"] == []
+    assert treasury["policy"]["runway_weeks"] is None
+
+    metrics = dataset["impact_metrics"]
+    assert metrics["history"] == []
+    assert metrics["trend"] == {}
+
+    assert dataset["upcoming_engagements"] == []
