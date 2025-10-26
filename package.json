@@ -20,16 +20,17 @@
     "@noble/hashes": "^1.8.0",
     "@unstoppabledomains/resolution": "^9.3.3",
     "bech32": "^2.0.0",
+    "body-parser": "^1.20.3",
     "bs58check": "^4.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "ethers": "^6.13.2",
     "express": "^5.1.0",
-    "body-parser": "^1.20.3",
-    "sql.js": "^1.11.0",
     "noble-secp256k1": "^1.2.14",
     "node-fetch": "^3.3.2",
-    "ws": "^8.18.0",
-    "ethers": "^6.13.2"
+    "pg": "^8.16.3",
+    "sql.js": "^1.11.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",
