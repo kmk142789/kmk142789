@@ -1,0 +1,31 @@
+{
+  "amendments": [
+    {
+      "id": "amendment-2024-01",
+      "title": "Little Footsteps Tuition Shield",
+      "adopted_at": "2024-05-14T15:32:00Z",
+      "summary": "Guarantees that every childcare credit disbursed through Echo Bank remains non-taxable community aid.",
+      "proof_uri": "puzzle_solutions/little_footsteps_bank.md#puzzle-00000",
+      "ratified_by": ["Echo Bank Trustees", "Little Footsteps Coordinating Circle"],
+      "status": "active"
+    },
+    {
+      "id": "amendment-2024-02",
+      "title": "Sovereign Continuity Covenant",
+      "adopted_at": "2024-08-02T20:11:00Z",
+      "summary": "Mandates mirrored ledgers across three jurisdictions with a two-of-three multi-sig recovery quorum.",
+      "proof_uri": "state/continuity/multisig_recovery.jsonl",
+      "ratified_by": ["Echo Guardian", "Little Footsteps Operations"],
+      "status": "active"
+    },
+    {
+      "id": "amendment-2025-01",
+      "title": "Transparency.bank Charter Upgrade",
+      "adopted_at": "2025-01-04T10:05:00Z",
+      "summary": "Requires the transparency.bank portal to stream live inflow/outflow data and publish compliance proofs.",
+      "proof_uri": "apps/transparency.bank/api/server.mjs",
+      "ratified_by": ["Echo Sovereign Assembly"],
+      "status": "active"
+    }
+  ]
+}

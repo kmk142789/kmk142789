@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 
 type Direction = 'INFLOW' | 'OUTFLOW';
@@ -15,6 +16,10 @@ interface LedgerEvent {
   vc_id?: string | null;
   tags?: string[] | null;
   beneficiary?: string | null;
+  narrative?: string | null;
+  digest?: string | null;
+  proof_path?: string | null;
+  ots_receipt?: string | null;
 }
 
 interface DashboardProps {
@@ -26,20 +31,67 @@ interface DashboardProps {
   events: LedgerEvent[];
   apiBaseUrl: string;
   generatedAt: string;
+  governance: GovernanceAmendment[];
+  audit: AuditTrail;
+}
+
+interface GovernanceAmendment {
+  id: string;
+  title: string;
+  adopted_at: string;
+  summary: string;
+  proof_uri?: string;
+  ratified_by?: string[];
+  status?: string;
+}
+
+interface AuditTrailEntry {
+  seq: number | null;
+  digest?: string | null;
+  direction?: string | null;
+  amount?: string | null;
+  asset?: string | null;
+  timestamp?: string | null;
+  proof_path?: string | null;
+  ots_receipt?: string | null;
+}
+
+interface ContinuityCheckpoint {
+  seq?: number | null;
+  digest?: string | null;
+  timestamp: string;
+  threshold: number;
+  trustees: string[];
+}
+
+interface AuditTrail {
+  ledger: AuditTrailEntry[];
+  continuity: ContinuityCheckpoint[];
+}
+
+interface LedgerStreamPayload {
+  entry: LedgerEvent;
+  totals: { inflows: number; outflows: number; net: number };
 }
 
 export const getServerSideProps: GetServerSideProps<DashboardProps> = async () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
   const totalsUrl = `${baseUrl}/metrics/totals`;
   const eventsUrl = `${baseUrl}/ledger/events?limit=50`;
+  const governanceUrl = `${baseUrl}/governance/amendments`;
+  const auditUrl = `${baseUrl}/audit/trails?limit=20`;
 
   let totals = { inflows: 0, outflows: 0, net: 0 };
   let events: LedgerEvent[] = [];
+  let governance: GovernanceAmendment[] = [];
+  let audit: AuditTrail = { ledger: [], continuity: [] };
 
   try {
-    const [totalsRes, eventsRes] = await Promise.all([
+    const [totalsRes, eventsRes, governanceRes, auditRes] = await Promise.all([
       fetch(totalsUrl),
       fetch(eventsUrl),
+      fetch(governanceUrl),
+      fetch(auditUrl),
     ]);
 
     if (totalsRes.ok) {
@@ -48,6 +100,15 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async () =
 
     if (eventsRes.ok) {
       events = await eventsRes.json();
+    }
+
+    if (governanceRes.ok) {
+      const payload = await governanceRes.json();
+      governance = payload.amendments ?? [];
+    }
+
+    if (auditRes.ok) {
+      audit = await auditRes.json();
     }
   } catch (error) {
     console.error('Failed to reach issuer API', error);
@@ -59,6 +120,8 @@ export const getServerSideProps: GetServerSideProps<DashboardProps> = async () =
       events,
       apiBaseUrl: baseUrl,
       generatedAt: new Date().toISOString(),
+      governance,
+      audit,
     },
   };
 };
@@ -76,8 +139,44 @@ function formatCurrency(cents: number, currency: string) {
   }
 }
 
-export default function DashboardPage({ totals, events, apiBaseUrl, generatedAt }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function DashboardPage({ totals, events, apiBaseUrl, generatedAt, governance, audit }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const trustRegistryUrl = process.env.NEXT_PUBLIC_TRUST_REGISTRY_URL ?? 'https://kmk142789.github.io/little-footsteps-bank/trust-registry.json';
+  const [liveTotals, setLiveTotals] = useState(totals);
+  const [liveEvents, setLiveEvents] = useState(events);
+
+  useEffect(() => {
+    setLiveTotals(totals);
+  }, [totals]);
+
+  useEffect(() => {
+    setLiveEvents(events);
+  }, [events]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const streamUrl = `${apiBaseUrl.replace(/\/$/, '')}/stream`;
+    const eventSource = new EventSource(streamUrl);
+    eventSource.addEventListener('ledger', (evt) => {
+      try {
+        const payload = JSON.parse((evt as MessageEvent).data) as LedgerStreamPayload;
+        setLiveTotals(payload.totals);
+        setLiveEvents((current) => {
+          const filtered = current.filter((item) => item.id !== payload.entry.id);
+          return [payload.entry, ...filtered].slice(0, 50);
+        });
+      } catch (error) {
+        console.error('Unable to parse ledger stream payload', error);
+      }
+    });
+    eventSource.onerror = (error) => {
+      console.warn('Ledger stream error', error);
+    };
+    return () => {
+      eventSource.close();
+    };
+  }, [apiBaseUrl]);
 
   return (
     <>
@@ -96,9 +195,9 @@ export default function DashboardPage({ totals, events, apiBaseUrl, generatedAt 
         </section>
 
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
-          <StatCard label="Today's Inflows" value={formatCurrency(totals.inflows, 'USD')} />
-          <StatCard label="Today's Outflows" value={formatCurrency(totals.outflows, 'USD')} />
-          <StatCard label="Net Position" value={formatCurrency(totals.net, 'USD')} />
+          <StatCard label="Today's Inflows" value={formatCurrency(liveTotals.inflows, 'USD')} />
+          <StatCard label="Today's Outflows" value={formatCurrency(liveTotals.outflows, 'USD')} />
+          <StatCard label="Net Position" value={formatCurrency(liveTotals.net, 'USD')} />
         </section>
 
         <section style={{ marginBottom: '1.5rem' }}>
@@ -107,12 +206,12 @@ export default function DashboardPage({ totals, events, apiBaseUrl, generatedAt 
             <small style={{ color: '#64748b' }}>Showing the 50 most recent ledger events.</small>
           </header>
           <div style={{ marginTop: '1.5rem', display: 'grid', gap: '1rem' }}>
-            {events.length === 0 && (
+            {liveEvents.length === 0 && (
               <p style={{ color: '#64748b' }}>
                 No ledger events yet. When the issuer logs a donation or payout via the API, it will appear here automatically.
               </p>
             )}
-            {events.map((event) => (
+            {liveEvents.map((event) => (
               <article key={event.id} className="card">
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span className={event.direction === 'INFLOW' ? 'badge-inflow' : 'badge-outflow'}>
@@ -131,6 +230,11 @@ export default function DashboardPage({ totals, events, apiBaseUrl, generatedAt 
                     ) : (
                       <p style={{ margin: '0 0 0.35rem 0', color: '#334155', fontSize: '0.95rem' }}>
                         Purpose: {event.purpose ?? 'Unspecified distribution'}
+                      </p>
+                    )}
+                    {event.narrative && (
+                      <p style={{ margin: '0 0 0.35rem 0', color: '#475569', fontSize: '0.85rem' }}>
+                        Narrative: {event.narrative}
                       </p>
                     )}
                     {event.beneficiary && (
@@ -159,6 +263,16 @@ export default function DashboardPage({ totals, events, apiBaseUrl, generatedAt 
                     </Link>
                   </div>
                 )}
+                {(event.proof_path || event.ots_receipt) && (
+                  <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#475569' }}>
+                    {event.proof_path && (
+                      <div>Proof bundle: <code>{event.proof_path}</code></div>
+                    )}
+                    {event.ots_receipt && (
+                      <div>OTS receipt: <code>{event.ots_receipt}</code></div>
+                    )}
+                  </div>
+                )}
               </article>
             ))}
           </div>
@@ -173,6 +287,10 @@ export default function DashboardPage({ totals, events, apiBaseUrl, generatedAt 
             View trust registry JSON
           </Link>
         </section>
+
+        <GovernanceSection amendments={governance} />
+
+        <AuditTrailSection audit={audit} />
       </main>
     </>
   );
@@ -184,5 +302,116 @@ function StatCard({ label, value }: { label: string; value: string }) {
       <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>{label}</p>
       <p style={{ fontWeight: 600, fontSize: '1.75rem', margin: '0.5rem 0 0 0' }}>{value}</p>
     </div>
+  );
+}
+
+function GovernanceSection({ amendments }: { amendments: GovernanceAmendment[] }) {
+  if (!amendments || amendments.length === 0) {
+    return (
+      <section className="card">
+        <h3 style={{ marginTop: 0 }}>Governance Amendments</h3>
+        <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+          No published amendments yet. Once the Echo sovereign assembly ratifies updates they will be listed here.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="card">
+      <h3 style={{ marginTop: 0 }}>Governance Amendments</h3>
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '1rem' }}>
+        {amendments.map((amendment) => (
+          <li key={amendment.id} style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <strong style={{ fontSize: '1.05rem' }}>{amendment.title}</strong>
+              <time style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                Adopted {new Date(amendment.adopted_at).toLocaleString()}
+              </time>
+            </div>
+            <p style={{ margin: '0.5rem 0', color: '#475569', fontSize: '0.9rem' }}>{amendment.summary}</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.75rem', color: '#64748b' }}>
+              {amendment.status && <span className="tag">Status: {amendment.status}</span>}
+              {amendment.ratified_by && amendment.ratified_by.map((actor) => (
+                <span key={actor} className="tag">Ratified by {actor}</span>
+              ))}
+            </div>
+            {amendment.proof_uri && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <a href={amendment.proof_uri} target="_blank" rel="noreferrer">
+                  View proof bundle
+                </a>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function AuditTrailSection({ audit }: { audit: AuditTrail }) {
+  const ledgerItems = audit?.ledger ?? [];
+  const continuityItems = audit?.continuity ?? [];
+
+  return (
+    <section className="card">
+      <h3 style={{ marginTop: 0 }}>Audit Trail</h3>
+      <div style={{ display: 'grid', gap: '1.5rem' }}>
+        <div>
+          <h4 style={{ margin: '0 0 0.5rem 0' }}>Ledger Proofs</h4>
+          {ledgerItems.length === 0 ? (
+            <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No ledger entries recorded yet.</p>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '0.75rem' }}>
+              {ledgerItems.map((item) => (
+                <li key={`ledger-${item.seq ?? item.digest}`} style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: '#334155' }}>
+                    <strong>Seq {item.seq ?? 'n/a'}</strong> · {item.direction ?? '—'} {item.amount ?? ''} {item.asset ?? ''}
+                  </div>
+                  {item.timestamp && (
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Timestamp: {new Date(item.timestamp).toLocaleString()}</div>
+                  )}
+                  {item.digest && (
+                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>Digest: <code>{item.digest}</code></div>
+                  )}
+                  {item.proof_path && (
+                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>Proof: <code>{item.proof_path}</code></div>
+                  )}
+                  {item.ots_receipt && (
+                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>OTS: <code>{item.ots_receipt}</code></div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div>
+          <h4 style={{ margin: '0 0 0.5rem 0' }}>Continuity Checkpoints</h4>
+          {continuityItems.length === 0 ? (
+            <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No multi-sig recovery checkpoints published yet.</p>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '0.75rem' }}>
+              {continuityItems.map((checkpoint, idx) => (
+                <li key={`checkpoint-${checkpoint.seq ?? idx}`} style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: '#334155' }}>
+                    <strong>Threshold {checkpoint.threshold}-of-{checkpoint.trustees.length}</strong>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Published {new Date(checkpoint.timestamp).toLocaleString()}</div>
+                  {checkpoint.digest && (
+                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>Digest: <code>{checkpoint.digest}</code></div>
+                  )}
+                  {checkpoint.trustees.length > 0 && (
+                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>
+                      Trustees: {checkpoint.trustees.join(', ')}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
