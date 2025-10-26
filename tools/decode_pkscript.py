@@ -25,6 +25,7 @@ _NETWORK_PARAMS = {
 }
 
 _KNOWN_OPS = {"OP_DUP", "OP_HASH160", "OP_EQUALVERIFY", "OP_CHECKSIG", "OP_0"}
+_METADATA_SENTINELS = {"SIGSCRIPT", "SCRIPTSIG", "WITNESS", "WITNESSES"}
 
 
 def _clean_opcode(token: str) -> str:
@@ -232,6 +233,10 @@ def _normalize_tokens(script: str) -> List[str]:
     buffer_raw: List[str] = []
 
     for part in filter(None, parts):
+        sentinel = part.split(":", 1)[0].upper()
+        if sentinel in _METADATA_SENTINELS:
+            break
+
         clean = _clean_opcode(part)
 
         if buffer_clean:
