@@ -1,0 +1,184 @@
+:root {
+  color-scheme: dark;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: #05070d;
+  color: #ecf1ff;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 1100px;
+  padding: 1.5rem;
+}
+
+.site-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(236, 72, 153, 0.3));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 2.2rem;
+}
+
+.site-header p {
+  margin-top: 0.5rem;
+  color: rgba(236, 241, 255, 0.8);
+}
+
+.site-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 2rem;
+  padding: 1rem 0;
+  text-align: center;
+  color: rgba(236, 241, 255, 0.65);
+}
+
+.grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-top: 1.5rem;
+}
+
+.panel {
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 1.35rem;
+}
+
+.panel ul,
+.panel ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.panel li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.panel li:last-child {
+  border-bottom: none;
+}
+
+.panel header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.panel p {
+  margin: 0.4rem 0;
+  line-height: 1.45;
+}
+
+.panel .meta {
+  font-size: 0.8rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.panel .empty {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.5);
+}
+
+.panel.loading,
+.panel.error {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+.panel.inflow {
+  border-left: 4px solid rgba(34, 197, 94, 0.7);
+}
+
+.panel.outflow {
+  border-left: 4px solid rgba(248, 113, 113, 0.7);
+}
+
+.panel.compliance {
+  border-left: 4px solid rgba(59, 130, 246, 0.7);
+}
+
+.panel.governance {
+  border-left: 4px solid rgba(217, 119, 6, 0.7);
+}
+
+.panel.feed {
+  border-left: 4px solid rgba(236, 72, 153, 0.7);
+}
+
+.panel.proofs {
+  border-left: 4px solid rgba(129, 140, 248, 0.7);
+  grid-column: 1 / -1;
+}
+
+.panel table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.panel table th,
+.panel table td {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  padding: 0.5rem 0.35rem;
+  text-align: left;
+}
+
+.panel table th {
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.panel table tr:last-child td {
+  border-bottom: none;
+}
+
+.timestamp {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.75rem;
+}
+
+.amount {
+  font-weight: 600;
+}
+
+.ots-links ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+
+code {
+  background: rgba(148, 163, 184, 0.12);
+  padding: 0.1rem 0.3rem;
+  border-radius: 6px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.75rem;
+}
+
+a {
+  color: #60a5fa;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

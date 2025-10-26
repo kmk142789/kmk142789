@@ -39,6 +39,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
+from .compliance_buffer import ComplianceAnnotation, ComplianceBufferService
+from .continuity_guardian import (
+    ContinuityGuardian,
+    MultiSigRecoveryPlan,
+    ReplicaNode,
+    Trustee,
+)
+
 from skeleton_key_core import derive_from_skeleton, read_secret_from_file, read_secret_from_phrase
 
 
@@ -177,12 +185,16 @@ class SovereignLedger:
         puzzle_path: Path,
         proofs_dir: Path,
         skip_ots: bool = False,
+        compliance_service: Optional[ComplianceBufferService] = None,
+        continuity_guardian: Optional[ContinuityGuardian] = None,
     ) -> None:
         self.bank = bank
         self.ledger_path = ledger_path
         self.puzzle_path = puzzle_path
         self.proofs_dir = proofs_dir
         self.skip_ots = skip_ots
+        self.compliance_service = compliance_service
+        self.continuity_guardian = continuity_guardian
         self.ledger_path.parent.mkdir(parents=True, exist_ok=True)
         self.proofs_dir.mkdir(parents=True, exist_ok=True)
         self._seq = self._load_last_sequence()
@@ -240,8 +252,36 @@ class SovereignLedger:
         payload = entry.payload() | {"digest": digest}
         if ots_receipt is not None:
             payload["ots_receipt"] = ots_receipt
+        compliance_annotation: Optional[ComplianceAnnotation] = None
+        if self.compliance_service is not None:
+            compliance_annotation = self.compliance_service.attach(
+                entry=entry,
+                digest=digest,
+                proof_path=proof_path,
+                ots_receipt=ots_receipt,
+            )
+            payload["compliance"] = compliance_annotation.payload
         self._append_ledger_line(payload)
-        self._append_puzzle_section(entry, digest, proof_path, ots_receipt)
+        self._append_puzzle_section(
+            entry,
+            digest,
+            proof_path,
+            ots_receipt,
+            payload.get("compliance"),
+        )
+        if self.continuity_guardian is not None:
+            self.continuity_guardian.sync_entry(
+                entry=entry,
+                digest=digest,
+                ledger_path=self.ledger_path,
+                puzzle_path=self.puzzle_path,
+                proof_path=proof_path,
+                compliance_credential=(
+                    compliance_annotation.credential_path
+                    if compliance_annotation is not None
+                    else None
+                ),
+            )
         return entry
 
     # ------------------------------------------------------------------
@@ -327,6 +367,7 @@ class SovereignLedger:
         digest: str,
         proof_path: Path,
         ots_receipt: Optional[str],
+        compliance: Optional[Dict[str, Any]],
     ) -> None:
         section = [
             f"## Puzzle {entry.seq:05d} — {entry.direction.title()} {entry.amount} {entry.asset}\n",
@@ -344,6 +385,18 @@ class SovereignLedger:
         ]
         if ots_receipt:
             section.append(f"* OpenTimestamps receipt: `{ots_receipt}`\n")
+        if compliance:
+            classification = compliance.get("classification", "unknown")
+            section.append(f"* Compliance classification: `{classification}`\n")
+            credential_path = compliance.get("credential_path")
+            if credential_path:
+                section.append(f"* Compliance credential: `{credential_path}`\n")
+            registry_path = compliance.get("registry_path")
+            if registry_path:
+                section.append(f"* Legal posture registry: `{registry_path}`\n")
+            ots_path = compliance.get("ots_receipt")
+            if ots_path:
+                section.append(f"* Compliance OTS receipt: `{ots_path}`\n")
         section.append("\n---\n\n")
         with self.puzzle_path.open("a", encoding="utf-8") as handle:
             handle.writelines(section)
@@ -387,6 +440,17 @@ def _read_secret(args: argparse.Namespace) -> bytes:
     raise ValueError("Supply --skeleton-phrase or --skeleton-file")
 
 
+def _parse_trustee_spec(spec: str) -> Trustee:
+    parts = [segment.strip() for segment in spec.split(":", 2)]
+    if len(parts) < 2 or not parts[0] or not parts[1]:
+        raise ValueError(
+            "Trustee specs must be formatted as 'Name:contact[:public_key]'"
+        )
+    name, contact = parts[0], parts[1]
+    public_key = parts[2] if len(parts) == 3 and parts[2] else None
+    return Trustee(name=name, contact=contact, public_key=public_key)
+
+
 def cli(argv: Optional[Iterable[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Record Little Footsteps Bank ledger entries")
     parser.add_argument("--direction", choices=["inflow", "outflow"], required=True)
@@ -420,6 +484,64 @@ def cli(argv: Optional[Iterable[str]] = None) -> int:
         help="Directory for canonical proof bundles",
     )
     parser.add_argument("--skip-ots", action="store_true", help="Skip OpenTimestamps stamping")
+    parser.add_argument("--disable-compliance", action="store_true", help="Disable compliance buffer attachments")
+    parser.add_argument(
+        "--compliance-registry",
+        type=Path,
+        default=Path("legal/legal_posture_registry.jsonl"),
+        help="Destination for the legal posture registry JSONL",
+    )
+    parser.add_argument(
+        "--compliance-credentials-dir",
+        type=Path,
+        default=Path("proofs/compliance_credentials"),
+        help="Directory for verifiable compliance credential bundles",
+    )
+    parser.add_argument(
+        "--compliance-issuer",
+        default="Echo Bank Compliance Node",
+        help="Issuer label recorded on compliance credentials",
+    )
+    parser.add_argument(
+        "--compliance-jurisdiction",
+        default="Global-Donation",
+        help="Jurisdiction descriptor applied to compliance credentials",
+    )
+    parser.add_argument(
+        "--compliance-policy",
+        default="ECHO-DONATION-EXEMPT-2025",
+        help="Policy reference attached to compliance credentials",
+    )
+    parser.add_argument(
+        "--mirror-dir",
+        action="append",
+        type=Path,
+        default=[],
+        help="Replica directory that should mirror ledger artifacts",
+    )
+    parser.add_argument(
+        "--continuity-state",
+        type=Path,
+        default=Path("ledger/continuity_state.json"),
+        help="State export file capturing continuity posture",
+    )
+    parser.add_argument(
+        "--trustee",
+        action="append",
+        default=[],
+        help="Trustee spec formatted as 'Name:contact[:public_key]'",
+    )
+    parser.add_argument(
+        "--recovery-threshold",
+        type=int,
+        default=2,
+        help="Number of trustees required to trigger recovery",
+    )
+    parser.add_argument(
+        "--recovery-contract",
+        default=None,
+        help="Optional reference to an external recovery contract",
+    )
     parser.add_argument("--log-level", default="INFO", help="Python logging level")
     args = parser.parse_args(list(argv) if argv is not None else None)
 
@@ -430,12 +552,55 @@ def cli(argv: Optional[Iterable[str]] = None) -> int:
     attestation_payload = _read_attestation_payload(args.attestation)
     skeleton_record = SkeletonKeyRecord.from_secret(secret, args.skeleton_namespace, args.skeleton_index)
 
+    compliance_service: Optional[ComplianceBufferService] = None
+    if not args.disable_compliance:
+        compliance_service = ComplianceBufferService(
+            bank=args.bank,
+            registry_path=args.compliance_registry,
+            credential_dir=args.compliance_credentials_dir,
+            issuer=args.compliance_issuer,
+            jurisdiction=args.compliance_jurisdiction,
+            policy_reference=args.compliance_policy,
+        )
+
+    mirror_nodes: list[ReplicaNode] = []
+    for index, path in enumerate(args.mirror_dir, start=1):
+        label = path.name or f"node-{index}"
+        mirror_nodes.append(ReplicaNode(name=f"mirror-{index}-{label}", base_path=path))
+
+    trustees: list[Trustee] = []
+    for spec in args.trustee:
+        try:
+            trustees.append(_parse_trustee_spec(spec))
+        except ValueError as exc:
+            parser.error(str(exc))
+
+    recovery_plan: Optional[MultiSigRecoveryPlan] = None
+    if trustees:
+        threshold = max(1, min(args.recovery_threshold, len(trustees)))
+        recovery_plan = MultiSigRecoveryPlan(
+            trustees=trustees,
+            threshold=threshold,
+            recovery_contract=args.recovery_contract,
+        )
+
+    continuity_guardian: Optional[ContinuityGuardian] = None
+    if mirror_nodes or recovery_plan is not None:
+        continuity_guardian = ContinuityGuardian(
+            bank=args.bank,
+            state_path=args.continuity_state,
+            mirror_nodes=mirror_nodes,
+            recovery_plan=recovery_plan,
+        )
+
     ledger = SovereignLedger(
         bank=args.bank,
         ledger_path=args.ledger_path,
         puzzle_path=args.puzzle_path,
         proofs_dir=args.proofs_dir,
         skip_ots=args.skip_ots,
+        compliance_service=compliance_service,
+        continuity_guardian=continuity_guardian,
     )
     entry = ledger.record_transaction(
         direction=args.direction,
