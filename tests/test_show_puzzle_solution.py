@@ -53,6 +53,17 @@ def test_parse_pkscript_with_metadata_lines():
     assert _parse_p2pkh_hash160(script) == "f828005d41b0f4fed4c8dca3b06011072cfb07d4"
 
 
+def test_parse_pkscript_with_explicit_pushbytes_token():
+    script = (
+        "OP_DUP OP_HASH160 OP_PUSHBYTES_20 a0b0d60e5991578ed37cbda2b17d8b2ce23ab295 "
+        "OP_EQUALVERIFY OP_CHECKSIG"
+    )
+    assert (
+        _parse_p2pkh_hash160(script)
+        == "a0b0d60e5991578ed37cbda2b17d8b2ce23ab295"
+    )
+
+
 def test_parse_pkscript_with_puzzle_65_metadata():
     script = """Puzzle #65\n18ZMbwUFL-Cbktshgpe\nPkscript\nOP_DUP\nOP_HASH160\n52e763a7ddc1aa4fa811578c491c1bc7fd570137\nOP_EQUALVERIFY\nOP_CHECKSIG"""
     assert _parse_p2pkh_hash160(script) == PUZZLE_65_HASH160

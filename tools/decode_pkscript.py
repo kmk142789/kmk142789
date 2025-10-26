@@ -25,6 +25,7 @@ _NETWORK_PARAMS = {
 }
 
 _KNOWN_OPS = {"OP_DUP", "OP_HASH160", "OP_EQUALVERIFY", "OP_CHECKSIG", "OP_0"}
+_PUSHBYTES_PATTERN = re.compile(r"OP_PUSHBYTES_(\d+)")
 _METADATA_SENTINELS = {"SIGSCRIPT", "SCRIPTSIG", "WITNESS", "WITNESSES"}
 
 
@@ -324,6 +325,17 @@ def _extract_p2pkh_tokens(tokens: Iterable[str]) -> List[str]:
             sequence.append(upper)
             started = True
             continue
+
+        pushbytes = _PUSHBYTES_PATTERN.fullmatch(upper)
+        if pushbytes:
+            if not started:
+                continue
+            indicated = int(pushbytes.group(1))
+            if len(sequence) == 2:
+                if indicated != 20:
+                    raise ScriptDecodeError("unexpected pushbytes length for P2PKH")
+                continue
+            raise ScriptDecodeError(f"unexpected token in script body: {token}")
 
         if re.fullmatch(r"[0-9a-fA-F]{40}", token):
             sequence.append(token.lower())
