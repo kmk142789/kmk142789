@@ -1758,5 +1758,16 @@
     "public_key": "02e0a8b039282faf6fe0fd769cfbc4b6b4cf8758ba68220eac420e32b91ddfa673",
     "private_key": "",
     "solve_date": ""
+  },
+  {
+    "bits": 161,
+    "range_min": "1.60E+40",
+    "range_max": "1ffffffffffffffffffffffffffffffffffffffff",
+    "address": "1K6k9AagqkS8STU4uak8F4fSUwMQTpcnWL",
+    "btc_value": 16.1,
+    "hash160_compressed": "c6885b24810c868bdbc6fbf9dd80de778246da57",
+    "public_key": "",
+    "private_key": "",
+    "solve_date": ""
   }
 ]
