@@ -38,6 +38,10 @@ class PulseDashboardPaths:
         return self.worker_state_dir / "worker_events.jsonl"
 
     @property
+    def amplify_log(self) -> Path:
+        return self.root / "state" / "amplify_log.jsonl"
+
+    @property
     def output_dir(self) -> Path:
         return self.root / "pulse_dashboard" / "data"
 
@@ -65,6 +69,7 @@ class PulseDashboardBuilder:
             "dns_snapshots": self._load_dns_snapshots(),
             "worker_hive": self._load_worker_events(),
         }
+        payload["amplify"] = self._load_amplify_snapshots()
         payload["impact_explorer"] = ImpactExplorerBuilder(self._paths.root).build()
         payload["glyph_cycle"] = self._build_glyph_cycle(payload)
         return payload
@@ -196,6 +201,93 @@ class PulseDashboardBuilder:
             events.append(data)
         events.sort(key=lambda item: item.get("timestamp", ""), reverse=True)
         return {"events": events, "total": len(events)}
+
+    # ------------------------------------------------------------------
+
+    def _load_amplify_snapshots(self) -> dict[str, object]:
+        path = self._paths.amplify_log
+        if not path.exists():
+            return {"history": [], "latest": None, "summary": {"cycles_tracked": 0}}
+
+        raw_entries = path.read_text(encoding="utf-8").splitlines()
+        snapshots: list[dict[str, object]] = []
+        for raw in raw_entries:
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+
+            try:
+                cycle = int(data.get("cycle", 0))
+            except (TypeError, ValueError):
+                continue
+
+            try:
+                index_value = float(data.get("index", 0.0))
+            except (TypeError, ValueError):
+                index_value = 0.0
+
+            timestamp_raw = data.get("timestamp")
+            timestamp_iso = None
+            sort_dt = None
+            if isinstance(timestamp_raw, str):
+                iso_source = timestamp_raw.replace("Z", "+00:00")
+                try:
+                    sort_dt = datetime.fromisoformat(iso_source)
+                    timestamp_iso = sort_dt.isoformat()
+                except ValueError:
+                    timestamp_iso = timestamp_raw
+            if sort_dt is None:
+                sort_dt = datetime.fromtimestamp(0, tz=timezone.utc)
+
+            metrics_payload: dict[str, float | object] = {}
+            metrics = data.get("metrics", {})
+            if isinstance(metrics, Mapping):
+                for key, value in metrics.items():
+                    try:
+                        metrics_payload[str(key)] = round(float(value), 2)
+                    except (TypeError, ValueError):
+                        metrics_payload[str(key)] = value
+
+            entry: dict[str, object] = {
+                "cycle": cycle,
+                "index": round(index_value, 2),
+                "commit_sha": str(data.get("commit_sha", "")),
+                "timestamp": timestamp_iso or timestamp_raw,
+                "metrics": metrics_payload,
+                "_sort_key": (sort_dt, cycle),
+            }
+            snapshots.append(entry)
+
+        if not snapshots:
+            return {"history": [], "latest": None, "summary": {"cycles_tracked": 0}}
+
+        snapshots.sort(key=lambda item: item["_sort_key"], reverse=True)
+        for entry in snapshots:
+            entry.pop("_sort_key", None)
+
+        history = snapshots[:50]
+        latest = history[0]
+
+        indices = [entry["index"] for entry in history if isinstance(entry.get("index"), (int, float))]
+        summary: dict[str, object] = {"cycles_tracked": len(snapshots)}
+        if indices:
+            avg_index = sum(indices) / len(indices)
+            summary["average_index"] = round(avg_index, 2)
+            summary["peak_index"] = round(max(indices), 2)
+            if len(indices) >= 2:
+                summary["momentum"] = round(indices[0] - indices[1], 2)
+        summary["latest_commit"] = latest.get("commit_sha")
+        summary["presence"] = (
+            f"Amplify presence cycle {latest.get('cycle')} @ index {latest.get('index'):.2f}"
+            if isinstance(latest.get("index"), (int, float))
+            else f"Amplify presence cycle {latest.get('cycle')}"
+        )
+
+        return {"history": history, "latest": latest, "summary": summary}
 
     # ------------------------------------------------------------------
 
