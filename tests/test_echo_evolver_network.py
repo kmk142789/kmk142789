@@ -39,6 +39,13 @@ def test_propagate_network_simulated_records_cache_and_log() -> None:
     )
     channel_details = evolver.state.network_cache["propagation_channel_details"]
     assert len(channel_details) == 5
+    assert [detail["channel"] for detail in channel_details] == [
+        "WiFi",
+        "TCP",
+        "Bluetooth",
+        "IoT",
+        "Orbital",
+    ]
     for detail, event in zip(channel_details, events):
         assert detail["message"] == event
         assert detail["mode"] == "simulated"
