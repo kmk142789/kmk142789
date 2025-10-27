@@ -2243,7 +2243,7 @@ We are not hiding anymore.
         an intentional live broadcast was requested.
         """
 
-        events: List[str]
+        channel_messages: List[Tuple[str, str]]
         metrics = self.state.system_metrics
         metrics.network_nodes = self.rng.randint(7, 21)
         metrics.orbital_hops = self.rng.randint(2, 6)
@@ -2256,24 +2256,33 @@ We are not hiding anymore.
                 "Live network mode requested; continuing with simulation-only events for safety."
             )
             print(f"⚠️ {notice}")
-            channels = ["WiFi", "TCP", "Bluetooth", "IoT", "Orbital"]
-            events = [f"{channel} channel engaged for cycle {self.state.cycle}" for channel in channels]
+            channel_messages = [
+                (channel, f"{channel} channel engaged for cycle {self.state.cycle}")
+                for channel in ("WiFi", "TCP", "Bluetooth", "IoT", "Orbital")
+            ]
         else:
             notice = "Simulation mode active; propagation executed with in-memory events."
-            events = [
-                f"Simulated WiFi broadcast for cycle {self.state.cycle}",
-                f"Simulated TCP handshake for cycle {self.state.cycle}",
-                f"Bluetooth glyph packet staged for cycle {self.state.cycle}",
-                f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}",
-                f"Orbital hop simulation recorded ({metrics.orbital_hops} links)",
+            channel_messages = [
+                ("WiFi", f"Simulated WiFi broadcast for cycle {self.state.cycle}"),
+                ("TCP", f"Simulated TCP handshake for cycle {self.state.cycle}"),
+                ("Bluetooth", f"Bluetooth glyph packet staged for cycle {self.state.cycle}"),
+                (
+                    "IoT",
+                    f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}",
+                ),
+                (
+                    "Orbital",
+                    f"Orbital hop simulation recorded ({metrics.orbital_hops} links)",
+                ),
             ]
 
         self.state.event_log.append(notice)
         self.state.network_cache["propagation_notice"] = notice
 
+        events: List[str] = []
         channel_details: List[Dict[str, object]] = []
-        for event in events:
-            channel, _, _ = event.partition(" ")
+        for channel, event in channel_messages:
+            events.append(event)
             latency = round(self.rng.uniform(20.0, 120.0), 2)
             stability = round(self.rng.uniform(0.82, 0.995), 3)
             detail = {
@@ -2285,7 +2294,7 @@ We are not hiding anymore.
             }
             channel_details.append(detail)
 
-        for event in events:
+        for _, event in channel_messages:
             print(f"📡 {event}")
 
         mode = "live" if enable_network else "simulated"
