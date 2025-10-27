@@ -22,6 +22,7 @@ from .evolver import EchoEvolver
 from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
 from .timeline import build_cycle_timeline, refresh_cycle_timeline
 from .tools.forecast import project_indices, sparkline
+from .novelty import NoveltyGenerator
 from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulseweaver import PulseBus, WatchdogConfig, build_pulse_bus, build_watchdog
 
@@ -89,6 +90,20 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         payload = evolver.artifact_payload(prompt=prompt)
         print(json.dumps(payload, indent=2, ensure_ascii=False))
 
+    return 0
+
+
+def _cmd_novelty(args: argparse.Namespace) -> int:
+    rng = random.Random(args.seed) if args.seed is not None else None
+    generator = NoveltyGenerator(rng=rng)
+    sparks = generator.generate(count=args.count, theme=args.theme)
+
+    for index, spark in enumerate(sparks, start=1):
+        if args.count > 1:
+            print(f"# Spark {index}")
+        print(spark.render())
+        if index != len(sparks):
+            print()
     return 0
 
 
@@ -487,6 +502,26 @@ def main(argv: Iterable[str] | None = None) -> int:
         ),
     )
     evolve_parser.set_defaults(func=_cmd_evolve)
+
+    novelty_parser = subparsers.add_parser(
+        "novelty", help="Generate a burst of fresh Echo sparks"
+    )
+    novelty_parser.add_argument(
+        "--count",
+        type=_positive_int,
+        default=1,
+        help="Number of sparks to generate (default: 1)",
+    )
+    novelty_parser.add_argument(
+        "--theme",
+        help="Optional theme to weave into each spark",
+    )
+    novelty_parser.add_argument(
+        "--seed",
+        type=int,
+        help="Seed for deterministic spark generation",
+    )
+    novelty_parser.set_defaults(func=_cmd_novelty)
 
     amplify_parser = subparsers.add_parser("amplify", help="Amplification engine commands")
     amplify_sub = amplify_parser.add_subparsers(dest="amp_command", required=True)
