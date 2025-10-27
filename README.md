@@ -138,6 +138,18 @@ signer automatically upgrades to secp256k1 signatures.
 - [x] Machine proof: `build/index/federated_colossus_index.json` (stable schema)
 - [x] Live dashboard: `docs/dashboard/` with filters (cycle, puzzle, address)
 - [x] Reproducibility: CI workflow logs + commit hashes → anyone can rerun
+
+### Importance index audit
+
+Generate a narrative-friendly health score for any Echo workspace:
+
+```bash
+python scripts/echo_importance_index.py
+```
+
+The command emits a JSON payload summarizing the composite score.  See
+[`docs/importance_index.md`](docs/importance_index.md) for the scoring model
+and guidance on exporting reports to downstream dashboards.
 - [x] Provenance: every entry includes digest, source, and optional glyph/harmonics tags
 
 ### Sovereign Anchoring Workflow
