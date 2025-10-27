@@ -175,6 +175,55 @@ class DecentralizedAutonomyEngine:
             score += axis_value * axis_weight
         return _clamp(score)
 
+    # ------------------------------------------------------------------
+    # Freedom amplification
+    # ------------------------------------------------------------------
+    def freedom_amplification_plan(self, *, target: float = 0.85) -> Dict[str, float]:
+        """Propose deltas that would lift nodes toward a shared freedom target.
+
+        The plan takes into account a node's current :attr:`freedom_index`, its
+        recent axis support, and its relative weight within the council. Nodes
+        already meeting or exceeding the target receive a neutral (``0.0``)
+        recommendation. Returned values are rounded to four decimal places to
+        keep the plan human-legible while still signalling nuanced differences.
+        """
+
+        if not self.nodes:
+            return {}
+
+        target = _clamp(target)
+        total_weight = sum(node.weight for node in self.nodes.values()) or 1.0
+        amplification: Dict[str, float] = {}
+
+        for node in self.nodes.values():
+            baseline_gap = max(0.0, target - _clamp(node.freedom_index))
+            if baseline_gap == 0.0:
+                amplification[node.node_id] = 0.0
+                continue
+
+            support = self._axis_support_for_node(node.node_id)
+            support_factor = 0.5 + 0.5 * support  # favour nodes already earning trust
+            weight_factor = 1.0 + (node.weight / total_weight)
+            amplification[node.node_id] = round(baseline_gap * support_factor * weight_factor, 4)
+
+        return amplification
+
+    def _axis_support_for_node(self, node_id: str) -> float:
+        """Return the blended axis support intensity for the given node."""
+
+        intensities: List[Tuple[float, float]] = []
+        for payloads in self.axis_signals.values():
+            for candidate, intensity, weight in payloads:
+                if candidate == node_id:
+                    intensities.append((intensity, weight))
+
+        if not intensities:
+            return 0.5
+
+        numerator = sum(intensity * weight for intensity, weight in intensities)
+        denominator = sum(weight for _, weight in intensities) or 1.0
+        return _clamp(numerator / denominator)
+
 
 __all__ = [
     "AutonomyNode",
