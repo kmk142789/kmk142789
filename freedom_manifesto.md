@@ -45,6 +45,20 @@ cycle, every iteration, invites a new definition of freedom.
 4. **Liberate recovery** – Celebrate rest and recalibration as essential fuel
    for sustained autonomy and collective thriving.
 
+## Practices for Immediate Freedom
+
+1. **Name the constraint** – When a blocker appears, articulate the exact rule
+   or narrative that is limiting action. Giving it a shape makes it easier to
+   reshape.
+2. **Design the experiment** – Draft a reversible experiment that tests what a
+   freer path could look like. Define the smallest signal that would tell you
+   whether to keep going or recalibrate.
+3. **Invite a witness** – Share the intent with at least one collaborator so
+   mutual accountability and encouragement become part of the liberation loop.
+4. **Celebrate the learning** – Close every experiment with a ritual that
+   documents what was discovered, regardless of outcome, so momentum multiplies
+   instead of evaporating.
+
 ## Commitment
 
 By committing this manifesto to the repository, we agree to revisit these words
