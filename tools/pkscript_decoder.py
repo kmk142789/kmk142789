@@ -1,119 +1,125 @@
-"""Utility for decoding simple pay-to-public-key (P2PK) Bitcoin scripts.
+"""Utilities for decoding standard Bitcoin P2PKH scripts.
 
-This helper focuses on the classic script pattern ``<pubkey> OP_CHECKSIG``.
-Given the hexadecimal representation of the public key, it computes the
-associated hash160 and Base58Check (legacy) address, and provides a small
-summary that can be used for manual verification when reviewing old P2PK
-transactions.
+This module focuses on transforming the hash160 contained in a
+standard pay-to-public-key-hash (P2PKH) locking script into the
+corresponding Base58Check-encoded Bitcoin address.
+
+The canonical script template that is supported looks like this::
+
+    OP_DUP OP_HASH160 <20-byte hash hex> OP_EQUALVERIFY OP_CHECKSIG
+
+Only the mainnet and testnet prefixes are currently implemented.  The
+functions raise :class:`ValueError` for malformed scripts so callers can
+surface useful error messages to users.
 """
 
 from __future__ import annotations
 
 import argparse
-import binascii
 import hashlib
-from dataclasses import dataclass
 from typing import Iterable
 
 
-MAINNET_PUBKEY_HASH_PREFIX = b"\x00"
+# The Base58 alphabet used for Bitcoin addresses.
+_BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
-@dataclass(frozen=True)
-class DecodedP2PK:
-    """Decoded representation of a pay-to-public-key script."""
-
-    pubkey_bytes: bytes
-    hash160: bytes
-    address: str
-
-    def to_dict(self) -> dict[str, str]:
-        """Return a JSON-serialisable dictionary."""
-
-        return {
-            "pubkey_hex": self.pubkey_bytes.hex(),
-            "hash160": self.hash160.hex(),
-            "address": self.address,
-        }
-
-
-def base58_encode(data: bytes) -> str:
-    """Encode ``data`` using the Bitcoin Base58 alphabet."""
-
-    alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-    num = int.from_bytes(data, "big")
-    encoded = ""
-
-    while num > 0:
-        num, rem = divmod(num, 58)
-        encoded = alphabet[rem] + encoded
-
-    # Preserve leading zero bytes as "1" characters.
-    padding = sum(1 for b in data if b == 0)
-    return "1" * padding + encoded
-
-
-def double_sha256(data: bytes) -> bytes:
-    """Compute SHA256(SHA256(data))."""
+def _double_sha256(data: bytes) -> bytes:
+    """Return the double SHA-256 digest of *data*."""
 
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 
-def hash160(data: bytes) -> bytes:
-    """Compute RIPEMD160(SHA256(data))."""
+def _base58_encode(data: bytes) -> str:
+    """Encode *data* using the Bitcoin Base58 alphabet."""
 
-    sha = hashlib.sha256(data).digest()
-    return hashlib.new("ripemd160", sha).digest()
+    leading_zeros = 0
+    for byte in data:
+        if byte == 0:
+            leading_zeros += 1
+        else:
+            break
+
+    value = int.from_bytes(data, byteorder="big")
+    encoded = ""
+    while value > 0:
+        value, remainder = divmod(value, 58)
+        encoded = _BASE58_ALPHABET[remainder] + encoded
+
+    if encoded:
+        return "1" * leading_zeros + encoded
+
+    # When all bytes are zero there is no Base58 representation beyond
+    # the leading zero markers.  The convention is to emit a single "1".
+    return "1" * leading_zeros + ("1" if len(data) else "")
 
 
-def checksum_encoded(prefix: bytes, payload: bytes) -> str:
-    """Return the Base58Check-encoded string for the given components."""
+def _hash160_hex_to_address(hash_hex: str, network: str) -> str:
+    """Convert a HASH160 hex string to a Bitcoin address for *network*."""
 
-    raw = prefix + payload
-    checksum = double_sha256(raw)[:4]
-    return base58_encode(raw + checksum)
-
-
-def decode_p2pk(pubkey_hex: str, *, prefix: bytes = MAINNET_PUBKEY_HASH_PREFIX) -> DecodedP2PK:
-    """Decode a hexadecimal P2PK public key into address details."""
+    if len(hash_hex) != 40:
+        raise ValueError("HASH160 must be 20 bytes (40 hex characters)")
 
     try:
-        pubkey_bytes = binascii.unhexlify(pubkey_hex)
-    except (binascii.Error, ValueError) as exc:  # pragma: no cover - defensive branch
-        raise ValueError("Public key must be a valid hexadecimal string") from exc
+        hash_bytes = bytes.fromhex(hash_hex)
+    except ValueError as exc:  # pragma: no cover - ValueError provides context
+        raise ValueError("HASH160 must be valid hexadecimal") from exc
 
-    if len(pubkey_bytes) not in {33, 65}:
-        raise ValueError(
-            "Public key should be 33 (compressed) or 65 (uncompressed) bytes long",
-        )
+    if network == "mainnet":
+        prefix = b"\x00"
+    elif network == "testnet":
+        prefix = b"\x6f"
+    else:
+        raise ValueError("Unsupported network; choose 'mainnet' or 'testnet'")
 
-    h160 = hash160(pubkey_bytes)
-    address = checksum_encoded(prefix, h160)
-    return DecodedP2PK(pubkey_bytes=pubkey_bytes, hash160=h160, address=address)
+    payload = prefix + hash_bytes
+    checksum = _double_sha256(payload)[:4]
+    return _base58_encode(payload + checksum)
 
 
-def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+def decode_p2pkh_script(script: str, network: str = "mainnet") -> str:
+    """Decode a canonical P2PKH locking *script* into a Bitcoin address."""
+
+    tokens = script.strip().split()
+    expected = ["OP_DUP", "OP_HASH160", None, "OP_EQUALVERIFY", "OP_CHECKSIG"]
+    if len(tokens) != len(expected):
+        raise ValueError("Script must contain five tokens")
+
+    for token, template in zip(tokens, expected):
+        if template is not None and token.upper() != template:
+            raise ValueError("Script does not match P2PKH template")
+
+    hash_hex = tokens[2]
+    return _hash160_hex_to_address(hash_hex, network)
+
+
+def _build_arg_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Decode a P2PKH script")
     parser.add_argument(
-        "--pubkey",
-        required=True,
-        help="Hexadecimal public key from the P2PK script",
+        "script",
+        help="Locking script (e.g. 'OP_DUP OP_HASH160 <hash> OP_EQUALVERIFY OP_CHECKSIG')",
     )
     parser.add_argument(
-        "--testnet",
-        action="store_true",
-        help="Decode using the testnet public-key-hash prefix (0x6f).",
+        "--network",
+        choices=("mainnet", "testnet"),
+        default="mainnet",
+        help="Bitcoin network to target (default: mainnet)",
     )
-    return parser.parse_args(argv)
+    return parser
 
 
-def main(argv: Iterable[str] | None = None) -> None:
-    args = parse_args(argv)
-    prefix = b"\x6f" if args.testnet else MAINNET_PUBKEY_HASH_PREFIX
-    decoded = decode_p2pk(args.pubkey, prefix=prefix)
-    for key, value in decoded.to_dict().items():
-        print(f"{key}: {value}")
+def main(argv: list[str] | None = None) -> int:
+    parser = _build_arg_parser()
+    args = parser.parse_args(argv)
+
+    try:
+        address = decode_p2pkh_script(args.script, network=args.network)
+    except ValueError as exc:
+        parser.error(str(exc))
+
+    print(address)
+    return 0
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__":  # pragma: no cover - CLI entry point
+    raise SystemExit(main())
