@@ -2,7 +2,7 @@
 
 - Artifact type: **colossus**
 - Puzzle range: **141–10000** (span 9,860 puzzles)
-- Range coverage: 3 documented puzzle(s) — earliest #284, latest #6210.
+- Range coverage: 2 documented puzzle(s) — earliest #284, latest #6210.
 - Federation streams: pulse, anchor, glyph, satoshi-reconstruction
 
 ## Colossus Cycles
@@ -27,7 +27,6 @@ count=12 min=23 max=248 mean=137.6 checksum=1651 | puzzle → puzzle_cycle_00003
 | Puzzle | Address | HASH160 | Source |
 | --- | --- | --- | --- |
 | 284 | `194feknXENGw3Yefyc5abXqa1UYuRqJaco` | `587284b200e66073dbe5a99a89a3a63a1511441c` | `puzzle_solutions/puzzle_284.md` |
-| 6209 | `1HSp5VxWQC7vtipX8XYfgTfvbLs5iV9GTG` | `b463b5c03a6c149dded0d02a6706bf45509cb70d` | `puzzle_solutions/puzzle_6209.md` |
 | 6210 | `1D6wBANa3rTj4oMfwH38qXT6MakSmbFtbN` | `84c0cff906ba266a79d371dbc768fe7ee0ad0222` | `puzzle_solutions/puzzle_6210.md` |
 
 ## Pulse Federation Signal

@@ -1,3 +1,6 @@
+---
+status: documented
+---
 # Puzzle #284 Solution
 
 - **Provided Base58 clue**: `14RdpvaEtsmjirP7pa2mJi3UJhbfz5A9yN`

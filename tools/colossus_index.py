@@ -245,7 +245,17 @@ def collect_puzzle_solutions(min_puzzle: int, max_puzzle: int, root: Path = PUZZ
         puzzle_id = int(match.group(1))
         if puzzle_id < effective_min or puzzle_id > max_puzzle:
             continue
-        text = path.read_text(encoding="utf-8")
+        lines = path.read_text(encoding="utf-8").splitlines()
+        front_matter, body_lines = _parse_front_matter(lines)
+        status = front_matter.get("status", "").strip().lower()
+        if status and status not in {"documented", "attested", "verified"}:
+            continue
+        if not status:
+            # Require explicit opt-in so only vetted solutions appear in the
+            # generated index.  Files without a documented status remain
+            # accessible in the repository but are excluded from the summary.
+            continue
+        text = "\n".join(body_lines)
         hash_match = _HASH160_RE.search(text)
         address_match = _ADDRESS_RE.search(text)
         address = address_match.group(1) if address_match else None
