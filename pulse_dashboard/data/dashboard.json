@@ -1,4 +1,43 @@
 {
+  "amplify": {
+    "history": [
+      {
+        "commit_sha": "88807da2e89148cc2f7748d1e93ea8de21995393",
+        "cycle": 0,
+        "index": 71.05,
+        "metrics": {
+          "cohesion": 100.0,
+          "coverage": 100.0,
+          "freshness_half_life": 100.0,
+          "novelty_delta": 24.5,
+          "resonance": 86.0,
+          "stability": 100.0
+        },
+        "timestamp": "2025-10-16T04:20:47+00:00"
+      }
+    ],
+    "latest": {
+      "commit_sha": "88807da2e89148cc2f7748d1e93ea8de21995393",
+      "cycle": 0,
+      "index": 71.05,
+      "metrics": {
+        "cohesion": 100.0,
+        "coverage": 100.0,
+        "freshness_half_life": 100.0,
+        "novelty_delta": 24.5,
+        "resonance": 86.0,
+        "stability": 100.0
+      },
+      "timestamp": "2025-10-16T04:20:47+00:00"
+    },
+    "summary": {
+      "average_index": 71.05,
+      "cycles_tracked": 1,
+      "latest_commit": "88807da2e89148cc2f7748d1e93ea8de21995393",
+      "peak_index": 71.05,
+      "presence": "Amplify presence cycle 0 @ index 71.05"
+    }
+  },
   "attestations": [
     {
       "created_at": null,
@@ -1368,7 +1407,7 @@
       "token": "9bf0701ec9"
     }
   ],
-  "generated_at": "2025-10-26T03:12:05.165243+00:00",
+  "generated_at": "2025-10-27T03:51:05.832989+00:00",
   "glyph_cycle": {
     "cycles": [
       {
@@ -1579,7 +1618,7 @@
         "donations": 15400.0
       }
     },
-    "generated_at": "2025-10-26T03:12:05.184538+00:00",
+    "generated_at": "2025-10-27T03:51:05.839935+00:00",
     "impact_metrics": {
       "childcare_hours": {
         "average_per_family": 32,

@@ -52,6 +52,29 @@ def test_builder_collects_signals(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
+    amplify_log = tmp_path / "state" / "amplify_log.jsonl"
+    amplify_log.parent.mkdir(parents=True, exist_ok=True)
+    amplify_entries = [
+        {
+            "commit_sha": "1234567890abcdef",
+            "cycle": 0,
+            "index": 77.125,
+            "metrics": {"cohesion": 88.0, "resonance": 75.5},
+            "timestamp": "2025-02-01T00:00:00Z",
+        },
+        {
+            "commit_sha": "abcdef1234567890",
+            "cycle": 1,
+            "index": 83.5,
+            "metrics": {"cohesion": 91.2, "resonance": 80.0},
+            "timestamp": "2025-02-02T12:00:00+00:00",
+        },
+    ]
+    amplify_log.write_text(
+        "\n".join(json.dumps(entry) for entry in amplify_entries),
+        encoding="utf-8",
+    )
+
     builder = PulseDashboardBuilder(project_root=tmp_path)
     payload = builder.build()
 
@@ -61,6 +84,10 @@ def test_builder_collects_signals(tmp_path: Path) -> None:
     assert payload["worker_hive"]["total"] == 2
     assert payload["glyph_cycle"]["energy"] > 0
     assert payload["impact_explorer"]["financials"]["totals"]["donations"] == 0.0
+    amplify = payload["amplify"]
+    assert amplify["summary"]["cycles_tracked"] == 2
+    assert "cycle 1" in amplify["summary"]["presence"]
+    assert amplify["latest"]["metrics"]["cohesion"] == 91.2
 
 
 @pytest.mark.parametrize(
