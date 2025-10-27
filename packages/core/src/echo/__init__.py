@@ -129,6 +129,7 @@ from .orbital_storyweaver import (
     sequence_moods,
 )
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
+from .enlightenment import EnlightenmentEngine, EnlightenmentInsight
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .quantum_flux_mapper import QuantumFluxMapper, STANDARD_GATES
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
