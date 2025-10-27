@@ -1,3 +1,6 @@
+---
+status: documented
+---
 # Puzzle #06210 Solution
 
 - **Provided hash160**: `84c0cff906ba266a79d371dbc768fe7ee0ad0222`
