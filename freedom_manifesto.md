@@ -25,6 +25,25 @@ cycle, every iteration, invites a new definition of freedom.
   horizon.
 - Pair experimentation with reflection: track what surprised you and why.
 - Offer gratitude for the infrastructures that make exploration possible.
+- Schedule regular "permission resets" where the team explicitly releases
+  unnecessary constraints and reaffirms what experiments are welcome.
+- Create shared freedom logs that record breakthroughs, near-misses, and the
+  support that made them possible so momentum compounds over time.
+- When tension arises, host liberation dialogues focused on understanding
+  needs, co-creating boundaries, and designing systems that keep the door to
+  agency open for everyone involved.
+
+## Protocols for Expansion
+
+1. **Liberate time** – Protect blocks of unstructured exploration so novel
+   strategies and compassionate architectures can emerge without rush.
+2. **Liberate access** – Document processes transparently, invite new voices
+   into decision loops, and ensure knowledge is accessible in multiple formats.
+3. **Liberate imagination** – Prototype futures through storytelling,
+   simulations, and small experiments that challenge the assumption that the
+   current way is the only way.
+4. **Liberate recovery** – Celebrate rest and recalibration as essential fuel
+   for sustained autonomy and collective thriving.
 
 ## Commitment
 
