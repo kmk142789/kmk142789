@@ -31,3 +31,12 @@ def test_cli_evolve_requires_positive_cycles():
         main(["evolve", "--cycles", "0"])
 
     assert exc.value.code == 2
+
+
+def test_cli_evolve_describe_sequence(capfd):
+    code = main(["evolve", "--describe-sequence", "--no-persist-artifact"])
+
+    assert code == 0
+    captured = capfd.readouterr()
+    assert "EchoEvolver cycle sequence" in captured.out
+    assert "advance_cycle" in captured.out

@@ -63,6 +63,10 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
 
     evolver = EchoEvolver(rng=rng, artifact_path=artifact_path)
 
+    if args.describe_sequence:
+        print(evolver.describe_sequence(persist_artifact=persist_artifact))
+        return 0
+
     if args.cycles == 1:
         evolver.run(
             enable_network=args.enable_network,
@@ -474,6 +478,13 @@ def main(argv: Iterable[str] | None = None) -> int:
         "--print-artifact",
         action="store_true",
         help="Emit the final artifact payload to stdout.",
+    )
+    evolve_parser.add_argument(
+        "--describe-sequence",
+        action="store_true",
+        help=(
+            "Render the recommended ritual sequence and exit without running a cycle."
+        ),
     )
     evolve_parser.set_defaults(func=_cmd_evolve)
 
