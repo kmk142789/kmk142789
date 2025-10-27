@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from echo import thoughtlog as thoughtlog_module
-from echo.evolver import EchoEvolver
+from echo.evolver import EchoEvolver, _classify_momentum
 from echo.memory.store import JsonMemoryStore
 
 
@@ -45,6 +45,13 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     assert progress["remaining"] == progress["total"] - progress["completed"]
     assert progress["progress"] == pytest.approx(digest["progress"])
     assert progress["progress_percent"] == pytest.approx(digest["progress"] * 100)
+    assert progress["momentum_status"] in {"accelerating", "steady", "regressing"}
+    if progress["momentum"] > 0:
+        assert progress["momentum_direction"] == "positive"
+    elif progress["momentum"] < 0:
+        assert progress["momentum_direction"] == "negative"
+    else:
+        assert progress["momentum_direction"] == "neutral"
 
     manifest = payload["manifest"]
     assert manifest["cycle"] == 1
@@ -101,6 +108,13 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     progress = payload["progress"]
     assert progress["total"] == len(payload["digest"]["steps"])
     assert progress["progress_percent"] == pytest.approx(progress["progress"] * 100)
+    assert progress["momentum_status"] in {"accelerating", "steady", "regressing"}
+    if progress["momentum"] > 0:
+        assert progress["momentum_direction"] == "positive"
+    elif progress["momentum"] < 0:
+        assert progress["momentum_direction"] == "negative"
+    else:
+        assert progress["momentum_direction"] == "neutral"
 
     summary = payload["event_summary"]
     assert "recent events" in summary
@@ -143,3 +157,10 @@ def test_advance_system_rejects_invalid_event_summary_limit(tmp_path, monkeypatc
             include_system_report=True,
             system_report_events=0,
         )
+
+
+def test_classify_momentum_threshold_behavior():
+    assert _classify_momentum(0.25) == "accelerating"
+    assert _classify_momentum(-0.25) == "regressing"
+    assert _classify_momentum(0.0) == "steady"
+    assert _classify_momentum(0.005) == "steady"

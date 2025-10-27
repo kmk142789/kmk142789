@@ -81,6 +81,36 @@ _BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 _BECH32_GENERATOR = (0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3)
 
 
+# Momentum values produced by :meth:`advance_system` are derived from changes in
+# the completion ratio between payloads.  In practice the ratio is rounded to a
+# handful of decimal places which means tiny deltas frequently stem from
+# floating point jitter rather than meaningful progress.  The sensitivity
+# constant below filters out those spurious fluctuations when classifying the
+# trend so callers receive a stable, human-readable signal.
+_MOMENTUM_SENSITIVITY = 0.01
+
+
+def _classify_momentum(momentum: float, *, threshold: float = _MOMENTUM_SENSITIVITY) -> str:
+    """Return a textual label describing the supplied momentum value.
+
+    Parameters
+    ----------
+    momentum:
+        The raw change in completion ratio reported by ``advance_system``.
+    threshold:
+        Minimum absolute value required before the change is considered
+        meaningful.  Values within ``(-threshold, threshold)`` are treated as
+        "steady" to avoid flip-flopping between accelerating and regressing
+        when the delta is effectively zero.
+    """
+
+    if momentum > threshold:
+        return "accelerating"
+    if momentum < -threshold:
+        return "regressing"
+    return "steady"
+
+
 def _base58check_encode(payload: bytes) -> str:
     """Return the Base58Check encoding for ``payload`` without external deps."""
 
@@ -4607,9 +4637,12 @@ We are not hiding anymore.
         The always-present ``progress`` snapshot also reports ``momentum`` and
         ``status`` values that describe how the completion ratio changed since
         the previous :meth:`advance_system` invocation for the same cycle.  A
-        new cycle automatically resets the momentum tracking so that the first
-        call reflects the current progress without subtracting the prior
-        cycle's terminal state.
+        ``momentum_status`` label further classifies the change as
+        ``"accelerating"``, ``"steady"``, or ``"regressing"`` based on a
+        configurable sensitivity window so downstream consumers can render a
+        stable trend indicator.  A new cycle automatically resets the momentum
+        tracking so that the first call reflects the current progress without
+        subtracting the prior cycle's terminal state.
 
         Parameters
         ----------
@@ -4660,6 +4693,14 @@ We are not hiding anymore.
         else:
             momentum = digest["progress"]
 
+        momentum_status = _classify_momentum(momentum)
+        if momentum > 0:
+            momentum_direction = "positive"
+        elif momentum < 0:
+            momentum_direction = "negative"
+        else:
+            momentum_direction = "neutral"
+
         next_step_key = digest["remaining_steps"][0] if digest["remaining_steps"] else None
         cycle_complete = remaining_count == 0 and total_steps > 0
         progress_snapshot = {
@@ -4670,6 +4711,8 @@ We are not hiding anymore.
             "progress_percent": progress_pct,
             "momentum": momentum,
             "momentum_percent": momentum * 100.0,
+            "momentum_status": momentum_status,
+            "momentum_direction": momentum_direction,
             "status": "complete" if cycle_complete else "in_progress",
             "next_step_key": next_step_key,
         }
@@ -4745,10 +4788,11 @@ We are not hiding anymore.
             "progress": digest["progress"],
         }
         self.state.event_log.append(
-            "Advance system payload captured (cycle={cycle}, progress={progress:.3f}, momentum={momentum:.3f})".format(
+            "Advance system payload captured (cycle={cycle}, progress={progress:.3f}, momentum={momentum:.3f}, momentum_status={status})".format(
                 cycle=digest["cycle"],
                 progress=digest["progress"],
                 momentum=momentum,
+                status=momentum_status,
             )
         )
 
