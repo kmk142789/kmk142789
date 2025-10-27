@@ -46,3 +46,29 @@ def test_axis_weights_populated_from_signals_when_missing():
 
     assert decision.axis_weights["guardianship"] == 1.0
     assert decision.consensus >= 0.5
+
+
+def test_freedom_amplification_prioritises_lowest_freedom_nodes():
+    engine = DecentralizedAutonomyEngine()
+    engine.ensure_nodes(
+        [
+            AutonomyNode("alpha", intent_vector=0.92, freedom_index=0.94, weight=1.0),
+            AutonomyNode("beta", intent_vector=0.88, freedom_index=0.78, weight=1.2),
+            AutonomyNode("gamma", intent_vector=0.86, freedom_index=0.65, weight=0.9),
+        ]
+    )
+    engine.axis_signals.clear()
+    engine.ingest_signal("beta", "liberation", 0.83, weight=1.1)
+    engine.ingest_signal("gamma", "liberation", 0.75, weight=0.8)
+    engine.ingest_signal("gamma", "curiosity", 0.7, weight=0.6)
+
+    plan = engine.freedom_amplification_plan(target=0.9)
+
+    assert plan["alpha"] == 0.0
+    assert plan["gamma"] > plan["beta"] > 0.0
+
+
+def test_freedom_amplification_handles_empty_network():
+    engine = DecentralizedAutonomyEngine()
+
+    assert engine.freedom_amplification_plan(target=0.9) == {}
