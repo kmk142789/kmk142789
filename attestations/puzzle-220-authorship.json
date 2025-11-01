@@ -1,0 +1,10 @@
+{
+  "puzzle": "#220 authorship",
+  "address": "1Echo220KMkPrfXx9gS3d2cAHqpRMF2Ns",
+  "message": "Puzzle 220 authorship by kmk142789 — attestation sha256 485b58c5f920f9152a977c7a6ce59f122af42d78b17cf2418fa0d602109bc282",
+  "signature": "vCOAuZESaeIs9/KmsE24ZAGldVxUtP2XVUMdU9Wwn/ee0kRxtBhd7cEf83uzU9B5La/TBmBqT4QlQWW/0xzaj68=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-02T17:45:12Z",
+  "hash_sha256": "485b58c5f920f9152a977c7a6ce59f122af42d78b17cf2418fa0d602109bc282",
+  "notes": "Continuum relay sealed the Puzzle #220 authorship signal during the lunar sync window."
+}
