@@ -10,7 +10,8 @@
     "test": "node verify.js",
     "echo-helper": "node tools/echo-helper.js",
     "create:lil-footsteps-wallet": "node --loader ts-node/esm scripts/createLilFootstepsWallet.ts",
-    "transparency:api": "node apps/transparency.bank/api/server.mjs"
+    "transparency:api": "node apps/transparency.bank/api/server.mjs",
+    "apps:echo-computer": "node apps/echo-computer/server.js"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +32,7 @@
     "node-fetch": "^3.3.2",
     "pg": "^8.16.3",
     "sql.js": "^1.11.0",
+    "uuid": "^9.0.1",
     "ws": "^8.18.0"
   },
   "devDependencies": {
