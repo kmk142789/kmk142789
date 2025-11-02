@@ -220,8 +220,23 @@ class EchoComputer:
         *,
         inputs: Mapping[str, int | str] | None = None,
         trace: bool = False,
+        max_steps: int | None = None,
     ) -> ExecutionResult:
-        """Execute the loaded program and return an :class:`ExecutionResult`."""
+        """Execute the loaded program and return an :class:`ExecutionResult`.
+
+        Parameters
+        ----------
+        inputs:
+            Optional mapping of input values that will be exposed via the
+            ``?`` operand prefix.
+        trace:
+            When ``True`` the computer records a trace of executed
+            instructions and includes it in the returned diagnostics.
+        max_steps:
+            Optional override for the per-run execution limit.  When omitted
+            the limit configured on the computer instance is used.  The value
+            is clamped to a minimum of ``1`` to avoid runaway loops.
+        """
 
         if not self._program:
             raise RuntimeError("no program loaded")
@@ -230,11 +245,12 @@ class EchoComputer:
         if inputs:
             self._inputs.update({str(k): v for k, v in inputs.items()})
 
+        step_limit = self._max_steps if max_steps is None else max(1, int(max_steps))
         diagnostics: List[str] = []
         task = "echo.digital_computer.run"
         meta = {
             "instructions": len(self._program),
-            "max_steps": self._max_steps,
+            "max_steps": step_limit,
             "trace": trace,
         }
 
@@ -243,9 +259,9 @@ class EchoComputer:
             while not self._halted:
                 if self._pc < 0 or self._pc >= len(self._program):
                     raise RuntimeError(f"program counter out of range: {self._pc}")
-                if steps >= self._max_steps:
+                if steps >= step_limit:
                     raise RuntimeError(
-                        f"execution exceeded max steps ({self._max_steps}); possible infinite loop"
+                        f"execution exceeded max steps ({step_limit}); possible infinite loop"
                     )
 
                 instruction = self._program[self._pc]
@@ -493,12 +509,13 @@ def run_program(
     *,
     inputs: Mapping[str, int | str] | None = None,
     trace: bool = False,
+    max_steps: int | None = None,
 ) -> ExecutionResult:
     """Assemble and execute ``source`` in a freshly initialised computer."""
 
     computer = EchoComputer()
     computer.load(source)
-    return computer.run(inputs=inputs, trace=trace)
+    return computer.run(inputs=inputs, trace=trace, max_steps=max_steps)
 
 
 def evolve_program(

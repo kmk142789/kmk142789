@@ -154,3 +154,45 @@ def test_evolve_program_generates_cycle_reports() -> None:
     assert cycles[1].result.output == ("7",)
     assert cycles[0].inputs["value"] == 2
 
+
+def test_run_permits_per_call_max_steps_override() -> None:
+    computer = EchoComputer(max_steps=3)
+    computer.load(
+        """
+        LOAD A 0
+        INC A
+        INC A
+        INC A
+        INC A
+        HALT
+        """
+    )
+
+    with pytest.raises(RuntimeError):
+        computer.run()
+
+    result = computer.run(max_steps=8)
+
+    assert result.halted is True
+    assert result.registers["A"] == 4
+    assert result.steps == 6
+
+
+def test_run_program_accepts_max_steps_override() -> None:
+    program = """
+    LOAD A 0
+    INC A
+    INC A
+    INC A
+    INC A
+    HALT
+    """
+
+    with pytest.raises(RuntimeError):
+        run_program(program, max_steps=4)
+
+    result = run_program(program, max_steps=8)
+
+    assert result.steps == 6
+    assert result.registers["A"] == 4
+
