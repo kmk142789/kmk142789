@@ -3,11 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { API_BASE, apiDelete, apiGet, apiPost } from '../lib/api';
-import type { CliCommand, CliResult, FileDescriptor, NeonKeyRecord } from '../lib/types';
+import type {
+  CliCommand,
+  CliResult,
+  FileDescriptor,
+  NeonKeyRecord,
+  PuzzleFileDescriptor,
+  CodexRegistryResponse,
+} from '../lib/types';
 import LogsPanel from './LogsPanel';
 import PuzzlesPanel from './PuzzlesPanel';
 import CliRunner from './CliRunner';
 import NeonKeyManager from './NeonKeyManager';
+import CodexSummaryCard from './CodexSummaryCard';
 
 interface LogsResponse {
   files: string[];
@@ -29,7 +37,7 @@ const fetcher = async (path: string) => apiGet(path);
 
 export default function DashboardClient() {
   const [logContent, setLogContent] = useState<FileDescriptor | null>(null);
-  const [puzzleContent, setPuzzleContent] = useState<FileDescriptor | null>(null);
+  const [puzzleContent, setPuzzleContent] = useState<PuzzleFileDescriptor | null>(null);
   const [cliResult, setCliResult] = useState<CliResult | null>(null);
   const [cliLoading, setCliLoading] = useState(false);
   const [neonError, setNeonError] = useState<string | null>(null);
@@ -37,6 +45,7 @@ export default function DashboardClient() {
   const { data: logFiles, error: logError } = useSWR<LogsResponse>('/logs', fetcher);
   const { data: puzzleFiles, error: puzzleError } = useSWR<PuzzlesResponse>('/puzzles', fetcher);
   const { data: cliCommands } = useSWR<CliCommandsResponse>('/cli/commands', fetcher);
+  const { data: codexRegistry } = useSWR<CodexRegistryResponse>('/api/codex', fetcher);
   const { data: neonKeys, error: neonFetchError, mutate: refreshNeonKeys } = useSWR<NeonKeyResponse>(
     '/neon/keys',
     async (path) => {
@@ -76,7 +85,7 @@ export default function DashboardClient() {
 
   const handleSelectPuzzle = useCallback(async (name: string) => {
     try {
-      const response = await apiGet<FileDescriptor>(`/puzzles/${encodeURIComponent(name)}`);
+      const response = await apiGet<PuzzleFileDescriptor>(`/puzzles/${encodeURIComponent(name)}`);
       setPuzzleContent(response);
     } catch (error) {
       console.error('Unable to read puzzle', error);
@@ -162,6 +171,10 @@ export default function DashboardClient() {
           onCreate={handleCreateNeonKey}
           onDelete={handleDeleteNeonKey}
         />
+      </section>
+
+      <section>
+        <CodexSummaryCard items={codexRegistry?.items ?? []} generatedAt={codexRegistry?.generated_at} />
       </section>
     </main>
   );
