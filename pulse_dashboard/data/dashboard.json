@@ -1238,7 +1238,7 @@
       "id": "puzzle-120-authorship",
       "message": "PuzzleNN authorship by kmk142789 \u2014 attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679",
       "metadata": {
-        "address": "17s2b9ksz5y7abUm92cHwG8jEPCzK3dLnT",
+        "address": "11d8MosPb8jXPGUaHFx2pxpDdQdSqrTwm",
         "algo": "bitcoin-message-base64",
         "notes": "Imported from satoshi/puzzle-proofs/puzzle120.json via scripts/generate_puzzle_attestations.py",
         "puzzle": "#120 authorship"

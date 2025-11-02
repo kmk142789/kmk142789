@@ -217,7 +217,7 @@ Newest entries first.
 - Puzzle 117: Recovered 'Q9Rmwsc6NT5zsdvE' from clue '1KNRfGWw7-b9M2Wkj5Z'
 - Puzzle 118: Recovered '19a7twf5HyD2VvNi' from clue '1PJZPzvGX-PdHLzm9F6'
 - Puzzle 119: Recovered 'rnvRe4K8zu8vdQB3' from clue '1GuBBhf61-kHzwFqSy7'
-- Puzzle 120: Recovered '5y7abUm92cHwG8jE' from clue '17s2b9ksz-PCzK3dLnT'
+- Puzzle 120: Recovered '8jXPGUaHFx2pxpD' from clue '11d8MosPb-dQdSqrTwm'
 - Puzzle 121: Recovered 'V64c166LUFC9uDcV' from clue '1GDSuiThE-dGjqkxKyh'
 - Puzzle 122: Recovered 'JCTAK2XaC32RMeH3' from clue '1Me3ASYt5-4PdprrfDx'
 - Puzzle 125: Recovered 'oH3WD8n5zoAthYjN' from clue '1PXAyUB8Z-15yN5CVq5'

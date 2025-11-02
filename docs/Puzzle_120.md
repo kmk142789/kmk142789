@@ -5,11 +5,11 @@ locking script with the Base58Check address censored across its center:
 
 ```
 Puzzle #120
-17s2b9ksz-PCzK3dLnT
+11d8MosPb-dQdSqrTwm
 Pkscript
 OP_DUP
 OP_HASH160
-4b46e10a541aeec6be3fac709c256fb7da69308e
+001e283e0acd541dd54053b0be1129b1dcf8dc45
 OP_EQUALVERIFY
 OP_CHECKSIG
 ```
@@ -33,23 +33,23 @@ straightforward Base58Check reconstruction:
 Executing these steps restores the redacted characters and yields the complete
 legacy address for Puzzle #120:
 
-- **Address:** `17s2b9ksz5y7abUm92cHwG8jEPCzK3dLnT`
-- **Missing segment:** `5y7abUm92cHwG8jE`
+- **Address:** `11d8MosPb8jXPGUaHFx2pxpDdQdSqrTwm`
+- **Missing segment:** `8jXPGUaHFx2pxpD`
 
 The reconstructed address matches the authoritative catalogue entry recorded in
 [`satoshi/puzzle_solutions.json`](../satoshi/puzzle_solutions.json), which pairs
-the same HASH160 `4b46e10a541aeec6be3fac709c256fb7da69308e` with Puzzle #120.
+the same HASH160 `001e283e0acd541dd54053b0be1129b1dcf8dc45` with Puzzle #120.
 
 You can verify the reconstruction with the repository helper:
 
 ```python
 from tools.decode_pkscript import decode_p2pkh_script
 
-script = """Puzzle #120\n17s2b9ksz-PCzK3dLnT\nPkscript\nOP_DUP\nOP_HASH160\n"
-script += "4b46e10a541aeec6be3fac709c256fb7da69308e\nOP_EQUALVERIFY\nOP_CHECKSIG"\n
+script = """Puzzle #120\n11d8MosPb-dQdSqrTwm\nPkscript\nOP_DUP\nOP_HASH160\n"
+script += "001e283e0acd541dd54053b0be1129b1dcf8dc45\nOP_EQUALVERIFY\nOP_CHECKSIG"\n
 decoded = decode_pkscript.decode_p2pkh_script(script)
 print(decoded.address)
 ```
 
-Running the snippet prints `17s2b9ksz5y7abUm92cHwG8jEPCzK3dLnT`, confirming the
+Running the snippet prints `11d8MosPb8jXPGUaHFx2pxpDdQdSqrTwm`, confirming the
 restored P2PKH address for Bitcoin Puzzle #120.
