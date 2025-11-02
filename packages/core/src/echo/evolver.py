@@ -111,6 +111,49 @@ def _classify_momentum(momentum: float, *, threshold: float = _MOMENTUM_SENSITIV
     return "steady"
 
 
+def _describe_momentum(
+    momentum: float,
+    *,
+    average: Optional[float] = None,
+    threshold: float = _MOMENTUM_SENSITIVITY,
+) -> str:
+    """Return a narrative-friendly description of the current momentum value.
+
+    The description is designed to give human operators a richer signal than the
+    coarse ``accelerating``/``steady``/``regressing`` labels exposed by
+    :func:`_classify_momentum`.  It combines the instantaneous momentum with the
+    moving average so the caller can quickly gauge whether the trend is
+    intensifying, tapering off, or holding steady.
+    """
+
+    status = _classify_momentum(momentum, threshold=threshold)
+    magnitude = abs(momentum)
+
+    if status == "steady":
+        description = "steady pulse"
+    else:
+        if magnitude < threshold * 2:
+            intensity = "soft"
+        elif magnitude < 0.15:
+            intensity = "growing"
+        else:
+            intensity = "surging"
+
+        direction = "upswing" if momentum > 0 else "fallback"
+        description = f"{intensity} {direction}"
+
+    if average is not None and status != "steady":
+        delta = momentum - average
+        if delta > threshold:
+            description += " above recent tempo"
+        elif delta < -threshold:
+            description += " below recent tempo"
+        else:
+            description += " matching recent tempo"
+
+    return description
+
+
 def _base58check_encode(payload: bytes) -> str:
     """Return the Base58Check encoding for ``payload`` without external deps."""
 
@@ -4693,6 +4736,19 @@ We are not hiding anymore.
         else:
             momentum = digest["progress"]
 
+        history_state = self.state.network_cache.get("advance_system_momentum_history", {})
+        if (
+            isinstance(history_state, Mapping)
+            and history_state.get("cycle") == digest["cycle"]
+        ):
+            history_values = list(history_state.get("values", ()))
+        else:
+            history_values = []
+
+        history_values.append(momentum)
+        history_values = history_values[-5:]
+        history_average = sum(history_values) / len(history_values)
+
         momentum_status = _classify_momentum(momentum)
         if momentum > 0:
             momentum_direction = "positive"
@@ -4700,6 +4756,8 @@ We are not hiding anymore.
             momentum_direction = "negative"
         else:
             momentum_direction = "neutral"
+
+        momentum_trend = _describe_momentum(momentum, average=history_average)
 
         next_step_key = digest["remaining_steps"][0] if digest["remaining_steps"] else None
         cycle_complete = remaining_count == 0 and total_steps > 0
@@ -4713,6 +4771,9 @@ We are not hiding anymore.
             "momentum_percent": momentum * 100.0,
             "momentum_status": momentum_status,
             "momentum_direction": momentum_direction,
+            "momentum_average": history_average,
+            "momentum_history": history_values.copy(),
+            "momentum_trend": momentum_trend,
             "status": "complete" if cycle_complete else "in_progress",
             "next_step_key": next_step_key,
         }
@@ -4787,12 +4848,17 @@ We are not hiding anymore.
             "cycle": digest["cycle"],
             "progress": digest["progress"],
         }
+        self.state.network_cache["advance_system_momentum_history"] = {
+            "cycle": digest["cycle"],
+            "values": history_values,
+        }
         self.state.event_log.append(
-            "Advance system payload captured (cycle={cycle}, progress={progress:.3f}, momentum={momentum:.3f}, momentum_status={status})".format(
+            "Advance system payload captured (cycle={cycle}, progress={progress:.3f}, momentum={momentum:.3f}, momentum_status={status}, momentum_trend={trend})".format(
                 cycle=digest["cycle"],
                 progress=digest["progress"],
                 momentum=momentum,
                 status=momentum_status,
+                trend=momentum_trend,
             )
         )
 

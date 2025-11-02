@@ -46,6 +46,11 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     assert progress["progress"] == pytest.approx(digest["progress"])
     assert progress["progress_percent"] == pytest.approx(digest["progress"] * 100)
     assert progress["momentum_status"] in {"accelerating", "steady", "regressing"}
+    assert progress["momentum_history"][-1] == pytest.approx(progress["momentum"])
+    assert progress["momentum_average"] == pytest.approx(
+        sum(progress["momentum_history"]) / len(progress["momentum_history"])
+    )
+    assert isinstance(progress["momentum_trend"], str) and progress["momentum_trend"]
     if progress["momentum"] > 0:
         assert progress["momentum_direction"] == "positive"
     elif progress["momentum"] < 0:
@@ -109,6 +114,11 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     assert progress["total"] == len(payload["digest"]["steps"])
     assert progress["progress_percent"] == pytest.approx(progress["progress"] * 100)
     assert progress["momentum_status"] in {"accelerating", "steady", "regressing"}
+    assert progress["momentum_history"][-1] == pytest.approx(progress["momentum"])
+    assert progress["momentum_average"] == pytest.approx(
+        sum(progress["momentum_history"]) / len(progress["momentum_history"])
+    )
+    assert isinstance(progress["momentum_trend"], str) and progress["momentum_trend"]
     if progress["momentum"] > 0:
         assert progress["momentum_direction"] == "positive"
     elif progress["momentum"] < 0:
