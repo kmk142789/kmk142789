@@ -134,8 +134,12 @@ def assemble_program(source: str) -> EchoProgram:
         if stripped.startswith("#"):
             continue
 
-        if stripped.endswith(":"):
-            label = stripped[:-1].strip()
+        label_candidate = stripped
+        if "#" in stripped:
+            label_candidate = stripped.split("#", 1)[0].rstrip()
+
+        if label_candidate.endswith(":"):
+            label = label_candidate[:-1].strip()
             if not label:
                 raise AssemblyError(f"line {line_no}: empty label declaration")
             if label in labels:
@@ -348,9 +352,12 @@ class EchoComputer:
         if operand in self._registers:
             return self._registers[operand]
         try:
-            return int(operand)
-        except ValueError as error:
-            raise RuntimeError(f"unable to resolve operand {operand!r}") from error
+            return int(operand, 0)
+        except ValueError:
+            try:
+                return int(operand)
+            except ValueError as error:
+                raise RuntimeError(f"unable to resolve operand {operand!r}") from error
 
     def _resolve_int(self, operand: str) -> int:
         value = self._resolve_value(operand)
