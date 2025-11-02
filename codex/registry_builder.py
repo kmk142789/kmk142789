@@ -14,7 +14,7 @@ import subprocess
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Mapping, Optional, Sequence
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -38,6 +38,7 @@ class PullRequestRecord:
     title: str
     summary: str
     linkedIssues: list[str]
+    labels: list[str]
     commitHash: str
     timestamp: str
     url: str
@@ -50,11 +51,17 @@ class PullRequestRecord:
         merged_at = str(payload.get("merged_at") or "")
         pr_url = str(payload.get("html_url") or "")
         linked_issues = _extract_issue_references(body)
+        label_names: list[str] = []
+        for raw_label in payload.get("labels", []) or []:
+            name = raw_label.get("name") if isinstance(raw_label, Mapping) else None
+            if isinstance(name, str) and name.strip():
+                label_names.append(name.strip())
         return cls(
             id=int(payload["number"]),
             title=str(payload.get("title") or ""),
             summary=summary,
             linkedIssues=linked_issues,
+            labels=label_names,
             commitHash=merge_commit,
             timestamp=merged_at,
             url=pr_url,
@@ -141,15 +148,16 @@ def generate_markdown(
 ) -> str:
     """Create a Markdown table summarising the registry entries."""
 
-    header = ["PR", "Title", "Summary", "Merged", "Commit"]
+    header = ["PR", "Title", "Summary", "Merged", "Commit", "Labels"]
     lines = ["| " + " | ".join(header) + " |", "| " + " | ".join(["---"] * len(header)) + " |"]
     for record in records:
         link = f"[{record.id}]({record.url})" if record.url else str(record.id)
         summary = record.summary.replace("\n", " ")
         merged_at = record.timestamp or ""
         commit = record.commitHash[:7] if record.commitHash else ""
+        labels = ", ".join(record.labels)
         lines.append(
-            f"| {link} | {record.title} | {summary} | {merged_at} | {commit} |"
+            f"| {link} | {record.title} | {summary} | {merged_at} | {commit} | {labels} |"
         )
 
     description = ["# Echo Codex Registry"]
