@@ -123,6 +123,48 @@ def test_bitwise_operations_and_shifts() -> None:
     assert result.memory["shr"] == 128 >> 3
 
 
+def test_comparison_jumps_enable_rich_branching() -> None:
+    program = """
+    LOAD A 3
+    LOAD B 5
+    JLT A B lt
+    HALT
+    lt:
+        SET @lt 1
+        JGT B A greater
+        HALT
+    greater:
+        SET @gt 1
+        JLE A B le
+        HALT
+    le:
+        SET @le 1
+        JGE B A ge
+        HALT
+    ge:
+        SET @ge 1
+        JNE A B noteq
+        HALT
+    noteq:
+        SET @ne 1
+        LOAD C "echo"
+        JEQ C "echo" eq
+        HALT
+    eq:
+        SET @eq 1
+        HALT
+    """
+
+    result = run_program(program)
+
+    assert result.memory["lt"] == 1
+    assert result.memory["gt"] == 1
+    assert result.memory["le"] == 1
+    assert result.memory["ge"] == 1
+    assert result.memory["ne"] == 1
+    assert result.memory["eq"] == 1
+
+
 def test_shift_negative_amount_raises() -> None:
     computer = EchoComputer()
     computer.load(
@@ -225,4 +267,16 @@ def test_assistant_fallback_echo_and_missing_inputs() -> None:
     result = assistant.execute(suggestion, inputs={"value": "hi"})
 
     assert result.output == ("hi",)
+
+
+def test_assistant_max_pair_template() -> None:
+    assistant = EchoComputerAssistant()
+    suggestion = assistant.suggest("what is the max between two values?")
+
+    assert suggestion.metadata["template"] == "max_pair"
+    assert "JGE" in suggestion.program
+
+    result = assistant.execute(suggestion, inputs={"left": 7, "right": 3})
+
+    assert result.output == ("7",)
 

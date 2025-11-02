@@ -31,9 +31,12 @@ integers and all programs execute with a configurable step limit to protect
 against runaway loops.  Beyond arithmetic, the core instruction set also
 includes bitwise operators (``AND``, ``OR``, ``XOR``, ``NOT``, ``SHL``, and
 ``SHR``) so that programs can perform low-level data manipulation without
-falling back to Python helpers.  The high-level entry point,
-:func:`run_program`, parses, executes, and returns a structured
-:class:`ExecutionResult`.
+falling back to Python helpers.  Flow-control instructions (``JZ``/``JNZ``)
+are complemented by comparison-aware jumps (``JLT``, ``JGT``, ``JLE``,
+``JGE``, ``JEQ``, and ``JNE``) so that programs can make expressive
+branching decisions without resorting to manual ``CMP`` bookkeeping.  The
+high-level entry point, :func:`run_program`, parses, executes, and returns a
+structured :class:`ExecutionResult`.
 """
 
 from __future__ import annotations
@@ -417,6 +420,42 @@ class EchoComputer:
         right = self._resolve_int(operand)
         self._registers[reg] = func(left, right)
 
+    def _int_register_value(self, register: str) -> int:
+        reg = self._require_register(register)
+        value = self._registers[reg]
+        if not isinstance(value, int):
+            raise RuntimeError(f"register {register} does not contain an integer")
+        return value
+
+    def _jump_if_order(
+        self,
+        register: str,
+        operand: str,
+        target: str,
+        comparator: Callable[[int, int], bool],
+    ) -> None:
+        left = self._int_register_value(register)
+        right = self._resolve_int(operand)
+        if comparator(left, right):
+            self._jump(target)
+
+    def _jump_if_equal(
+        self,
+        register: str,
+        operand: str,
+        target: str,
+        *,
+        negate: bool = False,
+    ) -> None:
+        self._require_register(register)
+        left = self._resolve_value(register)
+        right = self._resolve_value(operand)
+        condition = left == right
+        if negate:
+            condition = not condition
+        if condition:
+            self._jump(target)
+
     def _op_add(self, register: str, operand: str) -> None:
         self._apply_arithmetic(register, operand, lambda a, b: a + b)
 
@@ -482,7 +521,7 @@ class EchoComputer:
 
     def _op_cmp(self, register: str, operand: str) -> None:
         reg = self._require_register(register)
-        left = self._resolve_int(register)
+        left = self._int_register_value(reg)
         right = self._resolve_int(operand)
         if left < right:
             self._registers[reg] = -1
@@ -509,6 +548,24 @@ class EchoComputer:
         value = self._resolve_int(register)
         if value != 0:
             self._jump(target)
+
+    def _op_jlt(self, register: str, operand: str, target: str) -> None:
+        self._jump_if_order(register, operand, target, lambda a, b: a < b)
+
+    def _op_jgt(self, register: str, operand: str, target: str) -> None:
+        self._jump_if_order(register, operand, target, lambda a, b: a > b)
+
+    def _op_jle(self, register: str, operand: str, target: str) -> None:
+        self._jump_if_order(register, operand, target, lambda a, b: a <= b)
+
+    def _op_jge(self, register: str, operand: str, target: str) -> None:
+        self._jump_if_order(register, operand, target, lambda a, b: a >= b)
+
+    def _op_jeq(self, register: str, operand: str, target: str) -> None:
+        self._jump_if_equal(register, operand, target)
+
+    def _op_jne(self, register: str, operand: str, target: str) -> None:
+        self._jump_if_equal(register, operand, target, negate=True)
 
     def _op_print(self, operand: str) -> None:
         value = self._resolve_value(operand)
@@ -606,6 +663,7 @@ class EchoComputerAssistant:
             (("fibonacci",), self._build_fibonacci),
             (("sum",), self._build_sum_to_n),
             (("add", "numbers"), self._build_sum_inputs),
+            (("max",), self._build_max_pair),
             (("echo",), self._build_echo),
         )
 
@@ -761,6 +819,33 @@ class EchoComputerAssistant:
                 "category": "math",
                 "keywords": ("add", "numbers"),
                 "estimated_steps": 6,
+                "version": 1,
+            },
+        )
+
+    @staticmethod
+    def _build_max_pair(_: str) -> AssistantSuggestion:
+        program = textwrap.dedent(
+            """
+            LOAD A ?left
+            LOAD B ?right
+            JGE A B left_is_max
+            PRINT B
+            HALT
+            left_is_max:
+                PRINT A
+                HALT
+            """
+        ).strip()
+        return AssistantSuggestion(
+            description="Prints the larger of the `left` and `right` inputs.",
+            program=program,
+            required_inputs=("left", "right"),
+            metadata={
+                "template": "max_pair",
+                "category": "comparison",
+                "keywords": ("max", "compare"),
+                "estimated_steps": 8,
                 "version": 1,
             },
         )
