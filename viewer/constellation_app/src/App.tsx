@@ -8,6 +8,7 @@ import Constellation, {
 
 import './app.css';
 import PulseForge from './components/PulseForge';
+import EchoControlCenter from './components/EchoControlCenter';
 
 const typeLabels: Record<string, string> = {
   repo: 'Repository',
@@ -195,6 +196,13 @@ export default function App(): JSX.Element {
           Every merged pull request becomes a living glyph. Watch contract classes pulse as Echo evolves.
         </p>
         <PulseForge />
+      </section>
+      <section className="control-center-section">
+        <h2>🛰️ EchoOS Control Center</h2>
+        <p className="muted">
+          Simulated operations console tracking git cadence, telemetry, and the Echo AI co-pilot.
+        </p>
+        <EchoControlCenter />
       </section>
     </div>
   );
