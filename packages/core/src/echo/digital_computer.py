@@ -40,6 +40,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import shlex
+import textwrap
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from .thoughtlog import thought_trace
@@ -54,6 +55,8 @@ __all__ = [
     "AssemblyError",
     "EvolutionCycle",
     "evolve_program",
+    "AssistantSuggestion",
+    "EchoComputerAssistant",
 ]
 
 
@@ -101,6 +104,15 @@ class EvolutionCycle:
     cycle: int
     inputs: Mapping[str, int | str]
     result: ExecutionResult
+
+
+@dataclass(frozen=True)
+class AssistantSuggestion:
+    """Container describing an assistant generated program template."""
+
+    description: str
+    program: str
+    required_inputs: Tuple[str, ...] = ()
 
 
 def assemble_program(source: str) -> EchoProgram:
@@ -568,4 +580,167 @@ def evolve_program(
         )
 
     return cycles
+
+
+class EchoComputerAssistant:
+    """Lightweight assistant that offers curated digital computer programs."""
+
+    def __init__(
+        self,
+        computer_factory: Callable[[], EchoComputer] | None = None,
+    ) -> None:
+        self._computer_factory = computer_factory or EchoComputer
+        self._templates: Tuple[
+            Tuple[Tuple[str, ...], Callable[[str], AssistantSuggestion]],
+            ...,
+        ] = (
+            (("factorial",), self._build_factorial),
+            (("fibonacci",), self._build_fibonacci),
+            (("sum",), self._build_sum_to_n),
+            (("add", "numbers"), self._build_sum_inputs),
+            (("echo",), self._build_echo),
+        )
+
+    def suggest(self, prompt: str) -> AssistantSuggestion:
+        """Return a program suggestion that matches ``prompt`` keywords.
+
+        The assistant relies on a deterministic set of keyword heuristics so that
+        behaviour remains predictable and auditable within tests.  Prompts are
+        normalised to lower case before matching.  When no specialised template is
+        selected the assistant falls back to a generic echo program.
+        """
+
+        normalised = prompt.lower()
+        for keywords, builder in self._templates:
+            if all(keyword in normalised for keyword in keywords):
+                return builder(normalised)
+        return self._build_echo(normalised)
+
+    def execute(
+        self,
+        suggestion: AssistantSuggestion,
+        *,
+        inputs: Mapping[str, int | str] | None = None,
+        trace: bool = False,
+        max_steps: int | None = None,
+    ) -> ExecutionResult:
+        """Run ``suggestion`` using a freshly constructed computer instance."""
+
+        provided_inputs = dict(inputs or {})
+        missing = [key for key in suggestion.required_inputs if key not in provided_inputs]
+        if missing:
+            missing_str = ", ".join(sorted(missing))
+            raise KeyError(f"missing required inputs: {missing_str}")
+
+        computer = self._computer_factory()
+        computer.load(suggestion.program)
+        return computer.run(inputs=provided_inputs, trace=trace, max_steps=max_steps)
+
+    def available_templates(self) -> Tuple[str, ...]:
+        """Return the registered template keywords for introspection."""
+
+        return tuple(" ".join(keywords) for keywords, _ in self._templates)
+
+    @staticmethod
+    def _build_factorial(_: str) -> AssistantSuggestion:
+        program = textwrap.dedent(
+            """
+            LOAD A 1
+            LOAD B ?n
+            SET @result 1
+            loop:
+                JZ B done
+                MUL A B
+                STORE A @result
+                DEC B
+                JMP loop
+            done:
+                PRINT @result
+                HALT
+            """
+        ).strip()
+        return AssistantSuggestion(
+            description="Computes the factorial of the input `n` and prints the product.",
+            program=program,
+            required_inputs=("n",),
+        )
+
+    @staticmethod
+    def _build_fibonacci(_: str) -> AssistantSuggestion:
+        program = textwrap.dedent(
+            """
+            LOAD A 0
+            LOAD B 1
+            LOAD C ?terms
+            loop:
+                JZ C done
+                PRINT A
+                LOAD D A
+                LOAD A B
+                ADD D B
+                LOAD B D
+                DEC C
+                JMP loop
+            done:
+                HALT
+            """
+        ).strip()
+        return AssistantSuggestion(
+            description="Streams Fibonacci numbers up to the provided number of `terms`.",
+            program=program,
+            required_inputs=("terms",),
+        )
+
+    @staticmethod
+    def _build_sum_to_n(_: str) -> AssistantSuggestion:
+        program = textwrap.dedent(
+            """
+            LOAD A 0
+            LOAD B ?limit
+            loop:
+                JZ B done
+                ADD A B
+                DEC B
+                JMP loop
+            done:
+                PRINT A
+                HALT
+            """
+        ).strip()
+        return AssistantSuggestion(
+            description="Accumulates the sum of integers from 1 through the input `limit`.",
+            program=program,
+            required_inputs=("limit",),
+        )
+
+    @staticmethod
+    def _build_sum_inputs(_: str) -> AssistantSuggestion:
+        program = textwrap.dedent(
+            """
+            LOAD A ?left
+            ADD A ?right
+            PRINT A
+            HALT
+            """
+        ).strip()
+        return AssistantSuggestion(
+            description="Adds the `left` and `right` inputs and prints the result.",
+            program=program,
+            required_inputs=("left", "right"),
+        )
+
+    @staticmethod
+    def _build_echo(_: str) -> AssistantSuggestion:
+        program = textwrap.dedent(
+            """
+            LOAD A ?value
+            PRINT A
+            HALT
+            """
+        ).strip()
+        return AssistantSuggestion(
+            description="Echoes the provided `value` input back to the output channel.",
+            program=program,
+            required_inputs=("value",),
+        )
 
