@@ -30,8 +30,112 @@
     }
     main {
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-columns: minmax(220px, 280px) 1fr;
+      gap: 0;
+      min-height: 0;
+    }
+    .sidebar {
+      background: rgba(10,15,32,0.9);
+      border-right: 1px solid rgba(148,163,184,0.15);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .sidebar-header {
+      padding: 0.75rem 1rem 0.5rem;
+      border-bottom: 1px solid rgba(148,163,184,0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       gap: 0.5rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(226,232,240,0.7);
+    }
+    .sidebar-actions {
+      display: flex;
+      gap: 0.35rem;
+    }
+    .sidebar button {
+      background: rgba(30,41,59,0.85);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 6px;
+      color: inherit;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: background 120ms ease, border 120ms ease;
+    }
+    .sidebar button:hover {
+      background: rgba(59,130,246,0.35);
+      border-color: rgba(96,165,250,0.5);
+    }
+    .tree {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 0.75rem 0.75rem;
+      display: grid;
+      gap: 0.25rem;
+    }
+    .tree-root {
+      display: grid;
+      gap: 0.2rem;
+    }
+    .tree-branch {
+      margin: 0;
+    }
+    .tree-branch > summary,
+    .tree-file {
+      list-style: none;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 120ms ease, border 120ms ease;
+    }
+    .tree-branch > summary::-webkit-details-marker {
+      display: none;
+    }
+    .tree-branch > summary::before {
+      content: '▸';
+      font-size: 0.75rem;
+      opacity: 0.6;
+      margin-right: 0.2rem;
+    }
+    .tree-branch[open] > summary::before {
+      content: '▾';
+    }
+    .tree-branch > summary:hover,
+    .tree-file:hover {
+      background: rgba(59,130,246,0.2);
+    }
+    .tree-children {
+      margin-left: 0.75rem;
+      border-left: 1px solid rgba(148,163,184,0.1);
+      padding-left: 0.5rem;
+      display: grid;
+      gap: 0.2rem;
+    }
+    .tree-selected {
+      background: rgba(59,130,246,0.35) !important;
+      border: 1px solid rgba(96,165,250,0.4);
+    }
+    .sidebar-footer {
+      padding: 0.5rem 0.75rem;
+      border-top: 1px solid rgba(148,163,184,0.15);
+      display: flex;
+      gap: 0.35rem;
+      justify-content: space-between;
+    }
+    .workspace {
+      display: grid;
+      grid-template-rows: auto minmax(320px, 1fr) minmax(160px, 0.5fr) auto;
+      gap: 0.5rem;
+      min-height: 0;
     }
     .controls {
       display: flex;
@@ -67,8 +171,14 @@
       background: rgba(59,130,246,0.35);
       border-color: rgba(96,165,250,0.5);
     }
+    .controls .spacer {
+      flex: 1 1 auto;
+    }
+    .controls .compact {
+      width: 6rem;
+    }
     #editor {
-      height: min(65vh, 600px);
+      height: 100%;
       min-height: 320px;
     }
     #terminal {
@@ -89,6 +199,7 @@
       align-items: center;
       border-top: 1px solid rgba(148,163,184,0.15);
       background: rgba(15,23,42,0.7);
+      gap: 0.5rem;
     }
     .status span strong {
       color: #f8fafc;
@@ -99,18 +210,29 @@
       border-top: 1px solid rgba(148,163,184,0.2);
     }
     @media (max-width: 768px) {
-      #editor {
-        height: 45vh;
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      .sidebar {
+        max-height: 260px;
+      }
+      .workspace {
+        grid-template-rows: auto minmax(260px, 1fr) minmax(140px, 0.5fr) auto;
       }
       .controls {
         flex-direction: column;
         align-items: stretch;
       }
-      .controls label {
-        width: 100%;
-      }
+      .controls label,
       .controls button {
         width: 100%;
+      }
+      .controls .spacer {
+        display: none;
+      }
+      .sidebar-footer {
+        flex-wrap: wrap;
       }
     }
   </style>
@@ -121,72 +243,351 @@
     <h1>Echo Computer • Live Sandbox</h1>
   </header>
   <main>
-    <section class="controls">
-      <label>
-        Language
-        <select id="lang">
-          <option value="python">Python</option>
-          <option value="node">Node</option>
-        </select>
-      </label>
-      <label>
-        Entry file
-        <input id="filename" value="main.py" spellcheck="false" />
-      </label>
-      <label>
-        Args
-        <input id="args" placeholder="space separated" spellcheck="false" />
-      </label>
-      <label>
-        Max steps (Python)
-        <input id="steps" type="number" min="1000" max="200000" value="20000" />
-      </label>
-      <label>
-        Memory (MB)
-        <input id="memory" type="number" min="64" max="1024" value="256" />
-      </label>
-      <label>
-        Time limit (ms)
-        <input id="time" type="number" min="500" max="15000" value="4000" />
-      </label>
-      <button id="save">Save</button>
-      <button id="run">Run ▶</button>
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span>Project</span>
+        <div class="sidebar-actions">
+          <button id="new-file">+ File</button>
+          <button id="new-folder">+ Folder</button>
+        </div>
+      </div>
+      <div class="tree" id="file-tree">
+        <div class="tree-root" id="file-tree-root"></div>
+      </div>
+      <div class="sidebar-footer">
+        <button id="rename-path">Rename</button>
+        <button id="delete-path">Delete</button>
+        <button id="refresh-tree" title="Reload tree">Refresh</button>
+      </div>
+    </aside>
+    <section class="workspace">
+      <section class="controls">
+        <label>
+          Language
+          <select id="lang">
+            <option value="python">Python</option>
+            <option value="node">Node</option>
+          </select>
+        </label>
+        <label>
+          Entry file
+          <input id="filename" value="main.py" spellcheck="false" />
+        </label>
+        <label>
+          Args
+          <input id="args" placeholder="space separated" spellcheck="false" />
+        </label>
+        <label>
+          Max steps (Python)
+          <input id="steps" type="number" min="1000" max="200000" value="20000" />
+        </label>
+        <label>
+          Memory (MB)
+          <input id="memory" type="number" min="64" max="1024" value="256" />
+        </label>
+        <label>
+          Time limit (ms)
+          <input id="time" type="number" min="500" max="15000" value="4000" />
+        </label>
+        <button id="save" class="compact">Save</button>
+        <button id="run" class="compact">Run ▶</button>
+        <button id="stop" class="compact" disabled>Stop ■</button>
+        <span class="spacer"></span>
+        <label>
+          STDIN
+          <input id="stdin" placeholder="enter text and press Enter" spellcheck="false" />
+        </label>
+        <button id="send-stdin" class="compact" disabled>Send ⏎</button>
+      </section>
+      <div id="editor"></div>
+      <pre id="terminal"></pre>
+      <div class="status">
+        <span id="status">Idle</span>
+        <span><strong>Tip:</strong> Files autosave after edits or when you leave the editor.</span>
+      </div>
     </section>
-    <div id="editor"></div>
-    <pre id="terminal"></pre>
-    <div class="status">
-      <span id="status">Idle</span>
-      <span><strong>Tip:</strong> Save before running to ensure the workspace matches the editor.</span>
-    </div>
   </main>
   <footer>
     Built for Echo — safe, capped, and streaming in real time.
   </footer>
 
   <script>
+    const currentUser = 'demo';
     let editor;
-    const status = document.getElementById('status');
+    let isDirty = false;
+    let autosaveTimer = null;
+    let currentFile = 'main.py';
+    let activeRun = null;
+    let selectedTreeElement = null;
+    let selectedPathInfo = null;
+
+    const statusEl = document.getElementById('status');
     const term = document.getElementById('terminal');
+    const filenameInput = document.getElementById('filename');
+    const langSelect = document.getElementById('lang');
+    const runButton = document.getElementById('run');
+    const stopButton = document.getElementById('stop');
+    const saveButton = document.getElementById('save');
+    const stdinInput = document.getElementById('stdin');
+    const stdinButton = document.getElementById('send-stdin');
+    const treeRoot = document.getElementById('file-tree-root');
+    const newFileButton = document.getElementById('new-file');
+    const newFolderButton = document.getElementById('new-folder');
+    const renameButton = document.getElementById('rename-path');
+    const deleteButton = document.getElementById('delete-path');
+    const refreshButton = document.getElementById('refresh-tree');
 
     require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs' }});
-    require(['vs/editor/editor.main'], function() {
+    require(['vs/editor/editor.main'], () => {
       editor = monaco.editor.create(document.getElementById('editor'), {
-        value: `print("Hello from Echo Computer")\n`,
+        value: 'print("Hello from Echo Computer")\n',
         language: 'python',
         theme: 'vs-dark',
         automaticLayout: true,
         minimap: { enabled: false }
       });
+
+      editor.onDidChangeModelContent(() => {
+        isDirty = true;
+        scheduleAutosave();
+      });
+
+      editor.onDidBlurEditorText(() => {
+        if (isDirty) {
+          saveFile('autosave');
+        }
+      });
+
+      setEditorLanguage(langSelect.value);
+      setRunUi(false);
+
+      (async () => {
+        await refreshTree(currentFile);
+        try {
+          await openFile(currentFile);
+        } catch {
+          isDirty = false;
+          setStatus('Ready');
+        }
+      })();
     });
 
     function setStatus(text) {
-      status.textContent = text;
+      statusEl.textContent = text;
     }
 
     function log(type, data) {
       const marker = type === 'stderr' ? '❗ ' : type === 'stdout' ? '' : 'ℹ️ ';
-      term.textContent += marker + data;
+      term.textContent += marker + String(data ?? '');
       term.scrollTop = term.scrollHeight;
+    }
+
+    async function fetchJSON(url, options = {}) {
+      const response = await fetch(url, options);
+      const contentType = response.headers.get('content-type') || '';
+      const isJson = contentType.includes('application/json');
+      const payload = isJson ? await response.json() : await response.text();
+      if (!response.ok) {
+        const message = typeof payload === 'string' ? payload : payload?.error || 'Request failed';
+        throw new Error(message);
+      }
+      return payload;
+    }
+
+    async function listDir(dir) {
+      const params = new URLSearchParams({ user: currentUser, dir });
+      return fetchJSON(`/fs/list?${params.toString()}`);
+    }
+
+    function escapePath(path) {
+      return typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(path) : path.replace(/"/g, '\\"');
+    }
+
+    function normalizePath(value) {
+      if (typeof value !== 'string') return null;
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      let sanitized = trimmed.replace(/^\.\/+/, '').replace(/^\/+/, '').replace(/\\\\/g, '/');
+      sanitized = sanitized.replace(/\/{2,}/g, '/');
+      sanitized = sanitized.replace(/\/+$/, '');
+      if (!sanitized) return null;
+      if (sanitized.includes('..')) {
+        alert('Paths cannot include ".."');
+        return null;
+      }
+      return sanitized;
+    }
+
+    function dirname(path) {
+      const idx = path.lastIndexOf('/');
+      return idx === -1 ? '.' : path.slice(0, idx);
+    }
+
+    function scheduleAutosave() {
+      if (autosaveTimer) clearTimeout(autosaveTimer);
+      autosaveTimer = setTimeout(() => {
+        if (isDirty) {
+          saveFile('autosave');
+        }
+      }, 2000);
+    }
+
+    async function saveFile(reason = 'manual') {
+      if (!editor) return false;
+      const normalized = normalizePath(filenameInput.value);
+      if (!normalized) {
+        setStatus('Filename required');
+        return false;
+      }
+      setStatus('Saving...');
+      const existingInTree = treeRoot.querySelector(`[data-path="${escapePath(normalized)}"]`);
+      try {
+        await fetchJSON('/fs/write', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: currentUser, path: normalized, content: editor.getValue() })
+        });
+        currentFile = normalized;
+        filenameInput.value = normalized;
+        isDirty = false;
+        if (autosaveTimer) {
+          clearTimeout(autosaveTimer);
+          autosaveTimer = null;
+        }
+        const message = reason === 'manual' ? `Saved ${normalized}` : `Autosaved ${normalized}`;
+        setStatus(message);
+        if (reason === 'manual') {
+          log('info', `[saved] ${normalized}\n`);
+        }
+        if (reason === 'manual' || !existingInTree) {
+          await refreshTree(normalized);
+        }
+        return true;
+      } catch (error) {
+        setStatus(`Save failed: ${error.message}`);
+        return false;
+      }
+    }
+
+    async function openFile(path) {
+      const normalized = normalizePath(path);
+      if (!normalized) throw new Error('Path required');
+      if (isDirty && normalized !== currentFile) {
+        const saved = await saveFile('autosave');
+        if (!saved) throw new Error('Save failed');
+      }
+      setStatus(`Loading ${normalized}...`);
+      try {
+        const result = await fetchJSON(`/fs/read?${new URLSearchParams({ user: currentUser, path: normalized })}`);
+        editor.setValue(result.content ?? '');
+        currentFile = normalized;
+        filenameInput.value = normalized;
+        isDirty = false;
+        if (autosaveTimer) {
+          clearTimeout(autosaveTimer);
+          autosaveTimer = null;
+        }
+        syncLanguageToPath(normalized);
+        setStatus(`Opened ${normalized}`);
+      } catch (error) {
+        setStatus(`Open failed: ${error.message}`);
+        throw error;
+      }
+    }
+
+    function selectTreeItem(path, element, isDir) {
+      if (!element) return;
+      if (selectedTreeElement && selectedTreeElement !== element) {
+        selectedTreeElement.classList.remove('tree-selected');
+      }
+      selectedTreeElement = element;
+      selectedTreeElement.classList.add('tree-selected');
+      selectedPathInfo = { path, isDir };
+    }
+
+    async function createTreeNode(entry, parentPath, activePath) {
+      const fullPath = parentPath === '.' ? entry.name : `${parentPath}/${entry.name}`;
+      if (entry.dir) {
+        const branch = document.createElement('details');
+        branch.className = 'tree-branch';
+        branch.dataset.path = fullPath;
+        const summary = document.createElement('summary');
+        summary.dataset.path = fullPath;
+        summary.tabIndex = 0;
+        summary.textContent = entry.name;
+        summary.addEventListener('click', (event) => {
+          event.stopPropagation();
+          selectTreeItem(fullPath, summary, true);
+        });
+        branch.appendChild(summary);
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'tree-children';
+        branch.appendChild(childrenContainer);
+        try {
+          const children = await listDir(fullPath);
+          for (const child of children) {
+            childrenContainer.appendChild(await createTreeNode(child, fullPath, activePath));
+          }
+        } catch (error) {
+          console.warn('tree load error', error);
+        }
+        if (activePath && (activePath === fullPath || activePath.startsWith(`${fullPath}/`))) {
+          branch.open = true;
+          if (activePath === fullPath) {
+            selectTreeItem(fullPath, summary, true);
+          }
+        }
+        return branch;
+      }
+      const file = document.createElement('div');
+      file.className = 'tree-file';
+      file.tabIndex = 0;
+      file.dataset.path = fullPath;
+      file.textContent = entry.name;
+      file.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        await openFile(fullPath).catch(() => {});
+        selectTreeItem(fullPath, file, false);
+      });
+      if (activePath === fullPath) {
+        selectTreeItem(fullPath, file, false);
+      }
+      return file;
+    }
+
+    async function refreshTree(activePath) {
+      const focusPath = activePath || selectedPathInfo?.path || currentFile;
+      selectedTreeElement = null;
+      selectedPathInfo = null;
+      treeRoot.innerHTML = '';
+      try {
+        const entries = await listDir('.');
+        for (const entry of entries) {
+          treeRoot.appendChild(await createTreeNode(entry, '.', focusPath));
+        }
+      } catch (error) {
+        setStatus(`Tree load failed: ${error.message}`);
+      }
+    }
+
+    function setEditorLanguage(lang) {
+      if (!editor) return;
+      const model = editor.getModel();
+      if (model) {
+        monaco.editor.setModelLanguage(model, lang === 'python' ? 'python' : 'javascript');
+      }
+    }
+
+    function detectLanguageFromPath(path) {
+      if (/\.py$/i.test(path)) return 'python';
+      if (/(\.mjs|\.cjs|\.js|\.ts)$/i.test(path)) return 'node';
+      return langSelect.value;
+    }
+
+    function syncLanguageToPath(path) {
+      const lang = detectLanguageFromPath(path);
+      langSelect.value = lang;
+      setEditorLanguage(lang);
     }
 
     function currentArgs() {
@@ -194,56 +595,72 @@
       return raw ? raw.split(/\s+/) : [];
     }
 
-    document.getElementById('lang').addEventListener('change', (event) => {
-      const lang = event.target.value;
-      const filenameInput = document.getElementById('filename');
-      if (lang === 'python') {
-        monaco.editor.setModelLanguage(editor.getModel(), 'python');
-        if (!filenameInput.value.endsWith('.py')) filenameInput.value = 'main.py';
-      } else {
-        monaco.editor.setModelLanguage(editor.getModel(), 'javascript');
-        if (!filenameInput.value.endsWith('.js')) filenameInput.value = 'main.js';
+    function setRunUi(running) {
+      runButton.disabled = running;
+      stopButton.disabled = !running;
+      stdinButton.disabled = !running;
+      stdinInput.disabled = !running;
+      if (!running) {
+        stdinInput.value = '';
       }
+    }
+
+    function sendStdin() {
+      if (!activeRun || !activeRun.runId) return;
+      const value = stdinInput.value;
+      if (!value) return;
+      const payload = value.endsWith('\n') ? value : `${value}\n`;
+      activeRun.socket.send(JSON.stringify({ type: 'stdin', runId: activeRun.runId, data: payload }));
+      stdinInput.value = '';
+    }
+
+    function defaultBasePath() {
+      if (selectedPathInfo?.isDir) return selectedPathInfo.path;
+      if (selectedPathInfo?.path) return dirname(selectedPathInfo.path);
+      return '.';
+    }
+
+    saveButton.addEventListener('click', () => {
+      saveFile('manual');
     });
 
-    document.getElementById('save').addEventListener('click', async () => {
-      setStatus('Saving...');
-      const filename = document.getElementById('filename').value.trim();
-      if (!filename) {
+    runButton.addEventListener('click', async () => {
+      const normalized = normalizePath(filenameInput.value);
+      if (!normalized) {
         setStatus('Filename required');
         return;
       }
-      await fetch('/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user: 'demo',
-          filename,
-          content: editor.getValue()
-        })
-      });
-      log('info', `Saved ${filename}\n`);
-      setStatus('Saved');
-    });
-
-    document.getElementById('run').addEventListener('click', () => {
-      const lang = document.getElementById('lang').value;
-      const filename = document.getElementById('filename').value.trim();
+      filenameInput.value = normalized;
+      currentFile = normalized;
+      if (isDirty) {
+        const saved = await saveFile('autosave');
+        if (!saved) return;
+      }
+      const lang = langSelect.value;
       const memMb = Number(document.getElementById('memory').value) || 256;
       const timeLimitMs = Number(document.getElementById('time').value) || 4000;
       const maxSteps = Number(document.getElementById('steps').value) || 20000;
       const args = currentArgs();
 
+      if (activeRun?.socket) {
+        activeRun.socket.close();
+      }
+
       term.textContent = '';
+      setRunUi(true);
       setStatus('Connecting...');
 
-      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/run`);
-      ws.addEventListener('open', () => {
-        setStatus('Running...');
-        ws.send(JSON.stringify({
-          user: 'demo',
+      const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+      const socket = new WebSocket(`${protocol}://${location.host}/run`);
+      const runState = { socket, runId: null, finished: false };
+      activeRun = runState;
+
+      socket.addEventListener('open', () => {
+        socket.send(JSON.stringify({
+          type: 'run',
+          user: currentUser,
           lang,
-          filename,
+          filename: normalized,
           args,
           memMb,
           timeLimitMs,
@@ -251,32 +668,201 @@
         }));
       });
 
-      ws.addEventListener('message', (event) => {
+      socket.addEventListener('message', (event) => {
         try {
           const message = JSON.parse(event.data);
-          if (message.type === 'stdout' || message.type === 'stderr') {
+          if (message.type === 'started') {
+            runState.runId = message.runId;
+            setStatus('Running...');
+          } else if (message.type === 'stdout' || message.type === 'stderr') {
             log(message.type, message.data);
           } else if (message.type === 'exit') {
             log('info', `\n[process exited ${message.code}]\n`);
+            runState.finished = true;
             setStatus('Idle');
-            ws.close();
+            setRunUi(false);
+            if (activeRun === runState) {
+              activeRun = null;
+            }
+            socket.close();
           } else if (message.type === 'error') {
             log('stderr', `Error: ${message.data}\n`);
-            setStatus('Idle');
+            runState.finished = true;
+            setStatus('Error');
+            setRunUi(false);
+            if (activeRun === runState) {
+              activeRun = null;
+            }
           }
         } catch (error) {
           console.error(error);
         }
       });
 
-      ws.addEventListener('close', () => {
-        if (status.textContent !== 'Idle') setStatus('Closed');
+      socket.addEventListener('close', () => {
+        if (activeRun === runState) {
+          activeRun = null;
+          setRunUi(false);
+          if (!runState.finished) {
+            setStatus('Closed');
+          }
+        }
       });
 
-      ws.addEventListener('error', () => {
+      socket.addEventListener('error', () => {
         log('stderr', 'WebSocket error\n');
         setStatus('Error');
       });
+    });
+
+    stopButton.addEventListener('click', () => {
+      if (!activeRun) return;
+      setStatus('Stopping...');
+      if (activeRun.runId) {
+        activeRun.socket.send(JSON.stringify({ type: 'kill', runId: activeRun.runId }));
+      } else {
+        activeRun.socket.close();
+      }
+    });
+
+    stdinButton.addEventListener('click', sendStdin);
+    stdinInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        sendStdin();
+      }
+    });
+
+    langSelect.addEventListener('change', (event) => {
+      const lang = event.target.value;
+      setEditorLanguage(lang);
+      const current = filenameInput.value.trim();
+      if (!selectedPathInfo && (!current || current === 'main.py' || current === 'main.js')) {
+        const next = lang === 'python' ? 'main.py' : 'main.js';
+        filenameInput.value = next;
+        currentFile = next;
+      }
+    });
+
+    filenameInput.addEventListener('change', () => {
+      const normalized = normalizePath(filenameInput.value);
+      if (!normalized) {
+        filenameInput.value = currentFile || '';
+        return;
+      }
+      filenameInput.value = normalized;
+      currentFile = normalized;
+      syncLanguageToPath(normalized);
+    });
+
+    newFileButton.addEventListener('click', async () => {
+      const base = defaultBasePath();
+      const suggestion = base === '.' ? 'main.py' : `${base}/new_file.py`;
+      const input = prompt('New file path', suggestion);
+      const target = normalizePath(input ?? '');
+      if (!target) return;
+      try {
+        await fetchJSON('/fs/write', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: currentUser, path: target, content: '' })
+        });
+        setStatus(`Created ${target}`);
+        await refreshTree(target);
+        await openFile(target);
+      } catch (error) {
+        setStatus(`Create failed: ${error.message}`);
+      }
+    });
+
+    newFolderButton.addEventListener('click', async () => {
+      const base = defaultBasePath();
+      const suggestion = base === '.' ? 'src' : `${base}/new_folder`;
+      const input = prompt('New folder path', suggestion);
+      const target = normalizePath(input ?? '');
+      if (!target) return;
+      try {
+        await fetchJSON('/fs/mkdir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: currentUser, path: target })
+        });
+        setStatus(`Folder created: ${target}`);
+        await refreshTree(target);
+      } catch (error) {
+        setStatus(`Folder create failed: ${error.message}`);
+      }
+    });
+
+    renameButton.addEventListener('click', async () => {
+      if (!selectedPathInfo) {
+        setStatus('Select a file or folder to rename.');
+        return;
+      }
+      const current = selectedPathInfo.path;
+      const input = prompt('Rename path', current);
+      const target = normalizePath(input ?? '');
+      if (!target || target === current) return;
+      try {
+        await fetchJSON('/fs/move', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: currentUser, from: current, to: target })
+        });
+        setStatus(`Renamed to ${target}`);
+        if (currentFile === current) {
+          currentFile = target;
+          filenameInput.value = target;
+          syncLanguageToPath(target);
+        }
+        await refreshTree(target);
+      } catch (error) {
+        setStatus(`Rename failed: ${error.message}`);
+      }
+    });
+
+    deleteButton.addEventListener('click', async () => {
+      if (!selectedPathInfo) {
+        setStatus('Select a file or folder to delete.');
+        return;
+      }
+      const target = selectedPathInfo.path;
+      if (!confirm(`Delete ${target}?`)) return;
+      try {
+        await fetchJSON('/fs/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: currentUser, path: target })
+        });
+        setStatus(`Deleted ${target}`);
+        if (currentFile === target || currentFile.startsWith(`${target}/`)) {
+          editor.setValue('');
+          currentFile = '';
+          filenameInput.value = '';
+          isDirty = false;
+        }
+        selectedTreeElement = null;
+        selectedPathInfo = null;
+        await refreshTree(dirname(target));
+      } catch (error) {
+        setStatus(`Delete failed: ${error.message}`);
+      }
+    });
+
+    refreshButton.addEventListener('click', () => {
+      refreshTree(currentFile);
+    });
+
+    window.addEventListener('keydown', (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault();
+        if (!runButton.disabled) {
+          runButton.click();
+        }
+      } else if (event.key === 'Escape' && !stopButton.disabled) {
+        event.preventDefault();
+        stopButton.click();
+      }
     });
   </script>
 </body>
