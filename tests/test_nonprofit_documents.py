@@ -101,5 +101,17 @@ def test_generate_all_returns_expected_documents():
         "articles_of_incorporation",
         "form_1023_outline",
         "childcare_license_checklist",
+        "submission_packet_overview",
     }
     assert all(doc.title and doc.body for doc in documents.values())
+
+
+def test_submission_packet_overview_summarises_documents():
+    generator = make_generator()
+    overview = generator.generate_submission_packet_overview()
+
+    assert overview.title == "Nonprofit Submission Packet"
+    assert "NONPROFIT FORMATION SUBMISSION PACKET" in overview.body
+    assert "IRS EIN Request Letter" in overview.body
+    assert "Childcare Licensing Checklist" in overview.body
+    assert "Track jurisdiction-specific licensing expirations" in overview.body

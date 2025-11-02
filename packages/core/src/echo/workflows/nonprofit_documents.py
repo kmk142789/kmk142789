@@ -350,9 +350,23 @@ class NonprofitPaperworkGenerator:
         ).strip()
         return NonprofitDocument(title="Childcare Licensing Checklist", body=body)
 
+    def generate_submission_packet_overview(self) -> NonprofitDocument:
+        """Summarise all generated paperwork in a single checklist."""
+
+        documents = self._generate_core_documents()
+        return self._build_submission_packet(documents)
+
     def generate_all(self) -> Mapping[str, NonprofitDocument]:
         """Generate all paperwork artefacts and return them keyed by slug."""
 
+        documents = self._generate_core_documents()
+        documents["submission_packet_overview"] = self._build_submission_packet(documents)
+        return documents
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+    def _generate_core_documents(self) -> dict[str, NonprofitDocument]:
         return {
             "ein_request_letter": self.generate_ein_request_letter(),
             "articles_of_incorporation": self.generate_articles_of_incorporation(),
@@ -360,9 +374,44 @@ class NonprofitPaperworkGenerator:
             "childcare_license_checklist": self.generate_childcare_license_packet(),
         }
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
+    def _build_submission_packet(
+        self, documents: Mapping[str, NonprofitDocument]
+    ) -> NonprofitDocument:
+        profile = self.profile
+        contact = self.contact
+        packet_summary = self._format_bullet_list(
+            (f"{document.title}: prepared" for document in documents.values()),
+            indent="  ",
+        )
+        location_block = self._format_address(include_city_state=True)
+        body = dedent(
+            f"""
+            NONPROFIT FORMATION SUBMISSION PACKET
+
+            Organisation: {profile.legal_name}
+            Primary Contact: {contact.name}, {contact.title}
+            Email / Phone: {contact.email} / {contact.phone}
+
+            Registered Address
+            • {location_block}
+
+            Prepared Artefacts
+{packet_summary}
+
+            Filing Next Steps
+            • Submit EIN request letter via certified mail to IRS.
+            • File articles of incorporation with the Secretary of State.
+            • Attach Form 1023 planning outline to board review packet.
+            • Deliver childcare licensing checklist with required attachments to the state agency.
+
+            Internal Controls
+            • Store signed copies in Echo's credential vault with renewal reminders.
+            • Track jurisdiction-specific licensing expirations within the Echo governance log.
+            • Maintain digital and physical copies for auditing and grant compliance.
+            """
+        ).strip()
+        return NonprofitDocument(title="Nonprofit Submission Packet", body=body)
+
     def _format_address(self, include_city_state: bool = True) -> str:
         profile = self.profile
         lines: List[str] = [profile.address_line1]
