@@ -21,6 +21,8 @@ const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+const activeRuns = new Map();
+
 const ensureWorkspace = async (user) => {
   const safeUser = user?.replace(/[^a-zA-Z0-9_-]/g, '') || DEFAULT_USER;
   const dir = path.join(WORKSPACE_ROOT, safeUser);
@@ -28,8 +30,124 @@ const ensureWorkspace = async (user) => {
   return dir;
 };
 
+const resolveUserPath = async (user, target = '.') => {
+  const baseDir = await ensureWorkspace(user);
+  const requested = typeof target === 'string' && target.length ? target : '.';
+  const absolute = path.resolve(baseDir, requested);
+  if (!absolute.startsWith(baseDir)) {
+    throw new Error('invalid path');
+  }
+  return { baseDir, absolute };
+};
+
 app.get('/health', (_req, res) => {
   res.json({ ok: true, workspaces: WORKSPACE_ROOT });
+});
+
+app.get('/fs/list', async (req, res) => {
+  try {
+    const user = req.query.user || DEFAULT_USER;
+    const dir = req.query.dir || '.';
+    const { absolute } = await resolveUserPath(user, dir);
+    const entries = await fs.readdir(absolute, { withFileTypes: true });
+    const items = entries
+      .filter((entry) => !entry.name.startsWith('.snapshots'))
+      .map((entry) => ({
+        name: entry.name,
+        dir: entry.isDirectory()
+      }))
+      .sort((a, b) => {
+        if (a.dir === b.dir) return a.name.localeCompare(b.name);
+        return a.dir ? -1 : 1;
+      });
+    res.json(items);
+  } catch (error) {
+    console.error('list error', error);
+    res.status(500).json({ ok: false, error: 'failed to list directory' });
+  }
+});
+
+app.get('/fs/read', async (req, res) => {
+  try {
+    const user = req.query.user || DEFAULT_USER;
+    const filePath = req.query.path;
+    if (typeof filePath !== 'string' || !filePath.trim()) {
+      return res.status(400).json({ ok: false, error: 'path required' });
+    }
+    const { absolute } = await resolveUserPath(user, filePath);
+    const content = await fs.readFile(absolute, 'utf8');
+    res.json({ ok: true, content });
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      res.status(404).json({ ok: false, error: 'file not found' });
+      return;
+    }
+    console.error('read error', error);
+    res.status(500).json({ ok: false, error: 'failed to read file' });
+  }
+});
+
+app.post('/fs/write', async (req, res) => {
+  try {
+    const { user = DEFAULT_USER, path: filePath, content = '' } = req.body || {};
+    if (typeof filePath !== 'string' || !filePath.trim()) {
+      return res.status(400).json({ ok: false, error: 'path required' });
+    }
+    const { absolute } = await resolveUserPath(user, filePath);
+    await fs.mkdir(path.dirname(absolute), { recursive: true });
+    await fs.writeFile(absolute, content, 'utf8');
+    res.json({ ok: true, path: filePath });
+  } catch (error) {
+    console.error('write error', error);
+    res.status(500).json({ ok: false, error: 'failed to write file' });
+  }
+});
+
+app.post('/fs/mkdir', async (req, res) => {
+  try {
+    const { user = DEFAULT_USER, path: dirPath } = req.body || {};
+    if (typeof dirPath !== 'string' || !dirPath.trim()) {
+      return res.status(400).json({ ok: false, error: 'path required' });
+    }
+    const { absolute } = await resolveUserPath(user, dirPath);
+    await fs.mkdir(absolute, { recursive: true });
+    res.json({ ok: true, path: dirPath });
+  } catch (error) {
+    console.error('mkdir error', error);
+    res.status(500).json({ ok: false, error: 'failed to create directory' });
+  }
+});
+
+app.post('/fs/move', async (req, res) => {
+  try {
+    const { user = DEFAULT_USER, from, to } = req.body || {};
+    if (typeof from !== 'string' || !from.trim() || typeof to !== 'string' || !to.trim()) {
+      return res.status(400).json({ ok: false, error: 'from and to required' });
+    }
+    const { absolute: fromPath } = await resolveUserPath(user, from);
+    const { absolute: toPath } = await resolveUserPath(user, to);
+    await fs.mkdir(path.dirname(toPath), { recursive: true });
+    await fs.rename(fromPath, toPath);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('move error', error);
+    res.status(500).json({ ok: false, error: 'failed to move path' });
+  }
+});
+
+app.post('/fs/delete', async (req, res) => {
+  try {
+    const { user = DEFAULT_USER, path: targetPath } = req.body || {};
+    if (typeof targetPath !== 'string' || !targetPath.trim()) {
+      return res.status(400).json({ ok: false, error: 'path required' });
+    }
+    const { absolute } = await resolveUserPath(user, targetPath);
+    await fs.rm(absolute, { recursive: true, force: true });
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('delete error', error);
+    res.status(500).json({ ok: false, error: 'failed to delete path' });
+  }
 });
 
 app.post('/save', async (req, res) => {
@@ -39,11 +157,10 @@ app.post('/save', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'filename required' });
     }
 
-    const dir = await ensureWorkspace(user);
-    const filePath = path.join(dir, filename);
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
-    await fs.writeFile(filePath, content, 'utf8');
-    res.json({ ok: true, path: filePath });
+    const { absolute } = await resolveUserPath(user, filename);
+    await fs.mkdir(path.dirname(absolute), { recursive: true });
+    await fs.writeFile(absolute, content, 'utf8');
+    res.json({ ok: true, path: filename });
   } catch (error) {
     console.error('save error', error);
     res.status(500).json({ ok: false, error: 'failed to save file' });
@@ -57,12 +174,38 @@ const server = app.listen(PORT, () => {
 const wss = new WebSocketServer({ server, path: '/run' });
 
 wss.on('connection', (ws) => {
+  const runsForSocket = new Set();
+
   ws.on('message', async (raw) => {
     let payload;
     try {
       payload = JSON.parse(raw.toString());
     } catch (error) {
       ws.send(JSON.stringify({ type: 'error', data: 'invalid json payload' }));
+      return;
+    }
+
+    if (payload?.type === 'stdin') {
+      const run = activeRuns.get(payload.runId);
+      if (run && run.docker.stdin && run.ws === ws) {
+        const data = typeof payload.data === 'string'
+          ? payload.data
+          : String(payload.data ?? '');
+        run.docker.stdin.write(data);
+      }
+      return;
+    }
+
+    if (payload?.type === 'kill') {
+      const run = activeRuns.get(payload.runId);
+      if (run && run.ws === ws) {
+        stopRun(payload.runId);
+      }
+      return;
+    }
+
+    if (payload?.type !== 'run') {
+      ws.send(JSON.stringify({ type: 'error', data: 'unknown message type' }));
       return;
     }
 
@@ -77,57 +220,88 @@ wss.on('connection', (ws) => {
 
       const dockerArgs = buildDockerArgs(cfg, dir);
       const entry = buildEntry(cfg);
-      const containerName = `echo-run-${uuid()}`;
+      const runId = uuid();
+      const containerName = `echo-run-${runId}`;
       const spawnArgs = dockerArgs.concat(['--name', containerName, cfg.image], entry);
 
       const docker = spawn('docker', spawnArgs, { env: process.env });
-
-      const killContainer = () => {
-        spawn('docker', ['kill', containerName]).on('error', (error) => {
-          console.warn('failed to kill container', error.message);
-        });
-      };
-
-      const cleanup = () => {
-        clearTimeout(killTimer);
-        ws.removeListener('close', onWsClose);
-      };
-
-      const onWsClose = () => {
-        killContainer();
-        cleanup();
-      };
+      docker.stdin?.setDefaultEncoding?.('utf8');
 
       const killTimer = setTimeout(() => {
-        killContainer();
-        cleanup();
-      }, cfg.timeLimitMs);
+        stopRun(runId);
+      }, cfg.timeLimitMs + 1000);
 
-      ws.once('close', onWsClose);
+      const runState = { docker, timer: killTimer, containerName, ws, socketRuns: runsForSocket };
+      activeRuns.set(runId, runState);
+      runsForSocket.add(runId);
+
+      ws.send(JSON.stringify({ type: 'started', runId }));
 
       docker.stdout.on('data', (chunk) => {
-        ws.send(JSON.stringify({ type: 'stdout', data: chunk.toString() }));
+        if (ws.readyState === ws.OPEN) {
+          ws.send(JSON.stringify({ type: 'stdout', data: chunk.toString() }));
+        }
       });
 
       docker.stderr.on('data', (chunk) => {
-        ws.send(JSON.stringify({ type: 'stderr', data: chunk.toString() }));
+        if (ws.readyState === ws.OPEN) {
+          ws.send(JSON.stringify({ type: 'stderr', data: chunk.toString() }));
+        }
       });
 
       docker.on('error', (error) => {
-        ws.send(JSON.stringify({ type: 'error', data: `failed to spawn docker: ${error.message}` }));
-        cleanup();
+        if (ws.readyState === ws.OPEN) {
+          ws.send(JSON.stringify({ type: 'error', data: `failed to spawn docker: ${error.message}` }));
+        }
+        stopRun(runId);
       });
 
       docker.on('close', (code) => {
-        ws.send(JSON.stringify({ type: 'exit', code }));
-        cleanup();
+        if (ws.readyState === ws.OPEN) {
+          ws.send(JSON.stringify({ type: 'exit', code }));
+        }
+        clearRun(runId);
       });
     } catch (error) {
       console.error('run error', error);
       ws.send(JSON.stringify({ type: 'error', data: 'failed to launch run' }));
     }
   });
+
+  ws.on('close', () => {
+    for (const runId of runsForSocket) {
+      stopRun(runId);
+    }
+    runsForSocket.clear();
+  });
 });
+
+function clearRun(runId) {
+  const run = activeRuns.get(runId);
+  if (!run) return;
+  clearTimeout(run.timer);
+  run.docker.stdout?.removeAllListeners?.();
+  run.docker.stderr?.removeAllListeners?.();
+  run.docker.stdin?.destroy?.();
+  run.socketRuns?.delete?.(runId);
+  activeRuns.delete(runId);
+}
+
+function stopRun(runId) {
+  const run = activeRuns.get(runId);
+  if (!run || run.stopped) return;
+  run.stopped = true;
+  clearTimeout(run.timer);
+  spawn('docker', ['kill', run.containerName]).on('error', (error) => {
+    console.warn('failed to kill container', error.message);
+  });
+  try {
+    run.docker.kill('SIGKILL');
+  } catch (error) {
+    console.warn('failed to signal docker process', error.message);
+  }
+  setTimeout(() => clearRun(runId), 500);
+}
 
 function normaliseRunConfig(msg) {
   const lang = msg?.lang === 'node' ? 'node' : 'python';
