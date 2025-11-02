@@ -146,6 +146,15 @@ from .enlightenment import EnlightenmentEngine, EnlightenmentInsight
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
 from .quantum_flux_mapper import QuantumFluxMapper, STANDARD_GATES
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
+from .proof_of_computation import (
+    PolygonProofRecorder,
+    ProofOfComputationService,
+    ProofSubmission,
+    PuzzleProof,
+    PuzzleProofVerifier,
+    PuzzleVerificationError,
+    load_proof_ledger,
+)
 from .spectral_canvas import PaletteColor, SpectralCanvas, generate_palette
 from .temporal_ledger import PropagationWave, TemporalPropagationLedger
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
