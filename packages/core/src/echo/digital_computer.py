@@ -38,7 +38,7 @@ falling back to Python helpers.  The high-level entry point,
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import shlex
 import textwrap
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
@@ -113,6 +113,7 @@ class AssistantSuggestion:
     description: str
     program: str
     required_inputs: Tuple[str, ...] = ()
+    metadata: Mapping[str, object] = field(default_factory=dict)
 
 
 def assemble_program(source: str) -> EchoProgram:
@@ -670,6 +671,13 @@ class EchoComputerAssistant:
             description="Computes the factorial of the input `n` and prints the product.",
             program=program,
             required_inputs=("n",),
+            metadata={
+                "template": "factorial",
+                "category": "math",
+                "keywords": ("factorial",),
+                "estimated_steps": 9,
+                "version": 1,
+            },
         )
 
     @staticmethod
@@ -696,6 +704,13 @@ class EchoComputerAssistant:
             description="Streams Fibonacci numbers up to the provided number of `terms`.",
             program=program,
             required_inputs=("terms",),
+            metadata={
+                "template": "fibonacci",
+                "category": "sequence",
+                "keywords": ("fibonacci",),
+                "estimated_steps": "O(n)",
+                "version": 1,
+            },
         )
 
     @staticmethod
@@ -718,6 +733,13 @@ class EchoComputerAssistant:
             description="Accumulates the sum of integers from 1 through the input `limit`.",
             program=program,
             required_inputs=("limit",),
+            metadata={
+                "template": "sum_to_n",
+                "category": "math",
+                "keywords": ("sum", "limit"),
+                "estimated_steps": "O(n)",
+                "version": 1,
+            },
         )
 
     @staticmethod
@@ -734,6 +756,13 @@ class EchoComputerAssistant:
             description="Adds the `left` and `right` inputs and prints the result.",
             program=program,
             required_inputs=("left", "right"),
+            metadata={
+                "template": "sum_inputs",
+                "category": "math",
+                "keywords": ("add", "numbers"),
+                "estimated_steps": 6,
+                "version": 1,
+            },
         )
 
     @staticmethod
@@ -749,5 +778,12 @@ class EchoComputerAssistant:
             description="Echoes the provided `value` input back to the output channel.",
             program=program,
             required_inputs=("value",),
+            metadata={
+                "template": "echo",
+                "category": "io",
+                "keywords": ("echo",),
+                "estimated_steps": 3,
+                "version": 1,
+            },
         )
 
