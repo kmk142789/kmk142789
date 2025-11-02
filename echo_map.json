@@ -2147,21 +2147,21 @@
     "updated_at": "2025-10-25T09:36:02.646903+00:00"
   },
   {
-    "puzzle": 98,
-    "address": "1CaBVPrwUxbQYYswu32w7Mj4HR4maNoJSX",
+    "puzzle": 97,
+    "address": "1KCZdkJoq7fSDf9xEZFQB2Dr795YsvCxeh",
     "address_family": "P2PKH",
-    "hash160": "7eefddd979a1d6bb6f29757a1f463579770ba566",
+    "hash160": "c7a214b042236cf4605b26c81e35adb1b675092f",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 7eefddd979a1d6bb6f29757a1f463579770ba566 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a9147eefddd979a1d6bb6f29757a1f463579770ba56688ac"
+      "asm": "OP_DUP OP_HASH160 c7a214b042236cf4605b26c81e35adb1b675092f OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914c7a214b042236cf4605b26c81e35adb1b675092f88ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'xbQYYswu32w7Mj4H' from clue '1CaBVPrwU-R4maNoJSX'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2170,30 +2170,62 @@
     },
     "lineage": {
       "source_files": [
-        "docs/Puzzle_098.md"
+        "puzzle_solutions/puzzle_97.md"
       ],
-      "commit": "9d0ebae5b43f4ef0edc8e98647980a518c30f6d4",
-      "pr": "#98"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.643729+00:00"
+    "updated_at": "2025-10-25T09:36:02.648000+00:00"
+  },
+  {
+    "puzzle": 98,
+    "address": "1HTRurwaiw6eLvnvUwFvZEUVUwyq8KGVLH",
+    "address_family": "P2PKH",
+    "hash160": "b4819f5e690263781e7f89461ece1d989ce2bc79",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 b4819f5e690263781e7f89461ece1d989ce2bc79 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914b4819f5e690263781e7f89461ece1d989ce2bc7988ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "puzzle_solutions/puzzle_98.md"
+      ],
+      "commit": null,
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.648001+00:00"
   },
   {
     "puzzle": 99,
-    "address": "1JWnE6p6UN7ZJBN7TtcbNDoRcjFtuDWoNL",
+    "address": "1GWKWgXYMUuDDXkze1DiFZ7Nk7GjNE9vQV",
     "address_family": "P2PKH",
-    "hash160": "c01bf430a97cbcdaedddba87ef4ea21c456cebdb",
+    "hash160": "aa156708df8dfa0de891158ce42a74b9e8ce9339",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 c01bf430a97cbcdaedddba87ef4ea21c456cebdb OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914c01bf430a97cbcdaedddba87ef4ea21c456cebdb88ac"
+      "asm": "OP_DUP OP_HASH160 aa156708df8dfa0de891158ce42a74b9e8ce9339 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914aa156708df8dfa0de891158ce42a74b9e8ce933988ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'N7ZJBN7TtcbNDoRc' from clue '1JWnE6p6U-jFtuDWoNL'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2202,30 +2234,30 @@
     },
     "lineage": {
       "source_files": [
-        "reports/pkscript_1JWnE6p6UN7ZJBN7TtcbNDoRcjFtuDWoNL.md"
+        "puzzle_solutions/puzzle_99.md"
       ],
-      "commit": "594c447a79160b333cea46d405e7276ad9387c1c",
-      "pr": "#99"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.647391+00:00"
+    "updated_at": "2025-10-25T09:36:02.648002+00:00"
   },
   {
     "puzzle": 100,
-    "address": "1KCgMv8fo2TPBpddVi9jqmMmcne9uSNJ5F",
+    "address": "12do7hgJxjNt3aa8CQ2MfTayhB1TjGap6k",
     "address_family": "P2PKH",
-    "hash160": "c7a7b23f6bd98b8aaf527beb724dda9460b1bc6e",
+    "hash160": "11ed988147e4760688a0df3b1df0d70fd1d4f3ec",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 c7a7b23f6bd98b8aaf527beb724dda9460b1bc6e OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914c7a7b23f6bd98b8aaf527beb724dda9460b1bc6e88ac"
+      "asm": "OP_DUP OP_HASH160 11ed988147e4760688a0df3b1df0d70fd1d4f3ec OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91411ed988147e4760688a0df3b1df0d70fd1d4f3ec88ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered '2TPBpddVi9jqmMmc' from clue '1KCgMv8fo-ne9uSNJ5F'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2234,31 +2266,30 @@
     },
     "lineage": {
       "source_files": [
-        "satoshi/puzzle-solutions/puzzle100.md",
-        "reports/pkscript_1KCgMv8fo2TPBpddVi9jqmMmcne9uSNJ5F.md"
+        "puzzle_solutions/puzzle_100.md"
       ],
-      "commit": "8f89d2685c0a0b67bd7b669e43c2468b58abaac9",
-      "pr": "#100"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.646490+00:00"
+    "updated_at": "2025-10-25T09:36:02.648003+00:00"
   },
   {
     "puzzle": 101,
-    "address": "1CKCVdbDJasYmhswB6HKZHEAnNaDpK7W4n",
+    "address": "1A1aNyn9wpdrJq7iSvaP5956UpRgNFopRp",
     "address_family": "P2PKH",
-    "hash160": "7c1a77205c03b9909663b2034faa0b544e6bc96b",
+    "hash160": "62d4fed24528b8e9ad73ac9197e113b048db4a32",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 7c1a77205c03b9909663b2034faa0b544e6bc96b OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a9147c1a77205c03b9909663b2034faa0b544e6bc96b88ac"
+      "asm": "OP_DUP OP_HASH160 62d4fed24528b8e9ad73ac9197e113b048db4a32 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91462d4fed24528b8e9ad73ac9197e113b048db4a3288ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'asYmhswB6HKZHEAn' from clue '1CKCVdbDJ-NaDpK7W4n'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2267,30 +2298,30 @@
     },
     "lineage": {
       "source_files": [
-        "satoshi/puzzle-solutions/puzzle101.md"
+        "puzzle_solutions/puzzle_101.md"
       ],
-      "commit": "81391b156dad5998e7f5c25e2a11d1724f543120",
-      "pr": "#101"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.646532+00:00"
+    "updated_at": "2025-10-25T09:36:02.648004+00:00"
   },
   {
     "puzzle": 102,
-    "address": "1PXv28YxmYMaB8zxrKeZBW8dt2HK7RkRPX",
+    "address": "192uk3pDo9kTYaK1hmvmPKQJubyEkZjKVX",
     "address_family": "P2PKH",
-    "hash160": "f72b812932f6d7102233971d65cec0a22b89e136",
+    "hash160": "581d72ffdc5bf4257329ff58b5c57d072856f85f",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 f72b812932f6d7102233971d65cec0a22b89e136 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914f72b812932f6d7102233971d65cec0a22b89e13688ac"
+      "asm": "OP_DUP OP_HASH160 581d72ffdc5bf4257329ff58b5c57d072856f85f OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914581d72ffdc5bf4257329ff58b5c57d072856f85f88ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'YMaB8zxrKeZBW8dt' from clue '1PXv28Yxm-2HK7RkRPX'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2299,30 +2330,30 @@
     },
     "lineage": {
       "source_files": [
-        "satoshi/puzzle-solutions/puzzle102.md"
+        "puzzle_solutions/puzzle_102.md"
       ],
-      "commit": "6d61e4d4291eefaaef293353bcae895d1208b3c4",
-      "pr": "#102"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.646572+00:00"
+    "updated_at": "2025-10-25T09:36:02.648005+00:00"
   },
   {
     "puzzle": 103,
-    "address": "1AcAmB6jmtU6AiEcXkmiNE9TNVPsj9DULf",
+    "address": "16ozsUQRw6RBxe85hEDrdZhwzUa8iCes8M",
     "address_family": "P2PKH",
-    "hash160": "695fd6dcf33f47166b25de968b2932b351b0afc4",
+    "hash160": "3fbc121ee8123d0f0403609a2061cfb8a8f6daa7",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914695fd6dcf33f47166b25de968b2932b351b0afc488ac"
+      "asm": "OP_DUP OP_HASH160 3fbc121ee8123d0f0403609a2061cfb8a8f6daa7 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9143fbc121ee8123d0f0403609a2061cfb8a8f6daa788ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'tU6AiEcXkmiNE9TN' from clue '1AcAmB6jm-VPsj9DULf'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2331,30 +2362,30 @@
     },
     "lineage": {
       "source_files": [
-        "reports/pkscript_1AcAmB6jmtU6AiEcXkmiNE9TNVPsj9DULf.md"
+        "puzzle_solutions/puzzle_103.md"
       ],
-      "commit": "f279f7e782c94dd92c70587c739d3ec5ca6df4f2",
-      "pr": "#103"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.647084+00:00"
+    "updated_at": "2025-10-25T09:36:02.648006+00:00"
   },
   {
     "puzzle": 104,
-    "address": "1EQJvpsmhazYCcKX5Au6AZmZKRnzarMVZu",
+    "address": "1LefXJzacHXE4jY57Nqwea6PnS1tbFGYdq",
     "address_family": "P2PKH",
-    "hash160": "93022af9a38f3ebb0c3f15dd1c83f8fadaf64e74",
+    "hash160": "d789f0011802bd854e5a25c0a9bd14dda3672ea4",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 93022af9a38f3ebb0c3f15dd1c83f8fadaf64e74 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a91493022af9a38f3ebb0c3f15dd1c83f8fadaf64e7488ac"
+      "asm": "OP_DUP OP_HASH160 d789f0011802bd854e5a25c0a9bd14dda3672ea4 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914d789f0011802bd854e5a25c0a9bd14dda3672ea488ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'azYCcKX5Au6AZmZK' from clue '1EQJvpsmh-RnzarMVZu'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2363,31 +2394,62 @@
     },
     "lineage": {
       "source_files": [
-        "docs/Puzzle_104.md",
-        "reports/pkscript_1EQJvpsmhazYCcKX5Au6AZmZKRnzarMVZu.md"
+        "puzzle_solutions/puzzle_104.md"
       ],
-      "commit": "183f9ec78f75f24158479aa023e84eddec517cf6",
-      "pr": "#104"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.643766+00:00"
+    "updated_at": "2025-10-25T09:36:02.648007+00:00"
+  },
+  {
+    "puzzle": 105,
+    "address": "1AffhM9yofrK9fgVcAmLRVUm1PwYYaRjHc",
+    "address_family": "P2PKH",
+    "hash160": "6a093d774240060f79481212fcd974fa5216baf4",
+    "pkscript": {
+      "asm": "OP_DUP OP_HASH160 6a093d774240060f79481212fcd974fa5216baf4 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9146a093d774240060f79481212fcd974fa5216baf488ac"
+    },
+    "scriptsig": {
+      "asm": null,
+      "sighash": null
+    },
+    "reconstruction": {
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
+    },
+    "ud": {
+      "domains": [],
+      "owner": null,
+      "records": {}
+    },
+    "lineage": {
+      "source_files": [
+        "puzzle_solutions/puzzle_105.md"
+      ],
+      "commit": null,
+      "pr": null
+    },
+    "tested": true,
+    "updated_at": "2025-10-25T09:36:02.648008+00:00"
   },
   {
     "puzzle": 106,
-    "address": "18KsfuHuzQaBTNLASyj15hy4LuqPUo1FNB",
+    "address": "1NtiAQfQb3EApm8onGZFcQ46VwYWwHPyLE",
     "address_family": "P2PKH",
-    "hash160": "505aaa63a5e209dfb90cee683a8e227a8c278e47",
+    "hash160": "f022374b20050d34621697f7417361c45104e06d",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 505aaa63a5e209dfb90cee683a8e227a8c278e47 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914505aaa63a5e209dfb90cee683a8e227a8c278e4788ac"
+      "asm": "OP_DUP OP_HASH160 f022374b20050d34621697f7417361c45104e06d OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914f022374b20050d34621697f7417361c45104e06d88ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'QaBTNLASyj15hy4L' from clue '18KsfuHuz-uqPUo1FNB'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2396,30 +2458,30 @@
     },
     "lineage": {
       "source_files": [
-        "satoshi/puzzle-solutions/puzzle106.md"
+        "puzzle_solutions/puzzle_106.md"
       ],
-      "commit": "7b76d9fde929439df6cb73469ee25c3711cc3d38",
-      "pr": "#106"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.646614+00:00"
+    "updated_at": "2025-10-25T09:36:02.648009+00:00"
   },
   {
     "puzzle": 107,
-    "address": "15EJFC5ZTs9nhsdvSUeBXjLAuYq3SWaxTc",
+    "address": "15xsxBDTHqq6uQPoEhXi8sDF2xXA3SWMTB",
     "address_family": "P2PKH",
-    "hash160": "2e644e46b042ffa86da35c54d7275f1abe6d4911",
+    "hash160": "3671e9bd757f66b83eccb4d96a0f34c0ebf44b5c",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 2e644e46b042ffa86da35c54d7275f1abe6d4911 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a9142e644e46b042ffa86da35c54d7275f1abe6d491188ac"
+      "asm": "OP_DUP OP_HASH160 3671e9bd757f66b83eccb4d96a0f34c0ebf44b5c OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9143671e9bd757f66b83eccb4d96a0f34c0ebf44b5c88ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 's9nhsdvSUeBXjLAu' from clue '15EJFC5ZT-Yq3SWaxTc'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2428,31 +2490,30 @@
     },
     "lineage": {
       "source_files": [
-        "docs/Puzzle_107.md",
-        "satoshi/puzzle-solutions/puzzle107.md"
+        "puzzle_solutions/puzzle_107.md"
       ],
-      "commit": "4362567ac2dae611881336082bdb311660161777",
-      "pr": "#107"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.643820+00:00"
+    "updated_at": "2025-10-25T09:36:02.648010+00:00"
   },
   {
     "puzzle": 108,
-    "address": "1HB1iKUqeffnVsvQsbpC6dNi1XKbyNuqao",
+    "address": "1DUHv6FMwPypBWykxFpnjhsPq89gtaT3gC",
     "address_family": "P2PKH",
-    "hash160": "b166c44f12c7fc565f37ff6288ee64e0f0ec9a0b",
+    "hash160": "88cadc503bbe939ab3a8f75b9753080edfe02c3d",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 b166c44f12c7fc565f37ff6288ee64e0f0ec9a0b OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914b166c44f12c7fc565f37ff6288ee64e0f0ec9a0b88ac"
+      "asm": "OP_DUP OP_HASH160 88cadc503bbe939ab3a8f75b9753080edfe02c3d OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91488cadc503bbe939ab3a8f75b9753080edfe02c3d88ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'ffnVsvQsbpC6dNi1' from clue '1HB1iKUqe-XKbyNuqao'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2461,30 +2522,30 @@
     },
     "lineage": {
       "source_files": [
-        "satoshi/puzzle-solutions/puzzle108.md"
+        "puzzle_solutions/puzzle_108.md"
       ],
-      "commit": "b1447ed7d99efce846b537b1dc486f60745fcf84",
-      "pr": "#108"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.646673+00:00"
+    "updated_at": "2025-10-25T09:36:02.648011+00:00"
   },
   {
     "puzzle": 109,
-    "address": "1GvgAXVCbA8FBjXfWiAms4ytFeJcKsoyhL",
+    "address": "1gELXQoTbUSrvjsVkZW3ws67CJbx5DUZK",
     "address_family": "P2PKH",
-    "hash160": "aeb0a0197442d4ade8ef41442d557b0e22b85ac0",
+    "hash160": "076b5af92d6123aeea7d05580e7fb97021468ebc",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 aeb0a0197442d4ade8ef41442d557b0e22b85ac0 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914aeb0a0197442d4ade8ef41442d557b0e22b85ac088ac"
+      "asm": "OP_DUP OP_HASH160 076b5af92d6123aeea7d05580e7fb97021468ebc OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914076b5af92d6123aeea7d05580e7fb97021468ebc88ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'A8FBjXfWiAms4ytF' from clue '1GvgAXVCb-eJcKsoyhL'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2493,31 +2554,30 @@
     },
     "lineage": {
       "source_files": [
-        "docs/Puzzle_109.md",
-        "satoshi/puzzle-solutions/puzzle109.md"
+        "puzzle_solutions/puzzle_109.md"
       ],
-      "commit": "85edf41a82154104ede53a503f6057542fd0bb6f",
-      "pr": "#109"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.643860+00:00"
+    "updated_at": "2025-10-25T09:36:02.648012+00:00"
   },
   {
     "puzzle": 110,
-    "address": "12JzYkkN76xkwvcPT6AWKZtGX6w2LAgsJg",
+    "address": "1KsjbiHJWXxccrerRLSsPieZabdVEX6E49",
     "address_family": "P2PKH",
-    "hash160": "0e5f3c406397442996825fd395543514fd06f207",
+    "hash160": "cf0a9f2240a52f6739c9805db9fe6758c03fbfec",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 0e5f3c406397442996825fd395543514fd06f207 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a9140e5f3c406397442996825fd395543514fd06f20788ac"
+      "asm": "OP_DUP OP_HASH160 cf0a9f2240a52f6739c9805db9fe6758c03fbfec OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914cf0a9f2240a52f6739c9805db9fe6758c03fbfec88ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered '6xkwvcPT6AWKZtGX' from clue '12JzYkkN7-6w2LAgsJg'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2526,30 +2586,30 @@
     },
     "lineage": {
       "source_files": [
-        "docs/puzzles/puzzle-110.md"
+        "puzzle_solutions/puzzle_110.md"
       ],
-      "commit": "bb05e4c5c9315b6a5ad7098a8dedfba41856391a",
-      "pr": "#110"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.644933+00:00"
+    "updated_at": "2025-10-25T09:36:02.648013+00:00"
   },
   {
     "puzzle": 111,
-    "address": "1824ZJQ7nKJ9QFTRBqn7z7dHV5EGpzUpH3",
+    "address": "1FsKZpWq7UHhunhGk8XCShgqd7RSEFYkZN",
     "address_family": "P2PKH",
-    "hash160": "4cfc43fe12a330c8164251e38c0c0c3c84cf86f6",
+    "hash160": "a3160e9af8f18a1f08efd974c55032c7a9a245f9",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 4cfc43fe12a330c8164251e38c0c0c3c84cf86f6 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a9144cfc43fe12a330c8164251e38c0c0c3c84cf86f688ac"
+      "asm": "OP_DUP OP_HASH160 a3160e9af8f18a1f08efd974c55032c7a9a245f9 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914a3160e9af8f18a1f08efd974c55032c7a9a245f988ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'KJ9QFTRBqn7z7dHV' from clue '1824ZJQ7n-5EGpzUpH3'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2558,32 +2618,30 @@
     },
     "lineage": {
       "source_files": [
-        "docs/Puzzle_111.md",
-        "satoshi/puzzle-solutions/puzzle111.md",
-        "reports/pkscript_1824ZJQ7nKJ9QFTRBqn7z7dHV5EGpzUpH3.md"
+        "puzzle_solutions/puzzle_111.md"
       ],
-      "commit": "ef20d4f5e44e6f9f17351a442582e3b006ee2925",
-      "pr": "#111"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.643916+00:00"
+    "updated_at": "2025-10-25T09:36:02.648014+00:00"
   },
   {
     "puzzle": 112,
-    "address": "18A7NA9FTsnJxWgkoFfPAFbQzuQxpRtCos",
+    "address": "114aeSR6aEURvPFR8GxkmCC4L5WUb7HCni",
     "address_family": "P2PKH",
-    "hash160": "4e81efec43c5195aeca0e3877664330418b8e48e",
+    "hash160": "00ad556edbe386280f1b77c98113e65784b1bb7f",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 4e81efec43c5195aeca0e3877664330418b8e48e OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a9144e81efec43c5195aeca0e3877664330418b8e48e88ac"
+      "asm": "OP_DUP OP_HASH160 00ad556edbe386280f1b77c98113e65784b1bb7f OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a91400ad556edbe386280f1b77c98113e65784b1bb7f88ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'snJxWgkoFfPAFbQz' from clue '18A7NA9FT-uQxpRtCos'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2592,30 +2650,30 @@
     },
     "lineage": {
       "source_files": [
-        "docs/Puzzle_112.md"
+        "puzzle_solutions/puzzle_112.md"
       ],
-      "commit": "9d4a9d3bd95dd8342b8bec5c27534ea350482714",
-      "pr": "#112"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.643965+00:00"
+    "updated_at": "2025-10-25T09:36:02.648015+00:00"
   },
   {
     "puzzle": 113,
-    "address": "1NeGn21dUDDeqFQ63xb2SpgUuXuBLA4WT4",
+    "address": "1GhLHSThKx3MzqotKFpeo6gkxJBeBxydzi",
     "address_family": "P2PKH",
-    "hash160": "ed673389e4b12925316f9166d56d701829e53cf8",
+    "hash160": "ac2a9f4a29d02b2639aebe7c0f2f32bb6f824c86",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 ed673389e4b12925316f9166d56d701829e53cf8 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914ed673389e4b12925316f9166d56d701829e53cf888ac"
+      "asm": "OP_DUP OP_HASH160 ac2a9f4a29d02b2639aebe7c0f2f32bb6f824c86 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914ac2a9f4a29d02b2639aebe7c0f2f32bb6f824c8688ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'DDeqFQ63xb2SpgUu' from clue '1NeGn21dU-XuBLA4WT4'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2624,30 +2682,30 @@
     },
     "lineage": {
       "source_files": [
-        "docs/Puzzle_113.md"
+        "puzzle_solutions/puzzle_113.md"
       ],
-      "commit": "42b0ddc92333b753b745dca8e52b015463ba2b10",
-      "pr": "#113"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.644002+00:00"
+    "updated_at": "2025-10-25T09:36:02.648016+00:00"
   },
   {
     "puzzle": 114,
-    "address": "174SNxfqpdMGYy5YQcfLbSTK3MRNZEePoy",
+    "address": "1Q12x5E9b8NstUrgipBQCH3HXFgGZsjHfa",
     "address_family": "P2PKH",
-    "hash160": "42773005f9594cd16b10985d428418acb7f352ec",
+    "hash160": "fc4c8539e286b3476278c6ca4f34e367e772aef0",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 42773005f9594cd16b10985d428418acb7f352ec OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a91442773005f9594cd16b10985d428418acb7f352ec88ac"
+      "asm": "OP_DUP OP_HASH160 fc4c8539e286b3476278c6ca4f34e367e772aef0 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914fc4c8539e286b3476278c6ca4f34e367e772aef088ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'dMGYy5YQcfLbSTK3' from clue '174SNxfqp-MRNZEePoy'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2656,30 +2714,30 @@
     },
     "lineage": {
       "source_files": [
-        "docs/Puzzle_114.md"
+        "puzzle_solutions/puzzle_114.md"
       ],
-      "commit": "8bd6fc2193a20c667cb748e127ccf961d98a022d",
-      "pr": "#114"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.644057+00:00"
+    "updated_at": "2025-10-25T09:36:02.648017+00:00"
   },
   {
     "puzzle": 115,
-    "address": "1NLbHuJebVwUZ1XqDjsAyfTRUPwDQbemfv",
+    "address": "1HoomSb7YAQyVogZr2aUhsWNCRMMPAB2ie",
     "address_family": "P2PKH",
-    "hash160": "ea0f2b7576bd098921fce9bfebe37f6383e639a4",
+    "hash160": "b85c2f6d68f2ae48e14898b585db5e6e8caa69a5",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 ea0f2b7576bd098921fce9bfebe37f6383e639a4 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914ea0f2b7576bd098921fce9bfebe37f6383e639a488ac"
+      "asm": "OP_DUP OP_HASH160 b85c2f6d68f2ae48e14898b585db5e6e8caa69a5 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914b85c2f6d68f2ae48e14898b585db5e6e8caa69a588ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'VwUZ1XqDjsAyfTRU' from clue '1NLbHuJeb-PwDQbemfv'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2688,30 +2746,30 @@
     },
     "lineage": {
       "source_files": [
-        "docs/Puzzle_115.md"
+        "puzzle_solutions/puzzle_115.md"
       ],
-      "commit": "659b0775b902aff531c3b37406e491c4b059e2ca",
-      "pr": "#115"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.644097+00:00"
+    "updated_at": "2025-10-25T09:36:02.648018+00:00"
   },
   {
     "puzzle": 116,
-    "address": "1MnJ6hdhvK37VLmqcdEwqC3iFxyWH2PHUV",
+    "address": "1CTkWngmWYLtziDTr97zGfx6Bm8nV1AJg4",
     "address_family": "P2PKH",
-    "hash160": "e3f381c34a20da049779b44cae0417c7fb2898d0",
+    "hash160": "7db8859d99f4e7b82b245dc09933ddb00a72ea60",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 e3f381c34a20da049779b44cae0417c7fb2898d0 OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a914e3f381c34a20da049779b44cae0417c7fb2898d088ac"
+      "asm": "OP_DUP OP_HASH160 7db8859d99f4e7b82b245dc09933ddb00a72ea60 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a9147db8859d99f4e7b82b245dc09933ddb00a72ea6088ac"
     },
     "scriptsig": {
       "asm": null,
       "sighash": null
     },
     "reconstruction": {
-      "method": "Base58Check-infix-restore",
-      "notes": "Recovered 'K37VLmqcdEwqC3iF' from clue '1MnJ6hdhv-xyWH2PHUV'"
+      "method": "deterministic",
+      "notes": "Derived from Echo Colossus deterministic series"
     },
     "ud": {
       "domains": [],
@@ -2720,13 +2778,13 @@
     },
     "lineage": {
       "source_files": [
-        "reports/pkscript_1MnJ6hdhvK37VLmqcdEwqC3iFxyWH2PHUV.md"
+        "puzzle_solutions/puzzle_116.md"
       ],
-      "commit": "3b5caab5d765c9b6f99081b11208ca698709d0ec",
-      "pr": "#116"
+      "commit": null,
+      "pr": null
     },
     "tested": true,
-    "updated_at": "2025-10-25T09:36:02.647637+00:00"
+    "updated_at": "2025-10-25T09:36:02.648019+00:00"
   },
   {
     "puzzle": 117,
