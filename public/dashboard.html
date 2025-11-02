@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Echoview Dashboard</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: radial-gradient(circle at top, #1b1f3b, #0b0d1a);
+        color: #f5f6ff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 3rem 1rem;
+      }
+      h1 {
+        margin: 0;
+        font-size: 2rem;
+      }
+      p {
+        max-width: 42rem;
+        text-align: center;
+        line-height: 1.6;
+        opacity: 0.9;
+      }
+      .status {
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 24px rgba(94, 153, 255, 0.45);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🌐 Echoview Dashboard</h1>
+    <div class="status" id="status">Connecting to sovereign actuator...</div>
+    <p>
+      This lightweight dashboard confirms the ECHO server is online. Connect via WebSocket to
+      <code>/</code> to receive live heartbeat updates from the sovereign actuator.
+    </p>
+    <script>
+      const statusEl = document.getElementById('status');
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const socket = new WebSocket(`${protocol}://${window.location.host}`);
+        socket.onopen = () => {
+          statusEl.textContent = 'Dashboard link established. Awaiting mythogenic telemetry...';
+        };
+        socket.onmessage = (event) => {
+          statusEl.textContent = `Signal: ${event.data}`;
+        };
+        socket.onerror = () => {
+          statusEl.textContent = 'WebSocket error encountered. Monitoring passively.';
+        };
+      } catch (error) {
+        statusEl.textContent = 'Unable to initialize live dashboard link.';
+      }
+    </script>
+  </body>
+</html>
