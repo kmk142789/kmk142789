@@ -13,7 +13,7 @@ import json
 import random
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, List, Mapping
+from typing import Iterable, List, Mapping, NoReturn
 
 from pulse_weaver.cli import register_subcommand as register_pulse_weaver
 
@@ -58,14 +58,99 @@ def _cmd_verify(args: argparse.Namespace) -> int:
 
 
 def _cmd_evolve(args: argparse.Namespace) -> int:
+    parser: argparse.ArgumentParser | None = getattr(args, "_parser", None)
+
+    def parser_error(message: str) -> NoReturn:  # pragma: no cover - exercised via argparse
+        if parser is not None:
+            parser.error(message)
+        raise SystemExit(2)
+
     rng = random.Random(args.seed) if args.seed is not None else None
     artifact_path = args.artifact
     persist_artifact = not args.no_persist_artifact
+
+    if args.advance_system and args.cycles != 1:
+        parser_error("--advance-system can only be used with a single cycle")
+    if args.advance_system and args.describe_sequence:
+        parser_error("--advance-system cannot be combined with --describe-sequence")
+    if args.advance_system and args.persist_intermediate:
+        parser_error("--advance-system cannot be combined with --persist-intermediate")
+
+    if args.include_event_summary and args.event_summary_limit <= 0:
+        parser_error("--event-summary-limit must be positive when including the event summary")
+    if args.include_system_report and args.system_report_events <= 0:
+        parser_error("--system-report-events must be positive when including the system report")
+    if args.manifest_events < 0:
+        parser_error("--manifest-events must be non-negative")
+
+    if not args.advance_system:
+        default_summary_limit = parser.get_default("event_summary_limit") if parser else 5
+        if args.event_summary_limit != default_summary_limit:
+            parser_error("--event-summary-limit requires --advance-system")
+
+        default_system_events = parser.get_default("system_report_events") if parser else 5
+        if args.system_report_events != default_system_events:
+            parser_error("--system-report-events requires --advance-system")
+
+        default_manifest_events = parser.get_default("manifest_events") if parser else 5
+        if args.manifest_events != default_manifest_events:
+            parser_error("--manifest-events requires --advance-system")
+
+    if args.event_summary_limit > 0 and not args.include_event_summary:
+        default_summary_limit = parser.get_default("event_summary_limit") if parser else 5
+        if args.event_summary_limit != default_summary_limit:
+            parser_error("--event-summary-limit requires --include-event-summary")
+
+    if args.system_report_events > 0 and not args.include_system_report:
+        default_system_events = parser.get_default("system_report_events") if parser else 5
+        if args.system_report_events != default_system_events:
+            parser_error("--system-report-events requires --include-system-report")
+
+    if args.manifest_events >= 0 and not args.include_manifest:
+        default_manifest_events = parser.get_default("manifest_events") if parser else 5
+        if args.manifest_events != default_manifest_events:
+            parser_error("--manifest-events requires --include-manifest")
+
+    if (
+        not args.advance_system
+        and (
+            args.include_matrix
+            or args.include_event_summary
+            or args.include_propagation
+            or args.include_system_report
+        )
+    ):
+        parser_error(
+            "--include-matrix, --include-event-summary, --include-propagation, and --include-system-report require --advance-system"
+        )
 
     evolver = EchoEvolver(rng=rng, artifact_path=artifact_path)
 
     if args.describe_sequence:
         print(evolver.describe_sequence(persist_artifact=persist_artifact))
+        return 0
+
+    if args.advance_system:
+        payload = evolver.advance_system(
+            enable_network=args.enable_network,
+            persist_artifact=persist_artifact,
+            eden88_theme=args.eden88_theme,
+            include_manifest=args.include_manifest,
+            include_status=args.include_status,
+            include_reflection=args.include_reflection,
+            include_matrix=args.include_matrix,
+            include_event_summary=args.include_event_summary,
+            include_propagation=args.include_propagation,
+            include_system_report=args.include_system_report,
+            event_summary_limit=args.event_summary_limit,
+            manifest_events=args.manifest_events,
+            system_report_events=args.system_report_events,
+        )
+        summary = payload.get("summary") if isinstance(payload, Mapping) else None
+        if summary:
+            print(summary)
+        if args.print_artifact and isinstance(payload, Mapping):
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
         return 0
 
     if args.cycles == 1:
@@ -501,7 +586,94 @@ def main(argv: Iterable[str] | None = None) -> int:
             "Render the recommended ritual sequence and exit without running a cycle."
         ),
     )
-    evolve_parser.set_defaults(func=_cmd_evolve)
+    evolve_parser.add_argument(
+        "--advance-system",
+        action="store_true",
+        help=(
+            "Run the advance_system ritual and emit a structured payload "
+            "describing the current cycle."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--include-matrix",
+        action="store_true",
+        help=(
+            "Include the progress matrix snapshot when using --advance-system."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--include-event-summary",
+        action="store_true",
+        help=(
+            "Include the recent event summary when using --advance-system."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--include-propagation",
+        action="store_true",
+        help=(
+            "Include the propagation snapshot when using --advance-system."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--include-system-report",
+        action="store_true",
+        help=(
+            "Include the detailed system advancement report when using --advance-system."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--event-summary-limit",
+        type=int,
+        default=5,
+        help=(
+            "Number of events to include in the summary when using --include-event-summary "
+            "(default: 5)."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--system-report-events",
+        type=int,
+        default=5,
+        help=(
+            "Number of events to include in the system report when using --include-system-report "
+            "(default: 5)."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--manifest-events",
+        type=int,
+        default=5,
+        help=(
+            "Number of events to embed within the Eden88 manifest when using --advance-system "
+            "(default: 5)."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--no-include-status",
+        dest="include_status",
+        action="store_false",
+        help="Exclude the evolution status snapshot when using --advance-system.",
+    )
+    evolve_parser.add_argument(
+        "--no-include-manifest",
+        dest="include_manifest",
+        action="store_false",
+        help="Exclude the Eden88 manifest snapshot when using --advance-system.",
+    )
+    evolve_parser.add_argument(
+        "--no-include-reflection",
+        dest="include_reflection",
+        action="store_false",
+        help="Skip the reflective narrative when using --advance-system.",
+    )
+    evolve_parser.set_defaults(
+        func=_cmd_evolve,
+        include_status=True,
+        include_manifest=True,
+        include_reflection=True,
+        _parser=evolve_parser,
+    )
 
     novelty_parser = subparsers.add_parser(
         "novelty", help="Generate a burst of fresh Echo sparks"
