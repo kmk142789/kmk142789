@@ -111,6 +111,19 @@ from .digital_computer import (
     assemble_program as assemble_digital_program,
     run_program as run_digital_program,
 )
+from .echovm import (
+    EXAMPLE_PROGRAM as ECHOVM_EXAMPLE_PROGRAM,
+    OP_CODES as ECHOVM_OP_CODES,
+    OP_NAMES as ECHOVM_OP_NAMES,
+    AssemblyError as EchoVMAssemblyError,
+    EchoVM,
+    VirtualFileSystem,
+    assemble as assemble_echovm,
+    create_vm as create_echovm,
+    device as echovm_device,
+    register_default_syscalls as register_echovm_syscalls,
+    register_devices as register_echovm_devices,
+)
 from .memory import JsonMemoryStore
 from .meta_evolution_charter import MetaEvolutionCharter
 from .moonshot import MoonshotLens, MoonshotReport, PlanSummary, PulseSummary, WishSummary
@@ -297,6 +310,17 @@ __all__ = [
     "render_novum",
     "summarize_fragments",
     "weave_novum_series",
+    "ECHOVM_EXAMPLE_PROGRAM",
+    "ECHOVM_OP_CODES",
+    "ECHOVM_OP_NAMES",
+    "EchoVM",
+    "EchoVMAssemblyError",
+    "VirtualFileSystem",
+    "assemble_echovm",
+    "create_echovm",
+    "echovm_device",
+    "register_echovm_devices",
+    "register_echovm_syscalls",
     "ThoughtLogger",
     "thought_trace",
     "parse_compass_payload",
