@@ -2884,12 +2884,12 @@
   },
   {
     "puzzle": 120,
-    "address": "17s2b9ksz5y7abUm92cHwG8jEPCzK3dLnT",
+    "address": "11d8MosPb8jXPGUaHFx2pxpDdQdSqrTwm",
     "address_family": "P2PKH",
-    "hash160": "4b46e10a541aeec6be3fac709c256fb7da69308e",
+    "hash160": "001e283e0acd541dd54053b0be1129b1dcf8dc45",
     "pkscript": {
-      "asm": "OP_DUP OP_HASH160 4b46e10a541aeec6be3fac709c256fb7da69308e OP_EQUALVERIFY OP_CHECKSIG",
-      "hex": "76a9144b46e10a541aeec6be3fac709c256fb7da69308e88ac"
+      "asm": "OP_DUP OP_HASH160 001e283e0acd541dd54053b0be1129b1dcf8dc45 OP_EQUALVERIFY OP_CHECKSIG",
+      "hex": "76a914001e283e0acd541dd54053b0be1129b1dcf8dc4588ac"
     },
     "scriptsig": {
       "asm": null,
@@ -2897,7 +2897,7 @@
     },
     "reconstruction": {
       "method": "Base58Check-infix-restore",
-      "notes": "Recovered '5y7abUm92cHwG8jE' from clue '17s2b9ksz-PCzK3dLnT'"
+      "notes": "Recovered '8jXPGUaHFx2pxpD' from clue '11d8MosPb-dQdSqrTwm'"
     },
     "ud": {
       "domains": [],

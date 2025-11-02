@@ -1312,12 +1312,12 @@
     "bits": 120,
     "range_min": "8.00E+29",
     "range_max": "ffffffffffffffffffffffffffffff",
-    "address": "17s2b9ksz5y7abUm92cHwG8jEPCzK3dLnT",
+    "address": "11d8MosPb8jXPGUaHFx2pxpDdQdSqrTwm",
     "btc_value": 1.2,
-    "hash160_compressed": "4b46e10a541aeec6be3fac709c256fb7da69308e",
-    "public_key": "02ceb6cbbcdbdf5ef7150682150f4ce2c6f4807b349827dcdbdd1f2efa885a2630",
-    "private_key": "0000000000000000000000000000000000b10f22572c497a836ea187f2e1fc23",
-    "solve_date": "2023-02-27"
+    "hash160_compressed": "001e283e0acd541dd54053b0be1129b1dcf8dc45",
+    "public_key": "",
+    "private_key": "",
+    "solve_date": ""
   },
   {
     "bits": 121,
