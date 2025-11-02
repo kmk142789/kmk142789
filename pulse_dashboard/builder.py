@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Mapping
 
+from echo.proof_of_computation import load_proof_ledger
+
 from .impact_explorer import ImpactExplorerBuilder
 
 
@@ -72,6 +74,7 @@ class PulseDashboardBuilder:
         payload["amplify"] = self._load_amplify_snapshots()
         payload["impact_explorer"] = ImpactExplorerBuilder(self._paths.root).build()
         payload["glyph_cycle"] = self._build_glyph_cycle(payload)
+        payload["proof_of_computation"] = self._load_proof_of_computation()
         return payload
 
     def write(self, data: Mapping[str, object] | None = None, *, path: Path | str | None = None) -> Path:
@@ -201,6 +204,19 @@ class PulseDashboardBuilder:
             events.append(data)
         events.sort(key=lambda item: item.get("timestamp", ""), reverse=True)
         return {"events": events, "total": len(events)}
+
+    # ------------------------------------------------------------------
+    # Proof-of-Computation bridge
+
+    def _load_proof_of_computation(self) -> dict[str, object]:
+        path = self._paths.output_dir / "proof_of_computation.json"
+        records = load_proof_ledger(path)
+        latest = records[0] if records else None
+        return {
+            "total": len(records),
+            "latest": latest,
+            "records": records[:50],
+        }
 
     # ------------------------------------------------------------------
 

@@ -75,6 +75,27 @@ def test_builder_collects_signals(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
+    proof_dir = tmp_path / "pulse_dashboard" / "data"
+    proof_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(
+        proof_dir / "proof_of_computation.json",
+        [
+            {
+                "puzzle": 10,
+                "hash160": "54a84400bd93fca11d288ff8ce8d14f9299dd804",
+                "base58check": "18idLR5VPEWnvDLxZDsntC3SGKbwxsD3Xe",
+                "digest": "deadbeef",
+                "signature": "0x1234",
+                "recorded_at": "2025-01-01T00:00:00+00:00",
+                "signer": "0xabc",
+                "tx_hash": "0xfeed",
+                "chain_id": 80002,
+                "contract_address": "0xdef",
+                "metadata": {"mode": "stub"},
+            }
+        ],
+    )
+
     builder = PulseDashboardBuilder(project_root=tmp_path)
     payload = builder.build()
 
@@ -88,6 +109,9 @@ def test_builder_collects_signals(tmp_path: Path) -> None:
     assert amplify["summary"]["cycles_tracked"] == 2
     assert "cycle 1" in amplify["summary"]["presence"]
     assert amplify["latest"]["metrics"]["cohesion"] == 91.2
+    proof = payload["proof_of_computation"]
+    assert proof["total"] == 1
+    assert proof["latest"]["puzzle"] == 10
 
 
 @pytest.mark.parametrize(
