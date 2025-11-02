@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -11,7 +13,6 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from echo.digital_computer import EchoComputerAssistant
-from nonprofit_bank import create_default_structure
 
 from .puzzle_service import PuzzleService
 
@@ -20,6 +21,31 @@ _assistant = EchoComputerAssistant()
 _puzzles = PuzzleService()
 
 _REGISTRY_PATH = Path.cwd() / "codex" / "registry.json"
+
+
+def _load_bank_structure_factory():
+    module_name = "nonprofit_bank"
+    try:
+        module = importlib.import_module(module_name)
+    except ModuleNotFoundError as exc:
+        project_root = Path(__file__).resolve().parents[5]
+        src_path = project_root / "src"
+        if not src_path.exists():
+            raise exc
+        sys.path.insert(0, str(src_path))
+        module = importlib.import_module(module_name)
+    factory = getattr(module, "create_default_structure", None)
+    if factory is None:
+        raise AttributeError("nonprofit_bank.create_default_structure is unavailable")
+    return factory
+
+
+try:
+    _create_default_structure = _load_bank_structure_factory()
+    _BANK_IMPORT_ERROR: Exception | None = None
+except Exception as exc:  # pragma: no cover - depends on optional module
+    _create_default_structure = None
+    _BANK_IMPORT_ERROR = exc
 
 
 class ChatRequest(BaseModel):
@@ -132,7 +158,13 @@ def _invoke_solve_puzzle(puzzle_id: int, logs: List[str]) -> ToolInvocation:
 
 
 def _invoke_echo_bank_start(logs: List[str]) -> ToolInvocation:
-    structure = create_default_structure()
+    if _create_default_structure is None:
+        error = "Nonprofit bank module unavailable"
+        if _BANK_IMPORT_ERROR is not None:
+            error = f"{error}: {_BANK_IMPORT_ERROR}"
+        logs.append(error)
+        return ToolInvocation(name="echo_bank_start", arguments={}, success=False, error=error)
+    structure = _create_default_structure()
     payload = structure.as_dict()
     logs.append("Generated Lil Footsteps nonprofit bank structure snapshot.")
     return ToolInvocation(name="echo_bank_start", arguments={}, result=payload)
