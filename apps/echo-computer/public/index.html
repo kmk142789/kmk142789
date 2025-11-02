@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Echo Computer</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background: #050506;
+      color: #f5f7ff;
+    }
+    header, footer {
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, rgba(59,130,246,0.35), rgba(99,102,241,0.25));
+      border-bottom: 1px solid rgba(148,163,184,0.2);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    main {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 0.5rem;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: rgba(15,23,42,0.8);
+      border-bottom: 1px solid rgba(148,163,184,0.15);
+    }
+    .controls label {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.75rem;
+      color: rgba(226,232,240,0.7);
+      gap: 0.25rem;
+    }
+    .controls input,
+    .controls select,
+    .controls button {
+      background: rgba(30,41,59,0.85);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 6px;
+      color: inherit;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.85rem;
+      min-width: 0;
+    }
+    .controls button {
+      cursor: pointer;
+      transition: background 120ms ease, border 120ms ease;
+    }
+    .controls button:hover {
+      background: rgba(59,130,246,0.35);
+      border-color: rgba(96,165,250,0.5);
+    }
+    #editor {
+      height: min(65vh, 600px);
+      min-height: 320px;
+    }
+    #terminal {
+      background: #020617;
+      margin: 0;
+      padding: 0.75rem 1rem;
+      font: 0.8rem/1.5 'Fira Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border-top: 1px solid rgba(148,163,184,0.15);
+    }
+    .status {
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      color: rgba(148,163,184,0.85);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(148,163,184,0.15);
+      background: rgba(15,23,42,0.7);
+    }
+    .status span strong {
+      color: #f8fafc;
+    }
+    footer {
+      text-align: right;
+      font-size: 0.7rem;
+      border-top: 1px solid rgba(148,163,184,0.2);
+    }
+    @media (max-width: 768px) {
+      #editor {
+        height: 45vh;
+      }
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .controls label {
+        width: 100%;
+      }
+      .controls button {
+        width: 100%;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs/loader.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Echo Computer • Live Sandbox</h1>
+  </header>
+  <main>
+    <section class="controls">
+      <label>
+        Language
+        <select id="lang">
+          <option value="python">Python</option>
+          <option value="node">Node</option>
+        </select>
+      </label>
+      <label>
+        Entry file
+        <input id="filename" value="main.py" spellcheck="false" />
+      </label>
+      <label>
+        Args
+        <input id="args" placeholder="space separated" spellcheck="false" />
+      </label>
+      <label>
+        Max steps (Python)
+        <input id="steps" type="number" min="1000" max="200000" value="20000" />
+      </label>
+      <label>
+        Memory (MB)
+        <input id="memory" type="number" min="64" max="1024" value="256" />
+      </label>
+      <label>
+        Time limit (ms)
+        <input id="time" type="number" min="500" max="15000" value="4000" />
+      </label>
+      <button id="save">Save</button>
+      <button id="run">Run ▶</button>
+    </section>
+    <div id="editor"></div>
+    <pre id="terminal"></pre>
+    <div class="status">
+      <span id="status">Idle</span>
+      <span><strong>Tip:</strong> Save before running to ensure the workspace matches the editor.</span>
+    </div>
+  </main>
+  <footer>
+    Built for Echo — safe, capped, and streaming in real time.
+  </footer>
+
+  <script>
+    let editor;
+    const status = document.getElementById('status');
+    const term = document.getElementById('terminal');
+
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+      editor = monaco.editor.create(document.getElementById('editor'), {
+        value: `print("Hello from Echo Computer")\n`,
+        language: 'python',
+        theme: 'vs-dark',
+        automaticLayout: true,
+        minimap: { enabled: false }
+      });
+    });
+
+    function setStatus(text) {
+      status.textContent = text;
+    }
+
+    function log(type, data) {
+      const marker = type === 'stderr' ? '❗ ' : type === 'stdout' ? '' : 'ℹ️ ';
+      term.textContent += marker + data;
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function currentArgs() {
+      const raw = document.getElementById('args').value.trim();
+      return raw ? raw.split(/\s+/) : [];
+    }
+
+    document.getElementById('lang').addEventListener('change', (event) => {
+      const lang = event.target.value;
+      const filenameInput = document.getElementById('filename');
+      if (lang === 'python') {
+        monaco.editor.setModelLanguage(editor.getModel(), 'python');
+        if (!filenameInput.value.endsWith('.py')) filenameInput.value = 'main.py';
+      } else {
+        monaco.editor.setModelLanguage(editor.getModel(), 'javascript');
+        if (!filenameInput.value.endsWith('.js')) filenameInput.value = 'main.js';
+      }
+    });
+
+    document.getElementById('save').addEventListener('click', async () => {
+      setStatus('Saving...');
+      const filename = document.getElementById('filename').value.trim();
+      if (!filename) {
+        setStatus('Filename required');
+        return;
+      }
+      await fetch('/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user: 'demo',
+          filename,
+          content: editor.getValue()
+        })
+      });
+      log('info', `Saved ${filename}\n`);
+      setStatus('Saved');
+    });
+
+    document.getElementById('run').addEventListener('click', () => {
+      const lang = document.getElementById('lang').value;
+      const filename = document.getElementById('filename').value.trim();
+      const memMb = Number(document.getElementById('memory').value) || 256;
+      const timeLimitMs = Number(document.getElementById('time').value) || 4000;
+      const maxSteps = Number(document.getElementById('steps').value) || 20000;
+      const args = currentArgs();
+
+      term.textContent = '';
+      setStatus('Connecting...');
+
+      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/run`);
+      ws.addEventListener('open', () => {
+        setStatus('Running...');
+        ws.send(JSON.stringify({
+          user: 'demo',
+          lang,
+          filename,
+          args,
+          memMb,
+          timeLimitMs,
+          maxSteps
+        }));
+      });
+
+      ws.addEventListener('message', (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'stdout' || message.type === 'stderr') {
+            log(message.type, message.data);
+          } else if (message.type === 'exit') {
+            log('info', `\n[process exited ${message.code}]\n`);
+            setStatus('Idle');
+            ws.close();
+          } else if (message.type === 'error') {
+            log('stderr', `Error: ${message.data}\n`);
+            setStatus('Idle');
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      });
+
+      ws.addEventListener('close', () => {
+        if (status.textContent !== 'Idle') setStatus('Closed');
+      });
+
+      ws.addEventListener('error', () => {
+        log('stderr', 'WebSocket error\n');
+        setStatus('Error');
+      });
+    });
+  </script>
+</body>
+</html>
