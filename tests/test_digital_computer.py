@@ -6,7 +6,9 @@ import pytest
 
 from echo.digital_computer import (
     AssemblyError,
+    AssistantSuggestion,
     EchoComputer,
+    EchoComputerAssistant,
     EvolutionCycle,
     assemble_program,
     evolve_program,
@@ -195,4 +197,32 @@ def test_run_program_accepts_max_steps_override() -> None:
 
     assert result.steps == 6
     assert result.registers["A"] == 4
+
+
+def test_assistant_generates_factorial_program() -> None:
+    assistant = EchoComputerAssistant()
+    suggestion = assistant.suggest("Please craft a factorial helper for me")
+
+    assert isinstance(suggestion, AssistantSuggestion)
+    assert "factorial" in suggestion.description.lower()
+    assert "MUL A B" in suggestion.program
+
+    result = assistant.execute(suggestion, inputs={"n": 5})
+
+    assert result.output == ("120",)
+    assert result.memory["result"] == 120
+
+
+def test_assistant_fallback_echo_and_missing_inputs() -> None:
+    assistant = EchoComputerAssistant()
+    suggestion = assistant.suggest("say hello back")
+
+    assert suggestion.required_inputs == ("value",)
+
+    with pytest.raises(KeyError):
+        assistant.execute(suggestion)
+
+    result = assistant.execute(suggestion, inputs={"value": "hi"})
+
+    assert result.output == ("hi",)
 
