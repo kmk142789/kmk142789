@@ -78,6 +78,7 @@ dominion-archive = "dominion.archive:main"
 [tool.setuptools.package-dir]
 "" = "packages/core/src"
 "dominion" = "dominion"
+"codex" = "codex"
 
 [tool.setuptools.packages.find]
 where = ["packages/core/src", "."]
@@ -85,6 +86,7 @@ include = [
   "echo*",
   "echo_eye_ai*",
   "dominion*",
+  "codex*",
 ]
 
 [tool.setuptools]
@@ -92,9 +94,8 @@ py-modules = [
   "echo_cascade",
   "echo_constellation",
   "echo_evolver",
-"echo_manifest",
-"echo_universal_key_agent",
-"codex",
+  "echo_manifest",
+  "echo_universal_key_agent",
 ]
 
 [tool.setuptools.exclude-package-data]

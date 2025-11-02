@@ -23,7 +23,10 @@ from echo_atlas.service import AtlasService
 from pulse_weaver.api import create_router as create_pulse_weaver_router
 from pulse_weaver.service import PulseWeaverService
 
+from .routes_assistant import router as assistant_router
+from .routes_codex import router as codex_router
 from .routes_echonet import router as echonet_router
+from .routes_puzzles import router as puzzles_router
 from .routes_registry import router as registry_router
 from .routes_timeline import router as timeline_router
 from .state import dag, receipts, session_heads, set_dag, set_receipts, set_session_heads
@@ -34,7 +37,10 @@ from echo.orchestrator.core import OrchestratorCore
 from echo.orchestrator.api import create_router as create_orchestrator_router
 
 app = FastAPI(title="Echo")
+app.include_router(assistant_router)
+app.include_router(codex_router)
 app.include_router(echonet_router)
+app.include_router(puzzles_router)
 app.include_router(registry_router)
 app.include_router(timeline_router)
 

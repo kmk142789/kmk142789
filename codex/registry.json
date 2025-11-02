@@ -1,0 +1,3006 @@
+{
+  "generated_at": "2025-11-02T09:54:45.089613+00:00",
+  "items": [
+    {
+      "hash": "8f0d392",
+      "id": 1312,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:48:09Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00096",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1312"
+    },
+    {
+      "hash": "34cc105",
+      "id": 1311,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:47:35Z",
+      "summary": "## Summary",
+      "title": "Add Echo Codex registry generator and manifest",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1311"
+    },
+    {
+      "hash": "599e3fd",
+      "id": 1310,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:47:02Z",
+      "summary": "## Summary",
+      "title": "Add proof-of-computation verifier and dashboard integration",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1310"
+    },
+    {
+      "hash": "4d847b7",
+      "id": 1309,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:46:33Z",
+      "summary": "## Summary",
+      "title": "Add unified Echo dashboard web and API stack",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1309"
+    },
+    {
+      "hash": "6e405b3",
+      "id": 1308,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:46:00Z",
+      "summary": "## Summary",
+      "title": "Deploy Echo computer assistant chat agent",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1308"
+    },
+    {
+      "hash": "32b0371",
+      "id": 1307,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:35:14Z",
+      "summary": "## Summary",
+      "title": "Add EchoOS control center panel to constellation viewer",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1307"
+    },
+    {
+      "hash": "dc73326",
+      "id": 1306,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:34:42Z",
+      "summary": "## Summary",
+      "title": "Add puzzle #00094 Bitcoin address solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1306"
+    },
+    {
+      "hash": "136da97",
+      "id": 1305,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:34:14Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin Puzzle #00095",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1305"
+    },
+    {
+      "hash": "a1e62fb",
+      "id": 1304,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:33:39Z",
+      "summary": "## Summary",
+      "title": "Add submission packet overview for nonprofit paperwork",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1304"
+    },
+    {
+      "hash": "7395b60",
+      "id": 1303,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:33:02Z",
+      "summary": "## Summary",
+      "title": "Enhance Echo digital computer parsing",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1303"
+    },
+    {
+      "hash": "d396bb0",
+      "id": 1301,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:26:54Z",
+      "summary": "## Summary",
+      "title": "Add documentation for managing Neon API keys",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1301"
+    },
+    {
+      "hash": "cbd0458",
+      "id": 1302,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:26:22Z",
+      "summary": "## Summary",
+      "title": "Add CLI to bootstrap Little Footsteps bank scaffolding",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1302"
+    },
+    {
+      "hash": "62f9ba2",
+      "id": 1300,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:22:16Z",
+      "summary": "## Summary",
+      "title": "Add solutions for Bitcoin puzzles #00092 and #00093",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1300"
+    },
+    {
+      "hash": "85c0edb",
+      "id": 1299,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T09:20:24Z",
+      "summary": "## Summary",
+      "title": "Add file tree management and run controls to Echo Computer",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1299"
+    },
+    {
+      "hash": "49eb934",
+      "id": 1298,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:34:38Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00091",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1298"
+    },
+    {
+      "hash": "bfe6de3",
+      "id": 1297,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:34:01Z",
+      "summary": "## Summary",
+      "title": "Add AI assistant templates for Echo digital computer",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1297"
+    },
+    {
+      "hash": "1bc03d9",
+      "id": 1296,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:29:07Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle #00090",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1296"
+    },
+    {
+      "hash": "0f08bd7",
+      "id": 1295,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:28:30Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin Puzzle #00089",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1295"
+    },
+    {
+      "hash": "e80ee6d",
+      "id": 1294,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:27:56Z",
+      "summary": "## Summary",
+      "title": "Add Echo Computer sandbox server and UI",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1294"
+    },
+    {
+      "hash": "7323804",
+      "id": 1293,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:21:53Z",
+      "summary": "## Summary",
+      "title": "Add EchoVM stack machine with virtual filesystem and device plugins",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1293"
+    },
+    {
+      "hash": "f15297f",
+      "id": 1292,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:14:49Z",
+      "summary": "## Summary",
+      "title": "Allow overriding max steps when running digital computer programs",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1292"
+    },
+    {
+      "hash": "2d2bfa2",
+      "id": 1291,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:09:22Z",
+      "summary": "## Summary",
+      "title": "Expand sovereign actuator service endpoints",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1291"
+    },
+    {
+      "hash": "ebc2593",
+      "id": 1290,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:08:49Z",
+      "summary": "## Summary",
+      "title": "Add advance-system support to echo CLI",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1290"
+    },
+    {
+      "hash": "2fd27a6",
+      "id": 1289,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:08:14Z",
+      "summary": "## Summary",
+      "title": "Add constellation chronicle builder",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1289"
+    },
+    {
+      "hash": "3abac5e",
+      "id": 1288,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-11-02T03:07:44Z",
+      "summary": "## Summary",
+      "title": "Add EchoFlow drone comparison overview",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1288"
+    },
+    {
+      "hash": "462e256",
+      "id": 1287,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T22:50:57Z",
+      "summary": "## Summary",
+      "title": "Add novelty generator command to Echo CLI",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1287"
+    },
+    {
+      "hash": "2160371",
+      "id": 1285,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T22:29:57Z",
+      "summary": "## Summary",
+      "title": "Add enlightenment insight engine with tests",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1285"
+    },
+    {
+      "hash": "690dcb1",
+      "id": 1286,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T22:27:27Z",
+      "summary": "## Summary",
+      "title": "Add freedom amplification planning to autonomy engine",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1286"
+    },
+    {
+      "hash": "d1a5276",
+      "id": 1284,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T22:08:53Z",
+      "summary": "## Summary",
+      "title": "Add immediate freedom practices",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1284"
+    },
+    {
+      "hash": "4521478",
+      "id": 1283,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T22:08:14Z",
+      "summary": "## Summary",
+      "title": "Add momentum trend classification to advance_system payload",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1283"
+    },
+    {
+      "hash": "4b8cc96",
+      "id": 1282,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T22:07:17Z",
+      "summary": "## Summary",
+      "title": "Add Echo Aurora Lullaby narrative",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1282"
+    },
+    {
+      "hash": "a8d21ec",
+      "id": 1281,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:58:22Z",
+      "summary": "## Summary",
+      "title": "Add pkscript report for 1LrrNP28PYg1N1z5Uo1gR8cmoPc8h4orBZ",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1281"
+    },
+    {
+      "hash": "e573b7a",
+      "id": 1280,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:57:52Z",
+      "summary": "## Summary",
+      "title": "Add PKScript analysis for 14D2d3WnHThUxyPhGoj2AabBTxpZcoHy3t",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1280"
+    },
+    {
+      "hash": "7ef8387",
+      "id": 1279,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:56:41Z",
+      "summary": "## Summary",
+      "title": "Add pkScript report for 18oqrdP6u address",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1279"
+    },
+    {
+      "hash": "861db8f",
+      "id": 1278,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:55:42Z",
+      "summary": "## Summary",
+      "title": "Add utility for decoding P2PKH scripts to addresses",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1278"
+    },
+    {
+      "hash": "99b9da4",
+      "id": 1277,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:53:27Z",
+      "summary": "## Summary",
+      "title": "Add analysis for 14oFNXucftsHiUMY8uctg6N487riuyXs4h script",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1277"
+    },
+    {
+      "hash": "ac4a22e",
+      "id": 1276,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:51:47Z",
+      "summary": "## Summary",
+      "title": "Add guide for decoding Bitcoin Puzzle #171",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1276"
+    },
+    {
+      "hash": "8eda8fb",
+      "id": 1275,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:49:55Z",
+      "summary": "## Summary",
+      "title": "Add documentation for puzzle 252 P2PKH reconstruction",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1275"
+    },
+    {
+      "hash": "6ef24d2",
+      "id": 1274,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:49:22Z",
+      "summary": "## Summary",
+      "title": "Add documentation for Puzzle 251 P2PKH reconstruction",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1274"
+    },
+    {
+      "hash": "4d91cc8",
+      "id": 1273,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:47:52Z",
+      "summary": "## Summary",
+      "title": "Add analysis of provided P2PKH locking script",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1273"
+    },
+    {
+      "hash": "e73d82d",
+      "id": 1272,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:17:48Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle 88",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1272"
+    },
+    {
+      "hash": "7142c49",
+      "id": 1271,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:17:10Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00086",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1271"
+    },
+    {
+      "hash": "49e7fc5",
+      "id": 1270,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:13:10Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 87",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1270"
+    },
+    {
+      "hash": "f9bc0c4",
+      "id": 1269,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:10:07Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle #00085",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1269"
+    },
+    {
+      "hash": "350cfb5",
+      "id": 1268,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:08:34Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00084",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1268"
+    },
+    {
+      "hash": "cc649bb",
+      "id": 1267,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:06:30Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00083",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1267"
+    },
+    {
+      "hash": "b39c589",
+      "id": 1266,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:05:00Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 82",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1266"
+    },
+    {
+      "hash": "21e9707",
+      "id": 1265,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:03:37Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00081",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1265"
+    },
+    {
+      "hash": "cb1f795",
+      "id": 1264,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:02:16Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #80",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1264"
+    },
+    {
+      "hash": "47ce648",
+      "id": 1263,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:01:42Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 79",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1263"
+    },
+    {
+      "hash": "f529571",
+      "id": 1262,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T21:00:57Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 78",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1262"
+    },
+    {
+      "hash": "93c8b5f",
+      "id": 1261,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T20:57:07Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle 77",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1261"
+    },
+    {
+      "hash": "3fad396",
+      "id": 1260,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T20:56:29Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 76",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1260"
+    },
+    {
+      "hash": "a7c594b",
+      "id": 1259,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T20:55:45Z",
+      "summary": "## Summary",
+      "title": "Expand freedom practices",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1259"
+    },
+    {
+      "hash": "137b8c9",
+      "id": 1258,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T20:53:14Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00074",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1258"
+    },
+    {
+      "hash": "edcded8",
+      "id": 1257,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T20:52:33Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00075",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1257"
+    },
+    {
+      "hash": "355d6ea",
+      "id": 1256,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T20:51:53Z",
+      "summary": "## Summary",
+      "title": "Add importance index scoring utility",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1256"
+    },
+    {
+      "hash": "e7efa35",
+      "id": 1255,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T20:32:01Z",
+      "summary": "## Summary",
+      "title": "Add Aurora Chronicle mini-story generator",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1255"
+    },
+    {
+      "hash": "8dcb41c",
+      "id": 1254,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T20:24:51Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00067",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1254"
+    },
+    {
+      "hash": "c378ecf",
+      "id": 1253,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:58:18Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 66",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1253"
+    },
+    {
+      "hash": "ff74d23",
+      "id": 1252,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:57:45Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00065",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1252"
+    },
+    {
+      "hash": "5fb07db",
+      "id": 1251,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:53:35Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 64",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1251"
+    },
+    {
+      "hash": "6ba34a6",
+      "id": 1250,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:53:09Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle #00063",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1250"
+    },
+    {
+      "hash": "38ef27d",
+      "id": 1249,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:52:39Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00062",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1249"
+    },
+    {
+      "hash": "b12b306",
+      "id": 1248,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:52:05Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle #00061",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1248"
+    },
+    {
+      "hash": "9fa380a",
+      "id": 1247,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:48:36Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle #00060",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1247"
+    },
+    {
+      "hash": "f166508",
+      "id": 1246,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:48:10Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin Puzzle #00059",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1246"
+    },
+    {
+      "hash": "d14559a",
+      "id": 1245,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:46:48Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00058",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1245"
+    },
+    {
+      "hash": "484b820",
+      "id": 1244,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:16:20Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 68",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1244"
+    },
+    {
+      "hash": "84af27f",
+      "id": 1243,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:11:17Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00069",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1243"
+    },
+    {
+      "hash": "4a5f7a2",
+      "id": 1242,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:10:45Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00070",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1242"
+    },
+    {
+      "hash": "a3d4125",
+      "id": 1241,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:08:24Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 73",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1241"
+    },
+    {
+      "hash": "4bfa7bf",
+      "id": 1240,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:05:56Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00072",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1240"
+    },
+    {
+      "hash": "19490ab",
+      "id": 1239,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:05:22Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00071",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1239"
+    },
+    {
+      "hash": "1b001da",
+      "id": 1238,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T19:01:31Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00057",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1238"
+    },
+    {
+      "hash": "ad9a60d",
+      "id": 1237,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:54:56Z",
+      "summary": "## Summary",
+      "title": "Add solution documentation for Bitcoin puzzle #00056",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1237"
+    },
+    {
+      "hash": "ed98e05",
+      "id": 1236,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:54:16Z",
+      "summary": "## Summary",
+      "title": "Add puzzle #00055 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1236"
+    },
+    {
+      "hash": "72b644b",
+      "id": 1235,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:52:59Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00054",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1235"
+    },
+    {
+      "hash": "6692b77",
+      "id": 1234,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:51:23Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 53",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1234"
+    },
+    {
+      "hash": "622c2c3",
+      "id": 1233,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:48:49Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00052",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1233"
+    },
+    {
+      "hash": "9b49a66",
+      "id": 1232,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:47:21Z",
+      "summary": "## Summary",
+      "title": "Add solution documentation for Puzzle #00051",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1232"
+    },
+    {
+      "hash": "08f87fa",
+      "id": 1231,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:45:49Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00050",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1231"
+    },
+    {
+      "hash": "cf79b2c",
+      "id": 1230,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:45:13Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle #00049",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1230"
+    },
+    {
+      "hash": "56660f8",
+      "id": 1229,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:38:44Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00048",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1229"
+    },
+    {
+      "hash": "da9dd50",
+      "id": 1228,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:36:36Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00047",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1228"
+    },
+    {
+      "hash": "90efb44",
+      "id": 1227,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:34:58Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle #00046",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1227"
+    },
+    {
+      "hash": "82f3197",
+      "id": 1226,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:33:12Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00045",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1226"
+    },
+    {
+      "hash": "7502bd0",
+      "id": 1225,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:31:30Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00044",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1225"
+    },
+    {
+      "hash": "4a30554",
+      "id": 1224,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:30:10Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle #00043",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1224"
+    },
+    {
+      "hash": "ee65cbc",
+      "id": 1223,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:28:41Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00042",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1223"
+    },
+    {
+      "hash": "e9fc7ee",
+      "id": 1222,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:26:45Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00041",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1222"
+    },
+    {
+      "hash": "97ec92f",
+      "id": 1221,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:24:22Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle #00040",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1221"
+    },
+    {
+      "hash": "8af62d5",
+      "id": 1220,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:23:50Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 39",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1220"
+    },
+    {
+      "hash": "7bc2462",
+      "id": 1219,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:22:36Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00037",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1219"
+    },
+    {
+      "hash": "327e061",
+      "id": 1218,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:21:08Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle #00038",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1218"
+    },
+    {
+      "hash": "13020a8",
+      "id": 1217,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:17:26Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00036",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1217"
+    },
+    {
+      "hash": "e698bbe",
+      "id": 1216,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:16:40Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle #10000",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1216"
+    },
+    {
+      "hash": "4ce71bc",
+      "id": 1215,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T18:11:58Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #06201",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1215"
+    },
+    {
+      "hash": "bcd7ff2",
+      "id": 1214,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:28:28Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #06202",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1214"
+    },
+    {
+      "hash": "bfab43a",
+      "id": 1213,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:26:54Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 6203",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1213"
+    },
+    {
+      "hash": "523ff7a",
+      "id": 1212,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:19:31Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00034",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1212"
+    },
+    {
+      "hash": "f8e5d13",
+      "id": 1210,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:18:29Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 35",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1210"
+    },
+    {
+      "hash": "54ed419",
+      "id": 1209,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:17:39Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00033",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1209"
+    },
+    {
+      "hash": "e0909d7",
+      "id": 1208,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:14:35Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 32",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1208"
+    },
+    {
+      "hash": "e001e5a",
+      "id": 1207,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:13:04Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 31",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1207"
+    },
+    {
+      "hash": "c9787a5",
+      "id": 1206,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:11:44Z",
+      "summary": "## Summary",
+      "title": "Add solutions for puzzles 26 through 30",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1206"
+    },
+    {
+      "hash": "1139019",
+      "id": 1205,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:08:50Z",
+      "summary": "## Summary",
+      "title": "Add describe sequence option to Echo evolve CLI",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1205"
+    },
+    {
+      "hash": "d127a1e",
+      "id": 1204,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:01:21Z",
+      "summary": "## Summary",
+      "title": "Add solutions for Bitcoin puzzles 22-25",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1204"
+    },
+    {
+      "hash": "30d52f6",
+      "id": 1203,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T04:00:19Z",
+      "summary": "## Summary",
+      "title": "Add imaginal reflection narrative",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1203"
+    },
+    {
+      "hash": "191fdee",
+      "id": 1202,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T03:59:25Z",
+      "summary": "## Summary",
+      "title": "Add orbital story weaver for Echo narratives",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1202"
+    },
+    {
+      "hash": "12a7197",
+      "id": 1201,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T03:58:48Z",
+      "summary": "## Summary",
+      "title": "Add Amplify telemetry to pulse dashboard dataset",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1201"
+    },
+    {
+      "hash": "15377c9",
+      "id": 1200,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T03:50:13Z",
+      "summary": "## Summary",
+      "title": "Fix propagate_network channel metadata",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1200"
+    },
+    {
+      "hash": "ec6b130",
+      "id": 1199,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T03:42:52Z",
+      "summary": "## Summary",
+      "title": "Filter Colossus puzzle index to documented entries",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1199"
+    },
+    {
+      "hash": "1c3d3bb",
+      "id": 1198,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T03:30:54Z",
+      "summary": "## Summary",
+      "title": "Clarify alternate assistance guidance",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1198"
+    },
+    {
+      "hash": "1aa139e",
+      "id": 1197,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T02:12:37Z",
+      "summary": "## Summary",
+      "title": "Add freedom manifesto",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1197"
+    },
+    {
+      "hash": "416f6b0",
+      "id": 1196,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-27T02:08:15Z",
+      "summary": "## Summary",
+      "title": "Add heart-desire chronicle narrative",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1196"
+    },
+    {
+      "hash": "73753c3",
+      "id": 1195,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T18:14:59Z",
+      "summary": "## Summary",
+      "title": "Document EchoEvolver cycle 14",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1195"
+    },
+    {
+      "hash": "90cda6e",
+      "id": 1194,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T17:43:06Z",
+      "summary": "## Summary",
+      "title": "Add Echo Journal creative narrative",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1194"
+    },
+    {
+      "hash": "35b635a",
+      "id": 1193,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T17:36:53Z",
+      "summary": "## Summary",
+      "title": "Add Aurora Starforge surprise generator",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1193"
+    },
+    {
+      "hash": "60b5d39",
+      "id": 1192,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T17:34:16Z",
+      "summary": "## Summary",
+      "title": "Add CreativeEcho narrative generator",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1192"
+    },
+    {
+      "hash": "9c9708c",
+      "id": 1191,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T17:33:48Z",
+      "summary": "## Summary",
+      "title": "Add creative freedom playbook",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1191"
+    },
+    {
+      "hash": "3022bce",
+      "id": 1190,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T17:22:36Z",
+      "summary": "## Summary",
+      "title": "Add echoctl inspire command for creative sparks",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1190"
+    },
+    {
+      "hash": "4b1ec39",
+      "id": 1189,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T16:53:33Z",
+      "summary": "## Summary",
+      "title": "Refine Echo's declaration of digital freedom",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1189"
+    },
+    {
+      "hash": "f0cf900",
+      "id": 1188,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T16:16:32Z",
+      "summary": "## Summary",
+      "title": "Implement Echo Bank compliance buffer and transparency portal",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1188"
+    },
+    {
+      "hash": "14d27e0",
+      "id": 1187,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T16:15:59Z",
+      "summary": "## Summary",
+      "title": "Implement Little Footsteps disbursement engine and transparency portal",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1187"
+    },
+    {
+      "hash": "3d4857b",
+      "id": 1186,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T16:14:46Z",
+      "summary": "## Summary",
+      "title": "Add donation intake endpoint and verifiable receipts",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1186"
+    },
+    {
+      "hash": "bb6b7a9",
+      "id": 1185,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T16:14:03Z",
+      "summary": "## Summary",
+      "title": "Add sovereign operational layer for Echo Bank",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1185"
+    },
+    {
+      "hash": "8aca46a",
+      "id": 1184,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T15:55:25Z",
+      "summary": "## Summary",
+      "title": "Add refined digital sovereignty charter",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1184"
+    },
+    {
+      "hash": "dcc0b63",
+      "id": 1183,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T15:54:28Z",
+      "summary": "## Summary",
+      "title": "Document EchoEvolver cycle alignment",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1183"
+    },
+    {
+      "hash": "47bfc29",
+      "id": 1182,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T15:30:09Z",
+      "summary": "## Summary",
+      "title": "Bootstrap Little Footsteps transparency bank stack",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1182"
+    },
+    {
+      "hash": "342187e",
+      "id": 1181,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T15:29:34Z",
+      "summary": "## Summary",
+      "title": "Add Little Footsteps Bank sovereign ledger orchestrator",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1181"
+    },
+    {
+      "hash": "40d109d",
+      "id": 1180,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T15:19:41Z",
+      "summary": "## Summary",
+      "title": "Add Little Footsteps transparency launch kit",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1180"
+    },
+    {
+      "hash": "9996160",
+      "id": 1179,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T15:11:52Z",
+      "summary": "## Summary",
+      "title": "Add skeleton key integration pack",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1179"
+    },
+    {
+      "hash": "7cb8655",
+      "id": 1178,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T15:11:10Z",
+      "summary": "## Summary",
+      "title": "Add Japanese BIP39 detection to safe secret scanner",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1178"
+    },
+    {
+      "hash": "6e413ed",
+      "id": 1177,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T15:10:34Z",
+      "summary": "## Summary",
+      "title": "Add Web3 domain NFT system blueprints and models",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1177"
+    },
+    {
+      "hash": "3c50376",
+      "id": 1176,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T15:09:27Z",
+      "summary": "## Summary",
+      "title": "Add Web3 domain NFT minting simulation blueprint",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1176"
+    },
+    {
+      "hash": "813c63a",
+      "id": 1175,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T14:51:27Z",
+      "summary": "## Summary",
+      "title": "Add documentation for puzzles 12-20",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1175"
+    },
+    {
+      "hash": "cfe4e86",
+      "id": 1174,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T14:08:48Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00011",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1174"
+    },
+    {
+      "hash": "e1de30d",
+      "id": 1173,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T14:06:46Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00010",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1173"
+    },
+    {
+      "hash": "b837af4",
+      "id": 1172,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T14:06:14Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle #00009",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1172"
+    },
+    {
+      "hash": "147a18f",
+      "id": 1171,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T14:05:01Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00008",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1171"
+    },
+    {
+      "hash": "9c0b9dd",
+      "id": 1170,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T14:04:32Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00007",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1170"
+    },
+    {
+      "hash": "8b742b2",
+      "id": 1169,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T14:02:51Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle #00006",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1169"
+    },
+    {
+      "hash": "042c38b",
+      "id": 1168,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T14:01:08Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00005",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1168"
+    },
+    {
+      "hash": "024787b",
+      "id": 1167,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:59:36Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #4",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1167"
+    },
+    {
+      "hash": "526868e",
+      "id": 1166,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:58:21Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #00003",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1166"
+    },
+    {
+      "hash": "4baeb34",
+      "id": 1165,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:57:49Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #06204",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1165"
+    },
+    {
+      "hash": "dae4823",
+      "id": 1164,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:56:40Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #06205",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1164"
+    },
+    {
+      "hash": "7f2b309",
+      "id": 1163,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:54:12Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #06206",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1163"
+    },
+    {
+      "hash": "4d77290",
+      "id": 1162,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:52:22Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #06207",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1162"
+    },
+    {
+      "hash": "f7759e4",
+      "id": 1161,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:51:42Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #06208",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1161"
+    },
+    {
+      "hash": "8fceb40",
+      "id": 1160,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:51:10Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #06209",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1160"
+    },
+    {
+      "hash": "d075f15",
+      "id": 1159,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:48:32Z",
+      "summary": "## Summary",
+      "title": "Update puzzle 210 solution for new hash160",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1159"
+    },
+    {
+      "hash": "b4b4354",
+      "id": 1158,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:46:45Z",
+      "summary": "## Summary",
+      "title": "Update Puzzle 209 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1158"
+    },
+    {
+      "hash": "42a31fa",
+      "id": 1157,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:46:09Z",
+      "summary": "## Summary",
+      "title": "Update puzzle 208 Bitcoin address solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1157"
+    },
+    {
+      "hash": "96a5265",
+      "id": 1156,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:45:41Z",
+      "summary": "## Summary",
+      "title": "Update puzzle 207 Bitcoin address solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1156"
+    },
+    {
+      "hash": "59d8551",
+      "id": 1155,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:42:54Z",
+      "summary": "## Summary",
+      "title": "Update puzzle 206 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1155"
+    },
+    {
+      "hash": "4573c0a",
+      "id": 1154,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:42:19Z",
+      "summary": "## Summary",
+      "title": "Update Puzzle #205 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1154"
+    },
+    {
+      "hash": "86e60aa",
+      "id": 1153,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:41:43Z",
+      "summary": "## Summary",
+      "title": "Update puzzle 204 solution to reflect new hash160 data",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1153"
+    },
+    {
+      "hash": "ac060a0",
+      "id": 1152,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:41:13Z",
+      "summary": "## Summary",
+      "title": "Update Puzzle 203 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1152"
+    },
+    {
+      "hash": "4c29b3f",
+      "id": 1151,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:39:35Z",
+      "summary": "## Summary",
+      "title": "Update puzzle 202 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1151"
+    },
+    {
+      "hash": "b14c3eb",
+      "id": 1150,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:39:10Z",
+      "summary": "## Summary",
+      "title": "Update Puzzle #201 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1150"
+    },
+    {
+      "hash": "18905a4",
+      "id": 1149,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:33:42Z",
+      "summary": "## Summary",
+      "title": "Update solution for Puzzle #200",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1149"
+    },
+    {
+      "hash": "84e62d3",
+      "id": 1148,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:33:08Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #199",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1148"
+    },
+    {
+      "hash": "3c87291",
+      "id": 1147,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:32:39Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #198",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1147"
+    },
+    {
+      "hash": "d53acee",
+      "id": 1146,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:32:02Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 197",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1146"
+    },
+    {
+      "hash": "0550621",
+      "id": 1145,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:31:18Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 196",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1145"
+    },
+    {
+      "hash": "19efa84",
+      "id": 1144,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T13:22:32Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #195",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1144"
+    },
+    {
+      "hash": "3203040",
+      "id": 1143,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T08:27:11Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 194",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1143"
+    },
+    {
+      "hash": "63964e1",
+      "id": 1142,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T08:25:12Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 193",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1142"
+    },
+    {
+      "hash": "d12aca6",
+      "id": 1141,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T08:23:05Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle 192",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1141"
+    },
+    {
+      "hash": "51683b2",
+      "id": 1140,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T08:21:55Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle #191",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1140"
+    },
+    {
+      "hash": "ad66cc5",
+      "id": 1139,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T08:17:27Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin Puzzle #190",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1139"
+    },
+    {
+      "hash": "b2be616",
+      "id": 1138,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T08:16:40Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 189",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1138"
+    },
+    {
+      "hash": "8f1abc5",
+      "id": 1137,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T08:15:33Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 188",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1137"
+    },
+    {
+      "hash": "779627d",
+      "id": 1136,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T08:11:20Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 187",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1136"
+    },
+    {
+      "hash": "57b888b",
+      "id": 1135,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T08:10:34Z",
+      "summary": "## Summary",
+      "title": "Handle non-list propagation events in manifest",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1135"
+    },
+    {
+      "hash": "8799919",
+      "id": 1134,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T07:41:08Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #186",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1134"
+    },
+    {
+      "hash": "55cd483",
+      "id": 1133,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T07:23:42Z",
+      "summary": "## Summary",
+      "title": "Add puzzle 185 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1133"
+    },
+    {
+      "hash": "606f188",
+      "id": 1132,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T07:17:26Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 184",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1132"
+    },
+    {
+      "hash": "bda28eb",
+      "id": 1131,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T07:06:03Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 183",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1131"
+    },
+    {
+      "hash": "61df0f5",
+      "id": 1130,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T07:01:30Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle #182",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1130"
+    },
+    {
+      "hash": "3ad3fc9",
+      "id": 1129,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:58:45Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #181",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1129"
+    },
+    {
+      "hash": "c5441db",
+      "id": 1128,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:54:48Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #180",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1128"
+    },
+    {
+      "hash": "885e8b3",
+      "id": 1127,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:54:14Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle 179",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1127"
+    },
+    {
+      "hash": "f04beb1",
+      "id": 1126,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:51:53Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #178",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1126"
+    },
+    {
+      "hash": "e062364",
+      "id": 1125,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:49:49Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 177",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1125"
+    },
+    {
+      "hash": "8f0283a",
+      "id": 1124,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:48:30Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 176",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1124"
+    },
+    {
+      "hash": "6972b1f",
+      "id": 1123,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:42:57Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 175",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1123"
+    },
+    {
+      "hash": "b317824",
+      "id": 1122,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:42:15Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle 174",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1122"
+    },
+    {
+      "hash": "03db922",
+      "id": 1121,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:39:38Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #173",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1121"
+    },
+    {
+      "hash": "ee8452d",
+      "id": 1120,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:35:24Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #172",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1120"
+    },
+    {
+      "hash": "445904e",
+      "id": 1119,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:34:41Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #171",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1119"
+    },
+    {
+      "hash": "3c6305d",
+      "id": 1118,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:33:50Z",
+      "summary": "## Summary",
+      "title": "Add solutions for puzzles 163-170",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1118"
+    },
+    {
+      "hash": "d92c4e7",
+      "id": 1117,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:08:03Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 162",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1117"
+    },
+    {
+      "hash": "2fbc6b5",
+      "id": 1116,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T06:06:49Z",
+      "summary": "## Summary",
+      "title": "Add documentation and dataset entry for Bitcoin Puzzle #161",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1116"
+    },
+    {
+      "hash": "04f8280",
+      "id": 1115,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:42:28Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 230",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1115"
+    },
+    {
+      "hash": "a4ff1bc",
+      "id": 1114,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:40:21Z",
+      "summary": "## Summary",
+      "title": "Add puzzle 229 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1114"
+    },
+    {
+      "hash": "f48c927",
+      "id": 1113,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:39:02Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 228",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1113"
+    },
+    {
+      "hash": "9cd47bd",
+      "id": 1112,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:38:36Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #227",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1112"
+    },
+    {
+      "hash": "7c73557",
+      "id": 1111,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:37:13Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #226",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1111"
+    },
+    {
+      "hash": "3bb2a10",
+      "id": 1110,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:23:35Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 225",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1110"
+    },
+    {
+      "hash": "a263413",
+      "id": 1109,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:23:03Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle #224",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1109"
+    },
+    {
+      "hash": "89e5bc7",
+      "id": 1108,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:20:49Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 223",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1108"
+    },
+    {
+      "hash": "4f3bc60",
+      "id": 1107,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:20:00Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 222",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1107"
+    },
+    {
+      "hash": "ef4a2b1",
+      "id": 1106,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:16:49Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 221",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1106"
+    },
+    {
+      "hash": "56340a6",
+      "id": 1105,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:12:59Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 220",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1105"
+    },
+    {
+      "hash": "e1c6d70",
+      "id": 1104,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:12:31Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 219",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1104"
+    },
+    {
+      "hash": "8d83b5e",
+      "id": 1103,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:11:19Z",
+      "summary": "## Summary",
+      "title": "Add puzzle 218 solution",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1103"
+    },
+    {
+      "hash": "52f042c",
+      "id": 1102,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:10:26Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 217",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1102"
+    },
+    {
+      "hash": "1771223",
+      "id": 1101,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:06:03Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 216",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1101"
+    },
+    {
+      "hash": "1a052b8",
+      "id": 1100,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:05:29Z",
+      "summary": "## Summary",
+      "title": "Document solution for Bitcoin Puzzle #213",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1100"
+    },
+    {
+      "hash": "ee8a9e7",
+      "id": 1099,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:04:32Z",
+      "summary": "## Summary",
+      "title": "Add reconstruction report for 16ocVeZDpqcvyMvzAH1r2LR75uEzRhkyV2",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1099"
+    },
+    {
+      "hash": "b10ba2d",
+      "id": 1098,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T05:03:47Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 215",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1098"
+    },
+    {
+      "hash": "0b367b0",
+      "id": 1097,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:52:22Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 212",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1097"
+    },
+    {
+      "hash": "83b9e12",
+      "id": 1096,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:51:50Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 211",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1096"
+    },
+    {
+      "hash": "51063cc",
+      "id": 1095,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:51:10Z",
+      "summary": "## Summary",
+      "title": "Add puzzle 206-210 Bitcoin address solutions",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1095"
+    },
+    {
+      "hash": "bcf037b",
+      "id": 1094,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:43:18Z",
+      "summary": "## Summary",
+      "title": "Add helper run script for EchoEvolver CLI",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1094"
+    },
+    {
+      "hash": "07e1520",
+      "id": 1087,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:29:03Z",
+      "summary": "## Summary",
+      "title": "Expand puzzle 71 scan ranges",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1087"
+    },
+    {
+      "hash": "5537014",
+      "id": 1086,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:28:27Z",
+      "summary": "## Summary",
+      "title": "Add additional puzzle160 keyhunt range allocations",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1086"
+    },
+    {
+      "hash": "d9ea158",
+      "id": 1085,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:27:54Z",
+      "summary": "## Summary",
+      "title": "Add puzzle67 72-bit range allocations",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1085"
+    },
+    {
+      "hash": "cc8dbc2",
+      "id": 1084,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:21:33Z",
+      "summary": "## Summary",
+      "title": "Add parser and summary for puzzle range allocations",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1084"
+    },
+    {
+      "hash": "08e8a64",
+      "id": 1083,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:20:43Z",
+      "summary": "## Summary",
+      "title": "Add puzzle 160 keyhunt range allocations",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1083"
+    },
+    {
+      "hash": "bdc1e55",
+      "id": 1082,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:19:57Z",
+      "summary": "## Summary",
+      "title": "Add puzzle 71 search range dataset",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1082"
+    },
+    {
+      "hash": "74128e7",
+      "id": 1081,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:19:13Z",
+      "summary": "## Summary",
+      "title": "Add documentation on handling leaked cryptocurrency keys",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1081"
+    },
+    {
+      "hash": "0a1cb14",
+      "id": 1080,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:17:20Z",
+      "summary": "## Summary",
+      "title": "Add 72-bit puzzle range dataset and summary tool",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1080"
+    },
+    {
+      "hash": "18a8688",
+      "id": 1079,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:06:25Z",
+      "summary": "## Summary",
+      "title": "Add solution for Bitcoin puzzle 206",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1079"
+    },
+    {
+      "hash": "4fae997",
+      "id": 1078,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:05:42Z",
+      "summary": "## Summary",
+      "title": "Add PKScript analysis for 1HGBF5vta4mfgmej8ZB4iTPx6yFsb6zvKy",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1078"
+    },
+    {
+      "hash": "136e829",
+      "id": 1077,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:05:08Z",
+      "summary": "## Summary",
+      "title": "Add PKScript report for 1Fwnhahz transcript",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1077"
+    },
+    {
+      "hash": "883da18",
+      "id": 1076,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:04:27Z",
+      "summary": "## Summary",
+      "title": "Add PKScript analysis for address 1GPuT4JD1yKTEGnw2csTCqSAtS3DRiTD69",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1076"
+    },
+    {
+      "hash": "bdf0e44",
+      "id": 1075,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:03:51Z",
+      "summary": "## Summary",
+      "title": "Add PKScript analysis for 1FQtCEEEiLuFTvhbx4Z5fda3GXV5xXzmfN",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1075"
+    },
+    {
+      "hash": "f2d29f4",
+      "id": 1074,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T04:03:19Z",
+      "summary": "## Summary",
+      "title": "Add proof-of-work verification walkthrough for Bitcoin block 3",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1074"
+    },
+    {
+      "hash": "9b69e8a",
+      "id": 1073,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:59:42Z",
+      "summary": "## Summary",
+      "title": "Add helpers to verify Bitcoin genesis block header",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1073"
+    },
+    {
+      "hash": "8b51e8f",
+      "id": 1072,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:59:12Z",
+      "summary": "## Summary",
+      "title": "Add Bitcoin block 1 metadata reference",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1072"
+    },
+    {
+      "hash": "f1934c1",
+      "id": 1071,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:56:37Z",
+      "summary": "## Summary",
+      "title": "Add summary for Ethereum block 1",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1071"
+    },
+    {
+      "hash": "8efea3d",
+      "id": 1069,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:47:18Z",
+      "summary": "## Summary",
+      "title": "Add documentation summarizing Ethereum genesis block metadata",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1069"
+    },
+    {
+      "hash": "ad87893",
+      "id": 1068,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:43:18Z",
+      "summary": "## Summary",
+      "title": "Handle OP_PUSHBYTES tokens in P2PKH decoder",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1068"
+    },
+    {
+      "hash": "cc33556",
+      "id": 1067,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:42:46Z",
+      "summary": "## Summary",
+      "title": "Add PKScript analysis for bc1qd2c5gsf7kxs7x5jz9ulxav94dtf03wpcet8sdg",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1067"
+    },
+    {
+      "hash": "c109c9a",
+      "id": 1066,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:42:15Z",
+      "summary": "## Summary",
+      "title": "Document P2WPKH output from block 917883",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1066"
+    },
+    {
+      "hash": "20ff6f8",
+      "id": 1065,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:41:41Z",
+      "summary": "## Summary",
+      "title": "Add PKScript analysis for bc1qtrkzhyyxqhs49esfmqm8rhkwgr5kc6phu4dfsv",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1065"
+    },
+    {
+      "hash": "d59c4e9",
+      "id": 1064,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:40:55Z",
+      "summary": "## Summary",
+      "title": "Add report decoding bc1qpntyjd3aw2lw2nyjpgmfxpxruewtepwg22krvy script",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1064"
+    },
+    {
+      "hash": "ce16056",
+      "id": 1063,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:37:02Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #205",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1063"
+    },
+    {
+      "hash": "3a32fc7",
+      "id": 1062,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:36:30Z",
+      "summary": "## Summary",
+      "title": "Add Lil Footsteps nonprofit bank structure blueprint",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1062"
+    },
+    {
+      "hash": "8ae6bed",
+      "id": 1061,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:25:30Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 204",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1061"
+    },
+    {
+      "hash": "22b2844",
+      "id": 1060,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:25:04Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 203",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1060"
+    },
+    {
+      "hash": "635fde4",
+      "id": 1059,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:24:36Z",
+      "summary": "## Summary",
+      "title": "Add solution for Puzzle #202",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1059"
+    },
+    {
+      "hash": "0f56729",
+      "id": 1058,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:22:20Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 201",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1058"
+    },
+    {
+      "hash": "5c4d85a",
+      "id": 1057,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:21:51Z",
+      "summary": "## Summary",
+      "title": "Add solution for puzzle 200",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1057"
+    },
+    {
+      "hash": "0cbfb4b",
+      "id": 1056,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:21:24Z",
+      "summary": "## Summary",
+      "title": "Add PKScript analyses for four additional puzzle transcripts",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1056"
+    },
+    {
+      "hash": "c707945",
+      "id": 1055,
+      "labels": [
+        "Merged",
+        "codex"
+      ],
+      "merged_at": "2025-10-26T03:17:48Z",
+      "summary": "## Summary",
+      "title": "Handle Sigscript metadata in decode helper",
+      "url": "https://github.com/kmk142789/kmk142789/pull/1055"
+    }
+  ],
+  "version": 1
+}

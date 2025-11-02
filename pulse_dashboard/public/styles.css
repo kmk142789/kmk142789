@@ -245,3 +245,356 @@ footer .dns {
     padding: 1.6rem;
   }
 }
+.top-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.top-nav a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.top-nav a:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.top-nav a.active {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.codex-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 2.25rem;
+  padding: 2.5rem 5vw 4rem;
+}
+
+.codex-controls .filter-grid {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.filter-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.filter-grid input,
+.filter-grid select {
+  background: rgba(16, 16, 40, 0.85);
+  border: 1px solid rgba(148, 110, 255, 0.35);
+  color: #f6f5ff;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  font: inherit;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.filter-actions button {
+  background: rgba(112, 88, 255, 0.8);
+  border: 1px solid rgba(112, 88, 255, 0.9);
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.filter-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(112, 88, 255, 0.35);
+}
+
+.filter-actions button[type='button'] {
+  background: rgba(24, 24, 56, 0.9);
+  border-color: rgba(112, 88, 255, 0.4);
+}
+
+.codex-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 1.75rem 0 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.codex-timeline.loading {
+  position: relative;
+  min-height: 4rem;
+}
+
+.codex-timeline.loading::after {
+  content: 'Loading…';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.1em;
+}
+
+.codex-entry {
+  background: rgba(14, 12, 35, 0.85);
+  border: 1px solid rgba(148, 110, 255, 0.25);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.codex-entry__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.codex-entry__title {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.codex-entry__title:hover {
+  text-decoration: underline;
+}
+
+.codex-entry__time {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.codex-entry__summary {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.5;
+}
+
+.codex-entry__labels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.codex-entry__labels li {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.codex-entry__hash {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  word-break: break-all;
+}
+
+.codex-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.site-footer {
+  padding: 1.5rem 5vw 3rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
+.assistant-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  padding: 2.5rem 5vw 4rem;
+}
+
+.chat-container {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.chat-status {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.chat-history {
+  display: grid;
+  gap: 1.25rem;
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.chat-entry {
+  background: rgba(18, 16, 40, 0.8);
+  border: 1px solid rgba(118, 98, 255, 0.3);
+  border-radius: 16px;
+  padding: 1rem 1.2rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.chat-entry--user {
+  border-color: rgba(16, 221, 255, 0.35);
+}
+
+.chat-entry__role {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+}
+
+.chat-entry__content {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: pre-wrap;
+}
+
+.chat-tools {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.chat-tools summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.chat-tools pre {
+  background: rgba(12, 11, 30, 0.85);
+  border: 1px solid rgba(118, 98, 255, 0.25);
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+}
+
+.chat-tools ul {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.chat-tools li {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.chat-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.chat-form textarea {
+  min-height: 120px;
+  resize: vertical;
+  background: rgba(16, 16, 40, 0.85);
+  border: 1px solid rgba(118, 98, 255, 0.35);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  color: #fff;
+  font: inherit;
+}
+
+.chat-form .form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.chat-form input[type='number'] {
+  width: 120px;
+  background: rgba(16, 16, 40, 0.85);
+  border: 1px solid rgba(118, 98, 255, 0.35);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  color: #fff;
+}
+
+.chat-form button {
+  background: linear-gradient(135deg, rgba(112, 88, 255, 0.95), rgba(16, 221, 255, 0.85));
+  border: none;
+  color: #fff;
+  padding: 0.7rem 1.6rem;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 16px 32px rgba(25, 18, 70, 0.45);
+  transition: transform 0.15s ease;
+}
+
+.chat-form button:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 960px) {
+  .codex-layout {
+    grid-template-columns: 1fr;
+  }
+
+  main {
+    padding: 2rem 5vw 3rem;
+  }
+
+  .hero {
+    padding-top: 2.5rem;
+  }
+}
+.puzzle-meta {
+  margin-top: 1.5rem;
+  padding: 1.2rem 1.4rem;
+  background: rgba(12, 11, 30, 0.85);
+  border: 1px solid rgba(118, 98, 255, 0.25);
+  border-radius: 14px;
+  display: grid;
+  gap: 0.6rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.puzzle-meta strong {
+  display: block;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+}
+.codex-entry.codex-empty {
+  display: grid;
+  place-items: center;
+  min-height: 3rem;
+  font-weight: 500;
+}

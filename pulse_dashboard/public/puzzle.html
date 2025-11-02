@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Puzzle Detail • Echo Pulse Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="top-nav" aria-label="Primary navigation">
+        <a href="index.html">Pulse</a>
+        <a href="codex.html">Codex</a>
+        <a href="assistant.html">Assistant</a>
+        <a href="puzzle.html" class="active">Puzzles</a>
+      </nav>
+      <h1>Puzzle Detail</h1>
+      <p class="tagline">Inspect puzzle metadata and the attestation ledger recorded in Neon.</p>
+      <div class="meta">
+        <span id="puzzleStatus">Enter a puzzle identifier to begin.</span>
+      </div>
+    </header>
+
+    <main class="codex-layout">
+      <section class="panel" aria-labelledby="puzzleLookupTitle">
+        <header>
+          <h2 id="puzzleLookupTitle">Lookup</h2>
+          <p>Load puzzle metadata and ensure an attestation record is present.</p>
+        </header>
+        <form id="puzzleForm" class="filter-grid">
+          <label>
+            Puzzle ID
+            <input id="puzzleId" type="number" min="1" required />
+          </label>
+          <div class="filter-actions">
+            <button type="submit">Load puzzle</button>
+          </div>
+        </form>
+        <article id="puzzleMeta" class="puzzle-meta" hidden></article>
+      </section>
+
+      <section class="panel" aria-labelledby="attestationTitle">
+        <header>
+          <h2 id="attestationTitle">Attestations</h2>
+          <p>Each record is hashed and optionally stored in Neon for tamper-evident provenance.</p>
+        </header>
+        <ol id="attestationList" class="codex-timeline"></ol>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Records contain checksum, base58 fingerprint, and SHA-256 record hash.</p>
+    </footer>
+
+    <script src="puzzle.js" type="module"></script>
+  </body>
+</html>

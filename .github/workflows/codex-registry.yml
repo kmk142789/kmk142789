@@ -1,0 +1,40 @@
+name: Codex Registry
+
+on:
+  push:
+    branches: ["main", "master", "develop", "dev", "release/*"]
+  schedule:
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install requests
+
+      - name: Generate Codex registry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: kmk142789
+          REPO: kmk142789
+        run: python scripts/gen_codex_registry.py
+
+      - name: Commit registry updates
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update Codex registry"
+          file_pattern: codex/registry.json codex/REGISTRY.md

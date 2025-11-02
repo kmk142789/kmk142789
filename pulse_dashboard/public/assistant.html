@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Echo Computer Assistant • Echo Pulse Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="top-nav" aria-label="Primary navigation">
+        <a href="index.html">Pulse</a>
+        <a href="codex.html">Codex</a>
+        <a href="assistant.html" class="active">Assistant</a>
+        <a href="puzzle.html">Puzzles</a>
+      </nav>
+      <h1>Echo Computer Assistant</h1>
+      <p class="tagline">Route prompts through the Echo Computer and inspect tool activity in real time.</p>
+      <div class="meta">
+        <span id="assistantStatus" class="chat-status">Idle.</span>
+      </div>
+    </header>
+
+    <main class="assistant-layout">
+      <section class="panel chat-container" aria-labelledby="chatHistoryTitle">
+        <header>
+          <h2 id="chatHistoryTitle">Conversation</h2>
+          <p>Tool calls and execution logs are captured for every exchange.</p>
+        </header>
+        <div id="chatHistory" class="chat-history" aria-live="polite"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="chatComposerTitle">
+        <header>
+          <h2 id="chatComposerTitle">Send a prompt</h2>
+          <p>Hint: mention <code>puzzle 210</code>, ask to “start the bank”, or request the Codex registry.</p>
+        </header>
+        <form id="assistantForm" class="chat-form">
+          <textarea id="chatInput" name="message" placeholder="Ask the Echo Computer…" required></textarea>
+          <div class="form-row">
+            <label for="codexLimit">Codex limit</label>
+            <input id="codexLimit" type="number" min="1" max="100" value="10" />
+            <button type="submit">Send Prompt</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Assistant tools: <code>solve_puzzle</code>, <code>echo_bank_start</code>, <code>list_codex</code>.</p>
+    </footer>
+
+    <script src="assistant.js" type="module"></script>
+  </body>
+</html>
