@@ -1,0 +1,13 @@
+{
+  "id": 126,
+  "name": "Puzzle #00126",
+  "hash160": "8a068282bc4b2fd47710ccecfb9560397b0f0012",
+  "address_base58": "1ASQU6jrgC4CEsbkzxVHuFuiYhhZVcSWKH",
+  "script": "OP_DUP OP_HASH160 8a068282bc4b2fd47710ccecfb9560397b0f0012 OP_EQUALVERIFY OP_CHECKSIG",
+  "meta": {
+    "network": "bitcoin-mainnet",
+    "generated_by": "echo_colossus",
+    "deterministic": true
+  },
+  "checksum": "e88e7267969422e6813a0617ffbfa3ab9a5c62dfc7e09f973459467d6da68ee7"
+}
