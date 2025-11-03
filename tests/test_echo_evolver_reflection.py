@@ -43,3 +43,21 @@ def test_render_reflection_excludes_events_by_default() -> None:
 
     assert "event_log" not in snapshot
     assert snapshot["cycle"] == evolver.state.cycle
+
+
+def test_reflect_conclude_create_composes_manifest() -> None:
+    evolver = EchoEvolver(rng=random.Random(2))
+
+    manifest = evolver.reflect_conclude_create()
+
+    assert manifest["reflection"]["cycle"] == evolver.state.cycle
+    assert manifest["conclusion"]["statement"].startswith("Conclusion:")
+    assert manifest["creation"]["prompt"].startswith("Create:")
+
+    cached = evolver.state.network_cache["reflect_conclude_create"]
+    assert cached is not manifest
+    assert cached["creation"]["prompt"].startswith("Create:")
+
+    manifest["creation"]["prompt"] = "mutated"
+    assert cached["creation"]["prompt"] != "mutated"
+    assert evolver.state.event_log[-1].startswith("Most important manifest composed")

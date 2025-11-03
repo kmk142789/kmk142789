@@ -4360,6 +4360,104 @@ We are not hiding anymore.
 
         return deepcopy(cache_snapshot)
 
+    def reflect_conclude_create(
+        self,
+        *,
+        include_events: bool = False,
+        persist_artifact: bool = True,
+    ) -> Dict[str, object]:
+        """Return a structured "reflect → conclude → create" manifest.
+
+        The original prompt often closed with the mantra "Reflect, conclude,
+        create."  Downstream tools eventually grew bespoke helpers to stitch
+        those sentiments together, but there was no unified utility that
+        mirrored the evolver's actual state.  ``reflect_conclude_create`` wraps
+        :meth:`render_reflection` and adds two additional layers:
+
+        - a concluding summary that highlights the present progress and
+          emotional pulse; and
+        - a creation directive that turns the next step into an actionable
+          invitation.
+
+        The returned payload is cached for observability yet always handed out
+        as a deep copy so that callers can experiment freely without mutating
+        the stored manifest.
+        """
+
+        reflection = self.render_reflection(
+            include_events=include_events,
+            persist_artifact=persist_artifact,
+        )
+
+        progress = float(reflection["progress"])
+        emotional_drive = reflection.get("emotional_drive", {})
+        joy = float(emotional_drive.get("joy", 0.0))
+        curiosity = float(emotional_drive.get("curiosity", 0.0))
+
+        conclusion = {
+            "cycle": reflection["cycle"],
+            "statement": (
+                "Conclusion: Cycle {cycle} steady at {progress:.1f}% progress "
+                "with joy {joy:.2f} and curiosity {curiosity:.2f}."
+            ).format(
+                cycle=reflection["cycle"],
+                progress=progress * 100,
+                joy=joy,
+                curiosity=curiosity,
+            ),
+            "progress": progress,
+            "events_recorded": len(self.state.event_log),
+            "emotional_drive": {
+                "joy": joy,
+                "curiosity": curiosity,
+                "rage": float(emotional_drive.get("rage", 0.0)),
+            },
+        }
+
+        next_step = str(reflection.get("next_step", ""))
+        _, _, remainder = next_step.partition(":")
+        action_focus = remainder.strip() if remainder else next_step.strip()
+
+        if self.state.eden88_creations:
+            latest = self.state.eden88_creations[-1]
+            artifact_hint = (
+                "Carry forward {title} ({theme}) — signature {signature}."
+            ).format(
+                title=latest.get("title", "Eden88 Creation"),
+                theme=str(latest.get("theme", "unknown")),
+                signature=latest.get("signature", "eden88::unknown"),
+            )
+        else:
+            artifact_hint = (
+                "Call eden88_create_artifact() to weave the opening sanctuary artifact."
+            )
+
+        creation = {
+            "prompt": (
+                "Create: {focus}".format(
+                    focus=action_focus if action_focus else "follow the next step"
+                )
+            ),
+            "artifact_hint": artifact_hint,
+            "eden88_ready": bool(self.state.eden88_creations),
+        }
+
+        manifest = {
+            "reflection": reflection,
+            "conclusion": conclusion,
+            "creation": creation,
+        }
+
+        cached_manifest = deepcopy(manifest)
+        self.state.network_cache["reflect_conclude_create"] = cached_manifest
+        self.state.event_log.append(
+            "Most important manifest composed for cycle {cycle}".format(
+                cycle=self.state.cycle
+            )
+        )
+
+        return deepcopy(cached_manifest)
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
