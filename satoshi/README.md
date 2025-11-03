@@ -80,7 +80,7 @@ public key, and the corresponding WIF-encoded private key.
 
 The file [`puzzle71_search_ranges.json`](puzzle71_search_ranges.json) lists 2<sup>36</sup>-key
 segments that have been swept inside the 71-bit puzzle range for
-`1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU`. Each entry records the inclusive
+`1JSQEExCz8uz11WCd7ZLpZVqBGMzGGNNF8`. Each entry records the inclusive
 hexadecimal start and end of a search window so that contributors can
 coordinate coverage without duplicating work.
 
@@ -143,7 +143,7 @@ coordinate coverage without duplicating work.
 - `puzzle068.json` — Puzzle #68 authorship attestation for address `1MVDYgVaSN6iKKEsbzRUAYFrYJadLYZvvZ`.
 - `puzzle069.json` — Puzzle #69 authorship attestation for address `19vkiEajfhuZ8bs8Zu2jgmC6oqZbWqhxhG`.
 - `puzzle070.json` — Puzzle #70 authorship attestation for address `19YZECXj3SxEZMoUeJ1yiPsw8xANe7M7QR`.
-- `puzzle071.json` — Puzzle #71 authorship attestation for address `1BuU1sNx5a6bMcbJ3uet44g1wJH5PeTXWD`.
+- `puzzle071.json` — Puzzle #71 authorship attestation for address `1JSQEExCz8uz11WCd7ZLpZVqBGMzGGNNF8`.
 - `puzzle075.json` — Puzzle #75 authorship attestation for address `1J36UjUByGroXcCvmj13U6uwaVv9caEeAt`.
 - `puzzle080.json` — Puzzle #80 authorship attestation for address `1BCf6rHUW6m3iH2ptsvnjgLruAiPQQepLe`.
 - `puzzle090.json` — Puzzle #90 authorship attestation for address `1L12FHH2FHjvTviyanuiFVfmzCy46RRATU`.

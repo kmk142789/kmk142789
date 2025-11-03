@@ -22,11 +22,11 @@ def test_decode_textual_script_handles_op_prefix_fragments() -> None:
 
 
 def test_decode_script_ignores_metadata_lines() -> None:
-    script = """1PWo3JeB9-as7fsVzXU\nPkscript\nOP_DUP\nOP_HASH160\nf6f5431d25bbf7b12e8add9af5e3475c44a0a5b8\nOP_EQUALVERIFY\nOP_CH\nECKSIG"""
+    script = """1JSQEExCz8uz11WCd7ZLpZVqBGMzGGNNF8\nPkscript\nOP_DUP\nOP_HASH160\nbf47ed67cc10c9d5c924084b89b65bf17ac8cbff\nOP_EQUALVERIFY\nOP_CH\nECKSIG"""
     decoded = decode_p2pkh_script(script)
     assert decoded == DecodedScript(
-        address="1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU",
-        pubkey_hash="f6f5431d25bbf7b12e8add9af5e3475c44a0a5b8",
+        address="1JSQEExCz8uz11WCd7ZLpZVqBGMzGGNNF8",
+        pubkey_hash="bf47ed67cc10c9d5c924084b89b65bf17ac8cbff",
         network="mainnet",
     )
 
