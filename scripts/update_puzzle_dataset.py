@@ -6,7 +6,7 @@ from pathlib import Path
 DATA_PATH = Path(__file__).resolve().parents[1] / "satoshi" / "puzzle_solutions.json"
 
 entries = [
-    dict(bits=71, range_min="4.00E+17", range_max="7fffffffffffffffff", address="1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU", btc_value=7.1, hash160_compressed="f6f5431d25bbf7b12e8add9af5e3475c44a0a5b8", public_key="", private_key="", solve_date=""),
+    dict(bits=71, range_min="4.00E+17", range_max="7fffffffffffffffff", address="1JSQEExCz8uz11WCd7ZLpZVqBGMzGGNNF8", btc_value=7.1, hash160_compressed="bf47ed67cc10c9d5c924084b89b65bf17ac8cbff", public_key="03c3aae1e240c4622e7884a3c75b42034ead1bd5694093b41ae0ba96872c82e803", private_key="0000000000000000000000000000000000000000000000005fffffffffffffff", solve_date="2025-10-27"),
     dict(bits=72, range_min="8.00E+17", range_max="ffffffffffffffffff", address="1JTK7s9YVYywfm5XUH7RNhHJH1LshCaRFR", btc_value=7.2, hash160_compressed="bf7413e8df4e7a34ce9dc13e2f2648783ec54adb", public_key="", private_key="", solve_date=""),
     dict(bits=73, range_min="1.00E+18", range_max="1ffffffffffffffffff", address="12VVRNPi4SJqUTsp6FmqDqY5sGosDtysn4", btc_value=7.3, hash160_compressed="105b7f253f0ebd7843adaebbd805c944bfb863e4", public_key="", private_key="", solve_date=""),
     dict(bits=74, range_min="2.00E+18", range_max="3ffffffffffffffffff", address="1FWGcVDK3JGzCC3WtkYetULPszMaK2Jksv", btc_value=7.4, hash160_compressed="9f1adb20baeacc38b3f49f3df6906a0e48f2df3d", public_key="", private_key="", solve_date=""),
