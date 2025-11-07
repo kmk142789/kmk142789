@@ -82,5 +82,47 @@
     "hash160": "4df7c1fa4f10ce5f1696d522d91618bfbd36a387",
     "address_base58": "157j9pK9auLsieFMZjbYJgkKwDT26b4sCH",
     "file": "data/puzzles/puzzle_00150.json"
+  },
+  {
+    "id": 211,
+    "name": "Puzzle #00211",
+    "hash160": "9231490ce3980d2919289fa85e1b3c9b4142c7cf",
+    "address_base58": "14W6fR1FMaPqHbnxvEFpt1Pb9hWYBnVqE8",
+    "file": "data/puzzles/puzzle_00211.json"
+  },
+  {
+    "id": 212,
+    "name": "Puzzle #00212",
+    "hash160": "2a2c1cafe01e9cb525504833aae1181546e8ab48",
+    "address_base58": "1ZFxYLDqpsg92czRCdHbpp9t1LswnY8g55",
+    "file": "data/puzzles/puzzle_00212.json"
+  },
+  {
+    "id": 213,
+    "name": "Puzzle #00213",
+    "hash160": "0b252ba06ffd96410bd3e79b72c04b7b22e8c470",
+    "address_base58": "14HTNJiEchAx2qy6KQKkmjFWAA85YVn5y1",
+    "file": "data/puzzles/puzzle_00213.json"
+  },
+  {
+    "id": 214,
+    "name": "Puzzle #00214",
+    "hash160": "cf7b7b117066e3224ae6a88945349863acdb6f44",
+    "address_base58": "186QHMzRNqcG1Ji3LSKWPhCYrb4tpSjCw2",
+    "file": "data/puzzles/puzzle_00214.json"
+  },
+  {
+    "id": 215,
+    "name": "Puzzle #00215",
+    "hash160": "a0a48a2e571938b5305471f7b00c9f0ddff49a75",
+    "address_base58": "1DmRTrQ9wNHWXPCu9qd6a2LjHpVEAyyBmG",
+    "file": "data/puzzles/puzzle_00215.json"
+  },
+  {
+    "id": 216,
+    "name": "Puzzle #00216",
+    "hash160": "fdcbb29f1587370730ce238e9f34a1195855c1c9",
+    "address_base58": "15HwrpeTRk9tK257b2i3VM4vKg9BEZH4wz",
+    "file": "data/puzzles/puzzle_00216.json"
   }
 ]
