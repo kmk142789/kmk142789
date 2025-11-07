@@ -1,0 +1,8 @@
+# Ethical telemetry configuration with privacy-first defaults.
+telemetry:
+  enabled: false
+  storage_path: state/telemetry/events.jsonl
+  retention_days: 30
+  consent_audit_log: state/telemetry/consent_audit.jsonl
+  pseudonymization_salt_env: ETHICAL_TELEMETRY_SALT
+  anonymize_ip: true
