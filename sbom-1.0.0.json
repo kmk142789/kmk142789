@@ -1,0 +1,403 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "name": "AmplificationEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "BeneficiaryEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "BitwisePixelEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ColossusExpansionEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ContinuumEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ContinuumPlaybackEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "CosmosEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "DecentralizedAutonomyEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EchoMemoryEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EchoPulseEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EchoResonanceEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EnlightenmentEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ImpossibleRealityEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "LittleFootstepsDisbursementEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "PolicyEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "PolicyEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ResonanceEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "StellarResonanceEngine",
+      "type": "engines",
+      "version": "1.0.0"
+    },
+    {
+      "name": "AmplifyState",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "Argon2Parameters",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ArtifactRecord",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "AtlasState",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "AuroraChronicleMoment",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "BridgePlan",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "BridgeState",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "CapsuleEntry",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "CharterVersion",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ComplianceEntry",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "CredentialIssuer",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "DisbursementRecord",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "DonationReceipt",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EchoEye",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EchoKaleidoscope",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EchoState",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EchoThread",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EchoVM",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "EvolverState",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "GlyphLine",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "HarmonicLayer",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "HarmonixBridgeState",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "HarmonixStanza",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "IdentityLayerConfig",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ImpactGraph",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "InspirationPulse",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "LineageInfo",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "MemorySnapshot",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "MuSig2Session",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "MultiSigAttestation",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "NarrativeArtifact",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "NarrativeInputs",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "OrbitalState",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ParsedDocument",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "PoeticPayload",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "PolicyIssue",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "PolicyReport",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ProvenanceRecord",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "PulseEvent",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "PulseRecord",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "PuzzleEntry",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "QuantumFluxMapper",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "QuarantineRecord",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ReconstructionInfo",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ReleaseArtifacts",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "RunState",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ScriptData",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ScriptSig",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "SigningEntry",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "SpectralCanvas",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "StoryConstellation",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "SystemMetrics",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "TaskSpec",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "UDInfo",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "VaultEvent",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "WeaveResult",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "Wish",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "WorkerBot",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "_NullDag",
+      "type": "states",
+      "version": "1.0.0"
+    },
+    {
+      "name": "_NullReceipts",
+      "type": "states",
+      "version": "1.0.0"
+    }
+  ],
+  "metadata": {
+    "component": {
+      "name": "echo",
+      "version": "1.0.0"
+    }
+  },
+  "specVersion": "1.4",
+  "version": 1
+}

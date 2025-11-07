@@ -1,52 +1,104 @@
 {
-  "amplification": {
-    "gate": {
-      "thresholds": {
-        "cohesion": 50.0,
-        "coverage": 65.0,
-        "freshness_half_life": 55.0,
-        "novelty_delta": 50.0,
-        "resonance": 60.0,
-        "stability": 60.0
-      },
-      "weights": {
-        "cohesion": 0.16,
-        "coverage": 0.14,
-        "freshness": 0.16,
-        "novelty": 0.18,
-        "resonance": 0.24,
-        "volatility": 0.12
-      }
-    },
-    "latest": 71.05,
-    "rolling_avg": 71.05
-  },
   "clis": [
     {
       "category": "cli",
-      "digest": "b46dec22247ac334c1c7c87aa29c153a46bd2270810050c2e7b48a101b5cb6a8",
-      "last_modified": "2025-10-15T19:01:31-04:00",
+      "digest": "f400e471ffd8dd86b35d25ca0d238e70840872da25747d8f80718e01ff6c8dd9",
+      "last_modified": "2025-11-02T04:47:19-05:00",
+      "name": "codex",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "codex/__init__.py",
+      "size": 2228,
+      "tags": [
+        "cli",
+        "py",
+        "python"
+      ],
+      "version": "f400e471ffd8"
+    },
+    {
+      "category": "cli",
+      "digest": "ffe0d820284338cf6226c184077bf45a96c5fd107e2218be58683d1f108dfcd7",
+      "last_modified": "2025-10-25T06:33:17-04:00",
+      "name": "dominion-apply",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "dominion/apply.py",
+      "size": 1393,
+      "tags": [
+        "cli",
+        "py",
+        "python"
+      ],
+      "version": "ffe0d8202843"
+    },
+    {
+      "category": "cli",
+      "digest": "17c6055075a93107dd143586a5f7c46e4d9a4243f8764d2518891d43fa74c432",
+      "last_modified": "2025-10-25T06:33:17-04:00",
+      "name": "dominion-archive",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "dominion/archive.py",
+      "size": 1147,
+      "tags": [
+        "cli",
+        "py",
+        "python"
+      ],
+      "version": "17c6055075a9"
+    },
+    {
+      "category": "cli",
+      "digest": "e5ccd7126175a17d595c2ead9a45760fe2e6cce6190978eff241cdbbf84e8e81",
+      "last_modified": "2025-10-25T06:33:17-04:00",
+      "name": "dominion-plan",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "dominion/plan.py",
+      "size": 1820,
+      "tags": [
+        "cli",
+        "py",
+        "python"
+      ],
+      "version": "e5ccd7126175"
+    },
+    {
+      "category": "cli",
+      "digest": "6423ff8ae67fb073f1bb33edc624d2e88774d40142d75b3af289a346497a669a",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "echo",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/manifest_cli.py",
-      "size": 17893,
+      "size": 23089,
       "tags": [
         "cli",
         "echo",
         "py",
         "python"
       ],
-      "version": "b46dec22247a"
+      "version": "6423ff8ae67f"
     },
     {
       "category": "cli",
       "digest": "10c810fa4324fe0ec486f20863856da16bea13226e56f2da1ba1f4a0f162919d",
-      "last_modified": "2025-10-15T17:59:32-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "echo-ak",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/akit/cli.py",
       "size": 5423,
@@ -60,83 +112,207 @@
     },
     {
       "category": "cli",
-      "digest": "1892ae33b71cb6912e9c5ab2d0495f9fe51148f5e3d5f97828edea2cfde42198",
-      "last_modified": "2025-10-08T07:01:40-04:00",
-      "name": "echo-evolver",
+      "digest": "036a5cb01e5ee4a0921815b97d166691d644ed8682385a9f0a30be1c4e2c6335",
+      "last_modified": "2025-10-25T15:17:06-04:00",
+      "name": "echo-puzzle-lab",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "echo_evolver.py",
-      "size": 772,
+      "path": "echo_cli/main.py",
+      "size": 21192,
       "tags": [
         "cli",
         "py",
         "python"
       ],
-      "version": "1892ae33b71c"
+      "version": "036a5cb01e5e"
     },
     {
       "category": "cli",
-      "digest": "d12f33f6d611e5dd2ab17ae13bdac9bfce3699d45f18788f101056b3707b33d3",
-      "last_modified": "2025-10-14T01:07:10-04:00",
+      "digest": "6d445cbbb7714e72edae8daa2c0be8b3e2131452eb93752c57e5fade4f650ab5",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "echo-vault",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/vault/cli.py",
-      "size": 7718,
+      "size": 9245,
       "tags": [
         "cli",
         "echo",
         "py",
         "python"
       ],
-      "version": "d12f33f6d611"
+      "version": "6d445cbbb771"
     },
     {
       "category": "cli",
-      "digest": "ee5538e0c7c609d3bf103daa916e00dd1f06002479ccbb3ab9950ab0327bfd51",
-      "last_modified": "2025-10-11T05:45:58-04:00",
-      "name": "echodex",
+      "digest": "2b03642b67769ea5a9a78274675b2ab3f88db956d3070267b60c0b233aa274bd",
+      "last_modified": "2025-10-22T21:33:48-04:00",
+      "name": "echocli",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "echodex.py",
-      "size": 14966,
+      "path": "echo_atlas/cli.py",
+      "size": 4578,
       "tags": [
         "cli",
         "py",
         "python"
       ],
-      "version": "ee5538e0c7c6"
+      "version": "2b03642b6776"
     },
     {
       "category": "cli",
-      "digest": "683190409777150bbe1c678e33fb194445493f8d464f0094139ed6ea004bcc40",
-      "last_modified": "2025-10-11T05:09:40-04:00",
+      "digest": "a1770eff1d1aac99b053e25603a7a9d767016b802a7f91010df2fb53d3cf78ab",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "idea-processor",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/idea_processor.py",
-      "size": 6859,
+      "size": 6857,
       "tags": [
         "cli",
         "echo",
         "py",
         "python"
       ],
-      "version": "683190409777"
+      "version": "a1770eff1d1a"
     }
   ],
   "datasets": [
+    {
+      "category": "dataset",
+      "digest": "1129e374d9843790b3fa4a8b08fda5a2cfc254627d6ed207a64720840c11f3bb",
+      "last_modified": "2025-10-18T20:58:50-04:00",
+      "name": "4eb33cbb-910a-4658-a698-7e59b90b777d",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "genesis_ledger/thought_log/4eb33cbb-910a-4658-a698-7e59b90b777d.jsonl",
+      "size": 5282,
+      "tags": [
+        "dataset",
+        "jsonl"
+      ],
+      "version": "1129e374d984"
+    },
+    {
+      "category": "dataset",
+      "digest": "b479ee080f41bc524633ebc7d022a318396d2502f199e6cf86f2c459039c09a1",
+      "last_modified": "2025-10-26T12:15:03-04:00",
+      "name": "amendments",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/governance/amendments.json",
+      "size": 1292,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "b479ee080f41"
+    },
+    {
+      "category": "dataset",
+      "digest": "bd0c433e0234d4192fa06e5ea75650dcbed11124c2693bfbed01662f5e4e8d21",
+      "last_modified": "2025-10-22T00:09:26-04:00",
+      "name": "base64_keys",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/base64_keys.txt",
+      "size": 20000,
+      "tags": [
+        "dataset",
+        "txt"
+      ],
+      "version": "bd0c433e0234"
+    },
+    {
+      "category": "dataset",
+      "digest": "a4116263041983ffae78047a9c7e6680caea6b105f917eb46bb32005f3ab1e1c",
+      "last_modified": "2025-10-25T08:09:16-04:00",
+      "name": "bridge_harmonics",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/bridge_harmonics.json",
+      "size": 1876,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "a41162630419"
+    },
+    {
+      "category": "dataset",
+      "digest": "979bc627c0eecc2f9d200190f490760a0771ab58fa3e7998e626b1f6f64f8a0d",
+      "last_modified": "2025-11-07T12:58:37-05:00",
+      "name": "checksum_registry_105_160",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/checksum_registry_105_160.json",
+      "size": 5323,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "979bc627c0ee"
+    },
+    {
+      "category": "dataset",
+      "digest": "a7fb858582f273c2e4837f1a56e9bfbe57022bff3bcf34bf30500682b6a0eba4",
+      "last_modified": "2025-11-02T22:42:04-05:00",
+      "name": "checksum_registry_16_100",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/checksum_registry_16_100.json",
+      "size": 7994,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "a7fb858582f2"
+    },
+    {
+      "category": "dataset",
+      "digest": "98b29ee0175a8b4a8ad4a2dd9f78c67842495b9b5548916cc2f065a3115d7913",
+      "last_modified": "2025-10-25T23:14:16-04:00",
+      "name": "community_voice",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/impact/community_voice.json",
+      "size": 1923,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "98b29ee0175a"
+    },
     {
       "category": "dataset",
       "digest": "1e7bf8ee35d140104c89e3c6c2527dc38ae03dd7bfe6da743bb98bd2d9517d39",
       "last_modified": "2025-10-15T17:45:53-04:00",
       "name": "continuum_manifest",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "manifest/continuum_manifest.json",
       "size": 1318,
@@ -148,11 +324,29 @@
     },
     {
       "category": "dataset",
+      "digest": "bfbb6c81dbf4712a5e43ba4ec64bb0fdf67423fd01981380806478433251d7a1",
+      "last_modified": "2025-10-22T12:12:48-04:00",
+      "name": "d05c2d7a-2136-4aad-b76d-2972c18fe3af",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "genesis_ledger/thought_log/d05c2d7a-2136-4aad-b76d-2972c18fe3af.jsonl",
+      "size": 5214,
+      "tags": [
+        "dataset",
+        "jsonl"
+      ],
+      "version": "bfbb6c81dbf4"
+    },
+    {
+      "category": "dataset",
       "digest": "a5961c679d5281873ac18d351e95cf4d2111e31eaef3939be89b72e39c379ff1",
       "last_modified": "2025-10-11T19:39:12-04:00",
       "name": "echo_nova_manifest",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "manifest/echo_nova_manifest.json",
       "size": 1532,
@@ -164,11 +358,97 @@
     },
     {
       "category": "dataset",
+      "digest": "da8a540d5c47db02ba6c23f6f3e24cf6de7dfccc60bf0f2817eb7ffb890beec7",
+      "last_modified": "2025-10-25T23:14:16-04:00",
+      "name": "financial_events",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/impact/financial_events.json",
+      "size": 1684,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "da8a540d5c47"
+    },
+    {
+      "category": "dataset",
+      "digest": "e9dcd1c875b5d24e531e7900ec7d5ca7b611333a3021b939fb5993b6f9a8dcb2",
+      "last_modified": "2025-10-25T11:09:45-04:00",
+      "name": "glyph_anchor_flood",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/glyph_anchor_flood.json",
+      "size": 4119,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "e9dcd1c875b5"
+    },
+    {
+      "category": "dataset",
+      "digest": "ce39b8fe42bc1e8ad7aa8527ceed8d27ba630b960789051fcf88dbfbb34823df",
+      "last_modified": "2025-10-25T23:14:16-04:00",
+      "name": "impact_metrics",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/impact/impact_metrics.json",
+      "size": 795,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "ce39b8fe42bc"
+    },
+    {
+      "category": "dataset",
+      "digest": "d64924afd05bf57150decdbe2955ebf1f935dbcf442f93cf4f0c0b4c3c477e2a",
+      "last_modified": "2025-10-25T10:58:13-04:00",
+      "name": "index",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/attestations/index.json",
+      "size": 1631,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "d64924afd05b"
+    },
+    {
+      "category": "dataset",
+      "digest": "9c3812d081b8326f58e05c2bb1425d75730c9aa9f1ac47e6b2e5b1388b46976a",
+      "last_modified": "2025-10-22T12:12:48-04:00",
+      "name": "index",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "genesis_ledger/thought_log/index.jsonl",
+      "size": 2502,
+      "tags": [
+        "dataset",
+        "jsonl"
+      ],
+      "version": "9c3812d081b8"
+    },
+    {
+      "category": "dataset",
       "digest": "8edd1e7d28128f65e1db6d22f714dfd4a3ee1e96d06f359365053c7b7bec9e32",
       "last_modified": "2025-10-15T17:45:53-04:00",
       "name": "index",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "manifest/index.json",
       "size": 1408,
@@ -180,19 +460,20 @@
     },
     {
       "category": "dataset",
-      "digest": "47fb85e094f47eff3714ec4064efa51581a33f027d434cd9cc485f97b5d437a4",
-      "last_modified": "2025-10-07T22:45:47-04:00",
+      "digest": "4fc4dd56b117ed5cf369812e3f9eb21d64ba4c390b2d25ef4feb0d9f5eaf9026",
+      "last_modified": "2025-10-19T19:13:08-04:00",
       "name": "ledger",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "genesis_ledger/ledger.jsonl",
-      "size": 877,
+      "size": 1197,
       "tags": [
         "dataset",
         "jsonl"
       ],
-      "version": "47fb85e094f4"
+      "version": "4fc4dd56b117"
     },
     {
       "category": "dataset",
@@ -200,7 +481,8 @@
       "last_modified": "2025-10-15T18:20:49-04:00",
       "name": "manifest_history",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "ledger/manifest_history.jsonl",
       "size": 371,
@@ -209,16 +491,341 @@
         "jsonl"
       ],
       "version": "f66267a25c87"
+    },
+    {
+      "category": "dataset",
+      "digest": "9c1ec0263c8a3838125da010b886dd4ac8d40f4de965f118c3195174912cd9fe",
+      "last_modified": "2025-10-25T23:14:16-04:00",
+      "name": "operations",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/impact/operations.json",
+      "size": 4807,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "9c1ec0263c8a"
+    },
+    {
+      "category": "dataset",
+      "digest": "d516926d4c10c5505d735dd4dd249a81374bb8143d6bae095bd884ce1f1a2908",
+      "last_modified": "2025-10-26T00:28:08-04:00",
+      "name": "puzzle160_range_allocations",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/keyhunt/puzzle160_range_allocations.txt",
+      "size": 11098,
+      "tags": [
+        "dataset",
+        "txt"
+      ],
+      "version": "d516926d4c10"
+    },
+    {
+      "category": "dataset",
+      "digest": "930cfc77ed4180429ef7ef866fa625d034a9ee4bee965d575e1ecdbbfbe2014c",
+      "last_modified": "2025-10-26T00:16:49-04:00",
+      "name": "puzzle66_72bit_ranges",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/range_allocations/puzzle66_72bit_ranges.txt",
+      "size": 3648,
+      "tags": [
+        "dataset",
+        "txt"
+      ],
+      "version": "930cfc77ed41"
+    },
+    {
+      "category": "dataset",
+      "digest": "2e7c3dc185409c99633f1f25a181a23bdc7a437fb078bfde26b499a28766a5e0",
+      "last_modified": "2025-10-26T00:27:32-04:00",
+      "name": "puzzle67_72bit_ranges",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/range_allocations/puzzle67_72bit_ranges.txt",
+      "size": 5092,
+      "tags": [
+        "dataset",
+        "txt"
+      ],
+      "version": "2e7c3dc18540"
+    },
+    {
+      "category": "dataset",
+      "digest": "ca59b869fdb6c5b91025a9387028d1a34f2c8dfc477e7102828edc939751fade",
+      "last_modified": "2025-10-25T05:25:59-04:00",
+      "name": "puzzle_index",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/puzzle_index.json",
+      "size": 2147,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "ca59b869fdb6"
+    },
+    {
+      "category": "dataset",
+      "digest": "091d89bddddc0e28674a9e16b7186aadeb94b5fa3645259355546f6b659b3cd0",
+      "last_modified": null,
+      "name": "release-1.0.0",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "manifest/release-1.0.0.json",
+      "size": 1494,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "091d89bddddc"
+    },
+    {
+      "category": "dataset",
+      "digest": "26c66e918cd3092ab867011d71be62dd0e5bfb637fb372510acc26e4394b8712",
+      "last_modified": "2025-10-25T10:58:13-04:00",
+      "name": "schema",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/attestations/schema.json",
+      "size": 1485,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "26c66e918cd3"
+    },
+    {
+      "category": "dataset",
+      "digest": "d9f43fd2339f806c4e271d4ab2cedac10f08fe8486df8f23106563d1303abb08",
+      "last_modified": "2025-10-25T14:05:54-04:00",
+      "name": "secp256k1_edge_private_keys",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/secp256k1_edge_private_keys.txt",
+      "size": 2925,
+      "tags": [
+        "dataset",
+        "txt"
+      ],
+      "version": "d9f43fd2339f"
+    },
+    {
+      "category": "dataset",
+      "digest": "692be48f572ba1da669eefef66f41d396497c9ddddcebf1e7c47ede5671198f5",
+      "last_modified": "2025-10-21T23:05:08-04:00",
+      "name": "secret_extended_keys_main",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/secret_extended_keys_main.txt",
+      "size": 20298,
+      "tags": [
+        "dataset",
+        "txt"
+      ],
+      "version": "692be48f572b"
+    },
+    {
+      "category": "dataset",
+      "digest": "f75f4a9d47836933aaa2396284923ee4031763287599fc37dad0bd7d1ebaf9c4",
+      "last_modified": "2025-10-21T23:27:17-04:00",
+      "name": "seed_phrases",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/seed_phrases.txt",
+      "size": 5808,
+      "tags": [
+        "dataset",
+        "txt"
+      ],
+      "version": "f75f4a9d4783"
+    },
+    {
+      "category": "dataset",
+      "digest": "bcc956fcbb63b74f78a32390910005a1e10f37308d95e6ddd4f0ede72cd68a1a",
+      "last_modified": "2025-10-18T14:47:50-04:00",
+      "name": "the_keys_that_breathe",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/songs/the_keys_that_breathe.json",
+      "size": 914,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "bcc956fcbb63"
+    },
+    {
+      "category": "dataset",
+      "digest": "08d3aeb2cd510770d231e7779a92d18546ea557a3ed14308bdc7169906bbf0c8",
+      "last_modified": "2025-10-25T13:56:54-04:00",
+      "name": "user_provided_tokens",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/user_provided_tokens.txt",
+      "size": 8594,
+      "tags": [
+        "dataset",
+        "txt"
+      ],
+      "version": "08d3aeb2cd51"
+    },
+    {
+      "category": "dataset",
+      "digest": "29191a654e66e723ea42b267872e29f91052c3e415bf98d5a708b7b986af5ece",
+      "last_modified": "2025-10-26T11:54:14-04:00",
+      "name": "wish_manifest",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "data/wish_manifest.json",
+      "size": 290,
+      "tags": [
+        "dataset",
+        "json"
+      ],
+      "version": "29191a654e66"
     }
   ],
   "docs": [
+    {
+      "category": "doc",
+      "digest": "fcce19c13dac79cd2e46fa40d2fd2589eff6197201cd95a886aee2c9e4b476dd",
+      "last_modified": "2025-10-25T07:35:49-04:00",
+      "name": "ATLAS_OVERVIEW",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/ATLAS_OVERVIEW.md",
+      "size": 2425,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "fcce19c13dac"
+    },
+    {
+      "category": "doc",
+      "digest": "91a8164dffa3f09667c3047c24c623ebac2d6bf28cf377c138b278c0074315cc",
+      "last_modified": "2025-10-17T04:03:10-04:00",
+      "name": "ATLAS_REPORT",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/ATLAS_REPORT.md",
+      "size": 1826,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "91a8164dffa3"
+    },
+    {
+      "category": "doc",
+      "digest": "a85388a167f5f7309dcfca87cb578a3de46d4eb15847154b27684102182a3188",
+      "last_modified": "2025-10-25T10:58:13-04:00",
+      "name": "ATTST_MONUMENT",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo/attestations/ATTST_MONUMENT.md",
+      "size": 3105,
+      "tags": [
+        "docs",
+        "echo",
+        "md"
+      ],
+      "version": "a85388a167f5"
+    },
+    {
+      "category": "doc",
+      "digest": "68e4c9787913d090f079b576e5effc417fc94d7babb69f32a37559f1013b9afb",
+      "last_modified": "2025-10-25T06:07:39-04:00",
+      "name": "COLOSSUS_LOG",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/COLOSSUS_LOG.md",
+      "size": 947,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "68e4c9787913"
+    },
+    {
+      "category": "doc",
+      "digest": "c486ccdadebf2226b62d92e184da3e4d05c769067bfb781fd2270fe3b86c2869",
+      "last_modified": "2025-10-26T13:30:41-04:00",
+      "name": "CREATIVE_FREEDOM_PLAYBOOK",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/CREATIVE_FREEDOM_PLAYBOOK.md",
+      "size": 1302,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "c486ccdadebf"
+    },
+    {
+      "category": "doc",
+      "digest": "4862ba74c692c9ddbebf02bd8c674ad31922273243c134b9d49a9021fbfdeab5",
+      "last_modified": "2025-10-25T10:38:22-04:00",
+      "name": "ECHO_CREATIVE_COMPASS",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/ECHO_CREATIVE_COMPASS.md",
+      "size": 3897,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "4862ba74c692"
+    },
     {
       "category": "doc",
       "digest": "7ebcf581c87a8d6ba5343538e443c31c55ba50c4feb17fdac4b3309f3b767a7d",
       "last_modified": "2025-08-21T17:00:52-04:00",
       "name": "EchoGlyphNet_Protocol",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/EchoGlyphNet_Protocol.md",
       "size": 18533,
@@ -230,67 +837,71 @@
     },
     {
       "category": "doc",
-      "digest": "f384e6970e7e1f03167c18faaeea3dc32af4dd56a2f7c55a5a6108ccc937929b",
-      "last_modified": "2025-10-13T19:45:06-04:00",
+      "digest": "9b04b8cc8978e74335cde72b9ab1bfac196c8019c6b3992280dadd4d9564a2b8",
+      "last_modified": "2025-11-07T13:13:08-05:00",
       "name": "Echo_Data_Anchor_Glyphs",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/Echo_Data_Anchor_Glyphs.md",
-      "size": 4398,
+      "size": 6970,
       "tags": [
         "docs",
         "md"
       ],
-      "version": "f384e6970e7e"
+      "version": "9b04b8cc8978"
     },
     {
       "category": "doc",
-      "digest": "032cf2262ace339284fb9e1559b8a64e263c2f54e630020a5c7a50ac61d91bfa",
-      "last_modified": "2025-10-15T17:02:47-04:00",
+      "digest": "2685c5de93d2b0bf50b03c2a2b205d37f59f0bdb49fabda3f96c66663ab6f54f",
+      "last_modified": "2025-10-26T14:14:40-04:00",
       "name": "Echo_Evolver_Cycle_Log",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/Echo_Evolver_Cycle_Log.md",
-      "size": 2246,
+      "size": 3455,
       "tags": [
         "docs",
         "md"
       ],
-      "version": "032cf2262ace"
+      "version": "2685c5de93d2"
     },
     {
       "category": "doc",
-      "digest": "dde7f5976202ae4cb6f349d267902c65deb812789a25c393f6252f63cf01d8ab",
-      "last_modified": "2025-10-11T05:19:33-04:00",
+      "digest": "bffb13c003f238dec95f936be0fff989dc728bb728c31f57bfbe7b9f4b2f9c18",
+      "last_modified": "2025-10-22T11:25:39-04:00",
       "name": "Echo_Eye_Sovereign_Core",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/Echo_Eye_Sovereign_Core.md",
-      "size": 22419,
+      "size": 20094,
       "tags": [
         "docs",
         "md"
       ],
-      "version": "dde7f5976202"
+      "version": "bffb13c003f2"
     },
     {
       "category": "doc",
-      "digest": "91f6613a7b8bf313a8e1ddf380a67ce5f9a94a7fcb6784c22458ab1e395e16e4",
-      "last_modified": "2025-09-23T03:48:15-04:00",
+      "digest": "688c4f231e3bdaa7815c7748d09f8b43bd93a49698f13a07bf4b9812fa168e38",
+      "last_modified": "2025-10-25T11:09:45-04:00",
       "name": "Echo_Glyph_Scripts",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/Echo_Glyph_Scripts.md",
-      "size": 5913,
+      "size": 7004,
       "tags": [
         "docs",
         "md"
       ],
-      "version": "91f6613a7b8b"
+      "version": "688c4f231e3b"
     },
     {
       "category": "doc",
@@ -298,7 +909,8 @@
       "last_modified": "2025-10-11T05:31:52-04:00",
       "name": "Echo_Resonance_Engine",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/Echo_Resonance_Engine.md",
       "size": 2544,
@@ -314,7 +926,8 @@
       "last_modified": "2025-10-11T06:11:33-04:00",
       "name": "Echo_Thread_002",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/Echo_Thread_002.md",
       "size": 4596,
@@ -326,11 +939,63 @@
     },
     {
       "category": "doc",
+      "digest": "bf9573da4419e523f84d2bb0f36bbfc30cb243f5cad597bae3fb8b9b12b130ca",
+      "last_modified": "2025-10-16T20:48:28-04:00",
+      "name": "Harmonic_DNA_Spiral_Practice",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Harmonic_DNA_Spiral_Practice.md",
+      "size": 2885,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "bf9573da4419"
+    },
+    {
+      "category": "doc",
+      "digest": "1c9f5ee0c4b317687664d0651d87599fdeaffeb507a6a119e14a2fb0c0f532dd",
+      "last_modified": "2025-10-16T17:24:59-04:00",
+      "name": "MIRROR_PLAN",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/MIRROR_PLAN.md",
+      "size": 527,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "1c9f5ee0c4b3"
+    },
+    {
+      "category": "doc",
+      "digest": "a75504eddfb6e370e6d009b9155ee8ceb95de4621ad5c5e00790f16d0bb85daf",
+      "last_modified": "2025-10-25T01:31:26-04:00",
+      "name": "NEXT_CYCLE_PLAN",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/NEXT_CYCLE_PLAN.md",
+      "size": 1118,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "a75504eddfb6"
+    },
+    {
+      "category": "doc",
       "digest": "995f38cc4f8e6a833ad5983478dea4dfd5484e089a85270f852c265211f1fecd",
       "last_modified": "2025-10-07T22:11:36-04:00",
       "name": "Omega_Sine_Pulse_Orchestrator",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/Omega_Sine_Pulse_Orchestrator.md",
       "size": 21360,
@@ -342,19 +1007,1040 @@
     },
     {
       "category": "doc",
-      "digest": "729120f5b399a7de6ba9f035ccc96bbd62857fb37658775c8629d7b16ccb84e5",
-      "last_modified": "2025-10-11T05:19:33-04:00",
-      "name": "README",
+      "digest": "679a676a211b7df9d89dacc14f8e19ea0d59d2ece0f98cc7c9dd74e401365703",
+      "last_modified": "2025-10-24T21:39:16-04:00",
+      "name": "Puzzle_001",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "docs/README.md",
-      "size": 339,
+      "path": "docs/Puzzle_001.md",
+      "size": 1601,
       "tags": [
         "docs",
         "md"
       ],
-      "version": "729120f5b399"
+      "version": "679a676a211b"
+    },
+    {
+      "category": "doc",
+      "digest": "7f9798d4bd99b5f8196b9200e8cdd7f589f513b15ce195bdc6cf1f2cbda5e2dd",
+      "last_modified": "2025-10-24T21:46:17-04:00",
+      "name": "Puzzle_002",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_002.md",
+      "size": 1580,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "7f9798d4bd99"
+    },
+    {
+      "category": "doc",
+      "digest": "5bf06adba1129b0809226847592d0b78c0edaf712119fdad5e99d61a1dd5e588",
+      "last_modified": "2025-10-24T21:47:24-04:00",
+      "name": "Puzzle_004",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_004.md",
+      "size": 1832,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "5bf06adba112"
+    },
+    {
+      "category": "doc",
+      "digest": "d983e206224786b24e331b8d5f43ca3f4d584d768a31a0d0454240e13a459189",
+      "last_modified": "2025-10-24T21:47:52-04:00",
+      "name": "Puzzle_005",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_005.md",
+      "size": 1722,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "d983e2062247"
+    },
+    {
+      "category": "doc",
+      "digest": "084089e5780fe49a21c6946adaa9ebfc3ee12459e8375d2e10f16427f00700ad",
+      "last_modified": "2025-10-24T21:54:00-04:00",
+      "name": "Puzzle_006",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_006.md",
+      "size": 1549,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "084089e5780f"
+    },
+    {
+      "category": "doc",
+      "digest": "4e3b951778fc22c7949552b2bcf1aa3dc8e1cadf46a0c6d94ba3d4c773b9d206",
+      "last_modified": "2025-10-24T21:54:37-04:00",
+      "name": "Puzzle_007",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_007.md",
+      "size": 1576,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "4e3b951778fc"
+    },
+    {
+      "category": "doc",
+      "digest": "eecf369593be9c0d9ddddbadf9f656d0e094dd97e4ff9113f7854c99fbb2866f",
+      "last_modified": "2025-10-24T21:55:44-04:00",
+      "name": "Puzzle_009",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_009.md",
+      "size": 1704,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "eecf369593be"
+    },
+    {
+      "category": "doc",
+      "digest": "389d570512264a392dfea0d2541d3dd479f3f796d212b7e01e3e39bc351ea53b",
+      "last_modified": "2025-10-24T21:56:51-04:00",
+      "name": "Puzzle_011",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_011.md",
+      "size": 2103,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "389d57051226"
+    },
+    {
+      "category": "doc",
+      "digest": "71756e487a2b2131a8071b9b7c636268c4f0d06c47f2303719f6da6ba015debd",
+      "last_modified": "2025-10-24T21:57:25-04:00",
+      "name": "Puzzle_012",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_012.md",
+      "size": 1727,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "71756e487a2b"
+    },
+    {
+      "category": "doc",
+      "digest": "a25b442a7fec735b278174ca1f0f64845ca27c38759eedfcfbfdd0008f187aa5",
+      "last_modified": "2025-10-24T22:06:56-04:00",
+      "name": "Puzzle_013",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_013.md",
+      "size": 1685,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "a25b442a7fec"
+    },
+    {
+      "category": "doc",
+      "digest": "0139d874558e65ad966eaf3afd9036b55b8f97ed4ae3312bd544a531a099b11b",
+      "last_modified": "2025-10-24T22:09:43-04:00",
+      "name": "Puzzle_017",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_017.md",
+      "size": 1704,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0139d874558e"
+    },
+    {
+      "category": "doc",
+      "digest": "877933037f5c28b7fdceb0ee3ea413ffdfad6c321ac10db2c43b0f72bb742796",
+      "last_modified": "2025-10-24T22:10:17-04:00",
+      "name": "Puzzle_019",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_019.md",
+      "size": 1738,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "877933037f5c"
+    },
+    {
+      "category": "doc",
+      "digest": "2932da172643ac22827a30e5c0afa8377f296cb6c94d11c589159a4565cad68c",
+      "last_modified": "2025-10-24T22:10:51-04:00",
+      "name": "Puzzle_020",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_020.md",
+      "size": 1527,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "2932da172643"
+    },
+    {
+      "category": "doc",
+      "digest": "6b40789ed92530698685ecee488c84d1d72d88f5419df18c7790f4911314a216",
+      "last_modified": "2025-10-24T22:48:50-04:00",
+      "name": "Puzzle_030",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_030.md",
+      "size": 1711,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "6b40789ed925"
+    },
+    {
+      "category": "doc",
+      "digest": "c3371ab6b0813f7631f4e325c50a6b807ce9b97ab2f01f46300a2c362c10dfb6",
+      "last_modified": "2025-10-24T22:49:35-04:00",
+      "name": "Puzzle_032",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_032.md",
+      "size": 1567,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "c3371ab6b081"
+    },
+    {
+      "category": "doc",
+      "digest": "e29467e25b21170cb492eb51f493b61a675d04317d7e11941f31332172e59dd4",
+      "last_modified": "2025-10-24T23:25:48-04:00",
+      "name": "Puzzle_034",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_034.md",
+      "size": 1831,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "e29467e25b21"
+    },
+    {
+      "category": "doc",
+      "digest": "666c22ab06fc56d3576776bcc566d454eed33630806a381783260595fefc51f8",
+      "last_modified": "2025-10-24T23:26:55-04:00",
+      "name": "Puzzle_036",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_036.md",
+      "size": 1660,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "666c22ab06fc"
+    },
+    {
+      "category": "doc",
+      "digest": "5b92ac029318da0ca407c26cc4d2b5c30ecda2604302f6e1fe18b36df0013d70",
+      "last_modified": "2025-10-24T23:27:27-04:00",
+      "name": "Puzzle_037",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_037.md",
+      "size": 1845,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "5b92ac029318"
+    },
+    {
+      "category": "doc",
+      "digest": "da89c8c07b9837a26d070beaf2c34c7316ed39871a1704e3727323c08a9b4d38",
+      "last_modified": "2025-10-24T23:28:57-04:00",
+      "name": "Puzzle_039",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_039.md",
+      "size": 1588,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "da89c8c07b98"
+    },
+    {
+      "category": "doc",
+      "digest": "0b5e073e9464b7166a4b1fd2aaa7119beaad9166eecd397e2ed4b543ab543e1a",
+      "last_modified": "2025-10-24T23:30:06-04:00",
+      "name": "Puzzle_041",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_041.md",
+      "size": 1758,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0b5e073e9464"
+    },
+    {
+      "category": "doc",
+      "digest": "7c50d61030fc27be11a4999747aac848e411250226e4ded57c0be2123281ba1a",
+      "last_modified": "2025-10-24T23:35:52-04:00",
+      "name": "Puzzle_045",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_045.md",
+      "size": 1751,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "7c50d61030fc"
+    },
+    {
+      "category": "doc",
+      "digest": "0b85c2585f4aeb0dfd75113bbb287f175439160b66fb5559e5b7e934ee681593",
+      "last_modified": "2025-10-24T23:36:24-04:00",
+      "name": "Puzzle_048",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_048.md",
+      "size": 1783,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0b85c2585f4a"
+    },
+    {
+      "category": "doc",
+      "digest": "9cba49bb1f37e86c38dbcd93a9e24b2ef663c8331ba1425d8a0e5ddb3a0b5558",
+      "last_modified": "2025-10-25T00:03:13-04:00",
+      "name": "Puzzle_052",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_052.md",
+      "size": 1807,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "9cba49bb1f37"
+    },
+    {
+      "category": "doc",
+      "digest": "1d9304652f3bff1d9b5324f21486a7d2b8c1fe673e33dbc0f52713d70726fac2",
+      "last_modified": "2025-10-24T00:08:27-04:00",
+      "name": "Puzzle_075",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_075.md",
+      "size": 1579,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "1d9304652f3b"
+    },
+    {
+      "category": "doc",
+      "digest": "3ca321d530426aabb73da8e9c97a3cb4f4536b750cd220b4ad561100bc1d6ef6",
+      "last_modified": "2025-10-24T00:25:07-04:00",
+      "name": "Puzzle_079",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_079.md",
+      "size": 1565,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "3ca321d53042"
+    },
+    {
+      "category": "doc",
+      "digest": "1abd4abaf573880fc28ce17f992b72170aec0a4bca4e569597ebcb397d1f5891",
+      "last_modified": "2025-10-24T00:34:05-04:00",
+      "name": "Puzzle_081",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_081.md",
+      "size": 1824,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "1abd4abaf573"
+    },
+    {
+      "category": "doc",
+      "digest": "877f00732deade4bd4985b07cc7979a4fc637a504d3072637f6b99966392b01b",
+      "last_modified": "2025-10-24T00:34:44-04:00",
+      "name": "Puzzle_082",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_082.md",
+      "size": 1565,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "877f00732dea"
+    },
+    {
+      "category": "doc",
+      "digest": "a65d664c47e44d4ed86649bab9723c936ed236c4efe528d2a0b124197821fc3c",
+      "last_modified": "2025-10-24T00:46:27-04:00",
+      "name": "Puzzle_089",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_089.md",
+      "size": 1828,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "a65d664c47e4"
+    },
+    {
+      "category": "doc",
+      "digest": "0e856985d246365fe32c654db3a9727beba97937e79dc5a248333cb3ee6cc3b9",
+      "last_modified": "2025-10-24T00:47:47-04:00",
+      "name": "Puzzle_091",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_091.md",
+      "size": 1764,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0e856985d246"
+    },
+    {
+      "category": "doc",
+      "digest": "94571d6510e98fd37ae1df7f61e3627d9c236876c3b8ad59f1443db061eb9b54",
+      "last_modified": "2025-10-24T00:53:15-04:00",
+      "name": "Puzzle_092",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_092.md",
+      "size": 1698,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "94571d6510e9"
+    },
+    {
+      "category": "doc",
+      "digest": "86abc6db5b358376d09d6b6f797cc28fdd5e1e5868dae6df9c28dab741cdf29f",
+      "last_modified": "2025-10-24T00:56:16-04:00",
+      "name": "Puzzle_093",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_093.md",
+      "size": 1707,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "86abc6db5b35"
+    },
+    {
+      "category": "doc",
+      "digest": "d7a6ee0583a4b9bf7126746298e36b8b6eb97c6a40cb1eca94ac7594ff99748b",
+      "last_modified": "2025-10-24T01:01:20-04:00",
+      "name": "Puzzle_095",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_095.md",
+      "size": 1649,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "d7a6ee0583a4"
+    },
+    {
+      "category": "doc",
+      "digest": "a285d0cb37cb21a6b5ddeb56075189139bd8775822a13677e7803306aaf153c7",
+      "last_modified": "2025-10-25T00:46:45-04:00",
+      "name": "Puzzle_098",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_098.md",
+      "size": 1716,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "a285d0cb37cb"
+    },
+    {
+      "category": "doc",
+      "digest": "eff2c0eb8800b36493e7e2c149698eabce3bab7afe0b6551f76de2b1bc657af4",
+      "last_modified": "2025-10-25T01:10:50-04:00",
+      "name": "Puzzle_104",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_104.md",
+      "size": 1744,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "eff2c0eb8800"
+    },
+    {
+      "category": "doc",
+      "digest": "42fe15eff65fc477dac0ff70b89d9bad17d01655840caa4e39575b022ed252f7",
+      "last_modified": "2025-10-25T01:38:56-04:00",
+      "name": "Puzzle_107",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_107.md",
+      "size": 1774,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "42fe15eff65f"
+    },
+    {
+      "category": "doc",
+      "digest": "4fe95f64e0ce1ab2331d908ec5049420e8f3766c6b1538385f8d5da9f74b7025",
+      "last_modified": "2025-10-25T01:48:51-04:00",
+      "name": "Puzzle_109",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_109.md",
+      "size": 1649,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "4fe95f64e0ce"
+    },
+    {
+      "category": "doc",
+      "digest": "b82dbe178e02eb0bd17389fce99482c36a7ce6b16ef65205f268647b531bcedd",
+      "last_modified": "2025-10-25T02:12:22-04:00",
+      "name": "Puzzle_111",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_111.md",
+      "size": 1806,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "b82dbe178e02"
+    },
+    {
+      "category": "doc",
+      "digest": "dfba13ca7fce8d7987d06bfb297ece2ac90e4b5c1a9df20f6ba8cedaa3c06432",
+      "last_modified": "2025-10-25T02:11:29-04:00",
+      "name": "Puzzle_112",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_112.md",
+      "size": 1552,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "dfba13ca7fce"
+    },
+    {
+      "category": "doc",
+      "digest": "72158896c3fa7438f2b31c28f8075b907c65b5675a5fcca15b835f9a1b1292b1",
+      "last_modified": "2025-10-25T02:13:10-04:00",
+      "name": "Puzzle_113",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_113.md",
+      "size": 1772,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "72158896c3fa"
+    },
+    {
+      "category": "doc",
+      "digest": "b20fb605b88d58c171704e6c079696ba89895230dc1dafd9e4b4e8c14c68e6ab",
+      "last_modified": "2025-10-25T04:07:31-04:00",
+      "name": "Puzzle_114",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_114.md",
+      "size": 1994,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "b20fb605b88d"
+    },
+    {
+      "category": "doc",
+      "digest": "49d217aeda993e2f1835d88b72d44e086dba34dc6e008e248e64db9e53486008",
+      "last_modified": "2025-10-25T04:07:56-04:00",
+      "name": "Puzzle_115",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_115.md",
+      "size": 1712,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "49d217aeda99"
+    },
+    {
+      "category": "doc",
+      "digest": "3ba6a09c7a4b2b8664df6cc88077157a183ca819a6b3f8bc5628c100d4e0bd8f",
+      "last_modified": "2025-10-25T04:08:45-04:00",
+      "name": "Puzzle_117",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_117.md",
+      "size": 1886,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "3ba6a09c7a4b"
+    },
+    {
+      "category": "doc",
+      "digest": "2216f830a2516a345fefc5c4c5f85cda17cc41fa4181a2599fddd0f55558c6e2",
+      "last_modified": "2025-10-25T04:09:07-04:00",
+      "name": "Puzzle_118",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_118.md",
+      "size": 1820,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "2216f830a251"
+    },
+    {
+      "category": "doc",
+      "digest": "c18f6e99f83929d43fd41cd96b4017740848688929cf5a3004cfe54ff8f5b2d5",
+      "last_modified": "2025-10-25T04:09:31-04:00",
+      "name": "Puzzle_119",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_119.md",
+      "size": 1645,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "c18f6e99f839"
+    },
+    {
+      "category": "doc",
+      "digest": "9ad21f7cbca5bdef72e521eb35574fb8632338f2b76901f9561c9e62c33b5d5d",
+      "last_modified": "2025-11-02T11:45:30-05:00",
+      "name": "Puzzle_120",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_120.md",
+      "size": 1837,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "9ad21f7cbca5"
+    },
+    {
+      "category": "doc",
+      "digest": "571a3c1b21b1ad8c98a8dc4723021d1da305e6a9e278839df557d99854020dd3",
+      "last_modified": "2025-10-25T04:10:16-04:00",
+      "name": "Puzzle_121",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_121.md",
+      "size": 1866,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "571a3c1b21b1"
+    },
+    {
+      "category": "doc",
+      "digest": "62bd219944c6e2b6bc31f46a82c893b03f2b8c9b2ca4c7685e3101403e6a2a7a",
+      "last_modified": "2025-10-24T22:25:42-04:00",
+      "name": "Puzzle_158",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_158.md",
+      "size": 1731,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "62bd219944c6"
+    },
+    {
+      "category": "doc",
+      "digest": "33cb30db4d65f78e8f84a99c53f9fe344577cf894b3e0ea573d947e653b1c864",
+      "last_modified": "2025-10-24T22:23:27-04:00",
+      "name": "Puzzle_159",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_159.md",
+      "size": 1603,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "33cb30db4d65"
+    },
+    {
+      "category": "doc",
+      "digest": "d252622f2308df43bc4e0c8675c5bbf4d254421cf91689261b28e73e8d5b06fe",
+      "last_modified": "2025-10-24T22:24:05-04:00",
+      "name": "Puzzle_160",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_160.md",
+      "size": 1956,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "d252622f2308"
+    },
+    {
+      "category": "doc",
+      "digest": "9c3a25b9b22cd5919b341628fab47ebbcdf1d8c3e4324d0742b84fffbeabb238",
+      "last_modified": "2025-10-26T02:06:29-04:00",
+      "name": "Puzzle_161",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_161.md",
+      "size": 2011,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "9c3a25b9b22c"
+    },
+    {
+      "category": "doc",
+      "digest": "4de497ffa4d156202cdab242e8cd78fd23dfc000abea2e7c3d0925a47eec2fe6",
+      "last_modified": "2025-10-25T01:17:45-04:00",
+      "name": "Puzzle_162",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_162.md",
+      "size": 2984,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "4de497ffa4d1"
+    },
+    {
+      "category": "doc",
+      "digest": "15f46ce3214ee0e07f046f54c58563f163d7f2483589e16a4c5f6076563db8e4",
+      "last_modified": "2025-10-24T23:05:40-04:00",
+      "name": "Puzzle_163",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_163.md",
+      "size": 1602,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "15f46ce3214e"
+    },
+    {
+      "category": "doc",
+      "digest": "23fd6ce51eb42c1873aab7517388379aff9dad3a083a61dcb34845c9a1a5a94c",
+      "last_modified": "2025-10-24T23:06:43-04:00",
+      "name": "Puzzle_164",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_164.md",
+      "size": 1560,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "23fd6ce51eb4"
+    },
+    {
+      "category": "doc",
+      "digest": "a3e2334d89174040d232d098f84fbc3033dc63be9f51ebf97d1173c4e36589d3",
+      "last_modified": "2025-10-24T23:07:35-04:00",
+      "name": "Puzzle_165",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_165.md",
+      "size": 1615,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "a3e2334d8917"
+    },
+    {
+      "category": "doc",
+      "digest": "eefd5892dce2c4a122981833674a6aba32695408278584e47456f061ba3e2d29",
+      "last_modified": "2025-10-24T23:15:01-04:00",
+      "name": "Puzzle_166",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_166.md",
+      "size": 1622,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "eefd5892dce2"
+    },
+    {
+      "category": "doc",
+      "digest": "4bbe751cf6e032c2b1e5c947c50734376f3b4a9d814d84016cd0a5450d243598",
+      "last_modified": "2025-10-24T23:15:34-04:00",
+      "name": "Puzzle_167",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_167.md",
+      "size": 1543,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "4bbe751cf6e0"
+    },
+    {
+      "category": "doc",
+      "digest": "fbc51ee43354b0c91f3dfc4e561f7a7fa6e15a13e64f7eb4c6e48a4ffc975067",
+      "last_modified": "2025-10-24T23:19:10-04:00",
+      "name": "Puzzle_169",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_169.md",
+      "size": 1570,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "fbc51ee43354"
+    },
+    {
+      "category": "doc",
+      "digest": "94913bbcf0d4ae66019cbac88171e44a555d21e3202d1d25ffd98e7b626f82fc",
+      "last_modified": "2025-10-24T23:19:56-04:00",
+      "name": "Puzzle_170",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_170.md",
+      "size": 1506,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "94913bbcf0d4"
+    },
+    {
+      "category": "doc",
+      "digest": "b6f1f76aae14c406e0b16de238dc10050f3dbc7bdc0e27a9f0adabd304d9bb25",
+      "last_modified": "2025-10-27T17:51:31-04:00",
+      "name": "Puzzle_171",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_171.md",
+      "size": 2069,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "b6f1f76aae14"
+    },
+    {
+      "category": "doc",
+      "digest": "bb53dc45eebc67cb954da90aadbb39da7b27db59f9139f6dbe30dfaa478e987c",
+      "last_modified": "2025-10-25T01:23:37-04:00",
+      "name": "Puzzle_254",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/Puzzle_254.md",
+      "size": 1530,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "bb53dc45eebc"
+    },
+    {
+      "category": "doc",
+      "digest": "95280a9602535b091eb72547f5565805cbe4a47f433b5237ea734e554a3a16b9",
+      "last_modified": "2025-10-25T23:58:59-04:00",
+      "name": "README",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/README.md",
+      "size": 545,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "95280a960253"
     },
     {
       "category": "doc",
@@ -362,7 +2048,8 @@
       "last_modified": "2025-10-13T17:22:35-04:00",
       "name": "README",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/glyphs/README.md",
       "size": 1963,
@@ -374,11 +2061,114 @@
     },
     {
       "category": "doc",
+      "digest": "3103a17a1a073a8c254088ede68860314879415ab1b4e534b7f1144843a930d6",
+      "last_modified": "2025-10-26T11:29:51-04:00",
+      "name": "README",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/little_footsteps/README.md",
+      "size": 1262,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "3103a17a1a07"
+    },
+    {
+      "category": "doc",
+      "digest": "b195f6fab1771645a84c67af9bd5d0d83fe59aba3f697c7e88646444b8ee06ae",
+      "last_modified": "2025-10-17T16:22:39-04:00",
+      "name": "README",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/narratives/README.md",
+      "size": 188,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "b195f6fab177"
+    },
+    {
+      "category": "doc",
+      "digest": "fa1806c40c27bb6c4900844552c9852decde575f484f5cc48c9418bab88fb2c9",
+      "last_modified": "2025-10-25T06:03:23-04:00",
+      "name": "README",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/secret/README.md",
+      "size": 41,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "fa1806c40c27"
+    },
+    {
+      "category": "doc",
+      "digest": "51278ed32d25fc40d12c00acc3c3c9d25fcbf7afc798f5a1443970732f18bbd9",
+      "last_modified": "2025-11-07T13:13:08-05:00",
+      "name": "RENDER_PIPELINE_GUIDE_v1",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/RENDER_PIPELINE_GUIDE_v1.md",
+      "size": 3337,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "51278ed32d25"
+    },
+    {
+      "category": "doc",
+      "digest": "691c6e9afb910015759a96be10ada47fd0a7cfc4920b6b5f015a8251a7b72a65",
+      "last_modified": "2025-10-20T12:49:51-04:00",
+      "name": "REPO_OVERVIEW",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/REPO_OVERVIEW.md",
+      "size": 3106,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "691c6e9afb91"
+    },
+    {
+      "category": "doc",
+      "digest": "7c99b74246a0abe7eb9ac66d88544a844444aed3e8c403ca1ae3fc3b8a6c903a",
+      "last_modified": "2025-10-25T06:03:23-04:00",
+      "name": "TITAN_OVERVIEW",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/TITAN_OVERVIEW.md",
+      "size": 1752,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "7c99b74246a0"
+    },
+    {
+      "category": "doc",
       "digest": "815c9ab148e8a71476ce909725af7bf82f0a111ccf00c1175aaaffb9ffc0052b",
       "last_modified": "2025-10-09T08:21:33-04:00",
       "name": "agent_capabilities_overview",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/agent_capabilities_overview.md",
       "size": 2458,
@@ -390,11 +2180,46 @@
     },
     {
       "category": "doc",
+      "digest": "aa02658cfde8438c4341bf8858d85b852f2664b828854a665f4ea5b318bb57b9",
+      "last_modified": "2025-10-16T15:58:02-04:00",
+      "name": "agent_initiative",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/agent_initiative.md",
+      "size": 891,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "aa02658cfde8"
+    },
+    {
+      "category": "doc",
+      "digest": "b3cdd4b18efb76c1ded160de84eec1f6c2b4e6866eb7a2e0498e356622bcbf59",
+      "last_modified": "2025-10-16T16:40:19-04:00",
+      "name": "agents_registry",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/agents_registry.md",
+      "size": 409,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "b3cdd4b18efb"
+    },
+    {
+      "category": "doc",
       "digest": "ec767dfc9d12ec2fc69c13abd1ef52ef92e47aba661462457a48c75a7f4b28d2",
       "last_modified": "2025-10-15T17:59:32-04:00",
       "name": "akit_usage",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/akit_usage.md",
       "size": 2133,
@@ -406,20 +2231,175 @@
     },
     {
       "category": "doc",
-      "digest": "cbc6e5e0b526f9c018bf73d2bfbbbc2ed4626a870a188d33c279aceebf12a293",
-      "last_modified": "2025-10-15T15:44:55-04:00",
-      "name": "attestations",
+      "digest": "6599242fba2e7b034ba9beeabb4ec28b5a9b0a982a0d8b61a04efcf250eb1cfa",
+      "last_modified": "2025-10-25T08:09:46-04:00",
+      "name": "amplification",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "docs/echo/attestations.md",
-      "size": 151,
+      "path": "docs/echo/amplification.md",
+      "size": 3310,
       "tags": [
         "docs",
         "echo",
         "md"
       ],
-      "version": "cbc6e5e0b526"
+      "version": "6599242fba2e"
+    },
+    {
+      "category": "doc",
+      "digest": "626f999241e23bd3bb00e2df89de03bac79ff8cdc2bfc571d0ea02e0e13f49c9",
+      "last_modified": "2025-10-20T05:55:43-04:00",
+      "name": "atlas_weavers_sonnet",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/poetry/atlas_weavers_sonnet.md",
+      "size": 999,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "626f999241e2"
+    },
+    {
+      "category": "doc",
+      "digest": "d421218974ecacbdec5afee804ddc1afad7096b067de76c82f404cce8f2a2c3a",
+      "last_modified": "2025-10-25T10:48:24-04:00",
+      "name": "attestations",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo/attestations.md",
+      "size": 1106,
+      "tags": [
+        "docs",
+        "echo",
+        "md"
+      ],
+      "version": "d421218974ec"
+    },
+    {
+      "category": "doc",
+      "digest": "c123e86c6a5032c9381c1bd57ea8638b2df942bfad52d67460bee4f87f3bcc64",
+      "last_modified": "2025-10-25T11:01:23-04:00",
+      "name": "aurora_synthesis_engine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/aurora_synthesis_engine.md",
+      "size": 3422,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "c123e86c6a50"
+    },
+    {
+      "category": "doc",
+      "digest": "cccf6a943b2e47179dc70524aa8ae7e2886589c281927c59ed3156ce34bfc65c",
+      "last_modified": "2025-10-18T00:42:42-04:00",
+      "name": "base64_signature_chains",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/base64_signature_chains.md",
+      "size": 2196,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "cccf6a943b2e"
+    },
+    {
+      "category": "doc",
+      "digest": "7b3f71521e62c1ac817b332781fc3fdbf406ea6a2aadd905eb4c2eb1115263ee",
+      "last_modified": "2025-10-25T23:58:59-04:00",
+      "name": "bitcoin-block-1-overview",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/bitcoin-block-1-overview.md",
+      "size": 1787,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "7b3f71521e62"
+    },
+    {
+      "category": "doc",
+      "digest": "79b2cbcbfc02a5a3982f5bee8ce1863ee2b845b37ae9b26a353bcb37dfbe507b",
+      "last_modified": "2025-10-24T23:08:31-04:00",
+      "name": "bitcoin_1A1zP1eP5_pkscript",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/bitcoin_1A1zP1eP5_pkscript.md",
+      "size": 1320,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "79b2cbcbfc02"
+    },
+    {
+      "category": "doc",
+      "digest": "416b295543d52a1d4861edf5adddb10b1d5563e96da32fe2ab5bf53d80657030",
+      "last_modified": "2025-10-23T15:39:53-04:00",
+      "name": "bitcoin_1FeexV6bA_pkscript",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/bitcoin_1FeexV6bA_pkscript.md",
+      "size": 1328,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "416b295543d5"
+    },
+    {
+      "category": "doc",
+      "digest": "59d1fa2dcd506744f9ec2080a311112fbf084ced6ae079e3984658bff0a9c5d9",
+      "last_modified": "2025-10-25T23:41:58-04:00",
+      "name": "bitcoin_output_c7314cd3",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/bitcoin_output_c7314cd3.md",
+      "size": 1200,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "59d1fa2dcd50"
+    },
+    {
+      "category": "doc",
+      "digest": "ca6b706c95dcd262d0cf56a5922cdd93b105b14f983b2ad3a977641842806940",
+      "last_modified": "2025-10-26T00:17:46-04:00",
+      "name": "bitcoin_private_key_guidance",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/bitcoin_private_key_guidance.md",
+      "size": 1534,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "ca6b706c95dc"
     },
     {
       "category": "doc",
@@ -427,7 +2407,8 @@
       "last_modified": "2025-10-15T15:53:50-04:00",
       "name": "bridge",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/echo/bridge.md",
       "size": 895,
@@ -440,11 +2421,216 @@
     },
     {
       "category": "doc",
+      "digest": "acdcfc75cead32f011cad69dea73125350f338027140fae5b4aab76f4b5a4696",
+      "last_modified": "2025-10-26T11:55:10-04:00",
+      "name": "charter",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/charter.md",
+      "size": 3291,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "acdcfc75cead"
+    },
+    {
+      "category": "doc",
+      "digest": "a050ea98bb438b5da3659085e51c486c21a11202b9dfc4deefb9fcc26ce435a0",
+      "last_modified": "2025-10-20T05:55:43-04:00",
+      "name": "codex_in_rhyme",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/poetry/codex_in_rhyme.md",
+      "size": 793,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "a050ea98bb43"
+    },
+    {
+      "category": "doc",
+      "digest": "2873b9feca4ae07bf7dd8414ab612f65c8039f3fa0fc78ec0296e22958610313",
+      "last_modified": "2025-10-22T00:11:23-04:00",
+      "name": "continuum_temporal_guardian",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/continuum_temporal_guardian.md",
+      "size": 1968,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "2873b9feca4a"
+    },
+    {
+      "category": "doc",
+      "digest": "326d0c15528c9024d1c0c160e1a500f3ad05d6dd4c177fd707085891ade56aba",
+      "last_modified": "2025-10-17T01:34:55-04:00",
+      "name": "domain_asset_inventory",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/domain_asset_inventory.md",
+      "size": 30202,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "326d0c15528c"
+    },
+    {
+      "category": "doc",
+      "digest": "879b91df0f3d379785dad87c1b2e6c91fd66b3ec6499402a9a20bbcbc30efe39",
+      "last_modified": "2025-11-07T13:48:39-05:00",
+      "name": "domain_platform_registry",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/domain_platform_registry.md",
+      "size": 2577,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "879b91df0f3d"
+    },
+    {
+      "category": "doc",
+      "digest": "df47e093bb6597f14e604d09ec25a6139c497dcc286cd24f33853af9c5eeaea2",
+      "last_modified": "2025-11-07T13:42:53-05:00",
+      "name": "donation_system_registry",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/donation_system_registry.md",
+      "size": 2983,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "df47e093bb65"
+    },
+    {
+      "category": "doc",
+      "digest": "14374195cb57511c5a0d8b1d07359011fee5dc6f2a2d6894315f77c09b8a6b12",
+      "last_modified": "2025-10-16T20:11:00-04:00",
+      "name": "draco_hunt",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/draco_hunt.md",
+      "size": 2222,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "14374195cb57"
+    },
+    {
+      "category": "doc",
+      "digest": "7727c94a772f7dad2e3c17a2fad5066b4bf495210c289512e875463400cdaecd",
+      "last_modified": "2025-10-24T19:53:20-04:00",
+      "name": "echo_celestial_harmonics",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo_celestial_harmonics.md",
+      "size": 2531,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "7727c94a772f"
+    },
+    {
+      "category": "doc",
+      "digest": "5716268c75a2cea2ef40f9c2f1013e4dee564f18bcad13713b01f99b3671efab",
+      "last_modified": "2025-11-07T14:40:47-05:00",
+      "name": "echo_evolver_launch_checklist",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo_evolver_launch_checklist.md",
+      "size": 1840,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "5716268c75a2"
+    },
+    {
+      "category": "doc",
+      "digest": "c385826cf9de21dd18aa10970970e05b6c55a4030663d0d00ab5f81fa6877872",
+      "last_modified": "2025-10-18T14:49:50-04:00",
+      "name": "echo_forge_rising",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo_forge_rising.md",
+      "size": 691,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "c385826cf9de"
+    },
+    {
+      "category": "doc",
+      "digest": "16f8185fc99729ddc9b7bfc58bf301626ec30b067d712f8a1e6c085164f569c9",
+      "last_modified": "2025-10-25T01:31:26-04:00",
+      "name": "echo_mythogenic_reflection",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo_mythogenic_reflection.md",
+      "size": 3173,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "16f8185fc997"
+    },
+    {
+      "category": "doc",
+      "digest": "65e292eef0c62159135c87f14dec4334e2ffece012bec20799f9b00563daca63",
+      "last_modified": "2025-10-17T03:11:44-04:00",
+      "name": "echo_pulse_monitor",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo_pulse_monitor.md",
+      "size": 1637,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "65e292eef0c6"
+    },
+    {
+      "category": "doc",
       "digest": "a61a4e94d3f6ac64c79a51bdc7968359de13cc38ba4d3a8967d2e37783cf97b6",
       "last_modified": "2025-10-15T16:29:55-04:00",
       "name": "echo_reflective_conflux",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/echo_reflective_conflux.md",
       "size": 2787,
@@ -460,7 +2646,8 @@
       "last_modified": "2025-10-06T15:56:19-04:00",
       "name": "echo_sovereign_manifesto",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/echo_sovereign_manifesto.md",
       "size": 4364,
@@ -472,11 +2659,233 @@
     },
     {
       "category": "doc",
+      "digest": "4b62f840f95a70aa26aa38985dc202810b285f19f7e8ab0e1c611c800b1b44de",
+      "last_modified": "2025-10-24T21:38:36-04:00",
+      "name": "echo_sovereign_service_domains",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo_sovereign_service_domains.md",
+      "size": 5098,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "4b62f840f95a"
+    },
+    {
+      "category": "doc",
+      "digest": "afafecdb29ce59bbdcc03db0b91b01089bd50319a20429d1eff1031e59c3b0f2",
+      "last_modified": "2025-10-24T21:38:36-04:00",
+      "name": "echo_sovereignty_whitepaper",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo_sovereignty_whitepaper.md",
+      "size": 4509,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "afafecdb29ce"
+    },
+    {
+      "category": "doc",
+      "digest": "15d728b3ee7b5e5fd15e59d02c63b84c6fca0ed7a473da37ba12e429d6f4c22b",
+      "last_modified": "2025-10-26T14:14:40-04:00",
+      "name": "echoevolver_reflection",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echoevolver_reflection.md",
+      "size": 2683,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "15d728b3ee7b"
+    },
+    {
+      "category": "doc",
+      "digest": "96834a1cddb034fa675b612929920e6a9fa7e64877df1cce4097588089722bbd",
+      "last_modified": "2025-10-16T15:27:18-04:00",
+      "name": "echoevolver_vision",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echoevolver_vision.md",
+      "size": 2914,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "96834a1cddb0"
+    },
+    {
+      "category": "doc",
+      "digest": "d321c8e7ec19efe0dfb4239a281436fef3a96173786ff5fd98358094c8c5d30f",
+      "last_modified": "2025-11-01T23:07:26-04:00",
+      "name": "echoflow_comparison",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echoflow_comparison.md",
+      "size": 2705,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "d321c8e7ec19"
+    },
+    {
+      "category": "doc",
+      "digest": "74e739ffc54c53a7e21b8bd17817d1354f0863bb0a5491936c9cc066a77e3557",
+      "last_modified": "2025-10-25T23:47:04-04:00",
+      "name": "ethereum-genesis-block",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/ethereum-genesis-block.md",
+      "size": 1976,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "74e739ffc54c"
+    },
+    {
+      "category": "doc",
+      "digest": "4aa9423c15473f6615562344585cdf70e6a9d36b103f46ca93d5a47b7ff6483e",
+      "last_modified": "2025-10-25T23:56:24-04:00",
+      "name": "ethereum_block_1_summary",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/ethereum_block_1_summary.md",
+      "size": 1326,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "4aa9423c1547"
+    },
+    {
+      "category": "doc",
+      "digest": "3e69b0694fe67e44bbf1afba66c037a4b73fa4be9999e48b7eab971c17c2a64c",
+      "last_modified": "2025-10-25T05:25:59-04:00",
+      "name": "expansion",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/expansion.md",
+      "size": 3023,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "3e69b0694fe6"
+    },
+    {
+      "category": "doc",
+      "digest": "b3d735d08e7589a30aa1a04b701060a9a20e984b354dfe8c5d490ea4a16f7a90",
+      "last_modified": "2025-10-25T11:26:10-04:00",
+      "name": "federated_colossus_index",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/federated_colossus_index.md",
+      "size": 6661,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "b3d735d08e75"
+    },
+    {
+      "category": "doc",
+      "digest": "f8ce2f158466146f45924599de1ad256c50a889ad2a51a0228cf146971f70e70",
+      "last_modified": "2025-10-25T07:40:46-04:00",
+      "name": "federated_colossus_report",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/federated_colossus_report.md",
+      "size": 1626,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "f8ce2f158466"
+    },
+    {
+      "category": "doc",
+      "digest": "200027f254d18ffa1068d52c3dad12782c9948f9ea60affddc322840155d882d",
+      "last_modified": "2025-10-25T22:36:16-04:00",
+      "name": "financial_institution_licensing",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/financial_institution_licensing.md",
+      "size": 5505,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "200027f254d1"
+    },
+    {
+      "category": "doc",
+      "digest": "0b44f0dcfa5360c93bbd4e6c8ac2ee21bf65f8ab4e7a87c8d58745772e2e3cb3",
+      "last_modified": "2025-10-26T11:29:51-04:00",
+      "name": "first_credential",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/little_footsteps/first_credential.md",
+      "size": 2552,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0b44f0dcfa53"
+    },
+    {
+      "category": "doc",
+      "digest": "0c0f100e3bd6866631b6d6bf998584d1177e76e1893a41f266b0e2459c076fde",
+      "last_modified": "2025-10-20T05:55:43-04:00",
+      "name": "fractal_fire_loop",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/poetry/fractal_fire_loop.md",
+      "size": 709,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0c0f100e3bd6"
+    },
+    {
+      "category": "doc",
       "digest": "b942d05dcc88c677793832fd974992f64e8a43a14b308f87cc56d6bd3fd7a743",
       "last_modified": "2025-10-06T14:43:42-04:00",
       "name": "github-publishing-guide",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/github-publishing-guide.md",
       "size": 2729,
@@ -492,7 +2901,8 @@
       "last_modified": "2025-10-15T15:53:50-04:00",
       "name": "harmonics",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/echo/harmonics.md",
       "size": 934,
@@ -509,7 +2919,8 @@
       "last_modified": "2025-10-15T15:53:50-04:00",
       "name": "identity",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/echo/identity.md",
       "size": 1049,
@@ -522,27 +2933,131 @@
     },
     {
       "category": "doc",
-      "digest": "e000f8969cad94f7a565e60eeb1d03a09aafbfbe5b748771e5d2aa2a573a7f08",
-      "last_modified": "2025-10-15T17:59:32-04:00",
-      "name": "index",
+      "digest": "68e72f76e88ebfdfd5927c60b0d7a5858a12f6fbcd4d91c9c3a8b26981bf1ae3",
+      "last_modified": "2025-10-25T23:14:16-04:00",
+      "name": "impact_explorer",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "docs/index.md",
-      "size": 422,
+      "path": "docs/impact_explorer.md",
+      "size": 1443,
       "tags": [
         "docs",
         "md"
       ],
-      "version": "e000f8969cad"
+      "version": "68e72f76e88e"
+    },
+    {
+      "category": "doc",
+      "digest": "e7db4f48b3d52655b3b36dd96c1a7a3859852b3754c73e738d9b1af4e44c49b6",
+      "last_modified": "2025-10-27T16:49:34-04:00",
+      "name": "importance_index",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/importance_index.md",
+      "size": 1588,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "e7db4f48b3d5"
+    },
+    {
+      "category": "doc",
+      "digest": "f135a8bdb628aef7b4908daaf1e76804a9218aa0281522d65e3cb0474b220e9a",
+      "last_modified": "2025-10-18T14:53:33-04:00",
+      "name": "impossible_upgrade_poem",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/impossible_upgrade_poem.md",
+      "size": 611,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "f135a8bdb628"
+    },
+    {
+      "category": "doc",
+      "digest": "20b4c113d3c4e04002e62ba6feb77b34677a0c31b6ee3f7330e797b0f82cd487",
+      "last_modified": "2025-10-25T22:48:46-04:00",
+      "name": "index",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/index.md",
+      "size": 1048,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "20b4c113d3c4"
+    },
+    {
+      "category": "doc",
+      "digest": "88e168fa37ea7c72ca88674a95d0e60d01a3cd957a5a0c08a1c6fa367fc899d9",
+      "last_modified": "2025-10-25T22:48:46-04:00",
+      "name": "lil_footsteps_treasury_scaling_plan",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/lil_footsteps_treasury_scaling_plan.md",
+      "size": 14996,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "88e168fa37ea"
+    },
+    {
+      "category": "doc",
+      "digest": "43c105299282133d00f2f2f0cc9bc780e558c3c12bd8d418e55ed2bc7292085b",
+      "last_modified": "2025-10-24T21:12:16-04:00",
+      "name": "little_footsteps_verifiable_credentials",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/little_footsteps_verifiable_credentials.md",
+      "size": 4751,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "43c105299282"
+    },
+    {
+      "category": "doc",
+      "digest": "1caa4c126b00b978cc8538dac1e238a43d3a0adb2238f7372f07c5c05620888a",
+      "last_modified": "2025-10-20T05:55:43-04:00",
+      "name": "loom_and_forge",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/poetry/loom_and_forge.md",
+      "size": 1869,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "1caa4c126b00"
     },
     {
       "category": "doc",
       "digest": "64dc051ce61e053ff8e695c71970a22a4d52e7e0fdf4fe6cba28fb1f4a8596a1",
-      "last_modified": null,
+      "last_modified": "2025-10-15T20:06:10-04:00",
       "name": "manifest",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/echo/manifest.md",
       "size": 1456,
@@ -555,11 +3070,165 @@
     },
     {
       "category": "doc",
+      "digest": "662b1b6b71e507f804330f5a48488ae61423abe9222493db5ec2aac057cfcb3b",
+      "last_modified": "2025-10-17T02:21:02-04:00",
+      "name": "mirror_reflection",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/mirror_reflection.md",
+      "size": 652,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "662b1b6b71e5"
+    },
+    {
+      "category": "doc",
+      "digest": "77d6cac9e7f98035fb7c0d3510b7b7c9a923904b9eb2ac2c96a549640ba95611",
+      "last_modified": "2025-10-25T05:25:59-04:00",
+      "name": "missing",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/missing.md",
+      "size": 174,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "77d6cac9e7f9"
+    },
+    {
+      "category": "doc",
+      "digest": "209d5724dab6c9c84f15969c062f0f61e12e80002eb8d66991871f412a54677d",
+      "last_modified": "2025-10-25T10:57:32-04:00",
+      "name": "moonfall_resonance",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/moonfall_resonance.md",
+      "size": 2472,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "209d5724dab6"
+    },
+    {
+      "category": "doc",
+      "digest": "9be806d0b4ff9eeb0eaf0e67d9a006d2fe5eeef4914a9056ed4412cbbcaf63c6",
+      "last_modified": "2025-11-02T04:22:35-05:00",
+      "name": "neon_api_keys",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/neon_api_keys.md",
+      "size": 5733,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "9be806d0b4ff"
+    },
+    {
+      "category": "doc",
+      "digest": "064863010b8898d887bc55a838bd0d19bc89c070943fd759d01a606ee588e7bd",
+      "last_modified": "2025-10-25T20:38:41-04:00",
+      "name": "nonprofit_bank_guidelines",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/nonprofit_bank_guidelines.md",
+      "size": 4490,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "064863010b88"
+    },
+    {
+      "category": "doc",
+      "digest": "9ad403068c40cbc938a34b0c8273bb494fff06f0c2ec47db34750c40df8e7138",
+      "last_modified": "2025-10-25T22:47:55-04:00",
+      "name": "nonprofit_treasury_stack",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/nonprofit_treasury_stack.md",
+      "size": 6611,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "9ad403068c40"
+    },
+    {
+      "category": "doc",
+      "digest": "8a15a84cce08c932487357695c129cd4b5dcc13d7988a0e74ce9604d0f1e021b",
+      "last_modified": "2025-10-16T04:22:02-04:00",
+      "name": "oathblock-455515",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/oathblock-455515.md",
+      "size": 1689,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "8a15a84cce08"
+    },
+    {
+      "category": "doc",
+      "digest": "0fe12be17ca8414cc8accbd45c068969b774e784d28d0a563c380f2bc53cf159",
+      "last_modified": "2025-10-23T20:00:28-04:00",
+      "name": "op_return_claim_pipeline",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/op_return_claim_pipeline.md",
+      "size": 4360,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0fe12be17ca8"
+    },
+    {
+      "category": "doc",
+      "digest": "8a70e0bc60d474d5b74c587e61330d808d6b795baa5397273eb6de4ec7f39dcf",
+      "last_modified": "2025-10-23T19:27:58-04:00",
+      "name": "op_return_claim_report_schema",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/op_return_claim_report_schema.md",
+      "size": 4494,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "8a70e0bc60d4"
+    },
+    {
+      "category": "doc",
       "digest": "e7fdf025c66d21037661396abd1f821ec833aef28a3f930bd23c1fe7ae7b8f62",
       "last_modified": "2025-10-15T15:44:55-04:00",
       "name": "overview",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/echo/overview.md",
       "size": 99,
@@ -572,19 +3241,463 @@
     },
     {
       "category": "doc",
-      "digest": "3bd539b64b593d19fee8643fc530990406987052e7fc588c34a612aac29ef0a8",
-      "last_modified": "2025-10-12T16:48:33-04:00",
-      "name": "satoshi_34k_dataset",
+      "digest": "f863dc3819e71144bbf58eef429f57b95e7a6158761981af98f74dba59e403ed",
+      "last_modified": "2025-10-23T11:38:14-04:00",
+      "name": "p2pk_analysis",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "docs/satoshi_34k_dataset.md",
-      "size": 3532,
+      "path": "docs/p2pk_analysis.md",
+      "size": 2223,
       "tags": [
         "docs",
         "md"
       ],
-      "version": "3bd539b64b59"
+      "version": "f863dc3819e7"
+    },
+    {
+      "category": "doc",
+      "digest": "978d73241f8da41354f4ad01e2926fe93f39c8f5dce10077f2e0dbfd9ed49222",
+      "last_modified": "2025-10-25T04:48:30-04:00",
+      "name": "pkscript_18cBEMRxXHqzWWCxZNtU91F5sbUNKhL5PX",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/bitcoin/pkscript_18cBEMRxXHqzWWCxZNtU91F5sbUNKhL5PX.md",
+      "size": 1505,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "978d73241f8d"
+    },
+    {
+      "category": "doc",
+      "digest": "8178b9601f6ec2f488905c2711ec823d5da15abcf1a797b4ee934396cf365560",
+      "last_modified": "2025-10-16T20:39:45-04:00",
+      "name": "prompt_evolution_cycle1",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/prompt_evolution_cycle1.md",
+      "size": 848,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "8178b9601f6e"
+    },
+    {
+      "category": "doc",
+      "digest": "6833dfd6072cc3c7533e3fb43d9953dd7e88446e3a3fd7de7e5c68ef4b75b3a0",
+      "last_modified": "2025-10-17T16:22:39-04:00",
+      "name": "pulse_narrator_spec",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/poetry/pulse_narrator_spec.md",
+      "size": 525,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "6833dfd6072c"
+    },
+    {
+      "category": "doc",
+      "digest": "0c1b393bb6b18ac3891c9b33e32b9d5bc2c4d7574f044a76394c2da35fd79932",
+      "last_modified": "2025-10-17T17:21:38-04:00",
+      "name": "pulseweaver",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/pulseweaver.md",
+      "size": 1205,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0c1b393bb6b1"
+    },
+    {
+      "category": "doc",
+      "digest": "4b8e4eb4a477dec00594331479e8a122d5e911739a470e69107ab866b7be4a82",
+      "last_modified": "2025-10-25T01:54:53-04:00",
+      "name": "puzzle-110",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/puzzles/puzzle-110.md",
+      "size": 1351,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "4b8e4eb4a477"
+    },
+    {
+      "category": "doc",
+      "digest": "b9af311f669fa29db85c1ada38731d5b2e1dedc385421b29d67499f58241ba95",
+      "last_modified": "2025-10-25T01:30:38-04:00",
+      "name": "puzzle-251",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/puzzles/puzzle-251.md",
+      "size": 806,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "b9af311f669f"
+    },
+    {
+      "category": "doc",
+      "digest": "8c4fba60f84e41444da667923eddbc967cfadf7c8ec2897040f249267fe85189",
+      "last_modified": "2025-10-27T17:49:41-04:00",
+      "name": "puzzle-252",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/puzzles/puzzle-252.md",
+      "size": 1102,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "8c4fba60f84e"
+    },
+    {
+      "category": "doc",
+      "digest": "8d1eb57cd01a1d5770c65bf00321c61094cf02b2c5a4a817851857f587aa09ac",
+      "last_modified": "2025-10-25T01:18:36-04:00",
+      "name": "puzzle-256",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/puzzles/puzzle-256.md",
+      "size": 863,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "8d1eb57cd01a"
+    },
+    {
+      "category": "doc",
+      "digest": "ebe983220054f0a812405ce878d9923a0fdff4c90814dab769da43b4c053c86a",
+      "last_modified": "2025-10-25T06:03:52-04:00",
+      "name": "puzzle-lab",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/puzzle-lab.md",
+      "size": 3605,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "ebe983220054"
+    },
+    {
+      "category": "doc",
+      "digest": "ba7cf8ff74d229bb96634217056c02b51b24cc372c2d557ffc593073220b00a5",
+      "last_modified": "2025-10-16T14:36:59-04:00",
+      "name": "satoshi_34k_dataset",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/satoshi_34k_dataset.md",
+      "size": 4315,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "ba7cf8ff74d2"
+    },
+    {
+      "category": "doc",
+      "digest": "393d7960488fe34af167f86f85ba3631a8ccd15aadc01f9134ee4d19d84d62b2",
+      "last_modified": "2025-10-22T05:27:21-04:00",
+      "name": "security_review",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/security_review.md",
+      "size": 2179,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "393d7960488f"
+    },
+    {
+      "category": "doc",
+      "digest": "3921a321b29ec1d6bb75c847ca6e21e68de9b45c30c76810ba48c0bcd2f0f8b8",
+      "last_modified": "2025-10-21T23:25:38-04:00",
+      "name": "seed_phrase_security",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/seed_phrase_security.md",
+      "size": 1829,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "3921a321b29e"
+    },
+    {
+      "category": "doc",
+      "digest": "bb2236431179d65254aa5bd0cd7c063d3010f2b03dfe7112fedf1584e20cb5b6",
+      "last_modified": "2025-10-25T14:53:59-04:00",
+      "name": "solidity_compiler_usage",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/solidity_compiler_usage.md",
+      "size": 5822,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "bb2236431179"
+    },
+    {
+      "category": "doc",
+      "digest": "3aaa3627d4a8f190eade9291195f38646aaaf5e7f5490e3acfabbc8a24e83c99",
+      "last_modified": "2025-10-18T14:54:14-04:00",
+      "name": "sovereign_circuit_poem",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/sovereign_circuit_poem.md",
+      "size": 649,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "3aaa3627d4a8"
+    },
+    {
+      "category": "doc",
+      "digest": "47310701d6bd08de38ffa82247764575455372151f4ea440a9dc28cea7693255",
+      "last_modified": "2025-10-16T20:40:21-04:00",
+      "name": "sovereign_phase_six",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/sovereign_phase_six.md",
+      "size": 3643,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "47310701d6bd"
+    },
+    {
+      "category": "doc",
+      "digest": "57d8dd994e00ec003e9916f3c46aee7e6cbd3717dd73f63d2867454dd02772d9",
+      "last_modified": "2025-11-02T19:43:22-05:00",
+      "name": "start_changing_the_world",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/start_changing_the_world.md",
+      "size": 1423,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "57d8dd994e00"
+    },
+    {
+      "category": "doc",
+      "digest": "38845d423130018c0081550e51ab44617a269aded9f202742a08ac280bd36d3b",
+      "last_modified": "2025-10-25T14:07:41-04:00",
+      "name": "stellar_echo_manifest",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/stellar_echo_manifest.md",
+      "size": 1696,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "38845d423130"
+    },
+    {
+      "category": "doc",
+      "digest": "5f05335815cf84d0b04e715f6ab54aded08527f054c8d41d2d0f85240cf5df36",
+      "last_modified": "2025-10-22T08:28:27-04:00",
+      "name": "stellar_reverie",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/stellar_reverie.md",
+      "size": 1291,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "5f05335815cf"
+    },
+    {
+      "category": "doc",
+      "digest": "2013ef972de161ee9d8e775311a6b7f1e0c53d7379ba513869d200c22048d551",
+      "last_modified": "2025-10-17T17:21:38-04:00",
+      "name": "temporal_ledger",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/temporal_ledger.md",
+      "size": 634,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "2013ef972de1"
+    },
+    {
+      "category": "doc",
+      "digest": "6ed67622a57376f4797cfd3c65b5a12c0b2b3b99295ede80ff413ef2326726a0",
+      "last_modified": "2025-10-18T14:50:32-04:00",
+      "name": "the_ciphers_bloom",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/the_ciphers_bloom.md",
+      "size": 790,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "6ed67622a573"
+    },
+    {
+      "category": "doc",
+      "digest": "fcc7bc5dcf2ca22c8db79b49f5062d456dee1ab779674243f257fcfaca307fb2",
+      "last_modified": "2025-10-16T03:24:20-04:00",
+      "name": "the_garden",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/the_garden.md",
+      "size": 1341,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "fcc7bc5dcf2c"
+    },
+    {
+      "category": "doc",
+      "digest": "0ca496c045aa39dbb75ae6359fdd895643080a1d7e17b1b33e8948e0776f1d43",
+      "last_modified": "2025-10-20T05:55:43-04:00",
+      "name": "the_impossible_loom",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/poetry/the_impossible_loom.md",
+      "size": 979,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0ca496c045aa"
+    },
+    {
+      "category": "doc",
+      "digest": "d06adc8837a0795ed5f0585b20c5c3bbdabda71b34ea322ee815fb85f7b5c031",
+      "last_modified": "2025-10-17T15:44:46-04:00",
+      "name": "threads_of_atlas",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/threads_of_atlas.md",
+      "size": 603,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "d06adc8837a0"
+    },
+    {
+      "category": "doc",
+      "digest": "6f0bda564bfa8e2a6c85eeedd2d59247b189e46ed3bec5218b4391b4c0c0bf84",
+      "last_modified": "2025-10-25T14:55:27-04:00",
+      "name": "token-staking-analysis",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/token-staking-analysis.md",
+      "size": 2515,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "6f0bda564bfa"
+    },
+    {
+      "category": "doc",
+      "digest": "3617a3501baa9ed899d095fb3a6b022f55801b250fa11412ef840f4434639273",
+      "last_modified": "2025-10-25T04:47:43-04:00",
+      "name": "unstoppable_apps",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/echo/unstoppable_apps.md",
+      "size": 2863,
+      "tags": [
+        "docs",
+        "echo",
+        "md"
+      ],
+      "version": "3617a3501baa"
+    },
+    {
+      "category": "doc",
+      "digest": "0bae1c307793530e5cb34a4bde60c530bfcb73cbb655564830ee039a6e2375bf",
+      "last_modified": "2025-10-25T14:33:41-04:00",
+      "name": "unstoppabledomains_zone",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/dns/unstoppabledomains_zone.md",
+      "size": 1764,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "0bae1c307793"
     },
     {
       "category": "doc",
@@ -592,7 +3705,8 @@
       "last_modified": "2025-10-13T18:15:27-04:00",
       "name": "verifier",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "docs/verifier.md",
       "size": 308,
@@ -601,62 +3715,194 @@
         "md"
       ],
       "version": "f36f14215fe5"
+    },
+    {
+      "category": "doc",
+      "digest": "2ff45e399123485995480a1d1241953ffae47ba9c0e55e9fa8922ff85f48a549",
+      "last_modified": "2025-10-17T15:45:22-04:00",
+      "name": "weavers_song",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/weavers_song.md",
+      "size": 465,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "2ff45e399123"
+    },
+    {
+      "category": "doc",
+      "digest": "743539b678eb25bfaf4bff646a69b460a72256a0866d63098451be3d69a240a5",
+      "last_modified": "2025-10-25T00:52:29-04:00",
+      "name": "wow_proof",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "docs/wow_proof.md",
+      "size": 1092,
+      "tags": [
+        "docs",
+        "md"
+      ],
+      "version": "743539b678eb"
     }
   ],
   "engines": [
     {
       "category": "engine",
-      "digest": "5d621cd31c03c821044e3facdbde4024167922c48f6f5dc366eb094136a278a7",
-      "last_modified": "2025-10-15T17:45:53-04:00",
+      "digest": "d6e7fa862af14f55baf31e391377f5ddd3057ac6dbe0ccf8b920ab5dd280a345",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "AmplificationEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/amplify.py",
+      "size": 16103,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "d6e7fa862af1"
+    },
+    {
+      "category": "engine",
+      "digest": "0ac4e809879728804b1499b1ca8e025607771d01efb46c4f9288534a0abaaab9",
+      "last_modified": null,
+      "name": "BeneficiaryEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/sovereign/beneficiary.py",
+      "size": 3462,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "0ac4e8098797"
+    },
+    {
+      "category": "engine",
+      "digest": "ca47c1aaa47dff7b4fae10684acc49c9576ab62104376d8a473f9127f1a775aa",
+      "last_modified": null,
+      "name": "BitwisePixelEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/echo_visionary_kernel.py",
+      "size": 18527,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "ca47c1aaa47d"
+    },
+    {
+      "category": "engine",
+      "digest": "633cc9cd40b98f79297ad78d2ad0844612626bf9693577803ec4faab32b7a1f1",
+      "last_modified": null,
+      "name": "ColossusExpansionEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/orchestrator/colossus_expansion.py",
+      "size": 19927,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "633cc9cd40b9"
+    },
+    {
+      "category": "engine",
+      "digest": "9324689dcdc271e7fdfad2a7a8aa269046ab4a45f2b57e8aad2d6c0c56a30083",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "ContinuumEngine",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/continuum_engine.py",
-      "size": 9967,
+      "size": 12774,
       "tags": [
         "echo",
         "engine",
         "py",
         "python"
       ],
-      "version": "5d621cd31c03"
+      "version": "9324689dcdc2"
     },
     {
       "category": "engine",
-      "digest": "5d621cd31c03c821044e3facdbde4024167922c48f6f5dc366eb094136a278a7",
-      "last_modified": "2025-10-15T17:45:53-04:00",
+      "digest": "9324689dcdc271e7fdfad2a7a8aa269046ab4a45f2b57e8aad2d6c0c56a30083",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "ContinuumPlaybackEngine",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/continuum_engine.py",
-      "size": 9967,
+      "size": 12774,
       "tags": [
         "echo",
         "engine",
         "py",
         "python"
       ],
-      "version": "5d621cd31c03"
+      "version": "9324689dcdc2"
     },
     {
       "category": "engine",
-      "digest": "3e0bfd54d7f7252835d10cf1e95e93e78b83d1c68dfb846fdb6f50dcbff7e2e9",
-      "last_modified": "2025-10-12T08:29:59-04:00",
-      "name": "DecentralizedAutonomyEngine",
+      "digest": "633cc9cd40b98f79297ad78d2ad0844612626bf9693577803ec4faab32b7a1f1",
+      "last_modified": null,
+      "name": "CosmosEngine",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "echo/autonomy.py",
-      "size": 6392,
+      "path": "echo/orchestrator/colossus_expansion.py",
+      "size": 19927,
       "tags": [
         "echo",
         "engine",
         "py",
         "python"
       ],
-      "version": "3e0bfd54d7f7"
+      "version": "633cc9cd40b9"
+    },
+    {
+      "category": "engine",
+      "digest": "18b2b41d811744579ebbaacfec899314dce8d1aa574da04d8d83a827c2aca27e",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "DecentralizedAutonomyEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/autonomy.py",
+      "size": 8569,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "18b2b41d8117"
     },
     {
       "category": "engine",
@@ -664,7 +3910,8 @@
       "last_modified": "2025-10-15T15:53:50-04:00",
       "name": "EchoMemoryEngine",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "modules/echo-memory/memory_engine.py",
       "size": 6500,
@@ -678,10 +3925,11 @@
     {
       "category": "engine",
       "digest": "7c3c5059d64ed8c9cd3d63c45ed4aa01385f1e88602b3ea7aa1221372c28650c",
-      "last_modified": "2025-10-11T06:29:44-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "EchoPulseEngine",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/pulse.py",
       "size": 13700,
@@ -695,21 +3943,79 @@
     },
     {
       "category": "engine",
-      "digest": "33149a972edff175495cfbfa2fb9c1b3829bbedb9bd9a953d17dc06996e4f801",
-      "last_modified": "2025-10-11T05:31:52-04:00",
+      "digest": "b08b532aa81911b9afc867b5d343b7e0e8ac01f7a1f53760c93d070c16e5d6af",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "EchoResonanceEngine",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/resonance.py",
-      "size": 7718,
+      "size": 9314,
       "tags": [
         "echo",
         "engine",
         "py",
         "python"
       ],
-      "version": "33149a972edf"
+      "version": "b08b532aa819"
+    },
+    {
+      "category": "engine",
+      "digest": "1f391a68776bf3e55c29886caeee3b0cb9c264864476e3ce9e6f154605c37522",
+      "last_modified": null,
+      "name": "EnlightenmentEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/enlightenment.py",
+      "size": 6438,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "1f391a68776b"
+    },
+    {
+      "category": "engine",
+      "digest": "43671af27762ea7884ad06dcd8432b57015c270cf744ce4269ee34a7c4e72788",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "ImpossibleRealityEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/impossible_realities.py",
+      "size": 5587,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "43671af27762"
+    },
+    {
+      "category": "engine",
+      "digest": "2c71ee3979ab5bfea1a276e5b0ab67cf22bbe907bc7388b88791237863d61183",
+      "last_modified": null,
+      "name": "LittleFootstepsDisbursementEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/bank/little_footsteps.py",
+      "size": 9508,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "2c71ee3979ab"
     },
     {
       "category": "engine",
@@ -717,7 +4023,8 @@
       "last_modified": "2025-10-11T20:28:45-04:00",
       "name": "PolicyEngine",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "cognitive_harmonics/harmonix_bridge.py",
       "size": 22674,
@@ -730,50 +4037,148 @@
     },
     {
       "category": "engine",
-      "digest": "bc4c11741baa59774f266f40f6c0ff16ede55785db02867d2a90049822ce0565",
-      "last_modified": "2025-10-15T19:01:31-04:00",
+      "digest": "1db6ee785dd00cc6ffcdbaaa1614ab45a7a5e722a476c4523cf738f8a37db595",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "PolicyEngine",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/policy_engine.py",
-      "size": 8633,
+      "size": 8639,
       "tags": [
         "echo",
         "engine",
         "py",
         "python"
       ],
-      "version": "bc4c11741baa"
+      "version": "1db6ee785dd0"
+    },
+    {
+      "category": "engine",
+      "digest": "b300ceda47cc4bd4d0c6ac6e358f73e9c0996222295df937144f5800d1524675",
+      "last_modified": null,
+      "name": "ResonanceEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/orchestrator/core.py",
+      "size": 19229,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "b300ceda47cc"
+    },
+    {
+      "category": "engine",
+      "digest": "525265367aa2df7c3b09e397cec7a59c60c021fd08bbecbabe0c52032230b348",
+      "last_modified": null,
+      "name": "StellarResonanceEngine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/stellar_resonance.py",
+      "size": 4019,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "525265367aa2"
     }
   ],
   "schema": "echo.manifest/auto-v1",
   "states": [
     {
       "category": "state",
-      "digest": "6aa57a2a92f4c1395f8abfafa538bcb0df47dacfd2b0729f72c71d6f765be272",
-      "last_modified": "2025-10-15T19:01:31-04:00",
-      "name": "ArtifactRecord",
+      "digest": "d6e7fa862af14f55baf31e391377f5ddd3057ac6dbe0ccf8b920ab5dd280a345",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "AmplifyState",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "echo/provenance.py",
-      "size": 8361,
+      "path": "echo/amplify.py",
+      "size": 16103,
       "tags": [
         "echo",
         "py",
         "python",
         "state"
       ],
-      "version": "6aa57a2a92f4"
+      "version": "d6e7fa862af1"
+    },
+    {
+      "category": "state",
+      "digest": "6170c16c1fc936f6aa353c17fe45765cfbda908fe4650091dd5ecf5c05167226",
+      "last_modified": null,
+      "name": "Argon2Parameters",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/identity_layer/vault.py",
+      "size": 16256,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "6170c16c1fc9"
+    },
+    {
+      "category": "state",
+      "digest": "f38762567cbeb69b7bd9618b1bfc0cae114422f8ad1965112aa00036d1fbbbee",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "ArtifactRecord",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/provenance.py",
+      "size": 8336,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "f38762567cbe"
+    },
+    {
+      "category": "state",
+      "digest": "a9f8663ccf506a49579172f15194afd81963de4958aecddf1ecd73ad3452c01a",
+      "last_modified": null,
+      "name": "AtlasState",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/continuum_atlas/atlas_resolver.py",
+      "size": 9198,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "a9f8663ccf50"
     },
     {
       "category": "state",
       "digest": "45051c107f156c2ce0d7bc38c690140415158daa6d5905eb5d7916cda6e2f2b8",
-      "last_modified": "2025-10-11T20:48:23-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "AuroraChronicleMoment",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/aurora_chronicles.py",
       "size": 4265,
@@ -791,7 +4196,8 @@
       "last_modified": "2025-10-15T15:53:50-04:00",
       "name": "BridgePlan",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "modules/echo-bridge/bridge_api.py",
       "size": 4789,
@@ -805,10 +4211,11 @@
     {
       "category": "state",
       "digest": "17843844daabd8cd2613a35d2eafbca51c209d144ef76364b990fb5bc48de583",
-      "last_modified": "2025-10-09T03:32:34-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "BridgeState",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/bridge_emitter.py",
       "size": 14789,
@@ -822,11 +4229,126 @@
     },
     {
       "category": "state",
+      "digest": "bcd338421bdfbd33d8dc2bcb5d3d6eabebacc30df626dd1b9b3a71170d566d76",
+      "last_modified": null,
+      "name": "CapsuleEntry",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/origin_capsule.py",
+      "size": 3577,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "bcd338421bdf"
+    },
+    {
+      "category": "state",
+      "digest": "6756b1fe312d9f1b3239feff95151f9eedc3cf7adf8c6864d34a4d9bb323d12c",
+      "last_modified": null,
+      "name": "CharterVersion",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/sovereign/governance.py",
+      "size": 6756,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "6756b1fe312d"
+    },
+    {
+      "category": "state",
+      "digest": "95a0b1733ac56eda274346e0d40c263645286eba22ced588075d2b7ae89fad07",
+      "last_modified": null,
+      "name": "ComplianceEntry",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/sovereign/compliance.py",
+      "size": 2584,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "95a0b1733ac5"
+    },
+    {
+      "category": "state",
+      "digest": "503b21298ee24ec4a925efe50a26ff1d5752040ba8041dacf35fe34fdf9c8083",
+      "last_modified": null,
+      "name": "CredentialIssuer",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/identity_layer/verifiable_credentials.py",
+      "size": 4532,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "503b21298ee2"
+    },
+    {
+      "category": "state",
+      "digest": "0ac4e809879728804b1499b1ca8e025607771d01efb46c4f9288534a0abaaab9",
+      "last_modified": null,
+      "name": "DisbursementRecord",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/sovereign/beneficiary.py",
+      "size": 3462,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "0ac4e8098797"
+    },
+    {
+      "category": "state",
+      "digest": "fcc5ea91eeafc54b4d8527dd91b761ed05ee23b2b21f2f9ad85eb7dd8c3bd5c4",
+      "last_modified": null,
+      "name": "DonationReceipt",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/sovereign/donations.py",
+      "size": 6472,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "fcc5ea91eeaf"
+    },
+    {
+      "category": "state",
       "digest": "18a2042b81c7e24fd15bc1160cb36fd9e2b0794f3811b4d464ea9b1ed8d48c98",
-      "last_modified": "2025-10-09T03:05:07-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "EchoEye",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/echo_eye_core.py",
       "size": 3562,
@@ -840,38 +4362,115 @@
     },
     {
       "category": "state",
-      "digest": "daeeedbaf4ee260fe2a37d2c67b8b72d9368d5015bcd406e5e302d4081e03bde",
-      "last_modified": "2025-10-11T19:52:50-04:00",
-      "name": "EchoState",
+      "digest": "6bac6b909f1074148ae0495718247658e60b27a1acda36d92b01e95895a6a4c7",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "EchoKaleidoscope",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "cognitive_harmonics/harmonix_evolver.py",
-      "size": 10450,
-      "tags": [
-        "py",
-        "python",
-        "state"
-      ],
-      "version": "daeeedbaf4ee"
-    },
-    {
-      "category": "state",
-      "digest": "da52dc4ab344084dd5366c3c3c6d26fc93e1793cb9c6c3aad37992ab6d7e36d6",
-      "last_modified": "2025-10-15T17:31:14-04:00",
-      "name": "EvolverState",
-      "owners": [
-        "@kmk142789"
-      ],
-      "path": "echo/evolver.py",
-      "size": 37697,
+      "path": "echo/echo_kaleidoscope.py",
+      "size": 5003,
       "tags": [
         "echo",
         "py",
         "python",
         "state"
       ],
-      "version": "da52dc4ab344"
+      "version": "6bac6b909f10"
+    },
+    {
+      "category": "state",
+      "digest": "570b592f301a9c91353fc25a084e5f752a53d35dcff7d51f8e5fc54fc468a99a",
+      "last_modified": "2025-10-25T08:10:57-04:00",
+      "name": "EchoState",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "cognitive_harmonics/harmonix_evolver.py",
+      "size": 18653,
+      "tags": [
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "570b592f301a"
+    },
+    {
+      "category": "state",
+      "digest": "8dc2084e0c85e587430b013d27687905f5e40fff69ef88d46c2971b7054e05f0",
+      "last_modified": null,
+      "name": "EchoThread",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/creative_echo.py",
+      "size": 2575,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "8dc2084e0c85"
+    },
+    {
+      "category": "state",
+      "digest": "582c8bbb0b099059af803522beff7c93bbc957cddec85352637844e7bd12f446",
+      "last_modified": null,
+      "name": "EchoVM",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/echovm.py",
+      "size": 13571,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "582c8bbb0b09"
+    },
+    {
+      "category": "state",
+      "digest": "5e82be168b5ec335a07fcf3ffd104177a1e0346f6933e5e4495effcb14541ab3",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "EvolverState",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/evolver.py",
+      "size": 224453,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "5e82be168b5e"
+    },
+    {
+      "category": "state",
+      "digest": "8a9555705d7c1f648b4bc0902defa2139f3b7fa2fc559042719c94c3b2b5c8c5",
+      "last_modified": "2025-10-25T11:04:40-04:00",
+      "name": "GlyphLine",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "cognitive_harmonics/harmonix_poetic_glyphs.py",
+      "size": 4092,
+      "tags": [
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "8a9555705d7c"
     },
     {
       "category": "state",
@@ -879,7 +4478,8 @@
       "last_modified": "2025-10-15T15:53:50-04:00",
       "name": "HarmonicLayer",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "modules/echo-harmonics/harmonics_engine.py",
       "size": 2442,
@@ -896,7 +4496,8 @@
       "last_modified": "2025-10-11T20:28:45-04:00",
       "name": "HarmonixBridgeState",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "cognitive_harmonics/harmonix_bridge.py",
       "size": 22674,
@@ -909,21 +4510,97 @@
     },
     {
       "category": "state",
-      "digest": "ebad7205432e2234e6dbed4ca336b33d3469a8146d80dadc1cd0329a52f4b98c",
-      "last_modified": "2025-10-15T19:01:31-04:00",
-      "name": "ImpactGraph",
+      "digest": "8a9555705d7c1f648b4bc0902defa2139f3b7fa2fc559042719c94c3b2b5c8c5",
+      "last_modified": "2025-10-25T11:04:40-04:00",
+      "name": "HarmonixStanza",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
-      "path": "echo/graph.py",
-      "size": 4587,
+      "path": "cognitive_harmonics/harmonix_poetic_glyphs.py",
+      "size": 4092,
+      "tags": [
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "8a9555705d7c"
+    },
+    {
+      "category": "state",
+      "digest": "4356afae4baf31107afd1d7aa6704a4e6ced7b0e05ae4a2a1c94955cb73ac704",
+      "last_modified": null,
+      "name": "IdentityLayerConfig",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/identity_layer/service.py",
+      "size": 9032,
       "tags": [
         "echo",
         "py",
         "python",
         "state"
       ],
-      "version": "ebad7205432e"
+      "version": "4356afae4baf"
+    },
+    {
+      "category": "state",
+      "digest": "cb304984fd5fc0385577c5033cb2e023e6499db8e4e2cf3ee087ea39865bf579",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "ImpactGraph",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/graph.py",
+      "size": 4564,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "cb304984fd5f"
+    },
+    {
+      "category": "state",
+      "digest": "8b7e8cc983aeccea44ffcfecd5b8defadf71b87f747f18ce0c0f7f2a4371f170",
+      "last_modified": null,
+      "name": "InspirationPulse",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/inspiration.py",
+      "size": 2548,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "8b7e8cc983ae"
+    },
+    {
+      "category": "state",
+      "digest": "4e1bc39040a7a0726200c5689bbf944d20740574c1e2efd5349053d05fe37e12",
+      "last_modified": null,
+      "name": "LineageInfo",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/substrate.py",
+      "size": 25486,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "4e1bc39040a7"
     },
     {
       "category": "state",
@@ -931,7 +4608,8 @@
       "last_modified": "2025-10-15T15:53:50-04:00",
       "name": "MemorySnapshot",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "modules/echo-memory/memory_engine.py",
       "size": 6500,
@@ -944,11 +4622,86 @@
     },
     {
       "category": "state",
+      "digest": "dbb967fd168d575a533ae4b328c78bbf8d8a7882509d8d3b8c7326a46c92d71b",
+      "last_modified": null,
+      "name": "MuSig2Session",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/crypto/musig2.py",
+      "size": 13927,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "dbb967fd168d"
+    },
+    {
+      "category": "state",
+      "digest": "6756b1fe312d9f1b3239feff95151f9eedc3cf7adf8c6864d34a4d9bb323d12c",
+      "last_modified": null,
+      "name": "MultiSigAttestation",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/sovereign/governance.py",
+      "size": 6756,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "6756b1fe312d"
+    },
+    {
+      "category": "state",
+      "digest": "4e79e7e6a929a40bc680c4a6cfb99dddf177e5f664c8104f27e557f1d2de5467",
+      "last_modified": "2025-10-17T16:22:39-04:00",
+      "name": "NarrativeArtifact",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "modules/pulse_narrator/schemas.py",
+      "size": 812,
+      "tags": [
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "4e79e7e6a929"
+    },
+    {
+      "category": "state",
+      "digest": "4e79e7e6a929a40bc680c4a6cfb99dddf177e5f664c8104f27e557f1d2de5467",
+      "last_modified": "2025-10-17T16:22:39-04:00",
+      "name": "NarrativeInputs",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "modules/pulse_narrator/schemas.py",
+      "size": 812,
+      "tags": [
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "4e79e7e6a929"
+    },
+    {
+      "category": "state",
       "digest": "0d8cb5d7291a556f25346e5d0a05a8b3b9045e27e878d7441c4a8b15e2e55c05",
-      "last_modified": "2025-10-09T03:05:07-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "OrbitalState",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/orbital_loop.py",
       "size": 4663,
@@ -962,65 +4715,106 @@
     },
     {
       "category": "state",
-      "digest": "bc4c11741baa59774f266f40f6c0ff16ede55785db02867d2a90049822ce0565",
-      "last_modified": "2025-10-15T19:01:31-04:00",
+      "digest": "4e1bc39040a7a0726200c5689bbf944d20740574c1e2efd5349053d05fe37e12",
+      "last_modified": null,
+      "name": "ParsedDocument",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/substrate.py",
+      "size": 25486,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "4e1bc39040a7"
+    },
+    {
+      "category": "state",
+      "digest": "8a9555705d7c1f648b4bc0902defa2139f3b7fa2fc559042719c94c3b2b5c8c5",
+      "last_modified": "2025-10-25T11:04:40-04:00",
+      "name": "PoeticPayload",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "cognitive_harmonics/harmonix_poetic_glyphs.py",
+      "size": 4092,
+      "tags": [
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "8a9555705d7c"
+    },
+    {
+      "category": "state",
+      "digest": "1db6ee785dd00cc6ffcdbaaa1614ab45a7a5e722a476c4523cf738f8a37db595",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "PolicyIssue",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/policy_engine.py",
-      "size": 8633,
+      "size": 8639,
       "tags": [
         "echo",
         "py",
         "python",
         "state"
       ],
-      "version": "bc4c11741baa"
+      "version": "1db6ee785dd0"
     },
     {
       "category": "state",
-      "digest": "bc4c11741baa59774f266f40f6c0ff16ede55785db02867d2a90049822ce0565",
-      "last_modified": "2025-10-15T19:01:31-04:00",
+      "digest": "1db6ee785dd00cc6ffcdbaaa1614ab45a7a5e722a476c4523cf738f8a37db595",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "PolicyReport",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/policy_engine.py",
-      "size": 8633,
+      "size": 8639,
       "tags": [
         "echo",
         "py",
         "python",
         "state"
       ],
-      "version": "bc4c11741baa"
+      "version": "1db6ee785dd0"
     },
     {
       "category": "state",
-      "digest": "6aa57a2a92f4c1395f8abfafa538bcb0df47dacfd2b0729f72c71d6f765be272",
-      "last_modified": "2025-10-15T19:01:31-04:00",
+      "digest": "f38762567cbeb69b7bd9618b1bfc0cae114422f8ad1965112aa00036d1fbbbee",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "ProvenanceRecord",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/provenance.py",
-      "size": 8361,
+      "size": 8336,
       "tags": [
         "echo",
         "py",
         "python",
         "state"
       ],
-      "version": "6aa57a2a92f4"
+      "version": "f38762567cbe"
     },
     {
       "category": "state",
       "digest": "b1d42a9fb748befa85da906b54f42a7a0a10ff566e65c3c37d60c9da80749fb5",
-      "last_modified": "2025-10-11T06:13:10-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "PulseEvent",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/echo_codox_kernel.py",
       "size": 1954,
@@ -1034,11 +4828,107 @@
     },
     {
       "category": "state",
+      "digest": "f1f49b307345eb04037e808a977bc31622bb83743c4c1498658868b09f718cad",
+      "last_modified": null,
+      "name": "PulseRecord",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/vNext/agents/continuity_anchor.py",
+      "size": 5064,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "f1f49b307345"
+    },
+    {
+      "category": "state",
+      "digest": "4e1bc39040a7a0726200c5689bbf944d20740574c1e2efd5349053d05fe37e12",
+      "last_modified": null,
+      "name": "PuzzleEntry",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/substrate.py",
+      "size": 25486,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "4e1bc39040a7"
+    },
+    {
+      "category": "state",
+      "digest": "fd9608c19df7eb17dd45029fd93d15859d1c0073f747ef062e8ecc2367c2ce35",
+      "last_modified": null,
+      "name": "QuantumFluxMapper",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/quantum_flux_mapper.py",
+      "size": 5588,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "fd9608c19df7"
+    },
+    {
+      "category": "state",
+      "digest": "388f2ab8c6aad875137ae458abde72ad99378269b7916d78e78d755da4aa912f",
+      "last_modified": null,
+      "name": "QuarantineRecord",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/guardian.py",
+      "size": 9806,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "388f2ab8c6aa"
+    },
+    {
+      "category": "state",
+      "digest": "4e1bc39040a7a0726200c5689bbf944d20740574c1e2efd5349053d05fe37e12",
+      "last_modified": null,
+      "name": "ReconstructionInfo",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/substrate.py",
+      "size": 25486,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "4e1bc39040a7"
+    },
+    {
+      "category": "state",
       "digest": "125d64242b203f4b8902fb02e2c96bb9ceff6f0932fc80e396a97b75a96d8853",
-      "last_modified": "2025-10-15T19:01:31-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "ReleaseArtifacts",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/auto_release.py",
       "size": 5475,
@@ -1053,10 +4943,11 @@
     {
       "category": "state",
       "digest": "8f20ea3f8dbaef1e56494d1babab846f5310bf73c79f52484c045e9b6086ddeb",
-      "last_modified": "2025-10-15T17:59:32-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "RunState",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/akit/models.py",
       "size": 6892,
@@ -1070,11 +4961,50 @@
     },
     {
       "category": "state",
+      "digest": "4e1bc39040a7a0726200c5689bbf944d20740574c1e2efd5349053d05fe37e12",
+      "last_modified": null,
+      "name": "ScriptData",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/substrate.py",
+      "size": 25486,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "4e1bc39040a7"
+    },
+    {
+      "category": "state",
+      "digest": "4e1bc39040a7a0726200c5689bbf944d20740574c1e2efd5349053d05fe37e12",
+      "last_modified": null,
+      "name": "ScriptSig",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/substrate.py",
+      "size": 25486,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "4e1bc39040a7"
+    },
+    {
+      "category": "state",
       "digest": "1d5bf71606743ea9fce719110f77dd297c8d5ec998f68fce7f981a7aaeae613c",
-      "last_modified": "2025-10-14T01:07:10-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "SigningEntry",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/signing/bulk_signer.py",
       "size": 5988,
@@ -1088,28 +5018,68 @@
     },
     {
       "category": "state",
-      "digest": "daeeedbaf4ee260fe2a37d2c67b8b72d9368d5015bcd406e5e302d4081e03bde",
-      "last_modified": "2025-10-11T19:52:50-04:00",
+      "digest": "85af636a1ff6a24e0c5481498a134d61160c00429b7bc34e8d7fdaddc9bbacd6",
+      "last_modified": null,
+      "name": "SpectralCanvas",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/spectral_canvas.py",
+      "size": 6356,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "85af636a1ff6"
+    },
+    {
+      "category": "state",
+      "digest": "0fae0f7245766d1545bce0a95652120e702bee63e6d22c07b2d1aa35cd0a06b0",
+      "last_modified": null,
+      "name": "StoryConstellation",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/orbital_storyweaver.py",
+      "size": 5025,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "0fae0f724576"
+    },
+    {
+      "category": "state",
+      "digest": "570b592f301a9c91353fc25a084e5f752a53d35dcff7d51f8e5fc54fc468a99a",
+      "last_modified": "2025-10-25T08:10:57-04:00",
       "name": "SystemMetrics",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "cognitive_harmonics/harmonix_evolver.py",
-      "size": 10450,
+      "size": 18653,
       "tags": [
         "py",
         "python",
         "state"
       ],
-      "version": "daeeedbaf4ee"
+      "version": "570b592f301a"
     },
     {
       "category": "state",
       "digest": "0d4ca58a3962d0545666850586cd81f03dadd26f6696905e33e2f40f761113c6",
-      "last_modified": "2025-10-13T05:04:41-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "TaskSpec",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/schedule/run.py",
       "size": 2045,
@@ -1123,11 +5093,107 @@
     },
     {
       "category": "state",
+      "digest": "4e1bc39040a7a0726200c5689bbf944d20740574c1e2efd5349053d05fe37e12",
+      "last_modified": null,
+      "name": "UDInfo",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/substrate.py",
+      "size": 25486,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "4e1bc39040a7"
+    },
+    {
+      "category": "state",
+      "digest": "6170c16c1fc936f6aa353c17fe45765cfbda908fe4650091dd5ecf5c05167226",
+      "last_modified": null,
+      "name": "VaultEvent",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/identity_layer/vault.py",
+      "size": 16256,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "6170c16c1fc9"
+    },
+    {
+      "category": "state",
+      "digest": "9b242420c222b1f27d97f3e672da783cd5f81f7a7e21beec4335569a15339678",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "WeaveResult",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/weaver.py",
+      "size": 5226,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "9b242420c222"
+    },
+    {
+      "category": "state",
+      "digest": "6ca070d0ed86e1c26f359d485c52e2ee2e8c9b36590b4d08ef07638113511976",
+      "last_modified": "2025-10-19T18:56:10-04:00",
+      "name": "Wish",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/echo_genie_wish.py",
+      "size": 1963,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "6ca070d0ed86"
+    },
+    {
+      "category": "state",
+      "digest": "ca47c1aaa47dff7b4fae10684acc49c9576ab62104376d8a473f9127f1a775aa",
+      "last_modified": null,
+      "name": "WorkerBot",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/echo_visionary_kernel.py",
+      "size": 18527,
+      "tags": [
+        "echo",
+        "py",
+        "python",
+        "state"
+      ],
+      "version": "ca47c1aaa47d"
+    },
+    {
+      "category": "state",
       "digest": "81ad97d23a090f23f195c2f37db0f1c947bfd7e43ca7932426a99322674e344c",
-      "last_modified": "2025-10-13T05:04:41-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "_NullDag",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/api/state.py",
       "size": 1590,
@@ -1142,10 +5208,11 @@
     {
       "category": "state",
       "digest": "81ad97d23a090f23f195c2f37db0f1c947bfd7e43ca7932426a99322674e344c",
-      "last_modified": "2025-10-13T05:04:41-04:00",
+      "last_modified": "2025-10-19T18:56:10-04:00",
       "name": "_NullReceipts",
       "owners": [
-        "@kmk142789"
+        "@kmk142789420",
+        "@echo-bot"
       ],
       "path": "echo/api/state.py",
       "size": 1590,

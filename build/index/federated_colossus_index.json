@@ -1,6 +1,6 @@
 {
   "schema": "io.echo.colossus/federated-index@1",
-  "refreshed_at": "2025-10-25T15:23:44.159201Z",
+  "refreshed_at": "2025-11-07T19:53:19.803640Z",
   "totals": {
     "entries": 3,
     "cycles": 3,
@@ -525,6 +525,10 @@
         "threads": 3
       }
     ],
+    "resonance_intensity": {
+      "Convergence Point": 1.0,
+      "Safety Notice": 1.0
+    },
     "narrative_amplification": "3 voyages braid into Cycle 5 Glyph / Cycle 9 Glyph / Cycle 11 Glyph while recursion totals\n3.\n - Convergence Point :: Cycle 5 captured 1 entries\n - Safety Notice :: Artifacts remain non-custodial // severity Info\n - Safety Notice :: Attestation-only signing flow // severity Warning\nAnchors: Cycle 5 anchors 1 puzzles | Cycle 9 anchors 1 puzzles | Cycle 11 anchors 1 puzzles",
     "ascii_map": "🌌 Pulse Voyage Atlas\nGlyph Tapestry :: Cycle 5 Glyph / Cycle 9 Glyph / Cycle 11 Glyph\nRecursion Total :: 3\nThread Convergence ::\n   Convergence Point | ⚡⚡⚡ (3)\n   Safety Notice     | ⚡⚡⚡ (3)\nNarrative Amplification ::\n   3 voyages braid into Cycle 5 Glyph / Cycle 9 Glyph / Cycle 11 Glyph while recursion totals\n   3.\n    - Convergence Point :: Cycle 5 captured 1 entries\n    - Safety Notice :: Artifacts remain non-custodial // severity Info\n    - Safety Notice :: Attestation-only signing flow // severity Warning\n   Anchors: Cycle 5 anchors 1 puzzles | Cycle 9 anchors 1 puzzles | Cycle 11 anchors 1 puzzles",
     "summary_table": [

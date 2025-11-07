@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-11-07T19:56:35Z",
+  "manifest": {
+    "path": "echo_manifest.json",
+    "sha256": "62fafd43bfbcf80f58ae1a4a29865c073ec9a3f7666d5fa16dc1630a35190984",
+    "size": 129954
+  },
+  "sbom": {
+    "path": "sbom-1.0.0.json",
+    "sha256": "fe4a03b42268b2b45382a4fccf8bb28d14af3957b5f5e1578cbdab1ff29ab2d5",
+    "size": 7548,
+    "signatures": [
+      {
+        "path": "sbom-1.0.0.json",
+        "sha256": "fe4a03b42268b2b45382a4fccf8bb28d14af3957b5f5e1578cbdab1ff29ab2d5"
+      }
+    ]
+  },
+  "proof_bundles": [
+    {
+      "name": "federated_colossus_markdown",
+      "path": "docs/federated_colossus_index.md",
+      "sha256": "b3d735d08e7589a30aa1a04b701060a9a20e984b354dfe8c5d490ea4a16f7a90",
+      "size": 6661
+    },
+    {
+      "name": "federated_colossus_index",
+      "path": "build/index/federated_colossus_index.json",
+      "sha256": "ea41acaa259a6fd99179240713a2a6332d6c3a3f384a00c40acc06be13a82f24",
+      "size": 22353
+    },
+    {
+      "name": "federated_colossus_feed",
+      "path": "docs/feed/federated-colossus.xml",
+      "sha256": "e23a543726c6d3ee2542108054cf420fdfa5bc03ca4ed213b2c89023e0b6f05a",
+      "size": 1891
+    }
+  ],
+  "timeline": {
+    "path_json": "artifacts/cycle_timeline.json",
+    "path_markdown": "artifacts/cycle_timeline.md",
+    "sha256_json": "687f80e849a82042f04e03c3898784e9cdf6fa50e1a6f38ed0ad9f314e750263",
+    "sha256_markdown": "2ee131cc5bbbd447bae4bbb3451ee746b6ceae6f637b9cf8b440c6c9369f6612"
+  }
+}
