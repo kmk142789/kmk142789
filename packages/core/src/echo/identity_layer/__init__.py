@@ -6,6 +6,11 @@ from .verifiable_credentials import (
     CredentialVerificationError,
     verify_credential,
 )
+from .trust_fabric import (
+    CrossJurisdictionTrustFabric,
+    TrustEntity,
+    TrustLink,
+)
 
 try:  # pragma: no cover - optional gRPC dependency not shipped in kata runtime
     from .service import IdentityLayerConfig, IdentityService
@@ -21,4 +26,7 @@ __all__ = [
     "CredentialIssuer",
     "CredentialVerificationError",
     "verify_credential",
+    "CrossJurisdictionTrustFabric",
+    "TrustEntity",
+    "TrustLink",
 ]
