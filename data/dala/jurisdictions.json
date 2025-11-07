@@ -1,9 +1,12 @@
 {
   "jurisdictions": [
     {
+      "id": "wyoming-us",
       "name": "Wyoming, United States",
       "status": "supportive",
       "region": "North America",
+      "pathway_document": "docs/dala/pathways/wyoming.md",
+      "summary": "U.S. pioneer in digital asset statutes with DAO LLC recognition and SPDI-aligned banking pathways.",
       "primary_regulators": [
         "Wyoming Secretary of State",
         "Wyoming Division of Banking"
@@ -50,9 +53,12 @@
       ]
     },
     {
+      "id": "delaware-us",
       "name": "Delaware, United States",
       "status": "neutral",
       "region": "North America",
+      "pathway_document": "docs/dala/pathways/delaware.md",
+      "summary": "Contractually flexible jurisdiction favored by venture-backed digital projects and public-benefit DAOs.",
       "primary_regulators": [
         "Delaware Division of Corporations",
         "Delaware Department of Justice Investor Protection Unit"
@@ -98,9 +104,12 @@
       ]
     },
     {
+      "id": "zug-ch",
       "name": "Zug, Switzerland",
       "status": "supportive",
       "region": "Europe",
+      "pathway_document": "docs/dala/pathways/switzerland_zug.md",
+      "summary": "Crypto Valley canton with mature guidance on tokenized equity, foundations, and association models.",
       "primary_regulators": [
         "Commercial Register of the Canton of Zug",
         "Swiss Financial Market Supervisory Authority (FINMA)"
@@ -148,9 +157,12 @@
       ]
     },
     {
+      "id": "singapore",
       "name": "Singapore",
       "status": "supportive",
       "region": "Asia-Pacific",
+      "pathway_document": "docs/dala/pathways/singapore.md",
+      "summary": "Highly regulated fintech hub with clear licensing regimes for digital payment tokens and fund vehicles.",
       "primary_regulators": [
         "Accounting and Corporate Regulatory Authority (ACRA)",
         "Monetary Authority of Singapore (MAS)"
@@ -198,9 +210,12 @@
       ]
     },
     {
+      "id": "estonia",
       "name": "Estonia",
       "status": "supportive",
       "region": "Europe",
+      "pathway_document": "docs/dala/pathways/estonia.md",
+      "summary": "Digital-first EU member with e-residency, remote company formation, and VASP supervision.",
       "primary_regulators": [
         "Estonian Centre of Registers and Information Systems",
         "Estonian Financial Supervision and Resolution Authority"
@@ -247,9 +262,12 @@
       ]
     },
     {
+      "id": "adgm-ae",
       "name": "Abu Dhabi Global Market (United Arab Emirates)",
       "status": "supportive",
       "region": "Middle East",
+      "pathway_document": "docs/dala/pathways/adgm.md",
+      "summary": "English-law aligned free zone offering virtual asset sandboxes, foundations, and DAO-specific regulations.",
       "primary_regulators": [
         "Registration Authority of ADGM",
         "Financial Services Regulatory Authority (FSRA)"
