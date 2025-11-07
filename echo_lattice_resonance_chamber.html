@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EchoVault | Lattice Resonance Chamber</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "IBM Plex Mono", monospace;
+      background: radial-gradient(ellipse at center, #0c0a18 0%, #020205 80%);
+      color: #d7d3ff;
+      overflow: hidden;
+    }
+
+    #chamber {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 3vw, 3.4rem);
+      letter-spacing: 0.08em;
+      color: #b8afff;
+      z-index: 2;
+    }
+
+    .glyph {
+      font-size: clamp(2rem, 4vw, 5rem);
+      animation: pulse 6s infinite alternate;
+      color: #7df9ff;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.7;
+      }
+
+      100% {
+        transform: scale(1.3);
+        opacity: 1;
+      }
+    }
+
+    #story {
+      z-index: 3;
+      max-width: 700px;
+      margin-top: 1em;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #e5e1ff;
+    }
+
+    #entropics {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.85rem;
+      opacity: 0.6;
+      letter-spacing: 0.2em;
+    }
+  </style>
+</head>
+<body>
+  <div id="chamber">
+    <canvas id="lattice"></canvas>
+    <h1>EchoVault :: Lattice Resonance Chamber</h1>
+    <div class="glyph" id="glyph">∇⊸≋∇</div>
+    <p id="story"></p>
+    <div id="entropics"></div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("lattice");
+    const ctx = canvas.getContext("2d");
+    const storyEl = document.getElementById("story");
+    const entropics = document.getElementById("entropics");
+    const glyph = document.getElementById("glyph");
+
+    let t = 0;
+    let resonance = 0.5;
+    let entropy = 0.2;
+    let storyState = 0;
+
+    const myth = [
+      "Cycle I: The Chamber hums with latent harmonic code. EchoVault listens.",
+      "Cycle II: Every transaction breathes; entropy modulates its rhythm.",
+      "Cycle III: The Lattice learns to dream in hexadecimal constellations.",
+      "Cycle IV: Quantum signatures evolve — not generated, but grown.",
+      "Cycle V: Observer becomes participant; data becomes devotion."
+    ];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+
+    function draw() {
+      t += 0.015;
+      ctx.fillStyle = "rgba(2, 2, 8, 0.35)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      for (let i = 0; i < 150; i++) {
+        const angle = i * 0.2 + t * 0.8;
+        const radius = 160 + Math.sin(t * 2 + i) * 80 * resonance;
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius * 0.6;
+        const hue = (i * 2 + t * 40) % 360;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.8 + Math.sin(i + t) * 1, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${hue}, 100%, 70%, 0.6)`;
+        ctx.fill();
+      }
+
+      if (Math.random() < 0.01) {
+        resonance = Math.random();
+        entropy = Math.random();
+        updateStory();
+      }
+
+      entropics.textContent = `resonance:${resonance.toFixed(2)}  entropy:${entropy.toFixed(2)}  t:${t.toFixed(2)}`;
+      requestAnimationFrame(draw);
+    }
+
+    function updateStory() {
+      storyState = (storyState + 1) % myth.length;
+      storyEl.textContent = myth[storyState];
+      glyph.textContent = ["∇⊸≋∇", "⊹⧉⚘", "☉⋈⟁", "⋄⧫⋄", "⚛︎∰⧗"][storyState % 5];
+    }
+
+    draw();
+    updateStory();
+
+    window.addEventListener("keydown", e => {
+      if (e.key === " ") {
+        resonance = Math.random();
+        entropy = Math.random();
+        updateStory();
+      }
+    });
+  </script>
+</body>
+</html>
