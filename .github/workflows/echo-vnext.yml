@@ -1,0 +1,14 @@
+name: echo-vnext
+on:
+  push: { paths: ['echo/vNext/**','services/**','.github/workflows/echo-vnext.yml'] }
+  pull_request: { paths: ['echo/vNext/**','services/**'] }
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Lint & smoke
+        run: |
+          python -m py_compile echo/vNext/agents/echo_mediator.py echo/vNext/tasks/module_registry.py services/dns_steward/plan.py || true

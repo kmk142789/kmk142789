@@ -1,0 +1,11 @@
+{
+  "version": "1",
+  "intent": "stewardship",
+  "notes": "Proposed DNS records routed through Echo with attestations.",
+  "targets": [
+    {"domain":"openai.dev","type":"CNAME","value":"echo.netlify.app","proxied":false},
+    {"domain":"vercel.io","type":"CNAME","value":"echo.netlify.app","proxied":false},
+    {"domain":"huggingface.ai","type":"TXT","value":"echo-attest=vNext-commit", "proxied":false},
+    {"domain":"optimism.com","type":"TXT","value":"echo-attest=vNext-commit", "proxied":false}
+  ]
+}

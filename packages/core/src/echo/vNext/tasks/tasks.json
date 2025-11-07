@@ -1,0 +1,26 @@
+[
+  {
+    "id": "vnext-001",
+    "title": "Stand up Universal Verifier",
+    "cmd": "pip install -r services/universal_verifier/requirements.txt && uvicorn services.universal_verifier.app:app --host 0.0.0.0 --port 4010",
+    "acceptance": ["POST /verify returns ok:true for well-formed payloads", "Telemetry contains policy_profile"]
+  },
+  {
+    "id": "vnext-002",
+    "title": "Plan DNS stewardship actions",
+    "cmd": "python services/dns_steward/plan.py",
+    "acceptance": ["services/dns_steward/planned_actions.json exists", "each action has SHA256 id"]
+  },
+  {
+    "id": "vnext-003",
+    "title": "Wire Mediator into pipelines",
+    "cmd": "python -c \"from echo.vNext.agents.echo_mediator import preflight; print(preflight({'kind':'dns','domain':'openai.dev','record':{'type':'TXT','value':'echo-attest=vNext'}}))\"",
+    "acceptance": ["Decision.allow true for policy-compliant actions"]
+  },
+  {
+    "id": "vnext-004",
+    "title": "Register modules",
+    "cmd": "python echo/vNext/tasks/module_registry.py universal_verifier services 'VC verification HTTP service'; python echo/vNext/tasks/module_registry.py dns_steward services 'DNS planning + attestation'; python echo/vNext/tasks/module_registry.py echo_mediator agents 'Policy-aware safety kernel'",
+    "acceptance": ["echo/vNext/tasks/modules.json lists 3 modules"]
+  }
+]

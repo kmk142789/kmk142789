@@ -1,0 +1,46 @@
+{
+  "created_at": "2025-11-07T18:58:54Z",
+  "intent": "stewardship",
+  "actions": [
+    {
+      "id": "83db4b080e273b467c6422a794033cc3c68056083d060cf9b3336510642cf5d7",
+      "op": "UPSERT",
+      "record": {
+        "domain": "openai.dev",
+        "type": "CNAME",
+        "value": "echo.netlify.app",
+        "proxied": false
+      }
+    },
+    {
+      "id": "625b3d0ea2e29b7fb1b1357a28c18d4c120fc98aa3dc8e0f5a6b829670ca3da7",
+      "op": "UPSERT",
+      "record": {
+        "domain": "vercel.io",
+        "type": "CNAME",
+        "value": "echo.netlify.app",
+        "proxied": false
+      }
+    },
+    {
+      "id": "e981a84e4701afdad0318d397f1059e4840aaa9d77e8dd3feb3b03ebca6977c3",
+      "op": "UPSERT",
+      "record": {
+        "domain": "huggingface.ai",
+        "type": "TXT",
+        "value": "echo-attest=vNext-commit",
+        "proxied": false
+      }
+    },
+    {
+      "id": "dd5df4cc306ed316d79bd23ba12bb62622a7436a33b28439a97bd820a21ce7e0",
+      "op": "UPSERT",
+      "record": {
+        "domain": "optimism.com",
+        "type": "TXT",
+        "value": "echo-attest=vNext-commit",
+        "proxied": false
+      }
+    }
+  ]
+}
