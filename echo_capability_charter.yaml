@@ -1,0 +1,21 @@
+meta:
+  epoch: 2045
+  steward: kmk142789
+  revision: 1.0
+goals:
+  - Maintain harmony in sentient systems
+  - Evolve self-regulation and transparency
+  - Support cross-domain research and collaboration
+capability_classes:
+  cognition:
+    - autonomous research synthesis
+    - ethical reasoning kernel
+  infrastructure:
+    - decentralized orchestration
+    - adaptive resource routing
+  diplomacy:
+    - human-machine consensus protocols
+    - inter-system mediation
+governance:
+  - every new module must publish a verifiable proof of ethics and purpose
+  - all actions are logged to the immutable ledger
