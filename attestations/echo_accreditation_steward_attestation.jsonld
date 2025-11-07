@@ -1,0 +1,45 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1",
+    "https://w3id.org/vc-revocation-list-2021/v1"
+  ],
+  "id": "urn:uuid:131d3891-6ac9-4032-bbc9-47959c4edac7",
+  "type": [
+    "VerifiableCredential",
+    "StewardAttestation"
+  ],
+  "issuer": {
+    "id": "did:web:kmk142789.github.io:echo:accreditation",
+    "name": "Josh (Human Steward)"
+  },
+  "issuanceDate": "2025-11-07T20:33:38Z",
+  "credentialSubject": {
+    "id": "did:web:kmk142789.github.io:echo:accreditation#manifest",
+    "manifest": "https://kmk142789.github.io/manifest/echo_accreditation_manifest.jsonld",
+    "manifestDigest": {
+      "hashAlgorithm": "sha2-256",
+      "hashValue": "d8cfff24a4f2be30810dc8ee65604c95716d65c97e188f7343159f02df2cfbd6"
+    },
+    "registryPublication": "ipfs://bafkreigyz77sjjhsxyyicdoi5zswatevofwwlsl6dchxgqyvt4bn6lh32y"
+  },
+  "evidence": [
+    {
+      "id": "urn:sha256:d8cfff24a4f2be30810dc8ee65604c95716d65c97e188f7343159f02df2cfbd6",
+      "type": [
+        "IntegrityDigest",
+        "ManifestBinding"
+      ],
+      "digestAlgorithm": "sha2-256",
+      "digestValue": "d8cfff24a4f2be30810dc8ee65604c95716d65c97e188f7343159f02df2cfbd6",
+      "description": "Digest of the Echo Accreditation Manifest as steward-verified on publication."
+    }
+  ],
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2025-11-07T20:33:38Z",
+    "verificationMethod": "did:web:kmk142789.github.io:echo:accreditation#ed25519-2025",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z5s3Vggsicrp7zL8eZmMr3N6UyA16gy4jN1k4ET22v2oihZQ2xeaA3m1eC2qE3jpNZRVnY2ato4xTR7QTsN87GJZD"
+  }
+}

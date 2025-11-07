@@ -1,0 +1,10 @@
+{
+  "manifest": "https://kmk142789.github.io/manifest/echo_accreditation_manifest.jsonld",
+  "did": "did:web:kmk142789.github.io:echo:accreditation",
+  "hashAlgorithm": "sha2-256",
+  "hashValue": "d8cfff24a4f2be30810dc8ee65604c95716d65c97e188f7343159f02df2cfbd6",
+  "multihash": "1220d8cfff24a4f2be30810dc8ee65604c95716d65c97e188f7343159f02df2cfbd6",
+  "cid": "bafkreigyz77sjjhsxyyicdoi5zswatevofwwlsl6dchxgqyvt4bn6lh32y",
+  "registry": "ipfs",
+  "publicationDate": "2025-11-07T20:33:38Z"
+}
