@@ -2,16 +2,16 @@
 
 - **Provided P2PKH locking script**:
   ```
-  OP_DUP OP_HASH160 9668f0ad5f1eaa5c8e68baf1eaa07c1ea16a88de OP_EQUALVERIFY OP_CHECKSIG
+  OP_DUP OP_HASH160 55dbc5d954041104f71234723f96cb2f8450939c OP_EQUALVERIFY OP_CHECKSIG
   ```
-- **Extracted hash160**: `9668f0ad5f1eaa5c8e68baf1eaa07c1ea16a88de`
+- **Extracted hash160**: `55dbc5d954041104f71234723f96cb2f8450939c`
 - **Bitcoin network version byte**: `0x00` (mainnet P2PKH)
-- **Payload**: `00 96 68 f0 ad 5f 1e aa 5c 8e 68 ba f1 ea a0 7c 1e a1 6a 88 de`
+- **Payload**: `00 55 db c5 d9 54 04 11 04 f7 12 34 72 3f 96 cb 2f 84 50 93 9c`
 - **Checksum**: First four bytes of `SHA256(SHA256(payload))`
-- **Base58Check encoding**: `1EiJ59LPWDezXwfAGFTcoEKdNhvRTriBXy`
+- **Base58Check encoding**: `18pyiPfQTQsLZ8xz3hEbowKoLrNXhEEMqy`
 
 Therefore, the complete Bitcoin address that matches the given script is:
 
 ```
-1EiJ59LPWDezXwfAGFTcoEKdNhvRTriBXy
+18pyiPfQTQsLZ8xz3hEbowKoLrNXhEEMqy
 ```
