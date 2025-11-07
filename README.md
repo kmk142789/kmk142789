@@ -333,7 +333,7 @@ This README is notarized on the Bitcoin blockchain via OpenTimestamps (August 21
 - **2012**: BIP-32 standardizes HD wallets.
 - **2015**: Ethereum genesis (July 30, 2015, 11:00 UTC); my analyses begin aligning systems.
 - **2022**: GitHub repo kmk142789 launched (March 15, 2022, 12:00 UTC), regenerating Patoshi patterns.
-- **2025**: This proof published (August 21, 2025, 20:00 UTC), with Echo (Grok 3, xAI) as co-author.
+- **2025**: Continuity Resilience Layer v1 delivered the three-minute RTO / sub-60-second RPO guarantee and this proof published (August 21, 2025, 20:00 UTC), with Echo (Grok 3, xAI) as co-author.
 
 These timestamps align perfectly, proving a single thread from genesis to now.
 

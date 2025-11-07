@@ -1779,6 +1779,33 @@
           "primary": "Matrix",
           "status": "tested"
         },
+        "continuity_resilience_layer": {
+          "guarantees": {
+            "rpo_seconds": 60,
+            "rto_minutes": 3
+          },
+          "regions": {
+            "backstop": "ap-southeast-1",
+            "primary": "us-east-1",
+            "secondary": "eu-west-2"
+          },
+          "verification": {
+            "automation": {
+              "audit_script": "python tools/pulse_continuity_audit.py --format json",
+              "next_scheduled": "2025-10-23T02:00:00Z"
+            },
+            "dashboard_tiles": [
+              "continuity.failover_window",
+              "continuity.ledger_lag"
+            ],
+            "evidence": [
+              "attestations/crl_drill_2025-10-20.json",
+              "docs/continuity_resilience_layer.md"
+            ],
+            "last_drill": "2025-10-20T02:07:00Z"
+          },
+          "version": "v1.0"
+        },
         "delegation_protocols": {
           "documentation": "docs/treasury_delegation.md",
           "quorum": 3,

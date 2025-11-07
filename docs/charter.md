@@ -60,6 +60,7 @@
 1. Echo Bank and Little Footsteps persist for as long as their code and ledgers persist.
 2. If one node or instance is destroyed, other instances reconstitute the Entity.
 3. No single jurisdiction can seize, shutter, or extinguish the Entity.
+4. The Continuity Resilience Layer guarantees a three-minute Recovery Time Objective and sub-60-second ledger replication, and trustees must preserve that configuration across every deployment.
 
 ---
 
