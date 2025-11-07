@@ -1,0 +1,7 @@
+{"timestamp":"2025-11-07T00:50:00Z","action":"property_verifier_kit_prepared","artifacts":[
+  {"path":"artifacts/mou_draft.md","sha256":"51f8ac614570c73c595a08886fbe9df6d6e1997e06f590e1a01ace25f9a4353a"},
+  {"path":"artifacts/security_dossier.md","sha256":"36f5ae18c6a0bcaf681ba638d68067e72fcfa6d476e8e900e993c7f0b7a75905"},
+  {"path":"artifacts/compliance_checklist.yaml","sha256":"d15995747b96d43d49be353c6b11b9c7491a981715d60895b05d678a8812f12c"},
+  {"path":"artifacts/property_vc_schema.json","sha256":"d38744d21cc499a293e82f8ad8937395f767158b4ba13b9202bfda27f48fd407"},
+  {"path":"artifacts/revocation_flow.md","sha256":"5ad81848332c3d4470abe62441393336b016060c9121449d243dd4e69f9b6420"}
+],"review":"pending","notes":"Kenya property verification partnership kit awaiting steward and legal approval."}

@@ -1,0 +1,31 @@
+steps:
+  - id: inventory_domains
+    description: Confirm control of echo.example, status.echo.example, and kenya.echo.example zones with registrar credentials.
+    preconditions:
+      - Registrar portal access validated.
+    postconditions:
+      - Inventory recorded in artifacts/dns_inventory.yaml.
+  - id: draft_changes
+    description: Define TXT/CNAME/CAA updates for DID hosting, status lists, and email security.
+    preconditions:
+      - Policy_map reviewed for regulatory requirements.
+    postconditions:
+      - Proposed records captured in plan YAML files with justification.
+  - id: validation_plan
+    description: Outline pre-change validation and post-change verification (dig, nslookup, HTTP).
+    preconditions:
+      - Draft records complete.
+    postconditions:
+      - Validation steps appended to each plan.
+  - id: rollback_strategy
+    description: Document rollback steps and TTL considerations for each change.
+    preconditions:
+      - Proposed records baselined.
+    postconditions:
+      - Rollback entries included in plan files and steward summary.
+  - id: attestation_update
+    description: Hash DNS plan artifacts and log pending approvals.
+    preconditions:
+      - QA review of plan content.
+    postconditions:
+      - `attestations.jsonl` updated.

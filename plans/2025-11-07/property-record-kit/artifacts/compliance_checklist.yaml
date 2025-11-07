@@ -1,0 +1,25 @@
+requirements:
+  - requirement: Register as data controller with Office of the Data Protection Commissioner (ODPC)
+    reference: "Data Protection Act 2019 s.18"
+    owner: "Maya Chen"
+    status: "initiated"
+  - requirement: Obtain letter of support from Nairobi County Land Registrar
+    reference: "Land Registration Act 2012 s.12"
+    owner: "Njeri Kimani"
+    status: "pending"
+  - requirement: Secure anti-corruption clearance certificates for key personnel
+    reference: "ACECA 2003"
+    owner: "People Operations"
+    status: "to-request"
+  - requirement: Execute MoU with Ministry legal department
+    reference: "Land Regulations 2017 Part VIII"
+    owner: "Legal Team"
+    status: "drafted"
+  - requirement: Complete DPIA and lodge with ODPC
+    reference: "Data Protection (General) Regulations 2021"
+    owner: "Privacy Office"
+    status: "drafted"
+  - requirement: Configure NLIMS API sandbox access and security testing
+    reference: "Ministry Technical Standards 2024"
+    owner: "Engineering"
+    status: "scheduled"

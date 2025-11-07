@@ -1,0 +1,31 @@
+steps:
+  - id: confirm_program_scope
+    description: Validate that Echo's proposed programs fall within PCC Act scope and micro-credential allowances.
+    preconditions:
+      - Program outlines drafted with learning outcomes and hours.
+    postconditions:
+      - Scope memo stored in artifacts and referenced in cover letter.
+  - id: assemble_application_form
+    description: Populate the Superintendent registration form with Echo data and attach supporting documents.
+    preconditions:
+      - Corporate, governance, and financial statements current within 6 months.
+    postconditions:
+      - JSON + PDF-ready data package completed.
+  - id: prepare_policies
+    description: Draft mandatory student contract, sexual violence policy, fee refund policy, and privacy statement.
+    preconditions:
+      - Legal review of latest provincial templates.
+    postconditions:
+      - Policies stored in artifacts with version control metadata.
+  - id: compile_evidence_checklist
+    description: Create submission checklist referencing statutory clauses and responsible owners.
+    preconditions:
+      - All documents drafted and QA reviewed.
+    postconditions:
+      - Checklist linked in steward_readme with owner assignments.
+  - id: final_attestation
+    description: Generate attestation log summarizing artifacts and pending approvals.
+    preconditions:
+      - Artifact hashes computed.
+    postconditions:
+      - `attestations.jsonl` updated with steward signature placeholders.

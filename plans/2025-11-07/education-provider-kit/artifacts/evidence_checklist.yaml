@@ -1,0 +1,29 @@
+submission_checklist:
+  - item: Completed registration form (Schedule 1)
+    reference: "O. Reg. 415/06 s.6"
+    owner: "Alexis Moore"
+    status: "drafted"
+  - item: Financial statements (audited, last fiscal year)
+    reference: "PCC Act s.38(4)"
+    owner: "Jamal Rivera"
+    status: "in-review"
+  - item: Security instruments (trust agreement + surety bond)
+    reference: "O. Reg. 415/06 s.18"
+    owner: "Maya Chen"
+    status: "pending"
+  - item: Policies package (student contract, sexual violence, refunds, accessibility, privacy)
+    reference: "PCC Act s.32; Sexual Violence at Colleges Act s.2"
+    owner: "Priya Desai"
+    status: "drafted"
+  - item: Instructor CVs + background checks
+    reference: "O. Reg. 415/06 s.11"
+    owner: "HR Lead"
+    status: "to-collect"
+  - item: Program outlines and learning outcomes
+    reference: "O. Reg. 415/06 s.20"
+    owner: "Curriculum Committee"
+    status: "approved"
+  - item: Data governance summary (VC issuance controls)
+    reference: "PIPEDA Principle 7; PCTF"
+    owner: "Security Team"
+    status: "drafted"

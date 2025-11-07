@@ -1,0 +1,31 @@
+steps:
+  - id: map_requirements
+    description: Align Ministry of Lands partnership requirements with Echo's capabilities and compliance controls.
+    preconditions:
+      - Policy_map reviewed by legal counsel.
+    postconditions:
+      - Requirement matrix embedded in artifacts/compliance_checklist.yaml.
+  - id: draft_mou
+    description: Prepare memorandum of understanding detailing roles, security obligations, and revocation processes.
+    preconditions:
+      - Identified government contact and pilot counties.
+    postconditions:
+      - MoU ready for negotiation with placeholders for signatures and DID references.
+  - id: compile_security_dossier
+    description: Document technical and operational safeguards for property data handling.
+    preconditions:
+      - Security architecture diagrams available.
+    postconditions:
+      - Dossier PDF/Markdown stored in artifacts.
+  - id: credential_mapping
+    description: Map property verification data to W3C VC + OGC LADM structures with revocation strategy.
+    preconditions:
+      - Access to existing land parcel data models.
+    postconditions:
+      - JSON schema + revocation flow in artifacts.
+  - id: attestation_log
+    description: Record artifact hashes, responsible stewards, and pending approvals.
+    preconditions:
+      - Artifact QA complete.
+    postconditions:
+      - `attestations.jsonl` updated.

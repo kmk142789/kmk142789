@@ -1,0 +1,46 @@
+{
+  "jurisdiction": "Ontario",
+  "programs": [
+    {
+      "name": "Digital Trust Steward",
+      "duration_hours": 300,
+      "delivery_mode": "Hybrid",
+      "tuition_cad": 4800,
+      "credential": "W3C VC – Completion Certificate",
+      "work_integrated_learning": true
+    },
+    {
+      "name": "Verifiable Credential Specialist",
+      "duration_hours": 180,
+      "delivery_mode": "Online",
+      "tuition_cad": 3200,
+      "credential": "W3C VC – Skills Badge",
+      "work_integrated_learning": false
+    }
+  ],
+  "governance": {
+    "legal_name": "Echo Labs Cooperative",
+    "jurisdiction_of_incorporation": "Ontario",
+    "business_number": "807654321",
+    "directors": [
+      {"name": "Alexis Moore", "role": "Chair", "background_check_complete": true},
+      {"name": "Jamal Rivera", "role": "Treasurer", "background_check_complete": true}
+    ]
+  },
+  "financial_assurances": {
+    "trust_account_bank": "TD Canada Trust",
+    "trust_account_number": "****5678",
+    "surety_bond_provider": "Co-operators Insurance",
+    "bond_amount_cad": 10000
+  },
+  "student_support": {
+    "accessibility_policy_ref": "policies/accessibility-support.md",
+    "sexual_violence_policy_ref": "policies/sexual_violence_policy.md",
+    "fee_refund_policy_ref": "policies/fee_refund_policy.md"
+  },
+  "identity_security": {
+    "vc_issuance_platform": "Echo Credential Hub",
+    "ial_level": "PCTF IAL2",
+    "revocation_registry": "https://status.echo.example/lists/education.json"
+  }
+}

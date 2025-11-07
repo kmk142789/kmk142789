@@ -1,0 +1,30 @@
+plan_id: echo-example-2025-11-07
+zone: echo.example
+changes:
+  - type: TXT
+    name: _did.echo.example.
+    ttl: 3600
+    value: "did:document=https://echo.example/.well-known/did.json"
+    justification: "Expose DID document per W3C DID spec for stewardship proofs."
+  - type: TXT
+    name: _dmarc.echo.example.
+    ttl: 3600
+    value: "v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@echo.example; ruf=mailto:dmarc-failure@echo.example"
+    justification: "Align with CASL and NIST SP 800-63B email security guidance."
+  - type: CAA
+    name: echo.example.
+    ttl: 86400
+    value: "0 issue \\"letsencrypt.org\\""
+    justification: "Restrict certificate issuance authority for compliance endpoints."
+validation:
+  pre_change:
+    - Verify registrar access and existing record snapshots.
+  post_change:
+    - "dig TXT _did.echo.example"
+    - "dig TXT _dmarc.echo.example"
+    - "dig CAA echo.example"
+rollback:
+  instructions:
+    - Restore previous TXT/CAA values from snapshot stored in `artifacts/prechange_records/echo_example.json`.
+    - Reduce TTL to 300 if rollback required to expedite propagation.
+    - Notify stewards and update attestation ledger with rollback hash.

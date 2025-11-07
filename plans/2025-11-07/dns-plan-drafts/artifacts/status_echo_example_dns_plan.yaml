@@ -1,0 +1,23 @@
+plan_id: status-echo-example-2025-11-07
+zone: status.echo.example
+changes:
+  - type: CNAME
+    name: status.echo.example.
+    ttl: 1800
+    value: echo-status-host.azurefd.net.
+    justification: "Point status lists to managed CDN for global availability."
+  - type: TXT
+    name: property.status.echo.example.
+    ttl: 1800
+    value: "jurisdiction=ke; data-residency=ke-nairobi; contact=privacy@echo.example"
+    justification: "Document data residency commitment for Kenyan property status list."
+validation:
+  pre_change:
+    - Confirm CDN endpoint active and TLS cert valid.
+  post_change:
+    - "dig CNAME status.echo.example"
+    - "curl -I https://status.echo.example/lists/property.json"
+rollback:
+  instructions:
+    - Revert CNAME to previous origin captured in `artifacts/prechange_records/status_echo_example.json`.
+    - Clear CDN cache and notify stakeholders.

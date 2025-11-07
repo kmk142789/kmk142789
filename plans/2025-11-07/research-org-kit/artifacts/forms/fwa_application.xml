@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FWAApplication>
+  <InstitutionName>Echo Labs Cooperative</InstitutionName>
+  <Address>
+    <Line1>1200 Meridian Ave</Line1>
+    <City>Oakland</City>
+    <State>CA</State>
+    <PostalCode>94612</PostalCode>
+    <Country>USA</Country>
+  </Address>
+  <AssuranceContact>
+    <Name>Lina Alvarez</Name>
+    <Title>Research Compliance Officer</Title>
+    <Email>lina.alvarez@echo.example</Email>
+    <Phone>+1-510-555-0188</Phone>
+    <DID>did:web:echo.example/people/lina-alvarez</DID>
+  </AssuranceContact>
+  <SigningOfficial>
+    <Name>Marcus Okafor</Name>
+    <Title>Executive Director</Title>
+    <Email>marcus.okafor@echo.example</Email>
+    <Phone>+1-510-555-0101</Phone>
+  </SigningOfficial>
+  <IRBOfRecord>
+    <Name>Bay Area Collaborative IRB</Name>
+    <OHRPRegistration>IRB00011223</OHRPRegistration>
+    <FWANumber>FWA00040012</FWANumber>
+  </IRBOfRecord>
+  <EngagedResearch>
+    <Study>
+      <Title>Community Credential Adoption Study</Title>
+      <FundingSource>Echo internal</FundingSource>
+      <HumanSubjectsInvolvement>Surveys and focus groups with informed consent</HumanSubjectsInvolvement>
+      <HIPAAData>false</HIPAAData>
+    </Study>
+  </EngagedResearch>
+</FWAApplication>

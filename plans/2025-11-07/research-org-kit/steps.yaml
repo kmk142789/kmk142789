@@ -1,0 +1,31 @@
+steps:
+  - id: compile_fwa_form
+    description: Populate OHRP FWA form with Echo institutional data and designate IRB partners.
+    preconditions:
+      - Identification of engaged research sites and human subjects research scope.
+    postconditions:
+      - Draft FWA form (JSON + XML) ready for e-signature.
+  - id: draft_reliance_agreement
+    description: Prepare reliance agreement aligning responsibilities between Echo and partner IRB.
+    preconditions:
+      - Candidate IRB identified with OHRP registration.
+    postconditions:
+      - Agreement template completed with placeholders for signatures and DID references.
+  - id: finalize_policies
+    description: Consolidate human subjects protection plan, data security SOP, and consent templates.
+    preconditions:
+      - Policy_map reviewed for current regulations.
+    postconditions:
+      - Policies stored in artifacts with cross-references.
+  - id: verification_plan
+    description: Map VC issuance to IRB approval evidence and revocation triggers.
+    preconditions:
+      - Credential schema defined.
+    postconditions:
+      - Verification instructions published in artifacts.
+  - id: attestation_record
+    description: Hash artifacts and update attestation log with responsible steward placeholders.
+    preconditions:
+      - Artifact QA complete.
+    postconditions:
+      - `attestations.jsonl` updated.
