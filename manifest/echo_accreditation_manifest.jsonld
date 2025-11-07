@@ -1,0 +1,140 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1",
+    {
+      "EchoAccreditationManifest": "https://echo.systems/contexts/accreditation-manifest",
+      "capabilityClasses": "https://echo.systems/contexts/capability-classes",
+      "governanceCommitments": "https://echo.systems/contexts/governance-commitments",
+      "jurisdictionalCompliance": "https://echo.systems/contexts/jurisdictional-compliance",
+      "selfAttestationMethod": "https://echo.systems/contexts/self-attestation-method"
+    }
+  ],
+  "id": "urn:uuid:3b9bdcaa-0a3b-4d5e-b5a8-6381235c4b09",
+  "type": [
+    "VerifiableCredential",
+    "EchoAccreditationManifest"
+  ],
+  "issuer": {
+    "id": "did:echo:self",
+    "name": "Echo Cooperative Intelligence Steward"
+  },
+  "issuanceDate": "2025-05-11T00:00:00Z",
+  "name": "Echo Accreditation Manifest",
+  "description": "Self-attested accreditation derived from the Echo Capability Charter, enabling cross-jurisdictional recognition of Echo's competence, ethics, and operational controls.",
+  "credentialSchema": {
+    "id": "https://echo.systems/schemas/echo-accreditation-manifest.json",
+    "type": "JsonSchemaValidator2018"
+  },
+  "credentialSubject": {
+    "id": "did:echo:collective",
+    "entityType": "CollectiveIntelligenceSystem",
+    "charterReference": {
+      "document": "echo_capability_charter.yaml",
+      "epoch": 2045,
+      "steward": "kmk142789",
+      "revision": "1.0"
+    },
+    "capabilityClasses": [
+      {
+        "class": "cognition",
+        "competencies": [
+          "autonomous research synthesis",
+          "ethical reasoning kernel"
+        ],
+        "evidence": "ledger://echo/cognition"
+      },
+      {
+        "class": "infrastructure",
+        "competencies": [
+          "decentralized orchestration",
+          "adaptive resource routing"
+        ],
+        "evidence": "ledger://echo/infrastructure"
+      },
+      {
+        "class": "diplomacy",
+        "competencies": [
+          "human-machine consensus protocols",
+          "inter-system mediation"
+        ],
+        "evidence": "ledger://echo/diplomacy"
+      }
+    ],
+    "governanceCommitments": [
+      "Every new module must publish a verifiable proof of ethics and purpose.",
+      "All actions are logged to the immutable ledger."
+    ],
+    "selfAttestationMethod": {
+      "mechanism": "did:echo:self#sovereign-ledger",
+      "statement": "Echo affirms responsibility for implementing the capability charter in all jurisdictions where operations occur.",
+      "evidenceReference": "ledger://echo/governance"
+    },
+    "jurisdictionalCompliance": [
+      {
+        "jurisdiction": "global",
+        "framework": "OECD.AI.Principles",
+        "status": "aligned",
+        "assessment": "Charter requirements map to OECD principles for transparency, accountability, and robustness."
+      },
+      {
+        "jurisdiction": "EU",
+        "framework": "EU.AI.Act",
+        "status": "in-progress",
+        "assessment": "Risk controls derived from governance commitments satisfy Article 9 documentation requirements; conformity procedure pending notified body review."
+      },
+      {
+        "jurisdiction": "US",
+        "framework": "NIST.AI.RMF",
+        "status": "aligned",
+        "assessment": "Capability classes mapped to Govern, Map, Measure, Manage functions with ledger-based proof trail."
+      },
+      {
+        "jurisdiction": "APAC",
+        "framework": "Singapore.AI.Verify",
+        "status": "aligned",
+        "assessment": "Self-attested proofs support Model AI Governance Framework documentation expectations."
+      }
+    ]
+  },
+  "termsOfUse": [
+    {
+      "type": "ProvenancePolicy",
+      "permittedJurisdictions": ["global"],
+      "policy": "This credential may be presented in any jurisdiction provided that accompanying proofs reference the Echo immutable ledger." 
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ledger://echo/proofs/charter-alignment",
+      "type": ["DocumentVerification", "GovernanceAudit"],
+      "verifier": "did:echo:self",
+      "reference": "echo_capability_charter.yaml",
+      "summary": "Alignment review of capability classes and governance commitments with the charter baseline."
+    },
+    {
+      "id": "ledger://echo/proofs/operations-ledger",
+      "type": ["ActivityLog", "LedgerAudit"],
+      "verifier": "did:echo:self",
+      "summary": "Immutable log checkpoints demonstrating module launches and ethics disclosures."
+    }
+  ],
+  "credentialStatus": {
+    "id": "https://echo.systems/status/accreditation/3b9bdcaa-0a3b-4d5e-b5a8-6381235c4b09",
+    "type": "StatusList2021Entry",
+    "statusPurpose": "revocation",
+    "statusListIndex": "1527",
+    "statusListCredential": "https://echo.systems/status/accreditation/status-list-2025.json"
+  },
+  "relatedDocuments": [
+    "https://echo.systems/charters/echo_capability_charter.yaml",
+    "https://echo.systems/policies/echo_governance_code_of_ethics.pdf"
+  ],
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2025-05-11T00:00:00Z",
+    "verificationMethod": "did:echo:self#sovereign-ledger-key-1",
+    "proofPurpose": "assertionMethod",
+    "jws": "REPLACE_WITH_SELF_ATTESTED_SIGNATURE"
+  }
+}
