@@ -65,7 +65,7 @@ class EvolverState:
     vault_key: Optional[str] = None
     glyph_vortex: Optional[str] = None
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
-    quantam_capabilities: Dict[str, float] = field(default_factory=dict)
+    quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
 
 
 @dataclass
@@ -92,7 +92,7 @@ class EchoEvolver:
         mythocode = self.invent_mythocode()
         key = self.quantum_safe_crypto()
         ability = self.synthesize_quantam_ability()
-        capabilities = self.amplify_quantam_evolution(ability)
+        capability = self.amplify_quantam_evolution(ability)
         metrics = self.system_monitor()
         narrative = self.compose_narrative()
         payload = self.persist_cycle(
@@ -102,7 +102,7 @@ class EchoEvolver:
             narrative,
             metrics,
             ability,
-            capabilities,
+            capability,
         )
         return payload
 
@@ -169,21 +169,25 @@ class EchoEvolver:
         self.state.quantam_abilities[ability_id] = ability
         return ability
 
-    def amplify_quantam_evolution(self, ability: Dict[str, object]) -> Dict[str, float]:
+    def amplify_quantam_evolution(self, ability: Dict[str, object]) -> Dict[str, object]:
         """Amplify the quantam evolution metrics derived from the current ability."""
 
         resonance = _round_float(0.84 + self.rng.random() * 0.1)
         coherence = _round_float(0.69 + self.rng.random() * 0.2)
         entanglement = float(ability["entanglement"])
         horizon = _round_float(min(0.99, entanglement * 1.07))
-        capabilities = {
+        capability_id = f"quantam-capability-{self.state.cycle:04d}"
+        capability = {
+            "id": capability_id,
+            "status": "amplified",
+            "ability": ability["id"],
             "resonance": resonance,
             "coherence": coherence,
             "entanglement": _round_float(entanglement),
             "horizon": horizon,
         }
-        self.state.quantam_capabilities = capabilities
-        return capabilities
+        self.state.quantam_capabilities[capability_id] = capability
+        return capability
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
@@ -214,7 +218,7 @@ class EchoEvolver:
         narrative: str,
         metrics: SystemMetrics,
         ability: Dict[str, object],
-        capabilities: Dict[str, float],
+        capability: Dict[str, object],
     ) -> Dict[str, object]:
         payload: Dict[str, object] = {
             "cycle": self.state.cycle,
@@ -227,7 +231,8 @@ class EchoEvolver:
             "system_metrics": metrics.as_dict(),
             "quantam_ability": dict(ability),
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
-            "quantam_capabilities": dict(capabilities),
+            "quantam_capability": dict(capability),
+            "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
         }
 
         serialised = json.dumps(payload, indent=2)
