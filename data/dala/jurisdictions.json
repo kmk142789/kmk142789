@@ -1,0 +1,195 @@
+[
+  {
+    "category": "international",
+    "jurisdiction": "Council of Europe",
+    "instrument": "Parliamentary Assembly Resolution 2343 on the need for democratic governance of artificial intelligence",
+    "year": 2020,
+    "recognition_status": "rejected",
+    "scope": [
+      "AI systems",
+      "robots"
+    ],
+    "description": "Parliamentary Assembly urges member states not to grant legal personality to AI systems or robots and to ensure human accountability.",
+    "references": [
+      "https://pace.coe.int/en/files/28061/html"
+    ]
+  },
+  {
+    "category": "international",
+    "jurisdiction": "European Union",
+    "instrument": "European Parliament Resolution on Civil Law Rules on Robotics",
+    "year": 2017,
+    "recognition_status": "proposed",
+    "scope": [
+      "autonomous robots",
+      "AI agents"
+    ],
+    "description": "Non-binding resolution suggesting the creation of an \"electronic person\" status for sophisticated autonomous robots to allocate rights and obligations.",
+    "references": [
+      "https://www.europarl.europa.eu/doceo/document/TA-8-2017-0051_EN.html"
+    ]
+  },
+  {
+    "category": "international",
+    "jurisdiction": "European Union",
+    "instrument": "Regulation (EU) 2024/1689 laying down harmonised rules on artificial intelligence (AI Act)",
+    "year": 2024,
+    "recognition_status": "rejected",
+    "scope": [
+      "general-purpose AI",
+      "high-risk AI"
+    ],
+    "description": "Risk-based regulatory regime that treats AI systems as tools and places obligations on human or legal person deployers rather than conferring independent legal personality.",
+    "references": [
+      "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689"
+    ]
+  },
+  {
+    "category": "national",
+    "jurisdiction": "Republic of the Marshall Islands",
+    "instrument": "Decentralized Autonomous Organization Act",
+    "year": 2022,
+    "recognition_status": "recognized",
+    "scope": [
+      "DAOs"
+    ],
+    "description": "Allows decentralized autonomous organizations to register as limited liability companies whose governance is executed via smart contracts.",
+    "references": [
+      "https://www.rmiic.com/dao"
+    ]
+  },
+  {
+    "category": "national",
+    "jurisdiction": "United States - Wyoming",
+    "instrument": "SF0038 - Decentralized Autonomous Organization Supplement to the Wyoming LLC Act",
+    "year": 2021,
+    "recognition_status": "recognized",
+    "scope": [
+      "DAOs"
+    ],
+    "description": "Enables DAO formation as Wyoming LLCs with smart contracts serving as the operating agreement and clarifies member liability protections.",
+    "references": [
+      "https://wyoleg.gov/Legislation/2021/SF0038"
+    ]
+  },
+  {
+    "category": "national",
+    "jurisdiction": "United States - Tennessee",
+    "instrument": "Public Chapter No. 994 amending the Tennessee Limited Liability Company Act",
+    "year": 2022,
+    "recognition_status": "recognized",
+    "scope": [
+      "DAOs"
+    ],
+    "description": "Recognizes decentralized autonomous organizations as LLCs and permits smart contract governance provisions in formation documents.",
+    "references": [
+      "https://publications.tnsosfiles.com/acts/112/pub/pc0994.pdf"
+    ]
+  },
+  {
+    "category": "national",
+    "jurisdiction": "United States - Utah",
+    "instrument": "Utah Decentralized Autonomous Organizations Act",
+    "year": 2023,
+    "recognition_status": "recognized",
+    "scope": [
+      "DAOs",
+      "algorithmically managed entities"
+    ],
+    "description": "Creates the \"Utah DAO\" legal entity type that may own property, enter contracts, and be governed in whole or part by smart contracts.",
+    "references": [
+      "https://le.utah.gov/~2023/bills/static/HB0357.html"
+    ]
+  },
+  {
+    "category": "national",
+    "jurisdiction": "United States - Vermont",
+    "instrument": "Blockchain-Based Limited Liability Company (BBLLC) Act",
+    "year": 2018,
+    "recognition_status": "recognized",
+    "scope": [
+      "blockchain-governed LLCs"
+    ],
+    "description": "Authorizes LLCs with blockchain-based governance features subject to human fiduciary duties and compliance controls.",
+    "references": [
+      "https://legislature.vermont.gov/statutes/section/11/025/04171"
+    ]
+  },
+  {
+    "category": "national",
+    "jurisdiction": "Malta",
+    "instrument": "Innovative Technology Arrangements and Services Act (Cap. 592)",
+    "year": 2018,
+    "recognition_status": "conditional",
+    "scope": [
+      "innovative technology arrangements",
+      "DAOs"
+    ],
+    "description": "Provides for certification and recognition of technology arrangements, including DAO-style governance structures, under oversight of the Malta Digital Innovation Authority.",
+    "references": [
+      "https://legislation.mt/eli/cap/592/eng/pdf"
+    ]
+  },
+  {
+    "category": "sandbox",
+    "jurisdiction": "European Union",
+    "instrument": "European Blockchain Regulatory Sandbox",
+    "year": 2023,
+    "recognition_status": "exploratory",
+    "scope": [
+      "cross-border DLT",
+      "DAOs",
+      "autonomous agents"
+    ],
+    "description": "Three-year program offering legal guidance to DLT projects, including pilots addressing DAO governance and digital personhood questions.",
+    "references": [
+      "https://digital-strategy.ec.europa.eu/en/policies/european-blockchain-regulatory-sandbox"
+    ]
+  },
+  {
+    "category": "sandbox",
+    "jurisdiction": "United Kingdom",
+    "instrument": "FCA Digital Sandbox",
+    "year": 2020,
+    "recognition_status": "exploratory",
+    "scope": [
+      "AI-enabled fintech",
+      "autonomous financial agents"
+    ],
+    "description": "Provides datasets and supervisory feedback for testing AI-driven financial and autonomous agent solutions under regulatory oversight.",
+    "references": [
+      "https://www.fca.org.uk/digital-sandbox"
+    ]
+  },
+  {
+    "category": "sandbox",
+    "jurisdiction": "Singapore",
+    "instrument": "MAS FinTech Regulatory Sandbox and Sandbox Express",
+    "year": 2016,
+    "recognition_status": "exploratory",
+    "scope": [
+      "AI-enabled financial services",
+      "DLT-based governance"
+    ],
+    "description": "Sandbox regimes that allow experimentation with AI and decentralized governance solutions within limited customer exposure and bespoke safeguards.",
+    "references": [
+      "https://www.mas.gov.sg/development/fintech/regulatory-sandbox"
+    ]
+  },
+  {
+    "category": "sandbox",
+    "jurisdiction": "United Arab Emirates - Abu Dhabi Global Market",
+    "instrument": "Digital Securities Sandbox and DLT Foundations framework",
+    "year": 2023,
+    "recognition_status": "exploratory",
+    "scope": [
+      "DAOs",
+      "algorithmically managed foundations"
+    ],
+    "description": "Enables controlled testing of tokenized and autonomous governance structures and provides a path to incorporate DLT foundations with smart-contract bylaws.",
+    "references": [
+      "https://www.adgm.com/doing-business/fintech/reglab",
+      "https://www.adgm.com/operating-in-adgm/registration-authority/legislation/dlt-foundations-regulations-2023"
+    ]
+  }
+]
