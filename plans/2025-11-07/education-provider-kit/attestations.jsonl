@@ -1,0 +1,11 @@
+{"timestamp":"2025-11-07T00:15:00Z","action":"education_kit_prepared","artifacts":[
+  {"path":"artifacts/cover_letter.md","sha256":"d6ee9730369498e26011cf3a1ce021a901fb21a6e90953f491f5b0d586912f99"},
+  {"path":"artifacts/application_form.json","sha256":"c51585e661a006e2aa2ad71c691a4fd7b1cf4f0b019f15ed6bbe6ea4c311d745"},
+  {"path":"artifacts/evidence_checklist.yaml","sha256":"f0e33b6ec8ec6fae9b409b0b406df0ddecc48b8d3efb043ab999161d6e6b25e1"},
+  {"path":"artifacts/vc_mapping.json","sha256":"fe2a986d4362ead9bc499d1c5e2ba4675e3f15ff8be5cd4f9f91c02e523d319e"},
+  {"path":"artifacts/policies/accessibility-support.md","sha256":"ac26e3aac75089e1c66805ca5fccde3880480872a2da5f7c2d86651db1f449b0"},
+  {"path":"artifacts/policies/student_contract.md","sha256":"50c21baef49f9409e3527024f01150caccd74cbbd63ba5ea41722d30883131c0"},
+  {"path":"artifacts/policies/fee_refund_policy.md","sha256":"12c27a1fdc77d236a27625d9e3171c8325269997b408ad728985ba9bc2c895f2"},
+  {"path":"artifacts/policies/privacy_statement.md","sha256":"b9ac30a8ff2de7bbc3ddd4e769a422ed9fc6800b718c0a981aa30cbe301adbfb"},
+  {"path":"artifacts/policies/sexual_violence_policy.md","sha256":"2b70ab8b203c26f8dc8d9828ca78cba4dac2c6d57a1248ec0add5366940697ab"}
+],"review":"pending","notes":"Ontario PCC registration kit assembled; requires legal QA before submission."}

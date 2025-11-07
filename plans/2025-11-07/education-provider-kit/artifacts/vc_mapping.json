@@ -1,0 +1,18 @@
+{
+  "credential_schema_id": "https://echo.example/schemas/education/completion-v1",
+  "jurisdiction_requirements": "PCTF IAL2, StatusList2021",
+  "evidence": [
+    {
+      "type": "EducationalOccupationalCredential",
+      "name": "Digital Trust Steward Certificate",
+      "issuer": "did:web:echo.example",
+      "evidenceDocument": "Program completion transcript",
+      "revocation": "https://status.echo.example/lists/education.json#list"
+    }
+  ],
+  "holder_binding": {
+    "method": "did:ion",
+    "assurance_level": "IAL2",
+    "binding_proof": "OpenID4VCI token exchange"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "https://echo.example/schemas/property/verification-v1",
+  "type": "PropertyVerificationCredential",
+  "context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://schema.org",
+    "https://ogc.org/ladm/v1"
+  ],
+  "credentialSubject": {
+    "parcelId": "string",
+    "county": "string",
+    "ownerName": "string",
+    "registryEntry": "string",
+    "surveyDate": "date",
+    "verificationStatus": "enum[verified,pending,revoked]",
+    "nlmsTransactionId": "string"
+  },
+  "evidence": [
+    {
+      "type": "LandRegistryRecord",
+      "source": "https://nlms.mlands.go.ke/records/<id>",
+      "hash": "sha256"
+    }
+  ],
+  "status": {
+    "type": "StatusList2021Entry",
+    "statusPurpose": "revocation",
+    "statusListIndex": "number",
+    "statusListCredential": "https://status.echo.example/lists/property.json"
+  }
+}

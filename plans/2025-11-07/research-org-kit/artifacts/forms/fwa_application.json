@@ -1,0 +1,43 @@
+{
+  "institution_legal_name": "Echo Labs Cooperative",
+  "institution_address": {
+    "line1": "1200 Meridian Ave",
+    "city": "Oakland",
+    "state": "CA",
+    "postal_code": "94612",
+    "country": "USA"
+  },
+  "human_subjects_training": "CITI Social & Behavioral Research – Completed 2025-10-15",
+  "assurance_contact": {
+    "name": "Dr. Lina Alvarez",
+    "title": "Research Compliance Officer",
+    "email": "lina.alvarez@echo.example",
+    "phone": "+1-510-555-0188",
+    "did": "did:web:echo.example/people/lina-alvarez"
+  },
+  "signing_official": {
+    "name": "Marcus Okafor",
+    "title": "Executive Director",
+    "email": "marcus.okafor@echo.example",
+    "phone": "+1-510-555-0101"
+  },
+  "irb_of_record": {
+    "name": "Bay Area Collaborative IRB",
+    "ohrp_registration": "IRB00011223",
+    "fwa_number": "FWA00040012",
+    "reliance_agreement_reference": "artifacts/forms/reliance_agreement_template.md"
+  },
+  "engaged_research": [
+    {
+      "title": "Community Credential Adoption Study",
+      "funding_source": "Echo internal",
+      "human_subjects_involvement": "Surveys and focus groups with informed consent",
+      "hipaa_data": false
+    }
+  ],
+  "compliance_statements": {
+    "federalwide_assurance": true,
+    "hipaa_alignment": true,
+    "reporting_commitment": "Echo will report unanticipated problems to OHRP within required timelines."
+  }
+}

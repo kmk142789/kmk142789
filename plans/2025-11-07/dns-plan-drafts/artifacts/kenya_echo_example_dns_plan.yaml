@@ -1,0 +1,24 @@
+plan_id: kenya-echo-example-2025-11-07
+zone: kenya.echo.example
+changes:
+  - type: TXT
+    name: _verification.kenya.echo.example.
+    ttl: 1800
+    value: "gov-partner=Ministry of Lands; contact=nairobi-ops@echo.example; hash=ab12cd34"
+    justification: "Publish Ministry partnership verification TXT record per Land Regulations 2017 guidance."
+  - type: A
+    name: api.kenya.echo.example.
+    ttl: 900
+    value: 196.201.45.18
+    justification: "Point to Kenya-hosted API gateway for NLIMS integrations."
+validation:
+  pre_change:
+    - Confirm IP owned by Echo-managed VPC in Kenya.
+  post_change:
+    - "dig TXT _verification.kenya.echo.example"
+    - "dig A api.kenya.echo.example"
+    - "curl -I https://api.kenya.echo.example/health"
+rollback:
+  instructions:
+    - Remove TXT and revert A record to previous value stored in `artifacts/prechange_records/kenya_echo_example.json`.
+    - Notify Ministry contacts of rollback within 1 hour.

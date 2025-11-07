@@ -1,0 +1,13 @@
+zones:
+  - domain: echo.example
+    registrar: "Example Registrar LLC"
+    status: "active"
+    last_verified: "2025-10-30"
+  - domain: status.echo.example
+    registrar: "Example Registrar LLC"
+    status: "delegated"
+    last_verified: "2025-10-30"
+  - domain: kenya.echo.example
+    registrar: "Example Registrar LLC"
+    status: "delegated"
+    last_verified: "2025-10-30"

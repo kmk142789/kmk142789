@@ -1,0 +1,9 @@
+{"timestamp":"2025-11-07T01:05:00Z","action":"dns_plans_prepared","artifacts":[
+  {"path":"artifacts/dns_inventory.yaml","sha256":"37db5c33224278465f031a35899dcb708dc4e18bea08302ef1e1d66b10f0fb56"},
+  {"path":"artifacts/echo_example_dns_plan.yaml","sha256":"39b1c50d2aa0394c6f0ec2f8f575db2ce8f749ea82e81b6250496a45859400ba"},
+  {"path":"artifacts/status_echo_example_dns_plan.yaml","sha256":"b461648a145a255eb5941c7e79b8f28ce5a662270cc05ffe055aca0f33802432"},
+  {"path":"artifacts/kenya_echo_example_dns_plan.yaml","sha256":"57684d0e9b280da2d2e7d91d229a595907fd36b5e5db73665c3fd73a328b1f8c"},
+  {"path":"artifacts/prechange_records/echo_example.json","sha256":"e76d4eeb77c089b99c0d99d6d38c70666dfad664e32a885397787949a4d039b9"},
+  {"path":"artifacts/prechange_records/status_echo_example.json","sha256":"385a885a9f4557359bbfc5527a6c8456f343dbb0d4b9576ea47bbfca9a9fae0c"},
+  {"path":"artifacts/prechange_records/kenya_echo_example.json","sha256":"b1cb57843b60a4d2119ad74d448fab98e440358692c816409e3138fccbb42ee3"}
+],"review":"pending","notes":"DNS change plans drafted for approval; no changes executed."}

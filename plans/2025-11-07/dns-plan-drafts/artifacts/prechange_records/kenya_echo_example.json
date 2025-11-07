@@ -1,0 +1,7 @@
+{
+  "timestamp": "2025-10-30T12:00:00Z",
+  "records": [
+    {"type": "TXT", "name": "_verification.kenya.echo.example.", "value": "gov-partner=pending"},
+    {"type": "A", "name": "api.kenya.echo.example.", "value": "196.201.44.10"}
+  ]
+}

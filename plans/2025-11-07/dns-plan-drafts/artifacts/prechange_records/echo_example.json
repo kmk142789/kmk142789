@@ -1,0 +1,8 @@
+{
+  "timestamp": "2025-10-30T12:00:00Z",
+  "records": [
+    {"type": "TXT", "name": "_did.echo.example.", "value": "did:document=https://old.echo.example/did.json"},
+    {"type": "TXT", "name": "_dmarc.echo.example.", "value": "v=DMARC1; p=none"},
+    {"type": "CAA", "name": "echo.example.", "value": "0 issue \"digicert.com\""}
+  ]
+}

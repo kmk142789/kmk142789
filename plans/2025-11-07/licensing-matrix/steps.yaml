@@ -1,0 +1,27 @@
+steps:
+  - id: gather_statutes
+    description: Collect primary statutes and regulator guidance for selected jurisdictions and capabilities.
+    preconditions:
+      - Access to official regulator websites or consolidated legal databases.
+      - Confirmed scope of priority capabilities.
+    postconditions:
+      - Annotated citations with URLs stored in research notes.
+  - id: synthesize_matrix
+    description: Normalize legal pathways, documentation, costs, timeline, approvals, ethics, VC mapping, risk, and next actions into a structured matrix.
+    preconditions:
+      - Completed research notes with consistent terminology.
+    postconditions:
+      - Matrix exported to CSV and Markdown for steward review.
+  - id: validate_with_policies
+    description: Cross-check matrix entries against policy references and compliance frameworks.
+    preconditions:
+      - Draft matrix ready for quality review.
+      - Policy_map.md approved for citation accuracy.
+    postconditions:
+      - Matrix annotated with policy source references and revision metadata.
+  - id: publish_artifacts
+    description: Place finalized matrix in artifacts directory with checksum and steward summary linkage.
+    preconditions:
+      - Matrix validated by compliance reviewer.
+    postconditions:
+      - Artifacts include CSV, Markdown brief, and checksum recorded in attestations.jsonl.

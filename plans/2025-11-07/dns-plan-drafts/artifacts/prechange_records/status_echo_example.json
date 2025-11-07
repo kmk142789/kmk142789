@@ -1,0 +1,7 @@
+{
+  "timestamp": "2025-10-30T12:00:00Z",
+  "records": [
+    {"type": "CNAME", "name": "status.echo.example.", "value": "old-status-host.azurefd.net."},
+    {"type": "TXT", "name": "property.status.echo.example.", "value": "jurisdiction=ke; data-residency=unknown"}
+  ]
+}

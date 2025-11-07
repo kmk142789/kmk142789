@@ -1,0 +1,9 @@
+{"timestamp":"2025-11-07T00:35:00Z","action":"research_filing_kit_prepared","artifacts":[
+  {"path":"artifacts/forms/fwa_application.json","sha256":"825b135d6922cb52d55b54803985906911245ada5a8822c8122875644839f7d2"},
+  {"path":"artifacts/forms/fwa_application.xml","sha256":"d4738b5f93ec878215d5c7767c16addd60e385888ba98c7a0f4e7e24cd655fcc"},
+  {"path":"artifacts/forms/reliance_agreement_template.md","sha256":"6ea922c46be789a2ebf0b383556dbc2ff3760220beaf7cc0e8ae986aa7d00add"},
+  {"path":"artifacts/policies/human_subjects_protection_plan.md","sha256":"3cf1a54d0af02f213949b2b9660e4677fc30dc1eafe4ec34aca792d1d53a1795"},
+  {"path":"artifacts/policies/consent_template.md","sha256":"9bb5a171436a2887c17545cdf4bab17fc30f5f2fdf04dcfe9b0ca89c35d7e624"},
+  {"path":"artifacts/policies/data_security_sop.md","sha256":"33514f191b0c57aa0e640ec10320b05d00a8621f87f4ce07946351e88933af1d"},
+  {"path":"artifacts/verification_playbook.md","sha256":"427886f58cac777a6df42c2d1a60074a1014e81c04fba4925f5273fd96b65f5b"}
+],"review":"pending","notes":"OHRP FWA and IRB reliance package ready for steward approval."}
