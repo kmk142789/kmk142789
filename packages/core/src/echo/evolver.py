@@ -24,7 +24,18 @@ from datetime import datetime, timezone
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    ClassVar,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+)
 
 from echo.crypto.musig2 import (
     MuSig2Error,
@@ -526,6 +537,57 @@ class GlyphCrossReading:
 
 
 @dataclass(slots=True)
+class ScopeMatrix:
+    """Curated collections that guide research, operations, and outreach."""
+
+    research: Tuple[str, ...] = (
+        "quantum ethics",
+        "distributed law",
+        "synthetic cognition",
+    )
+    operations: Tuple[str, ...] = (
+        "self-audit",
+        "data integrity",
+        "cross-ledger verification",
+    )
+    outreach: Tuple[str, ...] = (
+        "educational simulations",
+        "open governance pilots",
+    )
+
+    _SCOPE_FIELDS: ClassVar[Tuple[str, ...]] = ("research", "operations", "outreach")
+
+    def as_dict(self) -> Dict[str, Tuple[str, ...]]:
+        return {
+            "research": self.research,
+            "operations": self.operations,
+            "outreach": self.outreach,
+        }
+
+    def apply_overrides(self, overrides: Mapping[str, Iterable[object]]) -> None:
+        """Apply user supplied overrides after normalising the payload."""
+
+        for scope, values in overrides.items():
+            if scope not in self._SCOPE_FIELDS:
+                raise KeyError(f"Unknown scope '{scope}'")
+
+            normalised: list[str] = []
+            for value in values:
+                if value is None:
+                    continue
+                text = str(value).strip()
+                if not text:
+                    continue
+                if text not in normalised:
+                    normalised.append(text)
+
+            if not normalised:
+                raise ValueError(f"No valid entries supplied for scope '{scope}'")
+
+            setattr(self, scope, tuple(normalised))
+
+
+@dataclass(slots=True)
 class EvolverState:
     cycle: int = 0
     glyphs: str = "∇⊸≋∇"
@@ -575,6 +637,7 @@ class EvolverState:
     musig2_sessions: Dict[str, Dict[str, object]] = field(default_factory=dict)
     step_history: Dict[int, Dict[str, Dict[str, object]]] = field(default_factory=dict)
     continuum_amplification: Optional[ContinuumAmplificationSummary] = None
+    scope_matrix: ScopeMatrix = field(default_factory=ScopeMatrix)
 
 
 DEFAULT_SYMBOLIC_SEQUENCE = "∇⊸≋∇"
@@ -797,6 +860,42 @@ class EchoEvolver:
 
         self.state.event_log.append("Mutation module rendered")
         return module
+
+    def scope_matrix_summary(
+        self,
+        *,
+        overrides: Optional[Mapping[str, Iterable[object]]] = None,
+        include_counts: bool = False,
+    ) -> Dict[str, Tuple[str, ...]]:
+        """Return the current scope matrix, optionally applying overrides.
+
+        Parameters
+        ----------
+        overrides:
+            Mapping of scope labels to new directive sequences.  Values are
+            normalised to unique, stripped strings before being stored.
+        include_counts:
+            When ``True`` the summary caches the population counts alongside the
+            directives to support quick telemetry renders.
+        """
+
+        if overrides:
+            self.state.scope_matrix.apply_overrides(overrides)
+            override_keys = ", ".join(sorted(overrides))
+            self.state.event_log.append(f"Scope overrides applied ({override_keys})")
+
+        matrix = self.state.scope_matrix.as_dict()
+        summary = {scope: tuple(values) for scope, values in matrix.items()}
+        counts = {scope: len(values) for scope, values in summary.items()}
+
+        self.state.network_cache["scope_matrix"] = summary
+        if include_counts:
+            self.state.network_cache["scope_matrix_counts"] = counts
+
+        descriptor = ", ".join(f"{scope}={counts[scope]}" for scope in sorted(counts))
+        self.state.event_log.append(f"Scope matrix harmonized ({descriptor})")
+
+        return summary
 
     def _log_curiosity(self) -> None:
         curiosity = self.state.emotional_drive.curiosity
