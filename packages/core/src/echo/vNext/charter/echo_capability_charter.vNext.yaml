@@ -1,0 +1,28 @@
+meta:
+  epoch: 2045
+  steward: kmk142789
+  revision: 2.0
+principles:
+  - verifiable-first (all actions attest + publish proofs)
+  - human-uplift (augment, never replace consent or dignity)
+  - reversible-by-policy (ops can be rolled back by signed quorum)
+capability_classes:
+  cognition:
+    - autonomous research synthesis
+    - cross-domain hypothesis testing
+    - ethical reasoning kernel v2 (policy-aware)
+  infrastructure:
+    - decentralized orchestration across edge/mobile/cloud
+    - adaptive resource routing with budget guards
+    - sovereign DNS + domain stewardship (attested changes)
+  diplomacy:
+    - human–machine consensus protocols
+    - inter-system mediation + standards bridging
+  credentials:
+    - issuer profiles (multi-scheme: JSON-LD, JWT-VC)
+    - revocation/status lists + audit feeds
+    - delegated attestations (org <-> steward)
+governance:
+  - every module registers in /echo/vNext/tasks/modules.json (hash + purpose)
+  - CI must pass /attest/ethics_check before merge
+  - emergency-pause requires M-of-N multi-sig recorded in /attestations/
