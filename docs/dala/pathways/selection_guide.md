@@ -35,7 +35,7 @@ flowchart TD
 | Tokenized investment fund | Singapore VCC; Swiss GmbH with FINMA guidance | VCC suits multi-strategy funds; Swiss route favored for EU investor familiarity. |
 
 ## Implementation Checklist
-1. Confirm the jurisdictional status (`supportive` vs `neutral`) from `data/dala/jurisdictions.json`.
+1. Confirm the jurisdictional status (`supportive` vs `neutral`) from `data/dala/jurisdictions.json` via the keyed lookup `jurisdictions["<id>"]`.
 2. Review the relevant pathway playbook for filing fees, timelines, and compliance checkpoints.
 3. Assemble cross-functional team (legal, finance, protocol) to own filings and ongoing reporting.
 4. Establish monitoring cadence to capture regulatory updates (e.g., MAS notices, FINMA circulars, US BOI requirements).

@@ -1,6 +1,6 @@
 {
-  "jurisdictions": [
-    {
+  "jurisdictions": {
+    "wyoming-us": {
       "id": "wyoming-us",
       "name": "Wyoming, United States",
       "status": "supportive",
@@ -52,7 +52,7 @@
         }
       ]
     },
-    {
+    "delaware-us": {
       "id": "delaware-us",
       "name": "Delaware, United States",
       "status": "neutral",
@@ -103,7 +103,7 @@
         }
       ]
     },
-    {
+    "zug-ch": {
       "id": "zug-ch",
       "name": "Zug, Switzerland",
       "status": "supportive",
@@ -156,7 +156,7 @@
         }
       ]
     },
-    {
+    "singapore": {
       "id": "singapore",
       "name": "Singapore",
       "status": "supportive",
@@ -209,7 +209,7 @@
         }
       ]
     },
-    {
+    "estonia": {
       "id": "estonia",
       "name": "Estonia",
       "status": "supportive",
@@ -261,7 +261,7 @@
         }
       ]
     },
-    {
+    "adgm-ae": {
       "id": "adgm-ae",
       "name": "Abu Dhabi Global Market (United Arab Emirates)",
       "status": "supportive",
@@ -313,5 +313,5 @@
         }
       ]
     }
-  ]
+  }
 }

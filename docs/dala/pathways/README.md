@@ -6,6 +6,11 @@ This directory captures procedural playbooks for supportive or neutral jurisdict
 2. Required documents, filings, fees, and expected timelines.
 3. Operational notes to maintain compliance across token, treasury, and governance activities.
 
+## Dataset Reference
+
+Jurisdictions in `data/dala/jurisdictions.json` are now keyed by their stable `id` (e.g., `jurisdictions["wyoming-us"]`).
+This reduces merge conflicts when updating individual entries and lets downstream tools address records directly.
+
 ## Covered Jurisdictions
 
 | Jurisdiction | Status | Region | Pathway | Key Highlights |
