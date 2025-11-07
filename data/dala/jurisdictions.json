@@ -1,0 +1,299 @@
+{
+  "jurisdictions": [
+    {
+      "name": "Wyoming, United States",
+      "status": "supportive",
+      "region": "North America",
+      "primary_regulators": [
+        "Wyoming Secretary of State",
+        "Wyoming Division of Banking"
+      ],
+      "frameworks": [
+        {
+          "category": "corporate",
+          "name": "Wyoming Limited Liability Company (LLC)",
+          "description": "Flexible LLC form with digital asset special-purpose provisions under Wyoming Statutes Title 17.",
+          "digital_capabilities": [
+            "Tokenization of membership interests",
+            "Digital asset custody designation as special purpose depository"
+          ],
+          "statutes": [
+            "Wyo. Stat. §17-29 (Wyoming Limited Liability Company Act)",
+            "Wyo. Stat. §17-12-101 et seq. (Digital Asset Custody)"
+          ]
+        },
+        {
+          "category": "nonprofit",
+          "name": "Wyoming Nonprofit Corporation",
+          "description": "Nonstock corporation governed by the Wyoming Nonprofit Corporation Act with accommodation for mission-driven token projects.",
+          "digital_capabilities": [
+            "Issuing governance tokens without equity",
+            "Operating grant-making DAOs with charitable compliance"
+          ],
+          "statutes": [
+            "Wyo. Stat. §17-19 (Wyoming Nonprofit Corporation Act)"
+          ]
+        },
+        {
+          "category": "dao",
+          "name": "Wyoming DAO LLC",
+          "description": "First-in-US legal wrapper for decentralized autonomous organizations, enabling smart-contract governed LLCs.",
+          "digital_capabilities": [
+            "On-chain governance recognition",
+            "Smart contract articles of organization",
+            "Limited liability for token holders"
+          ],
+          "statutes": [
+            "Wyo. Stat. §17-31-101 et seq. (Wyoming Decentralized Autonomous Organization Supplement)"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Delaware, United States",
+      "status": "neutral",
+      "region": "North America",
+      "primary_regulators": [
+        "Delaware Division of Corporations",
+        "Delaware Department of Justice Investor Protection Unit"
+      ],
+      "frameworks": [
+        {
+          "category": "corporate",
+          "name": "Delaware Limited Liability Company",
+          "description": "Gold-standard LLC for venture-backed digital platforms with contractual flexibility for token governance.",
+          "digital_capabilities": [
+            "Series LLC structures for protocol ventures",
+            "Token warrants and SAFE-style instruments"
+          ],
+          "statutes": [
+            "6 Del. C. §18 (Delaware Limited Liability Company Act)"
+          ]
+        },
+        {
+          "category": "nonprofit",
+          "name": "Delaware Nonstock Corporation",
+          "description": "501(c)(3)/(c)(4)-ready wrapper for open-source and public-goods DAOs seeking US nonprofit status.",
+          "digital_capabilities": [
+            "Stewardship of open-source IP",
+            "Grant administration for Web3 ecosystems"
+          ],
+          "statutes": [
+            "8 Del. C. §101 et seq. (Delaware General Corporation Law)"
+          ]
+        },
+        {
+          "category": "dao",
+          "name": "Delaware LLC with DAO Operating Agreement",
+          "description": "Private-ordering DAO wrapper leveraging LLC contractual freedom to embed smart-contract governance.",
+          "digital_capabilities": [
+            "Custom quorum and proposal automation",
+            "Series segmentation for sub-DAO pods"
+          ],
+          "statutes": [
+            "6 Del. C. §18-101 et seq.",
+            "Uniform Electronic Transactions Act (6 Del. C. §12A)"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Zug, Switzerland",
+      "status": "supportive",
+      "region": "Europe",
+      "primary_regulators": [
+        "Commercial Register of the Canton of Zug",
+        "Swiss Financial Market Supervisory Authority (FINMA)"
+      ],
+      "frameworks": [
+        {
+          "category": "corporate",
+          "name": "Gesellschaft mit beschränkter Haftung (GmbH)",
+          "description": "Swiss GmbH with Crypto Valley precedents for tokenized equity and asset issuance.",
+          "digital_capabilities": [
+            "Tokenized participation certificates",
+            "Crypto custody licensing under FINMA guidelines"
+          ],
+          "statutes": [
+            "Swiss Code of Obligations Art. 772-827",
+            "Swiss DLT Act (2021)"
+          ]
+        },
+        {
+          "category": "nonprofit",
+          "name": "Swiss Association",
+          "description": "Flexible membership association widely used for protocol stewardship and decentralized networks.",
+          "digital_capabilities": [
+            "Membership token governance",
+            "Foundation-style treasury management without share capital"
+          ],
+          "statutes": [
+            "Swiss Civil Code Art. 60-79"
+          ]
+        },
+        {
+          "category": "dao",
+          "name": "Swiss Foundation (Stiftung) for Protocol Governance",
+          "description": "Foundation structure tailored to oversee protocol IP and grant-making with strong regulatory recognition.",
+          "digital_capabilities": [
+            "Protocol IP custody",
+            "Long-term token treasury management",
+            "Regulated token issuance under FINMA guidance"
+          ],
+          "statutes": [
+            "Swiss Civil Code Art. 80-89",
+            "FINMA ICO Guidelines (2018)"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Singapore",
+      "status": "supportive",
+      "region": "Asia-Pacific",
+      "primary_regulators": [
+        "Accounting and Corporate Regulatory Authority (ACRA)",
+        "Monetary Authority of Singapore (MAS)"
+      ],
+      "frameworks": [
+        {
+          "category": "corporate",
+          "name": "Private Company Limited by Shares (Pte. Ltd.)",
+          "description": "Default vehicle for venture-backed Web3 companies with streamlined fintech licensing pathways.",
+          "digital_capabilities": [
+            "Payment Services Act licensing for digital payment token services",
+            "Tokenized cap tables"
+          ],
+          "statutes": [
+            "Singapore Companies Act (Cap. 50)",
+            "Payment Services Act 2019"
+          ]
+        },
+        {
+          "category": "nonprofit",
+          "name": "Company Limited by Guarantee (CLG)",
+          "description": "Nonprofit entity favored for open-source projects and foundation-style governance supporting token ecosystems.",
+          "digital_capabilities": [
+            "Grant administration for ecosystem growth",
+            "Non-equity governance token stewardship"
+          ],
+          "statutes": [
+            "Singapore Companies Act (Cap. 50)",
+            "Charities Act 1994"
+          ]
+        },
+        {
+          "category": "dao",
+          "name": "Singapore Variable Capital Company (VCC) for Tokenized Funds",
+          "description": "Investment fund wrapper enabling tokenized sub-funds and on-chain asset management with regulatory clarity.",
+          "digital_capabilities": [
+            "Segregated portfolios for DeFi strategies",
+            "Accredited-investor token issuance"
+          ],
+          "statutes": [
+            "Variable Capital Companies Act 2018",
+            "Securities and Futures Act (Cap. 289)"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Estonia",
+      "status": "supportive",
+      "region": "Europe",
+      "primary_regulators": [
+        "Estonian Centre of Registers and Information Systems",
+        "Estonian Financial Supervision and Resolution Authority"
+      ],
+      "frameworks": [
+        {
+          "category": "corporate",
+          "name": "Private Limited Company (Osaühing / OÜ)",
+          "description": "E-residency friendly corporate form enabling fully digital management and crypto licensing.",
+          "digital_capabilities": [
+            "Virtual asset service provider (VASP) licensing",
+            "100% remote formation and management"
+          ],
+          "statutes": [
+            "Estonian Commercial Code",
+            "Money Laundering and Terrorist Financing Prevention Act"
+          ]
+        },
+        {
+          "category": "nonprofit",
+          "name": "Nonprofit Association (MTÜ)",
+          "description": "Community-first vehicle for digital public goods and DAO stewardship with transparent governance requirements.",
+          "digital_capabilities": [
+            "Member-managed token voting",
+            "Eligibility for EU grants"
+          ],
+          "statutes": [
+            "Estonian Nonprofit Associations Act"
+          ]
+        },
+        {
+          "category": "dao",
+          "name": "Estonian OÜ with DAO Bylaws",
+          "description": "Hybrid wrapper recognized by Estonian regulators allowing smart-contract governance encoded into articles.",
+          "digital_capabilities": [
+            "Smart-contract managed cap table",
+            "On-chain voting recognized via digital signatures"
+          ],
+          "statutes": [
+            "Estonian Commercial Code",
+            "Digital Signatures Act"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Abu Dhabi Global Market (United Arab Emirates)",
+      "status": "supportive",
+      "region": "Middle East",
+      "primary_regulators": [
+        "Registration Authority of ADGM",
+        "Financial Services Regulatory Authority (FSRA)"
+      ],
+      "frameworks": [
+        {
+          "category": "corporate",
+          "name": "ADGM Private Company Limited by Shares",
+          "description": "Modern corporate form tailored for fintech and virtual asset ventures with English-law alignment.",
+          "digital_capabilities": [
+            "Regulatory sandbox access for digital asset services",
+            "Tokenized securities offerings"
+          ],
+          "statutes": [
+            "ADGM Companies Regulations 2020",
+            "FSRA Virtual Asset Framework"
+          ]
+        },
+        {
+          "category": "nonprofit",
+          "name": "ADGM Foundation",
+          "description": "Foundation structure supporting protocol treasuries, philanthropic grants, and ecosystem governance.",
+          "digital_capabilities": [
+            "Ring-fenced treasury management",
+            "Purpose-specific governance charters"
+          ],
+          "statutes": [
+            "ADGM Foundations Regulations 2017"
+          ]
+        },
+        {
+          "category": "dao",
+          "name": "ADGM DLT Foundation (DAO Framework)",
+          "description": "2023 regulations enabling DAO-style governance with recognized token-holder rights and smart contract references.",
+          "digital_capabilities": [
+            "Token-holder voting recognition",
+            "Smart contract-linked governing documents",
+            "Global onboarding of contributors"
+          ],
+          "statutes": [
+            "ADGM Distributed Ledger Technology Foundations Regulations 2023"
+          ]
+        }
+      ]
+    }
+  ]
+}
