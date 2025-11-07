@@ -1,14 +1,14 @@
 # Puzzle #157 Solution
 
-- **Locking script**: `OP_DUP OP_HASH160 242d790e5a168043c76f0539fd894b73ee67b3b3 OP_EQUALVERIFY OP_CHECKSIG`
-- **Extracted hash160**: `242d790e5a168043c76f0539fd894b73ee67b3b3`
+- **Locking script**: `OP_DUP OP_HASH160 641f536a48428bba935a7efe7016821cddd1fc57 OP_EQUALVERIFY OP_CHECKSIG`
+- **Extracted hash160**: `641f536a48428bba935a7efe7016821cddd1fc57`
 - **Bitcoin network version byte**: `0x00` (for a P2PKH mainnet address)
-- **Payload**: `00 24 2d 79 0e 5a 16 80 43 c7 6f 05 39 fd 89 4b 73 ee 67 b3 b3`
-- **Checksum**: First four bytes of `SHA256(SHA256(payload))` → `e9 a5 20 46`
-- **Base58Check encoding**: `14JHoRAdmJg3XR4RjMDh6Wed6ft6hzbQe9`
+- **Payload**: `00 64 1f 53 6a 48 42 8b ba 93 5a 7e fe 70 16 82 1c dd d1 fc 57`
+- **Checksum**: First four bytes of `SHA256(SHA256(payload))` → `09 db d6 8e`
+- **Base58Check encoding**: `1A8Q6jxNJyLexhXx4pLFCCswBoFHmQqGP7`
 
 Therefore, the completed Bitcoin address for the given locking script is:
 
 ```
-14JHoRAdmJg3XR4RjMDh6Wed6ft6hzbQe9
+1A8Q6jxNJyLexhXx4pLFCCswBoFHmQqGP7
 ```
