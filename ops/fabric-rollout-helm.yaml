@@ -1,0 +1,43 @@
+# Values snippet for deploying the Fabric consensus peer within the federation chart.
+fabric:
+  enabled: true
+  image:
+    repository: hyperledger/fabric-peer
+    tag: "2.5"
+    pullPolicy: IfNotPresent
+  persistence:
+    consensusState:
+      enabled: true
+      storageClass: fast-replicated
+      accessMode: ReadWriteOnce
+      size: 20Gi
+      mountPath: /var/hyperledger/production
+  env:
+    FABRIC_CFG_PATH: /etc/hyperledger/fabric
+    FABRIC_LOGGING_SPEC: INFO
+    FABRIC_CONSENSUS_STATE_DIR: /var/hyperledger/production/consensus
+    CORE_LEDGER_STATE_STATEDATABASE: goleveldb
+    CORE_LEDGER_STATE_TOTALCACHESIZE: "256"
+    CORE_OPERATIONS_LISTENADDRESS: 0.0.0.0:9443
+    CORE_METRICS_PROVIDER: prometheus
+    CORE_METRICS_PROMETHEUS_HANDLERPATH: /metrics
+  service:
+    type: ClusterIP
+    ports:
+      - name: peer
+        port: 7051
+        targetPort: 7051
+      - name: metrics
+        port: 9443
+        targetPort: 9443
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /metrics
+    prometheus.io/port: "9443"
+  logShipping:
+    enabled: true
+    format: json
+    sink: temporal-ledger
+    extraFields:
+      subsystem: fabric
+      federation: continuum

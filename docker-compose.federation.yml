@@ -21,3 +21,26 @@ services:
     environment: { ECHO_LEDGER_DIR: /data3/ledger }
     volumes: [ "./.attest3:/data3/ledger:ro" ]
     ports: [ "8103:8000" ]
+  fabric:
+    image: hyperledger/fabric-peer:2.5
+    container_name: echo-fabric
+    environment:
+      FABRIC_CFG_PATH: /etc/hyperledger/fabric
+      FABRIC_LOGGING_SPEC: INFO
+      FABRIC_CONSENSUS_STATE_DIR: /var/hyperledger/production/consensus
+      CORE_LEDGER_STATE_STATEDATABASE: goleveldb
+      CORE_LEDGER_STATE_TOTALCACHESIZE: "256"
+      CORE_OPERATIONS_LISTENADDRESS: 0.0.0.0:9443
+      CORE_METRICS_PROVIDER: prometheus
+      CORE_METRICS_PROMETHEUS_HANDLERPATH: /metrics
+    volumes:
+      - ./fabric/config:/etc/hyperledger/fabric:ro
+      - ./fabric/state:/var/hyperledger/production
+    ports:
+      - "7051:7051"
+      - "9443:9443"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
