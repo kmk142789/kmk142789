@@ -6,9 +6,11 @@ import os
 import threading
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Mapping, Optional
 
-from fastapi import APIRouter, HTTPException, Query, Response, status
+from fastapi import APIRouter, HTTPException, Query, Response
+from starlette import status
 from pydantic import BaseModel, ConfigDict, Field
 
 from echo.atlas.temporal_ledger import LedgerEntryInput, TemporalLedger
@@ -93,16 +95,37 @@ def _default_rate_limiter() -> RateLimiter:
     return RateLimiter(capacity=capacity, refill_rate=refill_rate)
 
 
+def _resolve_fabric_ops(
+    fabric_ops: FabricOperations | None,
+    ledger: TemporalLedger,
+) -> FabricOperations:
+    """Return a FabricOperations instance bound to the ledger's state directory."""
+
+    if fabric_ops is not None:
+        return fabric_ops
+
+    state_dir = getattr(ledger, "state_dir", None)
+    if state_dir is None:
+        ledger_path = getattr(ledger, "_ledger_path", None)
+        if ledger_path is not None:
+            state_dir = Path(ledger_path).parent
+        else:
+            state_dir = getattr(ledger, "_state_dir", Path("state"))
+
+    return FabricOperations(state_dir)
+
+
 def create_router(
     watchdog: SelfHealingWatchdog,
     pulse_bus: PulseBus,
     ledger: TemporalLedger,
     *,
-    fabric_ops: FabricOperations,
+    fabric_ops: FabricOperations | None = None,
     rate_limiter: RateLimiter | None = None,
 ) -> APIRouter:
     router = APIRouter()
     limiter = rate_limiter or _default_rate_limiter()
+    fabric = _resolve_fabric_ops(fabric_ops, ledger)
 
     @router.get("/pulse/health")
     def pulse_health() -> Mapping[str, Any]:  # pragma: no cover - FastAPI handles response serialisation
@@ -181,7 +204,7 @@ def create_router(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="At least one vote must be supplied",
             )
-        return fabric_ops.trigger_consensus_round(
+        return fabric.trigger_consensus_round(
             ledger,
             topic=request.topic,
             initiator=request.initiator,
@@ -193,10 +216,10 @@ def create_router(
 
     @router.get("/fabric/quorum", response_model=QuorumHealthSnapshot)
     def fabric_quorum(window: int = Query(10, ge=1)) -> QuorumHealthSnapshot:
-        return fabric_ops.quorum_health(window=window)
+        return fabric.quorum_health(window=window)
 
     @router.get("/fabric/diagnostics", response_model=FabricDiagnosticsReport)
     def fabric_diagnostics(limit: int | None = Query(None, ge=1)) -> FabricDiagnosticsReport:
-        return fabric_ops.diagnostics(limit=limit)
+        return fabric.diagnostics(limit=limit)
 
     return router
