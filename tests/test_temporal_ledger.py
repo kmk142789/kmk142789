@@ -31,3 +31,26 @@ def test_append_and_render(tmp_path):
 
     dot = ledger.as_dot()
     assert "digraph TemporalLedger" in dot
+
+
+def test_temporal_ledger_backwards_compatible_without_fabric(tmp_path, monkeypatch):
+    """Temporal ledger operations remain stable when fabric hooks are disabled."""
+
+    monkeypatch.setenv("ECHO_TEMPORAL_FABRIC_ENABLED", "0")
+    ledger = TemporalLedger(state_dir=tmp_path)
+    entry = ledger.append(
+        LedgerEntryInput(
+            actor="legacy-orchestrator",
+            action="baseline-event",
+            ref="legacy-ref",
+            proof_id="legacy-proof",
+        )
+    )
+
+    stored = ledger.entries()
+    assert stored[-1].id == entry.id
+    assert stored[-1].hash == entry.hash
+
+    markdown = ledger.as_markdown()
+    assert "legacy-proof" in markdown
+    assert "baseline-event" in markdown
