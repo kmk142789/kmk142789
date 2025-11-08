@@ -1,0 +1,41 @@
+# Service specification for deploying the Unified Sentience Loop orchestrator.
+apiVersion: ops.echo/v1alpha1
+kind: ProcessService
+metadata:
+  name: unified-sentience-loop
+  description: >-
+    Runs the cycle orchestrator that synthesises Colossus loop artifacts and
+    ships telemetry into the Pulse dashboard.
+spec:
+  runtime:
+    user: echo
+    workingDirectory: /opt/echo
+    environment:
+      ECHO_ENV: production
+      PULSE_DASHBOARD_ROOT: /var/lib/echo
+  executable:
+    command:
+      - /usr/bin/env
+      - python3
+      - /opt/echo/scripts/cycle_orchestrator.py
+      - --cycle
+      - "${CYCLE_ID:-1}"
+      - --output-root
+      - /var/lib/echo/build/cycles
+    restartPolicy: on-failure
+    restartWindow: 30s
+  observability:
+    logs:
+      path: /var/log/echo/unified-sentience-loop.log
+    metrics:
+      scrapeEndpoint: http://127.0.0.1:9410/metrics
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9410"
+  lifecycle:
+    prepare:
+      - mkdir -p /var/lib/echo/build/cycles
+      - mkdir -p /var/log/echo
+    postCycle:
+      - tar -czf /var/lib/echo/out/cycle-${CYCLE_ID:-1}.tgz -C /var/lib/echo/build/cycles cycle_${CYCLE_ID:-1}

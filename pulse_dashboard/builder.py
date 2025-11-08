@@ -11,6 +11,7 @@ from typing import Iterable, Mapping
 from echo.proof_of_computation import load_proof_ledger
 
 from .impact_explorer import ImpactExplorerBuilder
+from .loop_health import LoopHealthCollector
 
 
 @dataclass(slots=True)
@@ -73,6 +74,7 @@ class PulseDashboardBuilder:
         }
         payload["amplify"] = self._load_amplify_snapshots()
         payload["impact_explorer"] = ImpactExplorerBuilder(self._paths.root).build()
+        payload["loop_health"] = LoopHealthCollector(self._paths.root).collect()
         payload["glyph_cycle"] = self._build_glyph_cycle(payload)
         payload["proof_of_computation"] = self._load_proof_of_computation()
         return payload

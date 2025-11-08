@@ -61,3 +61,34 @@ jobs:
               issue_number: Number(issueNumber),
               body: `Echo evolution detected in ${context.sha}. Sovereign Architect ping: ${process.env.ARCHITECT_HANDLE}`
             });
+
+  smoke-package:
+    needs: lint-validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev]
+      - name: Run orchestrator smoke tests
+        run: |
+          pytest \
+            tests/test_cycle_orchestrator.py::test_cycle_orchestrator_generates_outputs \
+            tests/test_puzzle_lab.py::test_cli_smoke \
+            --maxfail=1 -q
+      - name: Package unified sentience loop artifact
+        run: |
+          python scripts/cycle_orchestrator.py --cycle 1 --output-root build/cycles --no-federate
+          mkdir -p out
+          tar -czf out/unified-sentience-loop-cycle-00001.tgz -C build/cycles cycle_00001
+      - name: Upload loop artifact bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-sentience-loop-cycle-00001
+          path: |
+            build/cycles/cycle_00001/federated_colossus_index.json
+            build/cycles/cycle_00001/federated_colossus_index.md
+            out/unified-sentience-loop-cycle-00001.tgz

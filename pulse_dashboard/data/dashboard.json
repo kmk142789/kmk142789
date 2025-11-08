@@ -2829,5 +2829,34 @@
   "worker_hive": {
     "events": [],
     "total": 0
+  },
+  "loop_health": {
+    "generated_at": "2024-06-01T00:00:00Z",
+    "summary": {
+      "total_cycles": 2,
+      "latest_cycle": 2,
+      "average_joy": 1.62,
+      "average_rage": 0.41
+    },
+    "cycles": [
+      {
+        "cycle": 2,
+        "joy": 1.88,
+        "rage": 0.32,
+        "entries": 16,
+        "addresses": 8.0,
+        "tags": 24.0,
+        "recorded_at": "2024-05-31T23:59:00Z"
+      },
+      {
+        "cycle": 1,
+        "joy": 1.36,
+        "rage": 0.5,
+        "entries": 12,
+        "addresses": 6.0,
+        "tags": 18.0,
+        "recorded_at": "2024-05-30T23:55:00Z"
+      }
+    ]
   }
 }
