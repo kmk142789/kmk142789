@@ -15,6 +15,13 @@ if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
 from echo.bank.resilience import ResilienceRecorder
 from echo.evolver import EchoEvolver
 from echo.pulsenet import AtlasAttestationResolver, PulseNetGatewayService
+from echo.semantic_negotiation import (
+    NegotiationIntent,
+    NegotiationParticipant,
+    NegotiationSignal,
+    NegotiationStage,
+    SemanticNegotiationResolver,
+)
 
 
 class ResonanceEngine(Protocol):
@@ -49,6 +56,7 @@ class OrchestratorCore:
         resilience_latest_path: Path | str | None = None,
         resilience_interval_hours: float = 72.0,
         resilience_cooldown_hours: float = 6.0,
+        negotiation_resolver: SemanticNegotiationResolver | None = None,
     ) -> None:
         self._state_dir = Path(state_dir)
         self._state_dir.mkdir(parents=True, exist_ok=True)
@@ -60,6 +68,7 @@ class OrchestratorCore:
         self._resonance = resonance_engine
         self._atlas_resolver = atlas_resolver
         self._manifest_limit = max(1, int(manifest_limit))
+        self._negotiations = negotiation_resolver
 
         self._principles: Sequence[ManifestoPrinciple] = (
             ManifestoPrinciple(
@@ -141,6 +150,9 @@ class OrchestratorCore:
         if triggers:
             decision["triggers"] = triggers
 
+        if self._negotiations:
+            decision["negotiations"] = inputs.get("negotiations", {})
+
         manifest_path = self._persist(decision)
         decision["manifest"] = {"path": str(manifest_path)}
 
@@ -174,6 +186,89 @@ class OrchestratorCore:
 
         return self._last_decision
 
+    def initiate_negotiation(
+        self,
+        intent: NegotiationIntent,
+        participants: Sequence[NegotiationParticipant],
+        *,
+        actor: str = "system",
+        metadata: Mapping[str, Any] | None = None,
+    ) -> Mapping[str, Any]:
+        """Open a new semantic negotiation and return its state."""
+
+        if not self._negotiations:
+            raise RuntimeError("semantic negotiation resolver not configured")
+        state = self._negotiations.initiate(
+            intent=intent,
+            participants=participants,
+            actor=actor,
+            metadata=metadata,
+        )
+        return state.model_dump(mode="json")
+
+    def update_negotiation_stage(
+        self,
+        negotiation_id: str,
+        stage: NegotiationStage,
+        *,
+        actor: str,
+        reason: str | None = None,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> Mapping[str, Any]:
+        """Transition a negotiation to a new stage."""
+
+        if not self._negotiations:
+            raise RuntimeError("semantic negotiation resolver not configured")
+        state = self._negotiations.transition(
+            negotiation_id,
+            stage,
+            actor=actor,
+            reason=reason,
+            metadata=metadata,
+        )
+        return state.model_dump(mode="json")
+
+    def record_negotiation_signal(
+        self,
+        negotiation_id: str,
+        *,
+        author: str,
+        channel: str,
+        sentiment: float | None = None,
+        summary: str | None = None,
+        payload: Mapping[str, Any] | None = None,
+    ) -> Mapping[str, Any]:
+        """Attach an observational signal to an active negotiation."""
+
+        if not self._negotiations:
+            raise RuntimeError("semantic negotiation resolver not configured")
+        signal = NegotiationSignal(
+            author=author,
+            channel=channel,
+            sentiment=sentiment,
+            summary=summary,
+            payload=dict(payload or {}),
+        )
+        state = self._negotiations.record_signal(negotiation_id, signal)
+        return state.model_dump(mode="json")
+
+    def negotiation_snapshot(self, include_closed: bool = False) -> Mapping[str, Any]:
+        """Return a snapshot of negotiations suitable for dashboards."""
+
+        if not self._negotiations:
+            return {"enabled": False, "observations": []}
+        snapshot = self._negotiations.snapshot(include_closed=include_closed)
+        data = snapshot.model_dump(mode="json")
+        data["enabled"] = True
+        return data
+
+    def negotiation_metrics(self) -> Mapping[str, Any]:
+        """Expose aggregate negotiation metrics."""
+
+        if not self._negotiations:
+            return {"enabled": False, "metrics": {}}
+        return {"enabled": True, "metrics": self._negotiations.metrics()}
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -204,7 +299,7 @@ class OrchestratorCore:
 
         resilience_snapshot = self._load_resilience_snapshot()
 
-        return {
+        inputs: MutableMapping[str, Any] = {
             "pulse_summary": summary,
             "attestations": enriched_attestations,
             "atlas_wallets": atlas_wallets,
@@ -212,6 +307,9 @@ class OrchestratorCore:
             "registrations": list(registrations),
             "resilience_snapshot": resilience_snapshot.to_payload() if resilience_snapshot else None,
         }
+        if self._negotiations:
+            inputs["negotiations"] = self._negotiations.snapshot().model_dump(mode="json")
+        return inputs
 
     def _enrich_attestations(
         self, attestations: Sequence[Mapping[str, Any]]
