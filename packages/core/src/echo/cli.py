@@ -516,6 +516,11 @@ def _load_loop_state(loop: SelfSustainingLoop) -> Mapping[str, object]:
     return json.loads(loop.state_path.read_text(encoding="utf-8"))
 
 
+def _print_json_file(path: Path) -> None:
+    content = path.read_text(encoding="utf-8")
+    print(content, end="" if content.endswith("\n") else "\n")
+
+
 def _cmd_loop_cycle(args: argparse.Namespace) -> int:
     loop = SelfSustainingLoop(args.root)
     try:
@@ -523,15 +528,13 @@ def _cmd_loop_cycle(args: argparse.Namespace) -> int:
     except ValueError as exc:  # pragma: no cover - validation surfaced to callers
         print(str(exc))
         return 1
-    state = _load_loop_state(loop)
-    print(json.dumps(state, indent=2, sort_keys=True))
+    _print_json_file(loop.state_path)
     return 0
 
 
 def _cmd_loop_status(args: argparse.Namespace) -> int:
     loop = SelfSustainingLoop(args.root)
-    state = _load_loop_state(loop)
-    print(json.dumps(state, indent=2, sort_keys=True))
+    _print_json_file(loop.state_path)
     return 0
 
 
@@ -544,9 +547,12 @@ def _cmd_loop_govern(args: argparse.Namespace) -> int:
         if args.reject
         else "auto-merge"
     )
-    result = loop.decide(args.proposal_id, decision, actor=args.actor, reason=args.reason)
-    payload = json.loads(result.path.read_text(encoding="utf-8"))
-    print(json.dumps(payload, indent=2, sort_keys=True))
+    try:
+        result = loop.decide(args.proposal_id, decision, actor=args.actor, reason=args.reason)
+    except (FileNotFoundError, ValueError) as exc:  # pragma: no cover - surfaced to operators
+        print(str(exc))
+        return 1
+    _print_json_file(result.path)
     return 0
 
 
@@ -555,10 +561,11 @@ def _cmd_loop_export(args: argparse.Namespace) -> int:
     state = _load_loop_state(loop)
     proposals = loop.list_proposals()
     payload = {"state": state, "proposals": proposals}
+    rendered = json.dumps(payload, indent=2)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps(payload, indent=2, sort_keys=True))
+        args.out.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
     return 0
 
 
