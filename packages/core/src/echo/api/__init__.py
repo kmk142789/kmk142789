@@ -30,6 +30,7 @@ from .state import dag, receipts, session_heads, set_dag, set_receipts, set_sess
 from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulseweaver import build_pulse_bus, build_watchdog
 from echo.pulseweaver.api import create_router as create_pulse_router
+from echo.pulseweaver.fabric import FabricOperations
 from echo.orchestrator.core import OrchestratorCore
 from echo.orchestrator.api import create_router as create_orchestrator_router
 
@@ -59,10 +60,19 @@ _pulse_weaver_service = PulseWeaverService(Path.cwd())
 _pulse_weaver_service.ensure_ready()
 app.include_router(create_pulse_weaver_router(_pulse_weaver_service))
 
-_pulse_watchdog = build_watchdog(Path.cwd() / "state")
-_pulse_bus = build_pulse_bus(Path.cwd() / "state")
-_pulse_ledger = TemporalLedger(state_dir=Path.cwd() / "state")
-app.include_router(create_pulse_router(_pulse_watchdog, _pulse_bus, _pulse_ledger))
+_pulse_state = Path.cwd() / "state"
+_pulse_watchdog = build_watchdog(_pulse_state)
+_pulse_bus = build_pulse_bus(_pulse_state)
+_pulse_ledger = TemporalLedger(state_dir=_pulse_state)
+_fabric_ops = FabricOperations(_pulse_state)
+app.include_router(
+    create_pulse_router(
+        _pulse_watchdog,
+        _pulse_bus,
+        _pulse_ledger,
+        fabric_ops=_fabric_ops,
+    )
+)
 
 _pulsenet_state = Path.cwd() / "state" / "pulsenet"
 _pulsenet_state.mkdir(parents=True, exist_ok=True)

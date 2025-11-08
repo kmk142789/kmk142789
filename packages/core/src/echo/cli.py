@@ -25,6 +25,7 @@ from .tools.forecast import project_indices, sparkline
 from .novelty import NoveltyGenerator
 from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulseweaver import PulseBus, WatchdogConfig, build_pulse_bus, build_watchdog
+from echo.pulseweaver.fabric import FabricOperations
 
 
 EXPECTED_STEPS = 13
@@ -511,6 +512,92 @@ def _cmd_ledger_tail(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ledger_consensus(args: argparse.Namespace) -> int:
+    parser: argparse.ArgumentParser | None = getattr(args, "_parser", None)
+    if not (args.approve or args.reject or args.abstain):
+        if parser is not None:
+            parser.error("At least one participant vote must be supplied via --approve/--reject/--abstain")
+        raise SystemExit(2)
+
+    state_dir = args.state or Path("state")
+    ledger = TemporalLedger(state_dir=state_dir)
+    fabric = FabricOperations(state_dir=state_dir)
+    result = fabric.trigger_consensus_round(
+        ledger,
+        topic=args.topic,
+        initiator=args.initiator,
+        quorum=args.quorum,
+        approvals=args.approve,
+        rejections=args.reject,
+        abstentions=args.abstain,
+    )
+    payload = result.model_dump(mode="json")
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    return 0
+
+
+def _cmd_ledger_quorum(args: argparse.Namespace) -> int:
+    state_dir = args.state or Path("state")
+    fabric = FabricOperations(state_dir=state_dir)
+    snapshot = fabric.quorum_health(window=args.window)
+    payload = snapshot.model_dump(mode="json")
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    return 0
+
+
+def _cmd_ledger_diagnostics(args: argparse.Namespace) -> int:
+    if args.limit is not None and args.limit <= 0:
+        parser: argparse.ArgumentParser | None = getattr(args, "_parser", None)
+        if parser is not None:
+            parser.error("--limit must be a positive integer")
+        raise SystemExit(2)
+
+    state_dir = args.state or Path("state")
+    fabric = FabricOperations(state_dir=state_dir)
+    report = fabric.diagnostics(limit=args.limit)
+    if args.format == "json":
+        payload = report.model_dump(mode="json")
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
+
+    payload = report.model_dump(mode="json")
+    lines = [
+        "# Fabric Diagnostics",
+        "",
+        f"- Generated at: {payload['generated_at']}",
+        f"- Status: {payload['status']}",
+        f"- Total rounds: {payload['total_rounds']}",
+        f"- Quorum met: {payload['quorum_met']}",
+        f"- Quorum failed: {payload['quorum_failed']}",
+        f"- Average consensus: {payload['average_consensus']}",
+        "",
+        "## Recent rounds",
+    ]
+    rounds = payload.get("rounds", [])
+    if rounds:
+        for round_payload in rounds:
+            lines.append(
+                f"- **{round_payload['recorded_at']}** — {round_payload['topic']} ({round_payload['round_id']})"
+            )
+            lines.append(
+                "  - approvals: {approve}, rejections: {reject}, abstentions: {abstain}".format(
+                    approve=len(round_payload.get("approvals", [])),
+                    reject=len(round_payload.get("rejections", [])),
+                    abstain=len(round_payload.get("abstentions", [])),
+                )
+            )
+            lines.append(
+                "  - consensus: {consensus}, quorum_met: {quorum}".format(
+                    consensus=round_payload.get("consensus"),
+                    quorum=round_payload.get("quorum_met"),
+                )
+            )
+    else:
+        lines.append("_No rounds recorded._")
+    print("\n".join(lines))
+    return 0
+
+
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="echo",
@@ -836,6 +923,48 @@ def main(argv: Iterable[str] | None = None) -> int:
     ledger_tail.add_argument("--since", help="ISO timestamp filter")
     ledger_tail.add_argument("--limit", type=int, default=10)
     ledger_tail.set_defaults(func=_cmd_ledger_tail)
+
+    ledger_consensus = ledger_sub.add_parser(
+        "consensus", help="Trigger a Fabric consensus round"
+    )
+    ledger_consensus.add_argument("--state", type=Path, help="Override state directory")
+    ledger_consensus.add_argument("--topic", required=True, help="Topic or reference for the round")
+    ledger_consensus.add_argument("--initiator", default="cli", help="Actor initiating the round")
+    ledger_consensus.add_argument("--quorum", type=_positive_int, default=1)
+    ledger_consensus.add_argument(
+        "--approve",
+        nargs="*",
+        default=[],
+        help="Participants approving the proposal",
+    )
+    ledger_consensus.add_argument(
+        "--reject",
+        nargs="*",
+        default=[],
+        help="Participants rejecting the proposal",
+    )
+    ledger_consensus.add_argument(
+        "--abstain",
+        nargs="*",
+        default=[],
+        help="Participants abstaining from the proposal",
+    )
+    ledger_consensus.set_defaults(func=_cmd_ledger_consensus, _parser=ledger_consensus)
+
+    ledger_quorum = ledger_sub.add_parser(
+        "quorum", help="Inspect Fabric quorum health"
+    )
+    ledger_quorum.add_argument("--state", type=Path, help="Override state directory")
+    ledger_quorum.add_argument("--window", type=_positive_int, default=10)
+    ledger_quorum.set_defaults(func=_cmd_ledger_quorum)
+
+    ledger_diagnostics = ledger_sub.add_parser(
+        "fabric-diagnostics", help="Export Fabric diagnostics"
+    )
+    ledger_diagnostics.add_argument("--state", type=Path, help="Override state directory")
+    ledger_diagnostics.add_argument("--limit", type=int, help="Limit rounds included in the export")
+    ledger_diagnostics.add_argument("--format", choices=["json", "md"], default="json")
+    ledger_diagnostics.set_defaults(func=_cmd_ledger_diagnostics, _parser=ledger_diagnostics)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
     return args.func(args)
