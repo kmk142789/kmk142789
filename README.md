@@ -11,6 +11,7 @@ publications and operational policies.
 
 - [Orientation](#orientation)
 - [Getting started](#getting-started)
+- [Deployment readiness](#deployment-readiness)
 - [Key workflows](#key-workflows)
 - [Monitoring](#monitoring)
 - [Narrative & provenance](#narrative--provenance)
@@ -79,6 +80,56 @@ free-form questions like `ask where do I find the verifier ui?`.
 
 The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every
 30 minutes if there were changes.
+
+## Deployment readiness
+
+### Setup steps
+
+1. **Create an isolated environment.** Use `python -m venv .venv && source .venv/bin/activate`
+   or your preferred manager, then install dependencies with `python -m pip install -e .[dev]`.
+2. **Prime local data roots.** Ensure `build/`, `out/`, and `genesis_ledger/` exist and are
+   writable by the deployment user. The CLI automatically initialises missing directories
+   when commands such as `python -m echo.echoctl cycle` or `python -m echo.echoctl health`
+   are executed.
+3. **Bootstrap the dashboard.** If you operate the dashboard, install JavaScript dependencies
+   via `npm install` from `apps/echo-dashboard/` and export the API base URL before running
+   `npm run dev`.
+4. **Verify proofs ahead of rollout.** Run `make proof-pack` to regenerate federated ledgers,
+   indexes, and public reports so downstream consumers receive the latest attestations.
+
+### Required environment variables
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `ECHO_DATA_ROOT` | `<repo>/out/data` | Overrides the working directory for CLI state written by `echoctl`. |
+| `ECHO_DOCS_ROOT` | `<repo>/docs` | Points CLI doc lookups (e.g., plans and manifests) to custom mirrors. |
+| `ECHO_PULSE_HISTORY` | `pulse_history.json` | Location of the pulse timeline used by the health check. |
+| `ECHO_STREAM_PATH` | `genesis_ledger/stream.jsonl` | Destination for bridge emission events. |
+| `ECHO_STATE_PATH` | `out/bridge_state.json` | Cached state for bridge synchronisation runs. |
+| `ECHO_ANCHOR_DIR` | `anchors/` | Directory for generated anchor payloads. |
+| `ECHO_ATTESTATION_KEY` | `proofs/watchdog_attest_key.json` | Path to the signing key consumed by attestation helpers. |
+| `ECHO_BRIDGE_STATE_DIR` | _unset_ | When provided, stores bridge artifacts in a custom directory for multi-tenant deploys. |
+| `ECHO_BRIDGE_GITHUB_REPOSITORY` | _unset_ | Publishes bridge updates to a target GitHub repository. |
+| `ECHO_BRIDGE_UNSTOPPABLE_DOMAINS` | _unset_ | Enables Unstoppable Domains propagation during bridge deploys. |
+| `ECHO_PULSE_INGEST_CAPACITY` / `ECHO_PULSE_INGEST_REFILL` | `10` / `1.0` | Tune API rate limits for Pulseweaver ingestion. |
+| `ECHO_WATCHDOG_ENABLED` | `true` | Toggles automatic remediation in the watchdog service. |
+| `ECHO_THOUGHT_DIR` | `genesis_ledger/thought_log` | Redirects the thought log archive to external storage. |
+
+Set these variables in your shell, CI secrets, or infrastructure orchestrator before invoking
+the rollout commands to keep artefacts consistent across environments.
+
+### Rollout checklist
+
+- [ ] Run `pytest` (or the relevant `nox` session) and ensure all suites pass.
+- [ ] Execute `make proof-pack` to refresh federation reports and indexes.
+- [ ] Export the required environment variables for the target deployment surface.
+- [ ] Regenerate `echo_map.json` with `python scripts/echo_orchestrator.py --refresh-map` if
+      any puzzle data changed.
+- [ ] Perform a dry run of `python -m echo.echoctl health` and capture the output in the
+      deployment journal.
+- [ ] Publish updated dashboards or APIs (e.g., `npm run dev` → `npm run build && npm run start`)
+      after confirming the backend is reachable.
+- [ ] Archive the rollout by appending notes to `ECHO_LOG.md` or the relevant attestation file.
 
 ## Key workflows
 
