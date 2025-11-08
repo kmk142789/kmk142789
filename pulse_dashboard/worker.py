@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import time
 import uuid
+from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -32,6 +33,12 @@ class WorkerHive:
         self._config = WorkerHiveConfig(root=Path(project_root or Path.cwd()).resolve())
         self._config.state_dir.mkdir(parents=True, exist_ok=True)
         self._config.log_path.touch(exist_ok=True)
+
+    @property
+    def log_path(self) -> Path:
+        """Return the path where worker telemetry is persisted."""
+
+        return self._config.log_path
 
     @contextmanager
     def worker(self, name: str, *, metadata: Mapping[str, Any] | None = None):
@@ -87,6 +94,51 @@ class WorkerHive:
             event["payload"] = dict(payload)
         return event
 
+    def tail_events(
+        self,
+        *,
+        limit: int | None = None,
+        since: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return the newest worker events respecting optional filters.
+
+        Parameters
+        ----------
+        limit:
+            Maximum number of events to return. ``None`` returns the entire log.
+        since:
+            ISO 8601 timestamp (``YYYY-MM-DDTHH:MM:SSZ``) used as a lower bound.
+        """
+
+        if limit is not None and limit < 1:
+            raise ValueError("limit must be a positive integer")
+
+        if limit is None:
+            events: list[dict[str, Any]] = []
+            append_event = events.append
+        else:
+            events_deque: deque[dict[str, Any]] = deque(maxlen=limit)
+            append_event = events_deque.append
+
+        since_marker = since
+        with self._config.log_path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:  # pragma: no cover - defensive guard
+                    continue
+                timestamp = event.get("timestamp")
+                if since_marker and timestamp and timestamp < since_marker:
+                    continue
+                append_event(event)
+
+        if limit is None:
+            return events
+        return list(events_deque)
+
 
 class WorkerTaskHandle:
     """Lifecycle controller for a worker invocation."""
@@ -96,6 +148,12 @@ class WorkerTaskHandle:
         self._task_id = task_id
         self._name = name
         self.completed = False
+
+    @property
+    def task_id(self) -> str:
+        """Identifier linking the handle to the persisted worker events."""
+
+        return self._task_id
 
     def progress(self, **payload: Any) -> None:
         """Emit a progress heartbeat for the active worker."""
