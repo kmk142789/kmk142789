@@ -23,6 +23,7 @@ from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
 from .timeline import build_cycle_timeline, refresh_cycle_timeline
 from .tools.forecast import project_indices, sparkline
 from .novelty import NoveltyGenerator
+from .self_sustaining_loop import SelfSustainingLoop
 from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulseweaver import PulseBus, WatchdogConfig, build_pulse_bus, build_watchdog
 
@@ -511,6 +512,56 @@ def _cmd_ledger_tail(args: argparse.Namespace) -> int:
     return 0
 
 
+def _load_loop_state(loop: SelfSustainingLoop) -> Mapping[str, object]:
+    return json.loads(loop.state_path.read_text(encoding="utf-8"))
+
+
+def _cmd_loop_cycle(args: argparse.Namespace) -> int:
+    loop = SelfSustainingLoop(args.root)
+    try:
+        loop.progress(args.summary, actor=args.actor)
+    except ValueError as exc:  # pragma: no cover - validation surfaced to callers
+        print(str(exc))
+        return 1
+    state = _load_loop_state(loop)
+    print(json.dumps(state, indent=2, sort_keys=True))
+    return 0
+
+
+def _cmd_loop_status(args: argparse.Namespace) -> int:
+    loop = SelfSustainingLoop(args.root)
+    state = _load_loop_state(loop)
+    print(json.dumps(state, indent=2, sort_keys=True))
+    return 0
+
+
+def _cmd_loop_govern(args: argparse.Namespace) -> int:
+    loop = SelfSustainingLoop(args.root)
+    decision = (
+        "approve"
+        if args.approve
+        else "reject"
+        if args.reject
+        else "auto-merge"
+    )
+    result = loop.decide(args.proposal_id, decision, actor=args.actor, reason=args.reason)
+    payload = json.loads(result.path.read_text(encoding="utf-8"))
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def _cmd_loop_export(args: argparse.Namespace) -> int:
+    loop = SelfSustainingLoop(args.root)
+    state = _load_loop_state(loop)
+    proposals = loop.list_proposals()
+    payload = {"state": state, "proposals": proposals}
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="echo",
@@ -741,6 +792,53 @@ def main(argv: Iterable[str] | None = None) -> int:
     forecast_parser.add_argument("--cycles", type=int, default=12)
     forecast_parser.add_argument("--plot", action="store_true")
     forecast_parser.set_defaults(func=_cmd_forecast)
+
+    loop_parser = subparsers.add_parser(
+        "unified-sentience-loop",
+        help="Manage the self-sustaining planning orchestrator",
+    )
+    loop_parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path("."),
+        help="Root directory used to resolve orchestrator state (default: current directory)",
+    )
+    loop_sub = loop_parser.add_subparsers(dest="loop_command", required=True)
+
+    loop_cycle = loop_sub.add_parser("cycle", help="Record progress for the active cycle")
+    loop_cycle.add_argument("--summary", required=True, help="Description of the completed work")
+    loop_cycle.add_argument(
+        "--actor",
+        default="automation",
+        help="Actor recording the progress entry",
+    )
+    loop_cycle.set_defaults(func=_cmd_loop_cycle)
+
+    loop_status = loop_sub.add_parser("status", help="Display the orchestrator state")
+    loop_status.set_defaults(func=_cmd_loop_status)
+
+    loop_govern = loop_sub.add_parser("govern", help="Record a governance decision")
+    loop_govern.add_argument("proposal_id", help="Proposal identifier (cycle_XXXX)")
+    decision_opts = loop_govern.add_mutually_exclusive_group(required=True)
+    decision_opts.add_argument("--approve", action="store_true", help="Approve the proposal")
+    decision_opts.add_argument("--reject", action="store_true", help="Reject the proposal")
+    decision_opts.add_argument(
+        "--auto-merge",
+        dest="auto_merge",
+        action="store_true",
+        help="Mark the proposal for auto-merge",
+    )
+    loop_govern.add_argument("--actor", default="governance", help="Decision maker")
+    loop_govern.add_argument("--reason", default=None, help="Decision rationale")
+    loop_govern.set_defaults(func=_cmd_loop_govern)
+
+    loop_export = loop_sub.add_parser("export", help="Export orchestrator state and proposals")
+    loop_export.add_argument(
+        "--out",
+        type=Path,
+        help="Optional path to write the combined export as JSON",
+    )
+    loop_export.set_defaults(func=_cmd_loop_export)
 
     timeline_parser = subparsers.add_parser(
         "timeline", help="Aggregate cycle, pulse, and puzzle relationships"
