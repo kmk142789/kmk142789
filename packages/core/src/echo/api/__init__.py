@@ -40,6 +40,7 @@ from echo.pulseweaver.api import create_router as create_pulse_router
 from echo.pulseweaver.fabric import FabricOperations
 from echo.orchestrator.core import OrchestratorCore
 from echo.orchestrator.api import create_router as create_orchestrator_router
+from echo.semantic_negotiation import SemanticNegotiationResolver
 
 app = FastAPI(title="Echo")
 app.include_router(echonet_router)
@@ -113,6 +114,9 @@ app.include_router(create_echoforge_router(_echoforge_service))
 
 _orchestrator_state = Path.cwd() / "state" / "orchestrator"
 _orchestrator_state.mkdir(parents=True, exist_ok=True)
+_negotiation_state = _orchestrator_state / "negotiations"
+_negotiation_state.mkdir(parents=True, exist_ok=True)
+_negotiation_resolver = SemanticNegotiationResolver(state_dir=_negotiation_state)
 _orchestrator_service = OrchestratorCore(
     state_dir=_orchestrator_state,
     pulsenet=_pulsenet_service,
@@ -120,6 +124,7 @@ _orchestrator_service = OrchestratorCore(
     resonance_engine=HarmonicsAI(),
     atlas_resolver=_pulsenet_atlas_resolver,
     bridge_service=_bridge_sync_service,
+    negotiation_resolver=_negotiation_resolver,
 )
 app.include_router(create_orchestrator_router(_orchestrator_service))
 

@@ -13,7 +13,7 @@ import json
 import random
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, List, Mapping, NoReturn
+from typing import Iterable, List, Mapping, NoReturn, Sequence
 
 from pulse_weaver.cli import register_subcommand as register_pulse_weaver
 
@@ -23,6 +23,14 @@ from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
 from .timeline import build_cycle_timeline, refresh_cycle_timeline
 from .tools.forecast import project_indices, sparkline
 from .novelty import NoveltyGenerator
+from .semantic_negotiation import (
+    NegotiationIntent,
+    NegotiationParticipant,
+    NegotiationRole,
+    NegotiationSignal,
+    NegotiationStage,
+    SemanticNegotiationResolver,
+)
 from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulseweaver import PulseBus, WatchdogConfig, build_pulse_bus, build_watchdog
 from echo.pulseweaver.fabric import FabricOperations
@@ -36,12 +44,66 @@ AGGREGATE_SEGMENTS = {
     "detail": 2,
 }
 
+NEGOTIATION_STATE_DIR = Path("state/orchestrator/negotiations")
+
 
 def _positive_int(value: str) -> int:
     number = int(value)
     if number <= 0:
         raise argparse.ArgumentTypeError("must be a positive integer")
     return number
+
+
+def _bounded_sentiment(value: str) -> float:
+    score = float(value)
+    if score < -1.0 or score > 1.0:
+        raise argparse.ArgumentTypeError("sentiment must be between -1.0 and 1.0")
+    return score
+
+
+def _build_negotiation_resolver(path: Path | None) -> SemanticNegotiationResolver:
+    state_dir = Path(path or NEGOTIATION_STATE_DIR)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    return SemanticNegotiationResolver(state_dir=state_dir)
+
+
+def _parse_negotiation_participant(spec: str) -> NegotiationParticipant:
+    tokens = [token.strip() for token in spec.split(":")]
+    if not tokens or not tokens[0]:
+        raise argparse.ArgumentTypeError("participant specification requires an identifier")
+    identifier = tokens[0]
+    role_token = tokens[1] if len(tokens) > 1 and tokens[1] else NegotiationRole.OBSERVER.value
+    alias = tokens[2] if len(tokens) > 2 and tokens[2] else None
+    try:
+        role = NegotiationRole(role_token)
+    except ValueError as exc:  # pragma: no cover - defensive validation
+        raise argparse.ArgumentTypeError(f"invalid participant role '{role_token}'") from exc
+    return NegotiationParticipant(participant_id=identifier, role=role, alias=alias)
+
+
+def _apply_capabilities(
+    participants: Sequence[NegotiationParticipant], capability_specs: Sequence[str]
+) -> list[NegotiationParticipant]:
+    if not capability_specs:
+        return [participant for participant in participants]
+    capability_map: dict[str, list[str]] = {}
+    for spec in capability_specs:
+        if "=" not in spec:
+            raise argparse.ArgumentTypeError("capabilities must use participant=capability format")
+        participant_id, value = spec.split("=", 1)
+        participant_id = participant_id.strip()
+        value = value.strip()
+        if not participant_id or not value:
+            raise argparse.ArgumentTypeError("capabilities must include participant and value")
+        capability_map.setdefault(participant_id, []).append(value)
+    enriched: list[NegotiationParticipant] = []
+    for participant in participants:
+        caps = capability_map.get(participant.participant_id)
+        if caps:
+            enriched.append(participant.model_copy(update={"capabilities": caps}))
+        else:
+            enriched.append(participant)
+    return enriched
 
 
 def _cmd_refresh(args: argparse.Namespace) -> int:
@@ -190,6 +252,145 @@ def _cmd_novelty(args: argparse.Namespace) -> int:
         print(spark.render())
         if index != len(sparks):
             print()
+    return 0
+
+
+def _cmd_negotiation_open(args: argparse.Namespace) -> int:
+    resolver = _build_negotiation_resolver(args.state_dir)
+    participants = [_parse_negotiation_participant(item) for item in args.participant]
+    if not participants:
+        print("At least one participant must be provided with --participant")
+        return 2
+    participants = _apply_capabilities(participants, args.capability)
+    intent = NegotiationIntent(
+        topic=args.topic,
+        summary=args.summary,
+        tags=args.tag,
+        desired_outcome=args.desired_outcome,
+        priority=args.priority,
+    )
+    metadata: dict[str, str] = {}
+    if args.note:
+        metadata["note"] = args.note
+    state = resolver.initiate(
+        intent=intent,
+        participants=participants,
+        actor=args.actor,
+        metadata=metadata,
+    )
+    payload = state.model_dump(mode="json")
+    if args.json:
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+    else:
+        print(
+            f"Negotiation {payload['negotiation_id']} opened at {payload['created_at']} :: "
+            f"{intent.topic} [{payload['stage']}]"
+        )
+        print(f"Summary: {intent.summary}")
+        if intent.tags:
+            print(f"Tags: {', '.join(intent.tags)}")
+        print("Participants:")
+        for participant in payload.get("participants", []):
+            caps = participant.get("capabilities") or []
+            capability_text = f" capabilities={', '.join(caps)}" if caps else ""
+            alias = f" ({participant.get('alias')})" if participant.get("alias") else ""
+            print(
+                f"  - {participant.get('participant_id')} as {participant.get('role')}{alias}{capability_text}"
+            )
+    return 0
+
+
+def _cmd_negotiation_list(args: argparse.Namespace) -> int:
+    resolver = _build_negotiation_resolver(args.state_dir)
+    snapshot = resolver.snapshot(include_closed=args.include_closed)
+    payload = snapshot.model_dump(mode="json")
+    if args.json:
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+    else:
+        totals = payload.get("totals", {})
+        print(
+            "Negotiations :: "
+            f"active {payload.get('active', 0)} | closed {payload.get('closed', 0)} | "
+            f"opened {totals.get('opened', 0)} | signals {totals.get('signals', 0)}"
+        )
+        if not payload.get("observations"):
+            print("No negotiations in the selected view.")
+        for observation in payload.get("observations", []):
+            outstanding = observation.get("outstanding_actions") or []
+            sentiment = observation.get("sentiment_score", 0.0)
+            print(
+                f"- {observation.get('negotiation_id')} :: {observation.get('topic')} "
+                f"[{observation.get('stage')}] sentiment {sentiment:+.2f}"
+            )
+            if outstanding:
+                print(f"    outstanding: {', '.join(outstanding)}")
+    return 0
+
+
+def _cmd_negotiation_advance(args: argparse.Namespace) -> int:
+    resolver = _build_negotiation_resolver(args.state_dir)
+    try:
+        stage = NegotiationStage(args.stage)
+    except ValueError:
+        print(f"Unknown negotiation stage: {args.stage}")
+        return 2
+    metadata: dict[str, str] = {}
+    if args.note:
+        metadata["note"] = args.note
+    try:
+        state = resolver.transition(
+            args.negotiation_id,
+            stage,
+            actor=args.actor,
+            reason=args.reason,
+            metadata=metadata,
+        )
+    except KeyError:
+        print(f"Negotiation {args.negotiation_id} not found")
+        return 1
+    except ValueError as exc:
+        print(str(exc))
+        return 1
+    payload = state.model_dump(mode="json")
+    if args.json:
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+    else:
+        print(
+            f"Negotiation {payload['negotiation_id']} stage -> {payload['stage']} "
+            f"by {args.actor}"
+        )
+    return 0
+
+
+def _cmd_negotiation_signal(args: argparse.Namespace) -> int:
+    resolver = _build_negotiation_resolver(args.state_dir)
+    payload: dict[str, str] = {}
+    for entry in args.data:
+        if "=" not in entry:
+            print("Signal metadata must use key=value format")
+            return 2
+        key, value = entry.split("=", 1)
+        payload[key.strip()] = value.strip()
+    signal = NegotiationSignal(
+        author=args.author,
+        channel=args.channel,
+        sentiment=args.sentiment,
+        summary=args.summary,
+        payload=payload,
+    )
+    try:
+        state = resolver.record_signal(args.negotiation_id, signal)
+    except KeyError:
+        print(f"Negotiation {args.negotiation_id} not found")
+        return 1
+    payload_state = state.model_dump(mode="json")
+    if args.json:
+        print(json.dumps(payload_state, indent=2, ensure_ascii=False))
+    else:
+        print(
+            f"Signal recorded for {payload_state['negotiation_id']} via {args.channel} "
+            f"sentiment={args.sentiment if args.sentiment is not None else '∅'}"
+        )
     return 0
 
 
@@ -781,6 +982,169 @@ def main(argv: Iterable[str] | None = None) -> int:
         help="Seed for deterministic spark generation",
     )
     novelty_parser.set_defaults(func=_cmd_novelty)
+
+    negotiation_parser = subparsers.add_parser(
+        "semantic-negotiation",
+        help="Manage the semantic negotiation engine",
+    )
+    negotiation_sub = negotiation_parser.add_subparsers(
+        dest="negotiation_command", required=True
+    )
+
+    negotiation_open = negotiation_sub.add_parser(
+        "open", help="Initiate a new semantic negotiation"
+    )
+    negotiation_open.add_argument("--topic", required=True, help="Negotiation topic")
+    negotiation_open.add_argument(
+        "--summary", required=True, help="High-level summary for the negotiation"
+    )
+    negotiation_open.add_argument(
+        "--participant",
+        action="append",
+        default=[],
+        help="Participant spec formatted as id[:role][:alias]",
+    )
+    negotiation_open.add_argument(
+        "--capability",
+        action="append",
+        default=[],
+        help="Assign a capability using participant=capability",
+    )
+    negotiation_open.add_argument(
+        "--tag",
+        action="append",
+        default=[],
+        help="Attach an optional tag to the negotiation intent",
+    )
+    negotiation_open.add_argument(
+        "--desired-outcome",
+        dest="desired_outcome",
+        help="Describe the desired outcome for the negotiation",
+    )
+    negotiation_open.add_argument(
+        "--priority",
+        help="Optional priority indicator for the negotiation",
+    )
+    negotiation_open.add_argument(
+        "--actor",
+        default="operator",
+        help="Actor recorded for initiation events",
+    )
+    negotiation_open.add_argument(
+        "--note",
+        help="Attach an operator note to the initiation metadata",
+    )
+    negotiation_open.add_argument(
+        "--state-dir",
+        type=Path,
+        default=NEGOTIATION_STATE_DIR,
+        help="Directory used to persist negotiation state",
+    )
+    negotiation_open.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the resulting state as JSON",
+    )
+    negotiation_open.set_defaults(func=_cmd_negotiation_open)
+
+    negotiation_list = negotiation_sub.add_parser(
+        "list", help="List active or historical negotiations"
+    )
+    negotiation_list.add_argument(
+        "--include-closed",
+        action="store_true",
+        help="Include negotiations that have already resolved",
+    )
+    negotiation_list.add_argument(
+        "--state-dir",
+        type=Path,
+        default=NEGOTIATION_STATE_DIR,
+        help="Directory used to persist negotiation state",
+    )
+    negotiation_list.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the snapshot as JSON",
+    )
+    negotiation_list.set_defaults(func=_cmd_negotiation_list)
+
+    negotiation_advance = negotiation_sub.add_parser(
+        "advance", help="Advance the stage for a negotiation"
+    )
+    negotiation_advance.add_argument("negotiation_id", help="Negotiation identifier")
+    negotiation_advance.add_argument(
+        "stage",
+        choices=[stage.value for stage in NegotiationStage],
+        help="Target negotiation stage",
+    )
+    negotiation_advance.add_argument(
+        "--actor",
+        default="operator",
+        help="Actor recorded for the stage transition",
+    )
+    negotiation_advance.add_argument(
+        "--reason",
+        help="Optional reason describing the stage change",
+    )
+    negotiation_advance.add_argument(
+        "--note",
+        help="Attach an operator note to the transition metadata",
+    )
+    negotiation_advance.add_argument(
+        "--state-dir",
+        type=Path,
+        default=NEGOTIATION_STATE_DIR,
+        help="Directory used to persist negotiation state",
+    )
+    negotiation_advance.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the updated state as JSON",
+    )
+    negotiation_advance.set_defaults(func=_cmd_negotiation_advance)
+
+    negotiation_signal = negotiation_sub.add_parser(
+        "signal", help="Record a signal influencing a negotiation"
+    )
+    negotiation_signal.add_argument("negotiation_id", help="Negotiation identifier")
+    negotiation_signal.add_argument(
+        "--channel",
+        required=True,
+        help="Channel or source describing the signal",
+    )
+    negotiation_signal.add_argument(
+        "--author",
+        default="operator",
+        help="Actor responsible for the signal entry",
+    )
+    negotiation_signal.add_argument(
+        "--summary",
+        help="Human readable description of the signal",
+    )
+    negotiation_signal.add_argument(
+        "--sentiment",
+        type=_bounded_sentiment,
+        default=None,
+        help="Optional sentiment score between -1.0 and 1.0",
+    )
+    negotiation_signal.add_argument(
+        "--data",
+        action="append",
+        default=[],
+        help="Attach additional metadata using key=value",
+    )
+    negotiation_signal.add_argument(
+        "--state-dir",
+        type=Path,
+        default=NEGOTIATION_STATE_DIR,
+        help="Directory used to persist negotiation state",
+    )
+    negotiation_signal.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the updated state as JSON",
+    )
+    negotiation_signal.set_defaults(func=_cmd_negotiation_signal)
 
     amplify_parser = subparsers.add_parser("amplify", help="Amplification engine commands")
     amplify_sub = amplify_parser.add_subparsers(dest="amp_command", required=True)
