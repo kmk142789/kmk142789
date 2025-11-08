@@ -1,7 +1,7 @@
 """Diagnostics collectors for the Transparent Reflection Layer."""
 from __future__ import annotations
 
-import json
+import json as json_lib
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,7 +29,7 @@ def load_reflection_diagnostics(path: Path) -> Sequence[ReflectionDiagnostics]:
     if not path.exists():
         return ()
     with path.open("r", encoding="utf-8") as handle:
-        entries = json.load(handle)
+        entries = json_lib.load(handle)
     diagnostics: list[ReflectionDiagnostics] = []
     for entry in entries:
         reflection = entry.get("reflection") if isinstance(entry, Mapping) else None
@@ -91,7 +91,7 @@ def build_reflection_report(
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True)
+        json_lib.dump(payload, handle, indent=2, sort_keys=True)
         handle.write("\n")
     return payload
 
