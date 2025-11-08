@@ -21,3 +21,12 @@ services:
     environment: { ECHO_LEDGER_DIR: /data3/ledger }
     volumes: [ "./.attest3:/data3/ledger:ro" ]
     ports: [ "8103:8000" ]
+  reflection:
+    build: .
+    image: echo/transparent-reflection-layer:0.1.0
+    container_name: echo-reflection
+    command: uvicorn services.universal_verifier.app:app --host 0.0.0.0 --port 8400
+    environment:
+      REFLECTION_LAYER_ENABLED: "true"
+    ports:
+      - "8400:8400"

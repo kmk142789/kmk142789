@@ -7,7 +7,13 @@ import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping, MutableMapping
+from typing import Any, Callable, Iterable, Mapping, MutableMapping
+
+from src.reflection import (
+    ReflectionMetric,
+    ReflectionTrace,
+    TransparentReflectionLayer,
+)
 
 
 @dataclass(slots=True)
@@ -28,10 +34,16 @@ class WorkerHiveConfig:
 class WorkerHive:
     """Record command execution telemetry for visualisation on the dashboard."""
 
-    def __init__(self, project_root: Path | str | None = None) -> None:
+    def __init__(
+        self,
+        project_root: Path | str | None = None,
+        *,
+        reflection_factory: Callable[[str], TransparentReflectionLayer] | None = None,
+    ) -> None:
         self._config = WorkerHiveConfig(root=Path(project_root or Path.cwd()).resolve())
         self._config.state_dir.mkdir(parents=True, exist_ok=True)
         self._config.log_path.touch(exist_ok=True)
+        self._reflection_factory = reflection_factory
 
     @contextmanager
     def worker(self, name: str, *, metadata: Mapping[str, Any] | None = None):
@@ -59,6 +71,33 @@ class WorkerHive:
     def record(self, event: Mapping[str, Any]) -> None:
         self._append(event)
 
+    def reflection(
+        self,
+        component: str,
+        *,
+        metrics: Iterable[ReflectionMetric | Mapping[str, object]] = (),
+        traces: Iterable[ReflectionTrace | Mapping[str, object]] = (),
+        safeguards: Iterable[str] = (),
+        diagnostics: Mapping[str, object] | None = None,
+    ) -> Mapping[str, object]:
+        """Emit a reflection snapshot and persist it to the worker log."""
+
+        layer = self._build_reflection_layer(component)
+        snapshot = layer.emit(
+            metrics=metrics,
+            traces=traces,
+            safeguards=safeguards,
+            diagnostics=diagnostics,
+        )
+        event = self._build_event(
+            uuid.uuid4().hex,
+            status="reflection",
+            name=component,
+            payload={"snapshot": snapshot},
+        )
+        self._append(event)
+        return snapshot
+
     def _append(self, event: Mapping[str, Any]) -> None:
         payload = dict(event)
         payload.setdefault("timestamp", time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
@@ -66,6 +105,11 @@ class WorkerHive:
         with self._config.log_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(payload, sort_keys=True))
             handle.write("\n")
+
+    def _build_reflection_layer(self, component: str) -> TransparentReflectionLayer:
+        if self._reflection_factory is not None:
+            return self._reflection_factory(component)
+        return TransparentReflectionLayer(component=component)
 
     def _build_event(
         self,
@@ -107,6 +151,26 @@ class WorkerTaskHandle:
             payload=payload,
         )
         self._hive.record(event)
+
+    def reflect(
+        self,
+        *,
+        metrics: Iterable[ReflectionMetric | Mapping[str, object]] = (),
+        traces: Iterable[ReflectionTrace | Mapping[str, object]] = (),
+        safeguards: Iterable[str] = (),
+        diagnostics: Mapping[str, object] | None = None,
+        component: str | None = None,
+    ) -> Mapping[str, object]:
+        """Delegate to the hive reflection emitter using the provided component."""
+
+        target = component or self._name
+        return self._hive.reflection(
+            target,
+            metrics=metrics,
+            traces=traces,
+            safeguards=safeguards,
+            diagnostics=diagnostics,
+        )
 
     def succeed(self, **payload: Any) -> None:
         self._complete("success", payload)

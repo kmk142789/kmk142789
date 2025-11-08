@@ -101,6 +101,7 @@ from echo.recursive_mythogenic_pulse import (
 )
 from echo.transcend import TranscendOrchestrator
 from pulse_dashboard import WorkerHive
+from src.reflection import ReflectionMetric, ReflectionTrace
 
 try:  # pragma: no cover - optional dependency
     from echo_puzzle_lab.charts import save_charts
@@ -160,6 +161,7 @@ def refresh(
         target = ensure_map_exists(force=force)
         payload = {"map_path": str(target)}
 
+        report_path: Path | None = None
         if voyage_map:
             voyages = [
                 compose_voyage(seed=seed, recursion_level=2 + (seed % 2))
@@ -177,6 +179,48 @@ def refresh(
                 console.print(
                     f"[blue]Converged pulse voyage atlas saved to {report_path}[/blue]"
                 )
+
+        reflection_metrics = [
+            ReflectionMetric(
+                key="map_generated",
+                value=1,
+                info="Puzzle map refreshed via echo_cli",
+            )
+        ]
+        if voyage_map:
+            reflection_metrics.append(
+                ReflectionMetric(
+                    key="voyage_atlases",
+                    value=len(voyages),
+                    unit="count",
+                    info="Pulse voyage atlases rendered",
+                )
+            )
+        reflection_traces = [
+            ReflectionTrace(
+                event="refresh.completed",
+                detail={
+                    "force": force,
+                    "json_mode": json_mode,
+                    "voyage_map": voyage_map,
+                },
+                level="info",
+            )
+        ]
+        reflection_diagnostics: dict[str, object] = {"map_path": str(target)}
+        if report_path is not None:
+            reflection_diagnostics["voyage_report"] = str(report_path)
+
+        task.reflect(
+            metrics=reflection_metrics,
+            traces=reflection_traces,
+            safeguards=(
+                "no_personal_data_logged",
+                "consent_required_for_telemetry",
+            ),
+            diagnostics=reflection_diagnostics,
+            component="echo_cli.refresh",
+        )
 
         _echo(ctx, payload, message=f"Puzzle map available at {target}")
         task.succeed(payload=payload)

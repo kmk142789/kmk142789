@@ -13,6 +13,11 @@ from .core import PulseWeaverSnapshot, WeaveFragment
 from .schema import get_validator
 from .storage.migrations import apply_migrations
 from .storage.repository import PulseWeaverRepository
+from src.reflection import (
+    ReflectionMetric,
+    ReflectionTrace,
+    TransparentReflectionLayer,
+)
 
 
 @dataclass(slots=True)
@@ -43,6 +48,7 @@ class PulseWeaverService:
         self._validator = get_validator()
         self._phantom_history = phantom_history or (project_root / "pulse_history.json")
         self._ready = False
+        self._reflection_layer = TransparentReflectionLayer(component="pulse_weaver.service")
 
     # ------------------------------------------------------------------
     # Setup
@@ -168,6 +174,35 @@ class PulseWeaverService:
         )
         payload = snapshot.to_dict()
         self._validator.validate(payload)
+        self._emit_reflection(
+            metrics=(
+                ReflectionMetric(
+                    key="ledger_events",
+                    value=len(fragments),
+                    unit="count",
+                    info="Fragments included in snapshot",
+                ),
+                ReflectionMetric(
+                    key="phantom_threads",
+                    value=len(phantom),
+                    unit="count",
+                    info="Phantom traces collected",
+                ),
+            ),
+            traces=(
+                ReflectionTrace(
+                    event="pulse_weaver.snapshot",
+                    detail={
+                        "cycle": cycle or "unknown",
+                        "schema": self.SNAPSHOT_SCHEMA,
+                    },
+                ),
+            ),
+            diagnostics={
+                "atlas_links": counts.atlas,
+                "phantom_source": str(self._phantom_history),
+            },
+        )
         return snapshot
 
     # ------------------------------------------------------------------
@@ -194,6 +229,24 @@ class PulseWeaverService:
             cycle=cycle,
             limit=limit,
             statuses=status_values,
+        )
+
+    def _emit_reflection(
+        self,
+        *,
+        metrics: Iterable[ReflectionMetric | Mapping[str, object]],
+        traces: Iterable[ReflectionTrace | Mapping[str, object]],
+        diagnostics: Mapping[str, object],
+    ) -> None:
+        self._reflection_layer.emit(
+            metrics=metrics,
+            traces=traces,
+            safeguards=(
+                "database_isolated",
+                "no_personal_data_logged",
+                "consent_required_for_external_exports",
+            ),
+            diagnostics=diagnostics,
         )
 
     def cycle_summary(self, cycle: str) -> Dict[str, int]:

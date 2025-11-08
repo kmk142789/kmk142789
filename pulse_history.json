@@ -583,5 +583,22 @@
     "timestamp": 1760416942.4580371,
     "message": "\ud83c\udf00 evolve:github-action:062bcadc8118",
     "hash": "601b09902c103b9e53ab7371635529f2b2eafebedc61af40d47e1181429a4c9d"
+  },
+  {
+    "timestamp": 1760419000.000001,
+    "message": "\ud83d\udd0d reflection-layer:bootstrap",
+    "hash": "0d40b60fb97998a99756bf3bce326b953b79a8ec37848c83fcc268869613b9b0",
+    "reflection": {
+      "component": "transparent-reflection-layer-v1",
+      "metrics": {
+        "workers": 1,
+        "services": 1,
+        "pipelines": 1
+      },
+      "safeguards": [
+        "no_personal_data_logged",
+        "consent_required_for_telemetry"
+      ]
+    }
   }
 ]
