@@ -52,6 +52,10 @@ if not TYPER_AVAILABLE:  # pragma: no cover - executed when typer is not install
 
             return decorator
 
+        def add_typer(self, sub_typer, name: str, **__):
+            self.commands[name] = sub_typer
+            return sub_typer
+
         def __call__(self) -> None:
             raise RuntimeError("Typer is unavailable in this environment")
 
@@ -84,6 +88,13 @@ if Table is None:  # pragma: no cover - executed when rich is not installed
         def add_row(self, *values: object) -> None:
             self.rows.append(values)
 
+from echo.deployment_meta_causal import (
+    CONFIG_PATH as META_CAUSAL_CONFIG_PATH,
+    MetaCausalRollout,
+    load_meta_causal_config,
+    plan_meta_causal_deployment,
+    save_meta_causal_config,
+)
 from echo_puzzle_lab import (
     build_dataframe,
     ensure_map_exists,
@@ -110,6 +121,8 @@ except ModuleNotFoundError:  # pragma: no cover - charts require matplotlib
 app = typer.Typer(help="Puzzle Lab utilities", no_args_is_help=True)
 console = Console()
 worker_hive = WorkerHive(project_root=Path(__file__).resolve().parent.parent)
+deploy_app = typer.Typer(help="Deployment automation", no_args_is_help=True)
+app.add_typer(deploy_app, name="deploy")
 
 
 def _ensure_ctx(ctx: typer.Context) -> None:
@@ -129,6 +142,100 @@ def _echo(ctx: typer.Context, payload: dict[str, object], *, message: str | None
         console.print(json.dumps(payload))
     elif message:
         console.print(message)
+
+
+def _format_meta_causal_summary(config: MetaCausalRollout, *, applied: bool) -> str:
+    checks = ", ".join(config.preflight_checks) if config.preflight_checks else "none"
+    status_text = "enabled" if config.enabled else "disabled"
+    action = "configuration updated" if applied else "preview generated (use --apply to persist)"
+    lines = [
+        "Meta-causal engine deployment plan",
+        f"  status        : {status_text}",
+        f"  channel       : {config.rollout_channel}",
+        f"  max_parallel  : {config.max_parallel_deployments}",
+        f"  preflight     : {checks}",
+        f"  artifact      : {config.artifact_path}",
+        f"  manifest file : {META_CAUSAL_CONFIG_PATH}",
+        f"  outcome       : {action}",
+    ]
+    return "\n".join(lines)
+
+
+@deploy_app.command("meta-causal-engine")
+def deploy_meta_causal_engine(
+    ctx: typer.Context,
+    status: Optional[str] = typer.Option(
+        None,
+        "--status",
+        help="Set engine status to 'enabled' or 'disabled'.",
+    ),
+    channel: Optional[str] = typer.Option(
+        None,
+        "--channel",
+        help="Override rollout channel (e.g. canary, production).",
+    ),
+    max_parallel: Optional[int] = typer.Option(
+        None,
+        "--max-parallel",
+        help="Maximum concurrent deployment targets.",
+    ),
+    apply: bool = typer.Option(
+        False,
+        "--apply",
+        help="Persist configuration changes before returning the plan.",
+    ),
+) -> None:
+    """Plan or apply a meta-causal engine deployment."""
+
+    _ensure_ctx(ctx)
+    metadata: dict[str, object] = {"apply": apply}
+    if status is not None:
+        metadata["status"] = status
+    if channel is not None:
+        metadata["channel"] = channel
+    if max_parallel is not None:
+        metadata["max_parallel"] = max_parallel
+
+    with worker_hive.worker("deploy.meta_causal_engine", metadata=metadata) as task:
+        config = load_meta_causal_config()
+        updates: dict[str, object] = {}
+
+        if status:
+            normalised = status.strip().lower()
+            if normalised not in {"enabled", "disabled"}:
+                task.fail(error=f"invalid status {status!r}")
+                raise typer.BadParameter("status must be 'enabled' or 'disabled'")
+            config = config.with_overrides(enabled=normalised == "enabled")
+            updates["status"] = normalised
+
+        if channel:
+            config = config.with_overrides(channel=channel)
+            updates["channel"] = channel
+
+        if max_parallel is not None:
+            if max_parallel < 1:
+                task.fail(error="max_parallel must be >= 1")
+                raise typer.BadParameter("--max-parallel must be a positive integer")
+            config = config.with_overrides(max_parallel=max_parallel)
+            updates["max_parallel"] = max_parallel
+
+        plan = plan_meta_causal_deployment(
+            config,
+            initiated_by="echo-cli",
+            reason="manual deploy invocation",
+        )
+        plan["config_path"] = str(META_CAUSAL_CONFIG_PATH)
+        if updates:
+            plan["updates"] = updates
+
+        payload = {"plan": plan, "applied": False}
+        if apply:
+            save_meta_causal_config(config)
+            payload["applied"] = True
+
+        summary = _format_meta_causal_summary(config, applied=payload["applied"])
+        _echo(ctx, payload, message=summary)
+        task.succeed(payload=payload)
 
 
 @app.callback()
@@ -583,6 +690,16 @@ def main() -> None:  # pragma: no cover - console entry point
     transcend_parser.add_argument("--base-dir", default=".", dest="base_dir")
     transcend_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
 
+    deploy_parser = subparsers.add_parser("deploy", help="Deployment automation")
+    deploy_subparsers = deploy_parser.add_subparsers(dest="deploy_command", required=True)
+    meta_parser = deploy_subparsers.add_parser(
+        "meta-causal-engine", help="Plan or apply a meta-causal engine rollout"
+    )
+    meta_parser.add_argument("--status", choices=("enabled", "disabled"))
+    meta_parser.add_argument("--channel")
+    meta_parser.add_argument("--max-parallel", type=int, dest="max_parallel")
+    meta_parser.add_argument("--apply", action="store_true")
+
     args = parser.parse_args()
 
     ctx = typer.Context()  # type: ignore[call-arg]
@@ -606,5 +723,16 @@ def main() -> None:  # pragma: no cover - console entry point
             base_dir=Path(args.base_dir),
             json_mode=args.json_mode,
         )
+    elif args.command == "deploy":
+        if args.deploy_command == "meta-causal-engine":
+            deploy_meta_causal_engine(
+                ctx,
+                status=args.status,
+                channel=args.channel,
+                max_parallel=args.max_parallel,
+                apply=args.apply,
+            )
+        else:  # pragma: no cover - defensive
+            parser.error(f"Unsupported deploy command: {args.deploy_command}")
     else:  # pragma: no cover - defensive
         parser.error(f"Unsupported command in fallback mode: {args.command}")

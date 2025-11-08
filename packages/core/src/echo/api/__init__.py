@@ -4,14 +4,21 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any, Mapping, MutableMapping, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from echo.bridge import BridgeSyncService, EchoBridgeAPI
 from echo.bridge.router import create_router as create_bridge_router
 from echo.echoforge.api import create_router as create_echoforge_router
 from echo.echoforge.service import EchoForgeDashboardService
 from echo.echoforge.storage import EchoForgeSessionStore
+from echo.deployment_meta_causal import (
+    CONFIG_PATH as META_CAUSAL_CONFIG_PATH,
+    load_meta_causal_config,
+    plan_meta_causal_deployment,
+    save_meta_causal_config,
+)
 from echo.pulsenet import AtlasAttestationResolver, PulseNetGatewayService
 from echo.pulsenet.api import create_router as create_pulsenet_router
 from echo.pulsenet.registration import RegistrationStore
@@ -115,6 +122,68 @@ _orchestrator_service = OrchestratorCore(
     bridge_service=_bridge_sync_service,
 )
 app.include_router(create_orchestrator_router(_orchestrator_service))
+
+
+@app.post("/deploy/meta-causal-engine", name="deploy_meta_causal_engine")
+def deploy_meta_causal_engine(payload: Mapping[str, Any] | None = None) -> MutableMapping[str, Any]:
+    data = dict(payload or {})
+    updates: MutableMapping[str, object] = {}
+
+    status = data.get("status")
+    enabled_override: Optional[bool] = None
+    if status is not None:
+        if not isinstance(status, str):
+            raise HTTPException(status_code=400, detail="status must be a string")
+        normalised = status.strip().lower()
+        if normalised not in {"enabled", "disabled"}:
+            raise HTTPException(status_code=400, detail="status must be 'enabled' or 'disabled'")
+        enabled_override = normalised == "enabled"
+        updates["status"] = normalised
+
+    channel = data.get("channel")
+    channel_override: Optional[str] = None
+    if channel is not None:
+        if not isinstance(channel, str):
+            raise HTTPException(status_code=400, detail="channel must be a string")
+        channel_override = channel
+        updates["channel"] = channel_override
+
+    max_parallel_raw = data.get("max_parallel")
+    max_parallel_override: Optional[int] = None
+    if max_parallel_raw is not None:
+        if isinstance(max_parallel_raw, bool) or not isinstance(max_parallel_raw, int):
+            raise HTTPException(status_code=400, detail="max_parallel must be an integer")
+        if max_parallel_raw < 1:
+            raise HTTPException(status_code=400, detail="max_parallel must be >= 1")
+        max_parallel_override = max_parallel_raw
+        updates["max_parallel"] = max_parallel_override
+
+    reason = data.get("reason")
+    if reason is not None and not isinstance(reason, str):
+        raise HTTPException(status_code=400, detail="reason must be a string")
+
+    apply_changes = bool(data.get("apply", False))
+
+    config = load_meta_causal_config().with_overrides(
+        enabled=enabled_override,
+        channel=channel_override,
+        max_parallel=max_parallel_override,
+    )
+    plan = plan_meta_causal_deployment(
+        config,
+        initiated_by="echo-api",
+        reason=reason,
+    )
+    plan["config_path"] = str(META_CAUSAL_CONFIG_PATH)
+    if updates:
+        plan["updates"] = dict(updates)
+
+    response: MutableMapping[str, Any] = {"plan": plan, "applied": False}
+    if apply_changes:
+        save_meta_causal_config(config)
+        response["applied"] = True
+    return response
+
 
 __all__ = [
     "app",

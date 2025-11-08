@@ -1,0 +1,14 @@
+{
+  "meta_causal_engine": {
+    "enabled": false,
+    "rollout_channel": "canary",
+    "max_parallel_deployments": 1,
+    "preflight_checks": [
+      "verify-pulse-weaver",
+      "atlas-attestations",
+      "resonance-sanity"
+    ],
+    "artifact_path": "dist/meta_causal_engine/package.json",
+    "notes": "Meta-causal engine staged rollout manifest."
+  }
+}
