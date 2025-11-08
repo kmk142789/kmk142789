@@ -3,8 +3,9 @@
 The module assembles signals from pulse history, wish manifests, and plan
 documents into a compact :class:`MoonshotReport`.  It is intentionally designed
 to feel like a lunar mission control console—highlighting the dominant pulse
-channels, celebrating wishes, and tracking the plan themes that are steering
-the ecosystem toward surprising outcomes.
+channels, celebrating wishes, surfacing the catalysts that keep desires burning,
+and tracking the plan themes that are steering the ecosystem toward surprising
+outcomes.
 
 The implementation favours pure functions and dataclasses to keep the behaviour
 easy to unit test.  Consumers can either feed pre-parsed records (useful for
@@ -23,6 +24,7 @@ __all__ = [
     "PulseSummary",
     "WishSummary",
     "PlanSummary",
+    "CatalystInsight",
     "MoonshotReport",
     "MoonshotLens",
 ]
@@ -103,6 +105,24 @@ class PlanSummary:
         }
 
 
+@dataclass(slots=True, frozen=True)
+class CatalystInsight:
+    """Aggregate view over catalysts powering recorded wishes."""
+
+    name: str
+    count: int
+    wishers: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        """Return a JSON-friendly representation."""
+
+        return {
+            "name": self.name,
+            "count": self.count,
+            "wishers": list(self.wishers),
+        }
+
+
 @dataclass(slots=True)
 class MoonshotReport:
     """Composite report linking pulses, wishes, and plan alignment."""
@@ -111,6 +131,7 @@ class MoonshotReport:
     pulses: tuple[PulseSummary, ...]
     wishes: tuple[WishSummary, ...]
     plan: PlanSummary
+    catalysts: tuple[CatalystInsight, ...]
     astonishment_score: float
     wonder_memo: str
     total_pulses: int
@@ -135,6 +156,7 @@ class MoonshotReport:
             },
             "pulses": [summary.to_dict() for summary in self.pulses],
             "wishes": [summary.to_dict() for summary in self.wishes],
+            "catalysts": [insight.to_dict() for insight in self.catalysts],
             "plan": self.plan.to_dict(),
         }
 
@@ -196,6 +218,18 @@ class MoonshotReport:
             )
 
         lines.append("")
+        lines.append("Catalyst Orbit:")
+        if not self.catalysts:
+            lines.append("  • No catalysts recorded. Invite new wish sparks.")
+        else:
+            for insight in self.catalysts:
+                wishers = ", ".join(insight.wishers) if insight.wishers else "(unknown dreamers)"
+                lines.append(
+                    "  • "
+                    f"{insight.name} ×{insight.count} :: wishers={wishers}"
+                )
+
+        lines.append("")
         lines.append(f"Wonder memo :: {self.wonder_memo}")
 
         return "\n".join(lines)
@@ -214,12 +248,14 @@ class MoonshotLens:
         plan_text: str | None,
         *,
         channel_limit: int | None = None,
+        catalyst_limit: int | None = None,
     ) -> MoonshotReport:
         """Return a :class:`MoonshotReport` from raw data structures."""
 
         pulse_summaries = _summarise_pulses(pulses, limit=channel_limit)
         wish_summaries = _summarise_wishes(wishes)
         plan_summary = _summarise_plan(plan_text or "")
+        catalyst_summaries = _aggregate_catalysts(wish_summaries, limit=catalyst_limit)
 
         total_pulses = sum(summary.count for summary in pulse_summaries)
         unique_channels = len(pulse_summaries)
@@ -248,6 +284,7 @@ class MoonshotLens:
             pulses=pulse_summaries,
             wishes=wish_summaries,
             plan=plan_summary,
+            catalysts=catalyst_summaries,
             astonishment_score=astonishment_score,
             wonder_memo=wonder_memo,
             total_pulses=total_pulses,
@@ -336,6 +373,49 @@ def _summarise_wishes(wishes: Sequence[Mapping[str, object]]) -> tuple[WishSumma
         )
 
     return tuple(summaries)
+
+
+def _aggregate_catalysts(
+    wish_summaries: Sequence[WishSummary], *, limit: int | None = None
+) -> tuple[CatalystInsight, ...]:
+    if not wish_summaries:
+        return tuple()
+
+    aggregates: dict[str, dict[str, object]] = {}
+    for wish in wish_summaries:
+        for catalyst in wish.catalysts:
+            label = catalyst.strip()
+            if not label:
+                continue
+            key = label.casefold()
+            entry = aggregates.setdefault(
+                key,
+                {
+                    "name": label,
+                    "count": 0,
+                    "wishers": set(),
+                },
+            )
+            # Preserve the first encountered casing for readability.
+            if not entry.get("name"):
+                entry["name"] = label
+            entry["count"] = int(entry["count"]) + 1
+            entry.setdefault("wishers", set()).add(wish.wisher)
+
+    insights = [
+        CatalystInsight(
+            name=str(data.get("name", key)),
+            count=int(data.get("count", 0)),
+            wishers=tuple(sorted(str(w) for w in data.get("wishers", set()) if str(w).strip())),
+        )
+        for key, data in aggregates.items()
+    ]
+    insights.sort(key=lambda item: (-item.count, item.name))
+
+    if limit is not None and limit >= 0:
+        insights = insights[:limit]
+
+    return tuple(insights)
 
 
 def _summarise_plan(plan_text: str) -> PlanSummary:
