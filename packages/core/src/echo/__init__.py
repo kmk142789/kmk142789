@@ -125,6 +125,7 @@ from .echovm import (
     register_devices as register_echovm_devices,
 )
 from .memory import JsonMemoryStore
+from .meta_causal import MetaCausalAwarenessEngine
 from .meta_evolution_charter import MetaEvolutionCharter
 from .moonshot import MoonshotLens, MoonshotReport, PlanSummary, PulseSummary, WishSummary
 from .novum_forge import (
