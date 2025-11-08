@@ -50,6 +50,12 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     assert progress["momentum_average"] == pytest.approx(
         sum(progress["momentum_history"]) / len(progress["momentum_history"])
     )
+    assert progress["momentum_delta"] == pytest.approx(
+        progress["momentum"] - progress["momentum_average"]
+    )
+    assert progress["momentum_confidence"] in {"low", "medium", "high"}
+    assert progress["momentum_history_size"] == len(progress["momentum_history"])
+    assert progress["momentum_window"] == 5
     assert isinstance(progress["momentum_trend"], str) and progress["momentum_trend"]
     if progress["momentum"] > 0:
         assert progress["momentum_direction"] == "positive"
@@ -118,6 +124,12 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     assert progress["momentum_average"] == pytest.approx(
         sum(progress["momentum_history"]) / len(progress["momentum_history"])
     )
+    assert progress["momentum_delta"] == pytest.approx(
+        progress["momentum"] - progress["momentum_average"]
+    )
+    assert progress["momentum_confidence"] in {"low", "medium", "high"}
+    assert progress["momentum_history_size"] == len(progress["momentum_history"])
+    assert progress["momentum_window"] == 5
     assert isinstance(progress["momentum_trend"], str) and progress["momentum_trend"]
     if progress["momentum"] > 0:
         assert progress["momentum_direction"] == "positive"
@@ -167,6 +179,61 @@ def test_advance_system_rejects_invalid_event_summary_limit(tmp_path, monkeypatc
             include_system_report=True,
             system_report_events=0,
         )
+
+
+def test_advance_system_respects_momentum_window(tmp_path, monkeypatch):
+    class LocalThoughtLogger(thoughtlog_module.ThoughtLogger):
+        def __init__(self) -> None:  # pragma: no cover - simple delegation
+            super().__init__(dirpath=tmp_path / "thought-log")
+
+    monkeypatch.setattr(thoughtlog_module, "ThoughtLogger", LocalThoughtLogger)
+    store = JsonMemoryStore(
+        storage_path=tmp_path / "memory.json",
+        log_path=tmp_path / "log.md",
+        core_datasets={},
+    )
+    evolver = EchoEvolver(memory_store=store)
+
+    primary = evolver.advance_system(
+        enable_network=False,
+        persist_artifact=False,
+        include_manifest=False,
+        include_status=False,
+        include_reflection=False,
+        momentum_window=4,
+    )
+
+    first_progress = primary["progress"]
+    assert first_progress["momentum_window"] == 4
+    assert first_progress["momentum_history_size"] == len(first_progress["momentum_history"])
+
+    next_cycle = evolver.state.cycle + 1
+    evolver.state.network_cache["advance_system_last"] = {
+        "cycle": next_cycle,
+        "progress": 0.35,
+    }
+    evolver.state.network_cache["advance_system_momentum_history"] = {
+        "cycle": next_cycle,
+        "values": [0.08, 0.12, 0.16],
+    }
+
+    follow_up = evolver.advance_system(
+        enable_network=False,
+        persist_artifact=False,
+        include_manifest=False,
+        include_status=False,
+        include_reflection=False,
+        momentum_window=2,
+    )
+
+    progress = follow_up["progress"]
+    assert progress["momentum_window"] == 2
+    assert progress["momentum_confidence"] in {"low", "medium", "high"}
+    assert len(progress["momentum_history"]) <= 2
+    assert progress["momentum_history_size"] == len(progress["momentum_history"])
+    assert progress["momentum_average"] == pytest.approx(
+        sum(progress["momentum_history"]) / len(progress["momentum_history"])
+    )
 
 
 def test_classify_momentum_threshold_behavior():
