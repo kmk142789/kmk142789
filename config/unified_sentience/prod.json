@@ -1,0 +1,9 @@
+{
+  "progress_actor": "sentience-prod",
+  "governance_actor": "council-prod",
+  "pulse_history": "state/prod_pulse_history.json",
+  "metrics_window": 10,
+  "manifest_limit": 30,
+  "resilience_interval_hours": 48.0,
+  "resilience_cooldown_hours": 6.0
+}

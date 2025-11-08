@@ -1,0 +1,9 @@
+{
+  "progress_actor": "sentience-staging",
+  "governance_actor": "council-staging",
+  "pulse_history": "state/staging_pulse_history.json",
+  "metrics_window": 7,
+  "manifest_limit": 20,
+  "resilience_interval_hours": 36.0,
+  "resilience_cooldown_hours": 3.0
+}
