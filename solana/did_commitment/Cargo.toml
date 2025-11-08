@@ -1,0 +1,14 @@
+[package]
+name = "did_commitment"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+borsh = { version = "0.10", features = ["derive"] }
+ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
+sha3 = "0.10"
+solana-program = "1.18"
+thiserror = "1.0"

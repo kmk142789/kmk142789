@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Echo DID Ordinal Inscription",
+  "description": "Schema for anchoring DID state on Bitcoin via ordinal inscriptions.",
+  "type": "object",
+  "required": [
+    "protocol",
+    "version",
+    "network",
+    "timestamp",
+    "did",
+    "hashes"
+  ],
+  "properties": {
+    "protocol": {
+      "type": "string",
+      "const": "echo-did-commitment"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "network": {
+      "type": "string",
+      "enum": ["mainnet", "testnet", "signet", "regtest"]
+    },
+    "timestamp": {
+      "type": "integer",
+      "description": "Unix epoch seconds when the commitment was produced."
+    },
+    "did": {
+      "type": "string",
+      "pattern": "^did:[a-z0-9:._-]+$"
+    },
+    "hashes": {
+      "type": "object",
+      "required": [
+        "did",
+        "verifiableCredentials",
+        "zk",
+        "aggregate"
+      ],
+      "properties": {
+        "did": {
+          "type": "string",
+          "pattern": "^0x[a-f0-9]{64}$"
+        },
+        "verifiableCredentials": {
+          "type": "string",
+          "pattern": "^0x[a-f0-9]{64}$"
+        },
+        "zk": {
+          "type": "string",
+          "pattern": "^0x[a-f0-9]{64}$"
+        },
+        "aggregate": {
+          "type": "string",
+          "pattern": "^0x[a-f0-9]{64}$"
+        }
+      }
+    },
+    "merkleProof": {
+      "type": "array",
+      "description": "Optional credential inclusion proof mirrored from Ethereum/Solana.",
+      "items": {
+        "type": "object",
+        "required": ["hash", "position"],
+        "properties": {
+          "hash": {
+            "type": "string",
+            "pattern": "^0x[a-f0-9]{64}$"
+          },
+          "position": {
+            "type": "string",
+            "enum": ["left", "right"]
+          }
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "description": "Optional Ed25519 signature payload for cross-chain verification.",
+      "required": ["publicKey", "value"],
+      "properties": {
+        "publicKey": {
+          "type": "string",
+          "pattern": "^0x[a-f0-9]{64}$"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^0x[a-f0-9]{128}$"
+        }
+      }
+    }
+  }
+}
