@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Callable, Iterable, List, Optional
+from typing import Any, Callable, Iterable, List, Mapping, Optional
 
 try:  # pragma: no cover - optional dependency
     import typer
@@ -88,6 +88,8 @@ if Table is None:  # pragma: no cover - executed when rich is not installed
         def add_row(self, *values: object) -> None:
             self.rows.append(values)
 
+FALLBACK_TABLE = Table.__module__ == __name__
+
 from echo.deployment_meta_causal import (
     CONFIG_PATH as META_CAUSAL_CONFIG_PATH,
     MetaCausalRollout,
@@ -134,6 +136,89 @@ def _set_json_mode(ctx: typer.Context, enabled: bool) -> None:
     _ensure_ctx(ctx)
     if enabled:
         ctx.obj["json"] = True
+
+
+def _normalise_iso_timestamp(value: str) -> str:
+    """Normalise ISO 8601 timestamps to UTC ``YYYY-MM-DDTHH:MM:SSZ`` format."""
+
+    text = value.strip()
+    if not text:
+        raise ValueError("timestamp cannot be empty")
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError as exc:  # pragma: no cover - defensive
+        raise ValueError(value) from exc
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    else:
+        parsed = parsed.astimezone(timezone.utc)
+    return parsed.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _format_mapping_preview(mapping: Mapping[str, Any], *, limit: int = 3) -> str:
+    """Render a concise preview of mapping contents for console output."""
+
+    items: list[str] = []
+    for index, (key, value) in enumerate(mapping.items()):
+        if index >= limit:
+            items.append("…")
+            break
+        if isinstance(value, (dict, list)):
+            value_text = json.dumps(value, sort_keys=True)
+        else:
+            value_text = str(value)
+        if len(value_text) > 40:
+            value_text = f"{value_text[:37]}…"
+        items.append(f"{key}={value_text}")
+    return ", ".join(items)
+
+
+def _summarise_event_details(
+    event: Mapping[str, Any],
+    *,
+    include_metadata: bool,
+    include_payload: bool,
+) -> str:
+    """Build a human readable summary for a worker hive event."""
+
+    segments: list[str] = []
+    metadata = event.get("metadata")
+    payload = event.get("payload")
+
+    if isinstance(payload, Mapping) and set(payload.keys()) == {"payload"}:
+        inner = payload.get("payload")
+        if isinstance(inner, Mapping):
+            payload = inner
+
+    if include_metadata and isinstance(metadata, Mapping) and metadata:
+        segments.append(f"meta: {_format_mapping_preview(metadata)}")
+
+    if include_payload and isinstance(payload, Mapping) and payload:
+        segments.append(f"payload: {_format_mapping_preview(payload)}")
+
+    if not segments:
+        if isinstance(payload, Mapping) and payload:
+            for key in (
+                "summary",
+                "status",
+                "error",
+                "path",
+                "cycle",
+                "updates",
+                "count",
+                "log_path",
+            ):
+                if key in payload:
+                    segments.append(f"{key}={payload[key]}")
+                    break
+            else:
+                segments.append(_format_mapping_preview(payload))
+        elif isinstance(metadata, Mapping) and metadata:
+            segments.append(_format_mapping_preview(metadata))
+
+    return "; ".join(segments) if segments else "-"
 
 
 def _echo(ctx: typer.Context, payload: dict[str, object], *, message: str | None = None) -> None:
@@ -241,6 +326,104 @@ def deploy_meta_causal_engine(
 @app.callback()
 def cli_root(ctx: typer.Context) -> None:
     _ensure_ctx(ctx)
+
+
+@app.command()
+def history(
+    ctx: typer.Context,
+    limit: int = typer.Option(20, "--limit", "-n", help="Number of events to display"),
+    since: Optional[str] = typer.Option(
+        None,
+        "--since",
+        help="Only include events at or after the provided ISO timestamp",
+    ),
+    show_metadata: bool = typer.Option(
+        False, "--show-metadata", help="Include metadata previews in the output"
+    ),
+    show_payload: bool = typer.Option(
+        False, "--show-payload", help="Include payload previews in the output"
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Display recent worker hive telemetry for puzzle lab commands."""
+
+    metadata = {
+        "limit": limit,
+        "since": since,
+        "show_metadata": show_metadata,
+        "show_payload": show_payload,
+        "json": json_mode,
+    }
+
+    with worker_hive.worker("history", metadata=metadata) as task:
+        if limit <= 0:
+            task.fail(error="invalid_limit", limit=limit)
+            raise typer.BadParameter("limit must be a positive integer")
+
+        _set_json_mode(ctx, json_mode)
+        since_marker: Optional[str] = None
+        if since is not None:
+            try:
+                since_marker = _normalise_iso_timestamp(since)
+            except ValueError as exc:
+                task.fail(error="invalid_since", since=since)
+                raise typer.BadParameter(f"Invalid ISO timestamp: {since}") from exc
+
+        events = worker_hive.tail_events(limit=limit, since=since_marker)
+        current_task_id = getattr(task, "task_id", None)
+        ordered_events = [
+            event for event in reversed(events) if event.get("task_id") != current_task_id
+        ]
+
+        payload: dict[str, object] = {
+            "events": ordered_events,
+            "log_path": str(worker_hive.log_path),
+            "count": len(ordered_events),
+        }
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            if not ordered_events:
+                console.print(
+                    "No worker activity recorded yet. Instrumented commands will appear here once executed."
+                )
+            else:
+                if FALLBACK_TABLE:
+                    console.print(
+                        f"Recent worker events ({len(ordered_events)}) from {worker_hive.log_path}:"
+                    )
+                    for event in ordered_events:
+                        timestamp = event.get("timestamp", "-")
+                        name = event.get("name", "-")
+                        status = event.get("status", "-")
+                        details = _summarise_event_details(
+                            event,
+                            include_metadata=show_metadata,
+                            include_payload=show_payload,
+                        )
+                        console.print(f"{timestamp} | {name} | {status} | {details}")
+                else:
+                    table = Table(title="Recent worker activity")
+                    table.add_column("Timestamp", style="cyan")
+                    table.add_column("Command", style="magenta")
+                    table.add_column("Status", style="green")
+                    table.add_column("Details")
+                    for event in ordered_events:
+                        timestamp = event.get("timestamp", "-")
+                        name = event.get("name", "-")
+                        status = event.get("status", "-")
+                        details = _summarise_event_details(
+                            event,
+                            include_metadata=show_metadata,
+                            include_payload=show_payload,
+                        )
+                        table.add_row(str(timestamp), str(name), str(status), details)
+                    console.print(table)
+
+        task.succeed(payload=payload)
 
 
 @app.command()
@@ -664,6 +847,19 @@ def main() -> None:  # pragma: no cover - console entry point
     stats_parser.add_argument("--build-charts", action="store_true", dest="build_charts")
     stats_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
 
+    history_parser = subparsers.add_parser(
+        "history", help="Display recent worker hive telemetry"
+    )
+    history_parser.add_argument("--limit", "-n", type=int, default=20, dest="limit")
+    history_parser.add_argument("--since", dest="since")
+    history_parser.add_argument(
+        "--show-metadata", action="store_true", dest="show_metadata"
+    )
+    history_parser.add_argument(
+        "--show-payload", action="store_true", dest="show_payload"
+    )
+    history_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
     verify_parser = subparsers.add_parser("verify", help="Verify puzzle addresses")
     verify_parser.add_argument("--puzzles", dest="puzzles")
     verify_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
@@ -706,6 +902,15 @@ def main() -> None:  # pragma: no cover - console entry point
 
     if args.command == "stats":
         stats(ctx, build_charts_flag=args.build_charts, json_mode=args.json_mode)
+    elif args.command == "history":
+        history(
+            ctx,
+            limit=args.limit,
+            since=args.since,
+            show_metadata=args.show_metadata,
+            show_payload=args.show_payload,
+            json_mode=args.json_mode,
+        )
     elif args.command == "verify":
         verify(ctx, puzzles=args.puzzles, json_mode=args.json_mode)
     elif args.command == "transcend":
