@@ -124,5 +124,12 @@
     "hash160": "fdcbb29f1587370730ce238e9f34a1195855c1c9",
     "address_base58": "15HwrpeTRk9tK257b2i3VM4vKg9BEZH4wz",
     "file": "data/puzzles/puzzle_00216.json"
+  },
+  {
+    "id": 223,
+    "name": "Puzzle #00223",
+    "hash160": "8420e063493e7dbce349bfade1e904331127860a",
+    "address_base58": "1tej33kDL6Um6A5EbehVrrC7gQdNJ6boze",
+    "file": "data/puzzles/puzzle_00223.json"
   }
 ]
