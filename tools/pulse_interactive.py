@@ -98,7 +98,12 @@ class PulseSession:
         return tuple(self._events)
 
     def summary_text(self, *, threshold_hours: Optional[float] = None) -> str:
-        report = audit_pulse_history(self._events, self.metadata, threshold_hours=threshold_hours)
+        report = audit_pulse_history(
+            self._events,
+            self.metadata,
+            threshold_hours=threshold_hours,
+            resilience=None,
+        )
         return report.render_text()
 
     def latest_events(self, limit: Optional[int] = None) -> List[PulseEvent]:

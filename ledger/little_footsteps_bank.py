@@ -39,6 +39,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
+from echo.bank.resilience import ResilienceProbe, ResilienceRecorder, ResilienceSnapshot
 from .compliance_buffer import ComplianceAnnotation, ComplianceBufferService
 from .continuity_guardian import (
     ContinuityGuardian,
@@ -187,6 +188,7 @@ class SovereignLedger:
         skip_ots: bool = False,
         compliance_service: Optional[ComplianceBufferService] = None,
         continuity_guardian: Optional[ContinuityGuardian] = None,
+        resilience_recorder: Optional[ResilienceRecorder] = None,
     ) -> None:
         self.bank = bank
         self.ledger_path = ledger_path
@@ -195,6 +197,7 @@ class SovereignLedger:
         self.skip_ots = skip_ots
         self.compliance_service = compliance_service
         self.continuity_guardian = continuity_guardian
+        self.resilience_recorder = resilience_recorder
         self.ledger_path.parent.mkdir(parents=True, exist_ok=True)
         self.proofs_dir.mkdir(parents=True, exist_ok=True)
         self._seq = self._load_last_sequence()
@@ -269,6 +272,7 @@ class SovereignLedger:
             ots_receipt,
             payload.get("compliance"),
         )
+        resilience_snapshot: Optional[ResilienceSnapshot] = None
         if self.continuity_guardian is not None:
             self.continuity_guardian.sync_entry(
                 entry=entry,
@@ -282,6 +286,23 @@ class SovereignLedger:
                     else None
                 ),
             )
+            if self.resilience_recorder is not None:
+                resilience_snapshot = self._record_resilience(
+                    entry=entry,
+                    digest=digest,
+                    proof_path=proof_path,
+                    ots_receipt=Path(ots_receipt) if ots_receipt is not None else None,
+                )
+        elif self.resilience_recorder is not None:
+            resilience_snapshot = self._record_resilience(
+                entry=entry,
+                digest=digest,
+                proof_path=proof_path,
+                ots_receipt=Path(ots_receipt) if ots_receipt is not None else None,
+            )
+        if resilience_snapshot is not None:
+            payload["resilience"] = resilience_snapshot.to_payload()
+            self._append_resilience_metadata(payload)
         return entry
 
     # ------------------------------------------------------------------
@@ -306,6 +327,52 @@ class SovereignLedger:
 
         ots_receipt = self._maybe_stamp_opentimestamps(proof_path)
         return proof_path, ots_receipt
+
+    def _record_resilience(
+        self,
+        *,
+        entry: LedgerEntry,
+        digest: str,
+        proof_path: Path,
+        ots_receipt: Optional[Path],
+    ) -> ResilienceSnapshot:
+        probes: list[ResilienceProbe] = [
+            ResilienceProbe(
+                mirror_path=self.ledger_path.parent,
+                ledger_copy=self.ledger_path,
+                proof_copy=proof_path,
+                ots_copy=ots_receipt,
+            )
+        ]
+        if self.continuity_guardian is not None:
+            for node in self.continuity_guardian.mirror_nodes:
+                probes.append(
+                    ResilienceProbe(
+                        mirror_path=node.base_path,
+                        ledger_copy=node.base_path / "ledger" / self.ledger_path.name,
+                        proof_copy=node.base_path / "proofs" / proof_path.name,
+                        ots_copy=None,
+                    )
+                )
+            checkpoint_path = self.continuity_guardian.state_path
+        else:
+            checkpoint_path = None
+        return self.resilience_recorder.record_checkpoint(
+            seq=entry.seq,
+            digest=digest,
+            probes=probes,
+            checkpoint_path=checkpoint_path,
+        )
+
+    def _append_resilience_metadata(self, payload: Dict[str, Any]) -> None:
+        # Mirror the resilience payload into a lightweight index for downstream tools.
+        resilience_dir = self.proofs_dir / "resilience"
+        resilience_dir.mkdir(parents=True, exist_ok=True)
+        index_path = resilience_dir / "latest.json"
+        index_path.write_text(
+            json.dumps(payload["resilience"], indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
     def _maybe_stamp_opentimestamps(self, proof_path: Path) -> Optional[str]:
         try:
@@ -593,6 +660,10 @@ def cli(argv: Optional[Iterable[str]] = None) -> int:
             recovery_plan=recovery_plan,
         )
 
+    resilience_recorder: Optional[ResilienceRecorder] = None
+    if continuity_guardian is not None:
+        resilience_recorder = ResilienceRecorder()
+
     ledger = SovereignLedger(
         bank=args.bank,
         ledger_path=args.ledger_path,
@@ -601,6 +672,7 @@ def cli(argv: Optional[Iterable[str]] = None) -> int:
         skip_ots=args.skip_ots,
         compliance_service=compliance_service,
         continuity_guardian=continuity_guardian,
+        resilience_recorder=resilience_recorder,
     )
     entry = ledger.record_transaction(
         direction=args.direction,

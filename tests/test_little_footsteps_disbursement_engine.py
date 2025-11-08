@@ -11,6 +11,7 @@ from echo.bank import (
     ContinuitySafeguards,
     DonationRecord,
     LittleFootstepsDisbursementEngine,
+    ResilienceRecorder,
 )
 from ledger.little_footsteps_bank import SovereignLedger
 
@@ -42,12 +43,14 @@ def test_donation_flows_are_recorded_with_compliance_and_continuity(ledger_paths
         threshold=2,
     )
     continuity = ContinuitySafeguards(state_dir=continuity_state, config=continuity_config)
+    resilience = ResilienceRecorder(state_dir=tmp_path / "resilience")
 
     engine = LittleFootstepsDisbursementEngine(
         ledger,
         skeleton_secret=b"test-secret",
         compliance=compliance,
         continuity=continuity,
+        resilience=resilience,
     )
 
     record = DonationRecord(
