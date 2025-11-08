@@ -8,6 +8,20 @@ from .colossus_expansion import (
     CosmosUniverse,
     save_expansion_log,
 )
+from .proof_service import (
+    AggregatedProof,
+    CredentialCollector,
+    DispatchResult,
+    Ed25519Wallet,
+    MultiChainDispatcher,
+    NetworkConfig,
+    ProofAggregator,
+    ProofOrchestratorService,
+    Secp256k1Wallet,
+    SubmissionStatus,
+    VerifiableCredential,
+)
+from .sdk import ProofOrchestratorClient
 
 __all__ = [
     "OrchestratorCore",
@@ -16,4 +30,16 @@ __all__ = [
     "CosmosFabrication",
     "CosmosUniverse",
     "save_expansion_log",
+    "AggregatedProof",
+    "CredentialCollector",
+    "DispatchResult",
+    "Ed25519Wallet",
+    "MultiChainDispatcher",
+    "NetworkConfig",
+    "ProofAggregator",
+    "ProofOrchestratorService",
+    "ProofOrchestratorClient",
+    "Secp256k1Wallet",
+    "SubmissionStatus",
+    "VerifiableCredential",
 ]

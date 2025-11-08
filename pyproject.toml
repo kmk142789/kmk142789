@@ -74,6 +74,7 @@ echo-puzzle-lab = "echo_cli.main:main"
 dominion-plan = "dominion.plan:main"
 dominion-apply = "dominion.apply:main"
 dominion-archive = "dominion.archive:main"
+echo-proof-orchestrator = "echo.orchestrator.cli:main"
 
 [tool.setuptools.package-dir]
 "" = "packages/core/src"
