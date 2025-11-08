@@ -4827,6 +4827,25 @@
       "version": "b1d42a9fb748"
     },
     {
+      "category": "engine",
+      "digest": "20b5ce0203d38f0538cf0c2517b4d1a028d523bfe75e7037417fb9ab798c37d0",
+      "last_modified": null,
+      "name": "EchoRecursiveReflectionKernel",
+      "owners": [
+        "@kmk142789420",
+        "@echo-bot"
+      ],
+      "path": "echo/echo_recursive_reflection_kernel.py",
+      "size": 3009,
+      "tags": [
+        "echo",
+        "engine",
+        "py",
+        "python"
+      ],
+      "version": "20b5ce0203d3"
+    },
+    {
       "category": "state",
       "digest": "f1f49b307345eb04037e808a977bc31622bb83743c4c1498658868b09f718cad",
       "last_modified": null,

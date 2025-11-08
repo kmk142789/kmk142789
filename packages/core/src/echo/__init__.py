@@ -57,6 +57,7 @@ from .cosmic_mnemonic_forge import (
 from .dotnet_sdk import build_dotnet_sdk_download_url
 from .echo_nexus_hub import EchoNexusHub, ScheduleLoopDigest, WorkerStory
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
+from .echo_recursive_reflection_kernel import EchoRecursiveReflectionKernel
 from .echo_visionary_kernel import BitwisePixelEngine, EchoVisionaryKernel, WorkerBot
 from .evolver import (
     EchoEvolver,
@@ -252,6 +253,7 @@ __all__ = [
     "EchoNexusHub",
     "EchoNexusPortal",
     "EchoVisionaryKernel",
+    "EchoRecursiveReflectionKernel",
     "ImpossibleEvent",
     "ImpossibleRealityEngine",
     "DecentralizedAutonomyEngine",
