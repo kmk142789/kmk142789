@@ -20,6 +20,7 @@ from ledger.little_footsteps_bank import (
 
 from .compliance import ComplianceBufferService, ComplianceClaim
 from .continuity import ContinuitySafeguards, MirrorResult
+from .resilience import ResilienceProbe, ResilienceRecorder, ResilienceSnapshot
 
 
 @dataclass(slots=True)
@@ -49,6 +50,7 @@ class RecordedTransaction:
     ots_receipt: Optional[Path]
     compliance_claim: ComplianceClaim
     mirrors: Sequence[MirrorResult]
+    resilience: Optional[ResilienceSnapshot] = None
 
     def to_summary(self) -> Dict[str, object]:
         return {
@@ -60,6 +62,7 @@ class RecordedTransaction:
             "ots_receipt": str(self.ots_receipt) if self.ots_receipt else None,
             "compliance_claim": self.compliance_claim.to_record(),
             "mirrors": [mirror.to_record() for mirror in self.mirrors],
+            "resilience": self.resilience.to_payload() if self.resilience else None,
         }
 
 
@@ -87,12 +90,14 @@ class LittleFootstepsDisbursementEngine:
         skeleton_secret: bytes,
         compliance: ComplianceBufferService,
         continuity: ContinuitySafeguards,
+        resilience: ResilienceRecorder | None = None,
         skeleton_namespace: str = "little-footsteps/bank",
     ) -> None:
         self.ledger = ledger
         self._secret = skeleton_secret
         self.compliance = compliance
         self.continuity = continuity
+        self.resilience = resilience or ResilienceRecorder()
         self.skeleton_namespace = skeleton_namespace
         self._next_skeleton_index = max(ledger._seq + 1, 0)
 
@@ -104,6 +109,7 @@ class LittleFootstepsDisbursementEngine:
         skeleton_phrase: str,
         compliance: ComplianceBufferService,
         continuity: ContinuitySafeguards,
+        resilience: ResilienceRecorder | None = None,
         skeleton_namespace: str = "little-footsteps/bank",
     ) -> "LittleFootstepsDisbursementEngine":
         from skeleton_key_core import read_secret_from_phrase
@@ -114,6 +120,7 @@ class LittleFootstepsDisbursementEngine:
             skeleton_secret=secret,
             compliance=compliance,
             continuity=continuity,
+            resilience=resilience,
             skeleton_namespace=skeleton_namespace,
         )
 
@@ -193,13 +200,40 @@ class LittleFootstepsDisbursementEngine:
             attachments=self._build_attachments(attachments, proof_path, ots_receipt),
         )
         mirrors = self.continuity.mirror_artifacts(self.ledger.ledger_path, proof_path, ots_receipt)
-        self.continuity.record_multisig_checkpoint(entry.seq, entry.digest())
+        checkpoint_path = self.continuity.record_multisig_checkpoint(entry.seq, entry.digest())
+        resilience_snapshot = self._record_resilience(entry.seq, entry.digest(), proof_path, ots_receipt, mirrors, checkpoint_path)
         return RecordedTransaction(
             entry=entry,
             proof_path=proof_path,
             ots_receipt=ots_receipt,
             compliance_claim=compliance_claim,
             mirrors=mirrors,
+            resilience=resilience_snapshot,
+        )
+
+    def _record_resilience(
+        self,
+        seq: int,
+        digest: str,
+        proof_path: Path,
+        ots_receipt: Optional[Path],
+        mirrors: Sequence[MirrorResult],
+        checkpoint_path: Path,
+    ) -> ResilienceSnapshot:
+        probes: list[ResilienceProbe] = [
+            ResilienceProbe(
+                mirror_path=self.ledger.ledger_path.parent,
+                ledger_copy=self.ledger.ledger_path,
+                proof_copy=proof_path,
+                ots_copy=ots_receipt,
+            )
+        ]
+        probes.extend(ResilienceProbe.from_mirror_result(mirror) for mirror in mirrors)
+        return self.resilience.record_checkpoint(
+            seq=seq,
+            digest=digest,
+            probes=probes,
+            checkpoint_path=checkpoint_path,
         )
 
     def _build_pow(self, *, direction: str, reference: str) -> ProofOfWorkReconstruction:

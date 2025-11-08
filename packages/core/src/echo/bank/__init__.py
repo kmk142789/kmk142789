@@ -8,6 +8,7 @@ from .little_footsteps import (
 )
 from .compliance import ComplianceBufferService, ComplianceClaim
 from .continuity import ContinuityConfig, ContinuitySafeguards, MirrorResult
+from .resilience import ResilienceRecorder
 
 __all__ = [
     "DonationRecord",
@@ -19,4 +20,5 @@ __all__ = [
     "ContinuityConfig",
     "ContinuitySafeguards",
     "MirrorResult",
+    "ResilienceRecorder",
 ]

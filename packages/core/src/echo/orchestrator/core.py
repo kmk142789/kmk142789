@@ -5,13 +5,14 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass, asdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Protocol, Sequence
+from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Optional, Protocol, Sequence
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
     from echo.bridge.service import BridgeSyncService
 
+from echo.bank.resilience import ResilienceRecorder
 from echo.evolver import EchoEvolver
 from echo.pulsenet import AtlasAttestationResolver, PulseNetGatewayService
 
@@ -45,6 +46,9 @@ class OrchestratorCore:
         atlas_resolver: AtlasAttestationResolver | None = None,
         manifest_limit: int = 30,
         bridge_service: "BridgeSyncService" | None = None,
+        resilience_latest_path: Path | str | None = None,
+        resilience_interval_hours: float = 72.0,
+        resilience_cooldown_hours: float = 6.0,
     ) -> None:
         self._state_dir = Path(state_dir)
         self._state_dir.mkdir(parents=True, exist_ok=True)
@@ -77,6 +81,14 @@ class OrchestratorCore:
 
         self._last_decision: MutableMapping[str, Any] | None = None
         self._bridge_service = bridge_service
+        self._resilience_latest = (
+            Path(resilience_latest_path)
+            if resilience_latest_path is not None
+            else Path("state/resilience/latest.json")
+        )
+        self._resilience_drill_log = self._state_dir / "resilience_drills.jsonl"
+        self._resilience_interval = timedelta(hours=max(1.0, float(resilience_interval_hours)))
+        self._resilience_cooldown = timedelta(hours=max(0.5, float(resilience_cooldown_hours)))
 
     # ------------------------------------------------------------------
     # Public API
@@ -111,6 +123,23 @@ class OrchestratorCore:
         decision["momentum"] = momentum
         if momentum["triggers"]:
             decision["triggers"] = list(momentum["triggers"])
+
+        resilience_plan = self._plan_resilience(inputs.get("resilience_snapshot"))
+        decision["resilience"] = resilience_plan
+        triggers = list(decision.get("triggers", []))
+        if resilience_plan.get("scheduled_for"):
+            reason = "; ".join(resilience_plan.get("reasons", [])) or "Resilience drill scheduled"
+            triggers.append(
+                {
+                    "id": "resilience_drill",
+                    "kind": "resilience",
+                    "action": "run_resilience_drill",
+                    "reason": reason,
+                    "scheduled_for": resilience_plan["scheduled_for"],
+                }
+            )
+        if triggers:
+            decision["triggers"] = triggers
 
         manifest_path = self._persist(decision)
         decision["manifest"] = {"path": str(manifest_path)}
@@ -173,12 +202,15 @@ class OrchestratorCore:
             except Exception:  # pragma: no cover - tolerate offline registration store
                 registrations = []
 
+        resilience_snapshot = self._load_resilience_snapshot()
+
         return {
             "pulse_summary": summary,
             "attestations": enriched_attestations,
             "atlas_wallets": atlas_wallets,
             "cycle_digest": cycle_digest,
             "registrations": list(registrations),
+            "resilience_snapshot": resilience_snapshot.to_payload() if resilience_snapshot else None,
         }
 
     def _enrich_attestations(
@@ -464,6 +496,130 @@ class OrchestratorCore:
         self._prune_manifests()
         return path
 
+    def _load_resilience_snapshot(self) -> "ResilienceSnapshot | None":
+        return ResilienceRecorder.load_latest_snapshot(self._resilience_latest)
+
+    def _plan_resilience(
+        self, snapshot_payload: Mapping[str, Any] | None
+    ) -> MutableMapping[str, Any]:
+        now = datetime.now(timezone.utc)
+        plan: MutableMapping[str, Any] = {
+            "snapshot": snapshot_payload,
+            "failover_ready": None,
+            "healthy_mirrors": None,
+            "total_mirrors": None,
+            "recorded_at": None,
+            "issues": [],
+            "scheduled_for": None,
+            "reasons": [],
+            "last_drill": None,
+            "cooldown_active": False,
+        }
+
+        recorded_at = None
+        issues: list[str] = []
+        failover_ready: Optional[bool] = None
+        healthy_mirrors: Optional[int] = None
+        total_mirrors: Optional[int] = None
+        if isinstance(snapshot_payload, Mapping):
+            failover_ready = bool(snapshot_payload.get("failover_ready", False))
+            healthy_mirrors = (
+                int(snapshot_payload.get("healthy_mirrors", 0))
+                if snapshot_payload.get("healthy_mirrors") is not None
+                else None
+            )
+            total_mirrors = (
+                int(snapshot_payload.get("total_mirrors", 0))
+                if snapshot_payload.get("total_mirrors") is not None
+                else None
+            )
+            issues_payload = snapshot_payload.get("issues")
+            if isinstance(issues_payload, Sequence):
+                issues = [str(entry) for entry in issues_payload]
+            recorded_at = self._parse_iso(snapshot_payload.get("recorded_at"))
+            plan["recorded_at"] = snapshot_payload.get("recorded_at")
+        else:
+            plan["recorded_at"] = None
+
+        plan["failover_ready"] = failover_ready
+        plan["healthy_mirrors"] = healthy_mirrors
+        plan["total_mirrors"] = total_mirrors
+        plan["issues"] = issues
+
+        reasons: list[str] = []
+        due = False
+        if snapshot_payload is None:
+            due = True
+            reasons.append("No resilience snapshot available")
+        else:
+            if failover_ready is False:
+                due = True
+                reasons.append("Failover mirrors are not ready")
+            if recorded_at is None:
+                due = True
+                reasons.append("Resilience snapshot timestamp unavailable")
+            else:
+                age = now - recorded_at
+                if age >= self._resilience_interval:
+                    hours = age.total_seconds() / 3600.0
+                    reasons.append(f"Last resilience snapshot is {hours:.1f} hours old")
+                    due = True
+            for issue in issues:
+                reasons.append(f"Issue: {issue}")
+
+        last_drill = self._load_last_drill()
+        if last_drill is not None:
+            plan["last_drill"] = last_drill.get("scheduled_for")
+            last_time = self._parse_iso(last_drill.get("scheduled_for"))
+            if last_time is not None and now - last_time < self._resilience_cooldown:
+                plan["cooldown_active"] = True
+                if due:
+                    reasons.append("Cooldown active — drill recently scheduled")
+                due = False
+
+        plan["reasons"] = reasons
+        if due:
+            scheduled_for = now.isoformat()
+            plan["scheduled_for"] = scheduled_for
+            self._record_resilience_drill(now, reasons, snapshot_payload)
+
+        return plan
+
+    def _load_last_drill(self) -> Mapping[str, Any] | None:
+        if not self._resilience_drill_log.exists():
+            return None
+        lines = self._resilience_drill_log.read_text(encoding="utf-8").splitlines()
+        for line in reversed(lines):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(payload, Mapping):
+                return payload
+        return None
+
+    def _record_resilience_drill(
+        self,
+        scheduled_for: datetime,
+        reasons: Sequence[str],
+        snapshot_payload: Mapping[str, Any] | None,
+    ) -> None:
+        record: MutableMapping[str, Any] = {
+            "scheduled_for": scheduled_for.isoformat(),
+            "logged_at": self._now_iso(),
+            "reasons": list(reasons),
+        }
+        if isinstance(snapshot_payload, Mapping):
+            if "seq" in snapshot_payload:
+                record["snapshot_seq"] = snapshot_payload["seq"]
+            if "digest" in snapshot_payload:
+                record["snapshot_digest"] = snapshot_payload["digest"]
+        with self._resilience_drill_log.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, sort_keys=True) + "\n")
+
     def _prune_manifests(self) -> None:
         manifests = sorted(self._manifest_dir.glob("orchestration_*.json"))
         excess = len(manifests) - self._manifest_limit
@@ -492,6 +648,15 @@ class OrchestratorCore:
     @staticmethod
     def _now_iso() -> str:
         return datetime.now(timezone.utc).isoformat()
+
+    @staticmethod
+    def _parse_iso(value: Any) -> Optional[datetime]:
+        if not isinstance(value, str):
+            return None
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
 
 
 __all__ = ["ManifestoPrinciple", "OrchestratorCore", "ResonanceEngine"]

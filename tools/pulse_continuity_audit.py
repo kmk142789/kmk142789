@@ -28,13 +28,16 @@ from __future__ import annotations
 import argparse
 import json
 import statistics
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, List, Optional
 
+from echo.bank.resilience import ResilienceRecorder, ResilienceSnapshot
+
 DEFAULT_HISTORY_PATH = Path("pulse_history.json")
 DEFAULT_PULSE_PATH = Path("pulse.json")
+DEFAULT_RESILIENCE_LATEST = Path("state/resilience/latest.json")
 
 
 @dataclass(slots=True)
@@ -87,6 +90,11 @@ class ContinuityReport:
     threshold_hours: Optional[float]
     breach_detected: bool
     warnings: List[str]
+    resilience_failover_ready: Optional[bool]
+    resilience_healthy_mirrors: Optional[int]
+    resilience_total_mirrors: Optional[int]
+    resilience_recorded_at: Optional[datetime]
+    resilience_issues: List[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         def iso_or_none(value: Optional[datetime]) -> Optional[str]:
@@ -108,6 +116,13 @@ class ContinuityReport:
             "threshold_hours": self.threshold_hours,
             "breach_detected": self.breach_detected,
             "warnings": list(self.warnings),
+            "resilience": {
+                "failover_ready": self.resilience_failover_ready,
+                "healthy_mirrors": self.resilience_healthy_mirrors,
+                "total_mirrors": self.resilience_total_mirrors,
+                "recorded_at": iso_or_none(self.resilience_recorded_at),
+                "issues": list(self.resilience_issues),
+            },
         }
 
     def render_text(self) -> str:
@@ -150,6 +165,20 @@ class ContinuityReport:
             lines.append(
                 f"  Threshold   : {self.threshold_hours:.2f} hours ({status})"
             )
+        if self.resilience_failover_ready is not None:
+            ready_icon = "✅" if self.resilience_failover_ready else "⚠️"
+            healthy = self.resilience_healthy_mirrors or 0
+            total = self.resilience_total_mirrors or 0
+            lines.append(
+                f"  Resilience  : {ready_icon} {healthy}/{total} mirrors healthy"
+            )
+        if self.resilience_recorded_at is not None:
+            lines.append(
+                f"  Res Snapshot: {self.resilience_recorded_at.isoformat()}"
+            )
+        if self.resilience_issues:
+            lines.append("Resilience Issues:")
+            lines.extend(f"  - {issue}" for issue in self.resilience_issues)
         if self.warnings:
             lines.append("Warnings:")
             lines.extend(f"  - {warning}" for warning in self.warnings)
@@ -212,6 +241,7 @@ def audit_pulse_history(
     metadata: Optional[dict] = None,
     *,
     threshold_hours: Optional[float] = None,
+    resilience: Optional[ResilienceSnapshot] = None,
 ) -> ContinuityReport:
     """Generate a :class:`ContinuityReport` from the supplied pulse data."""
 
@@ -286,6 +316,22 @@ def audit_pulse_history(
     if not events:
         warnings.append("No pulse events were recorded")
 
+    resilience_failover_ready: Optional[bool] = None
+    resilience_healthy: Optional[int] = None
+    resilience_total: Optional[int] = None
+    resilience_recorded_at: Optional[datetime] = None
+    resilience_issues: List[str] = []
+    if resilience is not None:
+        resilience_failover_ready = resilience.failover_ready
+        resilience_healthy = resilience.healthy_mirrors
+        resilience_total = resilience.total_mirrors
+        resilience_recorded_at = _parse_iso8601(resilience.recorded_at)
+        resilience_issues = list(resilience.issues)
+        if not resilience.failover_ready:
+            warnings.append("Resilience failover posture is not ready for handover")
+        for issue in resilience_issues:
+            warnings.append(f"Resilience issue detected: {issue}")
+
     return ContinuityReport(
         anchor=metadata.get("branch_anchor"),
         status=metadata.get("status"),
@@ -302,6 +348,11 @@ def audit_pulse_history(
         threshold_hours=threshold_hours,
         breach_detected=breach_detected,
         warnings=warnings,
+        resilience_failover_ready=resilience_failover_ready,
+        resilience_healthy_mirrors=resilience_healthy,
+        resilience_total_mirrors=resilience_total,
+        resilience_recorded_at=resilience_recorded_at,
+        resilience_issues=resilience_issues,
     )
 
 
@@ -318,6 +369,12 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_PULSE_PATH,
         help="Path to pulse.json metadata file (default: repository root)",
+    )
+    parser.add_argument(
+        "--resilience-latest",
+        type=Path,
+        default=DEFAULT_RESILIENCE_LATEST,
+        help="Path to the latest resilience snapshot (default: state/resilience/latest.json)",
     )
     parser.add_argument(
         "--threshold-hours",
@@ -340,10 +397,12 @@ def main(args: Optional[List[str]] = None) -> int:
 
     events = load_pulse_history(namespace.history)
     metadata = load_pulse_metadata(namespace.pulse)
+    resilience_snapshot = load_resilience_snapshot(namespace.resilience_latest)
     report = audit_pulse_history(
         events,
         metadata,
         threshold_hours=namespace.threshold_hours,
+        resilience=resilience_snapshot,
     )
 
     if namespace.format == "json":
@@ -351,6 +410,23 @@ def main(args: Optional[List[str]] = None) -> int:
     else:
         print(report.render_text())
     return 0
+
+
+def load_resilience_snapshot(path: Path) -> Optional[ResilienceSnapshot]:
+    """Return the latest resilience snapshot stored at ``path`` if present."""
+
+    snapshot = ResilienceRecorder.load_latest_snapshot(path)
+    return snapshot
+
+
+def _parse_iso8601(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        normalised = value.replace("Z", "+00:00")
+        return datetime.fromisoformat(normalised)
+    except ValueError:
+        return None
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry point
