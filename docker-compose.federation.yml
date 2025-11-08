@@ -44,3 +44,18 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+  negotiation:
+    build: .
+    image: echo/negotiation-gateway:0.4.1
+    container_name: echo-negotiation
+    depends_on:
+      - n1
+    environment:
+      NEGOTIATION_EVENT_TOPIC: negotiation.events
+      NEGOTIATION_DEFAULT_TIMEOUT_SECONDS: "45"
+      NEGOTIATION_CALLBACK_BASE_URL: http://negotiation:8080/api
+      NEGOTIATION_STATE_PATH: /data/negotiation/state.json
+    volumes:
+      - ./state/negotiation:/data/negotiation
+    ports:
+      - "8200:8080"

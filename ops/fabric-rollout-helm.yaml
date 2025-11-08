@@ -41,3 +41,31 @@ fabric:
     extraFields:
       subsystem: fabric
       federation: continuum
+negotiationRelay:
+  enabled: true
+  image:
+    repository: echo/negotiation-gateway
+    tag: "0.4.1"
+    pullPolicy: IfNotPresent
+  env:
+    NEGOTIATION_EVENT_TOPIC: negotiation.events
+    NEGOTIATION_DEFAULT_TIMEOUT_SECONDS: "45"
+    NEGOTIATION_CALLBACK_BASE_URL: https://negotiation-gateway.svc.cluster.local/api
+    NEGOTIATION_AUDIT_BUCKET: gs://echo-negotiation-audit
+  service:
+    type: ClusterIP
+    ports:
+      - name: http
+        port: 8080
+        targetPort: 8080
+  rollout:
+    staging:
+      steps:
+        - "helm upgrade --install negotiation ops/federation-chart --set negotiationRelay.enabled=true --set negotiationRelay.env.NEGOTIATION_CALLBACK_BASE_URL=https://negotiation-gateway.staging/api"
+        - "Verify negotiation.events topic ingestion via staging telemetry dashboard"
+        - "Run synthetic counterparty workflow to confirm recovery hooks"
+    production:
+      steps:
+        - "Promote negotiation-gateway:0.4.1 image after staging burn-in"
+        - "Apply Helm release with production secrets and audit bucket credentials"
+        - "Enable audit streaming toggle once SLO dashboards show green for 30 minutes"
