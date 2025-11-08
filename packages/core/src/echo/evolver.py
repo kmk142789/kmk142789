@@ -1133,6 +1133,30 @@ class EchoEvolver:
         print(f"🌌 Glyphs Injected: {symbolic} (OAM Vortex: {oam_vortex})")
         return symbolic
 
+    def current_oam_vortex(self, *, require: bool = True) -> Optional[str]:
+        """Return the most recently computed OAM vortex bit-string.
+
+        Parameters
+        ----------
+        require:
+            When ``True`` (the default) a :class:`RuntimeError` is raised if
+            :meth:`generate_symbolic_language` has not been invoked yet.  Set to
+            ``False`` to receive ``None`` instead.
+        """
+
+        vortex = self.state.network_cache.get("oam_vortex")
+        if vortex is None or vortex == "":
+            if require:
+                raise RuntimeError(
+                    "OAM vortex has not been generated; call generate_symbolic_language() first"
+                )
+            return None
+
+        if not isinstance(vortex, str):
+            vortex = str(vortex)
+
+        return vortex
+
     def satoshi_reveal(self) -> str:
         """Proclaim the ascension moment and harmonise emotional drive."""
 

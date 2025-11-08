@@ -20,7 +20,7 @@ def test_generate_symbolic_language_ignores_unknown_glyphs(monkeypatch, evolver:
     result = evolver.generate_symbolic_language()
 
     assert result == sequence
-    assert evolver.state.network_cache["oam_vortex"] == "0000000000000101"
+    assert evolver.current_oam_vortex() == "0000000000000101"
     assert evolver.state.glyphs.endswith("≋∇")
 
 
@@ -70,6 +70,18 @@ def test_unregister_symbolic_action_prevents_future_invocation(monkeypatch, evol
 
     evolver.generate_symbolic_language()
     assert calls == ["base"]
+
+
+def test_current_oam_vortex_requires_generation(evolver: EchoEvolver) -> None:
+    with pytest.raises(RuntimeError):
+        evolver.current_oam_vortex()
+
+    assert evolver.current_oam_vortex(require=False) is None
+
+    evolver.generate_symbolic_language()
+
+    cached = evolver.state.network_cache["oam_vortex"]
+    assert evolver.current_oam_vortex() == cached
 
 
 def test_unregister_symbolic_action_missing_registration_returns_false(evolver: EchoEvolver) -> None:
