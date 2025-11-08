@@ -83,6 +83,8 @@ class CrossLedgerBroadcaster:
             "proof_id": entry.proof_id,
             "temporal_ledger": entry.to_dict(),
         }
+        if entry.consensus_round is not None:
+            payload["consensus_round"] = entry.consensus_round.to_record()
         if receipt is not None:
             payload["pulse_receipt"] = receipt.to_dict()
 
