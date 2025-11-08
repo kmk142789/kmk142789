@@ -1674,6 +1674,19 @@
           "Seasonal visioning workshop"
         ]
       },
+      "diplomacy": {
+        "protocols": [
+          {
+            "protocol": "echo_embassy",
+            "fields": {
+              "peer_system": "Name or DID",
+              "shared_ethics_profile": "hash of governance manifest",
+              "dispute_resolution": "uri:echo/continuum_arbitration",
+              "telemetry_bridge": "wss://bridge.echo/pulse"
+            }
+          }
+        ]
+      },
       "digital_identity": {
         "qr_entry_points": [
           {
