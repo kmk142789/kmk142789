@@ -8,12 +8,18 @@ import time
 from datetime import datetime
 from typing import Any, Mapping, Optional
 
-from fastapi import APIRouter, HTTPException, Response, status
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, Query, Response, status
+from pydantic import BaseModel, ConfigDict, Field
 
 from echo.atlas.temporal_ledger import LedgerEntryInput, TemporalLedger
 from echo.pulseweaver.pulse_bus import PulseBus
 from echo.pulseweaver.watchdog import SelfHealingWatchdog, WatchdogConfig
+from echo.pulseweaver.fabric import (
+    ConsensusRoundResult,
+    FabricDiagnosticsReport,
+    FabricOperations,
+    QuorumHealthSnapshot,
+)
 
 __all__ = ["create_router"]
 
@@ -37,6 +43,28 @@ class IngestReceipt(BaseModel):
     ref: str
     proof_id: str
     stored_at: str
+
+
+class ConsensusRoundRequest(BaseModel):
+    """Request payload for triggering a Fabric consensus round."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    topic: str = Field(description="Topic or reference evaluated during the consensus round")
+    initiator: str = Field(default="api", description="Actor initiating the consensus round")
+    quorum: int = Field(default=1, ge=0, description="Minimum approvals required to satisfy quorum")
+    approvals: list[str] = Field(
+        default_factory=list,
+        description="Participants approving the proposal",
+    )
+    rejections: list[str] = Field(
+        default_factory=list,
+        description="Participants rejecting the proposal",
+    )
+    abstentions: list[str] = Field(
+        default_factory=list,
+        description="Participants abstaining from the proposal",
+    )
 
 
 class RateLimiter:
@@ -70,6 +98,7 @@ def create_router(
     pulse_bus: PulseBus,
     ledger: TemporalLedger,
     *,
+    fabric_ops: FabricOperations,
     rate_limiter: RateLimiter | None = None,
 ) -> APIRouter:
     router = APIRouter()
@@ -140,5 +169,34 @@ def create_router(
         since_dt = datetime.fromisoformat(since) if since else None
         svg = ledger.as_svg(since=since_dt, limit=limit)
         return Response(content=svg, media_type="image/svg+xml")
+
+    @router.post(
+        "/fabric/consensus",
+        response_model=ConsensusRoundResult,
+        status_code=status.HTTP_201_CREATED,
+    )
+    def fabric_consensus(request: ConsensusRoundRequest) -> ConsensusRoundResult:
+        if not (request.approvals or request.rejections or request.abstentions):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one vote must be supplied",
+            )
+        return fabric_ops.trigger_consensus_round(
+            ledger,
+            topic=request.topic,
+            initiator=request.initiator,
+            quorum=request.quorum,
+            approvals=request.approvals,
+            rejections=request.rejections,
+            abstentions=request.abstentions,
+        )
+
+    @router.get("/fabric/quorum", response_model=QuorumHealthSnapshot)
+    def fabric_quorum(window: int = Query(10, ge=1)) -> QuorumHealthSnapshot:
+        return fabric_ops.quorum_health(window=window)
+
+    @router.get("/fabric/diagnostics", response_model=FabricDiagnosticsReport)
+    def fabric_diagnostics(limit: int | None = Query(None, ge=1)) -> FabricDiagnosticsReport:
+        return fabric_ops.diagnostics(limit=limit)
 
     return router
