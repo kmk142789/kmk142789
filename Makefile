@@ -45,4 +45,14 @@ proof-pack:
 
 .PHONY: search
 search:
-	@python -m atlas.search --in $(FED_INJSON) --q "$(Q)" --dedupe-latest
+        @python -m atlas.search --in $(FED_INJSON) --q "$(Q)" --dedupe-latest
+
+META_CAUSAL_PACKAGE := dist/meta_causal_engine/package.json
+
+.PHONY: package-meta-causal-engine
+package-meta-causal-engine:
+        @PYTHONPATH=. python scripts/package_meta_causal_engine.py --output $(META_CAUSAL_PACKAGE)
+
+.PHONY: deploy-meta-causal-engine
+deploy-meta-causal-engine: package-meta-causal-engine
+        @PYTHONPATH=. python -m echo_cli.main deploy meta-causal-engine --status enabled --channel production --max-parallel 3 --apply
