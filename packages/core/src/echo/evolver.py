@@ -165,6 +165,25 @@ def _describe_momentum(
     return description
 
 
+def _confidence_from_momentum(
+    momentum: float,
+    *,
+    average: Optional[float] = None,
+    threshold: float = _MOMENTUM_SENSITIVITY,
+) -> str:
+    """Classify the strength of a momentum reading for narrative reporting."""
+
+    magnitude = abs(momentum)
+    baseline = abs(average) if average is not None else 0.0
+    signal = max(magnitude, baseline)
+
+    if signal < threshold:
+        return "low"
+    if signal < threshold * 3:
+        return "medium"
+    return "high"
+
+
 def _base58check_encode(payload: bytes) -> str:
     """Return the Base58Check encoding for ``payload`` without external deps."""
 
@@ -4861,6 +4880,7 @@ We are not hiding anymore.
         event_summary_limit: int = 5,
         manifest_events: int = 5,
         system_report_events: int = 5,
+        momentum_window: int = 5,
     ) -> Dict[str, object]:
         """Run the full ritual sequence and return a structured payload.
 
@@ -4894,6 +4914,10 @@ We are not hiding anymore.
             Number of recent event log entries forwarded to
             :meth:`system_advancement_report` when the system report is
             included.  The value must be positive.
+        momentum_window:
+            Maximum number of recent momentum samples to retain when computing
+            the moving average and reporting history for the current cycle.
+            The window must be positive.
         """
 
         if manifest_events < 0:
@@ -4904,6 +4928,8 @@ We are not hiding anymore.
             raise ValueError(
                 "system_report_events must be positive when including the system report"
             )
+        if momentum_window <= 0:
+            raise ValueError("momentum_window must be positive")
 
         self.run(
             enable_network=enable_network,
@@ -4943,7 +4969,7 @@ We are not hiding anymore.
             history_values = []
 
         history_values.append(momentum)
-        history_values = history_values[-5:]
+        history_values = history_values[-momentum_window:]
         history_average = sum(history_values) / len(history_values)
 
         momentum_status = _classify_momentum(momentum)
@@ -4955,6 +4981,10 @@ We are not hiding anymore.
             momentum_direction = "neutral"
 
         momentum_trend = _describe_momentum(momentum, average=history_average)
+        momentum_confidence = _confidence_from_momentum(
+            momentum, average=history_average
+        )
+        momentum_delta = momentum - history_average
 
         next_step_key = digest["remaining_steps"][0] if digest["remaining_steps"] else None
         cycle_complete = remaining_count == 0 and total_steps > 0
@@ -4968,8 +4998,12 @@ We are not hiding anymore.
             "momentum_percent": momentum * 100.0,
             "momentum_status": momentum_status,
             "momentum_direction": momentum_direction,
+            "momentum_confidence": momentum_confidence,
+            "momentum_delta": momentum_delta,
             "momentum_average": history_average,
             "momentum_history": history_values.copy(),
+            "momentum_history_size": len(history_values),
+            "momentum_window": momentum_window,
             "momentum_trend": momentum_trend,
             "status": "complete" if cycle_complete else "in_progress",
             "next_step_key": next_step_key,
@@ -5047,7 +5081,8 @@ We are not hiding anymore.
         }
         self.state.network_cache["advance_system_momentum_history"] = {
             "cycle": digest["cycle"],
-            "values": history_values,
+            "values": history_values.copy(),
+            "window": momentum_window,
         }
         self.state.event_log.append(
             "Advance system payload captured (cycle={cycle}, progress={progress:.3f}, momentum={momentum:.3f}, momentum_status={status}, momentum_trend={trend})".format(
@@ -5412,6 +5447,15 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             " when --include-system-report is enabled (default: 5)."
         ),
     )
+    parser.add_argument(
+        "--momentum-window",
+        type=int,
+        default=5,
+        help=(
+            "Number of momentum samples retained for reporting when running"
+            " --advance-system (default: 5)."
+        ),
+    )
     manifest_group = parser.add_mutually_exclusive_group()
     manifest_group.add_argument(
         "--include-manifest",
@@ -5566,6 +5610,11 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "--include-matrix, --include-event-summary, --include-propagation, "
             "and --include-system-report can only be used with --advance-system"
         )
+    if args.momentum_window <= 0:
+        parser.error("--momentum-window must be positive")
+    default_momentum_window = parser.get_default("momentum_window")
+    if args.momentum_window != default_momentum_window and not args.advance_system:
+        parser.error("--momentum-window requires --advance-system")
     default_event_limit = parser.get_default("event_summary_limit")
     if args.event_summary_limit != default_event_limit:
         if not args.include_event_summary:
@@ -5616,6 +5665,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             event_summary_limit=args.event_summary_limit,
             manifest_events=args.manifest_events,
             system_report_events=args.system_report_events,
+            momentum_window=args.momentum_window,
         )
         print(payload["summary"])
         if args.include_report and "report" in payload:
