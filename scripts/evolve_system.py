@@ -161,6 +161,15 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--momentum-window",
+        type=int,
+        default=5,
+        help=(
+            "Number of momentum samples retained when using --advance-system "
+            "(default: 5)."
+        ),
+    )
+    parser.add_argument(
         "--manifest-events",
         type=int,
         default=5,
@@ -200,6 +209,7 @@ def execute_evolution(
     include_reflection: bool,
     event_summary_limit: int,
     system_report_events: int,
+    momentum_window: int,
     manifest_events: int,
 ) -> EchoEvolver:
     """Execute a full cycle and return the configured evolver instance."""
@@ -223,6 +233,7 @@ def execute_evolution(
             event_summary_limit=event_summary_limit,
             manifest_events=manifest_events,
             system_report_events=system_report_events,
+            momentum_window=momentum_window,
         )
         summary = result.get("summary") if isinstance(result, dict) else None
         if summary:
@@ -282,8 +293,15 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     if args.system_report_events <= 0 and args.advance_system and args.include_system_report:
         parser.error("--system-report-events must be positive when including the system report")
 
+    if args.advance_system and args.momentum_window <= 0:
+        parser.error("--momentum-window must be positive when using --advance-system")
+
     if args.manifest_events < 0 and args.advance_system:
         parser.error("--manifest-events must be non-negative")
+
+    default_momentum_window = parser.get_default("momentum_window")
+    if args.momentum_window != default_momentum_window and not args.advance_system:
+        parser.error("--momentum-window requires --advance-system")
 
     execute_evolution(
         enable_network=args.enable_network,
@@ -304,6 +322,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         include_reflection=not args.no_include_reflection,
         event_summary_limit=args.event_summary_limit,
         system_report_events=args.system_report_events,
+        momentum_window=args.momentum_window,
         manifest_events=args.manifest_events,
     )
 

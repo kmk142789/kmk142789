@@ -143,6 +143,8 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         parser_error("--event-summary-limit must be positive when including the event summary")
     if args.include_system_report and args.system_report_events <= 0:
         parser_error("--system-report-events must be positive when including the system report")
+    if args.advance_system and args.momentum_window <= 0:
+        parser_error("--momentum-window must be positive when using --advance-system")
     if args.manifest_events < 0:
         parser_error("--manifest-events must be non-negative")
 
@@ -154,6 +156,10 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         default_system_events = parser.get_default("system_report_events") if parser else 5
         if args.system_report_events != default_system_events:
             parser_error("--system-report-events requires --advance-system")
+
+        default_momentum_window = parser.get_default("momentum_window") if parser else 5
+        if args.momentum_window != default_momentum_window:
+            parser_error("--momentum-window requires --advance-system")
 
         default_manifest_events = parser.get_default("manifest_events") if parser else 5
         if args.manifest_events != default_manifest_events:
@@ -168,6 +174,11 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         default_system_events = parser.get_default("system_report_events") if parser else 5
         if args.system_report_events != default_system_events:
             parser_error("--system-report-events requires --include-system-report")
+
+    if args.momentum_window > 0 and not args.advance_system:
+        default_momentum_window = parser.get_default("momentum_window") if parser else 5
+        if args.momentum_window != default_momentum_window:
+            parser_error("--momentum-window requires --advance-system")
 
     if args.manifest_events >= 0 and not args.include_manifest:
         default_manifest_events = parser.get_default("manifest_events") if parser else 5
@@ -208,6 +219,7 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
             event_summary_limit=args.event_summary_limit,
             manifest_events=args.manifest_events,
             system_report_events=args.system_report_events,
+            momentum_window=args.momentum_window,
         )
         summary = payload.get("summary") if isinstance(payload, Mapping) else None
         if summary:
@@ -925,6 +937,15 @@ def main(argv: Iterable[str] | None = None) -> int:
         default=5,
         help=(
             "Number of events to include in the system report when using --include-system-report "
+            "(default: 5)."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--momentum-window",
+        type=int,
+        default=5,
+        help=(
+            "Number of momentum samples to retain when using --advance-system "
             "(default: 5)."
         ),
     )

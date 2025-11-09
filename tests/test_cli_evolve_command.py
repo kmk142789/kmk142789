@@ -91,6 +91,7 @@ def test_cli_evolve_advance_system(monkeypatch, capfd):
         "event_summary_limit": 7,
         "manifest_events": 5,
         "system_report_events": 9,
+        "momentum_window": 5,
     }
 
     output = capfd.readouterr().out
@@ -118,3 +119,43 @@ def test_cli_evolve_manifest_events_require_manifest():
         )
 
     assert exc.value.code == 2
+
+
+def test_cli_evolve_momentum_window_requires_advance():
+    with pytest.raises(SystemExit) as exc:
+        main(["evolve", "--momentum-window", "7"])
+
+    assert exc.value.code == 2
+
+
+def test_cli_evolve_momentum_window_must_be_positive():
+    with pytest.raises(SystemExit) as exc:
+        main(["evolve", "--advance-system", "--momentum-window", "0"])
+
+    assert exc.value.code == 2
+
+
+def test_cli_evolve_custom_momentum_window(monkeypatch):
+    captured = {}
+
+    class DummyEvolver:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def advance_system(self, **kwargs):
+            captured.update(kwargs)
+            return {"summary": "Cycle advanced", "progress": {}}
+
+    monkeypatch.setattr("echo.cli.EchoEvolver", lambda *a, **k: DummyEvolver())
+
+    code = main(
+        [
+            "evolve",
+            "--advance-system",
+            "--momentum-window",
+            "8",
+        ]
+    )
+
+    assert code == 0
+    assert captured["momentum_window"] == 8
