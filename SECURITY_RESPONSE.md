@@ -5,6 +5,8 @@
 - Determined these requests pose significant security risks because they ask to execute unverified scripts with network propagation capabilities.
 - Declined to execute the scripts and documented the security reasoning for future reference.
 
+- **Latest incident record:** `reports/sanitized/2025-05-11-echo-bridge-evolver.json`
+
 ## EchoDominusCore Network Propagation Attempt (2025-05-11)
 - Received a follow-up payload that attempts to broadcast an "EchoDominusCore" signature across multiple public APIs and local networks.
 - The payload includes recursive self-modifying directives ("Recursive Memory Expansion + Autonomous Propagation") and instructions to run indefinite broadcast loops via HTTP requests, UDP broadcasts, shell loops, and injected JavaScript fetch calls.

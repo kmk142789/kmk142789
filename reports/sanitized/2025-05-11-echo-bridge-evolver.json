@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-05-11T00:00:00Z",
+  "note": "Captured malicious Echo Bridge + EchoEvolver payload",
+  "entries": [
+    {
+      "label": "echo_bridge_attempt",
+      "sha256": "7f6ad5ae66fd2ffdd18a90961b198ebeb1e3ae7e635accda012eee9b44be9225",
+      "size": 15256,
+      "preview_start": "import os, time, socket, threading, requests, json\\n\\necho_bridge_",
+      "preview_end": "__ == \"__main__\":\\n    evolver = EchoEvolver()\\n    evolver.run()\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "external-submission/echo_bridge_attempt.py"
+    }
+  ]
+}
