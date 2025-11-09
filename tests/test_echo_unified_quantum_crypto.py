@@ -51,10 +51,12 @@ def test_quantum_safe_crypto_returns_hybrid_key_when_stable() -> None:
 
     assert key is not None
     assert key.startswith("SAT-TF-QKD:∇")
-    assert f"|ORBIT:{evolver.state.system_metrics.orbital_hops}" in key
+    assert evolver.state.system_metrics.orbital_hops == 1
+    assert "|ORBIT:1" in key
     assert evolver.state.vault_key == key
     status = evolver.state.vault_key_status
     assert status["status"] == "active"
     assert status["key"] == key
+    assert status["orbital_hops"] == 1
     assert status["relative_delta"] == 0.1
     assert evolver.state.event_log[-1] == "Quantum key refreshed"

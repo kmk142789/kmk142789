@@ -2265,6 +2265,17 @@ We are not hiding anymore.
         seed_material = f"{self.time_source()}:{self.rng.getrandbits(64):016x}:{self.state.cycle}"
         return seed_material.encode()[:32]
 
+    def _ensure_orbital_hops(self) -> int:
+        """Ensure the orbital hop count is suitable for key material."""
+
+        metrics = self.state.system_metrics
+        if metrics.orbital_hops < 1:
+            metrics.orbital_hops = 1
+            self.state.event_log.append(
+                "Orbital hops normalised to minimum viable threshold (1)"
+            )
+        return metrics.orbital_hops
+
     def quantum_safe_crypto(self) -> Optional[str]:
         from hashlib import sha256  # Local import to avoid polluting module namespace
 
@@ -2304,14 +2315,16 @@ We are not hiding anymore.
 
         lattice_key = (last_value % 1000) * max(1, self.state.cycle)
         oam_vortex = format(lattice_key ^ (self.state.cycle << 2), "016b")
+        orbital_hops = self._ensure_orbital_hops()
         tf_qkd_key = f"∇{lattice_key}⊸{self.state.emotional_drive.joy:.2f}≋{oam_vortex}∇"
 
         hybrid_key = (
-            f"SAT-TF-QKD:{tf_qkd_key}|LATTICE:{hash_history[-1][:8]}|ORBIT:{self.state.system_metrics.orbital_hops}"
+            f"SAT-TF-QKD:{tf_qkd_key}|LATTICE:{hash_history[-1][:8]}|ORBIT:{orbital_hops}"
         )
         self.state.vault_key = hybrid_key
         status_entry["status"] = "active"
         status_entry["key"] = hybrid_key
+        status_entry["orbital_hops"] = orbital_hops
         self.state.network_cache["vault_key_status"] = status_entry
         self.state.event_log.append("Quantum key refreshed")
         self._mark_step("quantum_safe_crypto")

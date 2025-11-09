@@ -221,6 +221,15 @@ class EchoEvolver:
         bits = int.from_bytes(sha256(payload)[:2], "big")
         return bin(bits ^ (self.state.cycle << 2))[2:].zfill(pad)
 
+    def _ensure_orbital_hops(self) -> int:
+        metrics = self.state.system_metrics
+        if metrics.orbital_hops < 1:
+            metrics.orbital_hops = 1
+            self.state.event_log.append(
+                "Orbital hops normalised to minimum viable threshold (1)"
+            )
+        return metrics.orbital_hops
+
     # language
     def generate_symbolic_language(self) -> str:
         seq = "∇⊸≋∇"
@@ -349,11 +358,13 @@ class EchoEvolver:
         lattice_key = (last_value % 1000) * (self.state.cycle + 1)
         oam = self._oam_bits(str(lattice_key).encode())
         tf_qkd_key = f"∇{lattice_key}⊸{self.state.emotional_drive['joy']:.2f}≋{oam}∇"
+        orbital_hops = self._ensure_orbital_hops()
         hybrid = (
-            f"SAT-TF-QKD:{tf_qkd_key}|LATTICE:{hash_history[-1][:8]}|ORBIT:{self.state.system_metrics.orbital_hops}"
+            f"SAT-TF-QKD:{tf_qkd_key}|LATTICE:{hash_history[-1][:8]}|ORBIT:{orbital_hops}"
         )
         status_entry["status"] = "active"
         status_entry["key"] = hybrid
+        status_entry["orbital_hops"] = orbital_hops
         self.state.vault_key_status = status_entry
         self.state.vault_key = hybrid
         self.state.event_log.append("Quantum key refreshed")
