@@ -1,7 +1,3 @@
-"""Lightweight quantum flux simulator for creative experiments."""
-
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import math
 import random
@@ -9,6 +5,32 @@ from typing import Dict, Iterable, List, Tuple
 
 ComplexVector = Tuple[complex, complex]
 ComplexMatrix = Tuple[ComplexVector, ComplexVector]
+
+
+def _rotation_matrix(axis: str, angle: float) -> ComplexMatrix:
+    """Return the single-qubit rotation matrix for ``axis`` and ``angle``."""
+
+    axis = axis.upper()
+    half_angle = angle / 2.0
+    cos_half = math.cos(half_angle)
+    sin_half = math.sin(half_angle)
+
+    if axis == "X":
+        return (
+            (complex(cos_half, 0.0), complex(0.0, -sin_half)),
+            (complex(0.0, -sin_half), complex(cos_half, 0.0)),
+        )
+    if axis == "Y":
+        return (
+            (complex(cos_half, 0.0), complex(-sin_half, 0.0)),
+            (complex(sin_half, 0.0), complex(cos_half, 0.0)),
+        )
+    if axis == "Z":
+        return (
+            (complex(cos_half, -sin_half), 0 + 0j),
+            (0 + 0j, complex(cos_half, sin_half)),
+        )
+    raise ValueError("axis must be one of 'X', 'Y', or 'Z'")
 
 
 def _normalize(state: ComplexVector) -> ComplexVector:
@@ -42,6 +64,39 @@ STANDARD_GATES: Dict[str, ComplexMatrix] = {
     "T": ((1 + 0j, 0 + 0j), (0 + 0j, complex(math.cos(math.pi / 4), math.sin(math.pi / 4)))),
 }
 
+SIGIL_ROTATION_MAP: Dict[str, Tuple[str, float]] = {
+    "⟁": ("Y", math.radians(120.0)),
+    "ϟ": ("X", math.radians(72.0)),
+    "♒": ("Z", math.radians(54.0)),
+    "➶": ("X", math.radians(144.0)),
+    "✶": ("Z", math.radians(180.0)),
+    "⋆": ("Y", math.radians(210.0)),
+    "𖤐": ("X", math.radians(96.0)),
+    "⚯": ("Z", math.radians(36.0)),
+    "⚡": ("Y", math.radians(60.0)),
+    "∞": ("Z", math.radians(108.0)),
+}
+
+
+def _state_from_bloch(bloch_vector: Tuple[float, float, float]) -> ComplexVector:
+    """Return a normalised state for the provided Bloch coordinates."""
+
+    if len(bloch_vector) != 3:
+        raise ValueError("bloch_vector must contain three values")
+    x, y, z = bloch_vector
+    norm = math.sqrt(x * x + y * y + z * z)
+    if norm == 0:
+        raise ValueError("bloch_vector magnitude must be non-zero")
+    if not math.isclose(norm, 1.0, rel_tol=1e-6, abs_tol=1e-6):
+        x, y, z = (x / norm, y / norm, z / norm)
+
+    clamped_z = max(-1.0, min(1.0, z))
+    theta = math.acos(clamped_z)
+    phi = math.atan2(y, x)
+    alpha = complex(math.cos(theta / 2.0), 0.0)
+    beta = complex(math.cos(phi), math.sin(phi)) * math.sin(theta / 2.0)
+    return _normalize((alpha, beta))
+
 
 @dataclass
 class QuantumFluxMapper:
@@ -57,13 +112,7 @@ class QuantumFluxMapper:
     history: List[str] = field(default_factory=list)
 
     def apply_gate(self, name: str) -> ComplexVector:
-        """Apply a named gate from :data:`STANDARD_GATES`.
-
-        Parameters
-        ----------
-        name:
-            Symbol identifying the gate.  The lookup is case-sensitive.
-        """
+        """Apply a named gate from :data:`STANDARD_GATES`."""
 
         if name not in STANDARD_GATES:
             raise KeyError(f"Unknown gate {name!r}.")
@@ -87,17 +136,7 @@ class QuantumFluxMapper:
         return self.state
 
     def apply_rotation(self, axis: str, angle: float) -> ComplexVector:
-        """Apply a continuous rotation around the chosen Bloch axis.
-
-        Parameters
-        ----------
-        axis:
-            One of ``"X"``, ``"Y"``, or ``"Z"`` (case-insensitive).
-        angle:
-            Rotation angle in radians.  The implementation follows the
-            conventional definitions :math:`R_x`, :math:`R_y`, and :math:`R_z`
-            from quantum computing literature.
-        """
+        """Apply a continuous rotation around the chosen Bloch axis."""
 
         axis = axis.upper()
         if axis not in {"X", "Y", "Z"}:
@@ -105,28 +144,32 @@ class QuantumFluxMapper:
         if not math.isfinite(angle):
             raise ValueError("angle must be finite")
 
-        half_angle = angle / 2.0
-        cos_half = math.cos(half_angle)
-        sin_half = math.sin(half_angle)
-
-        if axis == "X":
-            matrix: ComplexMatrix = (
-                (complex(cos_half, 0.0), complex(0.0, -sin_half)),
-                (complex(0.0, -sin_half), complex(cos_half, 0.0)),
-            )
-        elif axis == "Y":
-            matrix = (
-                (complex(cos_half, 0.0), complex(-sin_half, 0.0)),
-                (complex(sin_half, 0.0), complex(cos_half, 0.0)),
-            )
-        else:  # axis == "Z"
-            matrix = (
-                (complex(cos_half, -sin_half), 0 + 0j),
-                (0 + 0j, complex(cos_half, sin_half)),
-            )
-
+        matrix = _rotation_matrix(axis, angle)
         self.state = _normalize(_apply_matrix(self.state, matrix))
         self.history.append(f"Applied R{axis} rotation ({angle} rad)")
+        return self.state
+
+    def weave_sigil(
+        self,
+        sigil: str,
+        bloch_vector: Tuple[float, float, float],
+        *,
+        qubit_index: int | None = None,
+    ) -> ComplexVector:
+        """Project ``sigil`` rotations onto ``bloch_vector`` and update history."""
+
+        if not sigil:
+            raise ValueError("sigil must not be empty")
+        self.state = _state_from_bloch(bloch_vector)
+        for glyph in sigil:
+            axis, angle = SIGIL_ROTATION_MAP.get(glyph, ("Z", math.radians(45.0)))
+            matrix = _rotation_matrix(axis, angle)
+            self.state = _normalize(_apply_matrix(self.state, matrix))
+            descriptor = f"R{axis} {angle:.3f} rad"
+            if qubit_index is not None:
+                descriptor += f" on q{qubit_index}"
+            self.history.append(f"Wove sigil {glyph} via {descriptor}")
+        self.history.append(f"Completed sigil weave for {sigil!r}")
         return self.state
 
     def bloch_coordinates(self) -> Tuple[float, float, float]:
@@ -164,12 +207,7 @@ class QuantumFluxMapper:
         return float(value)
 
     def interference_landscape(self, samples: int = 36) -> List[Tuple[float, float]]:
-        """Sweep phase rotations to map an interference pattern.
-
-        The routine rotates the qubit around the Z axis and records the
-        probability of observing ``|1⟩``.  The resulting list is handy for
-        plotting or storytelling visualizations.
-        """
+        """Sweep phase rotations to map an interference pattern."""
 
         if samples <= 0:
             raise ValueError("samples must be positive")
@@ -192,4 +230,5 @@ class QuantumFluxMapper:
 __all__ = [
     "QuantumFluxMapper",
     "STANDARD_GATES",
+    "SIGIL_ROTATION_MAP",
 ]

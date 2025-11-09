@@ -11,6 +11,7 @@ from types import ModuleType
 from typing import Any
 
 from . import registry_builder
+from . import advance_system_history, genesis_ledger, glitch_oracle, telemetry_vitality_report
 
 _core = import_module("packages.core.src.codex")
 
@@ -57,6 +58,13 @@ ModuleType.__setattr__(_proxy, "__file__", __file__)
 ModuleType.__setattr__(_proxy, "__path__", __path__)
 
 ModuleType.__setattr__(_proxy, "registry_builder", registry_builder)
+ModuleType.__setattr__(_proxy, "DEFAULT_GOV_MIRRORS", genesis_ledger.DEFAULT_GOV_MIRRORS)
+ModuleType.__setattr__(_proxy, "SovereignDomainLedger", genesis_ledger.SovereignDomainLedger)
+ModuleType.__setattr__(_proxy, "ledger_attest_domain", genesis_ledger.ledger_attest_domain)
+ModuleType.__setattr__(_proxy, "EchoVitalsReporter", telemetry_vitality_report.EchoVitalsReporter)
+ModuleType.__setattr__(_proxy, "report_echo_vitals", telemetry_vitality_report.report_echo_vitals)
+ModuleType.__setattr__(_proxy, "RecursiveForkTracker", advance_system_history.RecursiveForkTracker)
+ModuleType.__setattr__(_proxy, "oracle_rupture", glitch_oracle.oracle_rupture)
 ModuleType.__setattr__(
     _proxy, "PullRequestRecord", registry_builder.PullRequestRecord
 )

@@ -23,6 +23,28 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 COLOSSUS_ROOT = REPO_ROOT / "colossus"
 PUZZLE_SOLUTIONS_ROOT = REPO_ROOT / "puzzle_solutions"
 
+def _load_curated_puzzle_ids() -> set[int]:
+    """Extract curated puzzle identifiers from the master index."""
+
+    table_path = REPO_ROOT / "colossus_master_index.md"
+    if not table_path.exists():
+        return set()
+    ids: set[int] = set()
+    for line in table_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith('|'):
+            continue
+        parts = [segment.strip() for segment in stripped.strip('|').split('|')]
+        if not parts or not parts[0].isdigit():
+            continue
+        try:
+            ids.add(int(parts[0]))
+        except ValueError:  # pragma: no cover - defensive
+            continue
+    return ids
+
+CURATED_PUZZLE_IDS = _load_curated_puzzle_ids()
+
 # Only a subset of the historic Bitcoin puzzles have been reconstructed and
 # vetted within the Colossus index.  The attestation set begins with puzzle 200
 # and later entries, so we suppress older files when building the summary even
@@ -239,6 +261,8 @@ def collect_puzzle_solutions(min_puzzle: int, max_puzzle: int, root: Path = PUZZ
     summaries: List[PuzzleSolutionSummary] = []
     effective_min = max(min_puzzle, MIN_DOCUMENTED_PUZZLE)
     for path in root.glob("puzzle_*.md"):
+        if CURATED_PUZZLE_IDS and int(path.stem.split("_")[1]) not in CURATED_PUZZLE_IDS:
+            continue
         match = re.search(r"puzzle_(\d+)\.md$", path.name)
         if not match:
             continue
