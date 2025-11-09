@@ -119,3 +119,55 @@ def test_idea_command_outputs_markdown(monkeypatch):
 
     assert "Idea to Action Plan" in result.stdout
     assert "Recommended Steps" in result.stdout
+
+
+def test_pulse_command_emits_json(tmp_path, monkeypatch):
+    monkeypatch.setenv("PYTHONPATH", str(ROOT))
+    pulses = [
+        {"timestamp": 1_700_000_000.0, "message": "🌀 evolve:manual:aa", "hash": "aa"},
+        {"timestamp": 1_700_000_600.0, "message": "🌀 evolve:auto:bb", "hash": "bb"},
+        {"timestamp": 1_700_001_200.0, "message": "✨ craft:auto:cc", "hash": "cc"},
+    ]
+    pulses_path = tmp_path / "pulse_history.json"
+    pulses_path.write_text(json.dumps(pulses), encoding="utf-8")
+
+    result = run([
+        "pulse",
+        "--pulses",
+        str(pulses_path),
+        "--json",
+        "--limit",
+        "2",
+    ])
+
+    payload = json.loads(result.stdout)
+    assert payload["metrics"]["total_events"] == 3
+    assert payload["filtered_total"] == 3
+    assert len(payload["events"]) == 2
+    assert payload["events"][-1]["message"] == "✨ craft:auto:cc"
+
+
+def test_pulse_command_text_output(tmp_path, monkeypatch):
+    monkeypatch.setenv("PYTHONPATH", str(ROOT))
+    pulses = [
+        {"timestamp": 1_700_000_000.0, "message": "🌀 evolve:manual:aa", "hash": "aa"},
+        {"timestamp": 1_700_000_600.0, "message": "🌀 evolve:auto:bb", "hash": "bb"},
+        {"timestamp": 1_700_001_200.0, "message": "✨ craft:auto:cc", "hash": "cc"},
+    ]
+    pulses_path = tmp_path / "pulse_history.json"
+    pulses_path.write_text(json.dumps(pulses), encoding="utf-8")
+
+    result = run([
+        "pulse",
+        "--pulses",
+        str(pulses_path),
+        "--search",
+        "auto",
+        "--limit",
+        "1",
+    ])
+
+    assert "Echo Pulse Ledger" in result.stdout
+    assert "Filter: 'auto' (2 matches)" in result.stdout
+    assert "Recent events (showing 1 of 2):" in result.stdout
+    assert "craft:auto:cc" in result.stdout

@@ -9,9 +9,9 @@ import types
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 # ``echoctl`` needs to run both as an installed module and as a standalone
 # script.  When executed directly (``python echo/echoctl.py``) Python does not
@@ -101,6 +101,32 @@ except ImportError:  # pragma: no cover - executed when run as script
     generate_continuum_health = _HEALTH.generate_continuum_health  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
+    from .echo_codox_kernel import EchoCodexKernel
+except ImportError:  # pragma: no cover - executed when run as script
+    _KERNEL_SPEC = importlib.util.spec_from_file_location(
+        "echo.echo_codox_kernel", (Path(__file__).resolve().parent / "echo_codox_kernel.py")
+    )
+    if _KERNEL_SPEC is None or _KERNEL_SPEC.loader is None:
+        raise
+    _KERNEL = importlib.util.module_from_spec(_KERNEL_SPEC)
+    sys.modules[_KERNEL_SPEC.name] = _KERNEL
+    _KERNEL_SPEC.loader.exec_module(_KERNEL)  # type: ignore[attr-defined]
+    EchoCodexKernel = _KERNEL.EchoCodexKernel  # type: ignore[attr-defined]
+
+try:  # pragma: no cover - executed when run as module
+    from .pulse_health import compute_pulse_metrics
+except ImportError:  # pragma: no cover - executed when run as script
+    _PULSE_HEALTH_SPEC = importlib.util.spec_from_file_location(
+        "echo.pulse_health", (Path(__file__).resolve().parent / "pulse_health.py")
+    )
+    if _PULSE_HEALTH_SPEC is None or _PULSE_HEALTH_SPEC.loader is None:
+        raise
+    _PULSE_HEALTH = importlib.util.module_from_spec(_PULSE_HEALTH_SPEC)
+    sys.modules[_PULSE_HEALTH_SPEC.name] = _PULSE_HEALTH
+    _PULSE_HEALTH_SPEC.loader.exec_module(_PULSE_HEALTH)  # type: ignore[attr-defined]
+    compute_pulse_metrics = _PULSE_HEALTH.compute_pulse_metrics  # type: ignore[attr-defined]
+
+try:  # pragma: no cover - executed when run as module
     from ._paths import DATA_ROOT, DOCS_ROOT, REPO_ROOT
 except ImportError:  # pragma: no cover - executed when run as script
     _PATHS_SPEC = importlib.util.spec_from_file_location(
@@ -127,6 +153,29 @@ if str(ROOT) not in sys.path:
 WISH = DATA_ROOT / "wish_manifest.json"
 PLAN = DOCS_ROOT / "NEXT_CYCLE_PLAN.md"
 DOCS = DOCS_ROOT
+
+
+def _format_duration(seconds: Optional[float]) -> str:
+    if seconds is None:
+        return "n/a"
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    if seconds < 3600:
+        return f"{seconds / 60:.1f}m"
+    if seconds < 86400:
+        return f"{seconds / 3600:.1f}h"
+    return f"{seconds / 86400:.1f}d"
+
+
+def _format_timestamp(ts: float) -> str:
+    return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _filter_pulse_events(events, needle: Optional[str]):
+    if needle is None:
+        return list(events)
+    needle_lower = needle.casefold()
+    return [event for event in events if needle_lower in event.message.casefold()]
 
 
 def load_manifest() -> dict:
@@ -259,6 +308,134 @@ def run_health(argv: List[str]) -> int:
         return 2
     if report.status == "warning" and options.fail_on_warning:
         return 1
+    return 0
+
+
+def run_pulse(argv: List[str]) -> int:
+    """Summarise pulse cadence and recent resonance."""
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl pulse",
+        description="Summarise pulse history cadence, freshness, and resonance.",
+    )
+    parser.add_argument(
+        "--pulses",
+        type=Path,
+        default=PULSE_HISTORY,
+        help="Path to the pulse history JSON file (default: repo pulse_history.json).",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Number of recent events to display (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--search",
+        help="Only include events whose message contains this text (case-insensitive).",
+    )
+    parser.add_argument(
+        "--warning-hours",
+        type=float,
+        default=24.0,
+        help="Warning threshold in hours for time since last event (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--critical-hours",
+        type=float,
+        default=72.0,
+        help="Critical threshold in hours for time since last event (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit JSON instead of human readable text.",
+    )
+
+    options = parser.parse_args(argv)
+
+    pulses_path = options.pulses
+    if not pulses_path.exists():
+        print(f"pulse history not found: {pulses_path}", file=sys.stderr)
+
+    kernel = EchoCodexKernel(pulse_file=str(pulses_path))
+    events = kernel.history
+    filtered_events = _filter_pulse_events(events, options.search)
+    metrics = compute_pulse_metrics(
+        events,
+        warning_hours=options.warning_hours,
+        critical_hours=options.critical_hours,
+    )
+
+    limit = options.limit if options.limit > 0 else None
+    recent_events = list(filtered_events if limit is None else filtered_events[-limit:])
+
+    if options.json:
+        payload = {
+            "metrics": metrics.to_dict(),
+            "resonance": kernel.resonance() if events else None,
+            "filtered_total": len(filtered_events),
+            "filter": {
+                "search": options.search,
+                "limit": options.limit,
+            },
+            "events": [
+                {
+                    "timestamp": event.timestamp,
+                    "timestamp_iso": _format_timestamp(event.timestamp),
+                    "message": event.message,
+                    "hash": event.hash,
+                }
+                for event in recent_events
+            ],
+        }
+        print(json.dumps(payload, indent=2))
+        return 0
+
+    print("Echo Pulse Ledger")
+    print("=================")
+    print(f"Status: {metrics.status}")
+    print(f"Total events: {metrics.total_events}")
+    print(f"First event: {metrics.first_timestamp_iso or 'n/a'}")
+
+    last_line = "Last event: n/a"
+    if metrics.last_timestamp_iso:
+        ago = _format_duration(metrics.time_since_last_seconds)
+        last_line = f"Last event: {metrics.last_timestamp_iso} ({ago} ago)"
+    print(last_line)
+
+    print(f"Ledger span: {_format_duration(metrics.span_seconds)}")
+    print(f"Average interval: {_format_duration(metrics.average_interval_seconds)}")
+    print(f"Median interval: {_format_duration(metrics.median_interval_seconds)}")
+
+    if metrics.daily_rate is None:
+        print("Daily rate: n/a")
+    else:
+        print(f"Daily rate: {metrics.daily_rate:.2f} events/day")
+
+    resonance = kernel.resonance() if events else None
+    if resonance:
+        print(f"Resonance: {resonance}")
+
+    if options.search:
+        print(f"Filter: '{options.search}' ({len(filtered_events)} matches)")
+    else:
+        print(f"Filter: none ({len(filtered_events)} events considered)")
+
+    if not filtered_events:
+        if options.search:
+            print("No events matched the provided search term.")
+        else:
+            print("No pulse events recorded yet.")
+        return 0
+
+    display_count = len(recent_events)
+    print(f"Recent events (showing {display_count} of {len(filtered_events)}):")
+    print("timestamp │ hash digest │ message")
+    print("-" * 72)
+    for event in reversed(recent_events):
+        print(f"{_format_timestamp(event.timestamp)} │ {event.hash[:12]} │ {event.message}")
+
     return 0
 
 
@@ -549,7 +726,7 @@ def run_moonshot(argv: List[str]) -> int:
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
         print(
-            "usage: echoctl [cycle|plan|summary|wish-report|health|groundbreaking|moonshot|wish|idea|inspire] ..."
+            "usage: echoctl [cycle|plan|summary|wish-report|health|pulse|groundbreaking|moonshot|wish|idea|inspire] ..."
         )
         return 1
     cmd = argv[1]
@@ -566,6 +743,8 @@ def main(argv: List[str]) -> int:
         return run_wish_report(argv[2:])
     if cmd == "health":
         return run_health(argv[2:])
+    if cmd == "pulse":
+        return run_pulse(argv[2:])
     if cmd == "groundbreaking":
         return run_groundbreaking(argv[2:])
     if cmd == "moonshot":
