@@ -15,6 +15,11 @@ def create_router(service: PulseWeaverService) -> APIRouter:
         snapshot = service.snapshot().to_dict()
         return snapshot
 
+    @router.get("/monolith", name="pulse_weaver_monolith")
+    def _monolith() -> dict[str, object]:
+        report = service.monolith().to_dict()
+        return report
+
     return router
 
 

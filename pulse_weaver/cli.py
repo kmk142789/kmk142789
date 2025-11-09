@@ -85,6 +85,44 @@ def _cmd_record(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_monolith(args: argparse.Namespace) -> int:
+    service = _make_service(args)
+    report = service.monolith(limit=args.limit).to_dict()
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        print("Pulse Weaver Monolith")
+        print(f"Magnitude: {report['magnitude']}")
+        print(f"Cycles observed: {len(report['cycles'])}")
+        if report["cycles"]:
+            print("Cycles:")
+            for cycle in report["cycles"]:
+                print(f"  - {cycle}")
+        if report["timeline"]:
+            print("\nTimeline:")
+            for entry in report["timeline"]:
+                print(f"* {entry['cycle']} :: total {entry['total']}")
+                if entry["by_status"]:
+                    status_bits = ", ".join(
+                        f"{status}={count}" for status, count in entry["by_status"].items()
+                    )
+                    print(f"    statuses: {status_bits}")
+                if entry["highlights"]:
+                    for highlight in entry["highlights"]:
+                        print(f"    - {highlight}")
+        if report["atlas"]:
+            print("\nAtlas links:")
+            for node, count in report["atlas"].items():
+                print(f"  - {node}: {count}")
+        if report["phantom"]:
+            print("\nPhantom threads:")
+            for thread, count in report["phantom"].items():
+                print(f"  - {thread}: {count}")
+        print()
+        print(report["proclamation"])
+    return 0
+
+
 def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("pulse-weaver", help="Manage the Pulse Weaver ledger")
     parser.add_argument("--root", type=Path, help="Project root (defaults to CWD)")
@@ -106,6 +144,13 @@ def register_subcommand(subparsers: argparse._SubParsersAction) -> None:
     record.add_argument("--atlas-node", dest="atlas_node", help="Atlas node identifier")
     record.add_argument("--phantom-trace", dest="phantom_trace", help="Phantom thread reference")
     record.set_defaults(func=_cmd_record)
+
+    monolith = weaver_sub.add_parser(
+        "monolith", help="Generate the Pulse Weaver monolith report"
+    )
+    monolith.add_argument("--limit", type=int, default=200, help="Number of fragments to examine")
+    monolith.add_argument("--json", action="store_true", help="Print JSON payload")
+    monolith.set_defaults(func=_cmd_monolith)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -129,6 +174,11 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument("--atlas-node", dest="atlas_node")
     record.add_argument("--phantom-trace", dest="phantom_trace")
     record.set_defaults(func=_cmd_record)
+
+    monolith = sub.add_parser("monolith", help="Generate the Pulse Weaver monolith report")
+    monolith.add_argument("--limit", type=int, default=200)
+    monolith.add_argument("--json", action="store_true")
+    monolith.set_defaults(func=_cmd_monolith)
 
     return parser
 

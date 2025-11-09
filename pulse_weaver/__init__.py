@@ -1,5 +1,11 @@
 """Pulse Weaver service package."""
 
-from .service import PulseWeaverService, PulseWeaverSnapshot
+from .core import CycleMonument, PulseWeaverMonolith, PulseWeaverSnapshot
+from .service import PulseWeaverService
 
-__all__ = ["PulseWeaverService", "PulseWeaverSnapshot"]
+__all__ = [
+    "CycleMonument",
+    "PulseWeaverMonolith",
+    "PulseWeaverService",
+    "PulseWeaverSnapshot",
+]

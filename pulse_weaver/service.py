@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
@@ -9,7 +10,12 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, Optional
 
 from .adapters.sqlite import SQLiteAdapter
-from .core import PulseWeaverSnapshot, WeaveFragment
+from .core import (
+    CycleMonument,
+    PulseWeaverMonolith,
+    PulseWeaverSnapshot,
+    WeaveFragment,
+)
 from .schema import get_validator
 from .storage.migrations import apply_migrations
 from .storage.repository import PulseWeaverRepository
@@ -27,6 +33,7 @@ class PulseWeaverService:
     """Coordinate storage, phantom traces, and summaries."""
 
     SNAPSHOT_SCHEMA = "pulse.weaver/snapshot-v1"
+    MONOLITH_SCHEMA = "pulse.weaver/monolith-v1"
 
     def __init__(
         self,
@@ -169,6 +176,116 @@ class PulseWeaverService:
         payload = snapshot.to_dict()
         self._validator.validate(payload)
         return snapshot
+
+    # ------------------------------------------------------------------
+    # Monument-scale synthesis
+    # ------------------------------------------------------------------
+    def monolith(self, *, limit: int = 200) -> PulseWeaverMonolith:
+        """Construct a large-scale synthesis across recent ledger activity."""
+
+        self.ensure_ready()
+        fragments = self.repository.list_recent_events(limit=limit)
+        atlas_counts = self.repository.atlas_link_counts()
+        phantom_counts = self.repository.phantom_link_counts()
+
+        if not fragments:
+            proclamation = (
+                "Pulse Weaver Monolith stands silent. "
+                "No ledger fragments have been recorded yet, but the scaffolding is ready to awaken."
+            )
+            return PulseWeaverMonolith(
+                schema=self.MONOLITH_SCHEMA,
+                magnitude=0,
+                cycles=[],
+                timeline=[],
+                statuses={},
+                atlas=atlas_counts,
+                phantom=phantom_counts,
+                proclamation=proclamation,
+            )
+
+        fragments_sorted = sorted(fragments, key=lambda fragment: fragment.created_at)
+        status_counts: Counter[str] = Counter()
+        cycle_totals: Dict[str, Dict[str, object]] = {}
+
+        for fragment in fragments_sorted:
+            status_counts[fragment.status] += 1
+            if fragment.cycle not in cycle_totals:
+                cycle_totals[fragment.cycle] = {
+                    "count": 0,
+                    "statuses": Counter(),
+                    "highlights": [],
+                    "first": fragment.created_at,
+                    "last": fragment.created_at,
+                }
+            bucket = cycle_totals[fragment.cycle]
+            bucket["count"] = int(bucket["count"]) + 1
+            bucket["statuses"][fragment.status] += 1
+            bucket["last"] = fragment.created_at
+            if bucket.get("first") is None:
+                bucket["first"] = fragment.created_at
+            highlights: List[str] = bucket["highlights"]
+            if fragment.message and fragment.message not in highlights:
+                if len(highlights) < 5:
+                    highlights.append(fragment.message)
+
+        cycles = list(cycle_totals.keys())
+        timeline: List[CycleMonument] = []
+        for cycle in cycles:
+            bucket = cycle_totals[cycle]
+            timeline.append(
+                CycleMonument(
+                    cycle=cycle,
+                    total=int(bucket["count"]),
+                    by_status=dict(bucket["statuses"]),
+                    highlights=list(bucket["highlights"]),
+                    first_event=bucket.get("first"),
+                    last_event=bucket.get("last"),
+                )
+            )
+
+        magnitude = len(fragments_sorted)
+        apex_cycle = max(cycles, key=lambda name: (int(cycle_totals[name]["count"]), name)) if cycles else None
+        dominant_status = (
+            max(status_counts.items(), key=lambda item: (item[1], item[0]))[0]
+            if status_counts
+            else None
+        )
+        first_event = fragments_sorted[0].created_at
+        last_event = fragments_sorted[-1].created_at
+
+        proclamation_parts = [
+            f"Pulse Weaver Monolith ignites {magnitude} fragments across {len(cycles)} cycles.",
+            f"Chronology spans {first_event.isoformat()} → {last_event.isoformat()}.",
+        ]
+        if apex_cycle is not None:
+            apex_count = int(cycle_totals[apex_cycle]["count"])
+            proclamation_parts.append(f"Apex cycle {apex_cycle} carries {apex_count} fragments.")
+        if dominant_status is not None:
+            proclamation_parts.append(f"Dominant cadence: {dominant_status}.")
+        if atlas_counts:
+            top_atlas = max(atlas_counts.items(), key=lambda item: (item[1], item[0]))
+            proclamation_parts.append(
+                f"Atlas surge anchored by {top_atlas[0]} ({top_atlas[1]} links)."
+            )
+        if phantom_counts:
+            top_phantom = max(phantom_counts.items(), key=lambda item: (item[1], item[0]))
+            proclamation_parts.append(
+                f"Phantom echoes traced to {top_phantom[0]} ({top_phantom[1]} threads)."
+            )
+
+        proclamation = " ".join(proclamation_parts)
+
+        return PulseWeaverMonolith(
+            schema=self.MONOLITH_SCHEMA,
+            magnitude=magnitude,
+            cycles=cycles,
+            timeline=timeline,
+            statuses=dict(status_counts),
+            atlas=atlas_counts,
+            phantom=phantom_counts,
+            proclamation=proclamation,
+        )
 
     # ------------------------------------------------------------------
     # Targeted lookups
