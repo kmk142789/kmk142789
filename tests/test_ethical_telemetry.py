@@ -9,6 +9,7 @@ from src.self_assessment import ReportEmitter
 from src.self_assessment.metrics import ComplianceEvaluator
 from src.telemetry import (
     ConsentState,
+    PendingTelemetryEvent,
     TelemetryCollector,
     TelemetryContext,
     TelemetryEvent,
@@ -67,6 +68,55 @@ def test_collector_respects_consent() -> None:
     assert len(events) == 1
     assert events[0].payload == {"action": "view"}
     assert events[0].context.pseudonymous_id == ctx_in.pseudonymous_id
+
+
+def test_collector_session_annotation() -> None:
+    storage = InMemoryTelemetryStorage()
+    collector = TelemetryCollector(storage=storage, metadata={"session_label": "beta"})
+    ctx = TelemetryContext.pseudonymize(
+        raw_identifier="user-session",
+        salt="salt",
+        consent_state=ConsentState.OPTED_IN,
+    )
+
+    event = collector.record(event_type="visit", context=ctx, payload={})
+    assert event is not None
+    assert event.context.session_label == "beta"
+
+
+def test_collector_record_batch_handles_mixed_events() -> None:
+    storage = InMemoryTelemetryStorage()
+    collector = TelemetryCollector(storage=storage)
+    ctx_in = TelemetryContext.pseudonymize(
+        raw_identifier="user-batch-in",
+        salt="salt",
+        consent_state=ConsentState.OPTED_IN,
+    )
+    ctx_out = TelemetryContext.pseudonymize(
+        raw_identifier="user-batch-out",
+        salt="salt",
+        consent_state=ConsentState.OPTED_OUT,
+    )
+
+    recorded = collector.record_batch(
+        [
+            PendingTelemetryEvent(
+                event_type="batch",  # allowed event
+                context=ctx_in,
+                payload={"action": "view", "debug": True},
+                allowed_fields={"action"},
+            ),
+            PendingTelemetryEvent(
+                event_type="batch",
+                context=ctx_out,
+                payload={"action": "skip"},
+            ),
+        ]
+    )
+
+    assert len(recorded) == 1
+    assert recorded[0].payload == {"action": "view"}
+    assert recorded[0].context.pseudonymous_id == ctx_in.pseudonymous_id
 
 
 def test_compliance_evaluator_metrics() -> None:
