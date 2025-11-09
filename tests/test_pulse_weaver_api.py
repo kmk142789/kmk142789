@@ -22,3 +22,19 @@ def test_api_snapshot_returns_payload(tmp_path) -> None:
     assert payload["summary"]["total"] == 1
     assert payload["ledger"][0]["key"] == "api"
     assert "Pulse Weaver Rhyme" in payload["rhyme"]
+
+
+def test_api_monolith_returns_payload(tmp_path) -> None:
+    service = PulseWeaverService(tmp_path)
+    service.record_success(key="api-monolith", message="rising", cycle="cycle-123")
+
+    app = FastAPI()
+    app.include_router(create_router(service))
+    client = TestClient(app)
+
+    response = client.get("/pulse/weaver/monolith")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["schema"] == "pulse.weaver/monolith-v1"
+    assert payload["magnitude"] == 1
+    assert payload["proclamation"].startswith("Pulse Weaver Monolith")
