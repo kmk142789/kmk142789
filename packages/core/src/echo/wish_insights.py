@@ -8,7 +8,7 @@ runtime dependencies.
 """
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from typing import Iterable
 
@@ -87,4 +87,96 @@ def summarize_wishes(manifest: dict) -> str:
     return "\n".join(lines)
 
 
-__all__ = ["summarize_wishes"]
+def render_wish_report(manifest: dict, *, highlight_limit: int = 5) -> str:
+    """Return a Markdown report highlighting key wish insights."""
+
+    wishes = list(manifest.get("wishes", []) or [])
+    if not wishes:
+        return (
+            "# Echo Wish Report\n\n"
+            "No wishes recorded yet. Run `echoctl wish` to seed the manifest."
+        )
+
+    limit = highlight_limit if highlight_limit > 0 else None
+
+    total = len(wishes)
+    unique_wishers = len({wish.get("wisher", "") for wish in wishes if wish.get("wisher")})
+
+    statuses = Counter(wish.get("status", "unknown") or "unknown" for wish in wishes)
+    catalysts = Counter(_iter_catalysts(wishes))
+
+    wishers = defaultdict(lambda: {"count": 0, "latest": datetime.fromtimestamp(0, tz=timezone.utc)})
+    latest_details: dict[str, tuple[datetime, str]] = {}
+
+    for wish in wishes:
+        wisher = wish.get("wisher", "unknown") or "unknown"
+        wishers[wisher]["count"] += 1
+        timestamp = _parse_timestamp(wish.get("created_at"))
+        latest = wishers[wisher]["latest"]
+        if timestamp >= latest:
+            wishers[wisher]["latest"] = timestamp
+            latest_details[wisher] = (
+                timestamp,
+                wish.get("desire", "?"),
+            )
+
+    latest_wish = max(wishes, key=lambda wish: _parse_timestamp(wish.get("created_at")))
+    latest_time = _parse_timestamp(latest_wish.get("created_at")).isoformat()
+    latest_wisher = latest_wish.get("wisher", "unknown")
+    latest_desire = latest_wish.get("desire", "?")
+
+    lines: list[str] = ["# Echo Wish Report", ""]
+    lines.append(f"*Total wishes:* {total}")
+    lines.append(f"*Unique wishers:* {unique_wishers}")
+    lines.append(f"*Most recent:* {latest_time} — {latest_wisher}: {latest_desire}")
+    lines.append("")
+
+    lines.append("## Status Overview")
+    lines.append("")
+    lines.append("| Status | Count |")
+    lines.append("| --- | ---: |")
+    for status, count in sorted(statuses.items(), key=lambda item: (-item[1], item[0])):
+        lines.append(f"| {status} | {count} |")
+    lines.append("")
+
+    lines.append("## Top Wishers")
+    lines.append("")
+    lines.append("| Wisher | Wishes | Latest Desire | Last Update |")
+    lines.append("| --- | ---: | --- | --- |")
+    wisher_entries = sorted(
+        (
+            wisher,
+            info["count"],
+            latest_details.get(wisher, (datetime.fromtimestamp(0, tz=timezone.utc), "?")),
+        )
+        for wisher, info in wishers.items()
+    )
+    wisher_entries.sort(key=lambda item: (-item[1], item[0]))
+    if limit is not None:
+        wisher_entries = wisher_entries[:limit]
+    for wisher, count, (timestamp, desire) in wisher_entries:
+        lines.append(
+            "| {wisher} | {count} | {desire} | {timestamp} |".format(
+                wisher=wisher,
+                count=count,
+                desire=desire.replace("|", "\\|"),
+                timestamp=timestamp.isoformat(),
+            )
+        )
+    lines.append("")
+
+    lines.append("## Catalyst Highlights")
+    lines.append("")
+    if catalysts:
+        lines.append("| Catalyst | Count |")
+        lines.append("| --- | ---: |")
+        catalyst_entries = catalysts.most_common(limit) if limit is not None else catalysts.most_common()
+        for name, count in catalyst_entries:
+            lines.append(f"| {name} | {count} |")
+    else:
+        lines.append("No catalysts recorded yet.")
+
+    return "\n".join(lines)
+
+
+__all__ = ["summarize_wishes", "render_wish_report"]
