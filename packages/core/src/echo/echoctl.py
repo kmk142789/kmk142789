@@ -49,7 +49,7 @@ except ImportError:  # pragma: no cover - executed when run as script
     MoonshotLens = _MOONSHOT.MoonshotLens  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
-    from .wish_insights import summarize_wishes
+    from .wish_insights import render_wish_report, summarize_wishes
 except ImportError:  # pragma: no cover - executed when run as script
     _INSIGHTS_SPEC = importlib.util.spec_from_file_location(
         "echo.wish_insights", (Path(__file__).resolve().parent / "wish_insights.py")
@@ -59,6 +59,7 @@ except ImportError:  # pragma: no cover - executed when run as script
     _INSIGHTS = importlib.util.module_from_spec(_INSIGHTS_SPEC)
     _INSIGHTS_SPEC.loader.exec_module(_INSIGHTS)  # type: ignore[attr-defined]
     summarize_wishes = _INSIGHTS.summarize_wishes  # type: ignore[attr-defined]
+    render_wish_report = _INSIGHTS.render_wish_report  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
     from .idea_to_action import derive_action_plan
@@ -181,6 +182,28 @@ def show_summary() -> None:
 
     manifest = load_manifest()
     print(summarize_wishes(manifest))
+
+
+def run_wish_report(argv: List[str]) -> int:
+    """Render a Markdown wish report summarising manifest activity."""
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl wish-report",
+        description="Render a Markdown report with wish, status, and catalyst insights.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=5,
+        help="Maximum number of wishers and catalysts to highlight (default: %(default)s).",
+    )
+
+    options = parser.parse_args(argv)
+
+    manifest = load_manifest()
+    report = render_wish_report(manifest, highlight_limit=options.limit)
+    print(report)
+    return 0
 
 
 def run_health(argv: List[str]) -> int:
@@ -526,7 +549,7 @@ def run_moonshot(argv: List[str]) -> int:
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
         print(
-            "usage: echoctl [cycle|plan|summary|health|groundbreaking|moonshot|wish|idea|inspire] ..."
+            "usage: echoctl [cycle|plan|summary|wish-report|health|groundbreaking|moonshot|wish|idea|inspire] ..."
         )
         return 1
     cmd = argv[1]
@@ -539,6 +562,8 @@ def main(argv: List[str]) -> int:
     if cmd == "summary":
         show_summary()
         return 0
+    if cmd == "wish-report":
+        return run_wish_report(argv[2:])
     if cmd == "health":
         return run_health(argv[2:])
     if cmd == "groundbreaking":

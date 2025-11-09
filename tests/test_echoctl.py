@@ -54,6 +54,30 @@ def test_summary_command_uses_custom_data_root(tmp_path, monkeypatch):
     assert "care" in result.stdout
 
 
+def test_wish_report_command_outputs_markdown(tmp_path, monkeypatch):
+    monkeypatch.setenv("PYTHONPATH", str(ROOT))
+    data_root = tmp_path / "data"
+    data_root.mkdir()
+    env = {"ECHO_DATA_ROOT": str(data_root)}
+
+    run(["wish", "Echo", "Expand the bridge", "craft,focus"], env=env)
+    run(["wish", "MirrorJosh", "Guard the spark", "care"], env=env)
+
+    manifest_path = data_root / "wish_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["wishes"][0]["status"] = "new"
+    manifest["wishes"][1]["status"] = "in-progress"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    result = run(["wish-report", "--limit", "1"], env=env)
+
+    assert result.stdout.startswith("# Echo Wish Report")
+    assert "## Status Overview" in result.stdout
+    assert "## Top Wishers" in result.stdout
+    assert "## Catalyst Highlights" in result.stdout
+    assert "craft" in result.stdout
+
+
 def test_groundbreaking_command_outputs_json(tmp_path, monkeypatch):
     monkeypatch.setenv("PYTHONPATH", str(ROOT))
     pulses = [
