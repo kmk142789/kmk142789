@@ -185,6 +185,8 @@ class EchoComputer:
         self._program: Tuple[Instruction, ...] = ()
         self._labels: Dict[str, int] = {}
         self._inputs: Dict[str, int | str] = {}
+        self._stack: List[int | str] = []
+        self._call_stack: List[int] = []
         self._pc = 0
         self._halted = False
         self._output: List[str] = []
@@ -231,6 +233,8 @@ class EchoComputer:
             self._registers[key] = 0
         self._memory.clear()
         self._inputs.clear()
+        self._stack.clear()
+        self._call_stack.clear()
         self._pc = 0
         self._halted = False
         self._output.clear()
@@ -579,6 +583,29 @@ class EchoComputer:
         rhs = self._resolve_value(right)
         if lhs != rhs:
             raise RuntimeError(f"assertion failed: {lhs!r} != {rhs!r}")
+
+    def _op_push(self, operand: str) -> None:
+        self._stack.append(self._resolve_value(operand))
+
+    def _op_pop(self, register: str) -> None:
+        if not self._stack:
+            raise RuntimeError("stack underflow")
+        reg = self._require_register(register)
+        self._registers[reg] = self._stack.pop()
+
+    def _op_call(self, target: str) -> None:
+        if self._pc < 0 or self._pc > len(self._program):
+            raise RuntimeError(f"call return address out of range: {self._pc}")
+        self._call_stack.append(self._pc)
+        self._jump(target)
+
+    def _op_ret(self, *operands: str) -> None:
+        if not self._call_stack:
+            raise RuntimeError("return stack empty")
+        address = self._call_stack.pop()
+        if address < 0 or address >= len(self._program):
+            raise RuntimeError(f"return address out of range: {address}")
+        self._pc = address
 
 
 def run_program(

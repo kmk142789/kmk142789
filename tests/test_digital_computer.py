@@ -280,3 +280,68 @@ def test_assistant_max_pair_template() -> None:
 
     assert result.output == ("7",)
 
+
+def test_stack_push_pop_round_trip() -> None:
+    program = """
+    LOAD A 1
+    LOAD B 2
+    PUSH A
+    PUSH B
+    LOAD A 0
+    LOAD B 0
+    POP B
+    POP A
+    HALT
+    """
+
+    result = run_program(program)
+
+    assert result.registers["A"] == 1
+    assert result.registers["B"] == 2
+
+
+def test_pop_from_empty_stack_raises() -> None:
+    computer = EchoComputer()
+    computer.load(
+        """
+        POP A
+        HALT
+        """
+    )
+
+    with pytest.raises(RuntimeError):
+        computer.run()
+
+
+def test_call_and_ret_support_subroutines() -> None:
+    program = """
+    LOAD A 2
+    LOAD B 3
+    CALL add
+    PRINT A
+    HALT
+    add:
+        PUSH B
+        ADD A B
+        POP B
+        RET
+    """
+
+    result = run_program(program)
+
+    assert result.output == ("5",)
+    assert result.registers["B"] == 3
+
+
+def test_ret_without_call_stack_raises() -> None:
+    computer = EchoComputer()
+    computer.load(
+        """
+        RET
+        HALT
+        """
+    )
+
+    with pytest.raises(RuntimeError):
+        computer.run()
+
