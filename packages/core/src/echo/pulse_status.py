@@ -1,10 +1,150 @@
-from echo.echo_codox_kernel import EchoCodexKernel
+"""Utility helpers for inspecting the Echo pulse history.
+
+The original script only printed two numbers which meant operators often had to
+open ``pulse_history.json`` manually when they wanted richer context.  The
+updated tool provides a small command line interface that can filter the stored
+events, render a human readable timeline, and emit JSON payloads that are easy
+to feed into dashboards or other automations.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from dataclasses import asdict
+from datetime import datetime, timezone
+from typing import Iterable, List, Optional
+
+from echo.echo_codox_kernel import EchoCodexKernel, PulseEvent
 
 
-def main():
+def _format_timestamp(timestamp: float) -> str:
+    """Return an ISO-8601 string for ``timestamp`` in UTC."""
+
+    dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+    # ``isoformat`` already appends ``+00:00`` for UTC aware timestamps.  The
+    # trailing ``Z`` is widely used in tooling so we normalise to that form.
+    return dt.isoformat().replace("+00:00", "Z")
+
+
+def _filter_events(events: Iterable[PulseEvent], needle: Optional[str]) -> List[PulseEvent]:
+    """Return events whose message contains ``needle`` (case-insensitive).
+
+    When ``needle`` is ``None`` the original order is preserved and all events
+    are returned.  This keeps the filtering logic reusable for both text and
+    JSON output while keeping the implementation easy to test in isolation.
+    """
+
+    if needle is None:
+        return list(events)
+
+    needle_lower = needle.casefold()
+    return [event for event in events if needle_lower in event.message.casefold()]
+
+
+def _event_digest(event: PulseEvent) -> str:
+    """Return a succinct summary string for ``event``."""
+
+    ts = _format_timestamp(event.timestamp)
+    digest = event.hash[:12]
+    return f"{ts} │ {digest} │ {event.message}"
+
+
+def _build_summary(events: List[PulseEvent]) -> dict:
+    """Compute summary statistics for ``events``.
+
+    The output includes total counts, time span, and the hash resonance so
+    callers can quickly gauge the pulse ledger's state without digging through
+    raw files.
+    """
+
+    summary: dict = {
+        "count": len(events),
+    }
+
+    if events:
+        first = events[0]
+        last = events[-1]
+        summary.update(
+            {
+                "first_timestamp": _format_timestamp(first.timestamp),
+                "last_timestamp": _format_timestamp(last.timestamp),
+                "span_seconds": round(last.timestamp - first.timestamp, 2),
+            }
+        )
+
+    return summary
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Inspect the Echo pulse history")
+    parser.add_argument(
+        "--search",
+        metavar="TEXT",
+        help="only include events whose message contains TEXT",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="number of most recent events to display (default: 10)",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="emit JSON with summary and events instead of human readable text",
+    )
+    parser.add_argument(
+        "--show-resonance",
+        action="store_true",
+        help="include the current resonance hash in the textual output",
+    )
+    return parser
+
+
+def main(argv: Optional[Iterable[str]] = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(list(argv) if argv is not None else None)
+
     kernel = EchoCodexKernel()
-    print(f"Events: {len(kernel.history)}")
-    print(f"Resonance: {kernel.resonance()}")
+    filtered_events = _filter_events(kernel.history, args.search)
+
+    if args.json:
+        payload = {
+            "summary": _build_summary(kernel.history),
+            "filtered_summary": _build_summary(filtered_events),
+            "events": [
+                {
+                    **asdict(event),
+                    "timestamp_iso": _format_timestamp(event.timestamp),
+                }
+                for event in filtered_events[-args.limit :]
+            ],
+            "resonance": kernel.resonance(),
+        }
+        print(json.dumps(payload, indent=2))
+        return
+
+    print("Echo Pulse Overview")
+    print("===================")
+    print(f"Total events: {len(kernel.history)}")
+
+    if args.show_resonance:
+        print(f"Resonance: {kernel.resonance()}")
+
+    if not filtered_events:
+        if args.search:
+            print(f"No events matched search term: {args.search}")
+        else:
+            print("No events recorded yet.")
+        return
+
+    latest = filtered_events[-args.limit :]
+    print(f"Displaying {len(latest)} of {len(filtered_events)} filtered events")
+    print("timestamp │ hash digest │ message")
+    print("-" * 72)
+    for event in latest:
+        print(_event_digest(event))
 
 
 if __name__ == "__main__":
