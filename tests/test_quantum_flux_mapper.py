@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import math
 
+import pytest
+
 from echo.quantum_flux_mapper import QuantumFluxMapper, STANDARD_GATES
 
 
@@ -52,3 +54,18 @@ def test_measure_collapses_state():
 
 def test_standard_gates_catalog_contains_expected_entries():
     assert set(["H", "X", "Z"]).issubset(STANDARD_GATES)
+
+
+def test_apply_rotation_balances_superposition():
+    mapper = QuantumFluxMapper()
+    mapper.apply_rotation("y", math.pi / 2)
+    alpha, beta = mapper.state
+    assert math.isclose(abs(alpha) ** 2, 0.5, rel_tol=1e-9)
+    assert math.isclose(abs(beta) ** 2, 0.5, rel_tol=1e-9)
+    assert mapper.history[-1].startswith("Applied RY rotation")
+
+
+def test_apply_rotation_rejects_invalid_axis():
+    mapper = QuantumFluxMapper()
+    with pytest.raises(ValueError):
+        mapper.apply_rotation("q", math.pi / 3)

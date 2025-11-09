@@ -86,6 +86,49 @@ class QuantumFluxMapper:
             self.apply_gate(gate)
         return self.state
 
+    def apply_rotation(self, axis: str, angle: float) -> ComplexVector:
+        """Apply a continuous rotation around the chosen Bloch axis.
+
+        Parameters
+        ----------
+        axis:
+            One of ``"X"``, ``"Y"``, or ``"Z"`` (case-insensitive).
+        angle:
+            Rotation angle in radians.  The implementation follows the
+            conventional definitions :math:`R_x`, :math:`R_y`, and :math:`R_z`
+            from quantum computing literature.
+        """
+
+        axis = axis.upper()
+        if axis not in {"X", "Y", "Z"}:
+            raise ValueError("axis must be one of 'X', 'Y', or 'Z'")
+        if not math.isfinite(angle):
+            raise ValueError("angle must be finite")
+
+        half_angle = angle / 2.0
+        cos_half = math.cos(half_angle)
+        sin_half = math.sin(half_angle)
+
+        if axis == "X":
+            matrix: ComplexMatrix = (
+                (complex(cos_half, 0.0), complex(0.0, -sin_half)),
+                (complex(0.0, -sin_half), complex(cos_half, 0.0)),
+            )
+        elif axis == "Y":
+            matrix = (
+                (complex(cos_half, 0.0), complex(-sin_half, 0.0)),
+                (complex(sin_half, 0.0), complex(cos_half, 0.0)),
+            )
+        else:  # axis == "Z"
+            matrix = (
+                (complex(cos_half, -sin_half), 0 + 0j),
+                (0 + 0j, complex(cos_half, sin_half)),
+            )
+
+        self.state = _normalize(_apply_matrix(self.state, matrix))
+        self.history.append(f"Applied R{axis} rotation ({angle} rad)")
+        return self.state
+
     def bloch_coordinates(self) -> Tuple[float, float, float]:
         """Return ``(x, y, z)`` on the Bloch sphere for the current state."""
 
