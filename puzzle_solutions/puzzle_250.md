@@ -12,4 +12,7 @@ Therefore, the completed Bitcoin address for the provided locking script is:
 1KEh59RrPavuLFbHvE1JAk6n8PXuYSDQGK
 ```
 
-> **Note**: The supplied metadata address `1GTGue5H59bsZrtQxqCr7ELRG3NA2tJ263` decodes to the hash160 `a981fb1182d43e860820d02b83f737fa61405d46`, which does not match the locking script. The Base58Check reconstruction above corresponds to the provided hash160 and script.
+> **Note**:
+> - The supplied metadata address is `1GTGue5H59bsZrtQxqCr7ELRG3NA2tJ263`.
+> - Decoding that address yields the hash160 `a981fb1182d43e860820d02b83f737fa61405d46`.
+> - Because this hash160 differs from the locking script, the Base58Check reconstruction above is the correct address for the provided puzzle data.
