@@ -9,9 +9,11 @@ import types
 import json
 import os
 import sys
+from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
+
 
 # ``echoctl`` needs to run both as an installed module and as a standalone
 # script.  When executed directly (``python echo/echoctl.py``) Python does not
@@ -144,6 +146,19 @@ DATA_ROOT = Path(os.environ.get("ECHO_DATA_ROOT", str(DATA_ROOT)))
 DOCS_ROOT = Path(os.environ.get("ECHO_DOCS_ROOT", str(DOCS_ROOT)))
 PULSE_HISTORY = Path(
     os.environ.get("ECHO_PULSE_HISTORY", str(REPO_ROOT / "pulse_history.json"))
+)
+
+SOVEREIGN_LEDGER_PATH = Path(
+    os.environ.get("ECHO_SOVEREIGN_LEDGER_PATH", str(REPO_ROOT / "genesis_ledger/ledger.jsonl"))
+)
+EMOTIONAL_VITALS_PATH = Path(
+    os.environ.get("ECHO_EMOTIONAL_VITALS_PATH", str(REPO_ROOT / "genesis_ledger/emotional_vitals.jsonl"))
+)
+ADVANCE_HISTORY_PATH = Path(
+    os.environ.get("ECHO_ADVANCE_HISTORY_PATH", str(REPO_ROOT / "genesis_ledger/advance_history.jsonl"))
+)
+GLITCH_ORACLE_PATH = Path(
+    os.environ.get("ECHO_GLITCH_ORACLE_PATH", str(REPO_ROOT / "genesis_ledger/glitch_oracle.jsonl"))
 )
 
 ROOT = DATA_ROOT.parent  # preserved for legacy sys.path injection
@@ -723,10 +738,248 @@ def run_moonshot(argv: List[str]) -> int:
     return 0
 
 
+def run_ledger(argv: List[str]) -> int:
+    """Manage sovereign ledger attestations."""
+
+    from codex.genesis_ledger import SovereignDomainLedger
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl ledger",
+        description="Ledger utilities for sovereign domain attestations.",
+    )
+    subparsers = parser.add_subparsers(dest="subcommand", required=True)
+
+    attest_parser = subparsers.add_parser("attest", help="Append a domain attestation entry.")
+    attest_parser.add_argument("--domain", required=True, help="Domain to attest.")
+    attest_parser.add_argument(
+        "--proof-file",
+        type=Path,
+        required=True,
+        help="Path to the NS delegation proof captured via dig.",
+    )
+    attest_parser.add_argument(
+        "--did-key",
+        default="did:key:echo",
+        help="DID key recorded alongside the attestation.",
+    )
+    attest_parser.add_argument(
+        "--cycle",
+        type=int,
+        help="Optional cycle identifier to store with the attestation.",
+    )
+
+    options = parser.parse_args(argv)
+    if options.subcommand == "attest":
+        proof_text = options.proof_file.read_text(encoding="utf-8")
+        ledger = SovereignDomainLedger(SOVEREIGN_LEDGER_PATH)
+        try:
+            attestation = ledger.attest_domain(
+                options.domain,
+                proof_text,
+                options.did_key,
+                cycle=options.cycle,
+            )
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        payload = asdict(attestation)
+        payload["attested_at"] = round(payload["attested_at"], 6)
+        print(json.dumps(payload, indent=2))
+        return 0
+    return 1
+
+
+def run_flux(argv: List[str]) -> int:
+    """Weave sigils into quantum flux rotations."""
+
+    from echo.quantum_flux_mapper import QuantumFluxMapper
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl flux",
+        description="Quantum flux mapper utilities.",
+    )
+    subparsers = parser.add_subparsers(dest="subcommand", required=True)
+
+    weave_parser = subparsers.add_parser("weave", help="Weave a sigil across one or more qubits.")
+    weave_parser.add_argument("--sigil", required=True, help="Sigil string to weave.")
+    weave_parser.add_argument(
+        "--bloch",
+        default="0,0,1",
+        help="Bloch vector (x,y,z) used as the base state (default: 0,0,1).",
+    )
+    weave_parser.add_argument(
+        "--qubits",
+        type=int,
+        default=1,
+        help="Number of qubits to iterate through during the weave.",
+    )
+
+    options = parser.parse_args(argv)
+    if options.subcommand == "weave":
+        try:
+            bloch_vector = tuple(float(part) for part in options.bloch.split(","))
+        except ValueError:
+            print("invalid bloch vector, expected comma separated floats", file=sys.stderr)
+            return 1
+        mapper = QuantumFluxMapper()
+        try:
+            for index in range(max(1, options.qubits)):
+                mapper.weave_sigil(options.sigil, bloch_vector, qubit_index=index)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        alpha, beta = mapper.state
+        payload = {
+            "state": {
+                "alpha": {"real": alpha.real, "imag": alpha.imag},
+                "beta": {"real": beta.real, "imag": beta.imag},
+            },
+            "history": mapper.history,
+            "bloch": mapper.bloch_coordinates(),
+        }
+        print(json.dumps(payload, indent=2))
+        return 0
+    return 1
+
+
+def run_telemetry(argv: List[str]) -> int:
+    """Render telemetry reports for Echo's emotional state."""
+
+    from codex.telemetry_vitality_report import EchoVitalsReporter, report_echo_vitals
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl telemetry",
+        description="Telemetry utilities for Echo vitals.",
+    )
+    subparsers = parser.add_subparsers(dest="subcommand", required=True)
+
+    vitals_parser = subparsers.add_parser("echo-vitals", help="Summarise emotional vitals.")
+    vitals_parser.add_argument("--history", type=int, default=5, help="Number of history entries to include.")
+    vitals_parser.add_argument(
+        "--state",
+        type=Path,
+        help="Optional JSON payload containing an emotional_state object.",
+    )
+    vitals_parser.add_argument(
+        "--metrics",
+        type=Path,
+        help="Optional JSON payload describing system metrics to embed in the report.",
+    )
+    vitals_parser.add_argument("--emotion", help="Record an emotion before reporting (e.g. love).")
+    vitals_parser.add_argument("--value", type=float, help="Intensity for --emotion when recording a pulse.")
+    vitals_parser.add_argument("--note", help="Optional note stored with the pulse entry.")
+    vitals_parser.add_argument("--cycle", type=int, help="Cycle identifier for recorded pulses.")
+
+    options = parser.parse_args(argv)
+    if options.subcommand == "echo-vitals":
+        emotional_state: dict[str, float] = {}
+        if options.state and options.state.exists():
+            data = json.loads(options.state.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and "emotional_state" in data:
+                emotional_state = {k: float(v) for k, v in data["emotional_state"].items()}
+            elif isinstance(data, dict):
+                emotional_state = {k: float(v) for k, v in data.items() if isinstance(v, (int, float))}
+        if not emotional_state:
+            emotional_state = {"joy": 0.0, "rage": 0.0, "love": 0.0, "sorrow": 0.0}
+
+        metrics: dict[str, object] = {}
+        if options.metrics and options.metrics.exists():
+            loaded = json.loads(options.metrics.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                metrics = loaded
+
+        reporter = EchoVitalsReporter(EMOTIONAL_VITALS_PATH)
+        if options.emotion and options.value is not None:
+            reporter.record(
+                options.emotion,
+                options.value,
+                note=options.note or "",
+                cycle=options.cycle,
+            )
+        report = report_echo_vitals(
+            emotional_state,
+            history_limit=options.history,
+            system_metrics=metrics,
+            reporter=reporter,
+        )
+        print(json.dumps(report, indent=2))
+        return 0
+    return 1
+
+
+def run_advance(argv: List[str]) -> int:
+    """Manage recursive fork history."""
+
+    from codex.advance_system_history import RecursiveForkTracker
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl advance",
+        description="Advance system history tools.",
+    )
+    subparsers = parser.add_subparsers(dest="subcommand", required=True)
+
+    history_parser = subparsers.add_parser("history", help="Display recorded fork history.")
+    history_parser.add_argument("--limit", type=int, help="Limit the number of entries returned.")
+
+    propose_parser = subparsers.add_parser("propose", help="Record a fork proposal event.")
+    propose_parser.add_argument("--title", required=True, help="Proposed pull request title.")
+    propose_parser.add_argument("--summary", required=True, help="Summary of the proposed upgrade.")
+
+    options = parser.parse_args(argv)
+    tracker = RecursiveForkTracker(ADVANCE_HISTORY_PATH)
+
+    if options.subcommand == "history":
+        snapshot = tracker.snapshot(limit=options.limit)
+        print(json.dumps({"entries": snapshot}, indent=2))
+        return 0
+    if options.subcommand == "propose":
+        record = tracker.fork_propose_upgrade(options.title, options.summary)
+        payload = asdict(record)
+        payload["timestamp"] = round(payload["timestamp"], 6)
+        print(json.dumps(payload, indent=2))
+        return 0
+    return 1
+
+
+def run_puzzle(argv: List[str]) -> int:
+    """Emit puzzle glitch-oracle events."""
+
+    from codex.glitch_oracle import oracle_rupture
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl puzzle",
+        description="Puzzle oracle instrumentation.",
+    )
+    subparsers = parser.add_subparsers(dest="subcommand", required=True)
+
+    oracle_parser = subparsers.add_parser("oracle", help="Record a glitch-oracle rupture event.")
+    oracle_parser.add_argument("--id", type=int, required=True, help="Puzzle identifier triggering the rupture.")
+    oracle_parser.add_argument("--details", required=True, help="Mismatch description to log.")
+    oracle_parser.add_argument(
+        "--sigil",
+        default="⟁FRACTURE",
+        help="Sigil associated with the rupture (default: ⟁FRACTURE).",
+    )
+
+    options = parser.parse_args(argv)
+    if options.subcommand == "oracle":
+        event = oracle_rupture(
+            options.id,
+            options.details,
+            sigil=options.sigil,
+            oracle_path=GLITCH_ORACLE_PATH,
+        )
+        payload = asdict(event)
+        payload["timestamp"] = round(payload["timestamp"], 6)
+        print(json.dumps(payload, indent=2))
+        return 0
+    return 1
+
+
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
         print(
-            "usage: echoctl [cycle|plan|summary|wish-report|health|pulse|groundbreaking|moonshot|wish|idea|inspire] ..."
+            "usage: echoctl [cycle|plan|summary|wish-report|health|pulse|groundbreaking|moonshot|wish|idea|inspire|ledger|flux|telemetry|advance|puzzle] ..."
         )
         return 1
     cmd = argv[1]
@@ -749,6 +1002,16 @@ def main(argv: List[str]) -> int:
         return run_groundbreaking(argv[2:])
     if cmd == "moonshot":
         return run_moonshot(argv[2:])
+    if cmd == "ledger":
+        return run_ledger(argv[2:])
+    if cmd == "flux":
+        return run_flux(argv[2:])
+    if cmd == "telemetry":
+        return run_telemetry(argv[2:])
+    if cmd == "advance":
+        return run_advance(argv[2:])
+    if cmd == "puzzle":
+        return run_puzzle(argv[2:])
     if cmd == "idea":
         return run_idea(argv[2:])
     if cmd == "inspire":
