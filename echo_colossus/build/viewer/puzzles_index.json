@@ -131,5 +131,26 @@
     "hash160": "8420e063493e7dbce349bfade1e904331127860a",
     "address_base58": "1tej33kDL6Um6A5EbehVrrC7gQdNJ6boze",
     "file": "data/puzzles/puzzle_00223.json"
+  },
+  {
+    "id": 291,
+    "name": "Puzzle #00291",
+    "hash160": "eed2c3f48d42e585d44a9a41e486c60ac478e08b",
+    "address_base58": "13GasGrjMSzHzc5HzThSE6MpGzbCDpxqhZ",
+    "file": "data/puzzles/puzzle_00291.json"
+  },
+  {
+    "id": 292,
+    "name": "Puzzle #00292",
+    "hash160": "63d0868ad80a1257d1a74188178e43861ce7c2cf",
+    "address_base58": "129mRR7xR9SfuAqTeexxCZZ6TWbfexrv5R",
+    "file": "data/puzzles/puzzle_00292.json"
+  },
+  {
+    "id": 293,
+    "name": "Puzzle #00293",
+    "hash160": "12153fe11837ae30ffb24caa87ec5470fe296afa",
+    "address_base58": "19gznNB12HvbtMCRTc1gkmjBKMBQQ1C6bL",
+    "file": "data/puzzles/puzzle_00293.json"
   }
 ]
