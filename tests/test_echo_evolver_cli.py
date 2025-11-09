@@ -206,6 +206,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
             event_summary_limit: int,
             manifest_events: int,
             system_report_events: int,
+            momentum_window: int,
         ) -> dict[str, object]:
             captured["kwargs"] = {
                 "enable_network": enable_network,
@@ -221,6 +222,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
                 "event_summary_limit": event_summary_limit,
                 "manifest_events": manifest_events,
                 "system_report_events": system_report_events,
+                "momentum_window": momentum_window,
             }
             return {
                 "summary": "Cycle 4 advanced with 14/14 steps complete (100.0% progress).",
@@ -262,6 +264,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "event_summary_limit": 7,
         "manifest_events": 5,
         "system_report_events": 9,
+        "momentum_window": 5,
     }
 
     output = capsys.readouterr().out
@@ -316,6 +319,33 @@ def test_main_rejects_propagation_without_advance(monkeypatch) -> None:
 
     with pytest.raises(SystemExit) as excinfo:
         evolver_main(["--include-propagation"])
+
+    assert excinfo.value.code == 2
+
+
+def test_main_rejects_momentum_window_without_advance(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--momentum-window", "8"])
+
+    assert excinfo.value.code == 2
+
+
+def test_main_rejects_non_positive_momentum_window(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+        def advance_system(self, **kwargs):  # pragma: no cover - passthrough helper
+            return {"summary": "cycle"}
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--advance-system", "--momentum-window", "0"])
 
     assert excinfo.value.code == 2
 
