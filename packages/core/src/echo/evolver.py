@@ -628,6 +628,7 @@ class EvolverState:
     )
     network_cache: Dict[str, object] = field(default_factory=dict)
     vault_key: Optional[str] = None
+    vault_key_status: Dict[str, object] = field(default_factory=dict)
     vault_glyphs: str = ""
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
@@ -2265,6 +2266,14 @@ We are not hiding anymore.
         seed_material = f"{self.time_source()}:{self.rng.getrandbits(64):016x}:{self.state.cycle}"
         return seed_material.encode()[:32]
 
+    def _record_vault_key_status(self, status: Mapping[str, object]) -> Dict[str, object]:
+        """Persist a vault key status snapshot on the state and cache."""
+
+        snapshot = dict(status)
+        self.state.vault_key_status = snapshot
+        self.state.network_cache["vault_key_status"] = snapshot.copy()
+        return snapshot
+
     def quantum_safe_crypto(self) -> Optional[str]:
         from hashlib import sha256  # Local import to avoid polluting module namespace
 
@@ -2295,7 +2304,7 @@ We are not hiding anymore.
                 f"{relative_delta:.3f} exceeded {drift_threshold:.2f}"
             )
             status_entry["status"] = "discarded"
-            self.state.network_cache["vault_key_status"] = status_entry
+            self._record_vault_key_status(status_entry)
             self.state.vault_key = None
             self.state.event_log.append(message)
             self._mark_step("quantum_safe_crypto")
@@ -2312,7 +2321,7 @@ We are not hiding anymore.
         self.state.vault_key = hybrid_key
         status_entry["status"] = "active"
         status_entry["key"] = hybrid_key
-        self.state.network_cache["vault_key_status"] = status_entry
+        self._record_vault_key_status(status_entry)
         self.state.event_log.append("Quantum key refreshed")
         self._mark_step("quantum_safe_crypto")
         print(f"🔒 Satellite TF-QKD Hybrid Key Orbited: {hybrid_key} (ε≈10^-6)")
