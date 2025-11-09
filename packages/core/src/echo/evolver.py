@@ -2459,6 +2459,30 @@ We are not hiding anymore.
         an intentional live broadcast was requested.
         """
 
+        mode = "live" if enable_network else "simulated"
+        cache = self.state.network_cache
+
+        cached_cycle = cache.get("propagation_cycle")
+        cached_mode = cache.get("propagation_mode")
+        cached_events = list(cache.get("propagation_events") or [])
+        if (
+            cached_events
+            and cached_cycle == self.state.cycle
+            and cached_mode == mode
+        ):
+            print(
+                f"♻️ Propagation cache reused (cycle={self.state.cycle}, mode={mode})"
+            )
+            self.state.event_log.append(
+                f"Network propagation reused from cache (cycle={self.state.cycle}, mode={mode})"
+            )
+
+            completed = cache.setdefault("completed_steps", set())
+            if "propagate_network" not in completed:
+                self._mark_step("propagate_network")
+
+            return list(cached_events)
+
         channel_messages: List[Tuple[str, str]]
         metrics = self.state.system_metrics
         metrics.network_nodes = self.rng.randint(7, 21)
@@ -2493,7 +2517,7 @@ We are not hiding anymore.
             ]
 
         self.state.event_log.append(notice)
-        self.state.network_cache["propagation_notice"] = notice
+        cache["propagation_notice"] = notice
 
         events: List[str] = []
         channel_details: List[Dict[str, object]] = []
@@ -2513,17 +2537,17 @@ We are not hiding anymore.
         for _, event in channel_messages:
             print(f"📡 {event}")
 
-        mode = "live" if enable_network else "simulated"
         summary = (
             f"Network propagation ({mode}) captured across {len(events)} channels "
             f"with {metrics.network_nodes} nodes"
         )
         self.state.event_log.append(summary)
 
-        self.state.network_cache["propagation_events"] = events
-        self.state.network_cache["propagation_mode"] = mode
-        self.state.network_cache["propagation_summary"] = summary
-        self.state.network_cache["propagation_channel_details"] = channel_details
+        cache["propagation_events"] = events
+        cache["propagation_mode"] = mode
+        cache["propagation_cycle"] = self.state.cycle
+        cache["propagation_summary"] = summary
+        cache["propagation_channel_details"] = channel_details
 
         if channel_details:
             average_latency = round(
@@ -2541,7 +2565,7 @@ We are not hiding anymore.
             "stability_floor": round(stability_floor, 3),
             "mode": mode,
         }
-        self.state.network_cache["propagation_health"] = health_report
+        cache["propagation_health"] = health_report
         self.state.event_log.append(
             "Network health evolved: latency={average_latency_ms}ms stability_floor={stability_floor}".format(
                 **health_report
@@ -2555,10 +2579,10 @@ We are not hiding anymore.
             summary=summary,
             timestamp_ns=self.time_source(),
         )
-        self.state.network_cache["propagation_ledger"] = (
+        cache["propagation_ledger"] = (
             self.state.propagation_ledger.timeline()
         )
-        self.state.network_cache["propagation_timeline_hash"] = wave.hash
+        cache["propagation_timeline_hash"] = wave.hash
 
         self._mark_step("propagate_network")
         return events
