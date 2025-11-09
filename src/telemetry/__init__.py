@@ -3,6 +3,12 @@
 from .schema import ConsentState, TelemetryContext, TelemetryEvent
 from .collector import TelemetryCollector
 from .storage import InMemoryTelemetryStorage, JsonlTelemetryStorage, TelemetryStorage
+from .report import (
+    VitalityReport,
+    VitalityReportError,
+    generate_vitality_report,
+    main as generate_vitality_report_cli,
+)
 
 __all__ = [
     "ConsentState",
@@ -12,4 +18,8 @@ __all__ = [
     "TelemetryStorage",
     "InMemoryTelemetryStorage",
     "JsonlTelemetryStorage",
+    "VitalityReport",
+    "VitalityReportError",
+    "generate_vitality_report",
+    "generate_vitality_report_cli",
 ]
