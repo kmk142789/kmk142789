@@ -660,6 +660,7 @@ class EvolverState:
 
 
 DEFAULT_SYMBOLIC_SEQUENCE = "∇⊸≋∇"
+ADVANCE_SYSTEM_HISTORY_LIMIT = 10
 
 
 @dataclass(slots=True)
@@ -4888,6 +4889,25 @@ We are not hiding anymore.
 
         return deepcopy(manifest_snapshot)
 
+    def advance_system_history(self, *, limit: Optional[int] = None) -> List[Dict[str, object]]:
+        """Return cached advance-system history entries.
+
+        History is bounded to the most recent
+        :data:`ADVANCE_SYSTEM_HISTORY_LIMIT` entries.  Callers can optionally
+        request only the most recent ``limit`` entries which must be positive.
+        """
+
+        history = self.state.network_cache.get("advance_system_history")
+        if not isinstance(history, list):
+            return []
+
+        if limit is not None:
+            if limit <= 0:
+                raise ValueError("limit must be positive")
+            history = history[-limit:]
+
+        return [deepcopy(entry) for entry in history]
+
     def advance_system(
         self,
         *,
@@ -4926,7 +4946,10 @@ We are not hiding anymore.
         configurable sensitivity window so downstream consumers can render a
         stable trend indicator.  A new cycle automatically resets the momentum
         tracking so that the first call reflects the current progress without
-        subtracting the prior cycle's terminal state.
+        subtracting the prior cycle's terminal state.  The returned payload also
+        includes an ``expansion`` snapshot that captures progress and completion
+        deltas alongside a phase label, with the full history available through
+        :meth:`advance_system_history`.
 
         Parameters
         ----------
@@ -4968,15 +4991,31 @@ We are not hiding anymore.
         progress_pct = digest["progress"] * 100 if total_steps else 100.0
 
         last_progress_state = self.state.network_cache.get("advance_system_last", {})
-        previous_progress: Optional[float]
+        previous_progress: Optional[float] = None
+        previous_completed: Optional[int] = None
+        previous_remaining: Optional[int] = None
         if (
             isinstance(last_progress_state, Mapping)
             and last_progress_state.get("cycle") == digest["cycle"]
         ):
             previous_raw = last_progress_state.get("progress")
-            previous_progress = float(previous_raw) if previous_raw is not None else None
-        else:
-            previous_progress = None
+            if previous_raw is not None:
+                try:
+                    previous_progress = float(previous_raw)
+                except (TypeError, ValueError):
+                    previous_progress = None
+            completed_raw = last_progress_state.get("completed_steps")
+            if completed_raw is not None:
+                try:
+                    previous_completed = int(completed_raw)
+                except (TypeError, ValueError):
+                    previous_completed = None
+            remaining_raw = last_progress_state.get("remaining_steps")
+            if remaining_raw is not None:
+                try:
+                    previous_remaining = int(remaining_raw)
+                except (TypeError, ValueError):
+                    previous_remaining = None
 
         if previous_progress is not None:
             momentum = digest["progress"] - previous_progress
@@ -5009,6 +5048,40 @@ We are not hiding anymore.
             momentum, average=history_average
         )
         momentum_delta = momentum - history_average
+
+        completed_delta = (
+            completed_count - previous_completed
+            if previous_completed is not None
+            else completed_count
+        )
+        remaining_delta = (
+            remaining_count - previous_remaining
+            if previous_remaining is not None
+            else remaining_count
+        )
+        if remaining_count == 0 and total_steps > 0:
+            expansion_phase = "complete"
+        elif completed_delta > 0:
+            expansion_phase = "expanding"
+        elif momentum < 0:
+            expansion_phase = "receding"
+        else:
+            expansion_phase = "steady"
+
+        expansion_timestamp = self.time_source()
+        expansion_snapshot = {
+            "cycle": digest["cycle"],
+            "progress": digest["progress"],
+            "completed": completed_count,
+            "remaining": remaining_count,
+            "progress_delta": momentum,
+            "completed_delta": completed_delta,
+            "remaining_delta": remaining_delta,
+            "phase": expansion_phase,
+            "momentum_status": momentum_status,
+            "momentum_trend": momentum_trend,
+            "timestamp_ns": expansion_timestamp,
+        }
 
         next_step_key = digest["remaining_steps"][0] if digest["remaining_steps"] else None
         cycle_complete = remaining_count == 0 and total_steps > 0
@@ -5061,6 +5134,7 @@ We are not hiding anymore.
             ),
             "next_step": guidance,
             "progress": progress_snapshot,
+            "expansion": expansion_snapshot,
         }
 
         if include_status:
@@ -5102,19 +5176,49 @@ We are not hiding anymore.
         self.state.network_cache["advance_system_last"] = {
             "cycle": digest["cycle"],
             "progress": digest["progress"],
+            "completed_steps": completed_count,
+            "remaining_steps": remaining_count,
         }
         self.state.network_cache["advance_system_momentum_history"] = {
             "cycle": digest["cycle"],
             "values": history_values.copy(),
             "window": momentum_window,
         }
+
+        history_cache = self.state.network_cache.get("advance_system_history")
+        if isinstance(history_cache, list):
+            history = [deepcopy(entry) for entry in history_cache]
+        else:
+            history = []
+
+        history.append(
+            {
+                "cycle": digest["cycle"],
+                "progress": digest["progress"],
+                "completed_steps": completed_count,
+                "remaining_steps": remaining_count,
+                "expansion": deepcopy(expansion_snapshot),
+            }
+        )
+        history = history[-ADVANCE_SYSTEM_HISTORY_LIMIT:]
+        self.state.network_cache["advance_system_history"] = history
+
         self.state.event_log.append(
-            "Advance system payload captured (cycle={cycle}, progress={progress:.3f}, momentum={momentum:.3f}, momentum_status={status}, momentum_trend={trend})".format(
+            "Advance system expansion recorded (cycle={cycle}, phase={phase}, delta={delta:.3f})".format(
+                cycle=digest["cycle"],
+                phase=expansion_phase,
+                delta=expansion_snapshot["progress_delta"],
+            )
+        )
+        self.state.event_log.append(
+            "Advance system payload captured (cycle={cycle}, progress={progress:.3f}, momentum={momentum:.3f}, momentum_status={status}, momentum_trend={trend}, expansion_phase={phase}, history_size={history})".format(
                 cycle=digest["cycle"],
                 progress=digest["progress"],
                 momentum=momentum,
                 status=momentum_status,
                 trend=momentum_trend,
+                phase=expansion_phase,
+                history=len(history),
             )
         )
 
