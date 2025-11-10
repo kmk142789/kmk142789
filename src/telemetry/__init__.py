@@ -1,7 +1,15 @@
 """Ethical telemetry primitives with privacy-first defaults."""
 
-from .schema import ConsentState, TelemetryContext, TelemetryEvent
 from .collector import PendingTelemetryEvent, TelemetryCollector
+from .retention import (
+    CONSENT_OPT_OUT_REASON,
+    CONSENT_UNKNOWN_REASON,
+    EXPIRED_REASON,
+    RemovedTelemetryEvent,
+    RetentionDecision,
+    RetentionPolicy,
+)
+from .schema import ConsentState, TelemetryContext, TelemetryEvent
 from .storage import InMemoryTelemetryStorage, JsonlTelemetryStorage, TelemetryStorage
 from .report import (
     VitalityReport,
@@ -16,6 +24,12 @@ __all__ = [
     "TelemetryEvent",
     "PendingTelemetryEvent",
     "TelemetryCollector",
+    "RetentionPolicy",
+    "RetentionDecision",
+    "RemovedTelemetryEvent",
+    "EXPIRED_REASON",
+    "CONSENT_OPT_OUT_REASON",
+    "CONSENT_UNKNOWN_REASON",
     "TelemetryStorage",
     "InMemoryTelemetryStorage",
     "JsonlTelemetryStorage",
