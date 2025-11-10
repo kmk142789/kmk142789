@@ -126,7 +126,7 @@ def validate_key():
             jsonify(
                 {
                     "valid": False,
-                    "message": f"Validation failed: {result}",
+                    "error": f"Validation failed: {result}",
                     "key_hash": normalized_key,
                 }
             ),
@@ -149,7 +149,11 @@ def generate_domain():
 
     data = request.get_json(silent=True) or {}
     public_address = data.get("public_address")
-    genesis_info = data.get("genesis_info", {})
+    genesis_info = data.get("genesis_info") or {}
+    if not genesis_info:
+        genesis_id = data.get("genesis_id")
+        if genesis_id:
+            genesis_info = {"genesis_id": genesis_id}
 
     if not public_address:
         return jsonify({"success": False, "error": "Public address is required"}), 400
@@ -161,7 +165,9 @@ def generate_domain():
             genesis_info,
             domain_name=domain_name,
         )
-        return jsonify({"success": True, "domain": domain_name, "metadata": metadata})
+        return jsonify(
+            {"success": True, "domain_name": domain_name, "metadata": metadata}
+        )
     except Exception as exc:
         return (
             jsonify({"success": False, "error": f"Domain generation failed: {exc}"}),

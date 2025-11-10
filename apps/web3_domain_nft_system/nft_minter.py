@@ -19,6 +19,8 @@ import secrets
 from flask import Blueprint, Flask, jsonify, request
 from web3 import Web3
 
+from web3_domain_nft_system import crypto_bp
+
 
 @dataclass(slots=True)
 class MintRecord:
@@ -35,6 +37,7 @@ class MintRecord:
     timestamp: str
     gas_used: int
     status: str
+    contract_address: str
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -49,6 +52,7 @@ class MintRecord:
             "timestamp": self.timestamp,
             "gas_used": self.gas_used,
             "status": self.status,
+            "contract_address": self.contract_address,
         }
 
 
@@ -132,6 +136,7 @@ class NFTMinter:
             timestamp=timestamp,
             gas_used=gas_used,
             status="confirmed",
+            contract_address=self.contract_address,
         )
 
         self._minted_domains[domain_key] = record
@@ -227,7 +232,13 @@ def create_blueprint(minter: Optional[NFTMinter] = None) -> Blueprint:
             metadata = {}
         if not isinstance(metadata, Mapping):
             return (
-                jsonify({"message": "Metadata must be an object", "data": None}),
+                jsonify(
+                    {
+                        "message": "Metadata must be an object",
+                        "error": "Metadata must be an object",
+                        "data": None,
+                    }
+                ),
                 400,
             )
 
@@ -236,6 +247,7 @@ def create_blueprint(minter: Optional[NFTMinter] = None) -> Blueprint:
                 jsonify(
                     {
                         "message": "Missing required fields: domain_name, owner_address",
+                        "error": "Missing required fields: domain_name, owner_address",
                         "data": None,
                     }
                 ),
@@ -244,7 +256,13 @@ def create_blueprint(minter: Optional[NFTMinter] = None) -> Blueprint:
 
         if not _validate_address(owner_address):
             return (
-                jsonify({"message": "Invalid Ethereum address format", "data": None}),
+                jsonify(
+                    {
+                        "message": "Invalid Ethereum address format",
+                        "error": "Invalid Ethereum address format",
+                        "data": None,
+                    }
+                ),
                 400,
             )
 
@@ -255,10 +273,25 @@ def create_blueprint(minter: Optional[NFTMinter] = None) -> Blueprint:
                 metadata=metadata,
             )
         except ValueError as exc:
-            return jsonify({"message": f"Minting failed: {exc}", "data": None}), 409
+            return (
+                jsonify(
+                    {
+                        "message": f"Minting failed: {exc}",
+                        "error": str(exc),
+                        "data": None,
+                    }
+                ),
+                409,
+            )
         except Exception as exc:  # pragma: no cover - defensive guard
             return (
-                jsonify({"message": f"Minting request failed: {exc}", "data": None}),
+                jsonify(
+                    {
+                        "message": f"Minting request failed: {exc}",
+                        "error": str(exc),
+                        "data": None,
+                    }
+                ),
                 500,
             )
 
@@ -272,7 +305,16 @@ def create_blueprint(minter: Optional[NFTMinter] = None) -> Blueprint:
         payload = request.get_json(silent=True) or {}
         domain_name = str(payload.get("domain_name", "")).strip()
         if not domain_name:
-            return jsonify({"message": "Domain name is required", "available": False}), 400
+            return (
+                jsonify(
+                    {
+                        "message": "Domain name is required",
+                        "error": "Domain name is required",
+                        "available": False,
+                    }
+                ),
+                400,
+            )
 
         available = minter.check_domain_availability(domain_name)
         message = "Available for minting" if available else "Domain already exists"
@@ -282,7 +324,16 @@ def create_blueprint(minter: Optional[NFTMinter] = None) -> Blueprint:
     def get_domain_info(domain_name: str) -> Any:
         record = minter.get_nft_info(domain_name)
         if not record:
-            return jsonify({"message": "Domain not found or not minted", "found": False}), 404
+            return (
+                jsonify(
+                    {
+                        "message": "Domain not found or not minted",
+                        "error": "Domain not found or not minted",
+                        "found": False,
+                    }
+                ),
+                404,
+            )
         return jsonify({"message": "Domain details located", "found": True, "data": record})
 
     @blueprint.route("/batch-mint", methods=["POST"])
@@ -290,11 +341,20 @@ def create_blueprint(minter: Optional[NFTMinter] = None) -> Blueprint:
         payload = request.get_json(silent=True) or {}
         domains = payload.get("domains")
         if not domains:
-            return jsonify({"message": "No domains provided for batch minting"}), 400
+            return (
+                jsonify({"message": "No domains provided for batch minting", "error": "No domains provided"}),
+                400,
+            )
         if not isinstance(domains, list):
-            return jsonify({"message": "Domains payload must be a list"}), 400
+            return (
+                jsonify({"message": "Domains payload must be a list", "error": "Domains payload must be a list"}),
+                400,
+            )
         if len(domains) > 100:
-            return jsonify({"message": "Batch size limited to 100 domains"}), 400
+            return (
+                jsonify({"message": "Batch size limited to 100 domains", "error": "Batch size limited to 100 domains"}),
+                400,
+            )
 
         successes, failures, results = minter.batch_mint(domains)
         return jsonify(
@@ -311,7 +371,7 @@ def create_blueprint(minter: Optional[NFTMinter] = None) -> Blueprint:
     @blueprint.route("/stats", methods=["GET"])
     def get_minting_stats() -> Any:
         stats = minter.get_stats()
-        return jsonify({"message": "Minting statistics", "data": stats})
+        return jsonify(stats)
 
     return blueprint
 
@@ -320,7 +380,8 @@ def create_app(minter: Optional[NFTMinter] = None) -> Flask:
     """Return a minimal Flask app hosting the NFT minting blueprint."""
 
     app = Flask(__name__)
-    app.register_blueprint(create_blueprint(minter))
+    app.register_blueprint(create_blueprint(minter), url_prefix="/api/nft")
+    app.register_blueprint(crypto_bp, url_prefix="/api/crypto")
     return app
 
 
