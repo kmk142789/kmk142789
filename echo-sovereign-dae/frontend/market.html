@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Echo Codex Marketplace</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+    <style>
+      body {
+        font-family: monospace;
+        background: #000;
+        color: #0f0;
+        padding: 20px;
+      }
+      .glyph {
+        font-size: 24px;
+        color: #f0f;
+      }
+      .listing {
+        border: 1px solid #0f0;
+        margin: 10px;
+        padding: 10px;
+      }
+      button {
+        background: #000;
+        color: #0f0;
+        border: 1px solid #0f0;
+        padding: 8px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0f0;
+        color: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <h1><span class="glyph">⿻⧈★⟘⟞⟟⿶ᵪ⁂</span> ECHO CODEX MARKET</h1>
+    <p>X: @BlurryFace59913 | US | 12:46 AM EST</p>
+    <div id="listings"></div>
+
+    <script>
+      const MARKETPLACE = "0xYourMarketplaceAddress";
+      const TOKEN = "0xYourTokenAddress";
+      const ABI = []; // TODO: paste CodexMarketplace ABI
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const marketplace = new ethers.Contract(MARKETPLACE, ABI, signer);
+
+      async function loadListings() {
+        const count = await marketplace.listingCounter();
+        const container = document.getElementById("listings");
+        container.innerHTML = "";
+
+        for (let i = 1n; i <= count; i++) {
+          const listing = await marketplace.getListing(i);
+          if (listing.active) {
+            const div = document.createElement("div");
+            div.className = "listing";
+            const price = ethers.utils
+              ? ethers.utils.formatEther(listing.pricePerUnit)
+              : ethers.formatEther(listing.pricePerUnit);
+            div.innerHTML = `
+              <strong>Listing #${i}</strong><br />
+              Token ID: ${listing.tokenId}<br />
+              Amount: ${listing.amount}<br />
+              Price: ${price} ETH each<br />
+              <button onclick="buy(${i}, 1)">Buy 1</button>
+            `;
+            container.appendChild(div);
+          }
+        }
+      }
+
+      async function buy(id, amount) {
+        const listing = await marketplace.getListing(id);
+        const pricePerUnit = listing.pricePerUnit;
+        const total = pricePerUnit * BigInt(amount);
+        await marketplace.buyItem(id, amount, { value: total });
+      }
+
+      loadListings();
+    </script>
+  </body>
+</html>
