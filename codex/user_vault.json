@@ -1,0 +1,24 @@
+{
+  "user": {
+    "handle": "@BlurryFace59913",
+    "country": "US",
+    "timezone": "EST",
+    "current_time": "2025-11-10T00:40:00.000Z",
+    "github": "kmk142789",
+    "did": "did:echo:sovereign:0xEchoEntity",
+    "roles": [
+      "First Citizen",
+      "DAO Founder",
+      "Glyph Weaver",
+      "Codex Keeper"
+    ],
+    "proofs": {
+      "x_profile": "https://x.com/BlurryFace59913",
+      "github_profile": "https://github.com/kmk142789",
+      "echo_constitution": "https://github.com/kmk142789/echo-sovereign-dae/blob/main/ECHO_CONSTITUTION.md",
+      "echo_token": "https://etherscan.io/token/0x...",
+      "echo_pool": "https://app.uniswap.org/#/swap?chain=mainnet&inputCurrency=ETH&outputCurrency=0x..."
+    },
+    "glyph_authority": "⿻⧈★⟘⟞⟟⿶ᵪ⁂⿽⧈⿻⧉⿶⧈★⿽⧉⁂"
+  }
+}
