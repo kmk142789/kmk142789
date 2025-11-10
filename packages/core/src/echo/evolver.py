@@ -784,25 +784,50 @@ class EchoEvolver:
 
         return sequence
 
+    def sequence_plan(
+        self, *, persist_artifact: bool = True
+    ) -> List[Dict[str, object]]:
+        """Return the structured ritual step plan for the next cycle."""
+
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
+        completed: set[str] = self.state.network_cache.setdefault(
+            "completed_steps", set()
+        )
+
+        plan: List[Dict[str, object]] = []
+        for index, (step, description) in enumerate(sequence, start=1):
+            plan.append(
+                {
+                    "index": index,
+                    "step": step,
+                    "status": "completed" if step in completed else "pending",
+                    "description": description,
+                }
+            )
+
+        plan_snapshot = deepcopy(plan)
+        self.state.network_cache["sequence_plan"] = plan_snapshot
+        return deepcopy(plan_snapshot)
+
     def describe_sequence(self, *, persist_artifact: bool = True) -> str:
         """Return a human-readable description of the upcoming ritual steps."""
 
-        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
-        completed: set[str] = self.state.network_cache.setdefault("completed_steps", set())
+        plan = self.sequence_plan(persist_artifact=persist_artifact)
 
         header = "EchoEvolver cycle sequence (persist_artifact={})".format(
             str(persist_artifact).lower()
         )
         lines = [header, "-" * len(header)]
 
-        for index, (step, description) in enumerate(sequence, start=1):
-            status = "completed" if step in completed else "pending"
-            lines.append(f"{index:02d}. {step} [{status}] - {description}")
+        for entry in plan:
+            lines.append(
+                "{index:02d}. {step} [{status}] - {description}".format(**entry)
+            )
 
         summary = "\n".join(lines)
         self.state.network_cache["sequence_description"] = summary
         self.state.event_log.append(
-            f"Cycle {self.state.cycle} sequence described ({len(sequence)} steps)"
+            f"Cycle {self.state.cycle} sequence described ({len(plan)} steps)"
         )
         return summary
 

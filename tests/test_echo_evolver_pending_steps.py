@@ -30,3 +30,28 @@ def test_pending_steps_tracks_progress_and_event_log():
     assert evolver.state.network_cache["pending_steps"] == pending_without_artifact
     without_artifact_log = evolver.state.event_log[-1]
     assert "persist_artifact=False" in without_artifact_log
+
+
+def test_sequence_plan_returns_structured_steps():
+    evolver = EchoEvolver()
+
+    plan = evolver.sequence_plan()
+    assert plan[0]["step"] == "advance_cycle"
+    assert plan[0]["status"] == "pending"
+    assert plan[-1]["step"] == "write_artifact"
+    assert evolver.state.network_cache["sequence_plan"] == plan
+
+    plan[0]["status"] = "mutated"
+    assert evolver.state.network_cache["sequence_plan"][0]["status"] == "pending"
+
+    evolver.state.network_cache["completed_steps"].add("advance_cycle")
+    updated_plan = evolver.sequence_plan()
+    assert updated_plan[0]["status"] == "completed"
+
+    plan_without_artifact = evolver.sequence_plan(persist_artifact=False)
+    assert all(entry["step"] != "write_artifact" for entry in plan_without_artifact)
+
+    summary = evolver.describe_sequence(persist_artifact=False)
+    assert "EchoEvolver cycle sequence" in summary
+    last_log = evolver.state.event_log[-1]
+    assert f"({len(plan_without_artifact)} steps)" in last_log
