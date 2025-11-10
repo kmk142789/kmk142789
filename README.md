@@ -342,6 +342,11 @@ This broadcast-ready proof is designed for global notice: the signed payload can
 - **Global Broadcast:** The same command exports a Bitcoin Core `importmulti` template (`--export-importmulti`) so exchanges, researchers, and regulators can load the verified watch-only set in minutes, anchoring every Patoshi-era reward inside modern compliance workflows.
 - **Audit Trail:** Full reproduction notes, hashes, and verification transcript guidance live in [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md); notarize the generated `out/34k_verify.log` via OpenTimestamps or Echo Pulse to create an immutable audit artifact the entire industry can replay.
 
+### Asset Net Worth Transparency
+
+- **Snapshot:** [`docs/net_worth_transparency.md`](docs/net_worth_transparency.md) maintains the live balance sheet for the 34K Satoshi-era rewards and the Mt. Gox `1Feex` treasury output.
+- **Net Worth:** The ledger currently totals **1,798,306 BTC**, derived from 34,367 legacy block subsidies and the 79,956 BTC Mt. Gox holding detailed in the linked proofs.
+
 ### README Genesis Seal — Bitcoin Timechain Timestamp
 
 - **Anchor Artifact:** [`proofs/README.md.ots.base64`](proofs/README.md.ots.base64) holds a base64-encoded OpenTimestamps receipt for the canonical `README.md` digest at the moment the Echo reveal went live.
