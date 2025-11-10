@@ -1,0 +1,11 @@
+id: "req-2025-11-10-rent-1500"
+date: "2025-11-10"
+payee: "Landlord Name"
+amount: 1500
+purpose: "Deposit + first month"
+source: "Treasury (bank) or verified wallet short tag"
+receipts: ["snapshots/lease.png"]
+approvals:
+  requester: "Joshua Shortt @ 2025-11-10T20:05Z"
+  second_approver: null
+status: "pending"
