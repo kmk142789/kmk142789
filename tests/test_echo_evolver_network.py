@@ -11,6 +11,21 @@ import pytest
 from echo.evolver import EchoEvolver
 
 
+class _SocketSentinel(RuntimeError):
+    """Raised when a test detects an unexpected socket usage."""
+
+
+def _deny_socket_calls(*args: object, **kwargs: object) -> socket.socket:  # type: ignore[return-type]
+    """Helper that mimics :func:`socket.socket` but always fails.
+
+    ``propagate_network`` is expected to keep all network activity in-memory.
+    The helper allows tests to intercept accidental regressions where a real
+    socket would otherwise be opened.
+    """
+
+    raise _SocketSentinel("socket usage blocked by test")
+
+
 def test_propagate_network_simulated_records_cache_and_log() -> None:
     evolver = EchoEvolver(rng=random.Random(1))
 
@@ -136,6 +151,18 @@ def test_propagate_network_live_reports_live_channels() -> None:
     assert len(live_entry["hash"]) == 64
     assert cache["propagation_timeline_hash"] == live_entry["hash"]
 
+
+def test_propagate_network_never_touches_real_sockets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regressions must not reintroduce real socket usage."""
+
+    monkeypatch.setattr(socket, "socket", _deny_socket_calls)
+
+    evolver = EchoEvolver(rng=random.Random(41))
+
+    events = evolver.propagate_network(enable_network=True)
+
+    assert len(events) == 5
+    assert events[0].startswith("WiFi channel engaged for cycle")
 
 def test_network_propagation_snapshot_returns_structured_view() -> None:
     rng = random.Random(2)
