@@ -66,6 +66,7 @@ class EvolverState:
     glyph_vortex: Optional[str] = None
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    history: List[Dict[str, object]] = field(default_factory=list)
 
 
 @dataclass
@@ -104,7 +105,30 @@ class EchoEvolver:
             ability,
             capability,
         )
+        self._record_history(payload)
         return payload
+
+    def run_cycles(self, count: int) -> List[Dict[str, object]]:
+        """Execute multiple cycles and return their payloads.
+
+        Parameters
+        ----------
+        count:
+            Number of cycles to execute.  Must be at least one.
+        """
+
+        if count < 1:
+            raise ValueError("count must be at least 1")
+
+        results: List[Dict[str, object]] = []
+        for _ in range(count):
+            results.append(self.evolve_cycle())
+        return results
+
+    def history_snapshot(self) -> List[Dict[str, object]]:
+        """Return a detached list describing the cycle history."""
+
+        return [dict(entry) for entry in self.state.history]
 
     # ------------------------------------------------------------------
     # Simulation helpers
@@ -239,6 +263,20 @@ class EchoEvolver:
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
         self.storage_path.write_text(serialised, encoding="utf-8")
         return payload
+
+    def _record_history(self, payload: Dict[str, object]) -> None:
+        """Store a concise summary of the most recent cycle."""
+
+        summary = {
+            "cycle": payload["cycle"],
+            "glyphs": payload["glyphs"],
+            "narrative": payload["narrative"],
+            "vault_key": payload["vault_key"],
+            "system_metrics": dict(payload["system_metrics"]),
+            "quantam_ability": payload["quantam_ability"]["id"],
+            "quantam_capability": payload["quantam_capability"]["id"],
+        }
+        self.state.history.append(summary)
 
 
 def load_example_data_fixture(directory: Path) -> None:
