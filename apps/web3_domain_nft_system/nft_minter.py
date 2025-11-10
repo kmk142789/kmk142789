@@ -19,7 +19,6 @@ import secrets
 from flask import Blueprint, Flask, jsonify, request
 from web3 import Web3
 
-from web3_domain_nft_system import crypto_bp
 
 
 @dataclass(slots=True)
@@ -378,6 +377,8 @@ def create_blueprint(minter: Optional[NFTMinter] = None) -> Blueprint:
 
 def create_app(minter: Optional[NFTMinter] = None) -> Flask:
     """Return a minimal Flask app hosting the NFT minting blueprint."""
+
+    from web3_domain_nft_system.src.routes.crypto_handler import crypto_bp
 
     app = Flask(__name__)
     app.register_blueprint(create_blueprint(minter), url_prefix="/api/nft")
