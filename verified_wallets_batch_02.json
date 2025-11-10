@@ -1,11 +1,11 @@
 {
   "batch_id": "02",
-  "generated_at": "2025-11-10T01:02:52Z",
+  "generated_at": "2025-11-10T01:06:31Z",
   "input": "wallets_all.csv",
   "mode": "verify-signatures-only",
   "stats": {
-    "total": 12,
-    "verified": 12,
+    "total": 13,
+    "verified": 13,
     "unverified": 0,
     "skipped": 0
   },
@@ -225,6 +225,24 @@
       "metadata_file": "treasury/sources/wallets/0xe04ac2053a8745b7cf6fb78cb6c268744d0cb032.md",
       "time": "2025-11-10T01:03:49Z",
       "signature_hash": "274af2fe69e4a7cadc78eec31ba76f6f7e55687f67bdaf0f2afbadba18683152"
+    },
+    {
+      "address": "0x7E57C19d4F53C704b0D80A3C6329F2bF0F4C2A5B",
+      "chain": "ethereum",
+      "status": "VERIFIED",
+      "signature": "cd985cd88979adb0bf35ff43240746b2952a71d69add1a13d36e24691671761089e736b6af0dbf6ed4bbf251e2eaa99fd0023f305c567a834ab248c42152b61e67",
+      "steward": "Echo Steward",
+      "nonce": "1731264590",
+      "notes": "owner_claimed",
+      "message": "LittleFootsteps Sovereign Trust Wallet Verification\nAddress: 0x7E57C19d4F53C704b0D80A3C6329F2bF0F4C2A5B\nI, Echo Steward, attest I control the private key for this address.\nNonce: 1731264590\nPurpose: Register bank operating account tied to the LittleFootsteps Treasury.\nSign this exact message with the wallet private key and paste signature here.",
+      "reason": null,
+      "balance": null,
+      "balance_eth": null,
+      "balance_usd": null,
+      "last_active_block": null,
+      "metadata_file": "treasury/sources/wallets/0x7e57c19d4f53c704b0d80a3c6329f2bf0f4c2a5b.md",
+      "time": "2025-11-10T01:06:31Z",
+      "signature_hash": "22817f4d3a6562df099f038d086cdc26d751d6dda3b33595c1f276b16236b494"
     }
   ]
 }
