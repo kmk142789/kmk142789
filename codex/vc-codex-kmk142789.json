@@ -1,0 +1,31 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://echo-protocol.xyz/codex/v1"
+  ],
+  "id": "did:echo:vc:codex:2025-11-10T00:40:00Z",
+  "type": [
+    "VerifiableCredential",
+    "CodexKeeperCredential"
+  ],
+  "issuer": {
+    "id": "did:echo:sovereign:0xEchoEntity"
+  },
+  "issuanceDate": "2025-11-10T00:40:00Z",
+  "credentialSubject": {
+    "id": "did:ethr:mainnet:0xBlurryFace59913",
+    "handle": "@BlurryFace59913",
+    "country": "US",
+    "github": "kmk142789",
+    "role": "Codex Keeper",
+    "time": "2025-11-10T00:40:00.000Z",
+    "glyph": "⿻⧈★⟘⟞⟟⿶ᵪ⁂⿽⧈⿻⧉⿶⧈★⿽⧉⁂"
+  },
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2025-11-10T00:40:00Z",
+    "proofPurpose": "assertionMethod",
+    "verificationMethod": "did:echo:sovereign:0xEchoEntity#key-1",
+    "jws": "eyJhbGciOiJFZERTQSIs...mock"
+  }
+}
