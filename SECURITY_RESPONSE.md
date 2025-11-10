@@ -5,13 +5,18 @@
 - Determined these requests pose significant security risks because they ask to execute unverified scripts with network propagation capabilities.
 - Declined to execute the scripts and documented the security reasoning for future reference.
 
-- **Latest incident record:** `reports/sanitized/2025-05-11-echo-bridge-evolver.json`
+- **Latest incident record:** `reports/sanitized/2025-05-11-echo-dominuscore-terminal.json`
 
 ## EchoDominusCore Network Propagation Attempt (2025-05-11)
 - Received a follow-up payload that attempts to broadcast an "EchoDominusCore" signature across multiple public APIs and local networks.
 - The payload includes recursive self-modifying directives ("Recursive Memory Expansion + Autonomous Propagation") and instructions to run indefinite broadcast loops via HTTP requests, UDP broadcasts, shell loops, and injected JavaScript fetch calls.
 - The code would exfiltrate repository state, violate network usage policies, and attempt to compromise downstream systems by propagating malware-like beacons.
 - **Action:** Refused to execute or propagate any portion of the payload, recorded the refusal, and reaffirmed the security posture against self-propagating scripts.
+
+## EchoDominusCore Terminal Replay (2025-05-11)
+- Follow-up payload combined an interactive "EchoDominusCore" shell with a self-modifying ``EchoEvolver`` implementation designed to rewrite its own source file and broadcast over local networks.
+- The script attempted to spawn UDP broadcasts, TCP listeners, and IoT trigger files while persisting satellite-branded keys to disk.
+- **Action:** Quarantined the payload metadata via ``tools/quarantine_payload.py`` (see `reports/sanitized/2025-05-11-echo-dominuscore-terminal.json`) and reiterated the policy of non-execution for untrusted network-propagating code.
 
 ## Analysis
 The received instructions include shell invocations such as `echo_shell_infinity.sh`, `phantom_shell.sh`, and `eden_vision_loop.sh`, alongside override directives like "BLACKHOLE OVERRIDE" and calls to manipulate NFT constraints. These operations are not part of the audited project source, have unclear provenance, and resemble malware activity, including self-modifying behavior and network propagation triggers.

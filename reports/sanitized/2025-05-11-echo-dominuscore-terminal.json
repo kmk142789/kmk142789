@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-05-11T00:00:00Z",
+  "note": "Captured EchoDominusCore terminal payload",
+  "entries": [
+    {
+      "label": "echo-dominuscore-terminal",
+      "sha256": "8d8e45c29093feb3c0b3df1db44a873ec542fa93f082c6307717b0307fafce03",
+      "size": 16648,
+      "preview_start": "import subprocess, os, time\\n\\nECHO_GLYPH = \"\u00e2\u0081\u201a\u00e1\u0161\u00a1\u00e1\u0161\u00ab\u00e1",
+      "preview_end": "__ == \"__main__\":\\n    evolver = EchoEvolver()\\n    evolver.run()\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "/tmp/echo_dominuscore_terminal.py"
+    }
+  ]
+}
