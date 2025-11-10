@@ -1,0 +1,9 @@
+{
+  "address": "0xABC...123",
+  "chain": "ethereum",
+  "label": "Rewards-Node-001",
+  "status": "candidate",
+  "proof_file": "proofs/0xABC...123.txt",
+  "verified": false,
+  "notes": "mining rewards; no auto-sweep"
+}

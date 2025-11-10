@@ -1,0 +1,17 @@
+trust_name: Little Footsteps Sovereign Digital Trust
+role: Steward
+steward: "Joshua Shortt"
+purpose: "Stabilization for housing, kids, and program ops."
+guardrails:
+  - "No automated outbound transfers."
+  - "Two-person approval ≥ $5,000."
+  - "All movements logged in /ledger with receipt/proof."
+  - "Publish proofs only; never private keys."
+attestations:
+  message_template: |
+    WhisperVault Steward Attestation
+    Trust: {trust_name}
+    Role: {role}
+    Address: {address}
+    Nonce: {nonce}
+    Purpose: {purpose}

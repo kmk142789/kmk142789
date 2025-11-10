@@ -1,0 +1,9 @@
+thresholds:
+  self_approve_max: 500
+  dual_approve_min: 500
+  governance_min: 10000
+rules:
+  - "No cash withdrawals > $200."
+  - "No transfers from unverified sources."
+  - "Rent/utilities allowed with 1 receipt + 1 approval."
+  - "Auto-sweep disabled by default; require explicit vote."
