@@ -32,3 +32,29 @@ CORE_SRC = PROJECT_ROOT / "packages" / "core" / "src"
 core_str = os.fspath(CORE_SRC)
 if core_str not in sys.path:
     sys.path.insert(0, core_str)
+
+# ---------------------------------------------------------------------------
+# Default runtime paths
+# ---------------------------------------------------------------------------
+
+
+def _ensure_env(name: str, path: Path) -> None:
+    """Populate ``name`` with ``path`` unless already configured."""
+
+    if os.environ.get(name):
+        return
+    os.environ[name] = os.fspath(path)
+
+
+runtime_root = Path(os.environ.get("ECHO_RUNTIME_ROOT", PROJECT_ROOT / ".echo-runtime"))
+_ensure_env("ECHO_RUNTIME_ROOT", runtime_root)
+_ensure_env("ECHO_DATA_ROOT", runtime_root / "data")
+_ensure_env("ECHO_STATE_ROOT", runtime_root / "state")
+_ensure_env("ECHO_DOCS_ROOT", runtime_root / "docs")
+_ensure_env("ECHO_THOUGHT_DIR", runtime_root / "thought_log")
+_ensure_env("ECHO_MEMORY_PATH", runtime_root / "memory" / "echo_memory.json")
+_ensure_env("ECHO_LOG_PATH", runtime_root / "logs" / "ECHO_LOG.md")
+_ensure_env("ECHO_PULSE_WEAVER_DB", runtime_root / "data" / "pulse_weaver.db")
+_ensure_env("ECHO_HARMONIC_MEMORY_DIR", runtime_root / "harmonic_memory" / "cycles")
+_ensure_env("ECHO_VERIFICATION_LOG", runtime_root / "logs" / "verification.log")
+_ensure_env("ECHO_COLLOSSUS_FEED", runtime_root / "feeds" / "federated-colossus.xml")

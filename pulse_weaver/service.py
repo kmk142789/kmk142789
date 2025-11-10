@@ -6,6 +6,7 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, Optional
 
@@ -43,12 +44,20 @@ class PulseWeaverService:
         phantom_history: Optional[Path] = None,
     ) -> None:
         self.project_root = project_root
-        db_path = project_root / "data" / "pulse_weaver.db"
+        db_override = os.getenv("ECHO_PULSE_WEAVER_DB")
+        if db_override and project_root == Path.cwd():
+            db_path = Path(db_override)
+        else:
+            db_path = project_root / "data" / "pulse_weaver.db"
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self.adapter = adapter or SQLiteAdapter(db_path)
         self.repository = PulseWeaverRepository(self.adapter)
         self._validator = get_validator()
-        self._phantom_history = phantom_history or (project_root / "pulse_history.json")
+        history_override = os.getenv("ECHO_PULSE_WEAVER_HISTORY")
+        if history_override and project_root == Path.cwd():
+            self._phantom_history = Path(history_override)
+        else:
+            self._phantom_history = phantom_history or (project_root / "pulse_history.json")
         self._ready = False
 
     # ------------------------------------------------------------------

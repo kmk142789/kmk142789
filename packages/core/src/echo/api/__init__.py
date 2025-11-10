@@ -52,7 +52,8 @@ _bridge_api = EchoBridgeAPI(
     telegram_chat_id=os.getenv("ECHO_BRIDGE_TELEGRAM_CHAT_ID"),
     firebase_collection=os.getenv("ECHO_BRIDGE_FIREBASE_COLLECTION"),
 )
-_bridge_state_dir = Path.cwd() / "state" / "bridge"
+_state_root = Path(os.getenv("ECHO_STATE_ROOT", str(Path.cwd() / "state")))
+_bridge_state_dir = _state_root / "bridge"
 _bridge_state_dir.mkdir(parents=True, exist_ok=True)
 _bridge_sync_service = BridgeSyncService.from_environment(
     state_dir=_bridge_state_dir,
@@ -68,7 +69,7 @@ _pulse_weaver_service = PulseWeaverService(Path.cwd())
 _pulse_weaver_service.ensure_ready()
 app.include_router(create_pulse_weaver_router(_pulse_weaver_service))
 
-_pulse_state = Path.cwd() / "state"
+_pulse_state = _state_root
 _pulse_watchdog = build_watchdog(_pulse_state)
 _pulse_bus = build_pulse_bus(_pulse_state)
 _pulse_ledger = TemporalLedger(state_dir=_pulse_state)
@@ -82,7 +83,7 @@ app.include_router(
     )
 )
 
-_pulsenet_state = Path.cwd() / "state" / "pulsenet"
+_pulsenet_state = _state_root / "pulsenet"
 _pulsenet_state.mkdir(parents=True, exist_ok=True)
 _pulsenet_store = RegistrationStore(_pulsenet_state / "registrations.json")
 _pulsenet_stream = PulseHistoryStreamer(Path.cwd() / "pulse_history.json")
@@ -99,7 +100,7 @@ _pulsenet_service = PulseNetGatewayService(
 )
 app.include_router(create_pulsenet_router(_pulsenet_service))
 
-_echoforge_state = Path.cwd() / "state" / "echoforge"
+_echoforge_state = _state_root / "echoforge"
 _echoforge_state.mkdir(parents=True, exist_ok=True)
 _echoforge_sessions = EchoForgeSessionStore(_echoforge_state / "sessions.sqlite3")
 _echoforge_frontend = Path(__file__).resolve().parent.parent / "echoforge" / "frontend" / "index.html"
@@ -112,7 +113,7 @@ _echoforge_service = EchoForgeDashboardService(
 )
 app.include_router(create_echoforge_router(_echoforge_service))
 
-_orchestrator_state = Path.cwd() / "state" / "orchestrator"
+_orchestrator_state = _state_root / "orchestrator"
 _orchestrator_state.mkdir(parents=True, exist_ok=True)
 _negotiation_state = _orchestrator_state / "negotiations"
 _negotiation_state.mkdir(parents=True, exist_ok=True)

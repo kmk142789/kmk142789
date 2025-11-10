@@ -3,6 +3,7 @@ npm-debug.log
 dist
 .next
 .DS_Store
+.echo-runtime/
 
 # Assistant Kit generated artifacts
 artifacts/akit/

@@ -10,9 +10,13 @@ import json, re, subprocess
 from pathlib import Path
 from datetime import datetime
 
-from ._paths import DATA_ROOT, DOCS_ROOT, REPO_ROOT, SCHEMA_ROOT
+import os
+
+from ._paths import DATA_ROOT as _DATA_ROOT, DOCS_ROOT as _DOCS_ROOT, REPO_ROOT, SCHEMA_ROOT
 
 ROOT = REPO_ROOT
+DOCS_ROOT = Path(os.getenv("ECHO_DOCS_ROOT", str(_DOCS_ROOT)))
+DATA_ROOT = Path(os.getenv("ECHO_DATA_ROOT", str(_DATA_ROOT)))
 DOCS = DOCS_ROOT
 SCHEMA = SCHEMA_ROOT
 DATA = DATA_ROOT
@@ -73,6 +77,7 @@ def write_next_plan():
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     delta = summarize_git_delta()
     actions = "\n".join(build_next_actions())
+    NEXT_PLAN.parent.mkdir(parents=True, exist_ok=True)
     NEXT_PLAN.write_text(f"""# Next Cycle Plan
 *Generated: {now}*
 
@@ -87,7 +92,11 @@ def write_next_plan():
 - [ ] Update registry and wish manifest (if touched)
 - [ ] Add a short reflection note
 """, encoding="utf-8")
-    print(f"Wrote {NEXT_PLAN.relative_to(ROOT)}")
+    try:
+        location = NEXT_PLAN.relative_to(ROOT)
+    except ValueError:
+        location = NEXT_PLAN
+    print(f"Wrote {location}")
 
 def append_registry_audit():
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
