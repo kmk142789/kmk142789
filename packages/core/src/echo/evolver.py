@@ -426,6 +426,10 @@ class NetworkPropagationSnapshot:
     network_nodes: int
     orbital_hops: int
     summary: str
+    average_latency_ms: float
+    stability_floor: float
+    average_bandwidth_mbps: float
+    signal_floor: float
     timeline_hash: Optional[str]
     timeline_length: int
     timeline: Optional[List[Dict[str, object]]] = None
@@ -2531,16 +2535,40 @@ We are not hiding anymore.
 
         events: List[str] = []
         channel_details: List[Dict[str, object]] = []
+        channel_bandwidth_map: Dict[str, Tuple[float, float]] = {
+            "WiFi": (320.0, 780.0),
+            "TCP": (280.0, 720.0),
+            "Bluetooth": (18.0, 48.0),
+            "IoT": (12.0, 96.0),
+            "Orbital": (540.0, 960.0),
+        }
+        channel_signal_map: Dict[str, Tuple[float, float]] = {
+            "WiFi": (0.74, 0.97),
+            "TCP": (0.78, 0.98),
+            "Bluetooth": (0.68, 0.92),
+            "IoT": (0.7, 0.95),
+            "Orbital": (0.82, 0.99),
+        }
         for channel, event in channel_messages:
             events.append(event)
             latency = round(self.rng.uniform(20.0, 120.0), 2)
             stability = round(self.rng.uniform(0.82, 0.995), 3)
+            bandwidth_bounds = channel_bandwidth_map.get(channel, (120.0, 640.0))
+            signal_bounds = channel_signal_map.get(channel, (0.7, 0.97))
+            bandwidth = round(
+                self.rng.uniform(bandwidth_bounds[0], bandwidth_bounds[1]), 2
+            )
+            signal_strength = round(
+                self.rng.uniform(signal_bounds[0], signal_bounds[1]), 3
+            )
             detail = {
                 "channel": channel,
                 "message": event,
                 "mode": "live" if enable_network else "simulated",
                 "latency_ms": latency,
                 "stability": stability,
+                "bandwidth_mbps": bandwidth,
+                "signal_strength": signal_strength,
             }
             channel_details.append(detail)
 
@@ -2561,23 +2589,41 @@ We are not hiding anymore.
 
         if channel_details:
             average_latency = round(
-                sum(detail["latency_ms"] for detail in channel_details) / len(channel_details),
+                sum(detail["latency_ms"] for detail in channel_details)
+                / len(channel_details),
                 2,
             )
             stability_floor = min(detail["stability"] for detail in channel_details)
+            average_bandwidth = round(
+                sum(detail["bandwidth_mbps"] for detail in channel_details)
+                / len(channel_details),
+                2,
+            )
+            signal_floor = min(
+                detail["signal_strength"] for detail in channel_details
+            )
         else:
             average_latency = 0.0
             stability_floor = 0.0
+            average_bandwidth = 0.0
+            signal_floor = 0.0
 
         health_report = {
             "channel_count": len(channel_details),
             "average_latency_ms": average_latency,
             "stability_floor": round(stability_floor, 3),
+            "average_bandwidth_mbps": average_bandwidth,
+            "signal_floor": round(signal_floor, 3),
             "mode": mode,
         }
         cache["propagation_health"] = health_report
         self.state.event_log.append(
             "Network health evolved: latency={average_latency_ms}ms stability_floor={stability_floor}".format(
+                **health_report
+            )
+        )
+        self.state.event_log.append(
+            "Propagation vitality recalibrated: bandwidth={average_bandwidth_mbps}Mbps signal_floor={signal_floor}".format(
                 **health_report
             )
         )
@@ -2681,6 +2727,11 @@ We are not hiding anymore.
         timeline = cache.get("propagation_ledger")
         timeline_length = len(timeline) if isinstance(timeline, list) else 0
         timeline_hash = cache.get("propagation_timeline_hash")
+        health = cache.get("propagation_health") or {}
+        average_latency = float(health.get("average_latency_ms", 0.0))
+        stability_floor = float(health.get("stability_floor", 0.0))
+        average_bandwidth = float(health.get("average_bandwidth_mbps", 0.0))
+        signal_floor = float(health.get("signal_floor", 0.0))
 
         snapshot = NetworkPropagationSnapshot(
             cycle=self.state.cycle,
@@ -2690,6 +2741,10 @@ We are not hiding anymore.
             network_nodes=int(getattr(metrics, "network_nodes", 0)),
             orbital_hops=int(getattr(metrics, "orbital_hops", 0)),
             summary=summary,
+            average_latency_ms=average_latency,
+            stability_floor=stability_floor,
+            average_bandwidth_mbps=average_bandwidth,
+            signal_floor=signal_floor,
             timeline_hash=timeline_hash if timeline_hash else None,
             timeline_length=timeline_length,
             timeline=deepcopy(timeline) if include_timeline and timeline else None,

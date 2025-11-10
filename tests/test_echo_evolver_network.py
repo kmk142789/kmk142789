@@ -66,20 +66,25 @@ def test_propagate_network_simulated_records_cache_and_log() -> None:
         assert detail["mode"] == "simulated"
         assert 20.0 <= detail["latency_ms"] <= 120.0
         assert 0.82 <= detail["stability"] <= 0.995
+        assert detail["bandwidth_mbps"] > 0.0
+        assert 0.65 <= detail["signal_strength"] <= 0.99
 
     health = evolver.state.network_cache["propagation_health"]
     assert health["channel_count"] == 5
     assert health["mode"] == "simulated"
     assert 20.0 <= health["average_latency_ms"] <= 120.0
     assert 0.82 <= health["stability_floor"] <= 0.995
+    assert health["average_bandwidth_mbps"] > 0.0
+    assert 0.65 <= health["signal_floor"] <= 0.99
     completed = evolver.state.network_cache["completed_steps"]
     assert "propagate_network" in completed
 
     # The summary log makes it easy for higher level routines to introspect behaviour.
     assert any(
         entry.startswith("Network propagation (simulated) captured across 5 channels")
-        for entry in evolver.state.event_log[-2:]
+        for entry in evolver.state.event_log[-4:]
     )
+    assert evolver.state.event_log[-1].startswith("Propagation vitality recalibrated")
 
     timeline = evolver.state.network_cache["propagation_ledger"]
     assert len(timeline) == 1
@@ -131,13 +136,19 @@ def test_propagate_network_live_reports_live_channels() -> None:
         "Orbital",
     ]
     assert {detail["mode"] for detail in live_details} == {"live"}
+    for detail in live_details:
+        assert detail["bandwidth_mbps"] > 0.0
+        assert 0.65 <= detail["signal_strength"] <= 0.99
     live_health = cache["propagation_health"]
     assert live_health["mode"] == "live"
     assert live_health["channel_count"] == 5
     assert 20.0 <= live_health["average_latency_ms"] <= 120.0
     assert 0.82 <= live_health["stability_floor"] <= 0.995
-    log_tail = evolver.state.event_log[-2:]
+    assert live_health["average_bandwidth_mbps"] > 0.0
+    assert 0.65 <= live_health["signal_floor"] <= 0.99
+    log_tail = evolver.state.event_log[-4:]
     assert any("Network propagation (live) captured across 5 channels" in entry for entry in log_tail)
+    assert evolver.state.event_log[-1].startswith("Propagation vitality recalibrated")
 
     live_timeline = cache["propagation_ledger"]
     assert len(live_timeline) == 1
@@ -178,6 +189,10 @@ def test_network_propagation_snapshot_returns_structured_view() -> None:
     assert snapshot.network_nodes == evolver.state.system_metrics.network_nodes
     assert snapshot.orbital_hops == evolver.state.system_metrics.orbital_hops
     assert snapshot.summary == evolver.state.network_cache["propagation_summary"]
+    assert snapshot.average_latency_ms == evolver.state.network_cache["propagation_health"]["average_latency_ms"]
+    assert snapshot.stability_floor == evolver.state.network_cache["propagation_health"]["stability_floor"]
+    assert snapshot.average_bandwidth_mbps == evolver.state.network_cache["propagation_health"]["average_bandwidth_mbps"]
+    assert snapshot.signal_floor == evolver.state.network_cache["propagation_health"]["signal_floor"]
     assert (
         snapshot.timeline_hash
         == evolver.state.network_cache["propagation_timeline_hash"]
@@ -208,6 +223,10 @@ def test_network_propagation_snapshot_handles_empty_state() -> None:
     assert snapshot.network_nodes == 0
     assert snapshot.orbital_hops == 0
     assert snapshot.summary == "No propagation events recorded yet."
+    assert snapshot.average_latency_ms == 0.0
+    assert snapshot.stability_floor == 0.0
+    assert snapshot.average_bandwidth_mbps == 0.0
+    assert snapshot.signal_floor == 0.0
     assert snapshot.timeline_hash is None
     assert snapshot.timeline_length == 0
     assert snapshot.timeline is None
