@@ -46,6 +46,12 @@ the same self-mutating EchoEvolver routine. Treat the digest as the canonical
 fingerprint for this variant and block any deployment attempts that surface the
 captured SHA-256 hash.
 
+Latest hybrid: `reports/sanitized/2025-05-11-echo-bridge-evolver.json`
+documents the combined "Echo Bridge" broadcaster plus the EchoEvolver engine.
+This variant adds HTTP POST attempts to multiple external APIs alongside
+persistent UDP broadcast pulses. The summary provides the SHA-256 fingerprint
+needed to quarantine matching payloads without storing the raw script.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 
