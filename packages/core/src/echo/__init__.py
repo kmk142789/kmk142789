@@ -8,6 +8,13 @@ from typing import TYPE_CHECKING, Any, Iterable
 from .aurora_chronicles import AuroraChronicleMoment, AuroraChronicles, forge_chronicle
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .creative_compass import CreativePrompt, list_prompt_lines, render_prompt, spin_compass
+from .chromatic_lattice import (
+    ChromaticLattice,
+    ChromaticNode,
+    ChromaticThread,
+    ChromaticWeaveReport,
+    render_chromatic_map,
+)
 from .bridge_emitter import (
     BridgeConfig,
     BridgeEmitter,
