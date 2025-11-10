@@ -5975,26 +5975,35 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         if args.persist_artifact:
             print(f"📜 Final artifact: {evolver.state.artifact}")
     elif args.advance_system:
-        payload = evolver.advance_system(
-            enable_network=args.enable_network,
-            persist_artifact=args.persist_artifact,
-            eden88_theme=args.eden88_theme,
-            include_manifest=args.include_manifest,
-            include_status=args.include_status,
-            include_reflection=args.include_reflection,
-            include_matrix=args.include_matrix,
-            include_event_summary=args.include_event_summary,
-            include_propagation=args.include_propagation,
-            include_system_report=args.include_system_report,
-            event_summary_limit=args.event_summary_limit,
-            manifest_events=args.manifest_events,
-            system_report_events=args.system_report_events,
-            momentum_window=args.momentum_window,
-            include_expansion_history=args.include_expansion_history,
-            expansion_history_limit=(
+        advance_kwargs = {
+            "enable_network": args.enable_network,
+            "persist_artifact": args.persist_artifact,
+            "eden88_theme": args.eden88_theme,
+            "include_manifest": args.include_manifest,
+            "include_status": args.include_status,
+            "include_reflection": args.include_reflection,
+            "include_matrix": args.include_matrix,
+            "include_event_summary": args.include_event_summary,
+            "include_propagation": args.include_propagation,
+            "include_system_report": args.include_system_report,
+            "event_summary_limit": args.event_summary_limit,
+            "manifest_events": args.manifest_events,
+            "system_report_events": args.system_report_events,
+            "momentum_window": args.momentum_window,
+            "include_expansion_history": args.include_expansion_history,
+            "expansion_history_limit": (
                 args.expansion_history_limit if args.include_expansion_history else None
             ),
-        )
+        }
+        signature = inspect.signature(evolver.advance_system)
+        parameters = signature.parameters
+        if any(param.kind is inspect.Parameter.VAR_KEYWORD for param in parameters.values()):
+            filtered_kwargs = advance_kwargs
+        else:
+            filtered_kwargs = {
+                key: value for key, value in advance_kwargs.items() if key in parameters
+            }
+        payload = evolver.advance_system(**filtered_kwargs)
         print(payload["summary"])
         if args.include_report and "report" in payload:
             print()

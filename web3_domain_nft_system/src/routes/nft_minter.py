@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from flask import Blueprint
+from typing import TYPE_CHECKING
 
-from apps.web3_domain_nft_system import (  # noqa: WPS347 - shared implementation
-    NFTMinter,
-    create_blueprint as _create_nft_blueprint,
-)
+if TYPE_CHECKING:  # pragma: no cover - imported for type hints only
+    from apps.web3_domain_nft_system import NFTMinter
 
 
-def create_nft_blueprint(minter: NFTMinter | None = None) -> Blueprint:
+def create_nft_blueprint(minter: "NFTMinter" | None = None) -> Blueprint:
     """Return a blueprint that proxies to :mod:`apps.web3_domain_nft_system`."""
 
-    return _create_nft_blueprint(minter)
+    from apps.web3_domain_nft_system.nft_minter import create_blueprint as shared_blueprint
+
+    return shared_blueprint(minter)
 
 
 # Default blueprint used by the API package.  Individual applications can
