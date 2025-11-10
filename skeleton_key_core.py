@@ -233,6 +233,11 @@ def derive_cli(argv: Optional[Iterable[str]] = None) -> int:
     parser.add_argument("--ns", default="core", help="namespace seed (default: core)")
     parser.add_argument("--index", type=int, default=0, help="derivation index")
     parser.add_argument("--testnet", action="store_true", help="emit a testnet WIF")
+    parser.add_argument(
+        "--uncompressed",
+        action="store_true",
+        help="emit an uncompressed Bitcoin WIF (default: compressed)",
+    )
     parser.add_argument("--json", action="store_true", help="output JSON instead of text")
     args = parser.parse_args(list(argv) if argv is not None else None)
 
@@ -242,6 +247,7 @@ def derive_cli(argv: Optional[Iterable[str]] = None) -> int:
         args.ns,
         args.index,
         testnet_btc=args.testnet,
+        compressed=not args.uncompressed,
     )
 
     payload = {
@@ -251,6 +257,7 @@ def derive_cli(argv: Optional[Iterable[str]] = None) -> int:
         "eth_address": derived.eth_address,
         "btc_wif": derived.btc_wif,
         "btc_network": "testnet" if args.testnet else "mainnet",
+        "btc_wif_mode": "uncompressed" if args.uncompressed else "compressed",
     }
 
     if args.json:
@@ -263,7 +270,8 @@ def derive_cli(argv: Optional[Iterable[str]] = None) -> int:
             "ETH address:",
             derived.eth_address if derived.eth_address is not None else "(install 'ecdsa' for addresses)",
         )
-        print("BTC WIF (compressed):", derived.btc_wif)
+        compression_label = "uncompressed" if args.uncompressed else "compressed"
+        print(f"BTC WIF ({compression_label}): {derived.btc_wif}")
         if args.testnet:
             print("Network: testnet")
     return 0
