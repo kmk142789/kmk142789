@@ -41,6 +41,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: rgba(255, 255, 255, 0.7);
+  flex-wrap: wrap;
 }
 
 main {
@@ -131,6 +132,7 @@ main {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.25rem;
   margin-top: 1.5rem;
+  width: 100%;
 }
 
 .transparency-grid {
@@ -138,6 +140,7 @@ main {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
   margin-top: 1.75rem;
+  width: 100%;
 }
 
 .transparency-card {
@@ -376,5 +379,114 @@ footer .dns {
 
   .panel {
     padding: 1.6rem;
+  }
+}
+
+@media (max-width: 720px) {
+  body {
+    font-size: 15px;
+  }
+
+  main {
+    padding: 1.75rem 1.25rem 3rem;
+    gap: 1.6rem;
+  }
+
+  .hero {
+    padding: 2.4rem 1.25rem 1.75rem;
+  }
+
+  .hero .tagline {
+    max-width: 45ch;
+  }
+
+  .hero .meta {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .panel {
+    padding: 1.4rem;
+  }
+
+  #pulseCanvas {
+    height: 240px;
+  }
+
+  .event-item {
+    grid-template-columns: 1fr;
+    justify-items: start;
+    padding: 0.85rem;
+  }
+
+  .event-item::before {
+    font-size: 1.4rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .worker-summary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .transparency-grid,
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stat-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  main {
+    padding: 1.5rem 1rem 2.75rem;
+    gap: 1.4rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.1rem, 12vw, 2.6rem);
+  }
+
+  .hero .tagline {
+    font-size: 0.95rem;
+  }
+
+  .panel h2 {
+    font-size: 1.4rem;
+  }
+
+  .panel p {
+    font-size: 0.95rem;
+  }
+
+  #pulseCanvas {
+    height: 200px;
+  }
+
+  .glyph-card .glyph {
+    font-size: 2rem;
+  }
+
+  footer {
+    padding: 1.75rem 1rem 2.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .glyph-card:hover {
+    transform: none;
   }
 }
