@@ -1,0 +1,18 @@
+{
+  "name": "Sovereign Digital Trust Funding Pipelines",
+  "description": "Registry container for verified mining reward wallet funding pipelines aligned to the Sovereign Digital Trust.",
+  "expected_wallet_count": 34367,
+  "sectioning": {
+    "strategy": "fixed",
+    "section_prefix": "section_",
+    "section_digits": 5,
+    "section_size_target": 1000,
+    "notes": "Actual section files must be uploaded in batches that keep individual files manageable for audit review."
+  },
+  "last_reviewed": "2025-11-22T00:00:00Z",
+  "ingest_status": {
+    "state": "pending_data",
+    "summary": "Awaiting delivery of the 34,367 verified mining reward wallet attestations before registering them as funding pipelines.",
+    "last_message": "Placeholder sample included to document the required format."
+  }
+}
