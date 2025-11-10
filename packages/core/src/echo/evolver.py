@@ -2597,6 +2597,60 @@ We are not hiding anymore.
         self._mark_step("propagate_network")
         return events
 
+    def clear_propagation_cache(self) -> bool:
+        """Remove cached propagation artefacts from the network cache.
+
+        ``propagate_network`` memoizes a rich collection of derived values so
+        subsequent calls within the same cycle can reuse the simulated broadcast
+        transcript.  Downstream workflows occasionally need to force a fresh
+        propagation—most notably tests that validate cache invalidation logic.
+        ``clear_propagation_cache`` provides a supported hook for those
+        scenarios without requiring direct mutation of :attr:`state` internals.
+
+        Returns
+        -------
+        bool
+            ``True`` when one or more cache entries were removed. ``False``
+            indicates that the cache was already empty.
+        """
+
+        cache = self.state.network_cache
+        related_keys = {
+            "propagation_events",
+            "propagation_mode",
+            "propagation_cycle",
+            "propagation_notice",
+            "propagation_summary",
+            "propagation_channel_details",
+            "propagation_health",
+            "propagation_ledger",
+            "propagation_timeline_hash",
+        }
+
+        removed_keys: List[str] = []
+        for key in related_keys:
+            if key in cache:
+                cache.pop(key, None)
+                removed_keys.append(key)
+
+        completed_steps = cache.get("completed_steps")
+        completed_updated = False
+        if isinstance(completed_steps, set) and "propagate_network" in completed_steps:
+            completed_steps.discard("propagate_network")
+            completed_updated = True
+
+        if removed_keys or completed_updated:
+            removed_keys.sort()
+            summary = ", ".join(removed_keys) if removed_keys else "no-key"
+            message = f"Propagation cache cleared ({summary})"
+            if completed_updated:
+                message += "; completed step reset"
+            self.state.event_log.append(message)
+            return True
+
+        self.state.event_log.append("Propagation cache already empty")
+        return False
+
     def network_propagation_snapshot(
         self, *, include_timeline: bool = False
     ) -> NetworkPropagationSnapshot:
