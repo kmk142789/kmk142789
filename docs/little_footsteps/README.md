@@ -6,6 +6,7 @@ This directory collects the artifacts required to bootstrap the Little Footsteps
 - [`trust_registry.json`](./trust_registry.json) enumerates recognized credential types and governance policies.
 - [`first_credential.md`](./first_credential.md) documents the inaugural childcare voucher issuance.
 - [`credentials/`](./credentials) stores example verifiable credential payloads for QA and demos.
+- [`satoshi_vault_trust.md`](./satoshi_vault_trust.md) codifies the reserve relationship that backs the trust.
 
 ## Deployment checklist
 
