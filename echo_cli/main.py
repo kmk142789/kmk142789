@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
@@ -173,6 +174,48 @@ def _format_mapping_preview(mapping: Mapping[str, Any], *, limit: int = 3) -> st
             value_text = f"{value_text[:37]}…"
         items.append(f"{key}={value_text}")
     return ", ".join(items)
+
+
+def _aggregate_worker_events(
+    events: Iterable[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Derive aggregate statistics from worker hive telemetry."""
+
+    status_counts: Counter[str] = Counter()
+    command_counts: Counter[str] = Counter()
+    task_states: dict[str, str] = {}
+    last_event_timestamp: str | None = None
+
+    for event in events:
+        status = str(event.get("status", "unknown"))
+        name = str(event.get("name", "-"))
+        status_counts[status] += 1
+        command_counts[name] += 1
+
+        task_id = event.get("task_id")
+        if isinstance(task_id, str):
+            if status in {"success", "failure", "skipped"}:
+                task_states[task_id] = status
+            elif status == "start":
+                task_states.setdefault(task_id, "active")
+            else:
+                task_states.setdefault(task_id, "active")
+
+        timestamp = event.get("timestamp")
+        if isinstance(timestamp, str):
+            if last_event_timestamp is None or timestamp > last_event_timestamp:
+                last_event_timestamp = timestamp
+
+    active_tasks = sum(1 for state in task_states.values() if state == "active")
+
+    return {
+        "total_events": sum(status_counts.values()),
+        "status_counts": dict(status_counts),
+        "command_activity": dict(command_counts),
+        "unique_commands": len(command_counts),
+        "active_tasks": active_tasks,
+        "last_event": last_event_timestamp,
+    }
 
 
 def _summarise_event_details(
@@ -424,6 +467,90 @@ def history(
                     console.print(table)
 
         task.succeed(payload=payload)
+
+
+@app.command()
+def status(
+    ctx: typer.Context,
+    since: Optional[str] = typer.Option(
+        None,
+        "--since",
+        help="Only include events at or after the provided ISO timestamp",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Summarise worker hive activity across all instrumented commands."""
+
+    metadata = {"since": since, "json": json_mode}
+
+    with worker_hive.worker("status", metadata=metadata) as task:
+        _set_json_mode(ctx, json_mode)
+
+        since_marker: Optional[str] = None
+        if since is not None:
+            try:
+                since_marker = _normalise_iso_timestamp(since)
+            except ValueError as exc:
+                task.fail(error="invalid_since", since=since)
+                raise typer.BadParameter(f"Invalid ISO timestamp: {since}") from exc
+
+        events = worker_hive.tail_events(limit=None, since=since_marker)
+        aggregates = _aggregate_worker_events(events)
+        aggregates["log_path"] = str(worker_hive.log_path)
+        aggregates["since"] = since_marker
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, aggregates)
+        else:
+            total = aggregates["total_events"]
+            unique = aggregates["unique_commands"]
+            active = aggregates["active_tasks"]
+            last_event = aggregates.get("last_event")
+
+            console.print(
+                f"Worker hive summary: {total} events across {unique} commands (active tasks: {active})"
+            )
+            if last_event:
+                console.print(f"Most recent event recorded at {last_event}")
+            console.print(f"Log file: {aggregates['log_path']}")
+            if since_marker:
+                console.print(f"Filtered from: {since_marker}")
+
+            status_counts = aggregates["status_counts"]
+            command_activity = aggregates["command_activity"]
+
+            if status_counts:
+                if FALLBACK_TABLE:
+                    console.print("Status counts:")
+                    for status, count in sorted(status_counts.items()):
+                        console.print(f"  {status}: {count}")
+                else:
+                    status_table = Table(title="Event statuses")
+                    status_table.add_column("Status", style="green")
+                    status_table.add_column("Count", justify="right")
+                    for status, count in sorted(status_counts.items()):
+                        status_table.add_row(str(status), str(count))
+                    console.print(status_table)
+
+            if command_activity:
+                sorted_activity = sorted(
+                    command_activity.items(), key=lambda item: (-item[1], item[0])
+                )
+                if FALLBACK_TABLE:
+                    console.print("Command activity:")
+                    for name, count in sorted_activity:
+                        console.print(f"  {name}: {count}")
+                else:
+                    command_table = Table(title="Command activity")
+                    command_table.add_column("Command", style="magenta")
+                    command_table.add_column("Events", justify="right")
+                    for name, count in sorted_activity:
+                        command_table.add_row(str(name), str(count))
+                    console.print(command_table)
+
+        task.succeed(payload=aggregates)
 
 
 @app.command()
