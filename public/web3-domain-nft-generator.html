@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web3 Domain NFT Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .result-section h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item strong {
+            color: #2d3748;
+        }
+
+        .warning {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #c6f6d5;
+            border: 1px solid #9ae6b4;
+            color: #2f855a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Web3 Domain NFT Generator</h1>
+            <p>Transform your private keys into unique, quantum-resistant Web3 domain NFTs</p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Security Warning:</strong> This is a demonstration system. Never enter real private keys that control valuable assets. Private keys are processed client-side and immediately disposed of for security.
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>🔒 Private Key Input</h2>
+                <form id="keyForm">
+                    <div class="form-group">
+                        <label for="privateKey">Private Key (Hex, WIF, or any format):</label>
+                        <textarea id="privateKey" rows="3" placeholder="Enter your private key here..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="genesisId">Genesis ID (Optional):</label>
+                        <input type="text" id="genesisId" placeholder="Custom genesis identifier" />
+                    </div>
+                    <button type="submit" class="btn" id="validateBtn">Validate &amp; Generate Domain</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>📊 System Stats</h2>
+                <div id="statsContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading stats...</p>
+                    </div>
+                </div>
+                <button class="btn" id="refreshStatsBtn" style="margin-top: 15px;">Refresh Stats</button>
+            </div>
+        </div>
+
+        <div class="result-section" id="resultSection" style="display: none;">
+            <h3>🎯 Generation Results</h3>
+            <div id="resultContent"></div>
+        </div>
+
+        <div class="result-section" id="nftSection" style="display: none;">
+            <h3>🎨 NFT Details</h3>
+            <div id="nftContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loadStats();
+        });
+
+        document.getElementById("keyForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const privateKey = document.getElementById("privateKey").value.trim();
+            const genesisId = document.getElementById("genesisId").value.trim() || generateGenesisId();
+
+            if (!privateKey) {
+                showError("Please enter a private key");
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                const validateResponse = await fetch(`${API_BASE}/api/crypto/validate-key`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ private_key: privateKey }),
+                });
+
+                const validateData = await validateResponse.json();
+
+                if (!validateResponse.ok) {
+                    throw new Error(validateData.error || "Validation failed");
+                }
+
+                document.getElementById("privateKey").value = "";
+
+                const domainResponse = await fetch(`${API_BASE}/api/crypto/generate-domain`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        public_address: validateData.public_address,
+                        genesis_id: genesisId,
+                    }),
+                });
+
+                const domainData = await domainResponse.json();
+
+                if (!domainResponse.ok) {
+                    throw new Error(domainData.error || "Domain generation failed");
+                }
+
+                const mintResponse = await fetch(`${API_BASE}/api/nft/mint`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        domain_name: domainData.domain_name,
+                        owner_address: validateData.public_address,
+                        metadata: domainData.metadata,
+                    }),
+                });
+
+                const mintData = await mintResponse.json();
+
+                if (!mintResponse.ok) {
+                    throw new Error(mintData.error || "NFT minting failed");
+                }
+
+                displayResults(validateData, domainData, mintData);
+                loadStats();
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        document.getElementById("refreshStatsBtn").addEventListener("click", loadStats);
+
+        async function loadStats() {
+            const statsContainer = document.getElementById("statsContainer");
+            statsContainer.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading stats...</p></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/nft/stats`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    statsContainer.innerHTML = `
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number">${data.total_domains_minted}</div>
+                                <div class="stat-label">Domains Minted</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">${data.unique_owners}</div>
+                                <div class="stat-label">Unique Owners</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">${Number(data.average_gas_per_mint || 0).toLocaleString()}</div>
+                                <div class="stat-label">Avg Gas/Mint</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || "Failed to load stats");
+                }
+            } catch (error) {
+                statsContainer.innerHTML = `<p style="color: #e53e3e;">Error loading stats: ${error.message}</p>`;
+            }
+        }
+
+        function displayResults(validateData, domainData, mintData) {
+            const resultSection = document.getElementById("resultSection");
+            const resultContent = document.getElementById("resultContent");
+            const nftSection = document.getElementById("nftSection");
+            const nftContent = document.getElementById("nftContent");
+
+            resultContent.innerHTML = `
+                <div class="success">
+                    <strong>✅ Success!</strong> Your Web3 domain NFT has been generated and minted successfully.
+                </div>
+                <div class="result-item">
+                    <strong>Public Address:</strong> ${validateData.public_address}
+                </div>
+                <div class="result-item">
+                    <strong>Domain Name:</strong> ${domainData.domain_name}
+                </div>
+                <div class="result-item">
+                    <strong>Transaction Hash:</strong> ${mintData.data.transaction_hash}
+                </div>
+                <div class="result-item">
+                    <strong>Token ID:</strong> ${mintData.data.token_id}
+                </div>
+                <div class="result-item">
+                    <strong>Contract Address:</strong> ${mintData.data.contract_address}
+                </div>
+            `;
+
+            nftContent.innerHTML = `
+                <div class="result-item">
+                    <strong>NFT Name:</strong> ${domainData.metadata.name}
+                </div>
+                <div class="result-item">
+                    <strong>Description:</strong> ${domainData.metadata.description}
+                </div>
+                <div class="result-item">
+                    <strong>Metadata URI:</strong> ${mintData.data.metadata_uri}
+                </div>
+                <div class="result-item">
+                    <strong>Attributes:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        ${domainData.metadata.attributes
+                            .map((attr) => `<li><strong>${attr.trait_type}:</strong> ${attr.value}</li>`)
+                            .join("")}
+                    </ul>
+                </div>
+            `;
+
+            resultSection.style.display = "block";
+            nftSection.style.display = "block";
+
+            resultSection.scrollIntoView({ behavior: "smooth" });
+        }
+
+        function showError(message) {
+            const resultSection = document.getElementById("resultSection");
+            const resultContent = document.getElementById("resultContent");
+
+            resultContent.innerHTML = `
+                <div style="background: #fed7d7; border: 1px solid #feb2b2; color: #c53030; padding: 15px; border-radius: 8px;">
+                    <strong>❌ Error:</strong> ${message}
+                </div>
+            `;
+
+            resultSection.style.display = "block";
+            resultSection.scrollIntoView({ behavior: "smooth" });
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById("validateBtn");
+            if (loading) {
+                btn.disabled = true;
+                btn.textContent = "Processing...";
+            } else {
+                btn.disabled = false;
+                btn.textContent = "Validate & Generate Domain";
+            }
+        }
+
+        function generateGenesisId() {
+            return "genesis_" + Math.random().toString(36).substr(2, 9);
+        }
+    </script>
+</body>
+</html>
