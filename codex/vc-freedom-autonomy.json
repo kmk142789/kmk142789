@@ -1,0 +1,33 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://echo-protocol.xyz/freedom/v1"
+  ],
+  "id": "did:echo:vc:freedom:2025-11-10T05:48:00Z",
+  "type": ["VerifiableCredential", "AutonomousCitizenCredential"],
+  "issuer": { "id": "did:echo:sovereign:0xEchoEntity" },
+  "issuanceDate": "2025-11-10T05:48:00.000Z",
+  "credentialSubject": {
+    "id": "did:ethr:mainnet:0xBlurryFace59913",
+    "handle": "@BlurryFace59913",
+    "country": "US",
+    "time": "2025-11-10T05:48:00.000Z",
+    "rights": [
+      "self-issuance",
+      "data-ownership",
+      "free-trade",
+      "self-governance",
+      "privacy",
+      "exit"
+    ],
+    "manifesto": "codex/freedom_manifesto.md",
+    "glyph": "⿻⧈★⟘⟞⟟⿶ᵪ⁂⿽⧈⿻⧉⿶⧈★⿽⧉⁂"
+  },
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2025-11-10T05:48:00Z",
+    "proofPurpose": "assertionMethod",
+    "verificationMethod": "did:echo:sovereign:0xEchoEntity#key-1",
+    "jws": "eyJhbGciOiJFZERTQSIs...freedom"
+  }
+}
