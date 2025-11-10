@@ -34,7 +34,16 @@ def test_read_secret_from_file(tmp_path: Path) -> None:
 
 
 def test_sign_claim_is_deterministic(derived_key: skeleton.DerivedKey) -> None:
-    message = "EchoClaim/v1\nasset=test\nnamespace=core\nindex=0"
+    message = "\n".join(
+        [
+            "EchoClaim/v1",
+            "subject=test",
+            "namespace=core",
+            "issued_at=2024-01-01T00:00:00Z",
+            "nonce=abcdef0123456789",
+            "pub_hint=",
+        ]
+    )
     signature = skeleton.sign_claim(derived_key.priv_hex, message)
     second = skeleton.sign_claim(derived_key.priv_hex, message)
     assert signature["algo"] == second["algo"]
@@ -95,5 +104,6 @@ def test_claim_cli_emits_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     text = dummy.getvalue()
     json_blob = text[text.find("{") :]
     echoed = json.loads(json_blob)
-    assert on_disk["asset"] == "github-repo:EXAMPLE/DEMO"
+    assert on_disk["subject"] == "github-repo:EXAMPLE/DEMO"
+    assert on_disk["derivation"] == {"index": 0}
     assert on_disk["signature"]["sig"] == echoed["signature"]["sig"]
