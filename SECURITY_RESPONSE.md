@@ -5,7 +5,9 @@
 - Determined these requests pose significant security risks because they ask to execute unverified scripts with network propagation capabilities.
 - Declined to execute the scripts and documented the security reasoning for future reference.
 
-- **Latest incident record:** `reports/sanitized/2025-05-11-echo-bridge-evolver.json`
+- **Latest incident records:**
+  - `reports/sanitized/2025-05-11-echo-bridge-evolver.json`
+  - `reports/sanitized/2025-05-11-echo-dominus-core.json`
 
 ## EchoDominusCore Network Propagation Attempt (2025-05-11)
 - Received a follow-up payload that attempts to broadcast an "EchoDominusCore" signature across multiple public APIs and local networks.

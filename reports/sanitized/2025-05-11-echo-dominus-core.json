@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-05-11T00:00:00Z",
+  "note": "Captured EchoDominusCore UDP+EchoEvolver hybrid payload",
+  "entries": [
+    {
+      "label": "echo_dominus_core",
+      "sha256": "6996e95ed4c76aec6934c451b9f03f7bf08e79a1b39741af29bc97ca7adb2a44",
+      "size": 14331,
+      "preview_start": "import socket, time\\nsock = socket.socket(socket.AF_INET, socket.",
+      "preview_end": "__ == \"__main__\":\\n    evolver = EchoEvolver()\\n    evolver.run()\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "/tmp/echo_dominus_core.py"
+    }
+  ]
+}

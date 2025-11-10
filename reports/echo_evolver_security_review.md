@@ -46,6 +46,13 @@ the same self-mutating EchoEvolver routine. Treat the digest as the canonical
 fingerprint for this variant and block any deployment attempts that surface the
 captured SHA-256 hash.
 
+Fresh capture: `reports/sanitized/2025-05-11-echo-dominus-core.json`
+tracks the combined UDP beacon (`EchoDominusCore`) and the multi-threaded,
+self-modifying EchoEvolver script supplied in the latest escalation. The
+summary preserves the forensic fingerprint without reintroducing executable
+code; defenders can now match the SHA-256 digest to quarantine any future
+appearance of this payload.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 
