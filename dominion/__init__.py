@@ -12,11 +12,13 @@ The module exposes high-level entry points through ``python -m dominion.plan``,
 from .plans import ActionIntent, DominionPlan
 from .executor import PlanExecutor
 from .policy import PolicyEngine, AllowlistPolicy, RedactionPolicy, IdempotencyPolicy
+from .cascade import build_cascade_plan
 
 __all__ = [
     "ActionIntent",
     "DominionPlan",
     "PlanExecutor",
+    "build_cascade_plan",
     "PolicyEngine",
     "AllowlistPolicy",
     "RedactionPolicy",
