@@ -42,4 +42,22 @@ def test_evolver_cycle(tmp_path: Path) -> None:
     assert data["cycle"] == 1
     assert "glyphs" in data
     assert "vault_key" in data
+    history = evolver.history_snapshot()
+    assert len(history) == 1
+    assert history[0]["cycle"] == 1
+
+
+def test_evolver_run_cycles_tracks_history(tmp_path: Path) -> None:
+    output = tmp_path / "cycle.echo"
+    evolver = EchoEvolver(storage_path=output)
+
+    payloads = evolver.run_cycles(3)
+
+    assert len(payloads) == 3
+    history = evolver.history_snapshot()
+    assert [entry["cycle"] for entry in history] == [1, 2, 3]
+    assert output.exists()
+
+    with pytest.raises(ValueError):
+        evolver.run_cycles(0)
 
