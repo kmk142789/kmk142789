@@ -277,7 +277,11 @@ def claim_cli(argv: Optional[Iterable[str]] = None) -> int:
     parser.add_argument("--ns", default="claim", help="derivation namespace (default: claim)")
     parser.add_argument("--index", type=int, default=0, help="derivation index")
     parser.add_argument("--asset", required=True, help="claim subject asset identifier")
-    parser.add_argument("--pub-hint", help="public hint (e.g. Ethereum address)")
+    parser.add_argument(
+        "--pub-hint",
+        default="",
+        help="public hint (e.g. Ethereum address)",
+    )
     parser.add_argument("--out", type=Path, help="write claim JSON to this path")
     parser.add_argument("--stdout", action="store_true", help="echo JSON to stdout")
     args = parser.parse_args(list(argv) if argv is not None else None)
@@ -287,32 +291,27 @@ def claim_cli(argv: Optional[Iterable[str]] = None) -> int:
 
     issued_at = datetime.now(tz=timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     nonce = os.urandom(8).hex()
+    subject = args.asset
+    pub_hint = args.pub_hint or ""
     lines = [
         "EchoClaim/v1",
-        f"asset={args.asset}",
+        f"subject={subject}",
         f"namespace={args.ns}",
-        f"index={args.index}",
         f"issued_at={issued_at}",
         f"nonce={nonce}",
+        f"pub_hint={pub_hint}",
     ]
-    if args.pub_hint:
-        lines.append(f"pub_hint={args.pub_hint}")
     message = "\n".join(lines)
     signature = sign_claim(derived.priv_hex, message)
 
     claim_payload: Dict[str, object] = {
         "type": "EchoClaim/v1",
-        "asset": args.asset,
+        "subject": subject,
         "namespace": args.ns,
-        "index": args.index,
         "issued_at": issued_at,
         "nonce": nonce,
-        "pub_hint": args.pub_hint,
-        "signer": {
-            "eth_priv_hex": derived.priv_hex,
-            "eth_address": derived.eth_address,
-            "btc_wif": derived.btc_wif,
-        },
+        "pub_hint": pub_hint,
+        "derivation": {"index": args.index},
         "signature": signature,
     }
 
