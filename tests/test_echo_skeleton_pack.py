@@ -12,6 +12,7 @@ TEST_SECRET = "Echo skeleton integration test"
 EXPECTED_PRIV = "a8f73412c98967365c0b29d54676db86d27a34501f55a24b4b18ce2bf60eaa38"
 EXPECTED_WIF = "L2tA7mt9RtQRP9ok3UFqXhvmFx3So3cprFU9udaWvVoiAoj5URfP"
 EXPECTED_ETH = "0x2e22f4b1ac0028bf9cc5710449e6ed888d30ec68"
+EXPECTED_WIF_UNCOMPRESSED = "5K6hahyuCyxbyg9n6YYugajzc78MLwy9aMx6C23A3c5EruqEhgP"
 
 
 @pytest.fixture(scope="module")
@@ -63,6 +64,27 @@ def test_derive_cli_json_output(monkeypatch: pytest.MonkeyPatch) -> None:
     payload = json.loads(dummy.getvalue())
     assert payload["eth_priv_hex"] == EXPECTED_PRIV
     assert payload["btc_wif"] == EXPECTED_WIF
+    assert payload["btc_wif_mode"] == "compressed"
+
+
+def test_derive_cli_uncompressed(monkeypatch: pytest.MonkeyPatch) -> None:
+    class DummyStdout:
+        def __init__(self) -> None:
+            self.buffer: list[str] = []
+
+        def write(self, text: str) -> None:
+            self.buffer.append(text)
+
+        def getvalue(self) -> str:
+            return "".join(self.buffer)
+
+    dummy = DummyStdout()
+    monkeypatch.setattr("sys.stdout", dummy)
+    argv = ["--phrase", TEST_SECRET, "--json", "--uncompressed"]
+    assert skeleton.derive_cli(argv) == 0
+    payload = json.loads(dummy.getvalue())
+    assert payload["btc_wif"] == EXPECTED_WIF_UNCOMPRESSED
+    assert payload["btc_wif_mode"] == "uncompressed"
 
 
 def test_claim_cli_emits_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
