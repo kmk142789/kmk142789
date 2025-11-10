@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.systems/schemas/sovereign-digital-trust/funding-pipeline.json",
+  "title": "Sovereign Digital Trust Funding Pipeline Wallet",
+  "type": "object",
+  "required": [
+    "wallet_address",
+    "chain",
+    "reward_source",
+    "verification_reference",
+    "status"
+  ],
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "description": "Canonical wallet address string as recorded in the mining reward ledger."
+    },
+    "chain": {
+      "type": "string",
+      "enum": ["bitcoin", "litecoin", "dogecoin", "monero", "zcash", "ethereum"],
+      "description": "Chain or network where the mining reward wallet operates."
+    },
+    "reward_source": {
+      "type": "string",
+      "description": "Identifier for the mining reward program or pool that generated the funds."
+    },
+    "verification_reference": {
+      "type": "string",
+      "description": "Path or URL to the signed attestation or ledger proof verifying the wallet."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["verified", "revoked", "pending"],
+      "description": "Current trust status for the funding pipeline entry."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional annotations about the wallet (e.g., rotation schedule or escrow conditions)."
+    }
+  },
+  "additionalProperties": false
+}

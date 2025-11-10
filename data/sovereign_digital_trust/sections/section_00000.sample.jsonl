@@ -1,0 +1,2 @@
+{"wallet_address": "sample-bitcoin-wallet-0", "chain": "bitcoin", "reward_source": "sample-pool", "verification_reference": "attestations/pending/placeholder-proof.md", "status": "pending", "notes": "Replace with verified entry for Sovereign Digital Trust."}
+{"wallet_address": "sample-litecoin-wallet-1", "chain": "litecoin", "reward_source": "sample-pool", "verification_reference": "attestations/pending/placeholder-proof.md", "status": "pending"}
