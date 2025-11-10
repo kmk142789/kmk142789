@@ -35,6 +35,13 @@ from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Opti
 from echo.continuum_atlas import AtlasState, export_attestation
 
 
+from .codex_tasks import (
+    LedgerAddOptions,
+    VerifyWalletsOptions,
+    run_ledger_add,
+    run_verify_wallets,
+)
+
 try:  # pragma: no cover - fallback for Python < 3.11
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - fallback dependency
@@ -869,6 +876,40 @@ def _build_parser() -> argparse.ArgumentParser:
     attest.add_argument("--export", type=Path, default=None, help="Output path for the attestation JSON artifact")
     attest.add_argument("--signer", default=None, help="Optional signer label recorded in the attestation")
 
+    task = subparsers.add_parser("task", help="Execute automated Codex tasks")
+    task_sub = task.add_subparsers(dest="task_command", required=True)
+
+    task_run = task_sub.add_parser("run", help="Run a named task")
+    task_run_sub = task_run.add_subparsers(dest="task_name", required=True)
+
+    verify_wallets = task_run_sub.add_parser(
+        "verify_wallets",
+        help="Verify treasury wallet signatures and emit a batch report",
+    )
+    verify_wallets.add_argument("--input", dest="input_path", type=Path, required=True, help="CSV file with wallet data")
+    verify_wallets.add_argument("--batch-size", type=int, default=25, help="Wallets processed per batch")
+    verify_wallets.add_argument("--mode", default="verify-signatures-only", help="Verification mode to use")
+    verify_wallets.add_argument("--workers", type=int, default=1, help="Number of worker threads (reserved)")
+    verify_wallets.add_argument("--retry", type=int, default=0, help="Retry attempts for recoverable failures")
+    verify_wallets.add_argument(
+        "--throttle",
+        default=None,
+        help="Throttle delay between balance lookups (supports values like '5s' or '250ms')",
+    )
+    verify_wallets.add_argument("--output", type=Path, default=None, help="Optional output path for the batch JSON")
+
+    ledger_add = task_run_sub.add_parser(
+        "ledger_add",
+        help="Generate ledger entries from a verified wallet batch",
+    )
+    ledger_add.add_argument("--source-file", type=Path, required=True, help="Verification batch JSON file")
+    ledger_add.add_argument(
+        "--mode",
+        choices=["dryrun", "apply"],
+        default="dryrun",
+        help="Apply the ledger updates or perform a dry-run",
+    )
+
     return parser
 
 
@@ -879,7 +920,29 @@ def _parse_csv_option(value: Optional[str]) -> Optional[List[str]]:
     return [entry for entry in entries if entry]
 
 
-def _resolve_cli_path(value: str) -> Path:
+def _parse_throttle_option(value: Optional[str]) -> Optional[float]:
+    if value is None:
+        return None
+    text = value.strip().lower()
+    if not text:
+        return None
+    multiplier = 1.0
+    if text.endswith("ms"):
+        multiplier = 0.001
+        text = text[:-2]
+    elif text.endswith("s"):
+        text = text[:-1]
+    elif text.endswith("m"):
+        multiplier = 60.0
+        text = text[:-1]
+    try:
+        numeric = float(text)
+    except ValueError as exc:  # pragma: no cover - CLI validation
+        raise ValueError("invalid throttle value") from exc
+    return numeric * multiplier
+
+
+def _resolve_cli_path(value: str | Path) -> Path:
     candidate = Path(value)
     if not candidate.is_absolute():
         candidate = REPO_ROOT / candidate
@@ -940,6 +1003,36 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         output_path.write_text(report, encoding="utf-8")
         print(report)
         return 0
+
+    if args.command == "task":
+        if args.task_command == "run":
+            if args.task_name == "verify_wallets":
+                try:
+                    throttle = _parse_throttle_option(args.throttle)
+                except ValueError as exc:  # pragma: no cover - CLI validation
+                    parser.error(str(exc))
+                    return 2
+                output_path = _resolve_cli_path(args.output) if args.output else None
+                options = VerifyWalletsOptions(
+                    input_path=_resolve_cli_path(args.input_path),
+                    batch_size=args.batch_size,
+                    mode=args.mode,
+                    workers=args.workers,
+                    retry=args.retry,
+                    throttle_seconds=throttle,
+                    output_path=output_path,
+                )
+                run_verify_wallets(options)
+                return 0
+            if args.task_name == "ledger_add":
+                options = LedgerAddOptions(
+                    source_file=_resolve_cli_path(args.source_file),
+                    mode=args.mode,
+                )
+                run_ledger_add(options)
+                return 0
+        parser.error("unsupported task invocation")
+        return 2
 
     if args.command == "attest":
         export_path = args.export or DEFAULT_ATLAS_ATTESTATION_PATH
