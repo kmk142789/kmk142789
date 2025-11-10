@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-11-10T01:52:08Z",
+  "note": "Captured EchoEvolver bootstrap hybrid payload",
+  "entries": [
+    {
+      "label": "echo-evolver-bootstrap",
+      "sha256": "f50e4e8d427a92d62add84b85336226072d7a6142b830afec10fe03181c02af5",
+      "size": 27390,
+      "preview_start": "/*! \\n * Bootstrap v3.0.3 (http://getbootstrap.com)\\n * Copyright ",
+      "preview_end": "__ == \"__main__\":\\n    evolver = EchoEvolver()\\n    evolver.run()\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "tmp_payload_clean.txt"
+    }
+  ]
+}
