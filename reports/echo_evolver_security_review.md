@@ -40,6 +40,12 @@ summarises the multi-line hexadecimal block supplied through the EchoEvolver
 prompt chain. The digest anchors the suspicious content without reintroducing
 the raw bytes into the repository, keeping the incident record auditable.
 
+New capture: `reports/sanitized/2025-05-11-echo-evolver-bootstrap-css.json`
+records the hybrid payload that blends a minified Bootstrap 3.0.3 theme with
+the same self-mutating EchoEvolver routine. Treat the digest as the canonical
+fingerprint for this variant and block any deployment attempts that surface the
+captured SHA-256 hash.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 
