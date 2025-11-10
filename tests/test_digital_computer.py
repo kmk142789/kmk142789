@@ -123,6 +123,31 @@ def test_bitwise_operations_and_shifts() -> None:
     assert result.memory["shr"] == 128 >> 3
 
 
+def test_min_max_and_sign_helpers() -> None:
+    program = """
+    LOAD A 10
+    MIN A 7
+    STORE A @min
+    LOAD B -5
+    ABS B
+    STORE B @abs
+    LOAD C 3
+    NEG C
+    STORE C @neg
+    LOAD D 4
+    MAX D @min
+    STORE D @max
+    HALT
+    """
+
+    result = run_program(program)
+
+    assert result.memory["min"] == 7
+    assert result.memory["abs"] == 5
+    assert result.memory["neg"] == -3
+    assert result.memory["max"] == 7
+
+
 def test_comparison_jumps_enable_rich_branching() -> None:
     program = """
     LOAD A 3
@@ -197,6 +222,22 @@ def test_evolve_program_generates_cycle_reports() -> None:
     assert [cycle.result.memory["result"] for cycle in cycles] == [2, 7]
     assert cycles[1].result.output == ("7",)
     assert cycles[0].inputs["value"] == 2
+
+
+def test_assistant_offers_clamp_template() -> None:
+    assistant = EchoComputerAssistant()
+
+    suggestion = assistant.suggest("please clamp the value")
+
+    assert isinstance(suggestion, AssistantSuggestion)
+    assert suggestion.metadata["template"] == "clamp"
+
+    result = assistant.execute(
+        suggestion,
+        inputs={"value": 15, "low": 2, "high": 10},
+    )
+
+    assert result.output == ("10",)
 
 
 def test_run_permits_per_call_max_steps_override() -> None:
