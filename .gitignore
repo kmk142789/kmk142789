@@ -11,6 +11,8 @@ data/atlas.db
 artifacts/*.png
 artifacts/genesis_artifact_bundle.zip
 **/__pycache__/
+hardhat/cache/
+hardhat/artifacts/
 
 # Puzzle Lab generated artefacts
 reports/figures/*.png
