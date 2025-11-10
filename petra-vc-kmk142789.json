@@ -1,0 +1,19 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://aptos.dev/credentials/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "EchoSovereignCrossChain"
+  ],
+  "issuer": {
+    "id": "did:echo:polygon:0xPolygonEcho6f87cccd"
+  },
+  "credentialSubject": {
+    "id": "did:aptos:petra:0xBlurryFace59913",
+    "github": "kmk142789",
+    "evolution": "v2.0",
+    "attestation": "0x93104fb5a154844508a90a41498286c3"
+  }
+}
