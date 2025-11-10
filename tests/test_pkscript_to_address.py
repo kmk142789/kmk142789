@@ -63,6 +63,17 @@ P2WPKH_SPLIT_PROGRAM_SCRIPT = [
     "a1e",
 ]
 
+P2WPKH_METADATA_SCRIPT = [
+    "bc1qr2cr3-xu7txc2de",
+    "Pkscript",
+    "00141ab038be420532ef6419408002f21df7a79c9b9e",
+    "Witness",
+    "304402203acb6b2bbefd1475ab6c0922ed8ab3f02efa9605353f04832bb416350c2d3c2702204d7d4d394634636dac0ed107f7fe888876debba977d5116c4f6dcf441777e88701,03a57e8e4099ef1db00db7bfab566d159a3a6c94b53a03942f570a52733eb1",
+    "fea9",
+]
+
+P2WPKH_METADATA_ADDRESS = "bc1qr2cr30jzq5ew7eqegzqq9usa77neexu7txc2de"
+
 
 TAPROOT_PROGRAM = (
     "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
@@ -411,18 +422,9 @@ def test_pkscript_accepts_split_script_hash_tokens() -> None:
 
 
 def test_pkscript_handles_raw_witness_script_with_metadata() -> None:
-    script = [
-        "bc1qr2cr3-xu7txc2de",
-        "Pkscript",
-        "00141ab038be420532ef6419408002f21df7a79c9b9e",
-        "Witness",
-        "304402203acb6b2bbefd1475ab6c0922ed8ab3f02efa9605353f04832bb416350c2d3c2702204d7d4d394634636dac0ed107f7fe888876debba977d5116c4f6dcf441777e88701,03a57e8e4099ef1db00db7bfab566d159a3a6c94b53a03942f570a52733eb1",
-        "fea9",
-    ]
+    address = pkscript_to_address(P2WPKH_METADATA_SCRIPT)
 
-    address = pkscript_to_address(script)
-
-    assert address == "bc1qr2cr30jzq5ew7eqegzqq9usa77neexu7txc2de"
+    assert address == P2WPKH_METADATA_ADDRESS
 
 
 def test_pkscript_ignores_sigscript_metadata_block() -> None:
@@ -501,6 +503,26 @@ def test_cli_handles_direct_script_invocation(tmp_path) -> None:
     )
 
     assert proc.stdout.strip() == "1HvQwsgSXk5p2DfWRAbbqDrWSSppuLLdha"
+
+
+def test_cli_skips_witness_metadata_block(tmp_path) -> None:
+    script_path = Path(__file__).resolve().parents[1] / "tools" / "pkscript_to_address.py"
+    example = "\n".join(P2WPKH_METADATA_SCRIPT) + "\n"
+
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+
+    proc = subprocess.run(
+        [sys.executable, str(script_path)],
+        input=example,
+        text=True,
+        capture_output=True,
+        check=True,
+        env=env,
+        cwd=script_path.parents[1],
+    )
+
+    assert proc.stdout.strip() == P2WPKH_METADATA_ADDRESS
 
 
 def test_cli_validates_expected_address(tmp_path) -> None:
