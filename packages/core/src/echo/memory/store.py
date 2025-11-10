@@ -3,12 +3,34 @@
 from __future__ import annotations
 
 import json
+import os
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
+
+
+def _runtime_root() -> Path:
+    env = os.getenv("ECHO_RUNTIME_ROOT")
+    if env:
+        return Path(env)
+    return Path.home() / ".echo-runtime"
+
+
+def _default_storage_path() -> Path:
+    env = os.getenv("ECHO_MEMORY_PATH")
+    if env:
+        return Path(env)
+    return _runtime_root() / "memory" / "echo_memory.json"
+
+
+def _default_log_path() -> Path:
+    env = os.getenv("ECHO_LOG_PATH")
+    if env:
+        return Path(env)
+    return _runtime_root() / "logs" / "ECHO_LOG.md"
 
 
 @dataclass(slots=True)
@@ -85,18 +107,21 @@ class JsonMemoryStore:
 
     def __init__(
         self,
-        storage_path: Path | str = Path("memory/echo_memory.json"),
+        storage_path: Path | str | None = None,
         *,
-        log_path: Path | str = Path("ECHO_LOG.md"),
+        log_path: Path | str | None = None,
         core_datasets: Optional[Dict[str, Path | str]] = None,
     ) -> None:
-        self.storage_path = Path(storage_path)
-        self.log_path = Path(log_path)
+        self.storage_path = (
+            Path(storage_path) if storage_path is not None else _default_storage_path()
+        )
+        self.log_path = Path(log_path) if log_path is not None else _default_log_path()
         dataset_map = core_datasets or self.DEFAULT_DATASETS
         self.core_datasets: Dict[str, Path] = {
             name: Path(path) for name, path in dataset_map.items()
         }
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
+        self.log_path.parent.mkdir(parents=True, exist_ok=True)
         if not self.storage_path.exists():
             self._write({"executions": []})
         if not self.log_path.exists():

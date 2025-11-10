@@ -7,8 +7,10 @@ from cognitive_harmonics.harmonic_memory_serializer import canonical_checksum
 from satoshi.puzzle_dataset import load_puzzle_solutions
 
 
-def test_cycle_snapshot_persists_and_matches_schema() -> None:
-    target = Path("harmonic_memory/cycles/cycle_00001.json")
+def test_cycle_snapshot_persists_and_matches_schema(tmp_path, monkeypatch) -> None:
+    base_dir = tmp_path / "harmonic_cycles"
+    monkeypatch.setenv("ECHO_HARMONIC_MEMORY_DIR", str(base_dir))
+    target = base_dir / "cycle_00001.json"
     if target.exists():
         target.unlink()
 

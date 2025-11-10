@@ -8,7 +8,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ECHOCTL = ROOT / "echo" / "echoctl.py"
-DATA = ROOT / "data" / "wish_manifest.json"
 
 
 def run(args: list[str], *, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
@@ -27,16 +26,32 @@ def run(args: list[str], *, env: dict[str, str] | None = None) -> subprocess.Com
 
 def test_wish_roundtrip(tmp_path, monkeypatch):
     monkeypatch.setenv("PYTHONPATH", str(ROOT))
-    run(["wish", "TestUser", "Test Desire", "care,craft"])
-    manifest = json.loads(DATA.read_text(encoding="utf-8"))
+    data_root = tmp_path / "data"
+    docs_root = tmp_path / "docs"
+    docs_root.mkdir(parents=True, exist_ok=True)
+    env = {
+        "ECHO_DATA_ROOT": str(data_root),
+        "ECHO_DOCS_ROOT": str(docs_root),
+    }
+
+    run(["wish", "TestUser", "Test Desire", "care,craft"], env=env)
+    manifest_path = data_root / "wish_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["wishes"][-1]["wisher"] == "TestUser"
     assert "Test Desire" in manifest["wishes"][-1]["desire"]
 
 
-def test_cycle_generates_plan(monkeypatch):
+def test_cycle_generates_plan(tmp_path, monkeypatch):
     monkeypatch.setenv("PYTHONPATH", str(ROOT))
-    run(["cycle"])
-    plan = (ROOT / "docs" / "NEXT_CYCLE_PLAN.md").read_text(encoding="utf-8")
+    data_root = tmp_path / "data"
+    docs_root = tmp_path / "docs"
+    env = {
+        "ECHO_DATA_ROOT": str(data_root),
+        "ECHO_DOCS_ROOT": str(docs_root),
+    }
+
+    run(["cycle"], env=env)
+    plan = (docs_root / "NEXT_CYCLE_PLAN.md").read_text(encoding="utf-8")
     assert "Proposed Actions" in plan
 
 

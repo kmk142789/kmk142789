@@ -85,7 +85,7 @@ def test_prepare_voyage_report_generates_summary() -> None:
     assert dashboard["structured_filters"][0]["puzzles"]
 
 
-def test_cli_emits_voyage_report(tmp_path: Path) -> None:
+def test_cli_emits_voyage_report(tmp_path: Path, monkeypatch) -> None:
     input_path = tmp_path / "entries.json"
     input_payload = {
         "entries": [
@@ -107,6 +107,10 @@ def test_cli_emits_voyage_report(tmp_path: Path) -> None:
     json_out = tmp_path / "index.json"
     voyage_base = tmp_path / "voyage"
 
+    monkeypatch.chdir(tmp_path)
+
+    feed_out = tmp_path / "feed.xml"
+
     exit_code = main(
         [
             "--in",
@@ -117,6 +121,8 @@ def test_cli_emits_voyage_report(tmp_path: Path) -> None:
             str(json_out),
             "--voyage-report",
             str(voyage_base),
+            "--feed-out",
+            str(feed_out),
         ]
     )
     assert exit_code == 0

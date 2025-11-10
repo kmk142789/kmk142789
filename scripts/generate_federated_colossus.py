@@ -1001,9 +1001,13 @@ def main(argv: list[str] | None = None) -> int:
         default="build/index/federated_colossus_index.json",
         help="Dashboard JSON output path",
     )
+    default_feed = os.getenv(
+        "ECHO_COLLOSSUS_FEED", "docs/feed/federated-colossus.xml"
+    )
+
     parser.add_argument(
         "--feed-out",
-        default="docs/feed/federated-colossus.xml",
+        default=default_feed,
         help="Atom feed output path",
     )
     parser.add_argument(
@@ -1056,7 +1060,7 @@ def main(argv: list[str] | None = None) -> int:
         _write_text(args.feed_out, feed_text)
         print(f"Wrote {args.feed_out}")
 
-    verification_log = Path("verification.log")
+    verification_log = Path(os.getenv("ECHO_VERIFICATION_LOG", "verification.log"))
     _update_verification_log(verification_log, Path(args.json_out), rollups)
     print(f"Testing ritual complete → {verification_log}")
 

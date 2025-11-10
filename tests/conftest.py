@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sitecustomize  # noqa: F401 - ensure environment defaults are applied
 from typing import Mapping
 
 import pytest

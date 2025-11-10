@@ -8,7 +8,22 @@ import uuid
 from contextlib import contextmanager
 from typing import Any, Dict, Optional
 
-DEFAULT_DIR = pathlib.Path(os.getenv("ECHO_THOUGHT_DIR", "genesis_ledger/thought_log"))
+
+def _runtime_root() -> pathlib.Path:
+    env = os.getenv("ECHO_RUNTIME_ROOT")
+    if env:
+        return pathlib.Path(env)
+    return pathlib.Path.home() / ".echo-runtime"
+
+
+def _default_dir() -> pathlib.Path:
+    env = os.getenv("ECHO_THOUGHT_DIR")
+    if env:
+        return pathlib.Path(env)
+    return _runtime_root() / "thought_log"
+
+
+DEFAULT_DIR = _default_dir()
 DEFAULT_DIR.mkdir(parents=True, exist_ok=True)
 
 SCHEMA = {

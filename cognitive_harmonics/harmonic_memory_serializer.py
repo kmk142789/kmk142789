@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Dict
@@ -10,7 +11,14 @@ from typing import Any, Dict
 from satoshi.puzzle_dataset import PuzzleSolution, load_puzzle_solutions
 
 # Snapshot files live under this directory so downstream tooling can glob them.
-CYCLES_DIR = Path("harmonic_memory") / "cycles"
+_RUNTIME_ROOT = Path(os.getenv("ECHO_RUNTIME_ROOT", Path.cwd() / ".echo-runtime"))
+
+
+def _cycles_dir() -> Path:
+    env = os.getenv("ECHO_HARMONIC_MEMORY_DIR")
+    if env:
+        return Path(env)
+    return _RUNTIME_ROOT / "harmonic_memory" / "cycles"
 
 
 def canonical_checksum(payload: Any) -> str:
@@ -106,11 +114,12 @@ def build_harmonic_memory_record(
     return record
 
 
-def persist_cycle_record(record: Dict[str, Any], *, base_path: Path = CYCLES_DIR) -> Path:
+def persist_cycle_record(record: Dict[str, Any], *, base_path: Path | None = None) -> Path:
     """Write *record* to disk and return the resulting file path."""
 
-    base_path.mkdir(parents=True, exist_ok=True)
+    base = base_path or _cycles_dir()
+    base.mkdir(parents=True, exist_ok=True)
     cycle_id = record["cycle_snapshot"]["cycle_id"]
-    path = base_path / f"cycle_{cycle_id:05d}.json"
+    path = base / f"cycle_{cycle_id:05d}.json"
     path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return path
