@@ -42,6 +42,41 @@ def test_cli_evolve_describe_sequence(capfd):
     assert "advance_cycle" in captured.out
 
 
+def test_cli_evolve_describe_sequence_json(monkeypatch, capfd):
+    plan = [
+        {
+            "index": 1,
+            "step": "advance_cycle",
+            "status": "pending",
+            "description": "ignite advance_cycle() to begin the orbital loop",
+        }
+    ]
+
+    class DummyEvolver:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def sequence_plan(self, *, persist_artifact: bool):
+            assert persist_artifact is True
+            return plan
+
+    monkeypatch.setattr("echo.cli.EchoEvolver", lambda *a, **k: DummyEvolver())
+
+    code = main(["evolve", "--describe-sequence-json"])
+
+    assert code == 0
+    captured = capfd.readouterr()
+    payload = json.loads(captured.out)
+    assert payload == plan
+
+
+def test_cli_evolve_describe_sequence_json_rejects_advance():
+    with pytest.raises(SystemExit) as exc:
+        main(["evolve", "--advance-system", "--describe-sequence-json"])
+
+    assert exc.value.code == 2
+
+
 def test_cli_evolve_advance_system(monkeypatch, capfd):
     captured = {}
 

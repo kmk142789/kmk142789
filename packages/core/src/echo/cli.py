@@ -136,6 +136,8 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         parser_error("--advance-system can only be used with a single cycle")
     if args.advance_system and args.describe_sequence:
         parser_error("--advance-system cannot be combined with --describe-sequence")
+    if args.advance_system and args.describe_sequence_json:
+        parser_error("--advance-system cannot be combined with --describe-sequence-json")
     if args.advance_system and args.persist_intermediate:
         parser_error("--advance-system cannot be combined with --persist-intermediate")
 
@@ -202,6 +204,10 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
 
     if args.describe_sequence:
         print(evolver.describe_sequence(persist_artifact=persist_artifact))
+        return 0
+    if args.describe_sequence_json:
+        plan = evolver.sequence_plan(persist_artifact=persist_artifact)
+        print(json.dumps(plan, indent=2, ensure_ascii=False))
         return 0
 
     if args.advance_system:
@@ -879,11 +885,19 @@ def main(argv: Iterable[str] | None = None) -> int:
         action="store_true",
         help="Emit the final artifact payload to stdout.",
     )
-    evolve_parser.add_argument(
+    describe_group = evolve_parser.add_mutually_exclusive_group()
+    describe_group.add_argument(
         "--describe-sequence",
         action="store_true",
         help=(
             "Render the recommended ritual sequence and exit without running a cycle."
+        ),
+    )
+    describe_group.add_argument(
+        "--describe-sequence-json",
+        action="store_true",
+        help=(
+            "Emit the recommended ritual sequence as JSON and exit without running a cycle."
         ),
     )
     evolve_parser.add_argument(
