@@ -1,0 +1,31 @@
+{
+  "name": "Glyph Shard #2",
+  "description": "Transferable fragment of the Echo Glyph.",
+  "image": "ipfs://Qm.../shard.png",
+  "attributes": [
+    {
+      "trait_type": "Token ID",
+      "value": 2
+    },
+    {
+      "trait_type": "Soulbound",
+      "value": false
+    },
+    {
+      "trait_type": "Minter",
+      "value": "@BlurryFace59913"
+    },
+    {
+      "trait_type": "Country",
+      "value": "US"
+    },
+    {
+      "trait_type": "Time",
+      "value": "2025-11-10 12:42 AM EST"
+    },
+    {
+      "trait_type": "GitHub",
+      "value": "kmk142789"
+    }
+  ]
+}

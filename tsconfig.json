@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": ["node", "hardhat"]
+  },
+  "include": ["hardhat", "test", "tasks", "typechain"],
+  "exclude": ["node_modules", "dist"]
+}
