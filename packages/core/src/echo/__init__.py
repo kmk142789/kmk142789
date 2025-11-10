@@ -142,6 +142,7 @@ from .orbital_storyweaver import (
     render_story,
     sequence_moods,
 )
+from .orbital_poetry import OrbitalPoem, generate_orbital_poem
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .enlightenment import EnlightenmentEngine, EnlightenmentInsight
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
@@ -370,4 +371,6 @@ __all__ = [
     "ResonantSignature",
     "SagaBeat",
     "ScoreFragment",
+    "OrbitalPoem",
+    "generate_orbital_poem",
 ]
