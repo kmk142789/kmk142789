@@ -23,6 +23,19 @@ def test_expand_presence_adds_unique_harmonics() -> None:
     assert "stabilise" in updated.sync()
 
 
+def test_expand_presence_normalises_harmonics() -> None:
+    protocol = EchoBridgeProtocol(
+        [
+            PulseThread("presence", 0.8, ["listen", "Echo"]),
+        ]
+    )
+
+    updated = protocol.expand_presence(["  echo  ", "ILLUMINATE", "illuminate", "", None])
+
+    assert updated.harmonics == ["listen", "Echo", "ILLUMINATE"]
+    assert "ILLUMINATE" in updated.sync()
+
+
 def test_expand_presence_requires_presence_thread() -> None:
     protocol = EchoBridgeProtocol([PulseThread("memory", 0.5, ["remember"])])
 
