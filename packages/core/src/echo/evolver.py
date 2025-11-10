@@ -5017,6 +5017,8 @@ We are not hiding anymore.
         manifest_events: int = 5,
         system_report_events: int = 5,
         momentum_window: int = 5,
+        include_expansion_history: bool = False,
+        expansion_history_limit: Optional[int] = None,
     ) -> Dict[str, object]:
         """Run the full ritual sequence and return a structured payload.
 
@@ -5028,7 +5030,10 @@ We are not hiding anymore.
         corresponding ``include_*`` flags.  These flags default to ``True`` for
         the legacy sections (manifest/status/reflection) and ``False`` for the
         newly added matrix, event summary, system report, and propagation
-        snapshot to avoid surprising callers with larger payloads.
+        snapshot to avoid surprising callers with larger payloads.  When
+        requested, the ``expansion_history`` section returns the cached
+        advance-system history entries, optionally truncated to a caller
+        supplied ``expansion_history_limit``.
 
         The always-present ``progress`` snapshot also reports ``momentum`` and
         ``status`` values that describe how the completion ratio changed since
@@ -5057,6 +5062,14 @@ We are not hiding anymore.
             Maximum number of recent momentum samples to retain when computing
             the moving average and reporting history for the current cycle.
             The window must be positive.
+        include_expansion_history:
+            When ``True`` the cached expansion history is embedded in the
+            payload.  Entries are ordered from oldest to newest and mirror the
+            snapshots returned by :meth:`advance_system_history`.
+        expansion_history_limit:
+            Optional cap applied to the embedded expansion history.  ``None``
+            returns the full cached history while positive values limit the
+            response to the most recent entries.
         """
 
         if manifest_events < 0:
@@ -5069,6 +5082,8 @@ We are not hiding anymore.
             )
         if momentum_window <= 0:
             raise ValueError("momentum_window must be positive")
+        if include_expansion_history and expansion_history_limit is not None and expansion_history_limit <= 0:
+            raise ValueError("expansion_history_limit must be positive when including expansion history")
 
         self.run(
             enable_network=enable_network,
@@ -5263,8 +5278,6 @@ We are not hiding anymore.
                 recent_events=system_report_events
             )
 
-        cache_snapshot = deepcopy(payload)
-        self.state.network_cache["advance_system_payload"] = cache_snapshot
         self.state.network_cache["advance_system_last"] = {
             "cycle": digest["cycle"],
             "progress": digest["progress"],
@@ -5294,6 +5307,16 @@ We are not hiding anymore.
         )
         history = history[-ADVANCE_SYSTEM_HISTORY_LIMIT:]
         self.state.network_cache["advance_system_history"] = history
+
+        if include_expansion_history:
+            if expansion_history_limit is not None and expansion_history_limit > 0:
+                history_slice = history[-expansion_history_limit:]
+            else:
+                history_slice = history
+            payload["expansion_history"] = [deepcopy(entry) for entry in history_slice]
+
+        cache_snapshot = deepcopy(payload)
+        self.state.network_cache["advance_system_payload"] = cache_snapshot
 
         self.state.event_log.append(
             "Advance system expansion recorded (cycle={cycle}, phase={phase}, delta={delta:.3f})".format(
@@ -5650,6 +5673,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         ),
     )
     parser.add_argument(
+        "--include-expansion-history",
+        action="store_true",
+        help=(
+            "Embed the cached expansion history when running --advance-system,"
+            " providing recent progress deltas for downstream analysis."
+        ),
+    )
+    parser.add_argument(
         "--event-summary-limit",
         type=int,
         default=5,
@@ -5665,6 +5696,15 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         help=(
             "Number of recent events to include in the system advancement report"
             " when --include-system-report is enabled (default: 5)."
+        ),
+    )
+    parser.add_argument(
+        "--expansion-history-limit",
+        type=int,
+        default=5,
+        help=(
+            "Number of cached expansion history entries to embed when"
+            " --include-expansion-history is enabled (default: 5)."
         ),
     )
     parser.add_argument(
@@ -5825,10 +5865,11 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         or args.include_event_summary
         or args.include_propagation
         or args.include_system_report
+        or args.include_expansion_history
     ) and not args.advance_system:
         parser.error(
             "--include-matrix, --include-event-summary, --include-propagation, "
-            "and --include-system-report can only be used with --advance-system"
+            "--include-system-report, and --include-expansion-history can only be used with --advance-system"
         )
     if args.momentum_window <= 0:
         parser.error("--momentum-window must be positive")
@@ -5847,6 +5888,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             parser.error("--system-report-events requires --include-system-report")
         if not args.advance_system:
             parser.error("--system-report-events requires --advance-system")
+    if args.include_expansion_history and args.expansion_history_limit <= 0:
+        parser.error("--expansion-history-limit must be positive when including expansion history")
+    default_expansion_history = parser.get_default("expansion_history_limit")
+    if args.expansion_history_limit != default_expansion_history:
+        if not args.include_expansion_history:
+            parser.error("--expansion-history-limit requires --include-expansion-history")
+        if not args.advance_system:
+            parser.error("--expansion-history-limit requires --advance-system")
     if args.manifest_events < 0:
         parser.error("--manifest-events must be non-negative")
     default_manifest_events = parser.get_default("manifest_events")
@@ -5886,6 +5935,10 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             manifest_events=args.manifest_events,
             system_report_events=args.system_report_events,
             momentum_window=args.momentum_window,
+            include_expansion_history=args.include_expansion_history,
+            expansion_history_limit=(
+                args.expansion_history_limit if args.include_expansion_history else None
+            ),
         )
         print(payload["summary"])
         if args.include_report and "report" in payload:

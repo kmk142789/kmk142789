@@ -99,6 +99,7 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
 
     assert "advance_system_payload" in evolver.state.network_cache
     assert "propagation" not in payload
+    assert "expansion_history" not in payload
 
 
 def test_advance_system_optional_sections(tmp_path, monkeypatch):
@@ -172,6 +173,40 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
 
     system_report = payload["system_report"]
     assert "Recent events" in system_report
+    assert "expansion_history" not in payload
+
+
+def test_advance_system_can_embed_expansion_history(tmp_path, monkeypatch):
+    class LocalThoughtLogger(thoughtlog_module.ThoughtLogger):
+        def __init__(self) -> None:  # pragma: no cover - simple delegation
+            super().__init__(dirpath=tmp_path / "thought-log")
+
+    monkeypatch.setattr(thoughtlog_module, "ThoughtLogger", LocalThoughtLogger)
+    store = JsonMemoryStore(
+        storage_path=tmp_path / "memory.json",
+        log_path=tmp_path / "log.md",
+        core_datasets={},
+    )
+    evolver = EchoEvolver(memory_store=store)
+
+    # Run multiple times to accumulate history entries.
+    for _ in range(3):
+        payload = evolver.advance_system(
+            enable_network=False,
+            persist_artifact=False,
+            include_expansion_history=True,
+            expansion_history_limit=2,
+        )
+
+    history = payload["expansion_history"]
+    assert 1 <= len(history) <= 2
+    assert history[-1]["cycle"] == payload["digest"]["cycle"]
+    assert all("expansion" in entry for entry in history)
+
+    # Ensure defensive copies are returned
+    history[-1]["expansion"]["phase"] = "mutated"
+    cached_history = evolver.state.network_cache["advance_system_history"]
+    assert cached_history[-1]["expansion"]["phase"] != "mutated"
 
 
 def test_advance_system_rejects_invalid_event_summary_limit(tmp_path, monkeypatch):
@@ -201,6 +236,14 @@ def test_advance_system_rejects_invalid_event_summary_limit(tmp_path, monkeypatc
             persist_artifact=False,
             include_system_report=True,
             system_report_events=0,
+        )
+
+    with pytest.raises(ValueError):
+        evolver.advance_system(
+            enable_network=False,
+            persist_artifact=False,
+            include_expansion_history=True,
+            expansion_history_limit=0,
         )
 
 
