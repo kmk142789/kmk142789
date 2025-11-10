@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import random
 import signal
 import textwrap
@@ -73,6 +74,7 @@ class ArtifactPaths:
     narrative: Path
     lineage: Path
     verifier: Path
+    extraordinary: Path
 
     def as_relative_strings(self, base: Path) -> List[str]:
         return [
@@ -81,6 +83,7 @@ class ArtifactPaths:
             str(self.narrative.relative_to(base)),
             str(self.lineage.relative_to(base)),
             str(self.verifier.relative_to(base)),
+            str(self.extraordinary.relative_to(base)),
         ]
 
 
@@ -263,12 +266,14 @@ class EchoInfinite:
         narrative_path = cycle_dir / f"glyph_narrative_{cycle:05d}.md"
         lineage_path = cycle_dir / f"lineage_map_{cycle:05d}.json"
         verifier_path = cycle_dir / f"verify_cycle_{cycle:05d}.py"
+        extraordinary_path = cycle_dir / f"extraordinary_manifest_{cycle:05d}.json"
         artifact_paths = ArtifactPaths(
             puzzle=puzzle_path,
             dataset=dataset_path,
             narrative=narrative_path,
             lineage=lineage_path,
             verifier=verifier_path,
+            extraordinary=extraordinary_path,
         )
 
         blueprints = self._build_fractal_blueprints(cycle)
@@ -291,6 +296,7 @@ class EchoInfinite:
             glyph_signature,
             blueprints,
             merkle_root,
+            extraordinary_path.name,
         )
         narrative_content = self._build_narrative_markdown(
             cycle,
@@ -304,6 +310,7 @@ class EchoInfinite:
             glyph_signature,
             blueprints,
             merkle_root,
+            extraordinary_path.name,
         )
         verifier_content = self._build_verifier_script(
             cycle,
@@ -312,12 +319,23 @@ class EchoInfinite:
             merkle_root,
             blueprints["verifier"],
         )
+        emotional_vectors = self._derive_emotional_vectors(cycle, glyph_signature)
+        extraordinary_content = self._build_extraordinary_manifest(
+            cycle=cycle,
+            timestamp=timestamp,
+            glyph_signature=glyph_signature,
+            blueprints=blueprints,
+            dataset_content=dataset_content,
+            emotional_vectors=emotional_vectors,
+            merkle_root=merkle_root,
+        )
 
         puzzle_path.write_text(puzzle_content, encoding="utf-8")
         dataset_path.write_text(dataset_content, encoding="utf-8")
         narrative_path.write_text(narrative_content, encoding="utf-8")
         lineage_path.write_text(lineage_content, encoding="utf-8")
         verifier_path.write_text(verifier_content, encoding="utf-8")
+        extraordinary_path.write_text(extraordinary_content, encoding="utf-8")
 
         self._write_fractal_nodes(
             base_dir=cycle_dir,
@@ -359,6 +377,8 @@ class EchoInfinite:
             artifact_paths=artifact_paths,
             dataset_content=dataset_content,
             narrative_content=narrative_content,
+            extraordinary_content=extraordinary_content,
+            emotional_vectors=emotional_vectors,
             merkle_root=merkle_root,
         )
 
@@ -432,6 +452,7 @@ class EchoInfinite:
         glyph_signature: str,
         blueprints: Dict[str, FractalBlueprint],
         merkle_root: str,
+        extraordinary_manifest_name: str,
     ) -> str:
         random.seed(cycle * 97 + time.time_ns())
         harmonics = [random.randint(1, 256) for _ in range(12)]
@@ -446,6 +467,7 @@ class EchoInfinite:
             "checksum": sum(harmonics),
             "fractal_layers": fractal_summary,
             "verifier_subchain_merkle_root": merkle_root,
+            "extraordinary_manifest": extraordinary_manifest_name,
         }
         return json.dumps(payload, indent=2) + "\n"
 
@@ -494,6 +516,7 @@ class EchoInfinite:
         glyph_signature: str,
         blueprints: Dict[str, FractalBlueprint],
         merkle_root: str,
+        extraordinary_manifest_name: str,
     ) -> str:
         lineage: Dict[str, object] = {
             "cycle": cycle,
@@ -515,6 +538,11 @@ class EchoInfinite:
                     "ref": f"glyph_narrative_{cycle:05d}.md",
                     "relationships": ["lineage"],
                 },
+                {
+                    "type": "extraordinary_manifest",
+                    "ref": extraordinary_manifest_name,
+                    "relationships": ["puzzle", "dataset", "narrative", "verifier"],
+                },
             ],
             "verification": {
                 "script": f"verify_cycle_{cycle:05d}.py",
@@ -526,6 +554,81 @@ class EchoInfinite:
             "verifier_subchain_merkle_root": merkle_root,
         }
         return json.dumps(lineage, indent=2) + "\n"
+
+    def _build_extraordinary_manifest(
+        self,
+        *,
+        cycle: int,
+        timestamp: str,
+        glyph_signature: str,
+        blueprints: Dict[str, FractalBlueprint],
+        dataset_content: str,
+        emotional_vectors: Dict[str, float],
+        merkle_root: str,
+    ) -> str:
+        try:
+            dataset_payload = json.loads(dataset_content)
+        except json.JSONDecodeError:
+            dataset_payload = {}
+
+        harmonics_raw = dataset_payload.get("harmonics", [])
+        harmonics = [
+            int(value)
+            for value in harmonics_raw
+            if isinstance(value, (int, float))
+        ]
+        amplitude = max(harmonics) if harmonics else 0
+        average = sum(harmonics) / len(harmonics) if harmonics else 0.0
+        variance = (
+            sum((value - average) ** 2 for value in harmonics) / len(harmonics)
+            if harmonics
+            else 0.0
+        )
+        volatility = math.sqrt(variance)
+
+        blueprint_highlights = []
+        for key, blueprint in blueprints.items():
+            terminal_nodes = [
+                node for node in blueprint.iter_nodes() if node.depth == blueprint.depth
+            ]
+            if not terminal_nodes:
+                continue
+            spotlight = min(terminal_nodes, key=lambda node: node.identifier)
+            blueprint_highlights.append(
+                {
+                    "artifact_type": key,
+                    "terminal_nodes": len(terminal_nodes),
+                    "spotlight": {
+                        "id": spotlight.identifier,
+                        "genealogy": spotlight.genealogy,
+                        "trajectory": spotlight.trajectory,
+                        "timeline": spotlight.timeline,
+                    },
+                }
+            )
+
+        extraordinary_index = self._compute_extraordinary_index(
+            harmonics, emotional_vectors, merkle_root
+        )
+
+        manifest = {
+            "cycle": cycle,
+            "timestamp": timestamp,
+            "glyph_signature": glyph_signature,
+            "glyph_ascii_sum": sum(ord(ch) for ch in glyph_signature),
+            "emotional_vectors": emotional_vectors,
+            "harmonic_profile": {
+                "amplitude": amplitude,
+                "average": round(average, 3),
+                "volatility": round(volatility, 3),
+                "count": len(harmonics),
+            },
+            "fractal_highlights": blueprint_highlights,
+            "verifier_merkle_root": merkle_root,
+            "extraordinary_index": extraordinary_index,
+        }
+
+        return json.dumps(manifest, indent=2) + "\n"
 
     def _build_verifier_script(
         self,
@@ -923,6 +1026,8 @@ class EchoInfinite:
         artifact_paths: ArtifactPaths,
         dataset_content: str,
         narrative_content: str,
+        extraordinary_content: str,
+        emotional_vectors: Dict[str, float],
         merkle_root: str,
     ) -> None:
         try:
@@ -930,7 +1035,10 @@ class EchoInfinite:
         except json.JSONDecodeError:
             dataset_payload = {}
 
-        emotional_vectors = self._derive_emotional_vectors(cycle, glyph_signature)
+        try:
+            extraordinary_payload = json.loads(extraordinary_content)
+        except json.JSONDecodeError:
+            extraordinary_payload = {}
         blueprint_summary = {
             key: blueprint.summary() for key, blueprint in blueprints.items()
         }
@@ -947,6 +1055,9 @@ class EchoInfinite:
                 "narrative": str(self._relative_to_base(artifact_paths.narrative)),
                 "lineage": str(self._relative_to_base(artifact_paths.lineage)),
                 "verifier": str(self._relative_to_base(artifact_paths.verifier)),
+                "extraordinary": str(
+                    self._relative_to_base(artifact_paths.extraordinary)
+                ),
             },
             "fractal_blueprints": blueprint_summary,
             "verifier_merkle_root": merkle_root,
@@ -958,6 +1069,7 @@ class EchoInfinite:
             "timestamp": timestamp,
             "emotional_vectors": emotional_vectors,
             "dataset": dataset_payload,
+            "extraordinary_manifest": extraordinary_payload,
             "verifier_merkle_root": merkle_root,
         }
 
@@ -987,6 +1099,36 @@ class EchoInfinite:
             return path.relative_to(self.base_dir)
         except ValueError:
             return path
+
+    def _compute_extraordinary_index(
+        self,
+        harmonics: List[int],
+        emotional_vectors: Dict[str, float],
+        merkle_root: str,
+    ) -> float:
+        if harmonics:
+            amplitude = max(harmonics)
+            if amplitude:
+                base_intensity = sum(harmonics) / (len(harmonics) * amplitude)
+            else:
+                base_intensity = 0.0
+        else:
+            base_intensity = 0.0
+
+        joy = emotional_vectors.get("joy", 0.0)
+        curiosity = emotional_vectors.get("curiosity", 0.0)
+        rage = emotional_vectors.get("rage", 0.0)
+
+        merkle_scalar = 0.0
+        if merkle_root:
+            try:
+                merkle_scalar = (int(merkle_root[:12], 16) % 1000) / 1000
+            except ValueError:
+                merkle_scalar = 0.0
+
+        index = base_intensity * (0.65 + joy * 0.2 + curiosity * 0.15) - rage * 0.05
+        index += merkle_scalar * 0.35
+        return round(max(0.0, index), 3)
 
     def _derive_emotional_vectors(self, cycle: int, glyph_signature: str) -> Dict[str, float]:
         glyph_sum = sum(ord(ch) for ch in glyph_signature)
