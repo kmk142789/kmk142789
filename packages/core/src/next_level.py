@@ -12,7 +12,10 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Sequence, Set, Tuple
 
-TASK_PATTERN = re.compile(r"(?P<tag>TODO|FIXME)(?:[:\s-]+(?P<text>.*))?", re.IGNORECASE)
+TASK_PATTERN = re.compile(
+    r"^\s*(?:[<*!#/\-]+)?\s*(?P<tag>TODO|FIXME)(?=(?:[:\s-]|$))(?:[:\s-]+(?P<text>.*))?",
+    re.IGNORECASE,
+)
 BlockCommentPattern = Tuple[re.Pattern[str], Callable[[re.Match[str]], str], str]
 
 
@@ -52,6 +55,22 @@ DEFAULT_SKIP_DIRS = {
     ".tox",
     ".nox",
 }
+
+
+def _normalize_task_text(text: str) -> str:
+    """Return a cleaned representation of comment text."""
+
+    cleaned = text.strip()
+    if not cleaned:
+        return ""
+
+    first_line = cleaned.splitlines()[0].strip()
+
+    for marker in ("*/", "-->"):
+        if first_line.endswith(marker):
+            first_line = first_line[: -len(marker)].rstrip()
+
+    return first_line
 
 
 def _normalise_skip_entries(
@@ -367,7 +386,7 @@ def _record_task(
     tag: str,
     text: str,
 ) -> None:
-    normalized = text.strip()
+    normalized = _normalize_task_text(text)
     key = (file_path, line_no, tag, normalized)
     if key in seen:
         return

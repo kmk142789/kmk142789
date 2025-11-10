@@ -192,3 +192,31 @@ def test_discover_tasks_respects_ignore_patterns(tmp_path):
     assert all(task.path != ignored_dir for task in tasks)
     assert all(task.path != ignored_file for task in tasks)
     assert any(task.path == included for task in tasks)
+
+
+def test_discover_tasks_requires_word_boundaries(tmp_path):
+    """Ensure substrings like ``methodology`` do not register as TODOs."""
+
+    sample = tmp_path / "notes.txt"
+    sample.write_text(
+        "# methodology and prefixfixmer should not trigger\n",
+        encoding="utf-8",
+    )
+
+    assert discover_tasks(tmp_path) == []
+
+
+def test_discover_tasks_trims_comment_text(tmp_path):
+    doc = tmp_path / "doc.py"
+    doc.write_text(
+        '"""\nTODO calibrate signal\nadditional detail\n"""\n',
+        encoding="utf-8",
+    )
+
+    inline = tmp_path / "inline.c"
+    inline.write_text("/* TODO align portal */\n", encoding="utf-8")
+
+    tasks = discover_tasks(tmp_path)
+    texts = {task.text for task in tasks}
+
+    assert texts == {"calibrate signal", "align portal"}
