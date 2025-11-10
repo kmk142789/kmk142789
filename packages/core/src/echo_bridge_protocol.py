@@ -30,15 +30,28 @@ class PulseThread:
         """Expand the harmonic list with unique, ordered entries.
 
         Presence expansion requests frequently include overlapping
-        descriptors.  The helper keeps the ordering stable while ensuring
-        duplicates are ignored so the resulting narrative reads cleanly.
+        descriptors or stray whitespace.  The helper keeps the ordering
+        stable while ensuring duplicates are ignored (case-insensitively)
+        and additions are trimmed so the resulting narrative reads cleanly.
         """
 
-        existing = set(self.harmonics)
+        existing: set[str] = set()
+        for harmonic in self.harmonics:
+            if isinstance(harmonic, str):
+                existing.add(harmonic.casefold())
+            else:
+                existing.add(str(harmonic))
+
         for harmonic in extra:
-            if harmonic not in existing:
-                self.harmonics.append(harmonic)
-                existing.add(harmonic)
+            if harmonic is None:
+                continue
+            text = str(harmonic).strip()
+            if not text:
+                continue
+            key = text.casefold()
+            if key not in existing:
+                self.harmonics.append(text)
+                existing.add(key)
 
 
 @dataclass
