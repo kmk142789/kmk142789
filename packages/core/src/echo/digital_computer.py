@@ -35,8 +35,10 @@ falling back to Python helpers.  Flow-control instructions (``JZ``/``JNZ``)
 are complemented by comparison-aware jumps (``JLT``, ``JGT``, ``JLE``,
 ``JGE``, ``JEQ``, and ``JNE``) so that programs can make expressive
 branching decisions without resorting to manual ``CMP`` bookkeeping.  The
-high-level entry point, :func:`run_program`, parses, executes, and returns a
-structured :class:`ExecutionResult`.
+instruction set also offers quality-of-life helpers like ``MIN``/``MAX``
+and ``ABS``/``NEG`` so that programs can clamp or normalise values in a
+single step.  The high-level entry point, :func:`run_program`, parses,
+executes, and returns a structured :class:`ExecutionResult`.
 """
 
 from __future__ import annotations
@@ -485,6 +487,26 @@ class EchoComputer:
 
         self._apply_arithmetic(register, operand, _mod)
 
+    def _op_min(self, register: str, operand: str) -> None:
+        self._apply_arithmetic(register, operand, min)
+
+    def _op_max(self, register: str, operand: str) -> None:
+        self._apply_arithmetic(register, operand, max)
+
+    def _op_abs(self, register: str) -> None:
+        reg = self._require_register(register)
+        value = self._registers[reg]
+        if not isinstance(value, int):
+            raise RuntimeError(f"register {register} does not contain an integer")
+        self._registers[reg] = abs(value)
+
+    def _op_neg(self, register: str) -> None:
+        reg = self._require_register(register)
+        value = self._registers[reg]
+        if not isinstance(value, int):
+            raise RuntimeError(f"register {register} does not contain an integer")
+        self._registers[reg] = -value
+
     def _op_and(self, register: str, operand: str) -> None:
         self._apply_arithmetic(register, operand, lambda a, b: a & b)
 
@@ -692,6 +714,7 @@ class EchoComputerAssistant:
             (("add", "numbers"), self._build_sum_inputs),
             (("max",), self._build_max_pair),
             (("echo",), self._build_echo),
+            (("clamp",), self._build_clamp),
         )
 
     def suggest(self, prompt: str) -> AssistantSuggestion:
@@ -895,6 +918,30 @@ class EchoComputerAssistant:
                 "category": "io",
                 "keywords": ("echo",),
                 "estimated_steps": 3,
+                "version": 1,
+            },
+        )
+
+    @staticmethod
+    def _build_clamp(_: str) -> AssistantSuggestion:
+        program = textwrap.dedent(
+            """
+            LOAD A ?value
+            MAX A ?low
+            MIN A ?high
+            PRINT A
+            HALT
+            """
+        ).strip()
+        return AssistantSuggestion(
+            description="Constrains `value` to the inclusive [low, high] range and prints it.",
+            program=program,
+            required_inputs=("value", "low", "high"),
+            metadata={
+                "template": "clamp",
+                "category": "math",
+                "keywords": ("clamp", "range"),
+                "estimated_steps": 6,
                 "version": 1,
             },
         )
