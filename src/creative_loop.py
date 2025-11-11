@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
+import json
 import random
 from typing import Dict, Iterable, List, Tuple
 
@@ -77,6 +78,15 @@ class LoopDiagnostics:
             f"Voices[{ordered_voices}] | Fragments[{ordered_fragments or 'none'}] | Accents[{accent_profile}]"
         )
 
+    def as_dict(self) -> Dict[str, object]:
+        """Return a JSON-serialisable representation of the diagnostics."""
+
+        return {
+            "voices": dict(self.voices),
+            "fragments": dict(self.fragments),
+            "accents": list(self.accents),
+        }
+
 
 @dataclass
 class LoopResult:
@@ -94,6 +104,20 @@ class LoopResult:
             + f" :: dynamic={','.join(self.rhythm.dynamic_tempi)}"
         )
         return self.lines + [diagnostic_line, rhythm_line]
+
+    def to_dict(self) -> Dict[str, object]:
+        """Convert the loop result into a serialisable structure."""
+
+        return {
+            "lines": list(self.lines),
+            "diagnostics": self.diagnostics.as_dict(),
+            "rhythm": {
+                "tempo": self.rhythm.tempo,
+                "pulses": self.rhythm.pulses,
+                "accents": list(self.rhythm.accents),
+                "dynamic_tempi": list(self.rhythm.dynamic_tempi),
+            },
+        }
 
 
 def _choose_voice(random_state: random.Random, *, previous: str | None = None) -> str:
@@ -200,17 +224,38 @@ def generate_loop(seed: LoopSeed) -> LoopResult:
     return LoopResult(lines=lines, diagnostics=diagnostics, rhythm=rhythm)
 
 
-def compose_loop(seed: LoopSeed) -> str:
-    """Create a formatted creative loop string."""
+def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
+    """Create a creative loop in the requested output format."""
 
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     header = f"Loop for '{seed.motif}' at {timestamp} ({seed.tempo})"
     loop_result = generate_loop(seed)
-    body = "\n".join(loop_result.render())
-    return "\n".join([header, "", body])
+
+    if format == "text":
+        body = "\n".join(loop_result.render())
+        return "\n".join([header, "", body])
+
+    if format == "json":
+        payload = {
+            "motif": seed.motif,
+            "tempo": seed.tempo,
+            "pulses": seed.pulses,
+            "timestamp": timestamp,
+            "loop": loop_result.to_dict(),
+        }
+        return json.dumps(payload, indent=2)
+
+    raise ValueError("Unsupported format; expected 'text' or 'json'.")
 
 
-def demo(motif: str, *fragments: str, tempo: str = "andante", pulses: int = 3, seed: int | None = None) -> str:
+def demo(
+    motif: str,
+    *fragments: str,
+    tempo: str = "andante",
+    pulses: int = 3,
+    seed: int | None = None,
+    format: str = "text",
+) -> str:
     """Convenience wrapper for quickly generating a loop."""
 
     loop_seed = LoopSeed(
@@ -220,7 +265,7 @@ def demo(motif: str, *fragments: str, tempo: str = "andante", pulses: int = 3, s
         pulses=pulses,
         seed=seed,
     )
-    return compose_loop(loop_seed)
+    return compose_loop(loop_seed, format=format)
 
 
 if __name__ == "__main__":
@@ -256,6 +301,12 @@ if __name__ == "__main__":
         default=None,
         help="Optional seed for deterministic output",
     )
+    parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Choose between human-readable text or JSON output",
+    )
 
     args = parser.parse_args()
     seed = LoopSeed(
@@ -265,4 +316,4 @@ if __name__ == "__main__":
         pulses=args.pulses,
         seed=args.seed,
     )
-    print(compose_loop(seed))
+    print(compose_loop(seed, format=args.format))
