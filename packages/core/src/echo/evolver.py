@@ -22,7 +22,7 @@ import tempfile
 import time
 from datetime import datetime, timezone
 from copy import deepcopy
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -99,6 +99,39 @@ _BECH32_GENERATOR = (0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3)
 # constant below filters out those spurious fluctuations when classifying the
 # trend so callers receive a stable, human-readable signal.
 _MOMENTUM_SENSITIVITY = 0.01
+
+
+def _stringify_for_sort(value: object) -> str:
+    """Return a deterministic string representation used for ordering."""
+
+    try:
+        return json.dumps(value, sort_keys=True, ensure_ascii=False)
+    except (TypeError, ValueError):
+        return repr(value)
+
+
+def _json_ready(value: object) -> object:
+    """Return a JSON-serialisable representation of ``value``."""
+
+    if is_dataclass(value):
+        return _json_ready(asdict(value))
+    if hasattr(value, "as_dict") and callable(value.as_dict):
+        return _json_ready(value.as_dict())
+    if isinstance(value, TemporalPropagationLedger):
+        return value.timeline()
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, Mapping):
+        return {key: _json_ready(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, tuple):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, set):
+        return sorted((_json_ready(item) for item in value), key=_stringify_for_sort)
+    return value
 
 
 def _classify_momentum(momentum: float, *, threshold: float = _MOMENTUM_SENSITIVITY) -> str:
@@ -667,6 +700,21 @@ class EvolverState:
 
 DEFAULT_SYMBOLIC_SEQUENCE = "∇⊸≋∇"
 ADVANCE_SYSTEM_HISTORY_LIMIT = 10
+
+
+def evolver_state_to_dict(state: EvolverState) -> Dict[str, object]:
+    """Return a JSON-friendly dictionary describing ``state``."""
+
+    payload = _json_ready(state)
+    if isinstance(payload, Mapping):
+        return payload
+    raise TypeError("Evolver state serialisation did not produce a mapping")
+
+
+def format_state_json(state: EvolverState) -> str:
+    """Return ``state`` formatted as pretty-printed JSON."""
+
+    return json.dumps(evolver_state_to_dict(state), indent=2, ensure_ascii=False)
 
 
 @dataclass(slots=True)
@@ -5902,6 +5950,13 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "Require the configured amplification engine to meet or exceed this gate value after running multiple cycles."
         ),
     )
+    parser.add_argument(
+        "--dump-state",
+        action="store_true",
+        help=(
+            "Emit the evolver's final state as formatted JSON after completing the requested action."
+        ),
+    )
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
@@ -5999,6 +6054,9 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         )
         if args.persist_artifact:
             print(f"📜 Final artifact: {evolver.state.artifact}")
+        if args.dump_state:
+            print()
+            print(format_state_json(final_state))
     elif args.advance_system:
         advance_kwargs = {
             "enable_network": args.enable_network,
@@ -6036,6 +6094,9 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         if args.include_status and "status" in payload:
             print()
             print(json.dumps(payload["status"], indent=2, ensure_ascii=False))
+        if args.dump_state:
+            print()
+            print(format_state_json(evolver.state))
     elif args.continue_creation:
         payload = evolver.continue_creation(
             theme=args.eden88_theme,
@@ -6052,6 +6113,9 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         if args.include_report and "report" in payload:
             print()
             print(payload["report"])
+        if args.dump_state:
+            print()
+            print(format_state_json(evolver.state))
     elif args.continue_evolution:
         payload = evolver.continue_evolution(
             enable_network=args.enable_network,
@@ -6068,6 +6132,9 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         if args.include_report and "report" in payload:
             print()
             print(payload["report"])
+        if args.dump_state:
+            print()
+            print(format_state_json(evolver.state))
     else:
         run_kwargs = {
             "enable_network": args.enable_network,
@@ -6077,6 +6144,9 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         if "eden88_theme" in signature.parameters:
             run_kwargs["eden88_theme"] = args.eden88_theme
         evolver.run(**run_kwargs)
+        if args.dump_state:
+            print()
+            print(format_state_json(evolver.state))
     return 0
 
 
