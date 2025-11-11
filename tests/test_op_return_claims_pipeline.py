@@ -28,6 +28,7 @@ def test_parse_claim_records_matches_fixture(sample_transactions_path, expected_
         transactions = json.load(handle)
 
     parsed = parse_claim_records(transactions)
+    assert len(parsed) >= 1_000
     assert [record.as_dict() for record in parsed] == expected_parsed_records
 
 

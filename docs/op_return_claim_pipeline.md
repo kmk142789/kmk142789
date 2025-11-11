@@ -20,7 +20,9 @@ any OP_RETURN outputs and emits structured records with:
 
 Example fixture: ``tests/data/opreturn/sample_transactions.json`` paired with
 ``tests/data/opreturn/expected_parsed_records.json`` exercises both raw-hex and
-pre-decoded transaction inputs.
+pre-decoded transaction inputs.  The dataset now ships with 1,200 transactions
+generated via ``fixtures/opreturn/generate.py`` so downstream analytics can
+stress-test pagination, batching, and reporting logic without bespoke setup.
 
 ## 2. 90-day inactivity window validation
 
