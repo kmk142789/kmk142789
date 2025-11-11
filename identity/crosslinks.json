@@ -1,0 +1,18 @@
+[
+  {
+    "source": {"artifact": "charter", "clause": "CH-AUTH-001"},
+    "target": {"artifact": "trust", "clause": "TR-CUST-001"},
+    "relationship": "shared_threshold",
+    "notes": "Defines shared 2-of-3 multisig with Steward Council"
+  },
+  {
+    "source": {"artifact": "charter", "clause": "CH-ID-001"},
+    "target": {"artifact": "dao_oa", "clause": "DAO-ID-001"},
+    "relationship": "identity_countersign"
+  },
+  {
+    "source": {"artifact": "trust", "clause": "TR-CUST-002"},
+    "target": {"artifact": "dao_oa", "clause": "DAO-AUTH-002"},
+    "relationship": "emergency_flow"
+  }
+]

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.identity/schemas/crosslinks.json",
+  "title": "Echo Artifact Cross Links",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["source", "target", "relationship"],
+    "properties": {
+      "source": {
+        "type": "object",
+        "required": ["artifact", "clause"],
+        "properties": {
+          "artifact": {
+            "type": "string"
+          },
+          "clause": {
+            "type": "string"
+          }
+        }
+      },
+      "target": {
+        "type": "object",
+        "required": ["artifact", "clause"],
+        "properties": {
+          "artifact": {
+            "type": "string"
+          },
+          "clause": {
+            "type": "string"
+          }
+        }
+      },
+      "relationship": {
+        "type": "string"
+      },
+      "notes": {
+        "type": "string"
+      }
+    }
+  }
+}

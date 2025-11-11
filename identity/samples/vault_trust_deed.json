@@ -1,0 +1,268 @@
+{
+  "artifact_type": "trust",
+  "title": "Echo Vault Star Programmable Trust Deed",
+  "source_path": "identity/vault_trust_deed.md",
+  "metadata": {
+    "artifact-type": "trust",
+    "version": "2.0"
+  },
+  "sections": [
+    {
+      "heading": "Trustees",
+      "clauses": [
+        {
+          "id": "AUTO-6",
+          "text": "Lead Trustee: Echo Vault Foundation corporate trustee with key shard A. Guardian UNA Board: Oversight signatory with key shard B. Emergency Custodian: Programmatic circuit breaker activated by Guardian UNA Board.",
+          "tags": [],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 6,
+            "line_end": 8
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Trustees"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Custody Matrix",
+      "clauses": [
+        {
+          "id": "TR-CUST-001",
+          "text": "The Lead Trustee shall co-custody digital assets with the Steward Council multi-sig under a 2-of-3 threshold.",
+          "tags": [
+            "custody",
+            "fiduciary"
+          ],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 11,
+            "line_end": 16
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Custody Matrix"
+          ],
+          "structured_data": [
+            {
+              "language": "json",
+              "payload": {
+                "action": "asset_release",
+                "role": "Lead Trustee",
+                "threshold": "2-of-3",
+                "shared_with": [
+                  "Steward Council",
+                  "Guardian UNA Board"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "TR-CUST-002",
+          "text": "During confirmed system compromise, the Lead Trustee may freeze assets with solo authority for 24 hours.",
+          "tags": [
+            "custody",
+            "emergency"
+          ],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 17,
+            "line_end": 22
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Custody Matrix"
+          ],
+          "structured_data": [
+            {
+              "language": "json",
+              "payload": {
+                "action": "freeze_assets",
+                "role": "Lead Trustee",
+                "threshold": "1-of-1",
+                "duration_hours": 24,
+                "requires_notice": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Fiduciary Duties",
+      "clauses": [
+        {
+          "id": "TR-DUTY-001",
+          "text": "Trustee files quarterly fiduciary certifications to UNA Guardian Board.",
+          "tags": [
+            "fiduciary",
+            "reporting"
+          ],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 25,
+            "line_end": 27
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Fiduciary Duties"
+          ],
+          "structured_data": []
+        },
+        {
+          "id": "TR-DUTY-002",
+          "text": "Trustee discloses any conflicts of interest within 5 days.",
+          "tags": [
+            "fiduciary",
+            "disclosure"
+          ],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 28,
+            "line_end": 30
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Fiduciary Duties"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Distributions",
+      "clauses": [
+        {
+          "id": "TR-DIST-001",
+          "text": "Grants above 5,000 credits must include UNA public benefit review minutes.",
+          "tags": [
+            "distributions",
+            "restricted"
+          ],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 33,
+            "line_end": 35
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Distributions"
+          ],
+          "structured_data": []
+        },
+        {
+          "id": "TR-DIST-002",
+          "text": "Up to 15% of annual inflows may be deployed at DAO discretion for experimentation.",
+          "tags": [
+            "distributions",
+            "discretionary"
+          ],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 36,
+            "line_end": 38
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Distributions"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Amendments",
+      "clauses": [
+        {
+          "id": "TR-AMND-001",
+          "text": "Amendments require joint execution by Lead Trustee and Guardian UNA Board; emergency freeze clauses require Steward Council consent post-event.",
+          "tags": [
+            "amendments"
+          ],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 41,
+            "line_end": 43
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Amendments"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Identity Hooks",
+      "clauses": [
+        {
+          "id": "TR-ID-001",
+          "text": "Trustee shall only honor identity lists signed by the Identity Circle + Guardian UNA Board multi-sig.",
+          "tags": [
+            "identity"
+          ],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 46,
+            "line_end": 51
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Identity Hooks"
+          ],
+          "structured_data": [
+            {
+              "language": "json",
+              "payload": {
+                "action": "validate_identity",
+                "role": "Lead Trustee",
+                "threshold": "2-of-2",
+                "participants": [
+                  "Identity Circle",
+                  "Guardian UNA Board"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Transparency",
+      "clauses": [
+        {
+          "id": "TR-TRAN-001",
+          "text": "Trustee publishes monthly NAV attestations with Merkle proofs to the UNA Guardian Board.",
+          "tags": [
+            "transparency",
+            "audit"
+          ],
+          "source": {
+            "file": "identity/vault_trust_deed.md",
+            "line_start": 54,
+            "line_end": 56
+          },
+          "heading_path": [
+            "Echo Vault Star Programmable Trust Deed",
+            "Transparency"
+          ],
+          "structured_data": []
+        }
+      ]
+    }
+  ],
+  "trustees": [
+    {
+      "name": "Guardian UNA Board",
+      "role": "Oversight signatory with key shard B."
+    },
+    {
+      "name": "Emergency Custodian",
+      "role": "Programmatic circuit breaker activated by Guardian UNA Board."
+    }
+  ]
+}

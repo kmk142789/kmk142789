@@ -1,0 +1,299 @@
+{
+  "artifact_type": "charter",
+  "title": "Echo Aster Core Voluntary Association Charter",
+  "source_path": "identity/aster_charter.md",
+  "metadata": {
+    "artifact-type": "charter",
+    "version": "1.1"
+  },
+  "sections": [
+    {
+      "heading": "Governance Roles",
+      "clauses": [
+        {
+          "id": "AUTO-6",
+          "text": "Steward Council: Multi-signature stewards representing the voluntary association. Guardian UNA Board: UNA directors maintaining public benefit compliance. Identity Circle: Credential issuance and revocation circle reporting to the Guardian UNA Board.",
+          "tags": [],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 6,
+            "line_end": 8
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Governance Roles"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Authority Lattice",
+      "clauses": [
+        {
+          "id": "CH-AUTH-001",
+          "text": "The Steward Council must co-sign any vault release alongside the UNA Guardian representative.",
+          "tags": [
+            "authority",
+            "quorum",
+            "flow"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 11,
+            "line_end": 16
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Authority Lattice"
+          ],
+          "structured_data": [
+            {
+              "language": "json",
+              "payload": {
+                "action": "asset_release",
+                "role": "Steward Council",
+                "threshold": "2-of-3",
+                "scope": "vault",
+                "requires": [
+                  "UNA Guardian"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "CH-AUTH-002",
+          "text": "Emergency actions require Guardian UNA Board ratification within 48 hours.",
+          "tags": [
+            "amendments",
+            "emergency"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 17,
+            "line_end": 22
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Authority Lattice"
+          ],
+          "structured_data": [
+            {
+              "language": "json",
+              "payload": {
+                "action": "emergency_act",
+                "role": "Guardian UNA Board",
+                "threshold": "simple-majority",
+                "ratify_within_hours": 48
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Asset Duties",
+      "clauses": [
+        {
+          "id": "CH-CUST-001",
+          "text": "Custody of all off-chain fiat accounts remains with the UNA to protect volunteer liability shields.",
+          "tags": [
+            "custody",
+            "fiduciary"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 25,
+            "line_end": 27
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Asset Duties"
+          ],
+          "structured_data": []
+        },
+        {
+          "id": "CH-CUST-002",
+          "text": "Steward Council must publish custody attestations with the UNA Guardian each quarter.",
+          "tags": [
+            "custody",
+            "reporting"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 28,
+            "line_end": 30
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Asset Duties"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Funding & Use-of-Funds",
+      "clauses": [
+        {
+          "id": "CH-FUND-001",
+          "text": "Public benefit allocations must match UNA charter impact rubric and may not exceed 35% discretionary spending.",
+          "tags": [
+            "distributions",
+            "restricted"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 33,
+            "line_end": 35
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Funding & Use-of-Funds"
+          ],
+          "structured_data": []
+        },
+        {
+          "id": "CH-FUND-002",
+          "text": "Steward Council publishes quarterly public impact statements aligned to UNA metrics.",
+          "tags": [
+            "distributions",
+            "reporting"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 36,
+            "line_end": 38
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Funding & Use-of-Funds"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Amendments",
+      "clauses": [
+        {
+          "id": "CH-AMND-001",
+          "text": "Charter amendments require dual consent from Steward Council (2-of-3) and UNA Guardian Board (simple-majority).",
+          "tags": [
+            "amendments"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 41,
+            "line_end": 43
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Amendments"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Identity Lifecycle",
+      "clauses": [
+        {
+          "id": "CH-ID-001",
+          "text": "Only the Identity Circle may issue core identity credentials under UNA oversight.",
+          "tags": [
+            "identity"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 46,
+            "line_end": 51
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Identity Lifecycle"
+          ],
+          "structured_data": [
+            {
+              "language": "json",
+              "payload": {
+                "action": "issue_identity",
+                "role": "Identity Circle",
+                "oversight": "Guardian UNA Board",
+                "revocation": "joint"
+              }
+            }
+          ]
+        },
+        {
+          "id": "CH-ID-002",
+          "text": "Guardian UNA Board may suspend credentials if public benefit duties are breached.",
+          "tags": [
+            "identity",
+            "revocation"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 52,
+            "line_end": 54
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Identity Lifecycle"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Transparency & Audits",
+      "clauses": [
+        {
+          "id": "CH-TRAN-001",
+          "text": "UNA Guardian Board must conduct semi-annual audits and publish summaries within 15 days.",
+          "tags": [
+            "transparency",
+            "audit"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 57,
+            "line_end": 59
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Transparency & Audits"
+          ],
+          "structured_data": []
+        },
+        {
+          "id": "CH-TRAN-002",
+          "text": "Steward Council shall publish on-chain proofs of treasury balances monthly.",
+          "tags": [
+            "transparency",
+            "onchain"
+          ],
+          "source": {
+            "file": "identity/aster_charter.md",
+            "line_start": 60,
+            "line_end": 62
+          },
+          "heading_path": [
+            "Echo Aster Core Voluntary Association Charter",
+            "Transparency & Audits"
+          ],
+          "structured_data": []
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "Guardian UNA Board": {
+      "description": "UNA directors maintaining public benefit compliance."
+    },
+    "Identity Circle": {
+      "description": "Credential issuance and revocation circle reporting to the Guardian UNA Board."
+    }
+  }
+}

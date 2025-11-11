@@ -1,4 +1,4 @@
-.PHONY: akit plan wish cycle test all lineage
+.PHONY: akit plan wish cycle test validate report site all lineage
 
 akit:
 	python -m pytest -q
@@ -16,6 +16,15 @@ wish:
 
 test:
 	pytest -q
+
+validate:
+	PYTHONPATH=. python -m compliance.cli asterc:validate identity
+
+report:
+	PYTHONPATH=. python -m compliance.cli asterc:report identity
+
+site:
+	PYTHONPATH=. python -m compliance.cli asterc:site identity
 
 all: test
 
@@ -45,14 +54,14 @@ proof-pack:
 
 .PHONY: search
 search:
-        @python -m atlas.search --in $(FED_INJSON) --q "$(Q)" --dedupe-latest
+	@python -m atlas.search --in $(FED_INJSON) --q "$(Q)" --dedupe-latest
 
 META_CAUSAL_PACKAGE := dist/meta_causal_engine/package.json
 
 .PHONY: package-meta-causal-engine
 package-meta-causal-engine:
-        @PYTHONPATH=. python scripts/package_meta_causal_engine.py --output $(META_CAUSAL_PACKAGE)
+	@PYTHONPATH=. python scripts/package_meta_causal_engine.py --output $(META_CAUSAL_PACKAGE)
 
 .PHONY: deploy-meta-causal-engine
 deploy-meta-causal-engine: package-meta-causal-engine
-        @PYTHONPATH=. python -m echo_cli.main deploy meta-causal-engine --status enabled --channel production --max-parallel 3 --apply
+	@PYTHONPATH=. python -m echo_cli.main deploy meta-causal-engine --status enabled --channel production --max-parallel 3 --apply

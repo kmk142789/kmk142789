@@ -1,0 +1,320 @@
+{
+  "artifact_type": "dao_oa",
+  "title": "Echo Orbit DAO LLC Operating Agreement",
+  "source_path": "identity/orbit_dao_oa.md",
+  "metadata": {
+    "artifact-type": "dao_oa",
+    "version": "3.4"
+  },
+  "sections": [
+    {
+      "heading": "Committees",
+      "clauses": [
+        {
+          "id": "AUTO-6",
+          "text": "Treasury Committee: Executes on-chain treasury transactions under DAO policy; quorum 3-of-5 multi-sig. Operations Circle: Oversees identity issuance logistics; quorum 2-of-4. Emergency Response Pod: Handles incident mitigation with delegated authority; quorum 2-of-3.",
+          "tags": [],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 6,
+            "line_end": 8
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Committees"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Authority & Voting",
+      "clauses": [
+        {
+          "id": "DAO-AUTH-001",
+          "text": "Treasury Committee proposals must be ratified by token holders with 60% majority before execution.",
+          "tags": [
+            "authority",
+            "quorum"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 11,
+            "line_end": 16
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Authority & Voting"
+          ],
+          "structured_data": [
+            {
+              "language": "json",
+              "payload": {
+                "action": "asset_release",
+                "role": "Treasury Committee",
+                "threshold": "3-of-5",
+                "requires": [
+                  "Token Vote 60%"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "DAO-AUTH-002",
+          "text": "Emergency Response Pod may execute hotfix spending up to 2,000 credits with 2-of-3 approval and post-report within 24 hours.",
+          "tags": [
+            "emergency",
+            "authority"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 17,
+            "line_end": 22
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Authority & Voting"
+          ],
+          "structured_data": [
+            {
+              "language": "json",
+              "payload": {
+                "action": "emergency_act",
+                "role": "Emergency Response Pod",
+                "threshold": "2-of-3",
+                "cap": 2000,
+                "report_within_hours": 24
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Asset Stewardship",
+      "clauses": [
+        {
+          "id": "DAO-CUST-001",
+          "text": "DAO may not take unilateral custody; all transfers must reference the UNA + Trustee multi-sig policy.",
+          "tags": [
+            "custody",
+            "operations"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 25,
+            "line_end": 27
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Asset Stewardship"
+          ],
+          "structured_data": []
+        },
+        {
+          "id": "DAO-CUST-002",
+          "text": "Treasury Committee logs every on-chain move to shared audit trail within 1 hour.",
+          "tags": [
+            "custody",
+            "monitoring"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 28,
+            "line_end": 30
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Asset Stewardship"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Distributions & Budgets",
+      "clauses": [
+        {
+          "id": "DAO-DIST-001",
+          "text": "Up to 20% of treasury can be deployed via experimentation vault upon Steward Council sign-off.",
+          "tags": [
+            "distributions",
+            "discretionary"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 33,
+            "line_end": 35
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Distributions & Budgets"
+          ],
+          "structured_data": []
+        },
+        {
+          "id": "DAO-DIST-002",
+          "text": "Remaining funds follow UNA charter rubric with documented beneficiary impact statements.",
+          "tags": [
+            "distributions",
+            "restricted"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 36,
+            "line_end": 38
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Distributions & Budgets"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Amendments",
+      "clauses": [
+        {
+          "id": "DAO-AMND-001",
+          "text": "Operating agreement amendments require 2/3rds token vote plus UNA Guardian confirmation.",
+          "tags": [
+            "amendments"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 41,
+            "line_end": 43
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Amendments"
+          ],
+          "structured_data": []
+        },
+        {
+          "id": "DAO-AMND-002",
+          "text": "Guardian UNA Board holds veto right over amendments affecting fiduciary duties.",
+          "tags": [
+            "amendments",
+            "veto"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 44,
+            "line_end": 46
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Amendments"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Identity Program",
+      "clauses": [
+        {
+          "id": "DAO-ID-001",
+          "text": "Operations Circle may request issuance but must obtain Identity Circle countersignature before minting credentials.",
+          "tags": [
+            "identity"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 49,
+            "line_end": 54
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Identity Program"
+          ],
+          "structured_data": [
+            {
+              "language": "json",
+              "payload": {
+                "action": "issue_identity",
+                "role": "Operations Circle",
+                "requires": [
+                  "Identity Circle"
+                ],
+                "revocation": "Guardian veto"
+              }
+            }
+          ]
+        },
+        {
+          "id": "DAO-ID-002",
+          "text": "Emergency Response Pod may suspend DAO-issued credentials for 48 hours subject to Guardian UNA review.",
+          "tags": [
+            "identity",
+            "revocation"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 55,
+            "line_end": 57
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Identity Program"
+          ],
+          "structured_data": []
+        }
+      ]
+    },
+    {
+      "heading": "Transparency & Audits",
+      "clauses": [
+        {
+          "id": "DAO-TRAN-001",
+          "text": "DAO publishes monthly treasury dashboards referencing on-chain proofs delivered by the Trustee.",
+          "tags": [
+            "transparency",
+            "reporting"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 60,
+            "line_end": 62
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Transparency & Audits"
+          ],
+          "structured_data": []
+        },
+        {
+          "id": "DAO-TRAN-002",
+          "text": "Annual third-party audit required with results filed to UNA Guardian and token holders.",
+          "tags": [
+            "transparency",
+            "audit"
+          ],
+          "source": {
+            "file": "identity/orbit_dao_oa.md",
+            "line_start": 63,
+            "line_end": 65
+          },
+          "heading_path": [
+            "Echo Orbit DAO LLC Operating Agreement",
+            "Transparency & Audits"
+          ],
+          "structured_data": []
+        }
+      ]
+    }
+  ],
+  "committees": [
+    {
+      "name": "Operations Circle",
+      "mandate": "Oversees identity issuance logistics; quorum 2-of-4."
+    },
+    {
+      "name": "Emergency Response Pod",
+      "mandate": "Handles incident mitigation with delegated authority; quorum 2-of-3."
+    }
+  ]
+}

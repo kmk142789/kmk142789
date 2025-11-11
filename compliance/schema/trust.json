@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.identity/schemas/vault-trust.json",
+  "title": "Echo Vault Star Programmable Trust Deed",
+  "type": "object",
+  "required": ["artifact_type", "title", "trustees", "sections"],
+  "properties": {
+    "artifact_type": {
+      "const": "trust"
+    },
+    "title": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "trustees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "role"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["heading", "clauses"],
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "clauses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "text", "tags", "source"],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "structured_data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["language", "payload"],
+                    "properties": {
+                      "language": {
+                        "type": "string"
+                      },
+                      "payload": {}
+                    }
+                  }
+                },
+                "source": {
+                  "type": "object",
+                  "required": ["file", "line_start", "line_end"],
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "line_start": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "line_end": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
