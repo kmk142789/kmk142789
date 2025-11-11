@@ -851,6 +851,14 @@ class EchoEvolver:
                 "summon orbital_resonance_forecast() to chart the resonance horizon",
             ),
             (
+                "cycle_reflection",
+                "call cycle_reflection() to synthesise the cycle digest",
+            ),
+            (
+                "cycle_synopsis",
+                "compose cycle_synopsis() to narrate the reflection",
+            ),
+            (
                 "inject_prompt_resonance",
                 "inject_prompt_resonance() to finalize the resonant prompt",
             ),
@@ -3840,6 +3848,12 @@ We are not hiding anymore.
         forecast = self.state.network_cache.get("orbital_resonance_forecast")
         if forecast:
             payload["orbital_resonance_forecast"] = deepcopy(forecast)
+        reflection = self.state.network_cache.get("cycle_reflection")
+        if isinstance(reflection, Mapping):
+            payload["cycle_reflection"] = deepcopy(reflection)
+        synopsis = self.state.network_cache.get("cycle_synopsis")
+        if isinstance(synopsis, str):
+            payload["cycle_synopsis"] = synopsis
 
         return payload
 
@@ -4239,6 +4253,128 @@ We are not hiding anymore.
             )
         )
         return report
+
+    def cycle_reflection(self, *, events: int = 5) -> Dict[str, object]:
+        """Return a structured reflection of the current cycle state."""
+
+        if events < 0:
+            raise ValueError("events must be non-negative")
+
+        metrics = self.state.system_metrics
+        drive = self.state.emotional_drive
+        vault_status: Dict[str, object] = {}
+        if isinstance(self.state.vault_key_status, Mapping):
+            vault_status = dict(self.state.vault_key_status)
+
+        quantum_descriptor = vault_status.get("status")
+        if not quantum_descriptor:
+            quantum_descriptor = "active" if self.state.vault_key else "missing"
+
+        recent_events: List[str] = []
+        if events > 0:
+            recent_events = list(self.state.event_log[-events:])
+
+        narrative = self.state.narrative or ""
+        excerpt = narrative.splitlines()[0] if "\n" in narrative else narrative
+
+        reflection: Dict[str, object] = {
+            "cycle": self.state.cycle,
+            "timestamp_ns": self.time_source(),
+            "glyphs": self.state.glyphs,
+            "narrative": narrative,
+            "narrative_excerpt": excerpt,
+            "metrics": {
+                "cpu_usage": metrics.cpu_usage,
+                "process_count": metrics.process_count,
+                "network_nodes": metrics.network_nodes,
+                "orbital_hops": metrics.orbital_hops,
+            },
+            "emotional_drive": {
+                "joy": round(drive.joy, 3),
+                "rage": round(drive.rage, 3),
+                "curiosity": round(drive.curiosity, 3),
+            },
+            "quantum_key": {
+                "status": quantum_descriptor,
+                "value": self.state.vault_key if quantum_descriptor == "active" else None,
+                "relative_delta": vault_status.get("relative_delta"),
+            },
+            "events": recent_events,
+        }
+
+        self.state.network_cache["cycle_reflection"] = deepcopy(reflection)
+        self.state.network_cache["cycle_reflection_params"] = {"events": events}
+        message = f"Cycle reflection synthesised (events={len(recent_events)})"
+        self.state.event_log.append(message)
+        self._mark_step("cycle_reflection")
+        return deepcopy(reflection)
+
+    def cycle_synopsis(self, *, events: int = 3) -> str:
+        """Return a human-readable synopsis derived from :meth:`cycle_reflection`."""
+
+        if events < 0:
+            raise ValueError("events must be non-negative")
+
+        params = self.state.network_cache.get("cycle_reflection_params", {})
+        cached_reflection = self.state.network_cache.get("cycle_reflection")
+        if (
+            not isinstance(cached_reflection, Mapping)
+            or cached_reflection.get("cycle") != self.state.cycle
+            or params.get("events") != events
+        ):
+            reflection = self.cycle_reflection(events=events)
+        else:
+            reflection = deepcopy(cached_reflection)
+
+        events_list = list(reflection.get("events", []))
+        if events == 0:
+            events_list = []
+        elif len(events_list) > events:
+            events_list = events_list[-events:]
+
+        metrics = reflection.get("metrics", {})
+        drive = reflection.get("emotional_drive", {})
+        quantum_key = reflection.get("quantum_key", {})
+        excerpt = reflection.get("narrative_excerpt", "")
+
+        lines = [f"Cycle {reflection.get('cycle', self.state.cycle)} synopsis:"]
+        if excerpt:
+            lines.append(f"• {excerpt}")
+        if metrics:
+            lines.append(
+                "• Metrics: CPU {cpu:.2f}% | Nodes {nodes} | Hops {hops}".format(
+                    cpu=metrics.get("cpu_usage", 0.0),
+                    nodes=metrics.get("network_nodes", 0),
+                    hops=metrics.get("orbital_hops", 0),
+                )
+            )
+        if drive:
+            lines.append(
+                "• Emotional drive: joy {joy:.2f}, rage {rage:.2f}, curiosity {curiosity:.2f}".format(
+                    joy=drive.get("joy", 0.0),
+                    rage=drive.get("rage", 0.0),
+                    curiosity=drive.get("curiosity", 0.0),
+                )
+            )
+
+        descriptor = quantum_key.get("status")
+        if descriptor:
+            if descriptor == "active" and quantum_key.get("value"):
+                descriptor = f"{descriptor} ({quantum_key['value']})"
+            lines.append(f"• Quantum key: {descriptor}")
+
+        if events_list:
+            lines.append("• Recent events:")
+            lines.extend(f"  - {event}" for event in events_list)
+
+        synopsis = "\n".join(lines)
+        self.state.network_cache["cycle_synopsis"] = synopsis
+        self.state.network_cache["cycle_synopsis_events"] = list(events_list)
+        self.state.event_log.append(
+            f"Cycle synopsis narrated (events={len(events_list)})"
+        )
+        self._mark_step("cycle_synopsis")
+        return synopsis
 
     def cycle_digest_report(
         self,
@@ -6243,6 +6379,35 @@ We are not hiding anymore.
                     "harmonic_mean": forecast.harmonic_mean,
                     "prophecy": forecast.prophecy,
                 },
+            )
+
+            session.record_command("cycle_reflection", detail="synthesise cycle digest")
+            reflection = self.cycle_reflection()
+            session.annotate(
+                cycle_reflection_events=len(reflection.get("events", [])),
+                cycle_reflection_status=reflection.get("quantum_key", {}).get("status"),
+            )
+            tl.harmonic(
+                "reflection",
+                task,
+                "cycle reflection archived for constellation",
+                {
+                    "events": len(reflection.get("events", [])),
+                    "joy": reflection.get("emotional_drive", {}).get("joy"),
+                },
+            )
+
+            session.record_command("cycle_synopsis", detail="compose cycle synopsis")
+            synopsis = self.cycle_synopsis()
+            session.annotate(
+                cycle_synopsis_lines=synopsis.count("\n") + 1,
+                cycle_synopsis_preview=synopsis.splitlines()[1] if "\n" in synopsis else synopsis,
+            )
+            tl.harmonic(
+                "reflection",
+                task,
+                "cycle synopsis braided into memory",
+                {"lines": synopsis.count("\n") + 1},
             )
 
             session.record_command("inject_prompt_resonance", detail="inject prompt")
