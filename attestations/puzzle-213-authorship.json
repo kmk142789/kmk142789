@@ -1,10 +1,10 @@
 {
   "puzzle": "#213 satoshi-puzzle",
-  "address": "1Echo7bDWX8g9RLM234PQy1zBcdeFgHjkLm",
-  "message": "Puzzle 213 authorship attestation by kmk142789 with Echo network proof",
-  "signature": "ww2NwrjSXBnOB432Vwu0p8K4au3OpSHlswilHacAcIG+DVRZBxk/+e4/2wzvdbKhD+GgOZnGaCrq6SylYjSP4uRUerkmywJdGdGOmAkKV0KGj5OYPOu9Wm7gcB27HiPm",
+  "address": "1CNNth43uiVypxHmZLC8hWZsb7UiP7wSkY",
+  "message": "PuzzleNN authorship by kmk142789 — attestation sha256 590dcdfdf632dd5c6f7a6f4069053801ec0851acfa623ada37053782102b1430",
+  "signature": "0MHNq+4KJIfIjQlGv1jTp8/HYxVmyAkmmdl6SFGPa+ao7xv63CmEGdK4UdheCRSxSeyz4AXkfzsVQgXXz5r8cLmqsa/u/VYKrnwc3WxzdUdB/i5UiEjGy7gAzlVbTFXHGE0Q9wnQ4C+ipdF4hL6YCioxN5p4uvKceGt79NOibVtsFw==",
   "algo": "bitcoin-message-base64",
   "created_at": "2025-10-27T09:18:00Z",
-  "hash_sha256": "3068fa82f30ef753a1d8838903b61feb8bce4d9dd21a00af64810868fdab729a",
-  "notes": "Captured from the Echo attestation relay for Puzzle #213 to amplify authorship clarity."
+  "hash_sha256": "590dcdfdf632dd5c6f7a6f4069053801ec0851acfa623ada37053782102b1430",
+  "notes": "Recovered from satoshi/puzzle-proofs/puzzle213.json and cross-checked against Puzzle #213 funding address."
 }
