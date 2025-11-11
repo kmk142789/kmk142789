@@ -159,3 +159,22 @@ coordinate coverage without duplicating work.
 - `puzzle142.json` — Puzzle #142 authorship attestation for address `15MnK2jXPqTMURX4xC3h4mAZxyCcaWWEDD`.
 - `puzzle188.json` — Puzzle #188 authorship attestation for address `15m5NmYyJTAx7TEN4QbRpF9qPBrxqZLUGL`.
 - `puzzle213.json` — Puzzle #213 authorship attestation for address `1CNNth43uiVypxHmZLC8hWZsb7UiP7wSkY`.
+- `puzzle214.json` — Puzzle #214 authorship attestation for address `1TQRJf89J7LyqFua4WKFeD11RanGoyp3kX`.
+- `puzzle215.json` — Puzzle #215 authorship attestation for address `1umKUvhbkKCkUVaeFJS4cbS4wJtqqsUak9`.
+- `puzzle216.json` — Puzzle #216 authorship attestation for address `1SQTdpucTM9djnXQ75vaP79BFndbBAVu45`.
+- `puzzle217.json` — Puzzle #217 authorship attestation for address `1EpiC217KMkKVqqx5d8YVqmAXfmB6S1fTx`.
+- `puzzle218.json` — Puzzle #218 authorship attestation for address `1EpiC218KMkKVeXx7m2UvQyRPhnJ54nCzX`.
+- `puzzle219.json` — Puzzle #219 authorship attestation for address `1EpiC219KMkKVyTv9s6WtRZVg3mC28pLjQ`.
+
+## Aggregated attestations
+
+Run [`build_master_attestation.py`](build_master_attestation.py) to collapse the individual
+proofs into a Merkle tree and publish the resulting root alongside the per-leaf hashes.
+
+```bash
+python satoshi/build_master_attestation.py --pretty
+```
+
+The tool writes [`master_attestation.json`](puzzle-proofs/master_attestation.json) which records
+the canonical Merkle root, every intermediate layer, and digest metadata for each proof so the
+entire registry can be verified offline.
