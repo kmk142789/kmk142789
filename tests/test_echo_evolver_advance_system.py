@@ -77,6 +77,8 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     assert expansion["phase"] in {"expanding", "complete", "steady", "receding"}
     assert isinstance(expansion["timestamp_ns"], int)
     assert expansion["momentum_threshold"] == pytest.approx(_MOMENTUM_SENSITIVITY)
+    assert expansion["progress_percent"] == pytest.approx(progress["progress_percent"])
+    assert expansion["momentum_percent"] == pytest.approx(progress["momentum_percent"])
 
     manifest = payload["manifest"]
     assert manifest["cycle"] == 1
@@ -103,6 +105,14 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     assert history_entry["expansion"]["phase"] == expansion["phase"]
     assert history_entry["expansion"]["momentum_threshold"] == pytest.approx(
         _MOMENTUM_SENSITIVITY
+    )
+    assert history_entry["progress_percent"] == pytest.approx(progress["progress_percent"])
+    assert history_entry["momentum_percent"] == pytest.approx(progress["momentum_percent"])
+    assert history_entry["expansion"]["progress_percent"] == pytest.approx(
+        expansion["progress_percent"]
+    )
+    assert history_entry["expansion"]["momentum_percent"] == pytest.approx(
+        expansion["momentum_percent"]
     )
 
     history_via_method = evolver.advance_system_history()
@@ -173,6 +183,8 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     assert expansion["phase"] in {"expanding", "complete", "steady", "receding"}
     assert expansion["progress_delta"] == pytest.approx(progress["momentum"])
     assert expansion["momentum_threshold"] == pytest.approx(_MOMENTUM_SENSITIVITY)
+    assert expansion["progress_percent"] == pytest.approx(progress["progress_percent"])
+    assert expansion["momentum_percent"] == pytest.approx(progress["momentum_percent"])
 
     summary = payload["event_summary"]
     assert "recent events" in summary
@@ -214,6 +226,8 @@ def test_advance_system_can_embed_expansion_history(tmp_path, monkeypatch):
     assert 1 <= len(history) <= 2
     assert history[-1]["cycle"] == payload["digest"]["cycle"]
     assert all("expansion" in entry for entry in history)
+    assert all("progress_percent" in entry for entry in history)
+    assert all("momentum_percent" in entry for entry in history)
 
     # Ensure defensive copies are returned
     history[-1]["expansion"]["phase"] = "mutated"

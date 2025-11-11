@@ -5177,8 +5177,8 @@ We are not hiding anymore.
         tracking so that the first call reflects the current progress without
         subtracting the prior cycle's terminal state.  The returned payload also
         includes an ``expansion`` snapshot that captures progress and completion
-        deltas alongside a phase label, with the full history available through
-        :meth:`advance_system_history`.
+        deltas alongside percentage conversions and a phase label, with the full
+        history available through :meth:`advance_system_history`.
 
         Parameters
         ----------
@@ -5318,12 +5318,15 @@ We are not hiding anymore.
             expansion_phase = "steady"
 
         expansion_timestamp = self.time_source()
+        momentum_percent = momentum * 100.0
         expansion_snapshot = {
             "cycle": digest["cycle"],
             "progress": digest["progress"],
+            "progress_percent": progress_pct,
             "completed": completed_count,
             "remaining": remaining_count,
             "progress_delta": momentum,
+            "momentum_percent": momentum_percent,
             "completed_delta": completed_delta,
             "remaining_delta": remaining_delta,
             "phase": expansion_phase,
@@ -5342,7 +5345,7 @@ We are not hiding anymore.
             "progress": digest["progress"],
             "progress_percent": progress_pct,
             "momentum": momentum,
-            "momentum_percent": momentum * 100.0,
+            "momentum_percent": momentum_percent,
             "momentum_status": momentum_status,
             "momentum_direction": momentum_direction,
             "momentum_confidence": momentum_confidence,
@@ -5445,8 +5448,11 @@ We are not hiding anymore.
             {
                 "cycle": digest["cycle"],
                 "progress": digest["progress"],
+                "progress_percent": progress_pct,
                 "completed_steps": completed_count,
                 "remaining_steps": remaining_count,
+                "momentum": momentum,
+                "momentum_percent": momentum_percent,
                 "expansion": deepcopy(expansion_snapshot),
             }
         )
