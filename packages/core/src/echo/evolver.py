@@ -218,6 +218,28 @@ def _confidence_from_momentum(
     return "high"
 
 
+def _momentum_glyph(momentum: float, *, threshold: float) -> str:
+    """Return a glyph describing the supplied momentum value.
+
+    The mapping intentionally mirrors the human-friendly vocabulary used
+    throughout the evolver.  Samples above the positive threshold receive an
+    accelerating arrow, samples below the negative threshold receive a
+    descending arc, and neutral readings retain a steady glissando.  The
+    helper keeps glyph generation consistent across narrative surfaces and the
+    programmatic momentum resonance summaries introduced in this evolution.
+    """
+
+    if momentum > threshold * 2:
+        return "↗"
+    if momentum > threshold:
+        return "⇗"
+    if momentum < -threshold * 2:
+        return "↘"
+    if momentum < -threshold:
+        return "⇘"
+    return "→"
+
+
 def _base58check_encode(payload: bytes) -> str:
     """Return the Base58Check encoding for ``payload`` without external deps."""
 
@@ -5484,6 +5506,168 @@ We are not hiding anymore.
 
         return [deepcopy(entry) for entry in history]
 
+    def momentum_resonance(
+        self,
+        *,
+        limit: Optional[int] = None,
+        threshold: Optional[float] = None,
+    ) -> Dict[str, object]:
+        """Return a structured momentum resonance snapshot.
+
+        The snapshot distils the cached advance-system momentum samples into a
+        compact digest featuring glyph arcs, trend descriptions, and helpful
+        aggregates.  Downstream visualisations can render the glyph arc or the
+        numeric spans directly while narrative layers can lift the summary and
+        status strings.  When momentum measurements have not yet been recorded
+        the method returns a neutral payload encouraging callers to run
+        :meth:`advance_system` first.
+        """
+
+        if limit is not None and limit <= 0:
+            raise ValueError("limit must be positive")
+        if threshold is not None and threshold <= 0:
+            raise ValueError("threshold must be positive")
+
+        history_state = self.state.network_cache.get("advance_system_momentum_history")
+        if isinstance(history_state, Mapping):
+            stored_values = history_state.get("values", [])
+            stored_window = history_state.get("window")
+            stored_threshold = history_state.get("threshold")
+            cycle = history_state.get("cycle", self.state.cycle)
+        else:
+            stored_values = []
+            stored_window = None
+            stored_threshold = None
+            cycle = self.state.cycle
+
+        values: List[float] = list(stored_values)
+        if limit is not None:
+            values = values[-limit:]
+
+        effective_threshold = (
+            float(threshold)
+            if threshold is not None
+            else (float(stored_threshold) if stored_threshold else _MOMENTUM_SENSITIVITY)
+        )
+
+        if not values:
+            payload = {
+                "cycle": cycle,
+                "values": [],
+                "percent_values": [],
+                "sample_count": 0,
+                "window": stored_window,
+                "limit": limit,
+                "threshold": effective_threshold,
+                "status": "unavailable",
+                "trend": "no signal",
+                "confidence": "low",
+                "glyph_arc": "",
+                "summary": "Momentum history unavailable; run advance_system() to seed samples.",
+            }
+            snapshot = deepcopy(payload)
+            self.state.network_cache["momentum_resonance"] = snapshot
+            return deepcopy(snapshot)
+
+        average = sum(values) / len(values)
+        minimum = min(values)
+        maximum = max(values)
+        span = maximum - minimum
+        latest = values[-1]
+        momentum_status = _classify_momentum(latest, threshold=effective_threshold)
+        momentum_trend = _describe_momentum(
+            latest, average=average, threshold=effective_threshold
+        )
+        momentum_confidence = _confidence_from_momentum(
+            latest, average=average, threshold=effective_threshold
+        )
+
+        glyph_arc = "".join(
+            _momentum_glyph(sample, threshold=effective_threshold) for sample in values
+        )
+
+        def _direction(sample: float) -> int:
+            if sample > effective_threshold:
+                return 1
+            if sample < -effective_threshold:
+                return -1
+            return 0
+
+        directions = [_direction(sample) for sample in values]
+        current_direction = directions[-1]
+        if current_direction > 0:
+            direction_label = "positive"
+        elif current_direction < 0:
+            direction_label = "negative"
+        else:
+            direction_label = "steady"
+
+        streak = 1
+        for previous in reversed(directions[:-1]):
+            if previous == current_direction:
+                streak += 1
+            else:
+                break
+
+        direction_changes = sum(
+            1
+            for previous, current in zip(directions, directions[1:])
+            if current != previous
+        )
+
+        summary = (
+            "Momentum arc {arc} traces {trend} ({status}, {latest:+.3f}); "
+            "average {average:+.3f}, span {span:+.3f}; {label} streak {streak}."
+        ).format(
+            arc=glyph_arc or "→",
+            trend=momentum_trend,
+            status=momentum_status,
+            latest=latest,
+            average=average,
+            span=span,
+            label=f"{direction_label} pulse",
+            streak=streak,
+        )
+
+        payload = {
+            "cycle": cycle,
+            "values": values,
+            "percent_values": [sample * 100.0 for sample in values],
+            "sample_count": len(values),
+            "window": stored_window,
+            "limit": limit,
+            "threshold": effective_threshold,
+            "status": momentum_status,
+            "trend": momentum_trend,
+            "confidence": momentum_confidence,
+            "glyph_arc": glyph_arc,
+            "latest": latest,
+            "latest_percent": latest * 100.0,
+            "average": average,
+            "average_percent": average * 100.0,
+            "minimum": minimum,
+            "minimum_percent": minimum * 100.0,
+            "maximum": maximum,
+            "maximum_percent": maximum * 100.0,
+            "span": span,
+            "span_percent": span * 100.0,
+            "direction": direction_label,
+            "direction_changes": direction_changes,
+            "streak": streak,
+            "summary": summary,
+        }
+
+        snapshot = deepcopy(payload)
+        self.state.network_cache["momentum_resonance"] = snapshot
+        self.state.event_log.append(
+            "Momentum resonance mapped (cycle={cycle}, samples={samples}, status={status})".format(
+                cycle=cycle,
+                samples=len(values),
+                status=momentum_status,
+            )
+        )
+        return deepcopy(snapshot)
+
     def advance_system(
         self,
         *,
@@ -5498,6 +5682,7 @@ We are not hiding anymore.
         include_propagation: bool = False,
         include_system_report: bool = False,
         include_diagnostics: bool = False,
+        include_momentum_resonance: bool = False,
         event_summary_limit: int = 5,
         manifest_events: int = 5,
         system_report_events: int = 5,
@@ -5513,8 +5698,9 @@ We are not hiding anymore.
         readable ``summary`` and ``report``.  Optional sections such as the
         evolution ``status``, the Eden88 ``manifest``, a tabular
         ``progress_matrix``, a recent ``event_summary``, the system advancement
-        report, the system diagnostics analysis, and a structured propagation
-        snapshot can be toggled via the corresponding ``include_*`` flags.
+        report, the system diagnostics analysis, a glyph-rich momentum
+        resonance digest, and a structured propagation snapshot can be toggled
+        via the corresponding ``include_*`` flags.
         These flags default to ``True`` for the legacy sections
         (manifest/status/reflection) and ``False`` for the newly added matrix,
         event summary, system report, diagnostics analysis, and propagation
@@ -5553,6 +5739,10 @@ We are not hiding anymore.
             When ``True`` embed the diagnostics snapshot generated by
             :meth:`system_diagnostics`, including load, network, and
             emotional-trend analytics.
+        include_momentum_resonance:
+            When ``True`` append the momentum resonance digest produced by
+            :meth:`momentum_resonance`, giving consumers glyph arcs and
+            aggregates describing recent progress shifts.
         diagnostics_window:
             Number of diagnostic snapshots to retain in the embedded history
             when returning the system diagnostics analysis.  The window must be
@@ -5809,6 +5999,11 @@ We are not hiding anymore.
             "window": momentum_window,
             "threshold": effective_threshold,
         }
+
+        if include_momentum_resonance:
+            payload["momentum_resonance"] = self.momentum_resonance(
+                limit=momentum_window, threshold=momentum_threshold
+            )
 
         history_cache = self.state.network_cache.get("advance_system_history")
         if isinstance(history_cache, list):
