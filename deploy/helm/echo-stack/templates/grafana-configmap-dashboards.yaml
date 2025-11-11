@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-grafana-dashboards
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+    grafana_dashboard: "1"
+data:
+{{- $files := .Files.Glob "files/observability/grafana-dashboards-files/*.json" }}
+{{- range $path, $file := $files }}
+  {{ base $path }}: |
+{{ $file | indent 4 }}
+{{- end }}

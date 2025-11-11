@@ -17,7 +17,7 @@ Atlas OS is composed of modular services for scheduling, storage, networking, id
 - **Storage**: Receipts are stored in `data/last_receipt.json`. Drivers include memory, filesystem, and the vault adapter.
 - **Network**: Node registry lives in `data/nodes.json`. Update weights with `atlas route set`.
 - **Identity**: Issued credentials are cached in `data/last_credential.json`. DID documents are cached in `data/did_cache.json`.
-- **Metrics**: Prometheus-compatible metrics at `http://localhost:9100/` and WebSocket updates at `ws://localhost:9101/`.
+- **Metrics & Observability**: Prometheus-compatible metrics at `http://localhost:9100/` and WebSocket updates at `ws://localhost:9101/`. Full OpenTelemetry wiring, dashboards, and alert procedures are documented in [`docs/observability.md`](observability.md).
 
 ## Recovery
 

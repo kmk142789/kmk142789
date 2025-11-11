@@ -6,12 +6,21 @@ services:
       dockerfile: deploy/Dockerfile
     environment:
       - ATLAS_CONFIG=config/atlas.yaml
+      - PYTHONPATH=/app
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - DEPLOYMENT_ENVIRONMENT=development
     volumes:
       - ../config:/app/config
       - ../data:/app/data
     ports:
       - "9100:9100"
       - "9101:9101"
+    depends_on:
+      - otel-collector
+      - tempo
+      - loki
+
   dashboard:
     image: node:20
     working_dir: /app
@@ -22,3 +31,87 @@ services:
       - "5173:5173"
     depends_on:
       - atlas-core
+
+  universal-verifier:
+    build:
+      context: ..
+      dockerfile: services/universal_verifier/Dockerfile
+    environment:
+      - UVICORN_HOST=0.0.0.0
+      - UVICORN_PORT=8080
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - DEPLOYMENT_ENVIRONMENT=development
+    ports:
+      - "8080:8080"
+    depends_on:
+      - otel-collector
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.99.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ../observability/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "9464:9464"
+      - "8888:8888"
+    depends_on:
+      - tempo
+      - loki
+
+  tempo:
+    image: grafana/tempo:2.6.0
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    volumes:
+      - ../observability/tempo/config.yaml:/etc/tempo/config.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"
+
+  loki:
+    image: grafana/loki:2.9.0
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ../observability/loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/var/loki
+    ports:
+      - "3100:3100"
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../observability/prometheus/alerts.yml:/etc/prometheus/alerts/alerts.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
+
+volumes:
+  tempo-data:
+  loki-data:
+  prometheus-data:
+  grafana-data:

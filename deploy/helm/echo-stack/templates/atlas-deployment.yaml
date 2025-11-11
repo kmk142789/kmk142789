@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-atlas
+  labels:
+    app.kubernetes.io/name: atlas-core
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+    app.kubernetes.io/component: workload
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: atlas-core
+      app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: atlas-core
+        app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+    spec:
+      containers:
+        - name: atlas-core
+          image: {{ .Values.atlasCore.image.repository }}:{{ .Values.atlasCore.image.tag }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: ATLAS_CONFIG
+              value: config/atlas.yaml
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.global.otlpEndpoint }}
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: "true"
+            - name: DEPLOYMENT_ENVIRONMENT
+              value: {{ .Values.global.environment | quote }}
+          ports:
+            - containerPort: {{ .Values.atlasCore.service.port }}
+              name: metrics
+            - containerPort: {{ .Values.atlasCore.service.wsPort }}
+              name: metrics-ws
+          resources: {{- toYaml .Values.atlasCore.resources | nindent 12 }}

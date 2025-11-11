@@ -1,0 +1,46 @@
+groups:
+  - name: atlas-core
+    rules:
+      - alert: AtlasJobFailureRateHigh
+        expr: |
+          (sum(rate(atlas_jobs_failed_total[5m])) by () /
+           clamp_min(sum(rate(atlas_jobs_started_total[5m])) by (), 1e-9)) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Atlas job failure rate above 5%"
+          description: |
+            Atlas job failures exceeded the 5% error budget over the last 10 minutes.
+      - alert: AtlasSchedulerBacklog
+        expr: sum(atlas_jobs_active) > 20
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Atlas scheduler backlog exceeds 20 active jobs"
+          description: |
+            Active Atlas jobs have exceeded the configured concurrency envelope for 5 minutes.
+
+  - name: universal-verifier
+    rules:
+      - alert: UniversalVerifierErrorRateHigh
+        expr: |
+          (sum(rate(universal_verifier_failed_requests_total[5m])) by () /
+           clamp_min(sum(rate(universal_verifier_requests_total[5m])) by (), 1e-9)) > 0.02
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Universal Verifier error budget burn"
+          description: |
+            Verification failures are breaching the 2% SLO over the past 5 minutes.
+      - alert: UniversalVerifierLatencySLO
+        expr: histogram_quantile(0.95, sum(rate(universal_verifier_verification_duration_seconds_bucket[5m])) by (le)) > 0.75
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Universal Verifier p95 latency above 750ms"
+          description: |
+            High verification latency indicates degraded credential validation performance.

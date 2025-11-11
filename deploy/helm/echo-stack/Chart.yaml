@@ -1,0 +1,6 @@
+apiVersion: v2
+name: echo-stack
+version: 0.1.0
+appVersion: "0.1.0"
+description: Echo Atlas services with an observability stack (OTel Collector, Prometheus, Grafana, Tempo, Loki).
+type: application

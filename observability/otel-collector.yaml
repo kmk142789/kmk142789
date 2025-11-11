@@ -1,0 +1,62 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 256
+  resource:
+    attributes:
+      - key: deployment.environment
+        from_attribute: deployment.environment
+        action: upsert
+      - key: service.namespace
+        from_attribute: service.namespace
+        action: upsert
+
+exporters:
+  logging/debug:
+    loglevel: info
+  prometheus:
+    endpoint: 0.0.0.0:9464
+    namespace: echo
+  otlp/tempo:
+    endpoint: http://tempo:4317
+    tls:
+      insecure: true
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    labels:
+      attributes:
+        service.name: service
+        service.namespace: namespace
+        deployment.environment: environment
+        severity_text: level
+    tls:
+      insecure: true
+
+service:
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      address: 0.0.0.0:8888
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/tempo, logging/debug]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [loki, logging/debug]
