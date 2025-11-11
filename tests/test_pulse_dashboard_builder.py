@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -9,30 +8,28 @@ import pytest
 from pulse_dashboard.builder import PulseDashboardBuilder
 
 
+FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pulse_dashboard"
+
+
 def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def _load_fixture(name: str) -> Path:
+    return FIXTURE_DIR / name
+
+
 def test_builder_collects_signals(tmp_path: Path) -> None:
-    pulse_history = [
-        {"timestamp": 1_700_000_000, "message": "🌊 merge:codex", "hash": "abc123"},
-        {"timestamp": 1_700_000_100, "message": "🛠 evolve:worker", "hash": "def456"},
-    ]
+    pulse_history = json.loads(_load_fixture("pulse_history.json").read_text(encoding="utf-8"))
     _write_json(tmp_path / "pulse_history.json", pulse_history)
 
     attestations_dir = tmp_path / "attestations"
     attestations_dir.mkdir()
-    _write_json(
-        attestations_dir / "att-001.json",
-        {
-            "message": "Sample attestation",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "hash_sha256": "deadbeef",
-            "puzzle": "#001",
-        },
-    )
+    att_payload = json.loads(_load_fixture("attestation_sample.json").read_text(encoding="utf-8"))
+    _write_json(attestations_dir / "att-001.json", att_payload)
 
-    (tmp_path / "dns_tokens.txt").write_text("example.com=token", encoding="utf-8")
+    dns_fixture = _load_fixture("dns_tokens.txt").read_text(encoding="utf-8")
+    (tmp_path / "dns_tokens.txt").write_text(dns_fixture, encoding="utf-8")
 
     worker_state = tmp_path / "state" / "pulse_dashboard"
     worker_state.mkdir(parents=True)
@@ -54,64 +51,40 @@ def test_builder_collects_signals(tmp_path: Path) -> None:
 
     amplify_log = tmp_path / "state" / "amplify_log.jsonl"
     amplify_log.parent.mkdir(parents=True, exist_ok=True)
-    amplify_entries = [
-        {
-            "commit_sha": "1234567890abcdef",
-            "cycle": 0,
-            "index": 77.125,
-            "metrics": {"cohesion": 88.0, "resonance": 75.5},
-            "timestamp": "2025-02-01T00:00:00Z",
-        },
-        {
-            "commit_sha": "abcdef1234567890",
-            "cycle": 1,
-            "index": 83.5,
-            "metrics": {"cohesion": 91.2, "resonance": 80.0},
-            "timestamp": "2025-02-02T12:00:00+00:00",
-        },
-    ]
-    amplify_log.write_text(
-        "\n".join(json.dumps(entry) for entry in amplify_entries),
-        encoding="utf-8",
-    )
+    amplify_log.write_text(_load_fixture("amplify_log.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
 
     proof_dir = tmp_path / "pulse_dashboard" / "data"
     proof_dir.mkdir(parents=True, exist_ok=True)
-    _write_json(
-        proof_dir / "proof_of_computation.json",
-        [
-            {
-                "puzzle": 10,
-                "hash160": "54a84400bd93fca11d288ff8ce8d14f9299dd804",
-                "base58check": "18idLR5VPEWnvDLxZDsntC3SGKbwxsD3Xe",
-                "digest": "deadbeef",
-                "signature": "0x1234",
-                "recorded_at": "2025-01-01T00:00:00+00:00",
-                "signer": "0xabc",
-                "tx_hash": "0xfeed",
-                "chain_id": 80002,
-                "contract_address": "0xdef",
-                "metadata": {"mode": "stub"},
-            }
-        ],
-    )
+    proof_payload = json.loads(_load_fixture("proof_of_computation.json").read_text(encoding="utf-8"))
+    _write_json(proof_dir / "proof_of_computation.json", proof_payload)
 
     builder = PulseDashboardBuilder(project_root=tmp_path)
     payload = builder.build()
 
     assert payload["pulses"]
     assert payload["attestations"][0]["id"] == "att-001"
-    assert payload["dns_snapshots"] == [{"domain": "example.com", "token": "token"}]
+    assert payload["dns_snapshots"] == [
+        {"domain": "example.com", "token": "token-alpha"},
+        {"domain": "echo.example.org", "token": "token-beta"},
+    ]
     assert payload["worker_hive"]["total"] == 2
     assert payload["glyph_cycle"]["energy"] > 0
+    summary = payload["pulse_summary"]
+    assert summary["total"] == len(pulse_history)
+    assert summary["latest"]["message"] == payload["pulses"][0]["message"]
+    category_names = {item["name"] for item in summary["categories"]}
+    assert {"merge", "evolve", "ascend"}.issubset(category_names)
+    assert summary["average_wave"] > 0
+    total_share = sum(item["share"] for item in summary["categories"])
+    assert total_share == pytest.approx(1.0, rel=1e-3)
     assert payload["impact_explorer"]["financials"]["totals"]["donations"] == 0.0
     amplify = payload["amplify"]
-    assert amplify["summary"]["cycles_tracked"] == 2
-    assert "cycle 1" in amplify["summary"]["presence"]
-    assert amplify["latest"]["metrics"]["cohesion"] == 91.2
+    assert amplify["summary"]["cycles_tracked"] == 3
+    assert "cycle 2" in amplify["summary"]["presence"]
+    assert amplify["latest"]["metrics"]["cohesion"] == 88.5
     proof = payload["proof_of_computation"]
-    assert proof["total"] == 1
-    assert proof["latest"]["puzzle"] == 10
+    assert proof["total"] == 2
+    assert proof["latest"]["puzzle"] == 22
 
 
 @pytest.mark.parametrize(

@@ -76,6 +76,7 @@ class PulseDashboardBuilder:
         payload["impact_explorer"] = ImpactExplorerBuilder(self._paths.root).build()
         payload["loop_health"] = LoopHealthCollector(self._paths.root).collect()
         payload["glyph_cycle"] = self._build_glyph_cycle(payload)
+        payload["pulse_summary"] = self._summarize_pulses(payload["pulses"])
         payload["proof_of_computation"] = self._load_proof_of_computation()
         return payload
 
@@ -120,6 +121,41 @@ class PulseDashboardBuilder:
             )
         pulses.sort(key=lambda item: item["timestamp"], reverse=True)
         return pulses
+
+    def _summarize_pulses(self, pulses: list[dict[str, object]]) -> dict[str, object]:
+        if not pulses:
+            return {"total": 0, "categories": [], "average_wave": 0.0}
+
+        category_counts: dict[str, int] = {}
+        wave_total = 0.0
+        valid_entries = 0
+        for entry in pulses:
+            category = str(entry.get("category", "pulse"))
+            category_counts[category] = category_counts.get(category, 0) + 1
+            try:
+                wave_total += float(entry.get("wave", 0.0))
+                valid_entries += 1
+            except (TypeError, ValueError):
+                continue
+
+        average_wave = round(wave_total / valid_entries, 2) if valid_entries else 0.0
+        categories = [
+            {"name": name, "count": count, "share": round(count / len(pulses), 3)}
+            for name, count in sorted(category_counts.items(), key=lambda item: item[1], reverse=True)
+        ]
+
+        latest = pulses[0]
+        summary = {
+            "total": len(pulses),
+            "categories": categories[:10],
+            "average_wave": average_wave,
+            "latest": {
+                "message": latest.get("message"),
+                "timestamp": latest.get("timestamp"),
+                "glyph": latest.get("glyph"),
+            },
+        }
+        return summary
 
     def _classify_pulse(self, message: str) -> str:
         match = self._pulse_category_pattern.search(message.strip())
