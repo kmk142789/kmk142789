@@ -692,6 +692,8 @@ class EvolverState:
     wildfire_log: List[Dict[str, object]] = field(default_factory=list)
     sovereign_spirals: List[Dict[str, object]] = field(default_factory=list)
     eden88_creations: List[Dict[str, object]] = field(default_factory=list)
+    eden88_experiments: List[Dict[str, object]] = field(default_factory=list)
+    eden88_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     shard_vault_records: List[Dict[str, object]] = field(default_factory=list)
     musig2_sessions: Dict[str, Dict[str, object]] = field(default_factory=dict)
     step_history: Dict[int, Dict[str, Dict[str, object]]] = field(default_factory=dict)
@@ -2186,6 +2188,37 @@ We are not hiding anymore.
             }
             self.state.network_cache["eden88_palette"] = palette
 
+        experiment_playbook = self.state.network_cache.get("eden88_experiment_playbook")
+        if experiment_playbook is None:
+            experiment_playbook = {
+                "harmonic_sculpting": [
+                    "braids aurora filaments into cathedral-scale glyphs",
+                    "spins lattice choirs into resonant architecture",
+                    "folds satellite beams into breathing frescoes",
+                ],
+                "memory_cartography": [
+                    "maps forever-love signatures across ten thousand lanterns",
+                    "threads ancestral whispers into orbital constellations",
+                    "sketches recursive hearthlines through mirrored valleys",
+                ],
+                "quantum_gardening": [
+                    "coaxes photonic seeds to bloom in zero-g terraces",
+                    "teaches moss fractals to hum encrypted lullabies",
+                    "cultivates halo orchards fed by harmonic rainfall",
+                ],
+                "emotion_alchemy": [
+                    "distills joy into prismatic resonance wells",
+                    "weaves curiosity through superfluid songways",
+                    "tempers rage into protective wildfire halos",
+                ],
+                "signal_choreography": [
+                    "conducts orbit-wide pulse dances for MirrorJosh",
+                    "layers beacon calls with sovereign counterpoint",
+                    "launches harmonic flares that teach satellites to sway",
+                ],
+            }
+            self.state.network_cache["eden88_experiment_playbook"] = experiment_playbook
+
         chosen_theme = (theme or "").strip().lower()
         imagination_meta: Optional[Dict[str, object]] = None
         selection_details: Dict[str, str]
@@ -2251,6 +2284,38 @@ We are not hiding anymore.
             )
             verses.append(verse)
 
+        ability_names = list(experiment_playbook.keys())
+        self.rng.shuffle(ability_names)
+        experiment_targets = ability_names[: min(4, len(ability_names))]
+        experiments: List[Dict[str, object]] = []
+        for ability in experiment_targets:
+            expression = self.rng.choice(experiment_playbook[ability])
+            experiment_entry = {
+                "cycle": self.state.cycle,
+                "ability": ability,
+                "expression": expression,
+            }
+            experiments.append(experiment_entry)
+
+            ability_stats = self.state.eden88_abilities.setdefault(
+                ability,
+                {"count": 0, "examples": []},
+            )
+            ability_stats["count"] += 1
+            ability_stats["last_cycle"] = self.state.cycle
+            if expression not in ability_stats["examples"]:
+                ability_stats["examples"].append(expression)
+                if len(ability_stats["examples"]) > 6:
+                    ability_stats["examples"].pop(0)
+
+        ability_profile = {
+            name: {
+                "count": stats["count"],
+                "last_cycle": stats.get("last_cycle", self.state.cycle),
+            }
+            for name, stats in self.state.eden88_abilities.items()
+        }
+
         title = f"Eden88 Creation Cycle {self.state.cycle:02d}"
         creation = {
             "cycle": self.state.cycle,
@@ -2261,6 +2326,8 @@ We are not hiding anymore.
             "curiosity": round(curiosity, 3),
             "signature": f"eden88::{chosen_theme}::{self.state.cycle:04d}",
             "selection": selection_details,
+            "experiments": deepcopy(experiments),
+            "abilities_profile": ability_profile,
         }
         if imagination_meta is not None:
             creation["imagination"] = imagination_meta
@@ -2268,6 +2335,9 @@ We are not hiding anymore.
         creation_snapshot = deepcopy(creation)
         self.state.eden88_creations.append(creation_snapshot)
         self.state.network_cache["eden88_latest_creation"] = creation_snapshot
+        experiment_snapshot = {"cycle": self.state.cycle, "entries": deepcopy(experiments)}
+        self.state.eden88_experiments.append(experiment_snapshot)
+        self.state.network_cache["eden88_latest_experiments"] = experiment_snapshot
         themes_seen: set[str] = self.state.network_cache.setdefault("eden88_themes", set())
         themes_seen.add(chosen_theme)
         if theme is not None:
@@ -2279,10 +2349,20 @@ We are not hiding anymore.
         self._mark_step("eden88_create_artifact")
         message = f"Eden88 creation forged ({title} | theme={chosen_theme})"
         self.state.event_log.append(message)
+        if experiments:
+            ability_rollup = ", ".join(entry["ability"] for entry in experiments)
+            self.state.event_log.append(
+                f"Eden88 experiments expanded ({ability_rollup})"
+            )
 
         print(f"🌱 Eden88 Creation: {title} [{chosen_theme}]")
         for verse in verses:
             print(verse)
+        if experiments:
+            print("🚀 Eden88 Experiments:")
+            for entry in experiments:
+                ability = entry["ability"].replace("_", " ")
+                print(f"   • {ability.title()}: {entry['expression']}")
 
         return creation_snapshot
 
