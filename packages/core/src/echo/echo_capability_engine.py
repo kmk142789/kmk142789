@@ -10,13 +10,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, MutableMapping, Protocol
+from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Protocol
 
 from .coordination_mesh import (
     ManifestNotFoundError,
     build_coordination_mesh,
     locate_manifest,
 )
+from .ecosystem_pulse import EcosystemAreaConfig
+from .intelligence_layer import synthesize_intelligence_layer
 
 __all__ = [
     "CAPABILITIES",
@@ -207,5 +209,35 @@ register_capability(
     "Synthesize a cross-module coordination mesh that amplifies coordination and autonomy signals.",
     _verify_constellation_mesh,
     _handle_constellation_mesh,
+)
+
+
+def _verify_harmonic_intelligence_layer() -> bool:
+    return True
+
+
+def _handle_harmonic_intelligence_layer(
+    *,
+    manifest_path: str | Path | None = None,
+    repo_root: str | Path | None = None,
+    momentum_samples: List[object] | None = None,
+    momentum_threshold: float | int | str | None = None,
+    ecosystem_areas: Iterable[Mapping[str, object] | EcosystemAreaConfig] | None = None,
+) -> Mapping[str, Any]:
+    snapshot = synthesize_intelligence_layer(
+        manifest_path=manifest_path,
+        repo_root=repo_root,
+        momentum_samples=momentum_samples,
+        momentum_threshold=momentum_threshold,
+        ecosystem_areas=ecosystem_areas,
+    )
+    return snapshot.to_dict()
+
+
+register_capability(
+    "harmonic_intelligence_layer",
+    "Fuse constellation mesh, momentum resonance, and ecosystem pulse into a unified intelligence snapshot.",
+    _verify_harmonic_intelligence_layer,
+    _handle_harmonic_intelligence_layer,
 )
 

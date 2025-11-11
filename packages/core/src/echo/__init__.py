@@ -80,6 +80,7 @@ from .ecosystem_pulse import (
     EcosystemPulseReport,
     EcosystemSignal,
 )
+from .intelligence_layer import IntelligenceLayerSnapshot, synthesize_intelligence_layer
 from .hex_ingestion import (
     AnomalyAlert,
     HexPayloadReport,
