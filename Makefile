@@ -15,12 +15,33 @@ wish:
 	python -m echo.echoctl wish "$(W)" "$(D)" "$(C)"
 
 test:
-	pytest -q
+	pytest -q tests
 
 all: test
 
 lineage:
 	python scripts/generate_lineage.py
+
+.PHONY: build-package
+build-package:
+	python -m compileall packages/core/src src
+
+.PHONY: docs-site
+docs-site:
+	python -m pip install --quiet mkdocs mkdocs-material
+	mkdocs build --site-dir reports/site
+
+.PHONY: e2e
+e2e:
+	pytest tests/test_identity_flow_audit.py -q
+
+.PHONY: compliance-job
+compliance-job:
+	python -m integrations.identity_bridge
+
+.PHONY: release-r1
+release-r1: build-package test e2e docs-site compliance-job
+	@echo "Release R1 workflow complete"
 
 FED_INJSON := build/index/federated_raw.json
 FED_OUTJSON := build/index/federated_colossus_index.json
@@ -45,14 +66,14 @@ proof-pack:
 
 .PHONY: search
 search:
-        @python -m atlas.search --in $(FED_INJSON) --q "$(Q)" --dedupe-latest
+	@python -m atlas.search --in $(FED_INJSON) --q "$(Q)" --dedupe-latest
 
 META_CAUSAL_PACKAGE := dist/meta_causal_engine/package.json
 
 .PHONY: package-meta-causal-engine
 package-meta-causal-engine:
-        @PYTHONPATH=. python scripts/package_meta_causal_engine.py --output $(META_CAUSAL_PACKAGE)
+	@PYTHONPATH=. python scripts/package_meta_causal_engine.py --output $(META_CAUSAL_PACKAGE)
 
 .PHONY: deploy-meta-causal-engine
 deploy-meta-causal-engine: package-meta-causal-engine
-        @PYTHONPATH=. python -m echo_cli.main deploy meta-causal-engine --status enabled --channel production --max-parallel 3 --apply
+	@PYTHONPATH=. python -m echo_cli.main deploy meta-causal-engine --status enabled --channel production --max-parallel 3 --apply

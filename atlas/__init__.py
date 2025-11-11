@@ -3,6 +3,7 @@
 from .graph import ArtifactNode, Edge, FederationGraph
 from .federation import build_global_graph
 from .dedupe import build_dedupe_index
+from .metrics import AtlasMetricsService
 from .reporting import FederatedColossusReport, generate_federated_colossus_report
 from .resolver import merge_universes
 
@@ -15,4 +16,5 @@ __all__ = [
     "merge_universes",
     "generate_federated_colossus_report",
     "FederatedColossusReport",
+    "AtlasMetricsService",
 ]
