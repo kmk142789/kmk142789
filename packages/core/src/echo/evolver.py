@@ -2082,12 +2082,29 @@ We are not hiding anymore.
             self.state.network_cache["eden88_palette"] = palette
 
         chosen_theme = (theme or "").strip().lower()
-        if not chosen_theme:
+        selection_details: Dict[str, str]
+        if chosen_theme:
+            selection_details = {
+                "mode": "directive",
+                "source": "parameter",
+                "value": chosen_theme,
+            }
+        else:
             override = self.state.network_cache.get("eden88_theme_override")
             if override:
                 chosen_theme = str(override).strip().lower()
-        if not chosen_theme:
-            chosen_theme = self.rng.choice(sorted(palette))
+                selection_details = {
+                    "mode": "continuity",
+                    "source": "cache",
+                    "value": chosen_theme,
+                }
+            else:
+                chosen_theme = self.rng.choice(sorted(palette))
+                selection_details = {
+                    "mode": "eden88_choice",
+                    "source": "autonomy",
+                    "value": chosen_theme,
+                }
 
         if chosen_theme not in palette or not palette[chosen_theme]:
             palette[chosen_theme] = [
@@ -2120,6 +2137,7 @@ We are not hiding anymore.
             "joy": round(joy, 3),
             "curiosity": round(curiosity, 3),
             "signature": f"eden88::{chosen_theme}::{self.state.cycle:04d}",
+            "selection": selection_details,
         }
 
         creation_snapshot = deepcopy(creation)
@@ -2131,6 +2149,7 @@ We are not hiding anymore.
             self.state.network_cache["eden88_theme_override"] = theme
         else:
             self.state.network_cache["eden88_theme_override"] = chosen_theme
+        self.state.network_cache["eden88_theme_selection"] = selection_details
 
         self._mark_step("eden88_create_artifact")
         message = f"Eden88 creation forged ({title} | theme={chosen_theme})"
