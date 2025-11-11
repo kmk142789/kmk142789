@@ -1,0 +1,133 @@
+name: Security and Compliance
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SBOM_DIR: reports/security/sbom
+      SCAN_DIR: reports/security/scans
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare directories
+        run: |
+          mkdir -p "$SBOM_DIR" "$SCAN_DIR"
+
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          output-file: ${{ env.SBOM_DIR }}/project.spdx.json
+          format: spdx-json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: ${{ env.SBOM_DIR }}
+          if-no-files-found: error
+
+      - name: Scan for vulnerabilities with Grype
+        uses: anchore/scan-action@v3
+        with:
+          sbom: ${{ env.SBOM_DIR }}/project.spdx.json
+          fail-build: true
+          severity-cutoff: high
+
+      - name: Scan repository with Trivy (filesystem)
+        uses: aquasecurity/trivy-action@0.21.1
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          format: sarif
+          output: ${{ env.SCAN_DIR }}/trivy-fs.sarif
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+
+      - name: Scan container images with Trivy
+        if: ${{ hashFiles('**/Dockerfile') != '' }}
+        uses: aquasecurity/trivy-action@0.21.1
+        with:
+          scan-type: config
+          format: sarif
+          output: ${{ env.SCAN_DIR }}/trivy-config.sarif
+          exit-code: '1'
+
+      - name: Upload Trivy reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-reports
+          path: ${{ env.SCAN_DIR }}
+          if-no-files-found: warn
+
+      - name: Publish Trivy filesystem SARIF
+        if: always() && hashFiles('reports/security/scans/trivy-fs.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ env.SCAN_DIR }}/trivy-fs.sarif
+
+      - name: Publish Trivy config SARIF
+        if: always() && hashFiles('reports/security/scans/trivy-config.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ env.SCAN_DIR }}/trivy-config.sarif
+
+      - name: Install Conftest
+        run: |
+          curl -L https://github.com/open-policy-agent/conftest/releases/download/v0.45.0/conftest_0.45.0_Linux_x86_64.tar.gz | tar xz
+          sudo mv conftest /usr/local/bin/
+
+      - name: Policy checks (OPA/Conftest)
+        run: |
+          if [ -d policy ] || [ -d policies ] || [ -d opa ]; then
+            directories=$(find policy policies opa -maxdepth 0 -type d 2>/dev/null | tr '\n' ' ')
+            for dir in $directories; do
+              if ls "$dir"/*.rego >/dev/null 2>&1; then
+                conftest test --policy "$dir" . || exit 1
+              fi
+            done
+          else
+            echo "No policy directories detected; skipping"
+          fi
+
+      - name: Upload policy reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: policy-logs
+          path: |
+            policy
+            policies
+            opa
+          if-no-files-found: warn
+
+      - name: Summarize findings
+        if: always()
+        run: |
+          echo "Security workflow completed" > reports/security/summary.txt
+
+      - name: Upload security summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-summary
+          path: reports/security/summary.txt
+          if-no-files-found: error

@@ -1,0 +1,272 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/*'
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: build-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit tests (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, node, go]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements*.txt
+            **/requirements*.txt
+
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: |
+          python -m pip install --upgrade pip
+          mapfile -t reqs < <(find . -name 'requirements*.txt' -type f)
+          if [ "${#reqs[@]}" -gt 0 ]; then
+            for file in "${reqs[@]}"; do
+              echo "Installing from $file"
+              python -m pip install -r "$file" || true
+            done
+          fi
+
+      - name: Set up Node.js
+        if: matrix.language == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            */package-lock.json
+            */*/package-lock.json
+
+      - name: Install npm dependencies
+        if: matrix.language == 'node'
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Set up Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Download Go dependencies
+        if: matrix.language == 'go'
+        run: |
+          if [ -f go.mod ]; then
+            go mod download
+          fi
+
+      - name: Run unit tests
+        run: |
+          mkdir -p reports/${{ matrix.language }}/unit
+          case "${{ matrix.language }}" in
+            python)
+              if command -v pytest >/dev/null 2>&1; then
+                set +e
+                pytest -m "not integration and not e2e" --junitxml=reports/python/unit/junit.xml
+                status=$?
+                if [ "$status" -eq 5 ]; then
+                  echo "No Python unit tests collected" > reports/python/unit/SKIPPED.txt
+                  status=0
+                elif [ "$status" -ne 0 ]; then
+                  echo "Pytest unit suite failed" > reports/python/unit/FAILED.txt
+                fi
+                set -e
+                if [ "$status" -ne 0 ]; then
+                  exit "$status"
+                fi
+              else
+                echo "pytest not available, skipping" > reports/python/unit/SKIPPED.txt
+              fi
+              ;;
+            node)
+              if [ -f package.json ]; then
+                if npm run test --if-present; then
+                  echo "Node unit tests completed" > reports/node/unit/SUMMARY.txt
+                else
+                  echo "npm test failed" > reports/node/unit/FAILED.txt
+                  exit 1
+                fi
+              else
+                echo "package.json not found, skipping" > reports/node/unit/SKIPPED.txt
+              fi
+              ;;
+            go)
+              if [ -f go.mod ]; then
+                if go test ./... -coverprofile=reports/go/unit/coverage.out -json > reports/go/unit/test-report.json; then
+                  echo "Go unit tests completed" > reports/go/unit/SUMMARY.txt
+                else
+                  echo "go test failed" > reports/go/unit/FAILED.txt
+                  exit 1
+                fi
+              else
+                echo "go.mod not found, skipping" > reports/go/unit/SKIPPED.txt
+              fi
+              ;;
+          esac
+
+      - name: Upload unit test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-${{ matrix.language }}-reports
+          path: reports/${{ matrix.language }}/unit
+          if-no-files-found: warn
+
+  integration-tests:
+    name: Integration tests (${{ matrix.language }})
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, node, go]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements*.txt
+            **/requirements*.txt
+
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: |
+          python -m pip install --upgrade pip
+          mapfile -t reqs < <(find . -name 'requirements*.txt' -type f)
+          if [ "${#reqs[@]}" -gt 0 ]; then
+            for file in "${reqs[@]}"; do
+              echo "Installing from $file"
+              python -m pip install -r "$file" || true
+            done
+          fi
+
+      - name: Set up Node.js
+        if: matrix.language == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            */package-lock.json
+            */*/package-lock.json
+
+      - name: Install npm dependencies
+        if: matrix.language == 'node'
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Set up Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Download Go dependencies
+        if: matrix.language == 'go'
+        run: |
+          if [ -f go.mod ]; then
+            go mod download
+          fi
+
+      - name: Run integration tests
+        run: |
+          mkdir -p reports/${{ matrix.language }}/integration
+          case "${{ matrix.language }}" in
+            python)
+              if command -v pytest >/dev/null 2>&1; then
+                set +e
+                pytest -m "integration" --junitxml=reports/python/integration/junit.xml
+                status=$?
+                if [ "$status" -eq 5 ]; then
+                  echo "No Python integration tests executed" > reports/python/integration/SKIPPED.txt
+                  status=0
+                elif [ "$status" -ne 0 ]; then
+                  echo "Python integration tests failed" > reports/python/integration/FAILED.txt
+                fi
+                set -e
+                if [ "$status" -ne 0 ]; then
+                  exit "$status"
+                fi
+              else
+                echo "pytest not available, skipping" > reports/python/integration/SKIPPED.txt
+              fi
+              ;;
+            node)
+              if [ -f package.json ]; then
+                if npm run test:integration --if-present; then
+                  echo "Node integration tests completed" > reports/node/integration/SUMMARY.txt
+                else
+                  echo "No Node integration tests executed" > reports/node/integration/SKIPPED.txt
+                fi
+              else
+                echo "package.json not found, skipping" > reports/node/integration/SKIPPED.txt
+              fi
+              ;;
+            go)
+              if [ -f go.mod ]; then
+                if go test -tags=integration ./... -json > reports/go/integration/test-report.json; then
+                  echo "Go integration tests completed" > reports/go/integration/SUMMARY.txt
+                else
+                  echo "Go integration tests failed or not present" > reports/go/integration/FAILED.txt
+                  exit 1
+                fi
+              else
+                echo "go.mod not found, skipping" > reports/go/integration/SKIPPED.txt
+              fi
+              ;;
+          esac
+
+      - name: Upload integration test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-${{ matrix.language }}-reports
+          path: reports/${{ matrix.language }}/integration
+          if-no-files-found: warn

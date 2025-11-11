@@ -1,0 +1,186 @@
+name: End-to-End Verification
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'services/**'
+      - 'docker-compose*.yml'
+      - '.github/workflows/e2e.yml'
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect orchestration manifest
+        id: manifest
+        run: |
+          if [ -f docker-compose.yml ]; then
+            echo "compose-file=docker-compose.yml" >> "$GITHUB_OUTPUT"
+            echo "kind-config=" >> "$GITHUB_OUTPUT"
+          elif [ -f docker-compose.yaml ]; then
+            echo "compose-file=docker-compose.yaml" >> "$GITHUB_OUTPUT"
+            echo "kind-config=" >> "$GITHUB_OUTPUT"
+          elif [ -f docker-compose.federation.yml ]; then
+            echo "compose-file=docker-compose.federation.yml" >> "$GITHUB_OUTPUT"
+            echo "kind-config=" >> "$GITHUB_OUTPUT"
+          elif [ -f kind-config.yaml ]; then
+            echo "compose-file=" >> "$GITHUB_OUTPUT"
+            echo "kind-config=kind-config.yaml" >> "$GITHUB_OUTPUT"
+          else
+            echo "compose-file=" >> "$GITHUB_OUTPUT"
+            echo "kind-config=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq netcat-openbsd
+
+      - name: Start application stack
+        run: |
+          set -euo pipefail
+          compose_file="${{ steps.manifest.outputs.compose-file }}"
+          kind_config="${{ steps.manifest.outputs.kind-config }}"
+          if [ -n "$compose_file" ]; then
+            docker compose -f "$compose_file" pull || true
+            docker compose -f "$compose_file" up -d --build
+          elif [ -n "$kind_config" ]; then
+            curl -Lo kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64
+            chmod +x kind
+            sudo mv kind /usr/local/bin/kind
+            kind create cluster --config "$kind_config"
+            kubectl wait --for=condition=Available --timeout=300s --all deployments --namespace default || true
+          else
+            echo "No orchestration manifest found" >&2
+            exit 1
+          fi
+
+      - name: Wait for services to become healthy
+        run: |
+          set +e
+          deadline=$((SECONDS + 300))
+          healthy=false
+          compose_file="${{ steps.manifest.outputs.compose-file }}"
+          kind_config="${{ steps.manifest.outputs.kind-config }}"
+          while [ $SECONDS -lt $deadline ]; do
+            if [ -n "$compose_file" ]; then
+              if ! docker compose -f "$compose_file" ps >/tmp/compose-status 2>&1; then
+                sleep 5
+                continue
+              fi
+              if ! grep -q "unhealthy" /tmp/compose-status; then
+                healthy=true
+                break
+              fi
+            elif [ -n "$kind_config" ]; then
+              # Fallback for Kind
+              if kubectl get pods --all-namespaces >/tmp/pod-status 2>&1; then
+                if ! grep -q "ContainerCreating" /tmp/pod-status; then
+                  healthy=true
+                  break
+                fi
+              fi
+            fi
+            sleep 10
+          done
+          set -e
+          if [ "$healthy" != "true" ]; then
+            echo "Services failed to become healthy" >&2
+            exit 1
+          fi
+
+      - name: Run end-to-end suites
+        env:
+          E2E_RESULTS_DIR: reports/e2e
+        run: |
+          mkdir -p "$E2E_RESULTS_DIR"
+          status=0
+          if [ -f package.json ]; then
+            if npm run test:e2e --if-present; then
+              echo "Node e2e suite completed" > "$E2E_RESULTS_DIR"/node-summary.txt
+            else
+              echo "Node e2e suite failed" > "$E2E_RESULTS_DIR"/node-failure.txt
+              status=1
+            fi
+          fi
+          if [ -d tests/e2e ] || ls */tests/e2e >/dev/null 2>&1; then
+            if python -m pip --version >/dev/null 2>&1; then
+              python -m pip install --upgrade pip
+              mapfile -t reqs < <(find . -name 'requirements*.txt' -type f)
+              if [ "${#reqs[@]}" -gt 0 ]; then
+                for file in "${reqs[@]}"; do python -m pip install -r "$file" || true; done
+              fi
+            fi
+            if command -v pytest >/dev/null 2>&1; then
+              set +e
+              pytest tests/e2e --maxfail=1 --junitxml="$E2E_RESULTS_DIR"/python-e2e.xml
+              pystatus=$?
+              set -e
+              if [ "$pystatus" -eq 5 ]; then
+                echo "No Python e2e tests collected" > "$E2E_RESULTS_DIR"/python-skipped.txt
+              elif [ "$pystatus" -ne 0 ]; then
+                echo "Python e2e suite failed" > "$E2E_RESULTS_DIR"/python-failure.txt
+                status=1
+              fi
+            fi
+          fi
+          if [ -f go.mod ]; then
+            if go test -tags=e2e ./... -json > "$E2E_RESULTS_DIR"/go-e2e.json; then
+              echo "Go e2e suite completed" > "$E2E_RESULTS_DIR"/go-summary.txt
+            else
+              echo "Go e2e suite failed" > "$E2E_RESULTS_DIR"/go-failure.txt
+              status=1
+            fi
+          fi
+          exit $status
+
+      - name: Collect container logs
+        if: always()
+        run: |
+          mkdir -p reports/e2e/logs
+          compose_file="${{ steps.manifest.outputs.compose-file }}"
+          if [ -n "$compose_file" ]; then
+            docker compose -f "$compose_file" logs --no-color > reports/e2e/logs/compose.log || true
+          fi
+          if command -v kubectl >/dev/null 2>&1; then
+            kubectl get pods --all-namespaces -o wide > reports/e2e/logs/k8s-pods.txt || true
+            kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{"/"}{.metadata.name}{"\n"}{end}' \
+              | while IFS=/ read -r namespace name; do
+                  [ -z "$namespace" ] && continue
+                  kubectl logs -n "$namespace" "$name" > "reports/e2e/logs/${namespace}-${name}.log" || true
+                done
+          fi
+
+      - name: Shutdown environment
+        if: always()
+        run: |
+          compose_file="${{ steps.manifest.outputs.compose-file }}"
+          kind_config="${{ steps.manifest.outputs.kind-config }}"
+          if [ -n "$compose_file" ]; then
+            docker compose -f "$compose_file" down -v --remove-orphans || true
+          elif command -v kind >/dev/null 2>&1 && [ -n "$kind_config" ]; then
+            kind delete cluster || true
+          fi
+
+      - name: Upload e2e artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: reports/e2e
+          if-no-files-found: warn

@@ -1,20 +1,150 @@
-name: Release
+name: Semantic Release
+
 on:
+  workflow_dispatch:
   push:
-    tags: ["v*.*.*"]
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  packages: write
+  id-token: write
+
 jobs:
-  build-publish:
+  release:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DIST_DIR: dist-release
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: pip install build
-      - run: cd echo-core && python -m build
-      - run: cd harmonix && python -m build
-      - uses: softprops/action-gh-release@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          files: |
-            echo-core/dist/*
-            harmonix/dist/*
-            forensics/forensic_timeline_kit.zip
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            */package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements*.txt
+            **/requirements*.txt
+
+      - name: Set up Go
+        if: ${{ hashFiles('go.mod') != '' }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Install toolchains
+        run: |
+          python -m pip install --upgrade pip build twine
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f package.json ]; then
+            npm install
+          fi
+          if [ -f go.mod ]; then
+            go mod download
+          fi
+
+      - name: Build project artifacts
+        run: |
+          mkdir -p "$DIST_DIR"
+          if [ -f pyproject.toml ] || ls */pyproject.toml >/dev/null 2>&1; then
+            while IFS= read -r project; do
+              project_dir=$(dirname "$project")
+              python -m build "$project_dir" || exit 1
+              if [ -d "$project_dir/dist" ]; then
+                package_name=$(basename "$project_dir")
+                dest="$DIST_DIR/${package_name}-dist"
+                rm -rf "$dest"
+                cp -r "$project_dir/dist" "$dest"
+              fi
+            done < <(find . -name pyproject.toml -print)
+          fi
+          if [ -f package.json ]; then
+            npm run build --if-present
+            if [ -d build ]; then
+              cp -r build "$DIST_DIR"/frontend-build
+            fi
+            if [ -d dist ]; then
+              cp -r dist "$DIST_DIR"/frontend-dist
+            fi
+          fi
+          if [ -f go.mod ]; then
+            mkdir -p "$DIST_DIR"/go
+            mapfile -t commands < <(go list -f '{{if eq .Name "main"}}{{.ImportPath}}{{end}}' ./... | grep -v '^$' || true)
+            if [ "${#commands[@]}" -eq 0 ]; then
+              echo "No Go command packages detected; skipping binary build"
+            else
+              for pkg in "${commands[@]}"; do
+                bin_name=$(basename "$pkg")
+                go build -o "$DIST_DIR/go/$bin_name" "$pkg"
+              done
+            fi
+          fi
+
+      - name: Archive build outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: ${{ env.DIST_DIR }}
+          if-no-files-found: warn
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.6.0
+
+      - name: Sign container images
+        if: ${{ hashFiles('release-images.txt') != '' }}
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          if [ -z "$COSIGN_PRIVATE_KEY" ]; then
+            echo "COSIGN_PRIVATE_KEY secret not configured" >&2
+            exit 1
+          fi
+          echo "$COSIGN_PRIVATE_KEY" > cosign.key
+          chmod 600 cosign.key
+          while IFS= read -r image; do
+            [ -z "$image" ] && continue
+            cosign sign --key cosign.key "$image"
+          done < release-images.txt
+          rm -f cosign.key
+
+      - name: Publish release notes and tags
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          semantic_version: 23.0.0
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+            @semantic-release/npm
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Announce release
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          echo "Published version ${{ steps.semantic.outputs.new_release_version }}"
