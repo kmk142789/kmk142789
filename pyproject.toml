@@ -64,6 +64,10 @@ target-version = "py310"
 [project.scripts]
 echo = "echo.manifest_cli:main"
 echo-evolver = "echo_evolver:main"
+echo-evolve = "echo_evolve:main"
+echo-sync = "echo_sync:main"
+echo-dominion-cascade = "echo_dominion_cascade:main"
+echo-unleash = "echo_unleash:main"
 idea-processor = "echo.idea_processor:main"
 echodex = "echodex:main"
 codex = "codex:main"
@@ -95,6 +99,10 @@ py-modules = [
   "echo_constellation",
   "echo_evolver",
   "echo_manifest",
+  "echo_evolve",
+  "echo_sync",
+  "echo_dominion_cascade",
+  "echo_unleash",
   "echo_universal_key_agent",
   "codex",
   "next_level",
