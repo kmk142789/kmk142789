@@ -25,3 +25,11 @@ data/user_provided_keys.txt
 
 # Packaging artifacts
 *.egg-info/
+
+# Security automation artefacts
+security/sboms/*.json
+security/reports/*
+security/provenance/*
+!security/sboms/.gitkeep
+!security/reports/.gitkeep
+!security/provenance/.gitkeep
