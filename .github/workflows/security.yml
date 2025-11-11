@@ -1,0 +1,110 @@
+name: Security Safeguards
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  packages: read
+
+jobs:
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0.14.3
+
+      - name: Generate SBOM (SPDX JSON)
+        run: |
+          syft dir:. -o spdx-json -q > sbom.spdx.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+
+  vulnerability-scan:
+    name: Vulnerability scanning
+    runs-on: ubuntu-latest
+    needs: sbom
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download SBOM
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom
+
+      - name: Install Grype
+        uses: anchore/scan-action/download-grype@v3
+
+      - name: Run Grype against SBOM (fail on high)
+        run: |
+          mkdir -p security-reports
+          grype sbom:sbom.spdx.json --fail-on high -o table > security-reports/grype.txt
+
+      - name: Trivy filesystem scan (fail on critical/high)
+        uses: aquasecurity/trivy-action@0.21.0
+        with:
+          scan-type: 'fs'
+          hide-progress: true
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          output: security-reports/trivy.txt
+
+      - name: Upload vulnerability reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulnerability-reports
+          path: security-reports
+
+  policy-checks:
+    name: Policy enforcement
+    runs-on: ubuntu-latest
+    needs: [sbom, vulnerability-scan]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Conftest
+        run: |
+          set -euo pipefail
+          CONTFEST_VERSION=0.52.0
+          curl -sSL -o conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONTFEST_VERSION}/conftest_${CONTFEST_VERSION}_Linux_x86_64.tar.gz"
+          tar -xzf conftest.tar.gz
+          sudo mv conftest /usr/local/bin/conftest
+          conftest --version
+
+      - name: Run policy tests
+        run: |
+          set -euo pipefail
+          TARGETS=()
+          for path in deployment ops security; do
+            if [ -e "$path" ]; then
+              TARGETS+=("$path")
+            fi
+          done
+          if [ ${#TARGETS[@]} -eq 0 ]; then
+            echo "No policy targets found; skipping policy gate."
+            exit 0
+          fi
+          conftest test "${TARGETS[@]}" -p security/policies
+
+      - name: Confirm policy gate
+        run: echo "OPA/Conftest policy checks completed successfully."

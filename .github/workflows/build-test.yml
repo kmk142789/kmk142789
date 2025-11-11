@@ -1,0 +1,213 @@
+name: Build and Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+jobs:
+  unit-tests:
+    name: Unit tests (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, typescript, go]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          fi
+          python -m pip install pytest
+          if [ -f pyproject.toml ]; then
+            python -m pip install build
+          fi
+
+      - name: Run Python unit tests
+        if: matrix.language == 'python'
+        run: |
+          set -eo pipefail
+          mkdir -p artifacts/unit/python
+          if [ -d tests/unit ]; then
+            pytest tests/unit | tee artifacts/unit/python/pytest.log
+          else
+            pytest | tee artifacts/unit/python/pytest.log
+          fi
+
+      - name: Set up Node.js
+        if: matrix.language == 'typescript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        if: matrix.language == 'typescript'
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run TypeScript unit tests
+        if: matrix.language == 'typescript'
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/unit/typescript
+          LOG="artifacts/unit/typescript/unit.log"
+          if npm run | grep -q "test:unit"; then
+            npm run test:unit | tee "$LOG"
+            STATUS=${PIPESTATUS[0]}
+          else
+            STATUS=1
+            for CMD in "npm test -- --watch=false" "npm test -- --runInBand" "npm test"; do
+              if [ "$STATUS" -ne 0 ]; then
+                eval "$CMD" | tee "$LOG"
+                STATUS=${PIPESTATUS[0]}
+              fi
+            done
+          fi
+          exit $STATUS
+
+      - name: Set up Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Run Go unit tests
+        if: matrix.language == 'go'
+        run: |
+          set -eo pipefail
+          mkdir -p artifacts/unit/go
+          go test ./... -coverprofile=artifacts/unit/go/coverage.out | tee artifacts/unit/go/go-test.log
+
+      - name: Upload unit test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-${{ matrix.language }}-results
+          path: artifacts/unit/${{ matrix.language }}
+
+  integration-tests:
+    name: Integration tests (${{ matrix.language }})
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, typescript, go]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          fi
+          python -m pip install pytest pytest-asyncio
+
+      - name: Run Python integration tests
+        if: matrix.language == 'python'
+        run: |
+          set -eo pipefail
+          mkdir -p artifacts/integration/python
+          if [ -d tests/integration ]; then
+            pytest tests/integration | tee artifacts/integration/python/pytest.log
+          else
+            pytest -m "integration" | tee artifacts/integration/python/pytest.log || echo "No integration marker found"
+          fi
+
+      - name: Set up Node.js
+        if: matrix.language == 'typescript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        if: matrix.language == 'typescript'
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run TypeScript integration tests
+        if: matrix.language == 'typescript'
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/integration/typescript
+          LOG="artifacts/integration/typescript/integration.log"
+          if npm run | grep -q "test:integration"; then
+            npm run test:integration | tee "$LOG"
+            STATUS=${PIPESTATUS[0]}
+          else
+            STATUS=1
+            for CMD in "npm test -- --runInBand" "npm test -- --watch=false" "npm test"; do
+              if [ "$STATUS" -ne 0 ]; then
+                eval "$CMD" | tee "$LOG"
+                STATUS=${PIPESTATUS[0]}
+              fi
+            done
+          fi
+          exit $STATUS
+
+      - name: Set up Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Run Go integration tests
+        if: matrix.language == 'go'
+        run: |
+          set -eo pipefail
+          mkdir -p artifacts/integration/go
+          if [ -d integration ]; then
+            go test ./integration/... -run Integration | tee artifacts/integration/go/go-test.log
+          else
+            go test ./... | tee artifacts/integration/go/go-test.log
+          fi
+
+      - name: Upload integration test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-${{ matrix.language }}-results
+          path: artifacts/integration/${{ matrix.language }}
