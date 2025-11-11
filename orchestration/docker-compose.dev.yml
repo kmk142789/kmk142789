@@ -1,0 +1,166 @@
+version: "3.9"
+
+x-python-service: &python-service
+  restart: unless-stopped
+  networks:
+    - devnet
+  environment:
+    PYTHONUNBUFFERED: "1"
+    ECHO_ENV: development
+  volumes:
+    - ../:/workspace:cached
+    - ../fixtures:/workspace/fixtures:ro
+  tmpfs:
+    - /tmp
+
+services:
+  atlas_kernel:
+    <<: *python-service
+    build:
+      context: ..
+      dockerfile: atlas_os/atlas_kernel/Dockerfile
+      target: dev
+    working_dir: /workspace
+    command:
+      - watchfiles
+      - --filter
+      - python
+      - pytest atlas_os/atlas_kernel/tests
+      - atlas_os/atlas_kernel
+      - atlas_os/atlas_kernel/tests
+      - tests
+    environment:
+      PYTHONPATH: /workspace
+
+  runtime_sandbox:
+    <<: *python-service
+    build:
+      context: ..
+      dockerfile: atlas_os/atlas_runtime/Dockerfile
+      target: dev
+    working_dir: /workspace
+    command:
+      - watchfiles
+      - --filter
+      - python
+      - pytest atlas_os/atlas_runtime/tests
+      - atlas_os/atlas_runtime
+      - atlas_os/atlas_runtime/tests
+      - tests
+    environment:
+      PYTHONPATH: /workspace
+
+  pulse_dashboard:
+    <<: *python-service
+    build:
+      context: ..
+      dockerfile: pulse_dashboard/Dockerfile
+      target: dev
+    working_dir: /workspace
+    command:
+      - watchfiles
+      - --filter
+      - python
+      - python scripts/generate_pulse_dashboard.py --root /workspace --print
+      - pulse_dashboard
+      - scripts
+      - fixtures
+    environment:
+      PYTHONPATH: /workspace
+      PULSE_HISTORY_PATH: /workspace/pulse_history.json
+      PULSE_OUTPUT_PATH: /workspace/pulse_dashboard/data/dashboard.json
+
+  aster_compliance:
+    <<: *python-service
+    build:
+      context: ..
+      dockerfile: compliance/Dockerfile
+      target: dev
+    working_dir: /workspace
+    command:
+      - watchfiles
+      - --filter
+      - python
+      - python -m compliance.cli asterc:validate /workspace/identity
+      - compliance
+      - identity
+    environment:
+      PYTHONPATH: /workspace
+      ASTER_IDENTITY_ROOT: /workspace/identity
+
+  vault_v1:
+    <<: *python-service
+    build:
+      context: ..
+      dockerfile: vault_v1/Dockerfile
+      target: dev
+    working_dir: /workspace/vault_v1
+    command:
+      - uvicorn
+      - vault.api.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --reload
+      - --reload-dir
+      - /workspace/vault_v1
+    environment:
+      DATABASE_URL: sqlite:////workspace/vault_v1/state/dev.db
+      PYTHONPATH: /workspace/vault_v1
+    volumes:
+      - ../:/workspace:cached
+      - vault_v1_state:/workspace/vault_v1/state
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:8080/health\")'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  identity_bridge:
+    <<: *python-service
+    build:
+      context: ..
+      dockerfile: identity_bridge/Dockerfile
+      target: dev
+    working_dir: /workspace/identity_bridge
+    command:
+      - uvicorn
+      - identity_bridge.app:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8081"
+      - --reload
+      - --reload-dir
+      - /workspace/identity_bridge
+      - --reload-dir
+      - /workspace/modules
+      - --reload-dir
+      - /workspace/packages/core/src
+    environment:
+      PYTHONPATH: /workspace/identity_bridge:/workspace/modules:/workspace/packages/core/src
+      ECHO_BRIDGE_GITHUB_REPOSITORY: EchoOrg/sovereign
+      ECHO_BRIDGE_TELEGRAM_CHAT_ID: "@echo_bridge_dev"
+      ECHO_BRIDGE_FIREBASE_COLLECTION: echo/dev-relays
+      ECHO_STATE_ROOT: /workspace/state
+    volumes:
+      - ../:/workspace:cached
+      - bridge_state:/workspace/state
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:8081/health\")'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+networks:
+  devnet:
+    driver: bridge
+
+volumes:
+  vault_v1_state:
+  bridge_state:
