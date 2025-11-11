@@ -4,3 +4,4 @@ nav:
   - Echo Manifest: echo/manifest.md
   - Unstoppable Apps: echo/unstoppable_apps.md
   - Continuum Temporal Guardian: continuum_temporal_guardian.md
+  - Architecture Manifest: architecture/manifest.md

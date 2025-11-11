@@ -4,6 +4,7 @@ dist
 .next
 .DS_Store
 .echo-runtime/
+site/
 
 # Assistant Kit generated artifacts
 artifacts/akit/
