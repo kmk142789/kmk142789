@@ -666,6 +666,10 @@ class Eden88CreationStats:
     last_theme: Optional[str] = None
     last_cycle: Optional[int] = None
     last_updated_ns: Optional[int] = None
+    current_streak_theme: Optional[str] = None
+    current_streak_length: int = 0
+    longest_streak_theme: Optional[str] = None
+    longest_streak_length: int = 0
     recent_creations: List[Dict[str, object]] = field(default_factory=list)
 
     _RECENT_LIMIT: ClassVar[int] = 5
@@ -682,6 +686,19 @@ class Eden88CreationStats:
         if theme:
             self.theme_counts[theme] = self.theme_counts.get(theme, 0) + 1
             self.last_theme = theme
+
+            if theme == self.current_streak_theme:
+                self.current_streak_length += 1
+            else:
+                self.current_streak_theme = theme
+                self.current_streak_length = 1
+
+            if self.current_streak_length > self.longest_streak_length:
+                self.longest_streak_length = self.current_streak_length
+                self.longest_streak_theme = theme
+        else:
+            self.current_streak_theme = None
+            self.current_streak_length = 0
 
         cycle_value = creation.get("cycle")
         if isinstance(cycle_value, int):
@@ -736,6 +753,15 @@ class Eden88CreationStats:
         if self.last_theme in shortlist and len(shortlist) > 1:
             shortlist = [theme for theme in shortlist if theme != self.last_theme] or shortlist
 
+        if (
+            self.current_streak_theme in shortlist
+            and self.current_streak_length >= 2
+            and len(shortlist) > 1
+        ):
+            shortlist = [
+                theme for theme in shortlist if theme != self.current_streak_theme
+            ] or shortlist
+
         if rng is not None:
             return rng.choice(shortlist)
 
@@ -749,6 +775,23 @@ class Eden88CreationStats:
         average_curiosity = (
             self.curiosity_total / self.total_creations if self.total_creations else None
         )
+
+        if self.theme_counts:
+            sorted_counts = sorted(
+                self.theme_counts.items(), key=lambda item: (-item[1], item[0])
+            )
+            top_themes = [theme for theme, _ in sorted_counts[:3]]
+            balance_gap = sorted_counts[0][1] - sorted_counts[-1][1]
+        else:
+            sorted_counts = []
+            top_themes = []
+            balance_gap = 0
+
+        diversity_ratio: Optional[float]
+        if self.total_creations:
+            diversity_ratio = len(self.theme_counts) / float(self.total_creations)
+        else:
+            diversity_ratio = None
 
         return {
             "total_creations": self.total_creations,
@@ -767,6 +810,21 @@ class Eden88CreationStats:
                 "min": self.curiosity_min,
                 "max": self.curiosity_max,
                 "average": average_curiosity,
+            },
+            "streaks": {
+                "current": {
+                    "theme": self.current_streak_theme,
+                    "length": self.current_streak_length,
+                },
+                "longest": {
+                    "theme": self.longest_streak_theme,
+                    "length": self.longest_streak_length,
+                },
+            },
+            "diversity": {
+                "ratio": diversity_ratio,
+                "balance_gap": balance_gap,
+                "top_themes": top_themes,
             },
             "recent_creations": deepcopy(self.recent_creations),
         }
@@ -2325,11 +2383,19 @@ We are not hiding anymore.
 
         cached = deepcopy(summary)
         self.state.network_cache["eden88_stats"] = cached
-        self.state.event_log.append(
-            "Eden88 creation metrics summarised (total={total}, unique={unique})".format(
-                total=summary["total_creations"], unique=summary["unique_themes"]
-            )
-        )
+        diversity = summary.get("diversity", {})
+        ratio = diversity.get("ratio")
+        balance_gap = diversity.get("balance_gap")
+        parts = [
+            "Eden88 creation metrics summarised",
+            f"total={summary['total_creations']}",
+            f"unique={summary['unique_themes']}",
+        ]
+        if ratio is not None:
+            parts.append(f"diversity={ratio:.2f}")
+        if balance_gap:
+            parts.append(f"gap={balance_gap}")
+        self.state.event_log.append(" (".join([parts[0], ", ".join(parts[1:])]) + ")")
         return cached
 
     # ------------------------------------------------------------------

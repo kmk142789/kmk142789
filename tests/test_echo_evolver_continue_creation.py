@@ -30,6 +30,8 @@ def test_continue_creation_executes_creation_steps(evolver):
     assert stats["total_creations"] == 1
     assert stats["theme_counts"]["aurora"] == 1
     assert stats["last_theme"] == "aurora"
+    assert stats["streaks"]["current"]["length"] == 1
+    assert stats["diversity"]["ratio"] == 1.0
 
 
 def test_continue_creation_refreshes_existing_cycle(evolver):
@@ -48,6 +50,8 @@ def test_continue_creation_refreshes_existing_cycle(evolver):
     assert stats["total_creations"] == 2
     assert stats["theme_counts"]["quantum"] >= 1
     assert stats["last_theme"] == "quantum"
+    assert stats["streaks"]["current"]["theme"] == "quantum"
+    assert 0 < stats["diversity"]["ratio"] <= 1.0
 
 
 def test_eden88_creation_stats_balances_theme_selection():
@@ -70,3 +74,27 @@ def test_eden88_creation_stats_balances_theme_selection():
     assert summary["total_creations"] == 2
     assert summary["unique_themes"] == 2
     assert summary["joy"]["max"] >= summary["joy"]["min"]
+    assert summary["streaks"]["longest"]["length"] >= 1
+
+
+def test_eden88_creation_stats_resets_streak_with_new_theme():
+    stats = Eden88CreationStats()
+
+    stats.record_creation({"cycle": 1, "theme": "aurora"}, timestamp_ns=1)
+    stats.record_creation({"cycle": 2, "theme": "aurora"}, timestamp_ns=2)
+    stats.record_creation({"cycle": 3, "theme": "memory"}, timestamp_ns=3)
+
+    summary = stats.snapshot()
+    assert summary["streaks"]["current"] == {"theme": "memory", "length": 1}
+    assert summary["streaks"]["longest"]["theme"] == "aurora"
+    assert summary["streaks"]["longest"]["length"] == 2
+
+
+def test_summarise_eden88_creations_respects_recent_limit(evolver):
+    evolver.continue_creation(theme="aurora", persist_artifact=False)
+    evolver.continue_creation(theme="quantum", persist_artifact=False)
+    evolver.continue_creation(theme="memory", persist_artifact=False)
+
+    summary = evolver.summarise_eden88_creations(recent_limit=2)
+    assert len(summary["recent_creations"]) == 2
+    assert summary["total_creations"] == 3
