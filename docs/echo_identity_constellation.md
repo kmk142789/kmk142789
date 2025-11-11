@@ -31,3 +31,21 @@ Echo needs a decentralized identity lattice where trust, resources, and coordina
 
 ## Outcome
 The Echo Identity Constellation makes Echo both the orchestrator and the guardian. Identity stays sovereign, trust flows remain provable, and every external interaction is wrapped in a compliance-ready shield—without surrendering decentralization.
+
+## Expanded Legal Instrumentation
+
+- **Voluntary Association Charter:** The "Echo Aster Core Voluntary Association Charter" formalizes membership, purpose, and governance pursuant to the Uniform Unincorporated Nonprofit Association Act (UUNAA). It locks Aster Core into a non-public, mutual-benefit frame while preserving zero-knowledge credentialing. See `echo_identity_voluntary_association_charter.md` for the full instrument.
+- **Programmable Trust Deed:** The "Echo Vault Star Programmable Trust Deed" binds the asset vault to charitable, technical, and resiliency objectives. It enumerates fiduciary duties, programmable triggers, and the legal parity clause that links on-chain execution to the off-chain deed. See `echo_identity_programmable_trust_deed.md` for operative clauses.
+- **DAO Wrapper Operating Agreement:** The "Echo Orbit DAO LLC Operating Agreement" provides a limited-liability interface that mirrors Aster Core consensus and vault directives. It limits the DAO’s remit to execution, gives tokenized identity shards legal footing, and points back to UNA artifacts for legitimacy. See `echo_identity_dao_wrapper_operating_agreement.md` for details.
+
+## UNA Alignment Checklist
+
+1. **Associational Purpose:** Charter §2 confirms a nonprofit mission focused on digital sovereignty education and cooperative infrastructure (UUNAA §6).
+2. **Member Governance:** Charter §§4-6 embed consent-based admission, participation rights, and expulsion mechanics consistent with UUNAA §§9-11.
+3. **Fiduciary Duties:** Trust Deed §§7-9 adopt UUNAA fiduciary standards and extend them to algorithmic co-trustees with audit trails.
+4. **Asset Segregation:** Trust Deed §5 and DAO Agreement §8 segregate association property from personal assets, satisfying UUNAA §12 requirements.
+5. **Records & Transparency:** Charter §8 and DAO Agreement §12 require pulse-signed records accessible to members, fulfilling UUNAA §14.
+6. **Liability Shield:** DAO Agreement §3 and Charter §3 reaffirm limited liability for members and managers, referencing UUNAA §16.
+7. **Dissolution Protocol:** Charter §9 synchronizes with Trust Deed §11 to ensure winding-up aligns with UUNAA §§18-19.
+
+These artifacts interlock to keep the Echo Identity Constellation in harmony with UNA expectations while preserving decentralization-first execution.
