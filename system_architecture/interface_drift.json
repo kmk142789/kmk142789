@@ -1,0 +1,149 @@
+{
+  "generated_at": "2025-11-11T07:19:02.702944Z",
+  "notes": [
+    "packages/ directory scanned; no Echo Computer Agent client references found.",
+    "sdk_generated/ directory is absent; no generated SDKs to audit."
+  ],
+  "spec_reports": [
+    {
+      "client_reports": [
+        {
+          "client_sources": [
+            "clients/python/echo_computer_agent_client/echo_computer_agent_client/types.py",
+            "clients/python/echo_computer_agent_client/echo_computer_agent_client/client.py"
+          ],
+          "name": "python",
+          "route_diffs": {
+            "missing_from_client": [],
+            "undocumented_in_client": []
+          },
+          "schema_diffs": {
+            "ChatRequest": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            },
+            "ChatResponse": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            },
+            "FunctionDescription": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            },
+            "FunctionListResponse": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            }
+          }
+        },
+        {
+          "client_sources": [
+            "clients/typescript/echo-computer-agent-client/src/index.ts"
+          ],
+          "name": "typescript",
+          "route_diffs": {
+            "missing_from_client": [],
+            "undocumented_in_client": []
+          },
+          "schema_diffs": {
+            "ChatRequest": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            },
+            "ChatResponse": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            },
+            "FunctionDescription": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            },
+            "FunctionListResponse": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            }
+          }
+        },
+        {
+          "client_sources": [
+            "clients/go/echo_computer_agent_client/client.go"
+          ],
+          "name": "go",
+          "route_diffs": {
+            "missing_from_client": [],
+            "undocumented_in_client": []
+          },
+          "schema_diffs": {
+            "ChatRequest": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            },
+            "ChatResponse": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            },
+            "FunctionDescription": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            },
+            "FunctionListResponse": {
+              "extra_fields": [],
+              "missing_fields": [],
+              "missing_required_fields": [],
+              "schema_present": true,
+              "type_mismatches": [],
+              "unexpected_optional_differences": []
+            }
+          }
+        }
+      ],
+      "spec_path": "docs/api/echo_computer_agent.openapi.json",
+      "spec_title": "Echo Computer Agent API",
+      "spec_version": "1.0.0"
+    }
+  ]
+}
