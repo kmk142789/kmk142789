@@ -15,7 +15,7 @@ wish:
 	python -m echo.echoctl wish "$(W)" "$(D)" "$(C)"
 
 test:
-	pytest -q
+        pytest -q
 
 validate:
 	PYTHONPATH=. python -m compliance.cli asterc:validate identity
@@ -27,6 +27,20 @@ site:
 	PYTHONPATH=. python -m compliance.cli asterc:site identity
 
 all: test
+
+.PHONY: run up dash e2e
+
+run:
+	python -m atlas.core.runtime
+
+up:
+	docker compose -f deploy/docker-compose.yml up --build
+
+dash:
+	npm --prefix dashboard run dev
+
+e2e:
+	bash scripts/test_all.sh
 
 lineage:
 	python scripts/generate_lineage.py
