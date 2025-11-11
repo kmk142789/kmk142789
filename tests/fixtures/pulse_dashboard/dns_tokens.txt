@@ -1,0 +1,5 @@
+example.com=token-alpha
+echo.example.org=token-beta
+
+# comment line should be ignored
+invalid-line
