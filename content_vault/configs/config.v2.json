@@ -1,0 +1,51 @@
+{
+  "version": 2,
+  "timestamp": "2025-01-15T09:00:00Z",
+  "services": {
+    "storage": {
+      "strategy": "content-addressable",
+      "chunk_size": 8192,
+      "integrity_checks": true
+    },
+    "metadata": {
+      "index": "in-memory",
+      "refresh_interval": 30
+    },
+    "history": {
+      "retention_days": 90
+    }
+  },
+  "events": [
+    {
+      "id": "bootstrap",
+      "type": "initialize",
+      "payload": {
+        "actor": "system",
+        "note": "Initial vault bootstrapped"
+      }
+    },
+    {
+      "id": "enable-integrity",
+      "type": "toggle",
+      "payload": {
+        "feature": "integrity_checks",
+        "enabled": true
+      }
+    },
+    {
+      "id": "metadata-refresh",
+      "type": "tune",
+      "payload": {
+        "refresh_interval": 30
+      }
+    }
+  ],
+  "dependencies": [
+    {"name": "sqlite", "version": ">=3.41"},
+    {"name": "python", "version": ">=3.11"}
+  ],
+  "rollback": {
+    "enabled": true,
+    "strategy": "checkpoint"
+  }
+}

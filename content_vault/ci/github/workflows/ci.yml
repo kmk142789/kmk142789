@@ -1,0 +1,31 @@
+name: Content Vault CI
+
+on:
+  push:
+    paths:
+      - 'content_vault/**'
+  pull_request:
+    paths:
+      - 'content_vault/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jsonschema pytest
+      - name: Run tests
+        working-directory: content_vault
+        run: python -m pytest
+      - name: Verify changelog freshness
+        working-directory: content_vault
+        run: |
+          python scripts/update_config_changelog.py
+          git diff --exit-code configs/changelog.md

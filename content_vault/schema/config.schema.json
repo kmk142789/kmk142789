@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Content Vault Configuration",
+  "type": "object",
+  "required": ["version", "services", "events", "dependencies"],
+  "properties": {
+    "version": {"type": "integer", "minimum": 1},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "services": {
+      "type": "object",
+      "properties": {
+        "storage": {
+          "type": "object",
+          "required": ["strategy", "chunk_size"],
+          "properties": {
+            "strategy": {"type": "string"},
+            "chunk_size": {"type": "integer", "minimum": 1},
+            "integrity_checks": {"type": "boolean"}
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "required": ["index"],
+          "properties": {
+            "index": {"type": "string"},
+            "refresh_interval": {"type": "integer", "minimum": 1}
+          }
+        },
+        "history": {
+          "type": "object",
+          "required": ["retention_days"],
+          "properties": {
+            "retention_days": {"type": "integer", "minimum": 1}
+          }
+        }
+      },
+      "required": ["storage", "metadata", "history"]
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type"],
+        "properties": {
+          "id": {"type": "string"},
+          "type": {"type": "string"},
+          "payload": {"type": "object"}
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "version"],
+        "properties": {
+          "name": {"type": "string"},
+          "version": {"type": "string"}
+        }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "strategy": {"type": "string"}
+      }
+    }
+  }
+}

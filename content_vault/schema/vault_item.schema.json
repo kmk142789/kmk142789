@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Vault Item",
+  "type": "object",
+  "required": ["address", "metadata", "created_at", "version"],
+  "properties": {
+    "address": {"type": "string", "pattern": "^vault://[a-f0-9]{64}$"},
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "version": {"type": "integer", "minimum": 1}
+  }
+}
