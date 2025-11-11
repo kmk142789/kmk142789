@@ -16,6 +16,13 @@ jobs:
           python-version: "3.11"
       - run: pip install nox
       - run: nox -s docs
+      - name: Archive MkDocs site
+        run: tar -czf docs-site.tar.gz -C site .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-site
+          path: docs-site.tar.gz
+          if-no-files-found: error
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

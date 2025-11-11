@@ -9,12 +9,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - run: pip install build
+      - run: pip install build mkdocs mkdocs-material pyyaml
       - run: cd echo-core && python -m build
       - run: cd harmonix && python -m build
+      - run: python scripts/generate_doc_assets.py
+      - run: mkdocs build
+      - run: tar -czf site.tar.gz -C site .
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             echo-core/dist/*
             harmonix/dist/*
             forensics/forensic_timeline_kit.zip
+            site.tar.gz

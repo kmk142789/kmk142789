@@ -1,6 +1,16 @@
 site_name: EchoGlyphNet Docs
+site_dir: site
 nav:
   - Home: index.md
   - Echo Manifest: echo/manifest.md
   - Unstoppable Apps: echo/unstoppable_apps.md
   - Continuum Temporal Guardian: continuum_temporal_guardian.md
+  - Operations:
+      - Runbooks: runbooks/index.md
+      - Observability Guide: observability/index.md
+      - Testing Instructions: testing/index.md
+  - Generated References:
+      - Service Dependency Graph: generated/service_dependency_graph.md
+      - API Index: generated/api_index.md
+theme:
+  name: material
