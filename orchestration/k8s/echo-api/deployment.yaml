@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-api
+  labels:
+    app.kubernetes.io/name: echo-api
+    app.kubernetes.io/instance: echo-stack
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: echo-stack
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: echo-api
+      app.kubernetes.io/instance: echo-stack
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: echo-api
+        app.kubernetes.io/instance: echo-stack
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: echo-stack
+    spec:
+      containers:
+        - name: echo-api
+          image: ghcr.io/echo/echo-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: echo-api-config
+            - secretRef:
+                name: echo-api-secrets
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000

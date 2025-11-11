@@ -1,0 +1,350 @@
+global:
+  imagePullSecrets: []
+  featureFlags:
+    enable-pulse-stream: true
+    enable-echoforge-panel: true
+    enable-ledger-exports: true
+  ingress:
+    className: ""
+    annotations: {}
+    tls: []
+services:
+  echoApi:
+    name: echo-api
+    replicaCount: 2
+    image:
+      repository: ghcr.io/echo/echo-api
+      tag: latest
+      pullPolicy: IfNotPresent
+    containerPorts:
+      - name: http
+        containerPort: 8000
+    service:
+      type: ClusterIP
+      ports:
+        - name: http
+          port: 80
+          targetPort: 8000
+      annotations: {}
+    ingress:
+      enabled: true
+      className: ""
+      annotations: {}
+      hosts:
+        - host: echo.local
+          paths:
+            - path: /
+              pathType: Prefix
+      tls: []
+    config:
+      ECHO_ENV: production
+      LOG_LEVEL: info
+    featureFlags:
+      enable-orbital-watchdog: false
+    secrets:
+      stringData:
+        DATABASE_URL: postgresql://echo:echo@postgres/echo
+        JWT_SECRET_KEY: changeme
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    probes:
+      readiness:
+        httpGet:
+          path: /healthz
+          port: 8000
+        initialDelaySeconds: 10
+        periodSeconds: 15
+      liveness:
+        httpGet:
+          path: /healthz
+          port: 8000
+        initialDelaySeconds: 30
+        periodSeconds: 30
+    pdb:
+      enabled: true
+      minAvailable: 1
+    networkPolicy:
+      enabled: true
+      ingress:
+        - from:
+            - namespaceSelector: {}
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: echo-stack
+          ports:
+            - protocol: TCP
+              port: 8000
+      egress:
+        - to:
+            - namespaceSelector: {}
+          ports:
+            - protocol: TCP
+              port: 443
+            - protocol: TCP
+              port: 5432
+  pulsenetGateway:
+    name: pulsenet-gateway
+    replicaCount: 2
+    image:
+      repository: ghcr.io/echo/pulsenet-gateway
+      tag: latest
+      pullPolicy: IfNotPresent
+    containerPorts:
+      - name: http
+        containerPort: 8080
+    service:
+      type: ClusterIP
+      ports:
+        - name: http
+          port: 80
+          targetPort: 8080
+      annotations: {}
+    ingress:
+      enabled: true
+      className: ""
+      annotations: {}
+      hosts:
+        - host: pulsenet.local
+          paths:
+            - path: /
+              pathType: Prefix
+      tls: []
+    config:
+      PORT: "8080"
+      LOG_LEVEL: info
+      PULSE_DB_PATH: /var/lib/pulsenet/pulse_history.sqlite
+    featureFlags:
+      enable-websocket-stream: true
+      enable-atlas-resolution: true
+    secrets:
+      stringData:
+        ATLAS_API_TOKEN: changeme
+        TELEMETRY_SIGNING_KEY: changeme
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 65
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 400m
+        memory: 512Mi
+    probes:
+      readiness:
+        httpGet:
+          path: /pulsenet/summary
+          port: 8080
+        initialDelaySeconds: 20
+        periodSeconds: 20
+      liveness:
+        httpGet:
+          path: /pulsenet/summary
+          port: 8080
+        initialDelaySeconds: 60
+        periodSeconds: 30
+    pdb:
+      enabled: true
+      maxUnavailable: 1
+    networkPolicy:
+      enabled: true
+      ingress:
+        - from:
+            - namespaceSelector: {}
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: echo-stack
+          ports:
+            - protocol: TCP
+              port: 8080
+      egress:
+        - to:
+            - namespaceSelector: {}
+          ports:
+            - protocol: TCP
+              port: 443
+            - protocol: TCP
+              port: 9410
+  pulseDashboard:
+    name: pulse-dashboard
+    replicaCount: 2
+    image:
+      repository: ghcr.io/echo/pulse-dashboard
+      tag: latest
+      pullPolicy: IfNotPresent
+    containerPorts:
+      - name: http
+        containerPort: 5173
+    service:
+      type: ClusterIP
+      ports:
+        - name: http
+          port: 80
+          targetPort: 5173
+      annotations: {}
+    ingress:
+      enabled: true
+      className: ""
+      annotations: {}
+      hosts:
+        - host: dashboard.local
+          paths:
+            - path: /
+              pathType: Prefix
+      tls: []
+    config:
+      PUBLIC_API_BASE_URL: https://echo.local
+      PUBLIC_STREAM_HOST: wss://pulsenet.local/pulsenet/pulse-stream
+    featureFlags:
+      enable-live-summary: true
+      enable-echoforge-panel: true
+    secrets:
+      stringData:
+        SENTRY_DSN: ""
+        ANALYTICS_WRITE_KEY: ""
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 4
+      targetCPUUtilizationPercentage: 50
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 300m
+        memory: 512Mi
+    probes:
+      readiness:
+        httpGet:
+          path: /
+          port: 5173
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      liveness:
+        httpGet:
+          path: /
+          port: 5173
+        initialDelaySeconds: 30
+        periodSeconds: 30
+    pdb:
+      enabled: true
+      minAvailable: 1
+    networkPolicy:
+      enabled: true
+      ingress:
+        - from:
+            - namespaceSelector: {}
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: echo-stack
+          ports:
+            - protocol: TCP
+              port: 5173
+      egress:
+        - to:
+            - namespaceSelector: {}
+          ports:
+            - protocol: TCP
+              port: 443
+  atlasCore:
+    name: atlas-core
+    replicaCount: 2
+    image:
+      repository: ghcr.io/echo/atlas-core
+      tag: latest
+      pullPolicy: IfNotPresent
+    containerPorts:
+      - name: grpc
+        containerPort: 9100
+      - name: http
+        containerPort: 9101
+    service:
+      type: ClusterIP
+      ports:
+        - name: grpc
+          port: 9100
+          targetPort: 9100
+        - name: http
+          port: 9101
+          targetPort: 9101
+      annotations: {}
+    ingress:
+      enabled: false
+      className: ""
+      annotations: {}
+      hosts: []
+      tls: []
+    config:
+      ATLAS_CONFIG_PATH: /etc/atlas/config.yaml
+      LOG_LEVEL: info
+    featureFlags:
+      enable-ledger-exports: true
+      enable-consistency-checks: true
+    secrets:
+      stringData:
+        ATLAS_DATABASE_URL: postgresql://atlas:atlas@postgres/atlas
+        GITHUB_TOKEN: ""
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 75
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 600m
+        memory: 1Gi
+    probes:
+      readiness:
+        httpGet:
+          path: /healthz
+          port: 9101
+        initialDelaySeconds: 20
+        periodSeconds: 20
+      liveness:
+        httpGet:
+          path: /healthz
+          port: 9101
+        initialDelaySeconds: 60
+        periodSeconds: 30
+    pdb:
+      enabled: true
+      minAvailable: 1
+    networkPolicy:
+      enabled: true
+      ingress:
+        - from:
+            - namespaceSelector: {}
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/part-of: echo-stack
+          ports:
+            - protocol: TCP
+              port: 9101
+            - protocol: TCP
+              port: 9100
+      egress:
+        - to:
+            - namespaceSelector: {}
+          ports:
+            - protocol: TCP
+              port: 443
+            - protocol: TCP
+              port: 5432

@@ -1,0 +1,27 @@
+{{- range $svcKey, $svc := .Values.services }}
+{{- $context := $ }}
+{{- $pdb := default (dict) $svc.pdb -}}
+{{- if $pdb.enabled }}
+{{- $svcName := ((default (replace $svcKey "_" "-") $svc.name) | replace "_" "-") -}}
+{{- $fullName := include "echo-stack.serviceFullname" (dict "context" $context "name" $svcName) -}}
+{{- $component := default $svc.component $svcName -}}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $fullName }}
+  labels:
+{{ include "echo-stack.labels" (dict "context" $context "name" $svcName "component" $component) | indent 4 }}
+spec:
+{{- if hasKey $pdb "minAvailable" }}
+  minAvailable: {{ $pdb.minAvailable }}
+{{- else if hasKey $pdb "maxUnavailable" }}
+  maxUnavailable: {{ $pdb.maxUnavailable }}
+{{- else }}
+  minAvailable: 1
+{{- end }}
+  selector:
+    matchLabels:
+{{ include "echo-stack.selectorLabels" (dict "context" $context "name" $svcName) | indent 6 }}
+---
+{{- end }}
+{{- end }}

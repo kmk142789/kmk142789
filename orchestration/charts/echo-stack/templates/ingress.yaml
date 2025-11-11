@@ -1,0 +1,76 @@
+{{- range $svcKey, $svc := .Values.services }}
+{{- $context := $ }}
+{{- $ingress := default (dict) $svc.ingress -}}
+{{- if $ingress.enabled }}
+{{- $svcName := ((default (replace $svcKey "_" "-") $svc.name) | replace "_" "-") -}}
+{{- $fullName := include "echo-stack.serviceFullname" (dict "context" $context "name" $svcName) -}}
+{{- $component := default $svc.component $svcName -}}
+{{- $service := default (dict) $svc.service -}}
+{{- $servicePorts := default (list) $service.ports -}}
+{{- $defaultPort := 80 -}}
+{{- if $servicePorts }}
+{{- $firstPort := index $servicePorts 0 -}}
+{{- $defaultPort = default $defaultPort $firstPort.port -}}
+{{- end -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+{{ include "echo-stack.labels" (dict "context" $context "name" $svcName "component" $component) | indent 4 }}
+{{- $globalIngress := default (dict) $context.Values.global.ingress -}}
+{{- $annotations := dict -}}
+{{- if $globalIngress.annotations }}
+{{- range $k, $v := $globalIngress.annotations }}
+{{- $_ := set $annotations $k $v -}}
+{{- end -}}
+{{- end -}}
+{{- if $ingress.annotations }}
+{{- range $k, $v := $ingress.annotations }}
+{{- $_ := set $annotations $k $v -}}
+{{- end -}}
+{{- end -}}
+{{- if gt (len $annotations) 0 }}
+  annotations:
+{{ toYaml $annotations | indent 4 }}
+{{- end }}
+spec:
+{{- $className := default $globalIngress.className $ingress.className -}}
+{{- if $className }}
+  ingressClassName: {{ $className }}
+{{- end }}
+{{- $tlsEntries := list -}}
+{{- if $globalIngress.tls }}
+{{- $tlsEntries = $globalIngress.tls -}}
+{{- end -}}
+{{- if $ingress.tls }}
+{{- $tlsEntries = $ingress.tls -}}
+{{- end -}}
+{{- if $tlsEntries }}
+  tls:
+{{ toYaml $tlsEntries | indent 4 }}
+{{- end }}
+  rules:
+{{- range $host := $ingress.hosts }}
+    - host: {{ $host.host }}
+      http:
+        paths:
+{{- range $path := $host.paths }}
+          - path: {{ default "/" $path.path }}
+            pathType: {{ default "Prefix" $path.pathType }}
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+{{- if $path.servicePort }}
+                  number: {{ $path.servicePort }}
+{{- else if $path.servicePortName }}
+                  name: {{ $path.servicePortName }}
+{{- else }}
+                  number: {{ $defaultPort }}
+{{- end }}
+{{- end }}
+{{- end }}
+---
+{{- end }}
+{{- end }}

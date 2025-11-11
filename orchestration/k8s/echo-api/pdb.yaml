@@ -1,0 +1,14 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: echo-api
+  labels:
+    app.kubernetes.io/name: echo-api
+    app.kubernetes.io/instance: echo-stack
+    app.kubernetes.io/component: api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: echo-api
+      app.kubernetes.io/instance: echo-stack

@@ -1,0 +1,129 @@
+{{- range $svcKey, $svc := .Values.services }}
+{{- $context := $ }}
+{{- $svcName := ((default (replace $svcKey "_" "-") $svc.name) | replace "_" "-") -}}
+{{- $fullName := include "echo-stack.serviceFullname" (dict "context" $context "name" $svcName) -}}
+{{- $component := default $svc.component $svcName -}}
+{{- $replicas := default 1 $svc.replicaCount -}}
+{{- $secretCfg := default (dict) $svc.secrets -}}
+{{- $hasSecretData := or $secretCfg.stringData $secretCfg.data -}}
+{{- $configEnabled := or $svc.config (or $svc.featureFlags $context.Values.global.featureFlags) -}}
+{{- $secretRef := "" -}}
+{{- if $secretCfg.existingSecret -}}
+{{- $secretRef = $secretCfg.existingSecret -}}
+{{- else if $hasSecretData -}}
+{{- $secretRef = printf "%s-secrets" $fullName -}}
+{{- end -}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+  labels:
+{{ include "echo-stack.labels" (dict "context" $context "name" $svcName "component" $component) | indent 4 }}
+spec:
+  replicas: {{ $replicas }}
+  selector:
+    matchLabels:
+{{ include "echo-stack.selectorLabels" (dict "context" $context "name" $svcName) | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ include "echo-stack.selectorLabels" (dict "context" $context "name" $svcName) | indent 8 }}
+        app.kubernetes.io/component: {{ $component }}
+        app.kubernetes.io/part-of: {{ include "echo-stack.name" $context }}
+{{- if $svc.podLabels }}
+{{ toYaml $svc.podLabels | indent 8 }}
+{{- end }}
+{{- if $svc.podAnnotations }}
+      annotations:
+{{ toYaml $svc.podAnnotations | indent 8 }}
+{{- end }}
+    spec:
+{{- if $svc.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml $svc.imagePullSecrets | indent 8 }}
+{{- else if $context.Values.global.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml $context.Values.global.imagePullSecrets | indent 8 }}
+{{- end }}
+{{- if $svc.serviceAccountName }}
+      serviceAccountName: {{ $svc.serviceAccountName }}
+{{- end }}
+      containers:
+        - name: {{ $svcName }}
+          image: "{{ $svc.image.repository }}:{{ $svc.image.tag }}"
+          imagePullPolicy: {{ default "IfNotPresent" $svc.image.pullPolicy }}
+{{- if $svc.command }}
+          command:
+{{ toYaml $svc.command | indent 12 }}
+{{- end }}
+{{- if $svc.args }}
+          args:
+{{ toYaml $svc.args | indent 12 }}
+{{- end }}
+{{- if $svc.env }}
+          env:
+{{ toYaml $svc.env | indent 12 }}
+{{- end }}
+{{- if $svc.containerPorts }}
+          ports:
+{{ toYaml $svc.containerPorts | indent 12 }}
+{{- else if (and $svc.service (index $svc.service "ports")) }}
+          ports:
+{{- range $svc.service.ports }}
+            - name: {{ default "http" .name }}
+              containerPort: {{ default .targetPort .port }}
+{{- end }}
+{{- end }}
+{{ include "echo-stack.renderEnvFrom" (dict "configEnabled" $configEnabled "configName" (printf "%s-config" $fullName) "secretRef" $secretRef) }}
+{{- if $svc.volumeMounts }}
+          volumeMounts:
+{{ toYaml $svc.volumeMounts | indent 12 }}
+{{- end }}
+{{- if $svc.resources }}
+          resources:
+{{ toYaml $svc.resources | indent 12 }}
+{{- end }}
+{{- $defaultPort := 80 -}}
+{{- if $svc.containerPorts -}}
+{{- $first := index $svc.containerPorts 0 -}}
+{{- $defaultPort = default $defaultPort $first.containerPort -}}
+{{- else if and $svc.service (index $svc.service "ports") -}}
+{{- $firstSvcPort := index $svc.service.ports 0 -}}
+{{- $defaultPort = default $defaultPort $firstSvcPort.targetPort -}}
+{{- end -}}
+{{- if $svc.probes.liveness }}
+          livenessProbe:
+{{ include "echo-stack.probe" (dict "probe" $svc.probes.liveness "defaultPort" $defaultPort) | indent 12 }}
+{{- end }}
+{{- if $svc.probes.readiness }}
+          readinessProbe:
+{{ include "echo-stack.probe" (dict "probe" $svc.probes.readiness "defaultPort" $defaultPort) | indent 12 }}
+{{- end }}
+{{- if $svc.probes.startup }}
+          startupProbe:
+{{ include "echo-stack.probe" (dict "probe" $svc.probes.startup "defaultPort" $defaultPort) | indent 12 }}
+{{- end }}
+{{- if or $svc.volumes $context.Values.global.volumes }}
+      volumes:
+{{- if $svc.volumes }}
+{{ toYaml $svc.volumes | indent 8 }}
+{{- end }}
+{{- if $context.Values.global.volumes }}
+{{ toYaml $context.Values.global.volumes | indent 8 }}
+{{- end }}
+{{- end }}
+{{- if $svc.nodeSelector }}
+      nodeSelector:
+{{ toYaml $svc.nodeSelector | indent 8 }}
+{{- end }}
+{{- if $svc.tolerations }}
+      tolerations:
+{{ toYaml $svc.tolerations | indent 8 }}
+{{- end }}
+{{- if $svc.affinity }}
+      affinity:
+{{ toYaml $svc.affinity | indent 8 }}
+{{- end }}
+---
+{{- end }}

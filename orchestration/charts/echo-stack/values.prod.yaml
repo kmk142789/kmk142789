@@ -1,0 +1,106 @@
+global:
+  featureFlags:
+    enable-pulse-stream: true
+    enable-echoforge-panel: true
+    enable-ledger-exports: true
+services:
+  echoApi:
+    replicaCount: 4
+    autoscaling:
+      enabled: true
+      minReplicas: 4
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 55
+      targetMemoryUtilizationPercentage: 65
+    ingress:
+      className: nginx
+      annotations:
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+      hosts:
+        - host: api.echo.example.com
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: echo-api-tls
+          hosts:
+            - api.echo.example.com
+    resources:
+      requests:
+        cpu: 400m
+        memory: 768Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+    featureFlags:
+      enable-orbital-watchdog: true
+  pulsenetGateway:
+    replicaCount: 3
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 8
+      targetCPUUtilizationPercentage: 60
+    ingress:
+      className: nginx
+      annotations:
+        nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+      hosts:
+        - host: gateway.echo.example.com
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: pulsenet-gateway-tls
+          hosts:
+            - gateway.echo.example.com
+    resources:
+      requests:
+        cpu: 250m
+        memory: 384Mi
+      limits:
+        cpu: 600m
+        memory: 1Gi
+  pulseDashboard:
+    replicaCount: 3
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 45
+    ingress:
+      className: nginx
+      hosts:
+        - host: dashboard.echo.example.com
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: pulse-dashboard-tls
+          hosts:
+            - dashboard.echo.example.com
+    config:
+      PUBLIC_API_BASE_URL: https://api.echo.example.com
+      PUBLIC_STREAM_HOST: wss://gateway.echo.example.com/pulsenet/pulse-stream
+    resources:
+      requests:
+        cpu: 200m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  atlasCore:
+    replicaCount: 3
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 8
+      targetCPUUtilizationPercentage: 60
+      targetMemoryUtilizationPercentage: 70
+    resources:
+      requests:
+        cpu: 300m
+        memory: 768Mi
+      limits:
+        cpu: 800m
+        memory: 1.5Gi

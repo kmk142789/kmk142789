@@ -1,0 +1,35 @@
+{{- range $svcKey, $svc := .Values.services }}
+{{- $context := $ }}
+{{- $policy := default (dict) $svc.networkPolicy -}}
+{{- if $policy.enabled }}
+{{- $svcName := ((default (replace $svcKey "_" "-") $svc.name) | replace "_" "-") -}}
+{{- $fullName := include "echo-stack.serviceFullname" (dict "context" $context "name" $svcName) -}}
+{{- $component := default $svc.component $svcName -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $fullName }}
+  labels:
+{{ include "echo-stack.labels" (dict "context" $context "name" $svcName "component" $component) | indent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+{{ include "echo-stack.selectorLabels" (dict "context" $context "name" $svcName) | indent 6 }}
+  policyTypes:
+    - Ingress
+{{- if $policy.egress }}
+    - Egress
+{{- end }}
+{{- if $policy.ingress }}
+  ingress:
+{{ toYaml $policy.ingress | indent 4 }}
+{{- else }}
+  ingress: []
+{{- end }}
+{{- if $policy.egress }}
+  egress:
+{{ toYaml $policy.egress | indent 4 }}
+{{- end }}
+---
+{{- end }}
+{{- end }}

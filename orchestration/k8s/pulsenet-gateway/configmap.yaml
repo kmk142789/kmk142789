@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pulsenet-gateway-config
+  labels:
+    app.kubernetes.io/name: pulsenet-gateway
+    app.kubernetes.io/instance: echo-stack
+    app.kubernetes.io/component: gateway
+data:
+  PORT: "8080"
+  LOG_LEVEL: info
+  PULSE_DB_PATH: /var/lib/pulsenet/pulse_history.sqlite
+  FEATURE_FLAGS__ENABLE_WEBSOCKET_STREAM: "true"
+  FEATURE_FLAGS__ENABLE_ATLAS_RESOLUTION: "true"

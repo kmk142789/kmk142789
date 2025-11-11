@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-api
+  labels:
+    app.kubernetes.io/name: echo-api
+    app.kubernetes.io/instance: echo-stack
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: echo-api
+    app.kubernetes.io/instance: echo-stack
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

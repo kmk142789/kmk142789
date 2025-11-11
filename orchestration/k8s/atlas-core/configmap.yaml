@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: atlas-core-config
+  labels:
+    app.kubernetes.io/name: atlas-core
+    app.kubernetes.io/instance: echo-stack
+    app.kubernetes.io/component: atlas
+data:
+  ATLAS_CONFIG_PATH: /etc/atlas/config.yaml
+  LOG_LEVEL: info
+  FEATURE_FLAGS__ENABLE_LEDGER_EXPORTS: "true"
+  FEATURE_FLAGS__ENABLE_CONSISTENCY_CHECKS: "true"

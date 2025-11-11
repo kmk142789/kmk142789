@@ -1,0 +1,76 @@
+services:
+  echoApi:
+    replicaCount: 1
+    autoscaling:
+      enabled: false
+    config:
+      ECHO_ENV: development
+    ingress:
+      hosts:
+        - host: echo.dev.local
+          paths:
+            - path: /
+              pathType: Prefix
+    resources:
+      requests:
+        cpu: 150m
+        memory: 384Mi
+      limits:
+        cpu: 400m
+        memory: 768Mi
+    featureFlags:
+      enable-orbital-watchdog: false
+  pulsenetGateway:
+    replicaCount: 1
+    autoscaling:
+      enabled: false
+    config:
+      LOG_LEVEL: debug
+    ingress:
+      hosts:
+        - host: pulsenet.dev.local
+          paths:
+            - path: /
+              pathType: Prefix
+    resources:
+      requests:
+        cpu: 80m
+        memory: 192Mi
+      limits:
+        cpu: 250m
+        memory: 384Mi
+  pulseDashboard:
+    replicaCount: 1
+    autoscaling:
+      enabled: false
+    config:
+      PUBLIC_API_BASE_URL: http://echo.dev.local
+      PUBLIC_STREAM_HOST: ws://pulsenet.dev.local/pulsenet/pulse-stream
+    ingress:
+      hosts:
+        - host: dashboard.dev.local
+          paths:
+            - path: /
+              pathType: Prefix
+    resources:
+      requests:
+        cpu: 80m
+        memory: 192Mi
+      limits:
+        cpu: 250m
+        memory: 384Mi
+    featureFlags:
+      enable-live-summary: true
+  atlasCore:
+    replicaCount: 1
+    autoscaling:
+      enabled: false
+    config:
+      LOG_LEVEL: debug
+    resources:
+      requests:
+        cpu: 150m
+        memory: 384Mi
+      limits:
+        cpu: 400m
+        memory: 768Mi

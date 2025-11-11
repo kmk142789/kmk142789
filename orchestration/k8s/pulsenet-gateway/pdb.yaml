@@ -1,0 +1,14 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: pulsenet-gateway
+  labels:
+    app.kubernetes.io/name: pulsenet-gateway
+    app.kubernetes.io/instance: echo-stack
+    app.kubernetes.io/component: gateway
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pulsenet-gateway
+      app.kubernetes.io/instance: echo-stack
