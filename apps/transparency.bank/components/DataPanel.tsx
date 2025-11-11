@@ -1,4 +1,5 @@
 import type { GovernanceAmendment, LedgerEntrySummary } from "../lib/types";
+import ExportLedgerButton from "./ExportLedgerButton";
 
 type Variant = "inflow" | "outflow" | "compliance" | "governance";
 
@@ -69,9 +70,17 @@ function renderGovernance(entry: GovernanceAmendment) {
 
 export default function DataPanel({ title, entries, variant }: DataPanelProps) {
   const panelClass = variantClassMap[variant];
+  const isLedgerVariant = variant === "inflow" || variant === "outflow" || variant === "compliance";
+  const ledgerEntries = isLedgerVariant ? (entries as LedgerEntrySummary[]) : null;
+
   return (
     <section className={panelClass}>
-      <h2>{title}</h2>
+      <div className="panel-heading">
+        <h2>{title}</h2>
+        {isLedgerVariant && ledgerEntries ? (
+          <ExportLedgerButton entries={ledgerEntries} title={title} variant={variant} />
+        ) : null}
+      </div>
       {entries.length === 0 ? (
         <p className="empty">No entries yet.</p>
       ) : (
