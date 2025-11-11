@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  vault:
+    build: .
+    environment:
+      - DATABASE_URL=sqlite:///vault.db
+      - VAULT_BACKEND=local
+      - VAULT_LOCAL_PATH=/data
+    volumes:
+      - ./data:/data
+      - ./keys:/app/keys
+    ports:
+      - "8080:8080"
+    command: uvicorn vault.api.main:app --host 0.0.0.0 --port 8080
