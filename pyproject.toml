@@ -75,6 +75,7 @@ dominion-plan = "dominion.plan:main"
 dominion-apply = "dominion.apply:main"
 dominion-archive = "dominion.archive:main"
 echo-proof-orchestrator = "echo.orchestrator.cli:main"
+next-level = "next_level:main"
 
 [tool.setuptools.package-dir]
 "" = "packages/core/src"
@@ -93,9 +94,10 @@ py-modules = [
   "echo_cascade",
   "echo_constellation",
   "echo_evolver",
-"echo_manifest",
-"echo_universal_key_agent",
-"codex",
+  "echo_manifest",
+  "echo_universal_key_agent",
+  "codex",
+  "next_level",
 ]
 
 [tool.setuptools.exclude-package-data]

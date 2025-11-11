@@ -63,6 +63,9 @@ python -m echo.echoctl plan
 
 # record a wish
 python -m echo.echoctl wish "MirrorJosh" "Make joy reproducible" "listening,empathy"
+
+# refresh the roadmap from TODO/FIXME markers
+next-level --roadmap ROADMAP.md
 ```
 
 ### Need a guide?
