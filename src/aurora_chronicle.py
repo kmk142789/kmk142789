@@ -5,6 +5,11 @@ histories.  It provides a small DSL-like prompt object and helper functions
 for generating timestamped entries that mix poetic imagery with references to
 technological stewardship.
 
+The implementation maintains compatibility with existing usage while adding
+timeline tracking utilities for richer downstream integrations.  Generated
+chronicles expose metadata describing motif coverage and lexical density so
+callers can analyse how the narrative emphasised the supplied inputs.
+
 Example
 -------
 >>> from src.aurora_chronicle import ChroniclePrompt, compose_chronicle
@@ -23,10 +28,11 @@ Aurora Chronicle: Seventh Helix
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 import random
-from typing import Iterable, List
+from typing import Iterable, List, Tuple
 
 
 @dataclass
@@ -57,7 +63,69 @@ def _select_keywords(prompt: ChroniclePrompt, random_state: random.Random) -> Li
     return random_state.sample(prompt.keywords, k=sample_size)
 
 
-def _describe_event(index: int, keyword: str, prompt: ChroniclePrompt, random_state: random.Random) -> str:
+@dataclass
+class ChronicleEvent:
+    """Represent a single event within the chronicle."""
+
+    keyword: str
+    motif: str
+    line: str
+
+
+@dataclass
+class ChronicleTimeline:
+    """Container tracking generated events and motif coverage."""
+
+    prompt: ChroniclePrompt
+    events: List[ChronicleEvent] = field(default_factory=list)
+    motif_usage: Counter[str] = field(default_factory=Counter)
+
+    def add_event(self, keyword: str, motif: str, line: str) -> None:
+        self.events.append(ChronicleEvent(keyword=keyword, motif=motif, line=line))
+        self.motif_usage[motif] += 1
+
+    def unused_motifs(self) -> List[str]:
+        return [motif for motif in self.prompt.motifs if motif not in self.motif_usage]
+
+    def lexical_density(self) -> float:
+        if not self.events:
+            return 0.0
+        total_keywords = sum(len(event.keyword.split()) for event in self.events)
+        unique_terms = len({token for event in self.events for token in event.keyword.split()})
+        return round(unique_terms / total_keywords, 2)
+
+    def render_metadata(self) -> str:
+        motif_report = ", ".join(f"{motif}:{count}" for motif, count in self.motif_usage.items())
+        density = self.lexical_density()
+        return f"Motifs[{motif_report or 'none'}] | lexical_density={density}"
+
+
+def _build_keyword_schedule(
+    prompt: ChroniclePrompt, random_state: random.Random
+) -> List[Tuple[str, str]]:
+    """Return keyword/motif pairs for chronicle construction."""
+
+    keywords = _select_keywords(prompt, random_state)
+    motifs = list(prompt.motifs or [prompt.mood, "kinship"])
+    if not motifs:
+        motifs = [prompt.mood]
+
+    schedule: List[Tuple[str, str]] = []
+    for keyword in keywords:
+        motif = random_state.choice(motifs)
+        schedule.append((keyword, motif))
+        if len(motifs) > 1:
+            motifs = motifs[1:] + motifs[:1]
+    return schedule
+
+
+def _describe_event(
+    index: int,
+    keyword: str,
+    motif: str,
+    prompt: ChroniclePrompt,
+    random_state: random.Random,
+) -> Tuple[str, str]:
     """Render a single line of the aurora chronicle."""
 
     actions = [
@@ -76,32 +144,38 @@ def _describe_event(index: int, keyword: str, prompt: ChroniclePrompt, random_st
     ]
 
     action = random_state.choice(actions)
-    motif = random_state.choice(prompt.motifs or [prompt.mood, "kinship"])
     context = random_state.choice(contexts).format(motif=motif)
 
-    return f"{index:02d}: {keyword.capitalize()} {action} {context}."
+    line = f"{index:02d}: {keyword.capitalize()} {action} {context}."
+    return line, motif
 
 
 def compose_chronicle(prompt: ChroniclePrompt) -> str:
     """Generate a multi-line aurora chronicle string."""
 
     random_state = random.Random(prompt.seed)
-    keywords = _select_keywords(prompt, random_state)
+    timeline = ChronicleTimeline(prompt=prompt)
+    schedule = _build_keyword_schedule(prompt, random_state)
 
     header = f"Aurora Chronicle: {prompt.era}"
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     lead = f"Composed {timestamp} :: mood={prompt.mood}"
 
     lines = [header, lead, ""]
-    for idx, keyword in enumerate(keywords, start=1):
-        lines.append(f"  {_describe_event(idx, keyword, prompt, random_state)}")
+    for idx, (keyword, motif) in enumerate(schedule, start=1):
+        line, used_motif = _describe_event(idx, keyword, motif, prompt, random_state)
+        timeline.add_event(keyword, used_motif, line)
+        lines.append(f"  {line}")
 
     # If motifs remain unused, we add a coda acknowledging them.
-    unused_motifs = [m for m in prompt.motifs if m not in " ".join(lines)]
+    unused_motifs = timeline.unused_motifs()
     if unused_motifs:
         motif_line = ", ".join(unused_motifs)
         lines.append("")
         lines.append(f"Coda: Remaining motifs shimmer across {motif_line}.")
+
+    lines.append("")
+    lines.append(f"Metadata: {timeline.render_metadata()}")
 
     return "\n".join(lines)
 
