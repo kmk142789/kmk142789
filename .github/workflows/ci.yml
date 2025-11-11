@@ -25,6 +25,8 @@ jobs:
         run: python packages/mirror-sync/scripts/validate_index.py
       - name: Glyph integrity
         run: python scripts/check_glyph_integrity.py
+      - name: Verify architecture graph committed
+        run: git diff --exit-code system_architecture/architecture.graph.json
       - name: Verify inventory committed
         run: git diff --exit-code packages/glyphs/inventory.json
 
