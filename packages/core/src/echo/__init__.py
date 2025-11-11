@@ -182,6 +182,13 @@ from .spectral_canvas import PaletteColor, SpectralCanvas, generate_palette
 from .temporal_ledger import PropagationWave, TemporalPropagationLedger
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
 from .self_sustaining_loop import DecisionResult, ProgressResult, SelfSustainingLoop
+from .strategic_vector import (
+    StrategicSignal,
+    StrategicVectorReport,
+    build_strategic_vector,
+    export_strategic_vector,
+    generate_strategic_vector,
+)
 from .sync import CloudSyncCoordinator, DirectorySyncTransport, SyncReport, SyncTransport
 from .thoughtlog import ThoughtLogger, thought_trace
 from .wish_insights import summarize_wishes
@@ -318,6 +325,11 @@ __all__ = [
     "FluxLedgerEntry",
     "FluxVector",
     "RevolutionaryFlux",
+    "StrategicSignal",
+    "StrategicVectorReport",
+    "build_strategic_vector",
+    "export_strategic_vector",
+    "generate_strategic_vector",
     "QuantumFluxMapper",
     "STANDARD_GATES",
     "QuantumSynchronizer",
