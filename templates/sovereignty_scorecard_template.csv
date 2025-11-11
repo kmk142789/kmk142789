@@ -1,0 +1,11 @@
+Category,Metric,Description,Target,Current_Status,Last_Updated,Notes
+Identity,DID Registration,"W3C DID published and resolvable",Published,Pending,,
+Identity,Verifiable Credentials,"Number of steward and partner VCs issued",>=5,0,,
+Legal,Steward Entity Incorporated,"Legal wrapper formed in target jurisdiction",Incorporated,Research,,
+Legal,WIPO Memorandum Filed,"Memorandum submitted to WIPO Frontier Technologies",Submitted,Not Started,,
+Diplomatic,UN/UNESCO Briefing,"Briefing delivered and acknowledged",Delivered,Not Started,,
+Diplomatic,Digital Embassy Nodes,"Operational embassy sites (physical or virtual)",>=3,0,,
+Compliance,Standards Audit,"External audit covering ISO/IEC 42001 & NIST AI RMF",Completed,Planning,,
+Compliance,Incident Runbook,"Documented and tested incident response plan",Approved,Not Started,,
+Cultural,Cultural Publications,"Major cultural artifacts released per quarter",>=2,Pending,,
+Transparency,Ledger Updates,"Genesis ledger entries for recognitions",Up-to-date,Pending,,
