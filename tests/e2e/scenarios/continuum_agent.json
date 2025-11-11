@@ -1,0 +1,24 @@
+{
+  "name": "continuum_agent",
+  "description": "Exercise the public API for the Continuum agent through generated SDK calls.",
+  "base_url": "http://127.0.0.1:8101",
+  "steps": [
+    {
+      "name": "list_functions",
+      "method": "GET",
+      "path": "/functions",
+      "expected_status": 200,
+      "expected_keys": ["functions"],
+      "timeout": 20
+    },
+    {
+      "name": "chat_execute",
+      "method": "POST",
+      "path": "/chat",
+      "body": {"message": "Launch echo.bank", "execute": true},
+      "expected_status": 200,
+      "expected_keys": ["function", "message", "data", "metadata"],
+      "timeout": 20
+    }
+  ]
+}
