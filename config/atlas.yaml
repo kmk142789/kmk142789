@@ -1,0 +1,5 @@
+scheduler_db: data/scheduler.db
+storage_dir: data/storage
+identity_cache: data/did_cache.json
+metrics_host: 0.0.0.0
+metrics_port: 9100

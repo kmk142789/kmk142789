@@ -1,0 +1,24 @@
+version: '3.9'
+services:
+  atlas-core:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      - ATLAS_CONFIG=config/atlas.yaml
+    volumes:
+      - ../config:/app/config
+      - ../data:/app/data
+    ports:
+      - "9100:9100"
+      - "9101:9101"
+  dashboard:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ../dashboard:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - atlas-core
