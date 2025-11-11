@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
-import { promises as fs } from 'node:fs';
+import { promises as fs, createReadStream } from 'node:fs';
 import process from 'node:process';
 import { Pool } from 'pg';
 import bs58check from 'bs58check';
@@ -12,8 +12,8 @@ import bs58check from 'bs58check';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRoot = resolve(__dirname, '../../..');
-const LOG_DIRECTORY = join(repoRoot, 'logs');
-const PUZZLE_DIRECTORY = join(repoRoot, 'puzzle_solutions');
+export const LOG_DIRECTORY = join(repoRoot, 'logs');
+export const PUZZLE_DIRECTORY = join(repoRoot, 'puzzle_solutions');
 const CLI_ENTRYPOINT = join(repoRoot, 'echo_cli', 'main.py');
 const CODEX_REGISTRY_PATH = join(repoRoot, 'codex', 'registry.json');
 const PUZZLE_INDEX_PATH = join(repoRoot, 'data', 'puzzle_index.json');
@@ -23,6 +23,9 @@ const PYTHON_BIN = process.env.ECHO_DASHBOARD_PYTHON || process.env.PYTHON_BIN |
 const CLI_TIMEOUT_MS = Number(process.env.ECHO_DASHBOARD_TIMEOUT_MS || 45000);
 const MAX_ARG_LENGTH = 128;
 const MAX_ARGS = 16;
+const DEFAULT_LOG_CHUNK_BYTES = 8192;
+const MIN_LOG_CHUNK_BYTES = 512;
+const MAX_LOG_CHUNK_BYTES = 262144;
 
 const ALLOWED_CLI_COMMANDS = new Map([
   ['refresh', { label: 'Refresh Atlas', defaultArgs: ['--json'] }],
@@ -110,6 +113,246 @@ async function readFilePreview(directory, filename) {
     name: safeName,
     preview: lines.slice(0, 40).join('\n'),
     content: payload,
+  };
+}
+
+function clampChunkSize(value = DEFAULT_LOG_CHUNK_BYTES) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_LOG_CHUNK_BYTES;
+  }
+  return Math.min(Math.max(parsed, MIN_LOG_CHUNK_BYTES), MAX_LOG_CHUNK_BYTES);
+}
+
+function normaliseCursor(cursor, size) {
+  if (cursor === undefined || cursor === null || cursor === '' || cursor === 'latest') {
+    return { mode: 'latest', value: size };
+  }
+  const parsed = Number.parseInt(cursor, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error('invalid_cursor');
+  }
+  return { mode: 'explicit', value: Math.min(parsed, size) };
+}
+
+export async function readLogChunk(name, options = {}) {
+  const safeName = sanitiseFilename(name);
+  if (!safeName) {
+    throw new Error('invalid_filename');
+  }
+  const absolute = resolve(LOG_DIRECTORY, safeName);
+  if (!absolute.startsWith(LOG_DIRECTORY)) {
+    throw new Error('invalid_path');
+  }
+
+  const stats = await fs.stat(absolute);
+  if (!stats.isFile()) {
+    throw new Error('not_found');
+  }
+
+  const size = stats.size;
+  const limit = clampChunkSize(options.limit);
+  const direction = options.direction === 'backward' ? 'backward' : 'forward';
+  const cursor = normaliseCursor(options.cursor, size);
+
+  let start = 0;
+  let end = 0;
+  if (cursor.mode === 'latest') {
+    end = size;
+    start = Math.max(0, size - limit);
+  } else if (direction === 'backward') {
+    end = cursor.value;
+    start = Math.max(0, end - limit);
+  } else {
+    start = cursor.value;
+    end = Math.min(start + limit, size);
+  }
+
+  const length = Math.max(0, end - start);
+  let chunk = '';
+  if (length > 0) {
+    const handle = await fs.open(absolute, 'r');
+    try {
+      const buffer = Buffer.alloc(length);
+      const { bytesRead } = await handle.read(buffer, 0, length, start);
+      chunk = buffer.subarray(0, bytesRead).toString('utf8');
+    } finally {
+      await handle.close();
+    }
+  }
+
+  return {
+    name: safeName,
+    chunk,
+    start,
+    end,
+    size,
+    hasMoreBackward: start > 0,
+    hasMoreForward: end < size,
+    previousCursor: start > 0 ? start : null,
+    nextCursor: end < size ? end : null,
+  };
+}
+
+function coerceDate(value) {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === 'number') {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  if (typeof value === 'string') {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  return null;
+}
+
+function truncateToDay(date) {
+  const utc = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  return new Date(utc);
+}
+
+function bucketSeries(dates) {
+  const buckets = new Map();
+  for (const date of dates) {
+    if (!(date instanceof Date)) continue;
+    const bucket = truncateToDay(date).toISOString();
+    buckets.set(bucket, (buckets.get(bucket) || 0) + 1);
+  }
+  return Array.from(buckets.entries())
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([ts, value]) => ({ ts, value }));
+}
+
+async function gatherFileStats(directory) {
+  try {
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+    const results = [];
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      const absolute = resolve(directory, entry.name);
+      const stats = await fs.stat(absolute);
+      results.push({ name: entry.name, path: absolute, mtime: stats.mtime });
+    }
+    return results;
+  } catch (error) {
+    console.warn(`Unable to scan directory ${directory}`, error.message);
+    return [];
+  }
+}
+
+async function countFileLines(path) {
+  return new Promise((resolve) => {
+    const stream = createReadStream(path, { encoding: 'utf8' });
+    let count = 0;
+    let remainder = '';
+    stream.on('data', (chunk) => {
+      const segments = (remainder + chunk).split(/\r?\n/);
+      remainder = segments.pop() || '';
+      count += segments.length;
+    });
+    stream.on('end', () => {
+      if (remainder) {
+        count += 1;
+      }
+      resolve(count);
+    });
+    stream.on('error', () => resolve(0));
+  });
+}
+
+function withinRange(date, from, to) {
+  const value = coerceDate(date);
+  if (!value) return false;
+  const time = value.getTime();
+  return time >= from.getTime() && time <= to.getTime();
+}
+
+export function parseRangeQuery(query = {}) {
+  const toCandidate = coerceDate(query.to) || new Date();
+  const rangePreset = typeof query.range === 'string' ? query.range : '24h';
+  const presetDurations = new Map([
+    ['24h', 24 * 60 * 60 * 1000],
+    ['7d', 7 * 24 * 60 * 60 * 1000],
+    ['30d', 30 * 24 * 60 * 60 * 1000],
+  ]);
+  let fromCandidate = coerceDate(query.from);
+  if (!fromCandidate) {
+    const duration = presetDurations.get(rangePreset) || presetDurations.get('24h');
+    fromCandidate = new Date(toCandidate.getTime() - duration);
+  }
+
+  if (Number.isNaN(fromCandidate.getTime()) || Number.isNaN(toCandidate.getTime())) {
+    throw new Error('invalid_range');
+  }
+  if (fromCandidate.getTime() > toCandidate.getTime()) {
+    throw new Error('invalid_range');
+  }
+  return { from: fromCandidate, to: toCandidate };
+}
+
+export async function loadMetricsOverview({ from, to }) {
+  const codexItems = await listCodexItems();
+  const codexDates = codexItems
+    .map((item) => coerceDate(item?.merged_at))
+    .filter((date) => date && withinRange(date, from, to));
+  const codexSeries = bucketSeries(codexDates);
+
+  const puzzleFiles = await gatherFileStats(PUZZLE_DIRECTORY);
+  const filteredPuzzles = puzzleFiles.filter((file) => withinRange(file.mtime, from, to));
+  const puzzleSeries = bucketSeries(filteredPuzzles.map((file) => file.mtime));
+
+  const logFiles = await gatherFileStats(LOG_DIRECTORY);
+  const filteredLogs = logFiles.filter((file) => withinRange(file.mtime, from, to));
+  let logTotal = 0;
+  const logBuckets = new Map();
+  for (const file of filteredLogs) {
+    const lines = await countFileLines(file.path);
+    logTotal += lines;
+    const bucket = truncateToDay(file.mtime).toISOString();
+    logBuckets.set(bucket, (logBuckets.get(bucket) || 0) + lines);
+  }
+  const logSeries = Array.from(logBuckets.entries())
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([ts, value]) => ({ ts, value }));
+
+  let attestation = null;
+  if (pool) {
+    await ensurePuzzleAttestationTable();
+    const result = await pool.query(
+      `select date_trunc('day', created_at) as bucket, count(*)::int as value
+       from puzzle_attestations
+       where created_at between $1 and $2
+       group by bucket
+       order by bucket asc`,
+      [from.toISOString(), to.toISOString()]
+    );
+    const series = result.rows.map((row) => {
+      const value = Number.parseInt(row.value, 10);
+      const safeValue = Number.isNaN(value) ? 0 : value;
+      return {
+        ts: new Date(row.bucket).toISOString(),
+        value: safeValue,
+      };
+    });
+    const total = series.reduce((sum, entry) => sum + entry.value, 0);
+    attestation = {
+      label: 'Stored Attestations',
+      total,
+      series,
+    };
+  }
+
+  return {
+    range: { from: from.toISOString(), to: to.toISOString() },
+    metrics: {
+      codexMerges: { label: 'Codex merges', total: codexDates.length, series: codexSeries },
+      puzzleSolutions: { label: 'Puzzle solutions', total: filteredPuzzles.length, series: puzzleSeries },
+      logVolume: { label: 'Log entries', total: logTotal, series: logSeries },
+      attestationStored: attestation,
+    },
   };
 }
 
@@ -498,7 +741,7 @@ function routeAssistantMessage(message) {
   return { name: 'list_codex', args: { limit: 5 } };
 }
 
-const app = express();
+export const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
@@ -518,12 +761,39 @@ app.get('/logs', async (_req, res) => {
   res.json({ files });
 });
 
+app.get('/logs/:name/chunk', async (req, res) => {
+  try {
+    const payload = await readLogChunk(req.params.name, req.query || {});
+    res.json(payload);
+  } catch (error) {
+    if (error?.code === 'ENOENT' || error.message === 'not_found') {
+      res.status(404).json({ error: 'not_found' });
+      return;
+    }
+    const status = ['invalid_filename', 'invalid_path', 'invalid_cursor'].includes(error.message)
+      ? 400
+      : 500;
+    res.status(status).json({ error: error.message });
+  }
+});
+
 app.get('/logs/:name', async (req, res) => {
   try {
     const payload = await readFilePreview(LOG_DIRECTORY, req.params.name);
     res.json(payload);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/metrics/overview', async (req, res) => {
+  try {
+    const range = parseRangeQuery(req.query || {});
+    const payload = await loadMetricsOverview(range);
+    res.json(payload);
+  } catch (error) {
+    const status = error.message === 'invalid_range' ? 400 : 500;
+    res.status(status).json({ error: error.message });
   }
 });
 
@@ -650,6 +920,8 @@ app.use((req, res) => {
   res.status(404).json({ error: 'not_found' });
 });
 
-app.listen(API_PORT, () => {
-  console.log(`Echo dashboard API listening on http://localhost:${API_PORT}`);
-});
+if (process.argv[1] === __filename) {
+  app.listen(API_PORT, () => {
+    console.log(`Echo dashboard API listening on http://localhost:${API_PORT}`);
+  });
+}
