@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import create from 'zustand';
 import { MetricsPanel } from './MetricsPanel';
 import { NodeGraph } from './NodeGraph';
 import { LogPanel } from './LogPanel';
+import { HealthSummary } from './HealthSummary';
+import { ActivityTimeline } from './ActivityTimeline';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { themePalettes, ThemeVariant } from '../theme';
 import './dashboard.css';
 
 type Metric = { name: string; value: number; timestamp: number };
@@ -20,6 +24,7 @@ type DashboardState = {
   setNodes: (nodes: Node[]) => void;
   setDrives: (drives: { id: string; capacity: number; used: number }[]) => void;
   setHealth: (health: { status: string; reason?: string }) => void;
+  clearLogs: () => void;
 };
 
 const useDashboardStore = create<DashboardState>((set) => ({
@@ -33,6 +38,7 @@ const useDashboardStore = create<DashboardState>((set) => ({
   setNodes: (nodes) => set({ nodes }),
   setDrives: (drives) => set({ drives }),
   setHealth: (health) => set({ health }),
+  clearLogs: () => set({ logs: [] }),
 }));
 
 const useWebSocket = (url: string) => {
@@ -67,21 +73,48 @@ const useWebSocket = (url: string) => {
 };
 
 export const AtlasDashboard: React.FC = () => {
+  const [theme, setTheme] = useState<ThemeVariant>('light');
   useWebSocket('ws://localhost:9000/metrics');
   const metrics = useDashboardStore((s) => s.metrics);
   const logs = useDashboardStore((s) => s.logs);
   const nodes = useDashboardStore((s) => s.nodes);
   const drives = useDashboardStore((s) => s.drives);
   const health = useDashboardStore((s) => s.health);
+  const clearLogs = useDashboardStore((s) => s.clearLogs);
+  const palette = themePalettes[theme];
+
+  useKeyboardShortcuts({
+    'mod+k': () => setTheme((variant) => (variant === 'light' ? 'dark' : 'light')),
+    'mod+shift+l': () => clearLogs(),
+  });
+
+  const incidents = useMemo(
+    () =>
+      logs
+        .filter((entry) => entry.message.toLowerCase().includes('error'))
+        .map((entry) => ({ severity: 'error' as const, message: entry.message, ts: entry.ts })),
+    [logs],
+  );
+
+  const timelineEntries = useMemo(() => logs.slice(-30), [logs]);
 
   return (
-    <div className="atlas-dashboard">
+    <div
+      className="atlas-dashboard"
+      style={{ backgroundColor: palette.background, color: palette.foreground }}
+    >
       <header>
         <h1>Atlas OS Control Plane</h1>
         <div className={`health health-${health.status}`}>
           <strong>Health:</strong> {health.status}
           {health.reason && <span> – {health.reason}</span>}
         </div>
+        <button
+          className="theme-toggle"
+          onClick={() => setTheme((variant) => (variant === 'light' ? 'dark' : 'light'))}
+        >
+          Toggle Theme
+        </button>
       </header>
       <main>
         <section className="metrics-section">
@@ -92,6 +125,12 @@ export const AtlasDashboard: React.FC = () => {
         </section>
         <section className="logs-section">
           <LogPanel logs={logs} />
+        </section>
+        <aside className="health-section">
+          <HealthSummary health={{ ...health, incidents }} variant={theme} />
+        </aside>
+        <section className="timeline-section">
+          <ActivityTimeline entries={timelineEntries} />
         </section>
       </main>
     </div>
