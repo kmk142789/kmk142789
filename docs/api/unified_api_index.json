@@ -1,0 +1,162 @@
+{
+  "apis": [
+    {
+      "name": "Echo Computer Agent API",
+      "source": "docs/api/echo_computer_agent.openapi.json",
+      "version": "1.0.0",
+      "description": "API for interacting with the Echo computer assistant agent.",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/functions",
+          "summary": "List callable functions",
+          "request": null,
+          "response": {
+            "schema": "FunctionListResponse",
+            "description": "Returns a `functions[]` array of FunctionDescription entries."
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/chat",
+          "summary": "Send a chat message",
+          "request": {
+            "schema": "ChatRequest",
+            "fields": [
+              {
+                "name": "message",
+                "type": "string",
+                "description": "User command or query for the agent."
+              },
+              {
+                "name": "inputs",
+                "type": "object",
+                "description": "Optional inputs passed to the selected backend function."
+              },
+              {
+                "name": "execute",
+                "type": "boolean",
+                "description": "When true the agent executes the matched backend function."
+              }
+            ]
+          },
+          "response": {
+            "schema": "ChatResponse",
+            "fields": [
+              {
+                "name": "function",
+                "type": "string",
+                "description": "Name of the function that handled the request."
+              },
+              {
+                "name": "message",
+                "type": "string",
+                "description": "Human-readable response summarising the outcome."
+              },
+              {
+                "name": "data",
+                "type": "object",
+                "description": "Structured payload returned by the function handler."
+              },
+              {
+                "name": "metadata",
+                "type": "object",
+                "description": "Supplementary metadata describing the response context."
+              }
+            ]
+          }
+        }
+      ],
+      "schemas": [
+        {
+          "name": "FunctionDescription",
+          "fields": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "Identifier of the function."
+            },
+            {
+              "name": "description",
+              "type": "string",
+              "description": "Summary of what the function does."
+            },
+            {
+              "name": "parameters",
+              "type": "object",
+              "description": "JSON Schema describing accepted parameters."
+            },
+            {
+              "name": "metadata",
+              "type": "object",
+              "description": "Additional metadata such as categories and examples."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Echo Universal Verifier",
+      "source": "services/universal_verifier/app.py",
+      "version": "0.1",
+      "description": "Deterministic FastAPI verifier that returns stable VC validation envelopes.",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/verify",
+          "summary": "Validate a credential envelope",
+          "request": {
+            "schema": "VerifyRequest",
+            "fields": [
+              {
+                "name": "format",
+                "type": "string",
+                "description": "Must be \"jwt-vc\" or \"jsonld-vc\"."
+              },
+              {
+                "name": "credential",
+                "type": "object",
+                "description": "Arbitrary credential payload evaluated by the stub."
+              },
+              {
+                "name": "options",
+                "type": "object",
+                "description": "Optional key/value map mirrored from typical verifier interfaces."
+              }
+            ]
+          },
+          "response": {
+            "schema": "VerifyResponse",
+            "fields": [
+              {
+                "name": "ok",
+                "type": "boolean",
+                "description": "Set to true when the credential is non-empty and the format is recognised."
+              },
+              {
+                "name": "format",
+                "type": "string",
+                "description": "Echoes the requested credential format."
+              },
+              {
+                "name": "checks",
+                "type": "array",
+                "description": "Static list of checks reported for downstream consumers."
+              },
+              {
+                "name": "telemetry",
+                "type": "object",
+                "description": "Includes the active cycle and policy profile for observability correlation."
+              }
+            ]
+          }
+        }
+      ],
+      "notes": [
+        "Instrumentation initialised with observability.configure_otel for OTLP traces, metrics, and logs.",
+        "Counters track request totals and failures while a histogram captures verification latency.",
+        "Middleware annotates spans with HTTP metadata so dashboards align with the agent chat API."
+      ]
+    }
+  ]
+}
