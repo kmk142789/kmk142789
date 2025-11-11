@@ -1,0 +1,6 @@
+apiVersion: v2
+name: echo
+version: 0.9.0
+appVersion: "0.9.0"
+description: Helm chart for deploying the EchoEvolver services bundle.
+type: application

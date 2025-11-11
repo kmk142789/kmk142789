@@ -1,0 +1,4 @@
+# Common backup files
+*.swp
+*.bak
+.DS_Store

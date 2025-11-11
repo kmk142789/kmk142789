@@ -6,6 +6,19 @@ All notable changes to this project will be documented in this file.
 
 _No unreleased changes yet._
 
+## [0.9.0] - 2025-05-11
+
+### Added
+- Configured `semantic-release` with conventional commit parsing, automated changelog generation, and GitHub asset publishing so new tags are promoted as `v0.9.0` releases with bundled metadata. 
+- Introduced a cross-language release pipeline that aggregates pytest, npm, and Go client checks, builds Docker/Helm artifacts, and stages multi-language SDK packages for mock publishing.
+- Authored tooling to synthesize release metadata (SLO metrics, aggregated test totals, SBOM inventory, and Cosign attestations) and collate it alongside dashboards, provenance, and site bundles.
+
+### Changed
+- Normalized package versions to `0.9.0` across Node and Python distributions to align with the new release cadence.
+
+### Operations
+- Documented the v0.9.0 release, including SLO dashboards, Cosign attestations, SBOM references, and release bundle composition.
+
 ## [1.0.0] - 2025-11-08
 
 ### Added

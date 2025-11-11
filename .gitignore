@@ -25,3 +25,4 @@ data/user_provided_keys.txt
 
 # Packaging artifacts
 *.egg-info/
+out/
