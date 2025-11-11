@@ -27,3 +27,141 @@ jobs:
         run: python scripts/check_glyph_integrity.py
       - name: Verify inventory committed
         run: git diff --exit-code packages/glyphs/inventory.json
+
+  supply_chain_security:
+    name: Supply chain security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare security workspaces
+        run: |
+          mkdir -p security/sboms security/reports security/provenance
+
+      - name: Record build start time
+        run: echo "SECURITY_BUILD_STARTED=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+
+      - name: Install security tooling
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y jq
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sudo sh -s -- -b /usr/local/bin
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sudo sh -s -- -b /usr/local/bin
+          TRIVY_VERSION=0.50.2
+          wget -q https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
+          tar -xzf trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz trivy
+          sudo install -m 0755 trivy /usr/local/bin/trivy
+          rm -f trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz trivy
+          CONFTEST_VERSION=0.46.0
+          wget -q https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz
+          tar -xzf conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz conftest
+          sudo install -m 0755 conftest /usr/local/bin/conftest
+          rm -f conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz conftest
+          COSIGN_VERSION=v2.2.4
+          curl -sSL https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64 -o cosign
+          sudo install -m 0755 cosign /usr/local/bin/cosign
+          rm -f cosign
+
+      - name: Generate SBOM (Syft)
+        run: |
+          syft dir:. -o spdx-json=security/sboms/repository.spdx.json
+
+      - name: Upload SBOM artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-spdx
+          path: security/sboms/repository.spdx.json
+
+      - name: Run Grype vulnerability scan
+        run: |
+          set -euo pipefail
+          grype dir:. -o json --fail-on high | tee security/reports/grype-report.json
+
+      - name: Run Trivy vulnerability scan
+        run: |
+          trivy fs . --format json --output security/reports/trivy-report.json --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed
+
+      - name: Upload vulnerability reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulnerability-reports
+          path: |
+            security/reports/grype-report.json
+            security/reports/trivy-report.json
+
+      - name: Build container image
+        run: |
+          docker build -t echo-secure:${GITHUB_SHA} -f deploy/Dockerfile .
+
+      - name: Capture image provenance
+        run: |
+          mkdir -p security/provenance
+          docker save echo-secure:${GITHUB_SHA} | gzip > security/provenance/echo-secure-image.tar.gz
+          sha256sum security/provenance/echo-secure-image.tar.gz | awk '{print $1}' > security/provenance/echo-secure-image.sha256
+
+      - name: Sign container image archive
+        env:
+          COSIGN_PASSWORD: ""
+        run: |
+          cosign generate-key-pair --output-key-prefix security/provenance/cosign
+          cosign sign-blob --key security/provenance/cosign.key --output-signature security/provenance/echo-secure-image.sig security/provenance/echo-secure-image.tar.gz
+          rm -f security/provenance/cosign.key
+
+      - name: Generate SLSA provenance document
+        run: |
+          cat <<DOC > security/provenance/echo-secure-slsa.json
+          {
+            "_type": "https://slsa.dev/provenance/v0.2",
+            "subject": [
+              {
+                "name": "echo-secure",
+                "digest": {
+                  "sha256": "$(cat security/provenance/echo-secure-image.sha256)"
+                }
+              }
+            ],
+            "buildType": "https://slsa.dev/container/v1",
+            "builder": {
+              "id": "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            },
+            "metadata": {
+              "buildStartedOn": "${SECURITY_BUILD_STARTED}",
+              "buildFinishedOn": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "completeness": {
+                "parameters": true,
+                "environment": true,
+                "materials": true
+              }
+            },
+            "invocation": {
+              "configSource": {
+                "uri": "https://github.com/${GITHUB_REPOSITORY}",
+                "digest": {
+                  "sha1": "${GITHUB_SHA}"
+                },
+                "entryPoint": ".github/workflows/ci.yml"
+              }
+            },
+            "materials": [
+              {
+                "uri": "git+https://github.com/${GITHUB_REPOSITORY}.git",
+                "digest": {
+                  "sha1": "${GITHUB_SHA}"
+                }
+              }
+            ]
+          }
+DOC
+
+      - name: Upload provenance artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-provenance
+          path: security/provenance/
+
+      - name: Evaluate Conftest policies
+        run: |
+          conftest test ops --policy security/policies
