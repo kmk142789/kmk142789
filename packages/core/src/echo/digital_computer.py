@@ -60,6 +60,8 @@ __all__ = [
     "AssemblyError",
     "EvolutionCycle",
     "evolve_program",
+    "AdvancementCycle",
+    "advance_program",
     "AssistantSuggestion",
     "EchoComputerAssistant",
 ]
@@ -108,6 +110,17 @@ class EvolutionCycle:
 
     cycle: int
     inputs: Mapping[str, int | str]
+    result: ExecutionResult
+
+
+@dataclass(frozen=True)
+class AdvancementCycle:
+    """Represents a stateful advancement cycle across persistent runs."""
+
+    cycle: int
+    inputs: Mapping[str, int | str]
+    before_registers: Mapping[str, int | str]
+    before_memory: Mapping[str, int | str]
     result: ExecutionResult
 
 
@@ -228,12 +241,13 @@ class EchoComputer:
         self._labels = labels
         self.reset_runtime()
 
-    def reset_runtime(self) -> None:
-        """Reset the machine state while keeping the loaded program."""
+    def reset_runtime(self, *, preserve_state: bool = False) -> None:
+        """Reset runtime bookkeeping while optionally preserving state."""
 
-        for key in self._registers:
-            self._registers[key] = 0
-        self._memory.clear()
+        if not preserve_state:
+            for key in self._registers:
+                self._registers[key] = 0
+            self._memory.clear()
         self._inputs.clear()
         self._stack.clear()
         self._call_stack.clear()
@@ -247,6 +261,7 @@ class EchoComputer:
         inputs: Mapping[str, int | str] | None = None,
         trace: bool = False,
         max_steps: int | None = None,
+        persist_state: bool = False,
     ) -> ExecutionResult:
         """Execute the loaded program and return an :class:`ExecutionResult`.
 
@@ -262,12 +277,17 @@ class EchoComputer:
             Optional override for the per-run execution limit.  When omitted
             the limit configured on the computer instance is used.  The value
             is clamped to a minimum of ``1`` to avoid runaway loops.
+        persist_state:
+            When ``True`` register and memory contents are preserved between
+            runs.  The program counter, stacks, and transient output buffer are
+            still reset so that each execution begins from the first
+            instruction with a clean call stack.
         """
 
         if not self._program:
             raise RuntimeError("no program loaded")
 
-        self.reset_runtime()
+        self.reset_runtime(preserve_state=persist_state)
         if inputs:
             self._inputs.update({str(k): v for k, v in inputs.items()})
 
@@ -689,6 +709,48 @@ def evolve_program(
             EvolutionCycle(
                 cycle=cycle_index,
                 inputs=dict(prepared_inputs),
+                result=result,
+            )
+        )
+
+    return cycles
+
+
+def advance_program(
+    program: EchoProgram | str | Sequence[Instruction],
+    *,
+    input_series: Iterable[Mapping[str, int | str]],
+    max_steps: int = 1024,
+) -> List[AdvancementCycle]:
+    """Execute ``program`` across ``input_series`` while preserving state.
+
+    The helper mirrors :func:`evolve_program` but continues to reuse the same
+    computer instance between cycles without clearing registers or memory.  It
+    captures the state prior to each execution so that callers can trace how
+    the program evolves over time.
+
+    Returns
+    -------
+    List[AdvancementCycle]
+        Ordered sequence of advancement reports pairing each input mapping
+        with its pre-execution state snapshot and resulting execution report.
+    """
+
+    computer = EchoComputer(max_steps=max_steps)
+    computer.load(program)
+
+    cycles: List[AdvancementCycle] = []
+    for cycle_index, inputs in enumerate(input_series, start=1):
+        prepared_inputs = {str(key): value for key, value in dict(inputs).items()}
+        before_registers = dict(computer.registers)
+        before_memory = dict(computer.memory)
+        result = computer.run(inputs=prepared_inputs, persist_state=True)
+        cycles.append(
+            AdvancementCycle(
+                cycle=cycle_index,
+                inputs=dict(prepared_inputs),
+                before_registers=before_registers,
+                before_memory=before_memory,
                 result=result,
             )
         )
