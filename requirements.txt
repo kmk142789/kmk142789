@@ -31,6 +31,12 @@ itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.2
 multidict==6.6.4
+opentelemetry-api==1.25.0
+opentelemetry-exporter-otlp-proto-grpc==1.25.0
+opentelemetry-exporter-otlp-proto-http==1.25.0
+opentelemetry-instrumentation-asgi==0.46b0
+opentelemetry-instrumentation-fastapi==0.46b0
+opentelemetry-sdk==1.25.0
 parsimonious==0.10.0
 propcache==0.3.2
 pycparser==2.23

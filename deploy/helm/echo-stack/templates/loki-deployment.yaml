@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-loki
+  labels:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+    app.kubernetes.io/component: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: loki
+        app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+    spec:
+      containers:
+        - name: loki
+          image: {{ .Values.observability.loki.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          args:
+            - "-config.file=/etc/loki/config.yaml"
+          ports:
+            - containerPort: 3100
+              name: http
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki
+            - name: data
+              mountPath: /var/loki
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "echo-stack.fullname" . }}-loki-config
+            items:
+              - key: config.yaml
+                path: config.yaml
+        - name: data
+          emptyDir: {}

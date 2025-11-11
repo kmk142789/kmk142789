@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-prometheus-config
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+data:
+  prometheus.yml: |
+{{ (.Files.Get "files/observability/prometheus.yml") | indent 4 }}
+  alerts.yml: |
+{{ (.Files.Get "files/observability/alerts.yml") | indent 4 }}

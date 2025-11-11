@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-tempo-config
+  labels:
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+data:
+  config.yaml: |
+{{ (.Files.Get "files/observability/tempo-config.yaml") | indent 4 }}

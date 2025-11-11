@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-verifier
+  labels:
+    app.kubernetes.io/name: universal-verifier
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+spec:
+  selector:
+    app.kubernetes.io/name: universal-verifier
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+  ports:
+    - name: http
+      port: {{ .Values.universalVerifier.port }}
+      targetPort: http

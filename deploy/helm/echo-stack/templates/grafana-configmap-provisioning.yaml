@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-grafana-provisioning
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+data:
+  datasources.yaml: |
+{{ (.Files.Get "files/observability/grafana-datasource.yaml") | indent 4 }}
+  dashboards.yaml: |
+{{ (.Files.Get "files/observability/grafana-dashboards.yaml") | indent 4 }}

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-atlas
+  labels:
+    app.kubernetes.io/name: atlas-core
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+spec:
+  selector:
+    app.kubernetes.io/name: atlas-core
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+  ports:
+    - name: metrics
+      port: {{ .Values.atlasCore.service.port }}
+      targetPort: metrics
+    - name: metrics-ws
+      port: {{ .Values.atlasCore.service.wsPort }}
+      targetPort: metrics-ws

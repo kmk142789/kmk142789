@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-loki
+  labels:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+spec:
+  selector:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+  ports:
+    - name: http
+      port: 3100
+      targetPort: http

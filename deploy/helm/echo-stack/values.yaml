@@ -1,0 +1,35 @@
+global:
+  imagePullPolicy: IfNotPresent
+  otlpEndpoint: echo-stack-otel-collector:4317
+  environment: production
+
+atlasCore:
+  image:
+    repository: ghcr.io/echo/atlas-core
+    tag: latest
+  service:
+    port: 9100
+    wsPort: 9101
+  resources: {}
+
+universalVerifier:
+  image:
+    repository: ghcr.io/echo/universal-verifier
+    tag: latest
+  port: 8080
+  resources: {}
+
+observability:
+  otelCollector:
+    image: otel/opentelemetry-collector-contrib:0.99.0
+    replicaCount: 1
+  tempo:
+    image: grafana/tempo:2.6.0
+  loki:
+    image: grafana/loki:2.9.0
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    retention: 7d
+  grafana:
+    image: grafana/grafana:10.4.2
+    adminPassword: admin

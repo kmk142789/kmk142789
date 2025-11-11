@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "echo-stack.fullname" . }}-verifier
+  labels:
+    app.kubernetes.io/name: universal-verifier
+    app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+    app.kubernetes.io/component: workload
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: universal-verifier
+      app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: universal-verifier
+        app.kubernetes.io/part-of: {{ include "echo-stack.fullname" . }}
+    spec:
+      containers:
+        - name: universal-verifier
+          image: {{ .Values.universalVerifier.image.repository }}:{{ .Values.universalVerifier.image.tag }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.global.otlpEndpoint }}
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: "true"
+            - name: DEPLOYMENT_ENVIRONMENT
+              value: {{ .Values.global.environment | quote }}
+          ports:
+            - containerPort: {{ .Values.universalVerifier.port }}
+              name: http
+          resources: {{- toYaml .Values.universalVerifier.resources | nindent 12 }}
+          args:
+            - "uvicorn"
+            - "services.universal_verifier.app:app"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - {{ .Values.universalVerifier.port | quote }}

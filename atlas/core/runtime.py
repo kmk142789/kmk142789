@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from dataclasses import dataclass
 
 
@@ -13,6 +14,7 @@ from atlas.metrics import MetricsRegistry, MetricsService
 from atlas.network import NodeRegistry, Pathfinder, RoutingTable
 from atlas.scheduler import Job, JobStore, SchedulerService
 from atlas.storage import StorageService
+from observability import configure_otel
 
 
 @dataclass
@@ -34,6 +36,12 @@ async def _execute_job(job: Job) -> None:
 async def build_supervisor() -> Supervisor:
     configure_logging()
     config = load_config()
+    configure_otel(
+        "atlas-core",
+        service_namespace="echo",
+        service_version="0.1.0",
+        deployment_environment=config.env.get("ENV") or os.getenv("DEPLOYMENT_ENVIRONMENT"),
+    )
     store = JobStore(config.scheduler_db)
     metrics_registry = MetricsRegistry()
     storage = StorageService(config.settings, config.storage_dir)
