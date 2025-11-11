@@ -6,6 +6,7 @@ by searching for explicit references between services.
 
 ```mermaid
 graph TD
+  resilience_slo_alerts[resilience-slo-alerts]
   unified_sentience_loop[unified-sentience-loop]
   universal_verifier[universal-verifier]
 ```
