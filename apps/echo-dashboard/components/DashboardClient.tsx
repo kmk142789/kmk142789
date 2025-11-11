@@ -16,6 +16,7 @@ import CliRunner from './CliRunner';
 import NeonKeyManager from './NeonKeyManager';
 import CodexSummaryCard from './CodexSummaryCard';
 import MetricsPanel from './MetricsPanel';
+import { useAppContext } from './AppContext';
 
 interface LogsResponse {
   files: string[];
@@ -41,6 +42,7 @@ export default function DashboardClient() {
   const [cliResult, setCliResult] = useState<CliResult | null>(null);
   const [cliLoading, setCliLoading] = useState(false);
   const [neonError, setNeonError] = useState<string | null>(null);
+  const { notify } = useAppContext();
 
   const { data: logFiles, error: logError } = useSWR<LogsResponse>('/logs', fetcher);
   const { data: puzzleFiles, error: puzzleError } = useSWR<PuzzlesResponse>('/puzzles', fetcher);
@@ -81,14 +83,25 @@ export default function DashboardClient() {
     }
   }, [logFiles, selectedLog]);
 
-  const handleSelectPuzzle = useCallback(async (name: string) => {
-    try {
-      const response = await apiGet<PuzzleFileDescriptor>(`/puzzles/${encodeURIComponent(name)}`);
-      setPuzzleContent(response);
-    } catch (error) {
-      console.error('Unable to read puzzle', error);
-    }
-  }, []);
+  const handleSelectPuzzle = useCallback(
+    async (name: string) => {
+      try {
+        const response = await apiGet<PuzzleFileDescriptor>(`/puzzles/${encodeURIComponent(name)}`);
+        setPuzzleContent(response);
+      } catch (error) {
+        console.error('Unable to read puzzle', error);
+        notify({
+          title: 'Unable to load puzzle',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'An unexpected error occurred while opening the puzzle.',
+          variant: 'error',
+        });
+      }
+    },
+    [notify],
+  );
 
   const handleRunCli = useCallback(
     async (command: string, args: string[]) => {
@@ -100,28 +113,76 @@ export default function DashboardClient() {
       } catch (error) {
         if (error instanceof Error) {
           setCliResult({ code: null, stdout: '', stderr: error.message });
+          notify({
+            title: 'CLI invocation failed',
+            description: error.message,
+            variant: 'error',
+          });
+        } else {
+          setCliResult({ code: null, stdout: '', stderr: 'Unexpected error running command.' });
+          notify({
+            title: 'CLI invocation failed',
+            description: 'Unexpected error running command.',
+            variant: 'error',
+          });
         }
       } finally {
         setCliLoading(false);
       }
     },
-    []
+    [notify]
   );
 
   const handleCreateNeonKey = useCallback(
     async (label: string, value: string) => {
-      await apiPost('/neon/keys', { label, value });
-      await refreshNeonKeys();
+      try {
+        await apiPost('/neon/keys', { label, value });
+        await refreshNeonKeys();
+        notify({
+          title: 'Neon key stored',
+          description: `${label} encrypted and stored securely.`,
+          variant: 'success',
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Failed to store Neon key.';
+        const readable =
+          message === 'invalid_encryption_key'
+            ? 'Set NEON_KEY_ENCRYPTION_KEY to at least 16 characters before storing keys.'
+            : message;
+        notify({
+          title: 'Failed to store Neon key',
+          description: readable,
+          variant: 'error',
+        });
+        throw error instanceof Error ? error : new Error(message);
+      }
     },
-    [refreshNeonKeys]
+    [notify, refreshNeonKeys]
   );
 
   const handleDeleteNeonKey = useCallback(
     async (id: string) => {
-      await apiDelete(`/neon/keys/${id}`);
-      await refreshNeonKeys();
+      try {
+        await apiDelete(`/neon/keys/${id}`);
+        await refreshNeonKeys();
+        notify({
+          title: 'Neon key deleted',
+          description: 'The selected Neon credential has been removed.',
+          variant: 'success',
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Failed to delete Neon key.';
+        notify({
+          title: 'Failed to delete Neon key',
+          description: message,
+          variant: 'error',
+        });
+        throw error instanceof Error ? error : new Error(message);
+      }
     },
-    [refreshNeonKeys]
+    [notify, refreshNeonKeys]
   );
 
   const cliCommandOptions = useMemo(() => cliCommands?.commands ?? [], [cliCommands]);

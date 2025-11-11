@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import { AppProvider } from '../components/AppContext';
+import MobileSidebar from '../components/MobileSidebar';
 import SiteNav from '../components/SiteNav';
+import { Toaster } from '../components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'Echo Dashboard',
@@ -12,16 +15,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-background text-foreground font-sans antialiased">
-        <SiteNav />
-        <div className="pb-16">{children}</div>
-        <footer className="border-t border-slate-800 bg-slate-950/80 py-6 text-center text-xs text-slate-500">
-          <p>
-            Crafted for the Echo ecosystem ·{' '}
-            <Link href="https://github.com/kmk142789/kmk142789" className="text-echo-ember hover:underline">
-              Codex Registry
-            </Link>
-          </p>
-        </footer>
+        <AppProvider>
+          <SiteNav />
+          <MobileSidebar />
+          <div className="pb-16">{children}</div>
+          <footer className="border-t border-slate-800 bg-slate-950/80 py-6 text-center text-xs text-slate-500">
+            <p>
+              Crafted for the Echo ecosystem ·{' '}
+              <Link href="https://github.com/kmk142789/kmk142789" className="text-echo-ember hover:underline">
+                Codex Registry
+              </Link>
+            </p>
+          </footer>
+          <Toaster className="fixed bottom-6 right-6 flex w-80 flex-col gap-3" />
+        </AppProvider>
       </body>
     </html>
   );
