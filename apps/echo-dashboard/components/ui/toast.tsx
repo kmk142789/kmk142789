@@ -9,6 +9,15 @@ const ToastContext = React.createContext<ToastContextValue | undefined>(
   undefined
 );
 
+type ToastItemContextValue = {
+  id?: string;
+  onOpenChange?: (open: boolean) => void;
+};
+
+const ToastItemContext = React.createContext<ToastItemContextValue | null>(
+  null
+);
+
 export interface ToastProps extends React.ComponentPropsWithoutRef<"div"> {
   id?: string;
   open?: boolean;
@@ -53,35 +62,44 @@ const useToastContext = () => {
   return context;
 };
 
-const ToastViewport = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(
-  function ToastViewport({ className, ...props }, ref) {
-    const { toasts } = useToastContext();
+const useToastItemContext = () => React.useContext(ToastItemContext);
 
-    return (
-      <div
-        ref={ref}
-        role="region"
-        aria-live="polite"
-        aria-label="Notifications"
-        className={className}
-        {...props}
-      >
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id ?? toast.title?.toString() ?? Math.random().toString(36)}
-            {...toast}
-          />
-        ))}
-      </div>
-    );
-  }
-);
+const ToastViewport = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentPropsWithoutRef<"div">
+>(function ToastViewport({ className, children, ...props }, ref) {
+  return (
+    <div
+      ref={ref}
+      role="region"
+      aria-live="polite"
+      aria-label="Notifications"
+      className={className}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
 
 const Toast = React.forwardRef<HTMLDivElement, ToastProps>(function Toast(
-  { id, open = true, onOpenChange, title, description, action, className, ...props },
+  {
+    id,
+    open = true,
+    onOpenChange,
+    title,
+    description,
+    action,
+    className,
+    children,
+    ...props
+  },
   ref
 ) {
-  const { onDismiss } = useToastContext();
+  const hasCustomContent = React.useMemo(
+    () => React.Children.count(children) > 0,
+    [children]
+  );
 
   React.useEffect(() => {
     if (!open && onOpenChange) {
@@ -89,34 +107,40 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(function Toast(
     }
   }, [open, onOpenChange]);
 
-  return open ? (
-    <div
-      ref={ref}
-      role="status"
-      className={className}
-      data-toast-id={id}
-      {...props}
-    >
-      {title ? <ToastTitle>{title}</ToastTitle> : null}
-      {description ? <ToastDescription>{description}</ToastDescription> : null}
-      {action ?? null}
-      <ToastClose
-        onClick={() => {
-          onOpenChange?.(false);
-          if (id) {
-            onDismiss?.(id);
-          }
-        }}
-      />
-    </div>
-  ) : null;
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <ToastItemContext.Provider value={{ id, onOpenChange }}>
+      <div
+        ref={ref}
+        role="status"
+        className={className}
+        data-toast-id={id}
+        {...props}
+      >
+        {hasCustomContent ? (
+          children
+        ) : (
+          <>
+            {title ? <ToastTitle>{title}</ToastTitle> : null}
+            {description ? <ToastDescription>{description}</ToastDescription> : null}
+            {action ?? null}
+            <ToastClose />
+          </>
+        )}
+      </div>
+    </ToastItemContext.Provider>
+  );
 });
 
-const ToastTitle = React.forwardRef<HTMLParagraphElement, React.ComponentPropsWithoutRef<"p">>(
-  function ToastTitle({ className, ...props }, ref) {
-    return <p ref={ref} className={className} {...props} />;
-  }
-);
+const ToastTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.ComponentPropsWithoutRef<"p">
+>(function ToastTitle({ className, ...props }, ref) {
+  return <p ref={ref} className={className} {...props} />;
+});
 
 const ToastDescription = React.forwardRef<
   HTMLParagraphElement,
@@ -133,15 +157,33 @@ const ToastAction = React.forwardRef<HTMLButtonElement, ToastActionProps>(
   }
 );
 
-const ToastClose = React.forwardRef<HTMLButtonElement, React.ComponentPropsWithoutRef<"button">>(
-  function ToastClose({ children = "Close", ...props }, ref) {
-    return (
-      <button type="button" ref={ref} {...props}>
-        {children}
-      </button>
-    );
-  }
-);
+const ToastClose = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentPropsWithoutRef<"button">
+>(function ToastClose({ children = "Close", onClick, ...props }, ref) {
+  const itemContext = useToastItemContext();
+  const toastContext = useToastContext();
+
+  return (
+    <button
+      type="button"
+      ref={ref}
+      onClick={(event) => {
+        onClick?.(event);
+        if (event.defaultPrevented) {
+          return;
+        }
+        itemContext?.onOpenChange?.(false);
+        if (itemContext?.id) {
+          toastContext.onDismiss?.(itemContext.id);
+        }
+      }}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+});
 
 const useToastRenderer = () => {
   const context = useToastContext();
