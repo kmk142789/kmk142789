@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence
 
 from echo.continuum_atlas import AtlasState, export_attestation
+from echo.vault import AuthorityBinding, load_authority_bindings
 
 
 from .codex_tasks import (
@@ -366,13 +367,59 @@ def collect_repos(root: Path = REPO_ROOT) -> Dict[str, object]:
     }
 
 
+def _binding_summary(bindings: Iterable[AuthorityBinding]) -> Dict[str, object]:
+    """Return aggregate insights derived from *bindings*.
+
+    The helper surfaces quick-glance metrics so inventory reports can reference
+    authority coverage without having to iterate over every binding at
+    presentation time.  Only non-empty fields are included in the summary to
+    avoid leaking placeholder values into downstream dashboards.
+    """
+
+    binding_list = list(bindings)
+
+    def _unique(values: Iterable[Optional[str]]) -> List[str]:
+        return sorted({value for value in values if value})
+
+    level_counts = Counter(binding.authority_level for binding in binding_list)
+    status_counts = Counter(binding.echolink_status for binding in binding_list)
+
+    return {
+        "owners": _unique(binding.owner for binding in binding_list),
+        "anchors": _unique(binding.anchor for binding in binding_list),
+        "bound_phrases": _unique(binding.bound_phrase for binding in binding_list),
+        "glyphs": _unique(binding.glyphs for binding in binding_list),
+        "access_scopes": _unique(binding.access for binding in binding_list),
+        "authority_levels": [
+            {"authority_level": level, "count": count}
+            for level, count in sorted(level_counts.items())
+        ],
+        "status_breakdown": [
+            {"status": status, "count": count}
+            for status, count in sorted(status_counts.items())
+        ],
+    }
+
+
 def collect_keys(root: Path = REPO_ROOT) -> Dict[str, object]:
     payload_path = root / "packages" / "core" / "src" / "echo" / "vault" / "_authority_data.json"
     if not payload_path.exists():
-        return {"keys": [], "count": 0, "source": None}
+        return {
+            "keys": [],
+            "count": 0,
+            "source": None,
+            "summary": _binding_summary([]),
+        }
 
-    data = json.loads(payload_path.read_text(encoding="utf-8"))
-    return {"keys": data, "count": len(data), "source": str(payload_path.relative_to(root))}
+    bindings = load_authority_bindings(payload_path)
+    binding_payload = [binding.model_dump(by_alias=True) for binding in bindings]
+
+    return {
+        "keys": binding_payload,
+        "count": len(binding_payload),
+        "source": str(payload_path.relative_to(root)),
+        "summary": _binding_summary(bindings),
+    }
 
 
 SCOPE_BUILDERS: Mapping[str, Callable[[Path], Dict[str, object]]] = {
