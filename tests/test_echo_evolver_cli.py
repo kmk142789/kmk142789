@@ -6,7 +6,7 @@ from typing import Dict, List
 
 import pytest
 
-from echo.evolver import main as evolver_main
+from echo.evolver import _MOMENTUM_SENSITIVITY, main as evolver_main
 
 
 @pytest.mark.parametrize(
@@ -207,6 +207,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
             manifest_events: int,
             system_report_events: int,
             momentum_window: int,
+            momentum_threshold: float,
         ) -> dict[str, object]:
             captured["kwargs"] = {
                 "enable_network": enable_network,
@@ -223,6 +224,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
                 "manifest_events": manifest_events,
                 "system_report_events": system_report_events,
                 "momentum_window": momentum_window,
+                "momentum_threshold": momentum_threshold,
             }
             return {
                 "summary": "Cycle 4 advanced with 14/14 steps complete (100.0% progress).",
@@ -265,6 +267,7 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "manifest_events": 5,
         "system_report_events": 9,
         "momentum_window": 5,
+        "momentum_threshold": _MOMENTUM_SENSITIVITY,
     }
 
     output = capsys.readouterr().out
@@ -348,6 +351,55 @@ def test_main_rejects_non_positive_momentum_window(monkeypatch) -> None:
         evolver_main(["--advance-system", "--momentum-window", "0"])
 
     assert excinfo.value.code == 2
+
+
+def test_main_rejects_momentum_threshold_without_advance(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--momentum-threshold", "0.2"])
+
+    assert excinfo.value.code == 2
+
+
+def test_main_rejects_non_positive_momentum_threshold(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+        def advance_system(self, **kwargs):  # pragma: no cover - passthrough helper
+            return {"summary": "cycle"}
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--advance-system", "--momentum-threshold", "0"])
+
+    assert excinfo.value.code == 2
+
+
+def test_main_accepts_custom_momentum_threshold(monkeypatch) -> None:
+    captured: Dict[str, float] = {}
+
+    class DummyEvolver:
+        amplifier = None
+
+        def advance_system(self, **kwargs):  # pragma: no cover - passthrough helper
+            captured.update(kwargs)
+            return {"summary": "Cycle advanced"}
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    exit_code = evolver_main([
+        "--advance-system",
+        "--momentum-threshold",
+        "0.25",
+    ])
+
+    assert exit_code == 0
+    assert captured["momentum_threshold"] == pytest.approx(0.25)
 
 
 def test_main_rejects_negative_manifest_events(monkeypatch) -> None:

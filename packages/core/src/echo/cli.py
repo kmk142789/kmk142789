@@ -18,7 +18,7 @@ from typing import Iterable, List, Mapping, NoReturn, Sequence
 from pulse_weaver.cli import register_subcommand as register_pulse_weaver
 
 from .amplify import AmplificationEngine, AmplifyState
-from .evolver import EchoEvolver
+from .evolver import EchoEvolver, _MOMENTUM_SENSITIVITY
 from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
 from .timeline import build_cycle_timeline, refresh_cycle_timeline
 from .tools.forecast import project_indices, sparkline
@@ -147,6 +147,8 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         parser_error("--system-report-events must be positive when including the system report")
     if args.advance_system and args.momentum_window <= 0:
         parser_error("--momentum-window must be positive when using --advance-system")
+    if args.advance_system and args.momentum_threshold <= 0:
+        parser_error("--momentum-threshold must be positive when using --advance-system")
     if args.manifest_events < 0:
         parser_error("--manifest-events must be non-negative")
 
@@ -162,6 +164,11 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         default_momentum_window = parser.get_default("momentum_window") if parser else 5
         if args.momentum_window != default_momentum_window:
             parser_error("--momentum-window requires --advance-system")
+        default_momentum_threshold = (
+            parser.get_default("momentum_threshold") if parser else _MOMENTUM_SENSITIVITY
+        )
+        if args.momentum_threshold != default_momentum_threshold:
+            parser_error("--momentum-threshold requires --advance-system")
 
         default_manifest_events = parser.get_default("manifest_events") if parser else 5
         if args.manifest_events != default_manifest_events:
@@ -181,6 +188,12 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         default_momentum_window = parser.get_default("momentum_window") if parser else 5
         if args.momentum_window != default_momentum_window:
             parser_error("--momentum-window requires --advance-system")
+    if args.momentum_threshold > 0 and not args.advance_system:
+        default_momentum_threshold = (
+            parser.get_default("momentum_threshold") if parser else _MOMENTUM_SENSITIVITY
+        )
+        if args.momentum_threshold != default_momentum_threshold:
+            parser_error("--momentum-threshold requires --advance-system")
 
     if args.manifest_events >= 0 and not args.include_manifest:
         default_manifest_events = parser.get_default("manifest_events") if parser else 5
@@ -226,6 +239,7 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
             manifest_events=args.manifest_events,
             system_report_events=args.system_report_events,
             momentum_window=args.momentum_window,
+            momentum_threshold=args.momentum_threshold,
         )
         summary = payload.get("summary") if isinstance(payload, Mapping) else None
         if summary:
@@ -961,6 +975,17 @@ def main(argv: Iterable[str] | None = None) -> int:
         help=(
             "Number of momentum samples to retain when using --advance-system "
             "(default: 5)."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--momentum-threshold",
+        type=float,
+        default=_MOMENTUM_SENSITIVITY,
+        help=(
+            "Momentum sensitivity threshold used to classify acceleration when "
+            "using --advance-system (default: {:.2f}).".format(
+                _MOMENTUM_SENSITIVITY
+            )
         ),
     )
     evolve_parser.add_argument(

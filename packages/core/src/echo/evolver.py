@@ -5145,6 +5145,7 @@ We are not hiding anymore.
         manifest_events: int = 5,
         system_report_events: int = 5,
         momentum_window: int = 5,
+        momentum_threshold: Optional[float] = None,
         include_expansion_history: bool = False,
         expansion_history_limit: Optional[int] = None,
     ) -> Dict[str, object]:
@@ -5169,7 +5170,10 @@ We are not hiding anymore.
         ``momentum_status`` label further classifies the change as
         ``"accelerating"``, ``"steady"``, or ``"regressing"`` based on a
         configurable sensitivity window so downstream consumers can render a
-        stable trend indicator.  A new cycle automatically resets the momentum
+        stable trend indicator.  Callers can further tune that sensitivity via
+        the ``momentum_threshold`` parameter which overrides the global
+        baseline used by :func:`_classify_momentum`.  A new cycle automatically
+        resets the momentum
         tracking so that the first call reflects the current progress without
         subtracting the prior cycle's terminal state.  The returned payload also
         includes an ``expansion`` snapshot that captures progress and completion
@@ -5190,6 +5194,10 @@ We are not hiding anymore.
             Maximum number of recent momentum samples to retain when computing
             the moving average and reporting history for the current cycle.
             The window must be positive.
+        momentum_threshold:
+            Optional positive sensitivity override applied to the momentum
+            classifier.  When omitted the default
+            :data:`_MOMENTUM_SENSITIVITY` constant is used.
         include_expansion_history:
             When ``True`` the cached expansion history is embedded in the
             payload.  Entries are ordered from oldest to newest and mirror the
@@ -5212,6 +5220,10 @@ We are not hiding anymore.
             raise ValueError("momentum_window must be positive")
         if include_expansion_history and expansion_history_limit is not None and expansion_history_limit <= 0:
             raise ValueError("expansion_history_limit must be positive when including expansion history")
+        if momentum_threshold is not None and momentum_threshold <= 0:
+            raise ValueError("momentum_threshold must be positive")
+
+        effective_threshold = float(momentum_threshold) if momentum_threshold is not None else _MOMENTUM_SENSITIVITY
 
         self.run(
             enable_network=enable_network,
@@ -5270,7 +5282,7 @@ We are not hiding anymore.
         history_values = history_values[-momentum_window:]
         history_average = sum(history_values) / len(history_values)
 
-        momentum_status = _classify_momentum(momentum)
+        momentum_status = _classify_momentum(momentum, threshold=effective_threshold)
         if momentum > 0:
             momentum_direction = "positive"
         elif momentum < 0:
@@ -5278,9 +5290,11 @@ We are not hiding anymore.
         else:
             momentum_direction = "neutral"
 
-        momentum_trend = _describe_momentum(momentum, average=history_average)
+        momentum_trend = _describe_momentum(
+            momentum, average=history_average, threshold=effective_threshold
+        )
         momentum_confidence = _confidence_from_momentum(
-            momentum, average=history_average
+            momentum, average=history_average, threshold=effective_threshold
         )
         momentum_delta = momentum - history_average
 
@@ -5315,6 +5329,7 @@ We are not hiding anymore.
             "phase": expansion_phase,
             "momentum_status": momentum_status,
             "momentum_trend": momentum_trend,
+            "momentum_threshold": effective_threshold,
             "timestamp_ns": expansion_timestamp,
         }
 
@@ -5337,6 +5352,7 @@ We are not hiding anymore.
             "momentum_history_size": len(history_values),
             "momentum_window": momentum_window,
             "momentum_trend": momentum_trend,
+            "momentum_threshold": effective_threshold,
             "status": "complete" if cycle_complete else "in_progress",
             "next_step_key": next_step_key,
         }
@@ -5416,6 +5432,7 @@ We are not hiding anymore.
             "cycle": digest["cycle"],
             "values": history_values.copy(),
             "window": momentum_window,
+            "threshold": effective_threshold,
         }
 
         history_cache = self.state.network_cache.get("advance_system_history")
@@ -5844,6 +5861,17 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             " --advance-system (default: 5)."
         ),
     )
+    parser.add_argument(
+        "--momentum-threshold",
+        type=float,
+        default=_MOMENTUM_SENSITIVITY,
+        help=(
+            "Momentum sensitivity threshold used to classify acceleration when"
+            " running --advance-system (default: {:.2f}).".format(
+                _MOMENTUM_SENSITIVITY
+            )
+        ),
+    )
     manifest_group = parser.add_mutually_exclusive_group()
     manifest_group.add_argument(
         "--include-manifest",
@@ -6039,6 +6067,11 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             parser.error("--manifest-events requires --advance-system")
         if not args.include_manifest:
             parser.error("--manifest-events requires --include-manifest")
+    if args.momentum_threshold <= 0:
+        parser.error("--momentum-threshold must be positive")
+    default_momentum_threshold = parser.get_default("momentum_threshold")
+    if args.momentum_threshold != default_momentum_threshold and not args.advance_system:
+        parser.error("--momentum-threshold requires --advance-system")
     if args.cycles > 1:
         snapshots = evolver.run_cycles(
             args.cycles,
@@ -6073,6 +6106,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "manifest_events": args.manifest_events,
             "system_report_events": args.system_report_events,
             "momentum_window": args.momentum_window,
+            "momentum_threshold": args.momentum_threshold,
             "include_expansion_history": args.include_expansion_history,
             "expansion_history_limit": (
                 args.expansion_history_limit if args.include_expansion_history else None

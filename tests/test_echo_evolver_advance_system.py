@@ -3,7 +3,12 @@ from __future__ import annotations
 import pytest
 
 from echo import thoughtlog as thoughtlog_module
-from echo.evolver import ADVANCE_SYSTEM_HISTORY_LIMIT, EchoEvolver, _classify_momentum
+from echo.evolver import (
+    ADVANCE_SYSTEM_HISTORY_LIMIT,
+    EchoEvolver,
+    _MOMENTUM_SENSITIVITY,
+    _classify_momentum,
+)
 from echo.memory.store import JsonMemoryStore
 
 
@@ -57,6 +62,8 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     assert progress["momentum_history_size"] == len(progress["momentum_history"])
     assert progress["momentum_window"] == 5
     assert isinstance(progress["momentum_trend"], str) and progress["momentum_trend"]
+    assert progress["momentum_threshold"] == pytest.approx(_MOMENTUM_SENSITIVITY)
+    assert progress["momentum_threshold"] == pytest.approx(_MOMENTUM_SENSITIVITY)
     if progress["momentum"] > 0:
         assert progress["momentum_direction"] == "positive"
     elif progress["momentum"] < 0:
@@ -69,6 +76,7 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     assert expansion["progress_delta"] == pytest.approx(progress["momentum"])
     assert expansion["phase"] in {"expanding", "complete", "steady", "receding"}
     assert isinstance(expansion["timestamp_ns"], int)
+    assert expansion["momentum_threshold"] == pytest.approx(_MOMENTUM_SENSITIVITY)
 
     manifest = payload["manifest"]
     assert manifest["cycle"] == 1
@@ -93,6 +101,9 @@ def test_advance_system_returns_structured_payload(tmp_path, monkeypatch):
     history_entry = history_cache[0]
     assert history_entry["cycle"] == digest["cycle"]
     assert history_entry["expansion"]["phase"] == expansion["phase"]
+    assert history_entry["expansion"]["momentum_threshold"] == pytest.approx(
+        _MOMENTUM_SENSITIVITY
+    )
 
     history_via_method = evolver.advance_system_history()
     assert history_via_method == [history_entry]
@@ -161,6 +172,7 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     expansion = payload["expansion"]
     assert expansion["phase"] in {"expanding", "complete", "steady", "receding"}
     assert expansion["progress_delta"] == pytest.approx(progress["momentum"])
+    assert expansion["momentum_threshold"] == pytest.approx(_MOMENTUM_SENSITIVITY)
 
     summary = payload["event_summary"]
     assert "recent events" in summary
@@ -272,6 +284,7 @@ def test_advance_system_respects_momentum_window(tmp_path, monkeypatch):
     first_progress = primary["progress"]
     assert first_progress["momentum_window"] == 4
     assert first_progress["momentum_history_size"] == len(first_progress["momentum_history"])
+    assert first_progress["momentum_threshold"] == pytest.approx(_MOMENTUM_SENSITIVITY)
 
     next_cycle = evolver.state.cycle + 1
     evolver.state.network_cache["advance_system_last"] = {
@@ -300,6 +313,38 @@ def test_advance_system_respects_momentum_window(tmp_path, monkeypatch):
     assert progress["momentum_average"] == pytest.approx(
         sum(progress["momentum_history"]) / len(progress["momentum_history"])
     )
+    assert progress["momentum_threshold"] == pytest.approx(_MOMENTUM_SENSITIVITY)
+
+
+def test_advance_system_respects_momentum_threshold(tmp_path, monkeypatch):
+    class LocalThoughtLogger(thoughtlog_module.ThoughtLogger):
+        def __init__(self) -> None:  # pragma: no cover - simple delegation
+            super().__init__(dirpath=tmp_path / "thought-log")
+
+    monkeypatch.setattr(thoughtlog_module, "ThoughtLogger", LocalThoughtLogger)
+    store = JsonMemoryStore(
+        storage_path=tmp_path / "memory.json",
+        log_path=tmp_path / "log.md",
+        core_datasets={},
+    )
+    evolver = EchoEvolver(memory_store=store)
+
+    payload = evolver.advance_system(
+        enable_network=False,
+        persist_artifact=False,
+        include_manifest=False,
+        include_status=False,
+        include_reflection=False,
+        momentum_threshold=2.0,
+    )
+
+    progress = payload["progress"]
+    assert progress["momentum_threshold"] == pytest.approx(2.0)
+    assert progress["momentum_status"] == "steady"
+
+    expansion = payload["expansion"]
+    assert expansion["momentum_threshold"] == pytest.approx(2.0)
+    assert expansion["momentum_status"] == "steady"
 
 
 def test_advance_system_history_tracks_recent_cycles(tmp_path, monkeypatch):

@@ -5,6 +5,7 @@ import json
 import pytest
 
 from echo.cli import main
+from echo.evolver import _MOMENTUM_SENSITIVITY
 
 
 def test_cli_evolve_creates_artifact(tmp_path):
@@ -127,6 +128,7 @@ def test_cli_evolve_advance_system(monkeypatch, capfd):
         "manifest_events": 5,
         "system_report_events": 9,
         "momentum_window": 5,
+        "momentum_threshold": _MOMENTUM_SENSITIVITY,
     }
 
     output = capfd.readouterr().out
@@ -194,3 +196,43 @@ def test_cli_evolve_custom_momentum_window(monkeypatch):
 
     assert code == 0
     assert captured["momentum_window"] == 8
+
+
+def test_cli_evolve_momentum_threshold_requires_advance():
+    with pytest.raises(SystemExit) as exc:
+        main(["evolve", "--momentum-threshold", "0.2"])
+
+    assert exc.value.code == 2
+
+
+def test_cli_evolve_momentum_threshold_must_be_positive():
+    with pytest.raises(SystemExit) as exc:
+        main(["evolve", "--advance-system", "--momentum-threshold", "0"])
+
+    assert exc.value.code == 2
+
+
+def test_cli_evolve_custom_momentum_threshold(monkeypatch):
+    captured = {}
+
+    class DummyEvolver:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def advance_system(self, **kwargs):
+            captured.update(kwargs)
+            return {"summary": "Cycle advanced", "progress": {}}
+
+    monkeypatch.setattr("echo.cli.EchoEvolver", lambda *a, **k: DummyEvolver())
+
+    code = main(
+        [
+            "evolve",
+            "--advance-system",
+            "--momentum-threshold",
+            "0.2",
+        ]
+    )
+
+    assert code == 0
+    assert captured["momentum_threshold"] == pytest.approx(0.2)
