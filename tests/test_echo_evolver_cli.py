@@ -184,6 +184,30 @@ def test_main_rejects_system_report_events_without_flag(monkeypatch) -> None:
     assert excinfo.value.code == 2
 
 
+def test_main_rejects_include_diagnostics_without_advance(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--include-diagnostics"])
+
+    assert excinfo.value.code == 2
+
+
+def test_main_rejects_diagnostics_window_without_flag(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--diagnostics-window", "3"])
+
+    assert excinfo.value.code == 2
+
+
 def test_main_supports_advance_system(monkeypatch, capsys) -> None:
     captured = {}
 
@@ -203,9 +227,11 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
             include_event_summary: bool,
             include_propagation: bool,
             include_system_report: bool,
+            include_diagnostics: bool,
             event_summary_limit: int,
             manifest_events: int,
             system_report_events: int,
+            diagnostics_window: int,
             momentum_window: int,
             momentum_threshold: float,
         ) -> dict[str, object]:
@@ -220,9 +246,11 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
                 "include_event_summary": include_event_summary,
                 "include_propagation": include_propagation,
                 "include_system_report": include_system_report,
+                "include_diagnostics": include_diagnostics,
                 "event_summary_limit": event_summary_limit,
                 "manifest_events": manifest_events,
                 "system_report_events": system_report_events,
+                "diagnostics_window": diagnostics_window,
                 "momentum_window": momentum_window,
                 "momentum_threshold": momentum_threshold,
             }
@@ -249,6 +277,9 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "--include-system-report",
         "--system-report-events",
         "9",
+        "--include-diagnostics",
+        "--diagnostics-window",
+        "4",
     ])
 
     assert exit_code == 0
@@ -263,9 +294,11 @@ def test_main_supports_advance_system(monkeypatch, capsys) -> None:
         "include_event_summary": True,
         "include_propagation": True,
         "include_system_report": True,
+        "include_diagnostics": True,
         "event_summary_limit": 7,
         "manifest_events": 5,
         "system_report_events": 9,
+        "diagnostics_window": 4,
         "momentum_window": 5,
         "momentum_threshold": _MOMENTUM_SENSITIVITY,
     }

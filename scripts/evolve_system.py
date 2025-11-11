@@ -128,6 +128,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--include-diagnostics",
+        action="store_true",
+        help=(
+            "Include the system diagnostics snapshot within the advance-system "
+            "payload (requires --advance-system)."
+        ),
+    )
+    parser.add_argument(
         "--no-include-status",
         action="store_true",
         help="Exclude the status snapshot when running --advance-system.",
@@ -158,6 +166,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Number of recent events to forward to the system advancement "
             "report when using --include-system-report (default: 5)."
+        ),
+    )
+    parser.add_argument(
+        "--diagnostics-window",
+        type=int,
+        default=5,
+        help=(
+            "Number of diagnostic snapshots retained when using "
+            "--include-diagnostics (default: 5)."
         ),
     )
     parser.add_argument(
@@ -215,11 +232,13 @@ def execute_evolution(
     include_event_summary: bool,
     include_propagation: bool,
     include_system_report: bool,
+    include_diagnostics: bool,
     include_status: bool,
     include_manifest: bool,
     include_reflection: bool,
     event_summary_limit: int,
     system_report_events: int,
+    diagnostics_window: int,
     momentum_window: int,
     momentum_threshold: float,
     manifest_events: int,
@@ -242,9 +261,11 @@ def execute_evolution(
             include_event_summary=include_event_summary,
             include_propagation=include_propagation,
             include_system_report=include_system_report,
+            include_diagnostics=include_diagnostics,
             event_summary_limit=event_summary_limit,
             manifest_events=manifest_events,
             system_report_events=system_report_events,
+            diagnostics_window=diagnostics_window,
             momentum_window=momentum_window,
             momentum_threshold=momentum_threshold,
         )
@@ -299,12 +320,16 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         parser.error("--include-propagation requires --advance-system")
     if args.include_system_report and not args.advance_system:
         parser.error("--include-system-report requires --advance-system")
+    if args.include_diagnostics and not args.advance_system:
+        parser.error("--include-diagnostics requires --advance-system")
 
     if args.event_summary_limit <= 0 and args.advance_system and args.include_event_summary:
         parser.error("--event-summary-limit must be positive when including the event summary")
 
     if args.system_report_events <= 0 and args.advance_system and args.include_system_report:
         parser.error("--system-report-events must be positive when including the system report")
+    if args.diagnostics_window <= 0 and args.advance_system and args.include_diagnostics:
+        parser.error("--diagnostics-window must be positive when including diagnostics")
 
     if args.advance_system and args.momentum_window <= 0:
         parser.error("--momentum-window must be positive when using --advance-system")
@@ -320,6 +345,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     default_momentum_threshold = parser.get_default("momentum_threshold")
     if args.momentum_threshold != default_momentum_threshold and not args.advance_system:
         parser.error("--momentum-threshold requires --advance-system")
+    default_diagnostics_window = parser.get_default("diagnostics_window")
+    if args.diagnostics_window != default_diagnostics_window:
+        if not args.include_diagnostics:
+            parser.error("--diagnostics-window requires --include-diagnostics")
+        if not args.advance_system:
+            parser.error("--diagnostics-window requires --advance-system")
 
     execute_evolution(
         enable_network=args.enable_network,
@@ -335,11 +366,13 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         include_event_summary=args.include_event_summary,
         include_propagation=args.include_propagation,
         include_system_report=args.include_system_report,
+        include_diagnostics=args.include_diagnostics,
         include_status=not args.no_include_status,
         include_manifest=not args.no_include_manifest,
         include_reflection=not args.no_include_reflection,
         event_summary_limit=args.event_summary_limit,
         system_report_events=args.system_report_events,
+        diagnostics_window=args.diagnostics_window,
         momentum_window=args.momentum_window,
         momentum_threshold=args.momentum_threshold,
         manifest_events=args.manifest_events,

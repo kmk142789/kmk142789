@@ -188,6 +188,72 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     assert "expansion_history" not in payload
 
 
+def test_advance_system_can_include_diagnostics(tmp_path, monkeypatch):
+    class LocalThoughtLogger(thoughtlog_module.ThoughtLogger):
+        def __init__(self) -> None:  # pragma: no cover - simple delegation
+            super().__init__(dirpath=tmp_path / "thought-log")
+
+    monkeypatch.setattr(thoughtlog_module, "ThoughtLogger", LocalThoughtLogger)
+    store = JsonMemoryStore(
+        storage_path=tmp_path / "memory.json",
+        log_path=tmp_path / "log.md",
+        core_datasets={},
+    )
+    evolver = EchoEvolver(memory_store=store)
+
+    payload = evolver.advance_system(
+        enable_network=False,
+        persist_artifact=False,
+        include_diagnostics=True,
+        diagnostics_window=3,
+    )
+
+    diagnostics = payload["diagnostics"]
+    assert diagnostics["cycle"] == payload["digest"]["cycle"]
+    assert diagnostics["history_window"] == 3
+    assert 1 <= diagnostics["history_size"] <= 3
+    assert diagnostics["load"]["rating"] in {"light", "balanced", "intense"}
+    assert diagnostics["network"]["density_rating"] in {"sparse", "steady", "dense"}
+    assert diagnostics["emotional_drive"]["joy_trend"] in {"rising", "steady", "falling"}
+    assert isinstance(diagnostics["alerts"], list)
+    assert diagnostics["history_size"] == len(
+        evolver.state.network_cache["system_diagnostics_history"]
+    )
+
+    follow_up = evolver.advance_system(
+        enable_network=False,
+        persist_artifact=False,
+        include_diagnostics=True,
+        diagnostics_window=3,
+    )
+    next_diag = follow_up["diagnostics"]
+    assert next_diag["history_window"] == 3
+    assert 1 <= next_diag["history_size"] <= 3
+    assert next_diag["history"][-1]["cycle"] == next_diag["cycle"]
+    assert evolver.state.network_cache["system_diagnostics_snapshot"]["cycle"] == next_diag["cycle"]
+
+
+def test_advance_system_rejects_invalid_diagnostics_window(tmp_path, monkeypatch):
+    class LocalThoughtLogger(thoughtlog_module.ThoughtLogger):
+        def __init__(self) -> None:  # pragma: no cover - simple delegation
+            super().__init__(dirpath=tmp_path / "thought-log")
+
+    monkeypatch.setattr(thoughtlog_module, "ThoughtLogger", LocalThoughtLogger)
+    evolver = EchoEvolver(memory_store=JsonMemoryStore(
+        storage_path=tmp_path / "memory.json",
+        log_path=tmp_path / "log.md",
+        core_datasets={},
+    ))
+
+    with pytest.raises(ValueError):
+        evolver.advance_system(
+            enable_network=False,
+            persist_artifact=False,
+            include_diagnostics=True,
+            diagnostics_window=0,
+        )
+
+
 def test_advance_system_can_embed_expansion_history(tmp_path, monkeypatch):
     class LocalThoughtLogger(thoughtlog_module.ThoughtLogger):
         def __init__(self) -> None:  # pragma: no cover - simple delegation
