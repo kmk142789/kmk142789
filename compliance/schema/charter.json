@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.identity/schemas/aster-charter.json",
+  "title": "Echo Aster Core Voluntary Association Charter",
+  "type": "object",
+  "required": ["artifact_type", "title", "sections", "roles"],
+  "properties": {
+    "artifact_type": {
+      "const": "charter"
+    },
+    "title": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "roles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "authority": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["heading", "clauses"],
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "clauses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "text", "tags", "source"],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "structured_data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["language", "payload"],
+                    "properties": {
+                      "language": {
+                        "type": "string"
+                      },
+                      "payload": {}
+                    }
+                  }
+                },
+                "source": {
+                  "type": "object",
+                  "required": ["file", "line_start", "line_end"],
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "line_start": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "line_end": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,414 @@
+{
+  "matrix": {
+    "Pass": 9,
+    "Soft": 5,
+    "Fail": 3
+  },
+  "findings": [
+    {
+      "rule_id": "AUTH-ASSET_RELEASE",
+      "title": "Conflicting authority thresholds for asset_release",
+      "description": "Artifacts define inconsistent quorum thresholds for the same action.",
+      "severity": "contradiction",
+      "references": [
+        {
+          "clause": "CH-AUTH-001",
+          "artifact": "aster_charter.md",
+          "line_start": 11,
+          "line_end": 16
+        },
+        {
+          "clause": "TR-CUST-001",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 11,
+          "line_end": 16
+        },
+        {
+          "clause": "DAO-AUTH-001",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 11,
+          "line_end": 16
+        }
+      ],
+      "rationale": "Threshold values observed: 2-of-3, 3-of-5"
+    },
+    {
+      "rule_id": "AUTH-EMERGENCY_ACT",
+      "title": "Conflicting authority thresholds for emergency_act",
+      "description": "Artifacts define inconsistent quorum thresholds for the same action.",
+      "severity": "contradiction",
+      "references": [
+        {
+          "clause": "CH-AUTH-002",
+          "artifact": "aster_charter.md",
+          "line_start": 17,
+          "line_end": 22
+        },
+        {
+          "clause": "DAO-AUTH-002",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 17,
+          "line_end": 22
+        }
+      ],
+      "rationale": "Threshold values observed: 2-of-3, simple-majority"
+    },
+    {
+      "rule_id": "AUTH-ALIGN-ISSUE_IDENTITY",
+      "title": "Aligned authority for issue_identity",
+      "description": "All artifacts share the same quorum expectations for this action.",
+      "severity": "alignment",
+      "references": [
+        {
+          "clause": "CH-ID-001",
+          "artifact": "aster_charter.md",
+          "line_start": 46,
+          "line_end": 51
+        },
+        {
+          "clause": "DAO-ID-001",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 49,
+          "line_end": 54
+        }
+      ],
+      "rationale": ""
+    },
+    {
+      "rule_id": "AUTH-ALIGN-FREEZE_ASSETS",
+      "title": "Aligned authority for freeze_assets",
+      "description": "All artifacts share the same quorum expectations for this action.",
+      "severity": "alignment",
+      "references": [
+        {
+          "clause": "TR-CUST-002",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 17,
+          "line_end": 22
+        }
+      ],
+      "rationale": ""
+    },
+    {
+      "rule_id": "AUTH-ALIGN-VALIDATE_IDENTITY",
+      "title": "Aligned authority for validate_identity",
+      "description": "All artifacts share the same quorum expectations for this action.",
+      "severity": "alignment",
+      "references": [
+        {
+          "clause": "TR-ID-001",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 46,
+          "line_end": 51
+        }
+      ],
+      "rationale": ""
+    },
+    {
+      "rule_id": "CUST-ALIGN-BASE",
+      "title": "Custody anchored in shared multi-signature controls",
+      "description": "Charter, trust, and DAO documents all reference shared custody with UNA involvement.",
+      "severity": "alignment",
+      "references": [
+        {
+          "clause": "CH-CUST-001",
+          "artifact": "aster_charter.md",
+          "line_start": 25,
+          "line_end": 27
+        },
+        {
+          "clause": "TR-CUST-001",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 11,
+          "line_end": 16
+        },
+        {
+          "clause": "DAO-CUST-001",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 25,
+          "line_end": 27
+        }
+      ],
+      "rationale": ""
+    },
+    {
+      "rule_id": "CUST-EMERGENCY",
+      "title": "Emergency custody introduces solo authority",
+      "description": "Trust deed allows the Lead Trustee to freeze assets solo while DAO emergency pod assumes multi-sig execution, creating asymmetry in emergency custody.",
+      "severity": "tension",
+      "references": [
+        {
+          "clause": "TR-CUST-002",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 17,
+          "line_end": 22
+        },
+        {
+          "clause": "DAO-AUTH-002",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 17,
+          "line_end": 22
+        }
+      ],
+      "rationale": "Lead Trustee freeze window lacks explicit UNA countersignature while DAO pod still requires 2-of-3 approvals."
+    },
+    {
+      "rule_id": "CUST-REPORT",
+      "title": "Custody reporting duties align",
+      "description": "All artifacts include regular reporting obligations tied to custody operations.",
+      "severity": "alignment",
+      "references": [
+        {
+          "clause": "CH-CUST-002",
+          "artifact": "aster_charter.md",
+          "line_start": 28,
+          "line_end": 30
+        },
+        {
+          "clause": "TR-DUTY-001",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 25,
+          "line_end": 27
+        },
+        {
+          "clause": "DAO-CUST-002",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 28,
+          "line_end": 30
+        }
+      ],
+      "rationale": ""
+    },
+    {
+      "rule_id": "DIST-DISCRETIONARY",
+      "title": "Inconsistent discretionary spend ceilings",
+      "description": "Artifacts disagree on the maximum discretionary treasury percentage.",
+      "severity": "contradiction",
+      "references": [
+        {
+          "clause": "CH-FUND-001",
+          "artifact": "aster_charter.md",
+          "line_start": 33,
+          "line_end": 35
+        },
+        {
+          "clause": "TR-DIST-002",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 36,
+          "line_end": 38
+        },
+        {
+          "clause": "DAO-DIST-001",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 33,
+          "line_end": 35
+        }
+      ],
+      "rationale": "Observed discretionary ceilings range from 15% to 35%."
+    },
+    {
+      "rule_id": "DIST-RESTRICTED",
+      "title": "Restricted fund controls documented",
+      "description": "Trust deed and DAO agreement both demand UNA review for restricted grants.",
+      "severity": "alignment",
+      "references": [
+        {
+          "clause": "TR-DIST-001",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 33,
+          "line_end": 35
+        },
+        {
+          "clause": "DAO-DIST-002",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 36,
+          "line_end": 38
+        }
+      ],
+      "rationale": ""
+    },
+    {
+      "rule_id": "DIST-DAO-OVERRUN",
+      "title": "DAO discretionary window exceeds trustee authorization",
+      "description": "DAO experimentation vault cap is larger than what the trust deed permits.",
+      "severity": "tension",
+      "references": [
+        {
+          "clause": "TR-DIST-002",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 36,
+          "line_end": 38
+        },
+        {
+          "clause": "DAO-DIST-001",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 33,
+          "line_end": 35
+        }
+      ],
+      "rationale": "Trust deed cap 15% vs DAO experimentation cap 20%."
+    },
+    {
+      "rule_id": "AMND-UNA",
+      "title": "UNA involvement required for amendments",
+      "description": "Each artifact references UNA Guardian participation in amendment procedures.",
+      "severity": "alignment",
+      "references": [
+        {
+          "clause": "CH-AMND-001",
+          "artifact": "aster_charter.md",
+          "line_start": 41,
+          "line_end": 43
+        },
+        {
+          "clause": "TR-AMND-001",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 41,
+          "line_end": 43
+        },
+        {
+          "clause": "DAO-AMND-001",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 41,
+          "line_end": 43
+        },
+        {
+          "clause": "DAO-AMND-002",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 44,
+          "line_end": 46
+        }
+      ],
+      "rationale": ""
+    },
+    {
+      "rule_id": "AMND-TOKEN-GAP",
+      "title": "Token governance only appears in DAO agreement",
+      "description": "DAO operating agreement requires token-holder approval, which is absent from charter and trust deed amendment language.",
+      "severity": "tension",
+      "references": [
+        {
+          "clause": "DAO-AMND-001",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 41,
+          "line_end": 43
+        },
+        {
+          "clause": "CH-AMND-001",
+          "artifact": "aster_charter.md",
+          "line_start": 41,
+          "line_end": 43
+        },
+        {
+          "clause": "TR-AMND-001",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 41,
+          "line_end": 43
+        },
+        {
+          "clause": "DAO-AMND-002",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 44,
+          "line_end": 46
+        }
+      ],
+      "rationale": "Token voting threshold is articulated in DAO OA but omitted elsewhere."
+    },
+    {
+      "rule_id": "ID-ISSUANCE",
+      "title": "Identity issuance requires dual controls",
+      "description": "Charter, trust, and DAO artifacts all point to Identity Circle plus Guardian participation.",
+      "severity": "alignment",
+      "references": [
+        {
+          "clause": "CH-ID-001",
+          "artifact": "aster_charter.md",
+          "line_start": 46,
+          "line_end": 51
+        },
+        {
+          "clause": "TR-ID-001",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 46,
+          "line_end": 51
+        },
+        {
+          "clause": "DAO-ID-001",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 49,
+          "line_end": 54
+        }
+      ],
+      "rationale": ""
+    },
+    {
+      "rule_id": "ID-SUSPENSION",
+      "title": "Emergency suspension actor differs from charter",
+      "description": "DAO emergency pod may suspend credentials for 48 hours even though the charter reserves suspension to the Guardian UNA Board.",
+      "severity": "tension",
+      "references": [
+        {
+          "clause": "CH-ID-002",
+          "artifact": "aster_charter.md",
+          "line_start": 52,
+          "line_end": 54
+        },
+        {
+          "clause": "DAO-ID-002",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 55,
+          "line_end": 57
+        }
+      ],
+      "rationale": "Emergency Response Pod suspension power introduces a temporary divergence from UNA-led revocation."
+    },
+    {
+      "rule_id": "TRAN-ONCHAIN",
+      "title": "Monthly transparency loop",
+      "description": "All artifacts require monthly disclosures tied to on-chain proofs or trustee attestations.",
+      "severity": "alignment",
+      "references": [
+        {
+          "clause": "CH-TRAN-002",
+          "artifact": "aster_charter.md",
+          "line_start": 60,
+          "line_end": 62
+        },
+        {
+          "clause": "TR-TRAN-001",
+          "artifact": "vault_trust_deed.md",
+          "line_start": 54,
+          "line_end": 56
+        },
+        {
+          "clause": "DAO-TRAN-001",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 60,
+          "line_end": 62
+        }
+      ],
+      "rationale": ""
+    },
+    {
+      "rule_id": "TRAN-AUDIT-FREQUENCY",
+      "title": "Audit frequency mismatch",
+      "description": "Charter mandates semi-annual UNA audits while DAO OA references annual third-party audits.",
+      "severity": "tension",
+      "references": [
+        {
+          "clause": "CH-TRAN-001",
+          "artifact": "aster_charter.md",
+          "line_start": 57,
+          "line_end": 59
+        },
+        {
+          "clause": "DAO-TRAN-002",
+          "artifact": "orbit_dao_oa.md",
+          "line_start": 63,
+          "line_end": 65
+        }
+      ],
+      "rationale": "Semi-annual vs annual cadence requires harmonization."
+    }
+  ]
+}

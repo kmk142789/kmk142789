@@ -1,0 +1,27 @@
+flowchart TD
+    Steward_Council[Steward Council]
+    vault[vault]
+    Steward_Council -->|asset_release| vault
+    Treasury_Committee[Treasury Committee]
+    Token_Vote_60%[Token Vote 60%]
+    Treasury_Committee -->|asset_release| Token_Vote_60%
+    Lead_Trustee[Lead Trustee]
+    Steward_Council,_Guardian_UNA_Board[Steward Council, Guardian UNA Board]
+    Lead_Trustee -->|asset_release| Steward_Council,_Guardian_UNA_Board
+    Guardian_UNA_Board[Guardian UNA Board]
+    output[output]
+    Guardian_UNA_Board -->|emergency_act| output
+    Emergency_Response_Pod[Emergency Response Pod]
+    Emergency_Response_Pod -->|emergency_act| output
+    Operations_Circle[Operations Circle]
+    Identity_Circle[Identity Circle]
+    Operations_Circle -->|issue_identity| Identity_Circle
+    Identity_Circle -->|issue_identity| output
+    Lead_Trustee -->|freeze_assets| output
+    Lead_Trustee -->|validate_identity| output
+    Lead_Trustee -->|asset_release| Steward_Council,_Guardian_UNA_Board
+    Lead_Trustee -->|freeze_assets| output
+    Emergency_Response_Pod -->|emergency_act| output
+    Lead_Trustee -->|validate_identity| output
+    Operations_Circle -->|issue_identity| Identity_Circle
+    Identity_Circle -->|issue_identity| output

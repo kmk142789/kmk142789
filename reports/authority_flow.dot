@@ -1,0 +1,17 @@
+digraph AuthorityFlow {
+    "Steward Council" -> "vault" [label="asset_release"]
+    "Lead Trustee" -> "['Steward Council', 'Guardian UNA Board']" [label="asset_release"]
+    "Treasury Committee" -> "['Token Vote 60%']" [label="asset_release"]
+    "Guardian UNA Board" -> "output" [label="emergency_act"]
+    "Emergency Response Pod" -> "output" [label="emergency_act"]
+    "Identity Circle" -> "output" [label="issue_identity"]
+    "Operations Circle" -> "['Identity Circle']" [label="issue_identity"]
+    "Lead Trustee" -> "output" [label="freeze_assets"]
+    "Lead Trustee" -> "output" [label="validate_identity"]
+    "Lead Trustee" -> "['Steward Council', 'Guardian UNA Board']" [label="asset_release"]
+    "Lead Trustee" -> "output" [label="freeze_assets"]
+    "Emergency Response Pod" -> "output" [label="emergency_act"]
+    "Identity Circle" -> "output" [label="issue_identity"]
+    "Lead Trustee" -> "output" [label="validate_identity"]
+    "Operations Circle" -> "['Identity Circle']" [label="issue_identity"]
+}
