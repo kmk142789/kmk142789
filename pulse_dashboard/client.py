@@ -113,6 +113,43 @@ class PulseDashboardClient:
         latest = amplify.get("latest")
         return [latest] if isinstance(latest, Mapping) else []
 
+    def amplify_trend(self) -> str:
+        amplify = self.payload.get("amplify")
+        if not isinstance(amplify, Mapping):
+            return "unknown"
+        summary = amplify.get("summary")
+        if isinstance(summary, Mapping):
+            value = summary.get("trend")
+            if isinstance(value, str) and value:
+                return value
+        return "unknown"
+
+    def amplify_presence_score(self) -> float:
+        amplify = self.payload.get("amplify")
+        if not isinstance(amplify, Mapping):
+            return 0.0
+        summary = amplify.get("summary")
+        if isinstance(summary, Mapping):
+            value = summary.get("presence_score")
+            try:
+                return round(float(value), 2)
+            except (TypeError, ValueError):
+                pass
+        return 0.0
+
+    def amplify_volatility(self) -> float:
+        amplify = self.payload.get("amplify")
+        if not isinstance(amplify, Mapping):
+            return 0.0
+        summary = amplify.get("summary")
+        if isinstance(summary, Mapping):
+            value = summary.get("volatility")
+            try:
+                return round(float(value), 3)
+            except (TypeError, ValueError):
+                pass
+        return 0.0
+
     # ------------------------------------------------------------------
     # Worker hive helpers
 
@@ -159,7 +196,16 @@ class PulseDashboardClient:
 
         parts = [
             f"Pulse Dashboard :: pulses={self.total_pulses()} attestations={len(self.attestation_ids())}",
-            f"Glyph energy: {self.glyph_energy():.2f} :: Amplify momentum: {self.amplify_momentum()}",
+            (
+                "Glyph energy: "
+                f"{self.glyph_energy():.2f} :: Amplify momentum: {self.amplify_momentum()}"
+                f" :: trend={self.amplify_trend()}"
+            ),
+            (
+                "Amplify presence score: "
+                f"{self.amplify_presence_score():.2f}"
+                f" :: volatility={self.amplify_volatility():.3f}"
+            ),
             "Categories: "
             + ", ".join(f"{name}({count})" for name, count in self.pulse_categories(limit=3)),
         ]

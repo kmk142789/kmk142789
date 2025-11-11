@@ -326,20 +326,38 @@ class PulseDashboardBuilder:
         history = snapshots[:50]
         latest = history[0]
 
-        indices = [entry["index"] for entry in history if isinstance(entry.get("index"), (int, float))]
+        indices: list[float] = []
+        for entry in history:
+            value = entry.get("index")
+            if isinstance(value, (int, float)):
+                indices.append(float(value))
         summary: dict[str, object] = {"cycles_tracked": len(snapshots)}
         if indices:
             avg_index = sum(indices) / len(indices)
             summary["average_index"] = round(avg_index, 2)
             summary["peak_index"] = round(max(indices), 2)
             if len(indices) >= 2:
-                summary["momentum"] = round(indices[0] - indices[1], 2)
+                deltas = [round(indices[i] - indices[i + 1], 4) for i in range(len(indices) - 1)]
+                summary["momentum"] = round(deltas[0], 2)
+                direction, streak, stability = self._diagnose_amplify_trend(indices[0], deltas)
+                summary["trend"] = direction
+                summary["streak_length"] = streak
+                summary["stability"] = stability
+                summary["volatility"] = self._amplify_volatility(indices)
+                summary["presence_score"] = self._presence_score(indices[0], deltas[0], streak, stability)
+            else:
+                summary["trend"] = "steady"
+                summary["streak_length"] = 0
+                summary["stability"] = 1.0
+                summary["volatility"] = 0.0
+                summary["presence_score"] = round(indices[0], 2)
+        summary.setdefault("trend", "steady")
+        summary.setdefault("streak_length", 0)
+        summary.setdefault("stability", 1.0)
+        summary.setdefault("volatility", 0.0)
+        summary.setdefault("presence_score", 0.0)
         summary["latest_commit"] = latest.get("commit_sha")
-        summary["presence"] = (
-            f"Amplify presence cycle {latest.get('cycle')} @ index {latest.get('index'):.2f}"
-            if isinstance(latest.get("index"), (int, float))
-            else f"Amplify presence cycle {latest.get('cycle')}"
-        )
+        summary["presence"] = self._format_presence_message(latest, summary)
 
         return {"history": history, "latest": latest, "summary": summary}
 
@@ -364,6 +382,92 @@ class PulseDashboardBuilder:
             },
         ]
         return {"energy": round(energy, 2), "cycles": cycles}
+
+    def _diagnose_amplify_trend(
+        self,
+        latest_index: float,
+        deltas: list[float],
+    ) -> tuple[str, int, float]:
+        """Return a tuple describing trend direction, streak length, and stability.
+
+        ``deltas`` is expected to be ordered from newest change to oldest.
+        """
+
+        if not deltas:
+            return ("steady", 0, 1.0)
+
+        tolerance = 0.05
+        first_delta = deltas[0]
+        if abs(first_delta) <= tolerance:
+            direction = "steady"
+        else:
+            direction = "rising" if first_delta > 0 else "cooling"
+
+        streak = 0
+        for delta in deltas:
+            if abs(delta) <= tolerance:
+                if direction == "steady":
+                    streak += 1
+                    continue
+                break
+            if direction == "steady":
+                direction = "rising" if delta > 0 else "cooling"
+                streak = 1
+                continue
+            if direction == "rising" and delta > tolerance:
+                streak += 1
+                continue
+            if direction == "cooling" and delta < -tolerance:
+                streak += 1
+                continue
+            break
+
+        # Stability is inversely related to volatility of the first few deltas.
+        window = deltas[: min(4, len(deltas))]
+        if not window:
+            stability = 1.0
+        else:
+            avg_change = sum(abs(delta) for delta in window) / len(window)
+            # Higher average change means lower stability. Clamp between 0 and 1.
+            stability = max(0.0, min(1.0, 1.0 - (avg_change / max(abs(latest_index), 1.0))))
+
+        return (direction, streak, round(stability, 3))
+
+    def _amplify_volatility(self, indices: list[float]) -> float:
+        if len(indices) < 2:
+            return 0.0
+        mean = sum(indices) / len(indices)
+        variance = sum((value - mean) ** 2 for value in indices) / len(indices)
+        return round(variance ** 0.5, 3)
+
+    def _presence_score(
+        self,
+        latest_index: float,
+        momentum: float,
+        streak: int,
+        stability: float,
+    ) -> float:
+        baseline = max(latest_index, 0.0)
+        directional_bonus = max(momentum, 0.0)
+        streak_bonus = streak * 0.75
+        stability_bonus = stability * 2.0
+        return round(baseline + directional_bonus + streak_bonus + stability_bonus, 2)
+
+    def _format_presence_message(
+        self,
+        latest: Mapping[str, object],
+        summary: Mapping[str, object],
+    ) -> str:
+        cycle = latest.get("cycle")
+        index_value = latest.get("index")
+        trend = summary.get("trend", "steady")
+
+        if isinstance(index_value, (int, float)):
+            return (
+                f"Amplify presence cycle {cycle} :: index {float(index_value):.2f}"
+                f" :: {trend}"
+            )
+        return f"Amplify presence cycle {cycle} :: {trend}"
 
 
 __all__ = ["PulseDashboardBuilder"]
