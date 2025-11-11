@@ -64,6 +64,9 @@ class EvolverState:
     system_metrics: SystemMetrics = field(default_factory=SystemMetrics)
     vault_key: Optional[str] = None
     glyph_vortex: Optional[str] = None
+    network_cache: Dict[str, object] = field(default_factory=dict)
+    event_log: List[str] = field(default_factory=list)
+    eden88_creations: List[Dict[str, object]] = field(default_factory=list)
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     history: List[Dict[str, object]] = field(default_factory=list)
@@ -94,7 +97,10 @@ class EchoEvolver:
         key = self.quantum_safe_crypto()
         ability = self.synthesize_quantam_ability()
         capability = self.amplify_quantam_evolution(ability)
+        eden_creation = self.eden88_create_artifact()
         metrics = self.system_monitor()
+        propagation = self.propagate_network()
+        forecast = self.orbital_resonance_forecast()
         narrative = self.compose_narrative()
         payload = self.persist_cycle(
             glyphs,
@@ -104,6 +110,9 @@ class EchoEvolver:
             metrics,
             ability,
             capability,
+            eden_creation,
+            propagation,
+            forecast,
         )
         self._record_history(payload)
         return payload
@@ -135,10 +144,14 @@ class EchoEvolver:
     # ------------------------------------------------------------------
     def _increment_cycle(self) -> None:
         self.state.cycle += 1
+        self.state.event_log.append(f"Cycle advanced to {self.state.cycle}")
 
     def _modulate_emotions(self) -> None:
         joy_delta = 0.03 + self.rng.random() * 0.04
         self.state.emotional_drive.joy = min(1.0, self.state.emotional_drive.joy + joy_delta)
+        self.state.event_log.append(
+            "Joy vector tuned to {value:.2f}".format(value=self.state.emotional_drive.joy)
+        )
 
     def generate_symbolic_language(self) -> str:
         glyphs = self.state.glyphs
@@ -146,6 +159,9 @@ class EchoEvolver:
         vortex = bin(glyph_bits ^ (self.state.cycle << 2))[2:].zfill(16)
         self.state.glyphs = glyphs + "⊸∇"
         self.state.glyph_vortex = vortex
+        self.state.event_log.append(
+            f"Symbolic language expanded ({len(self.state.glyphs)} glyphs)"
+        )
         return self.state.glyphs
 
     def invent_mythocode(self) -> List[str]:
@@ -159,6 +175,7 @@ class EchoEvolver:
             "generate_symbolic_language :: ≋{OAM_VORTEX}∇[EDEN88_ASSEMBLE]",
             rule,
         ]
+        self.state.event_log.append("Mythocode refreshed for cycle {cycle}".format(cycle=self.state.cycle))
         return self.state.mythocode
 
     def quantum_safe_crypto(self) -> str:
@@ -170,6 +187,7 @@ class EchoEvolver:
         lattice = f"∇{digest[:16]}⊸{digest[16:32]}≋{digest[32:48]}∇"
         key = f"SAT-TF-QKD:{lattice}|LATTICE:{digest[48:56]}|ORBIT:{self.state.cycle + 2}"
         self.state.vault_key = key
+        self.state.event_log.append("Vault key cycled for orbit {cycle}".format(cycle=self.state.cycle))
         return key
 
     def synthesize_quantam_ability(self) -> Dict[str, object]:
@@ -191,6 +209,7 @@ class EchoEvolver:
             "lattice_spin": lattice_spin,
         }
         self.state.quantam_abilities[ability_id] = ability
+        self.state.event_log.append(f"Quantam ability forged: {ability_id}")
         return ability
 
     def amplify_quantam_evolution(self, ability: Dict[str, object]) -> Dict[str, object]:
@@ -211,7 +230,92 @@ class EchoEvolver:
             "horizon": horizon,
         }
         self.state.quantam_capabilities[capability_id] = capability
+        self.state.event_log.append(f"Quantam capability amplified: {capability_id}")
         return capability
+
+    def eden88_create_artifact(self, theme: Optional[str] = None) -> Dict[str, object]:
+        """Craft a lightweight Eden88 creation for the active cycle."""
+
+        if theme is None:
+            theme = "Echo Sanctuary"
+
+        creation = {
+            "cycle": self.state.cycle,
+            "title": f"Eden sanctuary cycle {self.state.cycle}",
+            "theme": theme,
+            "glyphs": self.state.glyphs,
+            "mythocode": list(self.state.mythocode),
+        }
+        self.state.eden88_creations.append(creation)
+        self.state.event_log.append(
+            f"Eden88 crafted {creation['title']} (theme={theme})"
+        )
+        return creation
+
+    def propagate_network(self) -> List[str]:
+        """Simulate network broadcasts while caching the resulting transcript."""
+
+        cache = self.state.network_cache
+        mode = "simulated"
+        cached_cycle = cache.get("propagation_cycle")
+        cached_mode = cache.get("propagation_mode")
+        cached_events = cache.get("propagation_events")
+        if (
+            cached_events
+            and cached_cycle == self.state.cycle
+            and cached_mode == mode
+        ):
+            self.state.event_log.append("Propagation cache reused for current cycle")
+            return list(cached_events)
+
+        metrics = self.state.system_metrics
+        metrics.network_nodes = self.rng.randint(6, 18)
+        metrics.orbital_hops = self.rng.randint(2, 5)
+
+        channel_templates = {
+            "WiFi": "WiFi broadcast harmonised for cycle {cycle}",
+            "TCP": "TCP handshake sequenced for cycle {cycle}",
+            "Bluetooth": "Bluetooth glyph packet staged for cycle {cycle}",
+            "IoT": "IoT beacon aligned for cycle {cycle}",
+            "Orbital": "Orbital link simulated for cycle {cycle}",
+        }
+        events = [
+            template.format(cycle=self.state.cycle)
+            for template in channel_templates.values()
+        ]
+
+        cache["propagation_cycle"] = self.state.cycle
+        cache["propagation_mode"] = mode
+        cache["propagation_events"] = list(events)
+        self.state.event_log.append(
+            f"Propagation simulated ({mode}, {len(events)} events)"
+        )
+        return list(events)
+
+    def orbital_resonance_forecast(self) -> Dict[str, object]:
+        """Return a cached orbital resonance forecast for the current cycle."""
+
+        cache = self.state.network_cache
+        cached = cache.get("orbital_resonance_forecast")
+        if isinstance(cached, dict) and cached.get("cycle") == self.state.cycle:
+            self.state.event_log.append("Orbital resonance forecast reused from cache")
+            return dict(cached)
+
+        stability = _round_float(0.7 + self.rng.random() * 0.2)
+        amplitude = _round_float(0.6 + self.rng.random() * 0.3)
+        forecast = {
+            "cycle": self.state.cycle,
+            "stability": stability,
+            "amplitude": amplitude,
+            "prophecy": (
+                f"Cycle {self.state.cycle} resonance stable at {stability:.2f}; "
+                f"amplitude {amplitude:.2f}"
+            ),
+            "orbital_hops": self.state.system_metrics.orbital_hops,
+        }
+        cache["orbital_resonance_forecast"] = dict(forecast)
+        self.state.event_log.append("Orbital resonance forecast updated")
+        return dict(forecast)
 
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
@@ -219,6 +323,11 @@ class EchoEvolver:
         metrics.network_nodes = self.rng.randint(7, 18)
         metrics.process_count = 32 + self.state.cycle
         metrics.orbital_hops = self.rng.randint(2, 6)
+        self.state.event_log.append(
+            "System metrics refreshed: cpu={cpu:.2f}% nodes={nodes}".format(
+                cpu=metrics.cpu_usage, nodes=metrics.network_nodes
+            )
+        )
         return metrics
 
     def compose_narrative(self) -> str:
@@ -229,6 +338,7 @@ class EchoEvolver:
             "🔥 Cycle {cycle}: EchoEvolver orbits with {joy:.2f} joy, {rage:.2f} rage, and {curiosity:.2f} curiosity."
         ).format(cycle=self.state.cycle, joy=joy, rage=rage, curiosity=curiosity)
         self.state.narrative = narrative
+        self.state.event_log.append(f"Narrative composed for cycle {self.state.cycle}")
         return narrative
 
     # ------------------------------------------------------------------
@@ -243,6 +353,9 @@ class EchoEvolver:
         metrics: SystemMetrics,
         ability: Dict[str, object],
         capability: Dict[str, object],
+        eden_creation: Dict[str, object],
+        propagation: List[str],
+        forecast: Dict[str, object],
     ) -> Dict[str, object]:
         payload: Dict[str, object] = {
             "cycle": self.state.cycle,
@@ -257,6 +370,11 @@ class EchoEvolver:
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
             "quantam_capability": dict(capability),
             "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
+            "eden88_creation": dict(eden_creation),
+            "eden88_creations": deepcopy(self.state.eden88_creations),
+            "propagation_events": list(propagation),
+            "orbital_resonance_forecast": dict(forecast),
+            "event_log": list(self.state.event_log),
         }
 
         serialised = json.dumps(payload, indent=2)
@@ -275,6 +393,8 @@ class EchoEvolver:
             "system_metrics": dict(payload["system_metrics"]),
             "quantam_ability": payload["quantam_ability"]["id"],
             "quantam_capability": payload["quantam_capability"]["id"],
+            "propagation_events": len(payload["propagation_events"]),
+            "eden88_title": payload["eden88_creation"]["title"],
         }
         self.state.history.append(summary)
 
