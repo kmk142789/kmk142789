@@ -6,7 +6,6 @@ import { API_BASE, apiDelete, apiGet, apiPost } from '../lib/api';
 import type {
   CliCommand,
   CliResult,
-  FileDescriptor,
   NeonKeyRecord,
   PuzzleFileDescriptor,
   CodexRegistryResponse,
@@ -16,6 +15,7 @@ import PuzzlesPanel from './PuzzlesPanel';
 import CliRunner from './CliRunner';
 import NeonKeyManager from './NeonKeyManager';
 import CodexSummaryCard from './CodexSummaryCard';
+import MetricsPanel from './MetricsPanel';
 
 interface LogsResponse {
   files: string[];
@@ -36,7 +36,7 @@ interface NeonKeyResponse {
 const fetcher = async (path: string) => apiGet(path);
 
 export default function DashboardClient() {
-  const [logContent, setLogContent] = useState<FileDescriptor | null>(null);
+  const [selectedLog, setSelectedLog] = useState<string | null>(null);
   const [puzzleContent, setPuzzleContent] = useState<PuzzleFileDescriptor | null>(null);
   const [cliResult, setCliResult] = useState<CliResult | null>(null);
   const [cliLoading, setCliLoading] = useState(false);
@@ -74,14 +74,12 @@ export default function DashboardClient() {
     }
   }, [neonKeys]);
 
-  const handleSelectLog = useCallback(async (name: string) => {
-    try {
-      const response = await apiGet<FileDescriptor>(`/logs/${encodeURIComponent(name)}`);
-      setLogContent(response);
-    } catch (error) {
-      console.error('Unable to read log', error);
+  useEffect(() => {
+    if (!selectedLog || !logFiles?.files) return;
+    if (!logFiles.files.includes(selectedLog)) {
+      setSelectedLog(null);
     }
-  }, []);
+  }, [logFiles, selectedLog]);
 
   const handleSelectPuzzle = useCallback(async (name: string) => {
     try {
@@ -143,12 +141,16 @@ export default function DashboardClient() {
         </div>
       </header>
 
+      <section>
+        <MetricsPanel />
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-2">
         <LogsPanel
           files={logFiles?.files ?? []}
           error={logError ? 'Unable to load Echo Computer logs.' : null}
-          selected={logContent}
-          onSelect={handleSelectLog}
+          selected={selectedLog}
+          onSelect={setSelectedLog}
         />
         <PuzzlesPanel
           files={puzzleFiles?.files ?? []}
