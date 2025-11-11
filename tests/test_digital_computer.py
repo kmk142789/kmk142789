@@ -6,11 +6,13 @@ import pytest
 
 from echo.digital_computer import (
     AssemblyError,
+    AdvancementCycle,
     AssistantSuggestion,
     EchoComputer,
     EchoComputerAssistant,
     EvolutionCycle,
     assemble_program,
+    advance_program,
     evolve_program,
     run_program,
 )
@@ -222,6 +224,46 @@ def test_evolve_program_generates_cycle_reports() -> None:
     assert [cycle.result.memory["result"] for cycle in cycles] == [2, 7]
     assert cycles[1].result.output == ("7",)
     assert cycles[0].inputs["value"] == 2
+
+
+def test_run_persist_state_preserves_registers() -> None:
+    computer = EchoComputer()
+    computer.load(
+        """
+        INC A
+        HALT
+        """
+    )
+
+    first = computer.run(persist_state=True)
+    assert first.registers["A"] == 1
+
+    second = computer.run(persist_state=True)
+    assert second.registers["A"] == 2
+
+    reset = computer.run()
+    assert reset.registers["A"] == 1
+
+
+def test_advance_program_preserves_state_between_cycles() -> None:
+    program = """
+    LOAD B ?delta
+    ADD A B
+    STORE A @total
+    PRINT A
+    HALT
+    """
+
+    cycles = advance_program(
+        program,
+        input_series=[{"delta": 1}, {"delta": 3}, {"delta": -2}],
+    )
+
+    assert all(isinstance(cycle, AdvancementCycle) for cycle in cycles)
+    assert [cycle.before_registers["A"] for cycle in cycles] == [0, 1, 4]
+    assert [cycle.result.registers["A"] for cycle in cycles] == [1, 4, 2]
+    assert [cycle.result.memory["total"] for cycle in cycles] == [1, 4, 2]
+    assert [cycle.before_memory.get("total", 0) for cycle in cycles] == [0, 1, 4]
 
 
 def test_assistant_offers_clamp_template() -> None:
