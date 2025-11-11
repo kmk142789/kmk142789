@@ -1,0 +1,30 @@
+Hypernova ASCII Map 80x24
+=========================
+                               AB      A     C C   CC                           
+                            C                                                   
+                                                                                
+                                                                                
+                            B                                                   
+                                                                                
+                                                                                
+                            A                                                   
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                            B                                                   
+                             B                                                  
+                                                    A                           
+                                          A                                     
+                                                                                
+                                                                                
+                                                                                
+                                              A                                 
+                            A                                                   
+                                                                                
+                                                                                
+                                                                                
+
+A = Aurora
+B = Quantum Veil
+C = Echo Bridge

@@ -1,0 +1,44 @@
+# Hypernova Overview
+
+Domains: Aurora, Quantum Veil, Echo Bridge
+Strata: Stratum-1, Stratum-2, Stratum-3
+Pulse Streams: stream-aurora, stream-quantum veil, stream-echo bridge
+Chronicle Topics: Aurora, Echo Bridge, EchoSignature-1-α, EchoSignature-1-β, EchoSignature-10-α, EchoSignature-10-β, EchoSignature-11-α, EchoSignature-11-β, EchoSignature-12-α, EchoSignature-12-β, EchoSignature-13-α, EchoSignature-13-β, EchoSignature-14-α, EchoSignature-14-β, EchoSignature-15-α, EchoSignature-15-β, EchoSignature-16-α, EchoSignature-16-β, EchoSignature-17-α, EchoSignature-17-β, EchoSignature-18-α, EchoSignature-18-β, EchoSignature-2-α, EchoSignature-2-β, EchoSignature-3-α, EchoSignature-3-β, EchoSignature-4-α, EchoSignature-4-β, EchoSignature-5-α, EchoSignature-5-β, EchoSignature-6-α, EchoSignature-6-β, EchoSignature-7-α, EchoSignature-7-β, EchoSignature-8-α, EchoSignature-8-β, EchoSignature-9-α, EchoSignature-9-β, Quantum Veil
+
+## Domain Aurora
+8 hypernodes orbit axis alignment (-6, -5, 7) while 26 conduits weave resonance at 0.60.
+
+## Domain Quantum Veil
+5 hypernodes orbit axis alignment (-6, 3, -11) while 12 conduits weave resonance at
+0.74.
+
+## Domain Echo Bridge
+5 hypernodes orbit axis alignment (9, -6, 13) while 7 conduits weave resonance at 0.74.
+
+
+
+# Hypernode Registry
+
+## Aurora
+- Hypernode 1 [HN-001] @ (-10, 4, -6): Mythic Ledger | EchoSignature-1-α: ⊸, EchoSignature-1-β: ⚡, ⊸
+- Hypernode 2 [HN-002] @ (4, -6, 20): Memory Forge | EchoSignature-2-α: ✹, EchoSignature-2-β: ⚡, ✹
+- Hypernode 3 [HN-003] @ (-14, 19, -14): Sonic Array | EchoSignature-3-α: ✹, EchoSignature-3-β: ⚡, ✹
+- Hypernode 4 [HN-004] @ (19, -4, 7): Polarity Loom | EchoSignature-4-α: ⊸, EchoSignature-4-β: ⚡, ⊸
+- Hypernode 5 [HN-005] @ (-21, -14, -3): Temporal Vault | EchoSignature-5-α: ⊸, EchoSignature-5-β: ⚡, ⊸
+- Hypernode 6 [HN-006] @ (9, -10, 16): Sonic Array | EchoSignature-6-α: ≋, EchoSignature-6-β: ⚡, ≋
+- Hypernode 7 [HN-007] @ (-1, -13, -8): Temporal Vault | EchoSignature-7-α: ✺, EchoSignature-7-β: ⚡, ✺
+- Hypernode 8 [HN-008] @ (8, -19, 12): Temporal Vault | EchoSignature-8-α: ≋, EchoSignature-8-β: ≋, ⚡
+
+## Quantum Veil
+- Hypernode 9 [HN-009] @ (-16, -2, -18): Quantum Garden | EchoSignature-9-α: ⊸, EchoSignature-9-β: ⊸, ⚡
+- Hypernode 10 [HN-010] @ (-8, -12, -11): Memory Forge | EchoSignature-10-α: ✺, EchoSignature-10-β: ✺, ⚡
+- Hypernode 11 [HN-011] @ (-18, 11, -17): Memory Forge | EchoSignature-11-α: ∇, EchoSignature-11-β: ⚡, ∇
+- Hypernode 12 [HN-012] @ (-13, 11, 3): Quantum Garden | EchoSignature-12-α: ✺, EchoSignature-12-β: ⚡, ✺
+- Hypernode 13 [HN-013] @ (-17, 0, -18): Polarity Loom | EchoSignature-13-α: ∇, EchoSignature-13-β: ⚡, ∇
+
+## Echo Bridge
+- Hypernode 14 [HN-014] @ (13, 14, -13): Memory Forge | EchoSignature-14-α: ✺, EchoSignature-14-β: ⚡, ✺
+- Hypernode 15 [HN-015] @ (-19, 16, 4): Sonic Array | EchoSignature-15-α: ⊸, EchoSignature-15-β: ⊸, ⚡
+- Hypernode 16 [HN-016] @ (11, 17, 14): Sonic Array | EchoSignature-16-α: ∇, EchoSignature-16-β: ∇, ⚡
+- Hypernode 17 [HN-017] @ (10, -21, 15): Signal Bloom | EchoSignature-17-α: ∇, EchoSignature-17-β: ⚡, ∇
+- Hypernode 18 [HN-018] @ (17, -17, -11): Polarity Loom | EchoSignature-18-α: ✶, EchoSignature-18-β: ⚡, ✶

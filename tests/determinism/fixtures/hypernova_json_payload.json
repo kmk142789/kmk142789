@@ -1,0 +1,1256 @@
+{
+  "hypernova": {
+    "adjacency": {
+      "HN-001": {
+        "HN-003": 1,
+        "HN-005": 1,
+        "HN-008": 1
+      },
+      "HN-002": {
+        "HN-004": 1,
+        "HN-005": 1,
+        "HN-006": 1,
+        "HN-007": 1
+      },
+      "HN-003": {
+        "HN-001": 1,
+        "HN-002": 1,
+        "HN-006": 1,
+        "HN-008": 1
+      },
+      "HN-004": {
+        "HN-005": 1,
+        "HN-006": 1,
+        "HN-007": 1,
+        "HN-008": 1
+      },
+      "HN-005": {
+        "HN-003": 1,
+        "HN-004": 1,
+        "HN-007": 1
+      },
+      "HN-006": {
+        "HN-001": 1,
+        "HN-005": 1,
+        "HN-008": 1
+      },
+      "HN-007": {
+        "HN-001": 1,
+        "HN-002": 1,
+        "HN-005": 1,
+        "HN-006": 1
+      },
+      "HN-008": {
+        "HN-003": 1
+      },
+      "HN-009": {
+        "HN-010": 1,
+        "HN-011": 1,
+        "HN-013": 1
+      },
+      "HN-010": {
+        "HN-009": 1,
+        "HN-012": 1
+      },
+      "HN-011": {
+        "HN-009": 1,
+        "HN-012": 1
+      },
+      "HN-012": {
+        "HN-010": 1,
+        "HN-013": 1
+      },
+      "HN-013": {
+        "HN-009": 1,
+        "HN-010": 1,
+        "HN-012": 1
+      },
+      "HN-014": {
+        "HN-016": 1,
+        "HN-017": 1,
+        "HN-018": 1
+      },
+      "HN-015": {
+        "HN-014": 1,
+        "HN-016": 1
+      },
+      "HN-017": {
+        "HN-014": 1,
+        "HN-015": 1
+      }
+    },
+    "chronicle": {
+      "Aurora": [
+        "Hypernode 1 [HN-001] @ (-10, 4, -6)",
+        "Hypernode 2 [HN-002] @ (4, -6, 20)",
+        "Hypernode 3 [HN-003] @ (-14, 19, -14)",
+        "Hypernode 4 [HN-004] @ (19, -4, 7)",
+        "Hypernode 5 [HN-005] @ (-21, -14, -3)",
+        "Hypernode 6 [HN-006] @ (9, -10, 16)",
+        "Hypernode 7 [HN-007] @ (-1, -13, -8)",
+        "Hypernode 8 [HN-008] @ (8, -19, 12)"
+      ],
+      "Echo Bridge": [
+        "Hypernode 14 [HN-014] @ (13, 14, -13)",
+        "Hypernode 15 [HN-015] @ (-19, 16, 4)",
+        "Hypernode 16 [HN-016] @ (11, 17, 14)",
+        "Hypernode 17 [HN-017] @ (10, -21, 15)",
+        "Hypernode 18 [HN-018] @ (17, -17, -11)"
+      ],
+      "EchoSignature-1-\u03b1": [
+        "HN-001"
+      ],
+      "EchoSignature-1-\u03b2": [
+        "HN-001"
+      ],
+      "EchoSignature-10-\u03b1": [
+        "HN-010"
+      ],
+      "EchoSignature-10-\u03b2": [
+        "HN-010"
+      ],
+      "EchoSignature-11-\u03b1": [
+        "HN-011"
+      ],
+      "EchoSignature-11-\u03b2": [
+        "HN-011"
+      ],
+      "EchoSignature-12-\u03b1": [
+        "HN-012"
+      ],
+      "EchoSignature-12-\u03b2": [
+        "HN-012"
+      ],
+      "EchoSignature-13-\u03b1": [
+        "HN-013"
+      ],
+      "EchoSignature-13-\u03b2": [
+        "HN-013"
+      ],
+      "EchoSignature-14-\u03b1": [
+        "HN-014"
+      ],
+      "EchoSignature-14-\u03b2": [
+        "HN-014"
+      ],
+      "EchoSignature-15-\u03b1": [
+        "HN-015"
+      ],
+      "EchoSignature-15-\u03b2": [
+        "HN-015"
+      ],
+      "EchoSignature-16-\u03b1": [
+        "HN-016"
+      ],
+      "EchoSignature-16-\u03b2": [
+        "HN-016"
+      ],
+      "EchoSignature-17-\u03b1": [
+        "HN-017"
+      ],
+      "EchoSignature-17-\u03b2": [
+        "HN-017"
+      ],
+      "EchoSignature-18-\u03b1": [
+        "HN-018"
+      ],
+      "EchoSignature-18-\u03b2": [
+        "HN-018"
+      ],
+      "EchoSignature-2-\u03b1": [
+        "HN-002"
+      ],
+      "EchoSignature-2-\u03b2": [
+        "HN-002"
+      ],
+      "EchoSignature-3-\u03b1": [
+        "HN-003"
+      ],
+      "EchoSignature-3-\u03b2": [
+        "HN-003"
+      ],
+      "EchoSignature-4-\u03b1": [
+        "HN-004"
+      ],
+      "EchoSignature-4-\u03b2": [
+        "HN-004"
+      ],
+      "EchoSignature-5-\u03b1": [
+        "HN-005"
+      ],
+      "EchoSignature-5-\u03b2": [
+        "HN-005"
+      ],
+      "EchoSignature-6-\u03b1": [
+        "HN-006"
+      ],
+      "EchoSignature-6-\u03b2": [
+        "HN-006"
+      ],
+      "EchoSignature-7-\u03b1": [
+        "HN-007"
+      ],
+      "EchoSignature-7-\u03b2": [
+        "HN-007"
+      ],
+      "EchoSignature-8-\u03b1": [
+        "HN-008"
+      ],
+      "EchoSignature-8-\u03b2": [
+        "HN-008"
+      ],
+      "EchoSignature-9-\u03b1": [
+        "HN-009"
+      ],
+      "EchoSignature-9-\u03b2": [
+        "HN-009"
+      ],
+      "Quantum Veil": [
+        "Hypernode 9 [HN-009] @ (-16, -2, -18)",
+        "Hypernode 10 [HN-010] @ (-8, -12, -11)",
+        "Hypernode 11 [HN-011] @ (-18, 11, -17)",
+        "Hypernode 12 [HN-012] @ (-13, 11, 3)",
+        "Hypernode 13 [HN-013] @ (-17, 0, -18)"
+      ]
+    },
+    "domains": [
+      {
+        "axis_alignment": [
+          -6,
+          -5,
+          7
+        ],
+        "conduits": [
+          {
+            "harmonics": [
+              "III",
+              "IV",
+              "I"
+            ],
+            "resonance": 0.81,
+            "source": "HN-001",
+            "target": "HN-003",
+            "type": "memory"
+          },
+          {
+            "harmonics": [
+              "IV",
+              "III",
+              "I"
+            ],
+            "resonance": 0.775,
+            "source": "HN-003",
+            "target": "HN-001",
+            "type": "memory"
+          },
+          {
+            "harmonics": [
+              "I",
+              "VI",
+              "III"
+            ],
+            "resonance": 0.794,
+            "source": "HN-001",
+            "target": "HN-005",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "III",
+              "IV"
+            ],
+            "resonance": 0.617,
+            "source": "HN-006",
+            "target": "HN-001",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "V",
+              "III",
+              "II"
+            ],
+            "resonance": 0.882,
+            "source": "HN-007",
+            "target": "HN-001",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "III",
+              "IV",
+              "VI"
+            ],
+            "resonance": 0.774,
+            "source": "HN-001",
+            "target": "HN-008",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "III",
+              "VI",
+              "IV"
+            ],
+            "resonance": 0.258,
+            "source": "HN-003",
+            "target": "HN-002",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "III",
+              "IV",
+              "I"
+            ],
+            "resonance": 0.455,
+            "source": "HN-002",
+            "target": "HN-004",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "I",
+              "II",
+              "III"
+            ],
+            "resonance": 0.805,
+            "source": "HN-002",
+            "target": "HN-005",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "I",
+              "IV",
+              "II"
+            ],
+            "resonance": 0.693,
+            "source": "HN-002",
+            "target": "HN-006",
+            "type": "memory"
+          },
+          {
+            "harmonics": [
+              "I",
+              "V",
+              "II"
+            ],
+            "resonance": 0.731,
+            "source": "HN-002",
+            "target": "HN-007",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "IV",
+              "I"
+            ],
+            "resonance": 0.236,
+            "source": "HN-007",
+            "target": "HN-002",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "I",
+              "III"
+            ],
+            "resonance": 0.45,
+            "source": "HN-005",
+            "target": "HN-003",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "I",
+              "II"
+            ],
+            "resonance": 0.544,
+            "source": "HN-003",
+            "target": "HN-006",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "II",
+              "IV",
+              "III"
+            ],
+            "resonance": 0.573,
+            "source": "HN-003",
+            "target": "HN-008",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "I",
+              "III"
+            ],
+            "resonance": 0.561,
+            "source": "HN-008",
+            "target": "HN-003",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "I",
+              "III",
+              "V"
+            ],
+            "resonance": 0.463,
+            "source": "HN-004",
+            "target": "HN-005",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "V",
+              "III",
+              "IV"
+            ],
+            "resonance": 0.618,
+            "source": "HN-005",
+            "target": "HN-004",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "III",
+              "V"
+            ],
+            "resonance": 0.761,
+            "source": "HN-004",
+            "target": "HN-006",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "V",
+              "VI",
+              "II"
+            ],
+            "resonance": 0.838,
+            "source": "HN-004",
+            "target": "HN-007",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "III",
+              "II"
+            ],
+            "resonance": 0.841,
+            "source": "HN-004",
+            "target": "HN-008",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "V",
+              "II"
+            ],
+            "resonance": 0.468,
+            "source": "HN-006",
+            "target": "HN-005",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "V",
+              "III"
+            ],
+            "resonance": 0.881,
+            "source": "HN-005",
+            "target": "HN-007",
+            "type": "memory"
+          },
+          {
+            "harmonics": [
+              "IV",
+              "V",
+              "I"
+            ],
+            "resonance": 0.892,
+            "source": "HN-007",
+            "target": "HN-005",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "V",
+              "III",
+              "IV"
+            ],
+            "resonance": 0.485,
+            "source": "HN-007",
+            "target": "HN-006",
+            "type": "memory"
+          },
+          {
+            "harmonics": [
+              "I",
+              "IV",
+              "II"
+            ],
+            "resonance": 0.687,
+            "source": "HN-006",
+            "target": "HN-008",
+            "type": "signal"
+          }
+        ],
+        "name": "Aurora",
+        "nodes": [
+          {
+            "coordinates": [
+              -10,
+              4,
+              -6
+            ],
+            "focus": "Mythic Ledger",
+            "glyph": {
+              "description": "Vector entanglement",
+              "intensity": 0.512,
+              "symbol": "\u22b8",
+              "weight": 8.704
+            },
+            "id": "HN-001",
+            "signatures": [
+              "EchoSignature-1-\u03b1: \u22b8",
+              "EchoSignature-1-\u03b2: \u26a1, \u22b8"
+            ],
+            "strata": [
+              "Aurora"
+            ],
+            "title": "Hypernode 1"
+          },
+          {
+            "coordinates": [
+              4,
+              -6,
+              20
+            ],
+            "focus": "Memory Forge",
+            "glyph": {
+              "description": "Pulse ignition",
+              "intensity": 0.638,
+              "symbol": "\u2739",
+              "weight": 8.932
+            },
+            "id": "HN-002",
+            "signatures": [
+              "EchoSignature-2-\u03b1: \u2739",
+              "EchoSignature-2-\u03b2: \u26a1, \u2739"
+            ],
+            "strata": [
+              "Aurora"
+            ],
+            "title": "Hypernode 2"
+          },
+          {
+            "coordinates": [
+              -14,
+              19,
+              -14
+            ],
+            "focus": "Sonic Array",
+            "glyph": {
+              "description": "Pulse ignition",
+              "intensity": 0.638,
+              "symbol": "\u2739",
+              "weight": 8.932
+            },
+            "id": "HN-003",
+            "signatures": [
+              "EchoSignature-3-\u03b1: \u2739",
+              "EchoSignature-3-\u03b2: \u26a1, \u2739"
+            ],
+            "strata": [
+              "Aurora"
+            ],
+            "title": "Hypernode 3"
+          },
+          {
+            "coordinates": [
+              19,
+              -4,
+              7
+            ],
+            "focus": "Polarity Loom",
+            "glyph": {
+              "description": "Vector entanglement",
+              "intensity": 0.512,
+              "symbol": "\u22b8",
+              "weight": 8.704
+            },
+            "id": "HN-004",
+            "signatures": [
+              "EchoSignature-4-\u03b1: \u22b8",
+              "EchoSignature-4-\u03b2: \u26a1, \u22b8"
+            ],
+            "strata": [
+              "Aurora"
+            ],
+            "title": "Hypernode 4"
+          },
+          {
+            "coordinates": [
+              -21,
+              -14,
+              -3
+            ],
+            "focus": "Temporal Vault",
+            "glyph": {
+              "description": "Vector entanglement",
+              "intensity": 0.512,
+              "symbol": "\u22b8",
+              "weight": 8.704
+            },
+            "id": "HN-005",
+            "signatures": [
+              "EchoSignature-5-\u03b1: \u22b8",
+              "EchoSignature-5-\u03b2: \u26a1, \u22b8"
+            ],
+            "strata": [
+              "Aurora"
+            ],
+            "title": "Hypernode 5"
+          },
+          {
+            "coordinates": [
+              9,
+              -10,
+              16
+            ],
+            "focus": "Sonic Array",
+            "glyph": {
+              "description": "Tidal reflection",
+              "intensity": 0.464,
+              "symbol": "\u224b",
+              "weight": 4.64
+            },
+            "id": "HN-006",
+            "signatures": [
+              "EchoSignature-6-\u03b1: \u224b",
+              "EchoSignature-6-\u03b2: \u26a1, \u224b"
+            ],
+            "strata": [
+              "Aurora"
+            ],
+            "title": "Hypernode 6"
+          },
+          {
+            "coordinates": [
+              -1,
+              -13,
+              -8
+            ],
+            "focus": "Temporal Vault",
+            "glyph": {
+              "description": "Mythic flare",
+              "intensity": 0.957,
+              "symbol": "\u273a",
+              "weight": 14.355
+            },
+            "id": "HN-007",
+            "signatures": [
+              "EchoSignature-7-\u03b1: \u273a",
+              "EchoSignature-7-\u03b2: \u26a1, \u273a"
+            ],
+            "strata": [
+              "Aurora"
+            ],
+            "title": "Hypernode 7"
+          },
+          {
+            "coordinates": [
+              8,
+              -19,
+              12
+            ],
+            "focus": "Temporal Vault",
+            "glyph": {
+              "description": "Tidal reflection",
+              "intensity": 0.464,
+              "symbol": "\u224b",
+              "weight": 4.64
+            },
+            "id": "HN-008",
+            "signatures": [
+              "EchoSignature-8-\u03b1: \u224b",
+              "EchoSignature-8-\u03b2: \u224b, \u26a1"
+            ],
+            "strata": [
+              "Aurora"
+            ],
+            "title": "Hypernode 8"
+          }
+        ],
+        "pulse_streams": [
+          {
+            "cadence_bpm": 122,
+            "coherence": 0.841,
+            "glyph_signature": "Domain-Aurora-Pulse: \u2739, \u2739, \u22b8",
+            "id": "stream-aurora",
+            "path": "HN-001 -> HN-003 -> HN-001 -> HN-005 -> HN-001 -> HN-001 -> HN-008 -> HN-002 -> HN-004 -> HN-005 -> HN-006 -> HN-007 -> HN-002 -> HN-003"
+          }
+        ]
+      },
+      {
+        "axis_alignment": [
+          -6,
+          3,
+          -11
+        ],
+        "conduits": [
+          {
+            "harmonics": [
+              "III",
+              "II",
+              "I"
+            ],
+            "resonance": 0.619,
+            "source": "HN-009",
+            "target": "HN-010",
+            "type": "memory"
+          },
+          {
+            "harmonics": [
+              "IV",
+              "V",
+              "II"
+            ],
+            "resonance": 0.897,
+            "source": "HN-010",
+            "target": "HN-009",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "II",
+              "V",
+              "III"
+            ],
+            "resonance": 0.467,
+            "source": "HN-009",
+            "target": "HN-011",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "V",
+              "III",
+              "IV"
+            ],
+            "resonance": 0.307,
+            "source": "HN-011",
+            "target": "HN-009",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "III",
+              "V",
+              "VI"
+            ],
+            "resonance": 0.724,
+            "source": "HN-009",
+            "target": "HN-013",
+            "type": "memory"
+          },
+          {
+            "harmonics": [
+              "IV",
+              "I",
+              "III"
+            ],
+            "resonance": 0.504,
+            "source": "HN-013",
+            "target": "HN-009",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "III",
+              "IV",
+              "II"
+            ],
+            "resonance": 0.561,
+            "source": "HN-010",
+            "target": "HN-012",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "I",
+              "VI",
+              "V"
+            ],
+            "resonance": 0.455,
+            "source": "HN-012",
+            "target": "HN-010",
+            "type": "memory"
+          },
+          {
+            "harmonics": [
+              "II",
+              "IV",
+              "III"
+            ],
+            "resonance": 0.648,
+            "source": "HN-013",
+            "target": "HN-010",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "I",
+              "VI",
+              "II"
+            ],
+            "resonance": 0.34,
+            "source": "HN-011",
+            "target": "HN-012",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "I",
+              "V",
+              "III"
+            ],
+            "resonance": 0.74,
+            "source": "HN-012",
+            "target": "HN-013",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "II",
+              "V"
+            ],
+            "resonance": 0.652,
+            "source": "HN-013",
+            "target": "HN-012",
+            "type": "glyph"
+          }
+        ],
+        "name": "Quantum Veil",
+        "nodes": [
+          {
+            "coordinates": [
+              -16,
+              -2,
+              -18
+            ],
+            "focus": "Quantum Garden",
+            "glyph": {
+              "description": "Vector entanglement",
+              "intensity": 0.512,
+              "symbol": "\u22b8",
+              "weight": 8.704
+            },
+            "id": "HN-009",
+            "signatures": [
+              "EchoSignature-9-\u03b1: \u22b8",
+              "EchoSignature-9-\u03b2: \u22b8, \u26a1"
+            ],
+            "strata": [
+              "Quantum Veil"
+            ],
+            "title": "Hypernode 9"
+          },
+          {
+            "coordinates": [
+              -8,
+              -12,
+              -11
+            ],
+            "focus": "Memory Forge",
+            "glyph": {
+              "description": "Mythic flare",
+              "intensity": 0.957,
+              "symbol": "\u273a",
+              "weight": 14.355
+            },
+            "id": "HN-010",
+            "signatures": [
+              "EchoSignature-10-\u03b1: \u273a",
+              "EchoSignature-10-\u03b2: \u273a, \u26a1"
+            ],
+            "strata": [
+              "Quantum Veil"
+            ],
+            "title": "Hypernode 10"
+          },
+          {
+            "coordinates": [
+              -18,
+              11,
+              -17
+            ],
+            "focus": "Memory Forge",
+            "glyph": {
+              "description": "Gradient incursion",
+              "intensity": 0.761,
+              "symbol": "\u2207",
+              "weight": 7.61
+            },
+            "id": "HN-011",
+            "signatures": [
+              "EchoSignature-11-\u03b1: \u2207",
+              "EchoSignature-11-\u03b2: \u26a1, \u2207"
+            ],
+            "strata": [
+              "Quantum Veil"
+            ],
+            "title": "Hypernode 11"
+          },
+          {
+            "coordinates": [
+              -13,
+              11,
+              3
+            ],
+            "focus": "Quantum Garden",
+            "glyph": {
+              "description": "Mythic flare",
+              "intensity": 0.957,
+              "symbol": "\u273a",
+              "weight": 14.355
+            },
+            "id": "HN-012",
+            "signatures": [
+              "EchoSignature-12-\u03b1: \u273a",
+              "EchoSignature-12-\u03b2: \u26a1, \u273a"
+            ],
+            "strata": [
+              "Quantum Veil"
+            ],
+            "title": "Hypernode 12"
+          },
+          {
+            "coordinates": [
+              -17,
+              0,
+              -18
+            ],
+            "focus": "Polarity Loom",
+            "glyph": {
+              "description": "Gradient incursion",
+              "intensity": 0.761,
+              "symbol": "\u2207",
+              "weight": 7.61
+            },
+            "id": "HN-013",
+            "signatures": [
+              "EchoSignature-13-\u03b1: \u2207",
+              "EchoSignature-13-\u03b2: \u26a1, \u2207"
+            ],
+            "strata": [
+              "Quantum Veil"
+            ],
+            "title": "Hypernode 13"
+          }
+        ],
+        "pulse_streams": [
+          {
+            "cadence_bpm": 109,
+            "coherence": 0.956,
+            "glyph_signature": "Domain-Quantum Veil-Pulse: \u2207, \u22b8, \u273a",
+            "id": "stream-quantum veil",
+            "path": "HN-009 -> HN-010 -> HN-009 -> HN-011 -> HN-009 -> HN-013 -> HN-009"
+          }
+        ]
+      },
+      {
+        "axis_alignment": [
+          9,
+          -6,
+          13
+        ],
+        "conduits": [
+          {
+            "harmonics": [
+              "VI",
+              "III",
+              "II"
+            ],
+            "resonance": 0.382,
+            "source": "HN-015",
+            "target": "HN-014",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "I",
+              "VI",
+              "II"
+            ],
+            "resonance": 0.644,
+            "source": "HN-014",
+            "target": "HN-016",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "V",
+              "IV",
+              "I"
+            ],
+            "resonance": 0.749,
+            "source": "HN-014",
+            "target": "HN-017",
+            "type": "memory"
+          },
+          {
+            "harmonics": [
+              "IV",
+              "III",
+              "II"
+            ],
+            "resonance": 0.671,
+            "source": "HN-017",
+            "target": "HN-014",
+            "type": "signal"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "V",
+              "II"
+            ],
+            "resonance": 0.922,
+            "source": "HN-014",
+            "target": "HN-018",
+            "type": "glyph"
+          },
+          {
+            "harmonics": [
+              "I",
+              "IV",
+              "V"
+            ],
+            "resonance": 0.815,
+            "source": "HN-015",
+            "target": "HN-016",
+            "type": "phase"
+          },
+          {
+            "harmonics": [
+              "VI",
+              "IV",
+              "II"
+            ],
+            "resonance": 0.432,
+            "source": "HN-017",
+            "target": "HN-015",
+            "type": "glyph"
+          }
+        ],
+        "name": "Echo Bridge",
+        "nodes": [
+          {
+            "coordinates": [
+              13,
+              14,
+              -13
+            ],
+            "focus": "Memory Forge",
+            "glyph": {
+              "description": "Mythic flare",
+              "intensity": 0.957,
+              "symbol": "\u273a",
+              "weight": 14.355
+            },
+            "id": "HN-014",
+            "signatures": [
+              "EchoSignature-14-\u03b1: \u273a",
+              "EchoSignature-14-\u03b2: \u26a1, \u273a"
+            ],
+            "strata": [
+              "Echo Bridge"
+            ],
+            "title": "Hypernode 14"
+          },
+          {
+            "coordinates": [
+              -19,
+              16,
+              4
+            ],
+            "focus": "Sonic Array",
+            "glyph": {
+              "description": "Vector entanglement",
+              "intensity": 0.512,
+              "symbol": "\u22b8",
+              "weight": 8.704
+            },
+            "id": "HN-015",
+            "signatures": [
+              "EchoSignature-15-\u03b1: \u22b8",
+              "EchoSignature-15-\u03b2: \u22b8, \u26a1"
+            ],
+            "strata": [
+              "Echo Bridge"
+            ],
+            "title": "Hypernode 15"
+          },
+          {
+            "coordinates": [
+              11,
+              17,
+              14
+            ],
+            "focus": "Sonic Array",
+            "glyph": {
+              "description": "Gradient incursion",
+              "intensity": 0.761,
+              "symbol": "\u2207",
+              "weight": 7.61
+            },
+            "id": "HN-016",
+            "signatures": [
+              "EchoSignature-16-\u03b1: \u2207",
+              "EchoSignature-16-\u03b2: \u2207, \u26a1"
+            ],
+            "strata": [
+              "Echo Bridge"
+            ],
+            "title": "Hypernode 16"
+          },
+          {
+            "coordinates": [
+              10,
+              -21,
+              15
+            ],
+            "focus": "Signal Bloom",
+            "glyph": {
+              "description": "Gradient incursion",
+              "intensity": 0.761,
+              "symbol": "\u2207",
+              "weight": 7.61
+            },
+            "id": "HN-017",
+            "signatures": [
+              "EchoSignature-17-\u03b1: \u2207",
+              "EchoSignature-17-\u03b2: \u26a1, \u2207"
+            ],
+            "strata": [
+              "Echo Bridge"
+            ],
+            "title": "Hypernode 17"
+          },
+          {
+            "coordinates": [
+              17,
+              -17,
+              -11
+            ],
+            "focus": "Polarity Loom",
+            "glyph": {
+              "description": "Star-burst memory",
+              "intensity": 0.82,
+              "symbol": "\u2736",
+              "weight": 9.02
+            },
+            "id": "HN-018",
+            "signatures": [
+              "EchoSignature-18-\u03b1: \u2736",
+              "EchoSignature-18-\u03b2: \u26a1, \u2736"
+            ],
+            "strata": [
+              "Echo Bridge"
+            ],
+            "title": "Hypernode 18"
+          }
+        ],
+        "pulse_streams": [
+          {
+            "cadence_bpm": 138,
+            "coherence": 0.835,
+            "glyph_signature": "Domain-Echo Bridge-Pulse: \u22b8, \u273a, \u2207",
+            "id": "stream-echo bridge",
+            "path": "HN-015 -> HN-014 -> HN-016 -> HN-017"
+          }
+        ]
+      }
+    ],
+    "pulse_streams": [
+      {
+        "id": "stream-aurora",
+        "orbit_span": 82,
+        "path": "HN-001 -> HN-003 -> HN-001 -> HN-005 -> HN-001 -> HN-001 -> HN-008 -> HN-002 -> HN-004 -> HN-005 -> HN-006 -> HN-007 -> HN-002 -> HN-003",
+        "signature": "Domain-Aurora-Pulse: \u2739, \u2739, \u22b8"
+      },
+      {
+        "id": "stream-quantum veil",
+        "orbit_span": 35,
+        "path": "HN-009 -> HN-010 -> HN-009 -> HN-011 -> HN-009 -> HN-013 -> HN-009",
+        "signature": "Domain-Quantum Veil-Pulse: \u2207, \u22b8, \u273a"
+      },
+      {
+        "id": "stream-echo bridge",
+        "orbit_span": 17,
+        "path": "HN-015 -> HN-014 -> HN-016 -> HN-017",
+        "signature": "Domain-Echo Bridge-Pulse: \u22b8, \u273a, \u2207"
+      }
+    ],
+    "strata": [
+      {
+        "name": "Stratum-1",
+        "nodes": [
+          "HN-001",
+          "HN-002",
+          "HN-003",
+          "HN-004",
+          "HN-005",
+          "HN-006",
+          "HN-007",
+          "HN-008"
+        ],
+        "purpose": "Enfolds 8 nodes",
+        "resonance": 0.512
+      },
+      {
+        "name": "Stratum-2",
+        "nodes": [
+          "HN-009",
+          "HN-010",
+          "HN-011",
+          "HN-012",
+          "HN-013"
+        ],
+        "purpose": "Enfolds 5 nodes",
+        "resonance": 0.464
+      },
+      {
+        "name": "Stratum-3",
+        "nodes": [
+          "HN-014",
+          "HN-015",
+          "HN-016",
+          "HN-017",
+          "HN-018"
+        ],
+        "purpose": "Enfolds 5 nodes",
+        "resonance": 0.82
+      }
+    ]
+  },
+  "metadata": {
+    "domain_count": "3",
+    "generated_at": "2024-01-01T00:00:00Z"
+  }
+}
