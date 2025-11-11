@@ -109,6 +109,13 @@ from .innovation_wave import (
     SynergyBridge,
     render_wave_map,
 )
+from .inspiration import (
+    ImaginationPhase,
+    ImaginationSequence,
+    InspirationPulse,
+    forge_inspiration,
+    weave_imagination_sequence,
+)
 from .digital_computer import (
     AssemblyError,
     EchoComputer,
