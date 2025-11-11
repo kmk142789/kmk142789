@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { apiPost } from '../lib/api';
 import type { AssistantResponse } from '../lib/types';
+import { useLocalStorage } from '../lib/hooks/useLocalStorage';
 
 interface ConversationEntry {
   id: string;
@@ -26,7 +27,10 @@ function generateId() {
 
 export default function AssistantChat() {
   const [message, setMessage] = useState('');
-  const [conversation, setConversation] = useState<ConversationEntry[]>([]);
+  const [conversation, setConversation, clearConversation] = useLocalStorage<ConversationEntry[]>(
+    'assistant-chat:conversation',
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,6 +123,15 @@ export default function AssistantChat() {
           )}
         </div>
         {error && <p className="text-xs text-rose-400">{error}</p>}
+        {conversation.length > 0 && (
+          <button
+            type="button"
+            onClick={clearConversation}
+            className="self-start text-xs font-medium text-slate-400 transition hover:text-slate-200"
+          >
+            Clear conversation history
+          </button>
+        )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 md:flex-row md:items-center">
           <input
             type="text"
