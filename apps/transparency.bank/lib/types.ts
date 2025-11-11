@@ -48,3 +48,65 @@ export interface TransparencySnapshot {
   proofBundles: ProofBundleInfo[];
   opentimestamps: OpenTimestampLink[];
 }
+
+export interface Wallet {
+  id: string;
+  chain: string;
+  address: string;
+  label: string;
+  verified: boolean;
+  signature?: string;
+  explorerUrl?: string;
+  balance?: number;
+  updatedAt: string;
+}
+
+export interface TimelineEvent {
+  who: string;
+  what: string;
+  when: string;
+}
+
+export interface SpendRequest {
+  id: string;
+  payee: string;
+  amount: number;
+  category: 'Housing' | 'Program' | 'Ops' | 'Reserve';
+  purpose: string;
+  sourceHint?: string;
+  attachments: string[];
+  status: 'Pending' | 'Approved' | 'Rejected';
+  requester: string;
+  approver1?: string;
+  approver2?: string;
+  timeline: TimelineEvent[];
+  createdAt: string;
+}
+
+export interface LedgerEntry {
+  id: string;
+  dateISO: string;
+  kind: 'INFLOW' | 'DISBURSE';
+  amount: number;
+  category: string;
+  payee: string;
+  ref?: string;
+  tx?: string;
+  notes?: string;
+}
+
+export interface Policy {
+  id: string;
+  selfApproveMax: number;
+  dualApproveMin: number;
+  governanceMin: number;
+  cashWithdrawalCap: number;
+}
+
+export interface Snapshot {
+  id: string;
+  treasuryUSD: number;
+  reserveUSD: number;
+  programUSD: number;
+  deltaUSD: number;
+}
