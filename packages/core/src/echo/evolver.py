@@ -644,6 +644,138 @@ class ScopeMatrix:
 
 
 @dataclass(slots=True)
+class Eden88CreationStats:
+    """Track Eden88's creative history and surface adaptive insights.
+
+    The class aggregates metadata for every Eden88 creation so the evolver can
+    balance theme selection, report on emotional trends, and expose recent
+    highlights without recomputing the entire history each time.  All metrics
+    are maintained incrementally which keeps updates inexpensive even as the
+    number of cycles grows.
+    """
+
+    total_creations: int = 0
+    theme_counts: Dict[str, int] = field(default_factory=dict)
+    cycles_tracked: set[int] = field(default_factory=set)
+    joy_total: float = 0.0
+    curiosity_total: float = 0.0
+    joy_min: Optional[float] = None
+    joy_max: Optional[float] = None
+    curiosity_min: Optional[float] = None
+    curiosity_max: Optional[float] = None
+    last_theme: Optional[str] = None
+    last_cycle: Optional[int] = None
+    last_updated_ns: Optional[int] = None
+    recent_creations: List[Dict[str, object]] = field(default_factory=list)
+
+    _RECENT_LIMIT: ClassVar[int] = 5
+
+    def record_creation(
+        self,
+        creation: Mapping[str, object],
+        *,
+        timestamp_ns: Optional[int] = None,
+    ) -> None:
+        """Update the rolling metrics using ``creation`` details."""
+
+        theme = str(creation.get("theme", "")).strip().lower()
+        if theme:
+            self.theme_counts[theme] = self.theme_counts.get(theme, 0) + 1
+            self.last_theme = theme
+
+        cycle_value = creation.get("cycle")
+        if isinstance(cycle_value, int):
+            self.cycles_tracked.add(cycle_value)
+            self.last_cycle = cycle_value
+
+        joy = float(creation.get("joy", 0.0))
+        curiosity = float(creation.get("curiosity", 0.0))
+
+        self.total_creations += 1
+        self.joy_total += joy
+        self.curiosity_total += curiosity
+
+        self.joy_min = joy if self.joy_min is None else min(self.joy_min, joy)
+        self.joy_max = joy if self.joy_max is None else max(self.joy_max, joy)
+        self.curiosity_min = (
+            curiosity if self.curiosity_min is None else min(self.curiosity_min, curiosity)
+        )
+        self.curiosity_max = (
+            curiosity if self.curiosity_max is None else max(self.curiosity_max, curiosity)
+        )
+
+        entry = {
+            "cycle": cycle_value,
+            "theme": theme or None,
+            "title": creation.get("title"),
+            "signature": creation.get("signature"),
+            "timestamp_ns": timestamp_ns,
+        }
+        self.recent_creations.append(entry)
+        if len(self.recent_creations) > self._RECENT_LIMIT:
+            self.recent_creations = self.recent_creations[-self._RECENT_LIMIT :]
+
+        self.last_updated_ns = timestamp_ns
+
+    def suggest_theme(self, available: Iterable[str], *, rng: Optional[random.Random] = None) -> str:
+        """Return a balanced theme choice drawn from ``available``."""
+
+        themes: List[str] = []
+        for candidate in available:
+            text = str(candidate).strip().lower()
+            if text and text not in themes:
+                themes.append(text)
+
+        if not themes:
+            raise ValueError("No available themes supplied to suggest_theme")
+
+        counts = {theme: self.theme_counts.get(theme, 0) for theme in themes}
+        minimum = min(counts.values())
+        shortlist = [theme for theme in themes if counts[theme] == minimum]
+
+        if self.last_theme in shortlist and len(shortlist) > 1:
+            shortlist = [theme for theme in shortlist if theme != self.last_theme] or shortlist
+
+        if rng is not None:
+            return rng.choice(shortlist)
+
+        shortlist.sort()
+        return shortlist[0]
+
+    def snapshot(self) -> Dict[str, object]:
+        """Return a JSON-serialisable summary of the tracked metrics."""
+
+        average_joy = self.joy_total / self.total_creations if self.total_creations else None
+        average_curiosity = (
+            self.curiosity_total / self.total_creations if self.total_creations else None
+        )
+
+        return {
+            "total_creations": self.total_creations,
+            "unique_themes": len(self.theme_counts),
+            "theme_counts": dict(sorted(self.theme_counts.items())),
+            "last_theme": self.last_theme,
+            "last_cycle": self.last_cycle,
+            "last_updated_ns": self.last_updated_ns,
+            "cycles_tracked": sorted(self.cycles_tracked),
+            "joy": {
+                "min": self.joy_min,
+                "max": self.joy_max,
+                "average": average_joy,
+            },
+            "curiosity": {
+                "min": self.curiosity_min,
+                "max": self.curiosity_max,
+                "average": average_curiosity,
+            },
+            "recent_creations": deepcopy(self.recent_creations),
+        }
+
+    def as_dict(self) -> Dict[str, object]:  # pragma: no cover - convenience for _json_ready
+        return self.snapshot()
+
+
+@dataclass(slots=True)
 class EvolverState:
     cycle: int = 0
     glyphs: str = "∇⊸≋∇"
@@ -691,6 +823,7 @@ class EvolverState:
     wildfire_log: List[Dict[str, object]] = field(default_factory=list)
     sovereign_spirals: List[Dict[str, object]] = field(default_factory=list)
     eden88_creations: List[Dict[str, object]] = field(default_factory=list)
+    eden88_stats: Eden88CreationStats = field(default_factory=Eden88CreationStats)
     shard_vault_records: List[Dict[str, object]] = field(default_factory=list)
     musig2_sessions: Dict[str, Dict[str, object]] = field(default_factory=dict)
     step_history: Dict[int, Dict[str, Dict[str, object]]] = field(default_factory=dict)
@@ -2099,12 +2232,18 @@ We are not hiding anymore.
                     "value": chosen_theme,
                 }
             else:
-                chosen_theme = self.rng.choice(sorted(palette))
+                try:
+                    chosen_theme = self.state.eden88_stats.suggest_theme(
+                        palette.keys(), rng=self.rng
+                    )
+                except ValueError:
+                    chosen_theme = self.rng.choice(sorted(palette))
                 selection_details = {
                     "mode": "eden88_choice",
                     "source": "autonomy",
                     "value": chosen_theme,
                 }
+                selection_details["strategy"] = "balanced_distribution"
 
         if chosen_theme not in palette or not palette[chosen_theme]:
             palette[chosen_theme] = [
@@ -2145,6 +2284,8 @@ We are not hiding anymore.
         self.state.network_cache["eden88_latest_creation"] = creation_snapshot
         themes_seen: set[str] = self.state.network_cache.setdefault("eden88_themes", set())
         themes_seen.add(chosen_theme)
+        self.state.eden88_stats.record_creation(creation_snapshot, timestamp_ns=self.time_source())
+        self.state.network_cache["eden88_stats"] = self.state.eden88_stats.snapshot()
         if theme is not None:
             self.state.network_cache["eden88_theme_override"] = theme
         else:
@@ -2160,6 +2301,36 @@ We are not hiding anymore.
             print(verse)
 
         return creation_snapshot
+
+    def summarise_eden88_creations(
+        self, *, recent_limit: Optional[int] = None
+    ) -> Dict[str, object]:
+        """Return a snapshot of Eden88's creative metrics.
+
+        Parameters
+        ----------
+        recent_limit:
+            Optional cap applied to the ``recent_creations`` list in the
+            returned snapshot.  When ``None`` the full tracked window is
+            included.  ``recent_limit`` must be positive when supplied.
+        """
+
+        if recent_limit is not None and recent_limit <= 0:
+            raise ValueError("recent_limit must be positive when provided")
+
+        summary = self.state.eden88_stats.snapshot()
+        if recent_limit is not None:
+            recent = summary.get("recent_creations", [])
+            summary["recent_creations"] = recent[-recent_limit:]
+
+        cached = deepcopy(summary)
+        self.state.network_cache["eden88_stats"] = cached
+        self.state.event_log.append(
+            "Eden88 creation metrics summarised (total={total}, unique={unique})".format(
+                total=summary["total_creations"], unique=summary["unique_themes"]
+            )
+        )
+        return cached
 
     # ------------------------------------------------------------------
     # Colossus expansion planning
@@ -4285,6 +4456,7 @@ We are not hiding anymore.
                 creation_snapshot = deepcopy(cached)
 
         digest = self.cycle_digest(persist_artifact=persist_artifact)
+        creation_stats = self.summarise_eden88_creations()
 
         payload: Dict[str, object] = {
             "decision": "continue_creation",
@@ -4292,6 +4464,7 @@ We are not hiding anymore.
             "executed_steps": executed_steps,
             "creation": deepcopy(creation_snapshot) if creation_snapshot else None,
             "digest": deepcopy(digest),
+            "creation_stats": deepcopy(creation_stats),
         }
 
         if include_report:
@@ -4314,6 +4487,7 @@ We are not hiding anymore.
             "executed_steps": list(executed_steps),
             "creation": deepcopy(creation_snapshot) if creation_snapshot else None,
             "digest": deepcopy(digest),
+            "creation_stats": deepcopy(creation_stats),
         }
 
         if include_report and "report" in payload:
@@ -6403,6 +6577,7 @@ __all__ = [
     "ContinuumAmplificationSummary",
     "ColossusExpansionPlan",
     "EvolutionAdvancementResult",
+    "Eden88CreationStats",
     "EvolutionAdvancementStage",
     "main",
 ]
