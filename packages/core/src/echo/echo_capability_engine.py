@@ -9,7 +9,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Mapping, MutableMapping, Protocol
+
+from .coordination_mesh import (
+    ManifestNotFoundError,
+    build_coordination_mesh,
+    locate_manifest,
+)
 
 __all__ = [
     "CAPABILITIES",
@@ -179,5 +186,26 @@ register_capability(
     "Produce and publish PhD-equivalent verifiable research.",
     _verify_academic,
     _handle_academic,
+)
+
+
+def _verify_constellation_mesh() -> bool:
+    try:
+        locate_manifest()
+    except ManifestNotFoundError:
+        return False
+    return True
+
+
+def _handle_constellation_mesh(*, manifest_path: str | Path | None = None) -> Mapping[str, Any]:
+    mesh = build_coordination_mesh(manifest_path)
+    return mesh.as_dict()
+
+
+register_capability(
+    "constellation_coordination_mesh",
+    "Synthesize a cross-module coordination mesh that amplifies coordination and autonomy signals.",
+    _verify_constellation_mesh,
+    _handle_constellation_mesh,
 )
 
