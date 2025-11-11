@@ -1,0 +1,41 @@
+{{- range $svcKey, $svc := .Values.services }}
+{{- $context := $ }}
+{{- $autoscaling := default (dict) $svc.autoscaling -}}
+{{- if $autoscaling.enabled }}
+{{- $svcName := ((default (replace $svcKey "_" "-") $svc.name) | replace "_" "-") -}}
+{{- $fullName := include "echo-stack.serviceFullname" (dict "context" $context "name" $svcName) -}}
+{{- $component := default $svc.component $svcName -}}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $fullName }}
+  labels:
+{{ include "echo-stack.labels" (dict "context" $context "name" $svcName "component" $component) | indent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $fullName }}
+  minReplicas: {{ default 1 $autoscaling.minReplicas }}
+  maxReplicas: {{ default 1 $autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ default 60 $autoscaling.targetCPUUtilizationPercentage }}
+{{- if $autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $autoscaling.targetMemoryUtilizationPercentage }}
+{{- end }}
+{{- if $autoscaling.customMetrics }}
+{{ toYaml $autoscaling.customMetrics | indent 4 }}
+{{- end }}
+---
+{{- end }}
+{{- end }}

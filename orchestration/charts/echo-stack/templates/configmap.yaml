@@ -1,0 +1,18 @@
+{{- range $svcKey, $svc := .Values.services }}
+{{- $context := $ }}
+{{- $svcName := ((default (replace $svcKey "_" "-") $svc.name) | replace "_" "-") -}}
+{{- $fullName := include "echo-stack.serviceFullname" (dict "context" $context "name" $svcName) -}}
+{{- $component := default $svc.component $svcName -}}
+{{- $hasConfig := or $svc.config (or $svc.featureFlags $context.Values.global.featureFlags) -}}
+{{- if $hasConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fullName }}-config
+  labels:
+{{ include "echo-stack.labels" (dict "context" $context "name" $svcName "component" $component) | indent 4 }}
+data:
+{{ include "echo-stack.renderConfigMapData" (dict "context" $context "service" $svc) | indent 2 }}
+---
+{{- end }}
+{{- end }}
