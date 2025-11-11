@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import random
 
 import pytest
 
@@ -69,3 +70,27 @@ def test_apply_rotation_rejects_invalid_axis():
     mapper = QuantumFluxMapper()
     with pytest.raises(ValueError):
         mapper.apply_rotation("q", math.pi / 3)
+
+
+def test_apply_noise_channel_bit_flip_triggers_with_probability_one():
+    mapper = QuantumFluxMapper()
+    mapper.apply_noise_channel("bit_flip", 1.0, rng=random.Random(0))
+    assert mapper.state == (0 + 0j, 1 + 0j)
+    assert "bit flip noise" in mapper.history[-1]
+
+
+def test_apply_noise_channel_validates_probability_bounds():
+    mapper = QuantumFluxMapper()
+    with pytest.raises(ValueError):
+        mapper.apply_noise_channel("bit_flip", 1.5)
+
+
+def test_fidelity_with_returns_overlap_probability():
+    mapper = QuantumFluxMapper()
+    mapper.apply_gate("H")
+    fidelity_same = mapper.fidelity_with(mapper.state)
+    assert math.isclose(fidelity_same, 1.0, rel_tol=1e-9)
+
+    fidelity_zero = mapper.fidelity_with((1 + 0j, 0 + 0j))
+    assert math.isclose(fidelity_zero, 0.5, rel_tol=1e-9)
+    assert mapper.history[-1].startswith("Computed fidelity")

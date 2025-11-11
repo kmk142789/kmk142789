@@ -135,6 +135,62 @@ class QuantumFluxMapper:
             self.apply_gate(gate)
         return self.state
 
+    def apply_noise_channel(
+        self,
+        channel: str,
+        probability: float,
+        *,
+        rng: random.Random | None = None,
+    ) -> ComplexVector:
+        """Apply a simple stochastic noise channel to the current qubit state.
+
+        ``probability`` must be between 0 and 1 (inclusive). ``channel`` supports
+        three options:
+
+        ``"bit_flip"``
+            Applies the Pauli-X gate with the provided probability.
+        ``"phase_flip"``
+            Applies the Pauli-Z gate with the provided probability.
+        ``"depolarizing"``
+            Applies a random Pauli gate from ``X``, ``Y`` or ``Z`` with the provided
+            probability.
+
+        The mapper records whether a noise event occurred in the history log.
+        """
+
+        if not 0.0 <= probability <= 1.0:
+            raise ValueError("probability must be between 0 and 1")
+
+        rng = rng or random
+        channel_key = channel.replace("-", "_").lower()
+
+        triggered_gate: str | None
+        if channel_key == "bit_flip":
+            triggered_gate = "X" if rng.random() < probability else None
+        elif channel_key == "phase_flip":
+            triggered_gate = "Z" if rng.random() < probability else None
+        elif channel_key == "depolarizing":
+            if rng.random() < probability:
+                triggered_gate = rng.choice(("X", "Y", "Z"))
+            else:
+                triggered_gate = None
+        else:
+            raise ValueError(
+                "channel must be one of 'bit_flip', 'phase_flip', or 'depolarizing'"
+            )
+
+        if triggered_gate is not None:
+            matrix = STANDARD_GATES[triggered_gate]
+            self.state = _normalize(_apply_matrix(self.state, matrix))
+
+        status = f"Applied {channel_key.replace('_', ' ')} noise (p={probability:.3f})"
+        if triggered_gate is not None:
+            status += f"; triggered {triggered_gate} gate"
+        else:
+            status += "; no event"
+        self.history.append(status)
+        return self.state
+
     def apply_rotation(self, axis: str, angle: float) -> ComplexVector:
         """Apply a continuous rotation around the chosen Bloch axis."""
 
@@ -205,6 +261,21 @@ class QuantumFluxMapper:
         else:  # "Z"
             value = (alpha.conjugate() * alpha - beta.conjugate() * beta).real
         return float(value)
+
+    def fidelity_with(self, target: ComplexVector) -> float:
+        """Return the state fidelity with ``target`` as ``|⟨ψ|φ⟩|^2``.
+
+        The target vector is normalised prior to comparison so callers can
+        provide any non-zero state.
+        """
+
+        normalized_target = _normalize(target)
+        alpha_target, beta_target = normalized_target
+        alpha, beta = self.state
+        overlap = alpha_target.conjugate() * alpha + beta_target.conjugate() * beta
+        fidelity = float(abs(overlap) ** 2)
+        self.history.append(f"Computed fidelity {fidelity:.6f} against target")
+        return fidelity
 
     def interference_landscape(self, samples: int = 36) -> List[Tuple[float, float]]:
         """Sweep phase rotations to map an interference pattern."""
