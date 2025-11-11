@@ -13,6 +13,10 @@ from .scheduler import PriorityScheduler, ScheduledTask
 from .message_bus import MessageBus
 from .resource_manager import ResourceBudget, ResourceManager
 from .metrics import KernelMetricsExporter
+from .diagnostics import KernelDiagnostics, KernelEvent
+from .timebase import Timebase
+from .task_registry import TaskRegistry, TaskRecord
+from .watchdog import EventLoopWatchdog
 
 __all__ = [
     "AtlasEventLoop",
@@ -22,4 +26,10 @@ __all__ = [
     "ResourceBudget",
     "ResourceManager",
     "KernelMetricsExporter",
+    "KernelDiagnostics",
+    "KernelEvent",
+    "Timebase",
+    "TaskRegistry",
+    "TaskRecord",
+    "EventLoopWatchdog",
 ]

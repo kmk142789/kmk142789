@@ -1,38 +1,84 @@
 .atlas-dashboard {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
-  color: #f8fafc;
   min-height: 100vh;
   padding: 24px;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 24px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .atlas-dashboard header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
   align-items: center;
+}
+
+.theme-toggle {
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(59, 130, 246, 0.2);
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: rgba(59, 130, 246, 0.35);
 }
 
 .health {
   padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(15, 118, 110, 0.2);
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.15);
 }
 
-.health-health {
-  background: rgba(34, 197, 94, 0.2);
-}
-
-.main {
+.atlas-dashboard main {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
 }
 
-.metrics-section, .graph-section, .logs-section {
-  background: rgba(15, 23, 42, 0.8);
+.metrics-section, .graph-section, .logs-section, .timeline-section {
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   padding: 20px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.15);
+}
+
+.health-section {
+  display: flex;
+}
+
+.health-summary {
+  width: 100%;
+  border-left: 4px solid currentColor;
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 8px;
+}
+
+.health-summary__incidents {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.health-summary__incidents li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-left: 4px solid currentColor;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.08);
 }
 
 .metrics-grid {
@@ -42,19 +88,47 @@
 }
 
 .metric-card {
-  background: rgba(30, 41, 59, 0.9);
+  background: rgba(15, 23, 42, 0.12);
   padding: 16px;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4);
 }
 
 .log-panel {
-  max-height: 240px;
+  max-height: 280px;
   overflow-y: auto;
   font-family: 'Source Code Pro', monospace;
 }
 
 .log-entry {
   padding: 4px 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.activity-timeline {
+  display: grid;
+  gap: 16px;
+}
+
+.activity-timeline section {
+  background: rgba(15, 23, 42, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.activity-timeline ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.activity-timeline li {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.activity-timeline li:last-child {
+  border-bottom: none;
 }
