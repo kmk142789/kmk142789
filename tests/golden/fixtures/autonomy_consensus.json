@@ -1,0 +1,21 @@
+{
+  "axis_weights": {
+    "harmony": 0.3,
+    "memory": 0.2,
+    "stability": 0.5
+  },
+  "consensus": 0.724221,
+  "description": "Ratify harmonic stabilization",
+  "ledger": {
+    "alpha": 0.764,
+    "beta": 0.81455,
+    "gamma": 0.630325
+  },
+  "proposal_id": "emergent-harmony",
+  "ratified": true,
+  "reasons": [
+    "alpha fused axis=0.73 with core=0.80 -> vote=0.76",
+    "beta fused axis=0.73 with core=0.75 -> vote=0.81",
+    "gamma fused axis=0.61 with core=0.71 -> vote=0.63"
+  ]
+}

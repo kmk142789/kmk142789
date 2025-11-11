@@ -4,6 +4,7 @@ from pathlib import Path
 
 from echo_atlas.domain import Edge, EntityType, Node, RelationType
 from echo_atlas.visualize import build_svg
+from tests.golden import read_golden_text
 
 
 def test_build_svg_matches_golden(tmp_path: Path) -> None:
@@ -20,5 +21,4 @@ def test_build_svg_matches_golden(tmp_path: Path) -> None:
         )
     ]
     svg = build_svg(nodes, edges)
-    golden = Path(__file__).parent / "golden" / "atlas_graph.svg"
-    assert svg == golden.read_text(encoding="utf-8")
+    assert svg == read_golden_text("atlas_graph_svg")

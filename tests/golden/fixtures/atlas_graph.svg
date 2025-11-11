@@ -1,0 +1,11 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'>
+  <style>text { font-family: sans-serif; font-size: 12px; }</style>
+  <line x1='350.0' y1='200.0' x2='50.0' y2='200.0' stroke='#888' stroke-width='1.5' marker-end='url(#arrow)' />
+  <defs><marker id='arrow' markerWidth='10' markerHeight='10' refX='6' refY='3' orient='auto' markerUnits='strokeWidth'><path d='M0,0 L0,6 L9,3 z' fill='#888' /></marker></defs>
+  <circle cx='350.0' cy='200.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='350.0' y='175.0' text-anchor='middle'>Alice</text>
+  <text x='350.0' y='235.0' text-anchor='middle' fill='#555'>Person</text>
+  <circle cx='50.0' cy='200.0' r='20' fill='#f5deb3' stroke='#b8860b' stroke-width='1.5' />
+  <text x='50.0' y='175.0' text-anchor='middle'>Echo</text>
+  <text x='50.0' y='235.0' text-anchor='middle' fill='#555'>Repo</text>
+</svg>
