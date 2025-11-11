@@ -15,8 +15,9 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterable, List, Set, Tuple
+from typing import Dict, Iterable, List, Mapping, Set, Tuple
 
 try:
     import yaml
@@ -40,6 +41,74 @@ SERVICE_FILE_GLOBS = (
 IGNORED_SERVICE_FILENAMES = {"__init__.py"}
 
 
+_CAMEL_CASE_BOUNDARY = re.compile(r"(?<!^)(?=[A-Z])")
+_TOKEN_SPLIT_PATTERN = re.compile(r"[\s,;:]+")
+
+
+@dataclass(slots=True)
+class ServiceDefinition:
+    """Canonicalised view of a service specification."""
+
+    name: str
+    path: Path
+    normalized: str
+    aliases: Set[str] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        self.aliases.add(self.normalized)
+
+    def merge_alias(self, alias: str) -> None:
+        normalized = _normalize_identifier(alias)
+        if normalized:
+            self.aliases.add(normalized)
+
+
+def _normalize_identifier(value: str) -> str:
+    """Return a slugified identifier for *value* suitable for comparisons."""
+
+    if not value:
+        return ""
+    collapsed = value.strip()
+    if not collapsed:
+        return ""
+    collapsed = _CAMEL_CASE_BOUNDARY.sub(" ", collapsed)
+    collapsed = collapsed.replace("/", " ").replace(".", " ")
+    collapsed = collapsed.replace("_", " ").replace("-", " ")
+    collapsed = re.sub(r"[^0-9A-Za-z]+", " ", collapsed)
+    parts = [segment for segment in collapsed.lower().split() if segment]
+    return "-".join(parts)
+
+
+def _normalized_candidates(text: str) -> Set[str]:
+    """Return the possible canonical identifiers contained within ``text``."""
+
+    candidates: Set[str] = set()
+    if not text:
+        return candidates
+
+    normalized = _normalize_identifier(text)
+    if normalized:
+        candidates.add(normalized)
+
+    for fragment in _TOKEN_SPLIT_PATTERN.split(text):
+        if not fragment:
+            continue
+        # Preserve intermediate punctuation (e.g. ``services.foo_bar``) for
+        # further splitting to catch nested identifiers.
+        tokens = re.split(r"[\\|]+", fragment)
+        for token in tokens:
+            if not token:
+                continue
+            normalized_token = _normalize_identifier(token)
+            if normalized_token:
+                candidates.add(normalized_token)
+            for piece in re.split(r"[./]", token):
+                normalized_piece = _normalize_identifier(piece)
+                if normalized_piece:
+                    candidates.add(normalized_piece)
+    return candidates
+
+
 def _iter_yaml_documents(path: Path) -> Iterable[dict]:
     """Yield YAML documents from *path* and ignore parsing failures."""
 
@@ -52,24 +121,40 @@ def _iter_yaml_documents(path: Path) -> Iterable[dict]:
         return
 
 
-def _discover_service_definitions() -> Dict[str, Path]:
-    """Return a mapping of service names to their defining file/directory."""
+def _discover_service_definitions() -> Dict[str, ServiceDefinition]:
+    """Return normalised service definitions keyed by their canonical name."""
 
-    services: Dict[str, Path] = {}
+    services: Dict[str, ServiceDefinition] = {}
+
+    def register(name: str, path: Path) -> None:
+        normalized = _normalize_identifier(name)
+        if not normalized:
+            return
+        definition = services.get(normalized)
+        if definition is None:
+            services[normalized] = ServiceDefinition(name=name, path=path, normalized=normalized)
+        else:
+            definition.merge_alias(name)
+            if definition.path.is_dir() and path.is_file():
+                definition.path = path
 
     for pattern in SERVICE_FILE_GLOBS:
         for path in REPO_ROOT.glob(pattern):
             for doc in _iter_yaml_documents(path):
                 name = doc.get("metadata", {}).get("name")
-                if not name:
+                if not isinstance(name, str):
                     continue
-                services[name] = path
+                register(name, path)
 
     services_root = REPO_ROOT / "services"
     if services_root.exists():
         for service_dir in services_root.iterdir():
             if service_dir.is_dir():
-                services.setdefault(service_dir.name.replace("_", "-"), service_dir)
+                display_name = service_dir.name.replace("_", "-")
+                register(display_name, service_dir)
+                definition = services.get(_normalize_identifier(display_name))
+                if definition is not None:
+                    definition.merge_alias(service_dir.name)
 
     return services
 
@@ -87,27 +172,32 @@ def _walk_values(node: object) -> Iterable[str]:
             yield from _walk_values(item)
 
 
-def _extract_edges(services: Dict[str, Path]) -> Set[Tuple[str, str]]:
+def _extract_edges(services: Mapping[str, ServiceDefinition]) -> Set[Tuple[str, str]]:
     """Infer dependency edges by scanning for explicit name references."""
 
     edges: Set[Tuple[str, str]] = set()
-    compiled_patterns: Dict[str, re.Pattern[str]] = {
-        name: re.compile(rf"\b{re.escape(name)}\b") for name in services
-    }
+    alias_map: Dict[str, str] = {}
+    for normalized, definition in services.items():
+        for alias in definition.aliases:
+            alias_map.setdefault(alias, normalized)
 
-    for name, path in services.items():
+    def resolve_targets(text: str, current: str) -> Set[str]:
+        matches: Set[str] = set()
+        for candidate in _normalized_candidates(text):
+            target = alias_map.get(candidate)
+            if target and target != current:
+                matches.add(target)
+        return matches
+
+    for normalized, definition in services.items():
+        path = definition.path
         if path.is_file():
             for doc in _iter_yaml_documents(path):
                 for value in _walk_values(doc.get("spec", doc)):
                     if not isinstance(value, str):
                         continue
-                    for target, pattern in compiled_patterns.items():
-                        if target == name:
-                            continue
-                        if pattern.search(value):
-                            edges.add((name, target))
+                    edges.update((normalized, target) for target in resolve_targets(value, normalized))
         else:
-            # Scan selected file types within the directory for references.
             for candidate in path.rglob("*"):
                 if not candidate.is_file() or candidate.name in IGNORED_SERVICE_FILENAMES:
                     continue
@@ -117,28 +207,32 @@ def _extract_edges(services: Dict[str, Path]) -> Set[Tuple[str, str]]:
                     content = candidate.read_text(encoding="utf-8")
                 except UnicodeDecodeError:
                     continue
-                for target, pattern in compiled_patterns.items():
-                    if target == name:
-                        continue
-                    if pattern.search(content):
-                        edges.add((name, target))
+                edges.update((normalized, target) for target in resolve_targets(content, normalized))
     return edges
 
 
-def _render_mermaid(services: Dict[str, Path], edges: Set[Tuple[str, str]]) -> str:
+def _render_mermaid(services: Mapping[str, ServiceDefinition], edges: Set[Tuple[str, str]]) -> str:
     lines = ["```mermaid", "graph TD"]
+
+    def node_id(definition: ServiceDefinition) -> str:
+        base = definition.normalized or definition.name
+        return base.replace("-", "_")
+
     if not edges:
-        for name in sorted(services):
-            lines.append(f"  {name.replace('-', '_')}[{name}]")
+        for _normalized, definition in sorted(services.items(), key=lambda item: item[1].name.lower()):
+            lines.append(f"  {node_id(definition)}[{definition.name}]")
     else:
         for source, target in sorted(edges):
-            src_id = source.replace("-", "_")
-            tgt_id = target.replace("-", "_")
-            lines.append(f"  {src_id}[{source}] --> {tgt_id}[{target}]")
-        # Ensure isolated services still appear
-        connected = {s for edge in edges for s in edge}
-        for name in sorted(set(services) - connected):
-            lines.append(f"  {name.replace('-', '_')}[{name}]")
+            source_def = services[source]
+            target_def = services[target]
+            lines.append(
+                f"  {node_id(source_def)}[{source_def.name}] --> {node_id(target_def)}[{target_def.name}]"
+            )
+        connected = {item for edge in edges for item in edge}
+        for normalized, definition in sorted(services.items(), key=lambda item: item[1].name.lower()):
+            if normalized not in connected:
+                lines.append(f"  {node_id(definition)}[{definition.name}]")
+
     lines.append("```")
     return "\n".join(lines)
 
