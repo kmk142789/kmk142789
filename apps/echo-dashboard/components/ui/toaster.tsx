@@ -1,3 +1,5 @@
+import type { ComponentPropsWithoutRef } from "react";
+
 import { useToast } from "@/hooks/use-toast";
 import {
   Toast,
@@ -8,14 +10,22 @@ import {
   ToastViewport,
 } from "@/components/ui/toast";
 
-export function Toaster() {
+type ToasterProps = ComponentPropsWithoutRef<typeof ToastViewport>;
+
+export function Toaster({ ...props }: ToasterProps) {
   const { toasts } = useToast();
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+      {toasts.map(function ({
+        id,
+        title,
+        description,
+        action,
+        ...toastProps
+      }) {
         return (
-          <Toast key={id} {...props}>
+          <Toast key={id} {...toastProps}>
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (
@@ -27,7 +37,7 @@ export function Toaster() {
           </Toast>
         );
       })}
-      <ToastViewport />
+      <ToastViewport {...props} />
     </ToastProvider>
   );
 }
