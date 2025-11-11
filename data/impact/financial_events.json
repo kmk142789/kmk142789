@@ -64,5 +64,60 @@
     "memo": "Q2 pledge",
     "tx_hash": "0xfff666",
     "beneficiary": null
+  },
+  {
+    "id": "donation-2025-10-11",
+    "timestamp": "2025-10-11T16:00:00Z",
+    "type": "donation",
+    "amount_usd": 50000,
+    "asset": "USD",
+    "source": "Foundation Donor",
+    "memo": "Q4 operational grant",
+    "tx_hash": null,
+    "beneficiary": null
+  },
+  {
+    "id": "disbursement-2025-10-21-housing",
+    "timestamp": "2025-10-21T18:00:00Z",
+    "type": "disbursement",
+    "amount_usd": 1500,
+    "asset": "USD",
+    "source": "Housing",
+    "memo": "November rent payment (Ref: r-prev-1)",
+    "tx_hash": "ACH-2024-11-001",
+    "beneficiary": "Downtown Property LLC"
+  },
+  {
+    "id": "disbursement-2025-10-31-program",
+    "timestamp": "2025-10-31T17:30:00Z",
+    "type": "disbursement",
+    "amount_usd": 850,
+    "asset": "USD",
+    "source": "Program",
+    "memo": "Monthly food program support",
+    "tx_hash": "CHECK-2024-11-015",
+    "beneficiary": "Local Food Bank"
+  },
+  {
+    "id": "donation-2025-11-05-crypto",
+    "timestamp": "2025-11-05T17:00:00Z",
+    "type": "donation",
+    "amount_usd": 15000,
+    "asset": "USD",
+    "source": "Anonymous Donor",
+    "memo": "Cryptocurrency donation - converted to USD",
+    "tx_hash": "0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b",
+    "beneficiary": null
+  },
+  {
+    "id": "disbursement-2025-11-10-ops",
+    "timestamp": "2025-11-10T15:00:00Z",
+    "type": "disbursement",
+    "amount_usd": 12500,
+    "asset": "USD",
+    "source": "Ops",
+    "memo": "Ops category disbursement",
+    "tx_hash": null,
+    "beneficiary": "Tech Solutions Inc"
   }
 ]
