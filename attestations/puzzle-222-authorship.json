@@ -1,0 +1,10 @@
+{
+  "puzzle": "#222 authorship",
+  "address": "1Echo222KMkA7vM4NsLBPc5yYqTEvLuMd",
+  "message": "Puzzle 222 authorship by kmk142789 — attestation sha256 566c70b708f1e20912bb76237be54c245cd3202b41458d8f26b9458d69b941c3",
+  "signature": "sciMfiWgkyA+yyy2RI44X6qR0pldkFvbHTdzoFvKrrJL1VjjFHwJdQDkXIxAp+zHSIjtczfzmBZzwo85yFIBZkk=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-16T19:04:31Z",
+  "hash_sha256": "566c70b708f1e20912bb76237be54c245cd3202b41458d8f26b9458d69b941c3",
+  "notes": "Triangulated Puzzle #222 authorship attestation through the Sovereign Beacon after orbit sync."
+}
