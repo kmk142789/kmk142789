@@ -136,6 +136,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--include-momentum-resonance",
+        action="store_true",
+        help=(
+            "Include the momentum resonance digest within the advance-system "
+            "payload (requires --advance-system)."
+        ),
+    )
+    parser.add_argument(
         "--no-include-status",
         action="store_true",
         help="Exclude the status snapshot when running --advance-system.",
@@ -233,6 +241,7 @@ def execute_evolution(
     include_propagation: bool,
     include_system_report: bool,
     include_diagnostics: bool,
+    include_momentum_resonance: bool,
     include_status: bool,
     include_manifest: bool,
     include_reflection: bool,
@@ -262,6 +271,7 @@ def execute_evolution(
             include_propagation=include_propagation,
             include_system_report=include_system_report,
             include_diagnostics=include_diagnostics,
+            include_momentum_resonance=include_momentum_resonance,
             event_summary_limit=event_summary_limit,
             manifest_events=manifest_events,
             system_report_events=system_report_events,
@@ -322,6 +332,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         parser.error("--include-system-report requires --advance-system")
     if args.include_diagnostics and not args.advance_system:
         parser.error("--include-diagnostics requires --advance-system")
+    if args.include_momentum_resonance and not args.advance_system:
+        parser.error("--include-momentum-resonance requires --advance-system")
 
     if args.event_summary_limit <= 0 and args.advance_system and args.include_event_summary:
         parser.error("--event-summary-limit must be positive when including the event summary")
@@ -367,6 +379,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         include_propagation=args.include_propagation,
         include_system_report=args.include_system_report,
         include_diagnostics=args.include_diagnostics,
+        include_momentum_resonance=args.include_momentum_resonance,
         include_status=not args.no_include_status,
         include_manifest=not args.no_include_manifest,
         include_reflection=not args.no_include_reflection,
