@@ -1,0 +1,1031 @@
+{
+  "generated_at": "2025-11-11T07:30:55.078797+00:00",
+  "repo_root": "/workspace/kmk142789",
+  "targets": [
+    "atlas",
+    "pulse_dashboard",
+    "aster_engine",
+    "fixtures",
+    "logs",
+    "echo",
+    "echo/orchestrator",
+    "packages/core/src/echo",
+    "packages/core/src/echo/orchestrator"
+  ],
+  "stats": {
+    "directories_scanned": 9,
+    "modules_found": 60,
+    "rpc_routes_found": 0,
+    "openapi_specs_found": 0,
+    "schema_files_found": 2
+  },
+  "directories": {
+    "atlas": {
+      "path": "atlas",
+      "missing": false,
+      "modules": [
+        "atlas/__init__.py",
+        "atlas/atlas_cli.py",
+        "atlas/cli/__init__.py",
+        "atlas/cli/main.py",
+        "atlas/core/__init__.py",
+        "atlas/core/config.py",
+        "atlas/core/logging.py",
+        "atlas/core/runtime.py",
+        "atlas/core/service.py",
+        "atlas/core/supervisor.py",
+        "atlas/dedupe.py",
+        "atlas/explore.py",
+        "atlas/federation.py",
+        "atlas/graph.py",
+        "atlas/harmonix_loader.py",
+        "atlas/identity/__init__.py",
+        "atlas/identity/did.py",
+        "atlas/identity/keys.py",
+        "atlas/identity/vc.py",
+        "atlas/merge.py",
+        "atlas/metrics/__init__.py",
+        "atlas/metrics/registry.py",
+        "atlas/metrics/service.py",
+        "atlas/network/__init__.py",
+        "atlas/network/health.py",
+        "atlas/network/pathfinder.py",
+        "atlas/network/registry.py",
+        "atlas/network/routing.py",
+        "atlas/reporting.py",
+        "atlas/resolver.py",
+        "atlas/scheduler/__init__.py",
+        "atlas/scheduler/job.py",
+        "atlas/scheduler/service.py",
+        "atlas/scheduler/store.py",
+        "atlas/schema.py",
+        "atlas/search.py",
+        "atlas/storage/__init__.py",
+        "atlas/storage/drivers/base.py",
+        "atlas/storage/drivers/fs.py",
+        "atlas/storage/drivers/memory.py",
+        "atlas/storage/drivers/vault.py",
+        "atlas/storage/receipt.py",
+        "atlas/storage/service.py",
+        "atlas/types.py"
+      ],
+      "rpc_routes": [],
+      "openapi_specs": [],
+      "schema_files": [
+        "atlas/schema.py"
+      ]
+    },
+    "pulse_dashboard": {
+      "path": "pulse_dashboard",
+      "missing": false,
+      "modules": [
+        "pulse_dashboard/__init__.py",
+        "pulse_dashboard/builder.py",
+        "pulse_dashboard/client.py",
+        "pulse_dashboard/impact_explorer.py",
+        "pulse_dashboard/loop_health.py",
+        "pulse_dashboard/public/assets/app.js",
+        "pulse_dashboard/worker.py"
+      ],
+      "rpc_routes": [],
+      "openapi_specs": [],
+      "schema_files": [
+        "pulse_dashboard/data/dashboard.json"
+      ]
+    },
+    "aster_engine": {
+      "path": "aster_engine",
+      "missing": true,
+      "modules": [],
+      "rpc_routes": [],
+      "openapi_specs": [],
+      "schema_files": []
+    },
+    "fixtures": {
+      "path": "fixtures",
+      "missing": false,
+      "modules": [
+        "fixtures/opreturn/generate.py"
+      ],
+      "rpc_routes": [],
+      "openapi_specs": [],
+      "schema_files": []
+    },
+    "logs": {
+      "path": "logs",
+      "missing": false,
+      "modules": [],
+      "rpc_routes": [],
+      "openapi_specs": [],
+      "schema_files": []
+    },
+    "echo": {
+      "path": "echo",
+      "missing": false,
+      "modules": [
+        "echo/dotnet_sdk.py",
+        "echo/harmonix_sdk.py",
+        "echo/orchestrator/sdk.py"
+      ],
+      "rpc_routes": [],
+      "openapi_specs": [],
+      "schema_files": []
+    },
+    "echo/orchestrator": {
+      "path": "echo/orchestrator",
+      "missing": false,
+      "modules": [
+        "echo/orchestrator/sdk.py"
+      ],
+      "rpc_routes": [],
+      "openapi_specs": [],
+      "schema_files": []
+    },
+    "packages/core/src/echo": {
+      "path": "packages/core/src/echo",
+      "missing": false,
+      "modules": [
+        "packages/core/src/echo/dotnet_sdk.py",
+        "packages/core/src/echo/harmonix_sdk.py",
+        "packages/core/src/echo/orchestrator/sdk.py"
+      ],
+      "rpc_routes": [],
+      "openapi_specs": [],
+      "schema_files": []
+    },
+    "packages/core/src/echo/orchestrator": {
+      "path": "packages/core/src/echo/orchestrator",
+      "missing": false,
+      "modules": [
+        "packages/core/src/echo/orchestrator/sdk.py"
+      ],
+      "rpc_routes": [],
+      "openapi_specs": [],
+      "schema_files": []
+    }
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "dir:atlas",
+        "label": "atlas",
+        "type": "directory",
+        "metadata": {
+          "exists": true
+        }
+      },
+      {
+        "id": "module:atlas/graph.py",
+        "label": "atlas/graph.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/harmonix_loader.py",
+        "label": "atlas/harmonix_loader.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/__init__.py",
+        "label": "atlas/__init__.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/dedupe.py",
+        "label": "atlas/dedupe.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/explore.py",
+        "label": "atlas/explore.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/types.py",
+        "label": "atlas/types.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/search.py",
+        "label": "atlas/search.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/federation.py",
+        "label": "atlas/federation.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/merge.py",
+        "label": "atlas/merge.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/reporting.py",
+        "label": "atlas/reporting.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/resolver.py",
+        "label": "atlas/resolver.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/atlas_cli.py",
+        "label": "atlas/atlas_cli.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/schema.py",
+        "label": "atlas/schema.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "schema:atlas/schema.py",
+        "label": "atlas/schema.py",
+        "type": "schema",
+        "metadata": {}
+      },
+      {
+        "id": "module:atlas/identity/vc.py",
+        "label": "atlas/identity/vc.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/identity/__init__.py",
+        "label": "atlas/identity/__init__.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/identity/did.py",
+        "label": "atlas/identity/did.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/identity/keys.py",
+        "label": "atlas/identity/keys.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/network/__init__.py",
+        "label": "atlas/network/__init__.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/network/routing.py",
+        "label": "atlas/network/routing.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/network/registry.py",
+        "label": "atlas/network/registry.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/network/health.py",
+        "label": "atlas/network/health.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/network/pathfinder.py",
+        "label": "atlas/network/pathfinder.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/cli/main.py",
+        "label": "atlas/cli/main.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/cli/__init__.py",
+        "label": "atlas/cli/__init__.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/core/__init__.py",
+        "label": "atlas/core/__init__.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/core/logging.py",
+        "label": "atlas/core/logging.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/core/runtime.py",
+        "label": "atlas/core/runtime.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/core/config.py",
+        "label": "atlas/core/config.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/core/supervisor.py",
+        "label": "atlas/core/supervisor.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/core/service.py",
+        "label": "atlas/core/service.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/metrics/__init__.py",
+        "label": "atlas/metrics/__init__.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/metrics/registry.py",
+        "label": "atlas/metrics/registry.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/metrics/service.py",
+        "label": "atlas/metrics/service.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/scheduler/job.py",
+        "label": "atlas/scheduler/job.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/scheduler/__init__.py",
+        "label": "atlas/scheduler/__init__.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/scheduler/store.py",
+        "label": "atlas/scheduler/store.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/scheduler/service.py",
+        "label": "atlas/scheduler/service.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/storage/__init__.py",
+        "label": "atlas/storage/__init__.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/storage/receipt.py",
+        "label": "atlas/storage/receipt.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/storage/service.py",
+        "label": "atlas/storage/service.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/storage/drivers/vault.py",
+        "label": "atlas/storage/drivers/vault.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/storage/drivers/memory.py",
+        "label": "atlas/storage/drivers/memory.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/storage/drivers/base.py",
+        "label": "atlas/storage/drivers/base.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:atlas/storage/drivers/fs.py",
+        "label": "atlas/storage/drivers/fs.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "dir:pulse_dashboard",
+        "label": "pulse_dashboard",
+        "type": "directory",
+        "metadata": {
+          "exists": true
+        }
+      },
+      {
+        "id": "module:pulse_dashboard/builder.py",
+        "label": "pulse_dashboard/builder.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:pulse_dashboard/__init__.py",
+        "label": "pulse_dashboard/__init__.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:pulse_dashboard/loop_health.py",
+        "label": "pulse_dashboard/loop_health.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:pulse_dashboard/worker.py",
+        "label": "pulse_dashboard/worker.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:pulse_dashboard/impact_explorer.py",
+        "label": "pulse_dashboard/impact_explorer.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:pulse_dashboard/client.py",
+        "label": "pulse_dashboard/client.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "schema:pulse_dashboard/data/dashboard.json",
+        "label": "pulse_dashboard/data/dashboard.json",
+        "type": "schema",
+        "metadata": {}
+      },
+      {
+        "id": "module:pulse_dashboard/public/assets/app.js",
+        "label": "pulse_dashboard/public/assets/app.js",
+        "type": "module",
+        "metadata": {
+          "language": "javascript"
+        }
+      },
+      {
+        "id": "dir:aster_engine",
+        "label": "aster_engine",
+        "type": "directory",
+        "metadata": {
+          "exists": false
+        }
+      },
+      {
+        "id": "dir:fixtures",
+        "label": "fixtures",
+        "type": "directory",
+        "metadata": {
+          "exists": true
+        }
+      },
+      {
+        "id": "module:fixtures/opreturn/generate.py",
+        "label": "fixtures/opreturn/generate.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "dir:logs",
+        "label": "logs",
+        "type": "directory",
+        "metadata": {
+          "exists": true
+        }
+      },
+      {
+        "id": "dir:echo",
+        "label": "echo",
+        "type": "directory",
+        "metadata": {
+          "exists": true
+        }
+      },
+      {
+        "id": "module:echo/dotnet_sdk.py",
+        "label": "echo/dotnet_sdk.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:echo/harmonix_sdk.py",
+        "label": "echo/harmonix_sdk.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:echo/orchestrator/sdk.py",
+        "label": "echo/orchestrator/sdk.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "dir:echo/orchestrator",
+        "label": "echo/orchestrator",
+        "type": "directory",
+        "metadata": {
+          "exists": true
+        }
+      },
+      {
+        "id": "dir:packages/core/src/echo",
+        "label": "packages/core/src/echo",
+        "type": "directory",
+        "metadata": {
+          "exists": true
+        }
+      },
+      {
+        "id": "module:packages/core/src/echo/dotnet_sdk.py",
+        "label": "packages/core/src/echo/dotnet_sdk.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:packages/core/src/echo/harmonix_sdk.py",
+        "label": "packages/core/src/echo/harmonix_sdk.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "module:packages/core/src/echo/orchestrator/sdk.py",
+        "label": "packages/core/src/echo/orchestrator/sdk.py",
+        "type": "module",
+        "metadata": {
+          "language": "python"
+        }
+      },
+      {
+        "id": "dir:packages/core/src/echo/orchestrator",
+        "label": "packages/core/src/echo/orchestrator",
+        "type": "directory",
+        "metadata": {
+          "exists": true
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/__init__.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/atlas_cli.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/cli/__init__.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/cli/main.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/core/__init__.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/core/config.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/core/logging.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/core/runtime.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/core/service.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/core/supervisor.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/dedupe.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/explore.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/federation.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/graph.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/harmonix_loader.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/identity/__init__.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/identity/did.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/identity/keys.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/identity/vc.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/merge.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/metrics/__init__.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/metrics/registry.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/metrics/service.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/network/__init__.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/network/health.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/network/pathfinder.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/network/registry.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/network/routing.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/reporting.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/resolver.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/scheduler/__init__.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/scheduler/job.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/scheduler/service.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/scheduler/store.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/schema.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/search.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/storage/__init__.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/storage/drivers/base.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/storage/drivers/fs.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/storage/drivers/memory.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/storage/drivers/vault.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/storage/receipt.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/storage/service.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "module:atlas/types.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:atlas",
+        "target": "schema:atlas/schema.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:echo",
+        "target": "module:echo/dotnet_sdk.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:echo",
+        "target": "module:echo/harmonix_sdk.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:echo",
+        "target": "module:echo/orchestrator/sdk.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:echo/orchestrator",
+        "target": "module:echo/orchestrator/sdk.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:fixtures",
+        "target": "module:fixtures/opreturn/generate.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:packages/core/src/echo",
+        "target": "module:packages/core/src/echo/dotnet_sdk.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:packages/core/src/echo",
+        "target": "module:packages/core/src/echo/harmonix_sdk.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:packages/core/src/echo",
+        "target": "module:packages/core/src/echo/orchestrator/sdk.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:packages/core/src/echo/orchestrator",
+        "target": "module:packages/core/src/echo/orchestrator/sdk.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:pulse_dashboard",
+        "target": "module:pulse_dashboard/__init__.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:pulse_dashboard",
+        "target": "module:pulse_dashboard/builder.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:pulse_dashboard",
+        "target": "module:pulse_dashboard/client.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:pulse_dashboard",
+        "target": "module:pulse_dashboard/impact_explorer.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:pulse_dashboard",
+        "target": "module:pulse_dashboard/loop_health.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:pulse_dashboard",
+        "target": "module:pulse_dashboard/public/assets/app.js",
+        "type": "contains"
+      },
+      {
+        "source": "dir:pulse_dashboard",
+        "target": "module:pulse_dashboard/worker.py",
+        "type": "contains"
+      },
+      {
+        "source": "dir:pulse_dashboard",
+        "target": "schema:pulse_dashboard/data/dashboard.json",
+        "type": "contains"
+      }
+    ]
+  }
+}
