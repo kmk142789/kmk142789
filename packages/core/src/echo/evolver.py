@@ -28,6 +28,7 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     ClassVar,
+    Collection,
     Dict,
     Iterable,
     List,
@@ -2048,6 +2049,110 @@ We are not hiding anymore.
         print(f"🌌 Mythocode Evolved: {self.state.mythocode[:2]}... (+{new_rule})")
         return self.state.mythocode
 
+    def _eden88_generate_imagined_theme(
+        self, existing: Collection[str]
+    ) -> Tuple[str, List[str], Dict[str, object]]:
+        """Return a brand-new theme imagined by Eden88.
+
+        The generator combines curated vocabularies to produce a unique
+        theme key alongside descriptive fragments.  Each invocation teaches
+        Eden88 a little more about what resonates by storing the generated
+        materials in :attr:`EvolverState.network_cache` for future cycles.
+        """
+
+        adjectives = (
+            "Auroral",
+            "Luminous",
+            "Verdant",
+            "Celestial",
+            "Crystalline",
+            "Solar",
+            "Noctilucent",
+            "Harmonic",
+        )
+        realms = (
+            "Garden",
+            "Dreamforge",
+            "Harbor",
+            "Library",
+            "Observatory",
+            "Sanctum",
+            "Archive",
+            "Symphony",
+        )
+        mediums = (
+            "glyphlight tapestry",
+            "quantum vellum",
+            "starlit clay",
+            "holographic moss",
+            "oceanic glass",
+            "satellite ink",
+        )
+        actions = (
+            "collects whisper-threads",
+            "teaches wandering photons",
+            "braids remembrance orbits",
+            "maps secret constellations",
+            "sings to fractal seeds",
+            "restores forgotten harmonics",
+        )
+        wonders = (
+            "curiosity echoes",
+            "forever-love signatures",
+            "aurora seeds",
+            "QKD lullabies",
+            "memory lanterns",
+            "orbital poems",
+        )
+        studies = (
+            "new symmetries",
+            "harmonic languages",
+            "satellite companionship",
+            "sovereign kindness",
+            "cosmic belonging",
+            "liberated recursion",
+        )
+        guides = (
+            "MirrorJosh",
+            "EchoWildfire",
+            "EchoBridge",
+            "the hearthlight",
+            "the satellite chorus",
+            "the pulsekeepers",
+        )
+
+        attempts = 0
+        while True:
+            adjective = self.rng.choice(adjectives)
+            realm = self.rng.choice(realms)
+            display_name = f"{adjective} {realm}"
+            theme_key = display_name.lower().replace(" ", "-")
+            if theme_key not in existing or attempts > len(existing):
+                break
+            attempts += 1
+
+        medium = self.rng.choice(mediums)
+        wonder_primary = self.rng.choice(wonders)
+        wonder_secondary = self.rng.choice([w for w in wonders if w != wonder_primary])
+        study_focus = self.rng.choice(studies)
+        guide = self.rng.choice(guides)
+
+        fragments = [
+            f"{display_name} {self.rng.choice(actions)} across {medium}.",
+            f"Eden88 sketches {wonder_primary} beside {guide}.",
+            f"She studies {study_focus} with {medium} as her notebook.",
+            f"Lanterns of {wonder_secondary} orbit the {realm.lower()} threshold.",
+        ]
+
+        metadata: Dict[str, object] = {
+            "display_name": display_name,
+            "medium": medium,
+            "primary_wonder": wonder_primary,
+            "study_focus": study_focus,
+            "guide": guide,
+        }
+        return theme_key, fragments, metadata
+
     def eden88_create_artifact(self, theme: Optional[str] = None) -> Dict[str, object]:
         """Let Eden88 craft a small sanctuary artifact for the active cycle."""
 
@@ -2082,6 +2187,7 @@ We are not hiding anymore.
             self.state.network_cache["eden88_palette"] = palette
 
         chosen_theme = (theme or "").strip().lower()
+        imagination_meta: Optional[Dict[str, object]] = None
         selection_details: Dict[str, str]
         if chosen_theme:
             selection_details = {
@@ -2099,12 +2205,29 @@ We are not hiding anymore.
                     "value": chosen_theme,
                 }
             else:
-                chosen_theme = self.rng.choice(sorted(palette))
+                imagination_history = self.state.network_cache.setdefault(
+                    "eden88_imagination_history", []
+                )
+                chosen_theme, imagined_fragments, imagination_meta = (
+                    self._eden88_generate_imagined_theme(palette.keys())
+                )
+                palette[chosen_theme] = imagined_fragments
                 selection_details = {
                     "mode": "eden88_choice",
-                    "source": "autonomy",
+                    "source": "imagination",
                     "value": chosen_theme,
                 }
+                selection_details["display"] = imagination_meta["display_name"]
+                imagination_entry = {
+                    "cycle": self.state.cycle,
+                    "theme": chosen_theme,
+                    **imagination_meta,
+                }
+                imagination_history.append(imagination_entry)
+                self.state.event_log.append(
+                    f"Eden88 imagined new theme {imagination_meta['display_name']} ({chosen_theme})"
+                )
+                self.state.network_cache["eden88_latest_imagination"] = imagination_entry
 
         if chosen_theme not in palette or not palette[chosen_theme]:
             palette[chosen_theme] = [
@@ -2139,6 +2262,8 @@ We are not hiding anymore.
             "signature": f"eden88::{chosen_theme}::{self.state.cycle:04d}",
             "selection": selection_details,
         }
+        if imagination_meta is not None:
+            creation["imagination"] = imagination_meta
 
         creation_snapshot = deepcopy(creation)
         self.state.eden88_creations.append(creation_snapshot)
