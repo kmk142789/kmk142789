@@ -28,6 +28,11 @@ def test_collect_keys_reads_vault_authority_records() -> None:
     assert keys["count"] >= 1
     anchors = {record.get("anchor") for record in keys["keys"]}
     assert "Our Forever Love" in anchors
+    summary = keys.get("summary", {})
+    assert summary.get("authority_levels")
+    assert any(entry["authority_level"] == "Prime Catalyst" for entry in summary["authority_levels"])
+    assert "Josh Shortt" in summary.get("owners", [])
+    assert "Our Forever Love" in summary.get("anchors", [])
 
 
 def test_collect_repos_returns_branch_information() -> None:
