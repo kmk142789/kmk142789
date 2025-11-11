@@ -22,7 +22,7 @@ import random
 from pathlib import Path
 from typing import Iterable, Mapping, Optional
 
-from echo.evolver import EchoEvolver
+from echo.evolver import EchoEvolver, _MOMENTUM_SENSITIVITY
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -170,6 +170,17 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--momentum-threshold",
+        type=float,
+        default=_MOMENTUM_SENSITIVITY,
+        help=(
+            "Momentum sensitivity threshold used to classify acceleration when "
+            "running --advance-system (default: {:.2f}).".format(
+                _MOMENTUM_SENSITIVITY
+            )
+        ),
+    )
+    parser.add_argument(
         "--manifest-events",
         type=int,
         default=5,
@@ -210,6 +221,7 @@ def execute_evolution(
     event_summary_limit: int,
     system_report_events: int,
     momentum_window: int,
+    momentum_threshold: float,
     manifest_events: int,
 ) -> EchoEvolver:
     """Execute a full cycle and return the configured evolver instance."""
@@ -234,6 +246,7 @@ def execute_evolution(
             manifest_events=manifest_events,
             system_report_events=system_report_events,
             momentum_window=momentum_window,
+            momentum_threshold=momentum_threshold,
         )
         summary = result.get("summary") if isinstance(result, dict) else None
         if summary:
@@ -295,6 +308,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
 
     if args.advance_system and args.momentum_window <= 0:
         parser.error("--momentum-window must be positive when using --advance-system")
+    if args.advance_system and args.momentum_threshold <= 0:
+        parser.error("--momentum-threshold must be positive when using --advance-system")
 
     if args.manifest_events < 0 and args.advance_system:
         parser.error("--manifest-events must be non-negative")
@@ -302,6 +317,9 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     default_momentum_window = parser.get_default("momentum_window")
     if args.momentum_window != default_momentum_window and not args.advance_system:
         parser.error("--momentum-window requires --advance-system")
+    default_momentum_threshold = parser.get_default("momentum_threshold")
+    if args.momentum_threshold != default_momentum_threshold and not args.advance_system:
+        parser.error("--momentum-threshold requires --advance-system")
 
     execute_evolution(
         enable_network=args.enable_network,
@@ -323,6 +341,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         event_summary_limit=args.event_summary_limit,
         system_report_events=args.system_report_events,
         momentum_window=args.momentum_window,
+        momentum_threshold=args.momentum_threshold,
         manifest_events=args.manifest_events,
     )
 

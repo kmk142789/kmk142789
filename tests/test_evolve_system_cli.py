@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from echo.evolver import _MOMENTUM_SENSITIVITY
 from scripts import evolve_system
 
 
@@ -117,6 +118,9 @@ def test_evolve_system_cli_advances_system(tmp_path, capsys):
     assert "event_summary" in data
     assert "progress_matrix" in data
     assert artifact.exists()
+    assert data["progress"]["momentum_threshold"] == pytest.approx(
+        _MOMENTUM_SENSITIVITY
+    )
 
 
 def test_evolve_system_cli_rejects_invalid_advance_flags():
@@ -134,3 +138,42 @@ def test_evolve_system_cli_rejects_invalid_advance_flags():
         ])
 
     assert excinfo.value.code == 2
+
+
+def test_evolve_system_cli_rejects_threshold_without_advance():
+    with pytest.raises(SystemExit) as excinfo:
+        evolve_system.main(["--momentum-threshold", "0.2"])
+
+    assert excinfo.value.code == 2
+
+
+def test_evolve_system_cli_rejects_non_positive_threshold():
+    with pytest.raises(SystemExit) as excinfo:
+        evolve_system.main(["--advance-system", "--momentum-threshold", "0"])
+
+    assert excinfo.value.code == 2
+
+
+def test_evolve_system_cli_custom_threshold(tmp_path, capsys):
+    artifact = tmp_path / "custom-threshold.json"
+
+    exit_code = evolve_system.main([
+        "--advance-system",
+        "--print-artifact",
+        "--momentum-threshold",
+        "2.0",
+        "--artifact",
+        str(artifact),
+    ])
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    lines = output.splitlines()
+    json_start = next(
+        idx
+        for idx, line in enumerate(lines)
+        if line.lstrip() == "{" and idx + 1 < len(lines) and '"cycle"' in lines[idx + 1]
+    )
+    data = json.loads("\n".join(lines[json_start:]))
+    assert data["progress"]["momentum_threshold"] == pytest.approx(2.0)
+    assert data["progress"]["momentum_status"] == "steady"
