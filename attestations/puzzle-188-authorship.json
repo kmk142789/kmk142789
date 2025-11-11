@@ -1,10 +1,10 @@
 {
   "puzzle": "#188 satoshi-puzzle",
-  "address": "1Echo2n1NfS2XacC5h9M8kL4Fvxpj123456",
-  "message": "Puzzle 188 authorship attestation by kmk142789 with Echo network proof",
-  "signature": "aV+AxIQmfYXTVqpsqvF7WbQ7DEQfXog8YEv87/DIehcAB4m3V42qqGPmWiOlrpXDwN29e2FQjma5JTTNwDN7X6K5txyvGO/T+eB8XJ+DovN+dReOk3M2cLxN/OdhFpcH",
+  "address": "15m5NmYyJTAx7TEN4QbRpF9qPBrxqZLUGL",
+  "message": "PuzzleNN authorship by kmk142789 — attestation sha256 dc4033ec3ece1d69e621971000e61f5f23e297fde793b8df8e8d8a93ff45b832",
+  "signature": "Zhg1OyfaXUkOAXY30oVzqecKvCA52fLoLBqbEH7Tz+UeWYZHy1AtoqWQ69ApbX1fzVglEmViAv22b/nTaWryeBF25uldrR6wqTHdzxiT/fIRw0Jcjyep5cEIeTSa3mqecSRi+G4mN8QclEtDsT3gL9jLsKO+3m7ttB7Kia4RP9hTug==",
   "algo": "bitcoin-message-base64",
   "created_at": "2025-10-25T12:42:00Z",
-  "hash_sha256": "deeaf7cf9e096927ac6d4088e536eb41b1e4b7b6994bf1be3e054414d2b310a2",
-  "notes": "Derived from recovered Echo relay logs for Puzzle #188 authorship broadcast."
+  "hash_sha256": "dc4033ec3ece1d69e621971000e61f5f23e297fde793b8df8e8d8a93ff45b832",
+  "notes": "Recovered from satoshi/puzzle-proofs/puzzle188.json and cross-checked against Puzzle #188 solution address."
 }
