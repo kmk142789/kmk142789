@@ -51,6 +51,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq netcat-openbsd
 
+      - name: Set up Node.js
+        if: ${{ hashFiles('**/package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            */package-lock.json
+            */*/package-lock.json
+
+      - name: Install Node dependencies
+        if: ${{ hashFiles('**/package.json') != '' }}
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f package.json ]; then
+            npm install
+          fi
+
       - name: Start application stack
         run: |
           set -euo pipefail
@@ -111,11 +131,15 @@ jobs:
           mkdir -p "$E2E_RESULTS_DIR"
           status=0
           if [ -f package.json ]; then
-            if npm run test:e2e --if-present; then
-              echo "Node e2e suite completed" > "$E2E_RESULTS_DIR"/node-summary.txt
+            if [ -n "$(node -pe "require('./package.json').scripts?.['test:e2e'] ? 'yes' : ''")" ]; then
+              if npm run test:e2e; then
+                echo "Node e2e suite completed" > "$E2E_RESULTS_DIR"/node-summary.txt
+              else
+                echo "Node e2e suite failed" > "$E2E_RESULTS_DIR"/node-failure.txt
+                status=1
+              fi
             else
-              echo "Node e2e suite failed" > "$E2E_RESULTS_DIR"/node-failure.txt
-              status=1
+              echo "No Node e2e script defined" > "$E2E_RESULTS_DIR"/node-skipped.txt
             fi
           fi
           if [ -d tests/e2e ] || ls */tests/e2e >/dev/null 2>&1; then
@@ -123,7 +147,7 @@ jobs:
               python -m pip install --upgrade pip
               mapfile -t reqs < <(find . -name 'requirements*.txt' -type f)
               if [ "${#reqs[@]}" -gt 0 ]; then
-                for file in "${reqs[@]}"; do python -m pip install -r "$file" || true; done
+                for file in "${reqs[@]}"; do python -m pip install -r "$file"; done
               fi
             fi
             if command -v pytest >/dev/null 2>&1; then

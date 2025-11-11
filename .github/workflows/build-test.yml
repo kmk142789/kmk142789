@@ -50,7 +50,7 @@ jobs:
           if [ "${#reqs[@]}" -gt 0 ]; then
             for file in "${reqs[@]}"; do
               echo "Installing from $file"
-              python -m pip install -r "$file" || true
+              python -m pip install -r "$file"
             done
           fi
 
@@ -113,11 +113,15 @@ jobs:
               ;;
             node)
               if [ -f package.json ]; then
-                if npm run test --if-present; then
-                  echo "Node unit tests completed" > reports/node/unit/SUMMARY.txt
+                if [ -n "$(node -pe "require('./package.json').scripts?.test ? 'yes' : ''")" ]; then
+                  if npm run test; then
+                    echo "Node unit tests completed" > reports/node/unit/SUMMARY.txt
+                  else
+                    echo "npm test failed" > reports/node/unit/FAILED.txt
+                    exit 1
+                  fi
                 else
-                  echo "npm test failed" > reports/node/unit/FAILED.txt
-                  exit 1
+                  echo "No Node unit test script defined" > reports/node/unit/SKIPPED.txt
                 fi
               else
                 echo "package.json not found, skipping" > reports/node/unit/SKIPPED.txt
@@ -177,7 +181,7 @@ jobs:
           if [ "${#reqs[@]}" -gt 0 ]; then
             for file in "${reqs[@]}"; do
               echo "Installing from $file"
-              python -m pip install -r "$file" || true
+              python -m pip install -r "$file"
             done
           fi
 
@@ -240,10 +244,15 @@ jobs:
               ;;
             node)
               if [ -f package.json ]; then
-                if npm run test:integration --if-present; then
-                  echo "Node integration tests completed" > reports/node/integration/SUMMARY.txt
+                if [ -n "$(node -pe "require('./package.json').scripts?.['test:integration'] ? 'yes' : ''")" ]; then
+                  if npm run test:integration; then
+                    echo "Node integration tests completed" > reports/node/integration/SUMMARY.txt
+                  else
+                    echo "Node integration tests failed" > reports/node/integration/FAILED.txt
+                    exit 1
+                  fi
                 else
-                  echo "No Node integration tests executed" > reports/node/integration/SKIPPED.txt
+                  echo "No Node integration tests defined" > reports/node/integration/SKIPPED.txt
                 fi
               else
                 echo "package.json not found, skipping" > reports/node/integration/SKIPPED.txt
