@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "timestamp": "2024-12-01T10:30:00Z",
+  "services": {
+    "storage": {
+      "strategy": "content-addressable",
+      "chunk_size": 4096,
+      "integrity_checks": true
+    },
+    "metadata": {
+      "index": "in-memory",
+      "refresh_interval": 60
+    },
+    "history": {
+      "retention_days": 30
+    }
+  },
+  "events": [
+    {
+      "id": "bootstrap",
+      "type": "initialize",
+      "payload": {
+        "actor": "system",
+        "note": "Initial vault bootstrapped"
+      }
+    },
+    {
+      "id": "enable-integrity",
+      "type": "toggle",
+      "payload": {
+        "feature": "integrity_checks",
+        "enabled": true
+      }
+    }
+  ],
+  "dependencies": [
+    {"name": "sqlite", "version": ">=3.40"},
+    {"name": "python", "version": ">=3.10"}
+  ],
+  "rollback": {
+    "enabled": true,
+    "strategy": "linear"
+  }
+}

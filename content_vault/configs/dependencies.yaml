@@ -1,0 +1,9 @@
+runtime:
+  - name: python
+    version: ">=3.11"
+  - name: sqlite
+    version: ">=3.41"
+services:
+  - name: redis
+    version: optional
+    purpose: cache coordination for metadata fan-out

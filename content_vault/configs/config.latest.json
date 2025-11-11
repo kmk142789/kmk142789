@@ -1,0 +1,4 @@
+{
+  "$ref": "./config.v2.json",
+  "notes": "Convenience pointer to the most recent approved configuration."
+}
