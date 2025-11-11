@@ -3,24 +3,15 @@ from pathlib import Path
 from typing import Any
 
 from ..lww_map import LWWMap, Dot
-
-DDL = """
-CREATE TABLE IF NOT EXISTS lww (
-  k TEXT PRIMARY KEY,
-  v BLOB,
-  ts INTEGER,
-  node TEXT
-);
-"""
+from .migrations import apply_migrations
 
 
 class SQLiteStore:
     def __init__(self, db_path: str = ".fpulse/pulse.db"):
         self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        apply_migrations(self.db_path)
         self.conn = sqlite3.connect(self.db_path)
-        self.conn.execute(DDL)
-        self.conn.commit()
+        self.conn.row_factory = sqlite3.Row
 
     def upsert(self, key: str, value: Any, ts: int, node: str) -> None:
         cur = self.conn.execute("SELECT ts,node FROM lww WHERE k=?", (key,)).fetchone()

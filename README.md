@@ -100,6 +100,17 @@ The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every
 4. **Verify proofs ahead of rollout.** Run `make proof-pack` to regenerate federated ledgers,
    indexes, and public reports so downstream consumers receive the latest attestations.
 
+### Deterministic dev state & retention
+
+The `scripts/dev_orchestration.py` helper seeds all stateful services with deterministic
+fixtures. Run `python scripts/dev_orchestration.py seed` after cloning or whenever you need a
+clean, reproducible baseline. Use `python scripts/dev_orchestration.py replay` to tear down and
+re-seed in one step.
+
+Retention policies for logs, metrics, and generated fixtures live in
+`config/retention.json`. Enforce them locally with `python scripts/enforce_retention.py` or read
+the detailed recovery steps in [`docs/dev_data_recovery.md`](docs/dev_data_recovery.md).
+
 ### Required environment variables
 
 | Variable | Default | Purpose |

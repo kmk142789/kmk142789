@@ -8,36 +8,13 @@ from pathlib import Path
 from typing import Iterable, Iterator, List, Optional
 
 from .job import Job, JobStatus
+from .migrations import apply_migrations
 
 
 class JobStore:
     def __init__(self, path: Path):
-        self.path = path
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_db()
-
-    def _init_db(self) -> None:
-        with self._connect() as conn:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS jobs (
-                    id TEXT PRIMARY KEY,
-                    tenant TEXT NOT NULL,
-                    payload TEXT NOT NULL,
-                    schedule_at TEXT NOT NULL,
-                    status TEXT NOT NULL,
-                    attempts INTEGER NOT NULL,
-                    last_error TEXT,
-                    retry_policy TEXT NOT NULL,
-                    runtime_limit REAL,
-                    created_at TEXT NOT NULL,
-                    updated_at TEXT NOT NULL
-                )
-                """
-            )
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_schedule ON jobs(status, schedule_at)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_tenant ON jobs(tenant, status)")
-            conn.commit()
+        self.path = Path(path)
+        apply_migrations(self.path)
 
     @contextmanager
     def _connect(self) -> Iterator[sqlite3.Connection]:

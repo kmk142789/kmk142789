@@ -1,0 +1,68 @@
+[
+  {
+    "id": "job.seed.sync-atlas",
+    "tenant": "atlas-core",
+    "payload": {
+      "task": "sync-metrics",
+      "priority": 1
+    },
+    "schedule_at": "2025-01-01T00:00:00+00:00",
+    "status": "pending",
+    "attempts": 0,
+    "last_error": null,
+    "retry_policy": {
+      "max_attempts": 5,
+      "initial_delay": 5.0,
+      "backoff_factor": 2.0,
+      "max_delay": 120.0,
+      "jitter": 0.0
+    },
+    "runtime_limit": 60.0,
+    "created_at": "2025-01-01T00:00:00+00:00",
+    "updated_at": "2025-01-01T00:00:00+00:00"
+  },
+  {
+    "id": "job.seed.refresh-did-cache",
+    "tenant": "atlas-core",
+    "payload": {
+      "task": "refresh-did-cache",
+      "batch_size": 5
+    },
+    "schedule_at": "2025-01-01T00:15:00+00:00",
+    "status": "pending",
+    "attempts": 0,
+    "last_error": null,
+    "retry_policy": {
+      "max_attempts": 3,
+      "initial_delay": 10.0,
+      "backoff_factor": 1.5,
+      "max_delay": 90.0,
+      "jitter": 0.0
+    },
+    "runtime_limit": 45.0,
+    "created_at": "2025-01-01T00:15:00+00:00",
+    "updated_at": "2025-01-01T00:15:00+00:00"
+  },
+  {
+    "id": "job.seed.generate-snapshot",
+    "tenant": "pulse-weaver",
+    "payload": {
+      "task": "generate-snapshot",
+      "cycle": "cycle-20250101"
+    },
+    "schedule_at": "2025-01-01T01:00:00+00:00",
+    "status": "pending",
+    "attempts": 0,
+    "last_error": null,
+    "retry_policy": {
+      "max_attempts": 4,
+      "initial_delay": 15.0,
+      "backoff_factor": 2.0,
+      "max_delay": 300.0,
+      "jitter": 0.0
+    },
+    "runtime_limit": 120.0,
+    "created_at": "2025-01-01T01:00:00+00:00",
+    "updated_at": "2025-01-01T01:00:00+00:00"
+  }
+]

@@ -9,9 +9,12 @@ services:
     volumes:
       - ../config:/app/config
       - ../data:/app/data
+      - ../fixtures:/app/fixtures
     ports:
       - "9100:9100"
       - "9101:9101"
+    command: >
+      sh -c "python scripts/dev_orchestration.py seed && python -m atlas.core.runtime"
   dashboard:
     image: node:20
     working_dir: /app

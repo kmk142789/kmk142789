@@ -1,0 +1,22 @@
+{
+  "policies": [
+    {
+      "name": "logs",
+      "paths": ["logs"],
+      "retention_days": 14,
+      "patterns": ["*.log", "*.jsonl"]
+    },
+    {
+      "name": "metrics",
+      "paths": ["data/metrics", "pulse_dashboard/metrics"],
+      "retention_days": 30,
+      "patterns": ["*.json", "*.csv"]
+    },
+    {
+      "name": "fixtures",
+      "paths": ["fixtures/_generated"],
+      "retention_days": 7,
+      "patterns": ["*.json", "*.ndjson", "*.log"]
+    }
+  ]
+}

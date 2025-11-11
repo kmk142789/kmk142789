@@ -1,0 +1,23 @@
+[
+  {
+    "key": "pulse.nodes.alpha",
+    "value": "online",
+    "timestamp": 1704067200,
+    "node": "atlas-alpha"
+  },
+  {
+    "key": "pulse.nodes.bravo",
+    "value": "online",
+    "timestamp": 1704068200,
+    "node": "atlas-bravo"
+  },
+  {
+    "key": "pulse.threshold",
+    "value": {
+      "minimum": 0.7,
+      "cycle": "cycle-20250101"
+    },
+    "timestamp": 1704069200,
+    "node": "atlas-alpha"
+  }
+]

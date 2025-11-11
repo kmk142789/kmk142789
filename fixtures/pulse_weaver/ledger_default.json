@@ -1,0 +1,55 @@
+{
+  "events": [
+    {
+      "key": "seed.cycle.start",
+      "status": "success",
+      "message": "Cycle bootstrap completed",
+      "cycle": "cycle-20250101",
+      "proof": null,
+      "echo": "atlas-alpha",
+      "metadata": {
+        "artifact": "pulse-weaver",
+        "revision": 1
+      },
+      "created_at": "2025-01-01T00:00:00+00:00"
+    },
+    {
+      "key": "seed.cycle.snapshot",
+      "status": "success",
+      "message": "Snapshot synthesized",
+      "cycle": "cycle-20250101",
+      "proof": "00000000",
+      "echo": "atlas-alpha",
+      "metadata": {
+        "records": 42
+      },
+      "created_at": "2025-01-01T00:05:00+00:00"
+    },
+    {
+      "key": "seed.cycle.alert",
+      "status": "failure",
+      "message": "Phantom trace sync lag detected",
+      "cycle": "cycle-20250101",
+      "proof": null,
+      "echo": "atlas-alpha",
+      "metadata": {
+        "lag_seconds": 18
+      },
+      "created_at": "2025-01-01T00:07:00+00:00"
+    }
+  ],
+  "links": [
+    {
+      "key": "seed.cycle.start",
+      "atlas_node": "atlas-alpha",
+      "phantom_trace": null,
+      "created_at": "2025-01-01T00:01:00+00:00"
+    },
+    {
+      "key": "seed.cycle.snapshot",
+      "atlas_node": "atlas-alpha",
+      "phantom_trace": "trace-cycle-20250101",
+      "created_at": "2025-01-01T00:06:00+00:00"
+    }
+  ]
+}

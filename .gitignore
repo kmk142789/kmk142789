@@ -8,6 +8,8 @@ dist
 # Assistant Kit generated artifacts
 artifacts/akit/
 data/atlas.db
+data/*.db
+.fpulse/
 artifacts/*.png
 artifacts/genesis_artifact_bundle.zip
 **/__pycache__/
