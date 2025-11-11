@@ -20,6 +20,13 @@ from .creative_harmony import (
     compose_resonance,
     demo as resonance_demo,
 )
+from .creative_constellation import (
+    ConstellationNode,
+    ConstellationSeed,
+    ConstellationWeaver,
+    compose_constellation,
+    demo as constellation_demo,
+)
 from .creative_loop import (
     LoopDiagnostics,
     LoopRhythm,
@@ -34,13 +41,18 @@ __all__ = [
     "ChronicleEvent",
     "ChroniclePrompt",
     "ChronicleTimeline",
+    "ConstellationNode",
+    "ConstellationSeed",
+    "ConstellationWeaver",
     "LoopDiagnostics",
     "LoopRhythm",
     "LoopSeed",
     "LoopResult",
     "ResonanceContext",
     "ResonancePrompt",
+    "constellation_demo",
     "chronicle_demo",
+    "compose_constellation",
     "compose_chronicle",
     "compose_loop",
     "compose_resonance",
