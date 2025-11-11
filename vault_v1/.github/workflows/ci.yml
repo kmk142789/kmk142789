@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - 'vault_v1/**'
+  pull_request:
+    paths:
+      - 'vault_v1/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vault_v1
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+      - name: Lint
+        run: |
+          ruff check .
+      - name: Test
+        run: |
+          pytest -q

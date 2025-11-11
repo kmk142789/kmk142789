@@ -1,0 +1,16 @@
+fastapi==0.110.1     --hash=sha256:f1eed5a17f0711e0bd9e177b1253356d7dab9801b2f41e10627f56c889293fd5
+uvicorn[standard]==0.27.1     --hash=sha256:9e3c73ee7a444d1086d97079ebda305a19acedabcabaac8120f2a4fbbd31935d
+sqlalchemy==2.0.28     --hash=sha256:e5abaec53d5e0ffaa9db1a64580270cf3df5e4fff29efe5572ffc999b8de95b9
+alembic==1.13.1     --hash=sha256:424584e04f2f550f9a9d6c3950911373016f8eb97eabb07b18a67f5c681c2627
+blake3==0.4.1     --hash=sha256:e94e4c2dea0219db67ffd64753eb48c2791bfcddb2fd99c64b0c4adf59ca3bff
+python-multipart==0.0.9     --hash=sha256:bc9c7f446dcfb5323cc2cf0a1b2d13e41f154ef1de78291be3db6837f72213bc
+click==8.1.7     --hash=sha256:9552c380eebc88946a4be145adcc35a53785cf98c553b6ad4e91f87b64dba566
+pydantic-settings==2.1.0     --hash=sha256:001f6585a914be5cb7e3d9c852c8366f6b15a1c8a8cb6fbb902e508399686527
+boto3==1.34.84     --hash=sha256:8812fb396134bd955ce4e681344eb9bc1204061a10d313de44b34aa4ec5ec3c5
+jwcrypto==1.5.4     --hash=sha256:add6da5a1ef3b9bd7703ac0ffae50320e577866e44211c4d66ea08ae9a34a37b
+python-dotenv==1.0.1     --hash=sha256:419e0323f46c2d6d5ec6b1c61c8b263ed311f7e924c1284aced3647ff7c36b6d
+requests==2.31.0     --hash=sha256:c50a404532932d720b3939120b749da1c820eecda6f19e45762b2be87da7fc0b
+pytest==8.1.1     --hash=sha256:01d84ba24f74fd94b1c52146a7e0ef42d2750b861dcbd19dd62aef2aefe62bea
+httpx==0.27.0     --hash=sha256:0342f140512036c20148707ca2eaa9b0cd9f0f846c1332ae8619f6fad5ecf412
+pytest-asyncio==0.23.5     --hash=sha256:144ea2c6a3a0517c9fd02e5529fc5c6c6b4ccd556201ced6dfced0a90a677588
+ruff==0.1.15     --hash=sha256:9eb75ef8fc04ba2203e80a625bfd7ba21a2bae3d43cd174f1123dd59007f4114
