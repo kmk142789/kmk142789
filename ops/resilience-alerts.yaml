@@ -1,0 +1,46 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: resilience-slo-alerts
+  labels:
+    team: resilience
+    role: reliability
+spec:
+  groups:
+    - name: load-chaos-slo
+      rules:
+        - alert: LoadTestSLOBreached
+          expr: |
+            max_over_time(load_test_slo_violation{service="pulse-gateway"}[5m]) > 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pulse Gateway load SLO breached"
+            description: |
+              The scheduled k6 job detected that a critical endpoint exceeded its
+              SLO. Review the `load-test-results` artifact from the Nightly
+              Resilience workflow and begin remediation per the playbook.
+        - alert: ChaosRecoverySlow
+          expr: |
+            chaos_recovery_seconds{scenario="pod_deletion"} > 180
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod recovery exceeded the 3 minute objective"
+            description: |
+              Pod deletion chaos experiment reports recovery slower than expected.
+              Validate controller health and consider scaling replicas or tuning
+              readiness probes.
+        - alert: ChaosNetworkLatencyActive
+          expr: |
+            chaos_network_latency_active == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Network latency chaos is still active"
+            description: |
+              Network latency injection has not been cleaned up within 15 minutes.
+              Ensure the experiment controller has reverted traffic shaping.

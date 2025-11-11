@@ -1,0 +1,63 @@
+name: Nightly Resilience Verification
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    env:
+      LOAD_TEST_BASE_URL: ${{ secrets.LOAD_TEST_BASE_URL }}
+      LOAD_TEST_AUTH_TOKEN: ${{ secrets.LOAD_TEST_AUTH_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+      - name: Execute critical endpoint load tests
+        run: tests/load/run_load_tests.sh
+      - name: Upload load test artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-results
+          path: tests/load/results
+  chaos-test:
+    runs-on: ubuntu-latest
+    needs: load-test
+    env:
+      KUBECONFIG_BASE64: ${{ secrets.KUBECONFIG_BASE64 }}
+      CHAOS_TARGET_NAMESPACE: ${{ secrets.CHAOS_TARGET_NAMESPACE }}
+      CHAOS_TARGET_SELECTOR: ${{ secrets.CHAOS_TARGET_SELECTOR }}
+      CHAOS_TARGET_DEPLOYMENT: ${{ secrets.CHAOS_TARGET_DEPLOYMENT }}
+      CHAOS_ROLLOUT_TIMEOUT: ${{ secrets.CHAOS_ROLLOUT_TIMEOUT }}
+      CHAOS_NETWORK_PROBE_POD: ${{ secrets.CHAOS_NETWORK_PROBE_POD }}
+      CHAOS_NETWORK_INTERFACE: ${{ secrets.CHAOS_NETWORK_INTERFACE }}
+      CHAOS_NETWORK_LATENCY: ${{ secrets.CHAOS_NETWORK_LATENCY }}
+      CHAOS_NETWORK_DURATION: ${{ secrets.CHAOS_NETWORK_DURATION }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Configure kubeconfig
+        if: env.KUBECONFIG_BASE64 != ''
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "$KUBECONFIG_BASE64" | base64 --decode > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+      - name: Run chaos experiments
+        run: tests/chaos/run_chaos.sh
+      - name: Upload chaos artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: chaos-results
+          path: tests/chaos/results
