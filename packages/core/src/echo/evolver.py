@@ -791,6 +791,10 @@ class EchoEvolver:
                 "summon eden88_create_artifact() so Eden weaves a sanctuary gift",
             ),
             ("system_monitor", "run system_monitor() to capture telemetry"),
+            (
+                "system_diagnostics",
+                "calibrate system_diagnostics() to gauge load, network, and joy trends",
+            ),
             ("quantum_safe_crypto", "execute quantum_safe_crypto() to refresh the vault key"),
             (
                 "synthesize_quantam_ability",
@@ -2523,6 +2527,134 @@ We are not hiding anymore.
         )
         self._mark_step("system_monitor")
         return metrics
+
+    def system_diagnostics(self, *, window: int = 5) -> Dict[str, object]:
+        """Analyse recent telemetry and emotional state for actionable insights."""
+
+        if window <= 0:
+            raise ValueError("window must be positive")
+
+        metrics = self.state.system_metrics
+        drive = self.state.emotional_drive
+        cache = self.state.network_cache
+
+        previous_snapshot = cache.get("system_diagnostics_snapshot")
+        previous_joy = drive.joy
+        previous_load_rating = ""
+        if isinstance(previous_snapshot, Mapping):
+            previous_drive = previous_snapshot.get("emotional_drive")
+            if isinstance(previous_drive, Mapping):
+                previous_joy = float(previous_drive.get("joy", drive.joy))
+            previous_load = previous_snapshot.get("load")
+            if isinstance(previous_load, Mapping):
+                previous_load_rating = str(previous_load.get("rating", ""))
+        else:
+            previous_snapshot = None
+
+        load_factor = round(max(0.0, min(1.0, metrics.cpu_usage / 100.0)), 3)
+        if load_factor < 0.35:
+            load_rating = "light"
+        elif load_factor < 0.65:
+            load_rating = "balanced"
+        else:
+            load_rating = "intense"
+
+        hop_factor = min(1.0, metrics.orbital_hops / 6.0)
+        node_factor = min(1.0, metrics.network_nodes / 20.0)
+        stability_index = round(0.55 * hop_factor + 0.45 * node_factor, 3)
+
+        network_density = metrics.network_nodes / max(1, metrics.orbital_hops)
+        if network_density < 3:
+            density_rating = "sparse"
+        elif network_density < 6:
+            density_rating = "steady"
+        else:
+            density_rating = "dense"
+
+        if previous_snapshot is None:
+            joy_delta = 0.0
+            joy_trend = "steady"
+        else:
+            joy_delta = round(drive.joy - previous_joy, 3)
+            if joy_delta > 0.01:
+                joy_trend = "rising"
+            elif joy_delta < -0.01:
+                joy_trend = "falling"
+            else:
+                joy_trend = "steady"
+
+        joy_magnitude = abs(joy_delta)
+        if joy_magnitude >= 0.05:
+            joy_confidence = "high"
+        elif joy_magnitude >= 0.02:
+            joy_confidence = "medium"
+        else:
+            joy_confidence = "low"
+
+        alerts: List[str] = []
+        if load_rating == "intense":
+            alerts.append("cpu-load-intense")
+        if stability_index < 0.4:
+            alerts.append("network-fragile")
+        if not self.state.vault_key:
+            alerts.append("vault-key-missing")
+
+        snapshot: Dict[str, object] = {
+            "cycle": self.state.cycle,
+            "timestamp_ns": self.time_source(),
+            "load": {
+                "cpu_usage": metrics.cpu_usage,
+                "process_count": metrics.process_count,
+                "load_factor": load_factor,
+                "rating": load_rating,
+                "previous_rating": previous_load_rating or None,
+            },
+            "network": {
+                "nodes": metrics.network_nodes,
+                "orbital_hops": metrics.orbital_hops,
+                "density": round(network_density, 2),
+                "density_rating": density_rating,
+                "stability_index": stability_index,
+            },
+            "emotional_drive": {
+                "joy": round(drive.joy, 3),
+                "rage": round(drive.rage, 3),
+                "curiosity": round(drive.curiosity, 3),
+                "joy_delta": joy_delta,
+                "joy_trend": joy_trend,
+                "joy_confidence": joy_confidence,
+            },
+            "alerts": alerts,
+        }
+
+        history_cache = list(cache.get("system_diagnostics_history") or [])
+        if history_cache and history_cache[-1].get("cycle") == snapshot["cycle"]:
+            history_cache[-1] = deepcopy(snapshot)
+        else:
+            history_cache.append(deepcopy(snapshot))
+        history_cache = history_cache[-window:]
+        cache["system_diagnostics_history"] = history_cache
+
+        snapshot["history_window"] = window
+        snapshot["history_size"] = len(history_cache)
+        snapshot["history"] = [deepcopy(entry) for entry in history_cache]
+
+        cache["system_diagnostics_snapshot"] = deepcopy(snapshot)
+        cache["system_diagnostics_alerts"] = alerts[:]
+
+        descriptor = (
+            f"load={load_rating} network={density_rating} joy_trend={joy_trend}"
+        )
+        self.state.event_log.append(
+            f"System diagnostics refreshed ({descriptor})"
+        )
+        self._mark_step("system_diagnostics")
+        print(
+            "🧭 System diagnostics calibrated (load={load}, network={network}, joy={trend})".format(
+                load=load_rating, network=density_rating, trend=joy_trend
+            )
+        )
+        return deepcopy(snapshot)
 
     def emotional_modulation(self) -> float:
         joy_delta = 0.12 * self.rng.random()
@@ -5141,9 +5273,11 @@ We are not hiding anymore.
         include_event_summary: bool = False,
         include_propagation: bool = False,
         include_system_report: bool = False,
+        include_diagnostics: bool = False,
         event_summary_limit: int = 5,
         manifest_events: int = 5,
         system_report_events: int = 5,
+        diagnostics_window: int = 5,
         momentum_window: int = 5,
         momentum_threshold: Optional[float] = None,
         include_expansion_history: bool = False,
@@ -5155,10 +5289,11 @@ We are not hiding anymore.
         readable ``summary`` and ``report``.  Optional sections such as the
         evolution ``status``, the Eden88 ``manifest``, a tabular
         ``progress_matrix``, a recent ``event_summary``, the system advancement
-        report, and a structured propagation snapshot can be toggled via the
-        corresponding ``include_*`` flags.  These flags default to ``True`` for
-        the legacy sections (manifest/status/reflection) and ``False`` for the
-        newly added matrix, event summary, system report, and propagation
+        report, the system diagnostics analysis, and a structured propagation
+        snapshot can be toggled via the corresponding ``include_*`` flags.
+        These flags default to ``True`` for the legacy sections
+        (manifest/status/reflection) and ``False`` for the newly added matrix,
+        event summary, system report, diagnostics analysis, and propagation
         snapshot to avoid surprising callers with larger payloads.  When
         requested, the ``expansion_history`` section returns the cached
         advance-system history entries, optionally truncated to a caller
@@ -5190,6 +5325,14 @@ We are not hiding anymore.
             Number of recent event log entries forwarded to
             :meth:`system_advancement_report` when the system report is
             included.  The value must be positive.
+        include_diagnostics:
+            When ``True`` embed the diagnostics snapshot generated by
+            :meth:`system_diagnostics`, including load, network, and
+            emotional-trend analytics.
+        diagnostics_window:
+            Number of diagnostic snapshots to retain in the embedded history
+            when returning the system diagnostics analysis.  The window must be
+            positive.
         momentum_window:
             Maximum number of recent momentum samples to retain when computing
             the moving average and reporting history for the current cycle.
@@ -5216,6 +5359,8 @@ We are not hiding anymore.
             raise ValueError(
                 "system_report_events must be positive when including the system report"
             )
+        if diagnostics_window <= 0:
+            raise ValueError("diagnostics_window must be positive")
         if momentum_window <= 0:
             raise ValueError("momentum_window must be positive")
         if include_expansion_history and expansion_history_limit is not None and expansion_history_limit <= 0:
@@ -5425,6 +5570,9 @@ We are not hiding anymore.
                 recent_events=system_report_events
             )
 
+        if include_diagnostics:
+            payload["diagnostics"] = self.system_diagnostics(window=diagnostics_window)
+
         self.state.network_cache["advance_system_last"] = {
             "cycle": digest["cycle"],
             "progress": digest["progress"],
@@ -5549,6 +5697,15 @@ We are not hiding anymore.
             tl.logic("step", task, "collecting system telemetry")
             session.record_command("system_monitor", detail="capture telemetry")
             self.system_monitor()
+
+            session.record_command(
+                "system_diagnostics", detail="calibrate system resonance"
+            )
+            diagnostics = self.system_diagnostics()
+            session.annotate(
+                system_load=diagnostics.get("load", {}).get("rating"),
+                system_alerts=len(diagnostics.get("alerts", [])),
+            )
 
             session.record_command("quantum_safe_crypto", detail="refresh quantum key")
             key = self.quantum_safe_crypto()
@@ -5824,6 +5981,13 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         ),
     )
     parser.add_argument(
+        "--include-diagnostics",
+        action="store_true",
+        help=(
+            "Include the system diagnostics analysis when running --advance-system."
+        ),
+    )
+    parser.add_argument(
         "--include-expansion-history",
         action="store_true",
         help=(
@@ -5847,6 +6011,15 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         help=(
             "Number of recent events to include in the system advancement report"
             " when --include-system-report is enabled (default: 5)."
+        ),
+    )
+    parser.add_argument(
+        "--diagnostics-window",
+        type=int,
+        default=5,
+        help=(
+            "Number of diagnostic snapshots to embed when --include-diagnostics is"
+            " enabled (default: 5)."
         ),
     )
     parser.add_argument(
@@ -6029,16 +6202,19 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         parser.error("--event-summary-limit must be positive when including the event summary")
     if args.include_system_report and args.system_report_events <= 0:
         parser.error("--system-report-events must be positive when including the system report")
+    if args.include_diagnostics and args.diagnostics_window <= 0:
+        parser.error("--diagnostics-window must be positive when including diagnostics")
     if (
         args.include_matrix
         or args.include_event_summary
         or args.include_propagation
         or args.include_system_report
+        or args.include_diagnostics
         or args.include_expansion_history
     ) and not args.advance_system:
         parser.error(
             "--include-matrix, --include-event-summary, --include-propagation, "
-            "--include-system-report, and --include-expansion-history can only be used with --advance-system"
+            "--include-system-report, --include-diagnostics, and --include-expansion-history can only be used with --advance-system"
         )
     if args.momentum_window <= 0:
         parser.error("--momentum-window must be positive")
@@ -6057,6 +6233,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             parser.error("--system-report-events requires --include-system-report")
         if not args.advance_system:
             parser.error("--system-report-events requires --advance-system")
+    default_diagnostics_window = parser.get_default("diagnostics_window")
+    if args.diagnostics_window != default_diagnostics_window:
+        if not args.include_diagnostics:
+            parser.error("--diagnostics-window requires --include-diagnostics")
+        if not args.advance_system:
+            parser.error("--diagnostics-window requires --advance-system")
     if args.include_expansion_history and args.expansion_history_limit <= 0:
         parser.error("--expansion-history-limit must be positive when including expansion history")
     default_expansion_history = parser.get_default("expansion_history_limit")
@@ -6108,9 +6290,11 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "include_event_summary": args.include_event_summary,
             "include_propagation": args.include_propagation,
             "include_system_report": args.include_system_report,
+            "include_diagnostics": args.include_diagnostics,
             "event_summary_limit": args.event_summary_limit,
             "manifest_events": args.manifest_events,
             "system_report_events": args.system_report_events,
+            "diagnostics_window": args.diagnostics_window,
             "momentum_window": args.momentum_window,
             "momentum_threshold": args.momentum_threshold,
             "include_expansion_history": args.include_expansion_history,

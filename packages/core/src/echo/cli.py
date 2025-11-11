@@ -145,6 +145,8 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         parser_error("--event-summary-limit must be positive when including the event summary")
     if args.include_system_report and args.system_report_events <= 0:
         parser_error("--system-report-events must be positive when including the system report")
+    if args.include_diagnostics and args.diagnostics_window <= 0:
+        parser_error("--diagnostics-window must be positive when including diagnostics")
     if args.advance_system and args.momentum_window <= 0:
         parser_error("--momentum-window must be positive when using --advance-system")
     if args.advance_system and args.momentum_threshold <= 0:
@@ -160,6 +162,9 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         default_system_events = parser.get_default("system_report_events") if parser else 5
         if args.system_report_events != default_system_events:
             parser_error("--system-report-events requires --advance-system")
+        default_diagnostics_window = parser.get_default("diagnostics_window") if parser else 5
+        if args.diagnostics_window != default_diagnostics_window:
+            parser_error("--diagnostics-window requires --advance-system")
 
         default_momentum_window = parser.get_default("momentum_window") if parser else 5
         if args.momentum_window != default_momentum_window:
@@ -183,6 +188,10 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         default_system_events = parser.get_default("system_report_events") if parser else 5
         if args.system_report_events != default_system_events:
             parser_error("--system-report-events requires --include-system-report")
+    if args.diagnostics_window > 0 and not args.include_diagnostics:
+        default_diagnostics_window = parser.get_default("diagnostics_window") if parser else 5
+        if args.diagnostics_window != default_diagnostics_window:
+            parser_error("--diagnostics-window requires --include-diagnostics")
 
     if args.momentum_window > 0 and not args.advance_system:
         default_momentum_window = parser.get_default("momentum_window") if parser else 5
@@ -207,10 +216,11 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
             or args.include_event_summary
             or args.include_propagation
             or args.include_system_report
+            or args.include_diagnostics
         )
     ):
         parser_error(
-            "--include-matrix, --include-event-summary, --include-propagation, and --include-system-report require --advance-system"
+            "--include-matrix, --include-event-summary, --include-propagation, --include-system-report, and --include-diagnostics require --advance-system"
         )
 
     evolver = EchoEvolver(rng=rng, artifact_path=artifact_path)
@@ -235,9 +245,11 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
             include_event_summary=args.include_event_summary,
             include_propagation=args.include_propagation,
             include_system_report=args.include_system_report,
+            include_diagnostics=args.include_diagnostics,
             event_summary_limit=args.event_summary_limit,
             manifest_events=args.manifest_events,
             system_report_events=args.system_report_events,
+            diagnostics_window=args.diagnostics_window,
             momentum_window=args.momentum_window,
             momentum_threshold=args.momentum_threshold,
         )
@@ -951,6 +963,13 @@ def main(argv: Iterable[str] | None = None) -> int:
         ),
     )
     evolve_parser.add_argument(
+        "--include-diagnostics",
+        action="store_true",
+        help=(
+            "Include the system diagnostics snapshot when using --advance-system."
+        ),
+    )
+    evolve_parser.add_argument(
         "--event-summary-limit",
         type=int,
         default=5,
@@ -965,6 +984,15 @@ def main(argv: Iterable[str] | None = None) -> int:
         default=5,
         help=(
             "Number of events to include in the system report when using --include-system-report "
+            "(default: 5)."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--diagnostics-window",
+        type=int,
+        default=5,
+        help=(
+            "Number of diagnostics snapshots to retain when using --include-diagnostics "
             "(default: 5)."
         ),
     )

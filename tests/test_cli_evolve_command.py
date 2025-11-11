@@ -124,9 +124,11 @@ def test_cli_evolve_advance_system(monkeypatch, capfd):
         "include_event_summary": True,
         "include_propagation": True,
         "include_system_report": True,
+        "include_diagnostics": False,
         "event_summary_limit": 7,
         "manifest_events": 5,
         "system_report_events": 9,
+        "diagnostics_window": 5,
         "momentum_window": 5,
         "momentum_threshold": _MOMENTUM_SENSITIVITY,
     }
