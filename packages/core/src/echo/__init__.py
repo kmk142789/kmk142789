@@ -74,6 +74,12 @@ from .evolver import (
     SystemMetrics,
     main,
 )
+from .ecosystem_pulse import (
+    EcosystemAreaConfig,
+    EcosystemPulse,
+    EcosystemPulseReport,
+    EcosystemSignal,
+)
 from .hex_ingestion import (
     AnomalyAlert,
     HexPayloadReport,
