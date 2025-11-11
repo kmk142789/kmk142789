@@ -20,6 +20,7 @@
     "swr": "^2.3.0",
     "tailwind-merge": "^2.5.2",
     "@radix-ui/react-dialog": "^1.1.1",
+    "input-otp": "^0.1.1",
     "lucide-react": "^0.468.0"
   },
   "devDependencies": {
