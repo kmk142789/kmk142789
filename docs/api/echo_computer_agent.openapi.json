@@ -1,0 +1,147 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Echo Computer Agent API",
+    "version": "1.0.0",
+    "description": "API for interacting with the Echo computer assistant agent."
+  },
+  "servers": [
+    {
+      "url": "https://api.echo.local/computer-agent",
+      "description": "Default deployment base URL"
+    }
+  ],
+  "paths": {
+    "/functions": {
+      "get": {
+        "operationId": "listFunctions",
+        "summary": "List callable functions",
+        "description": "Return the function definitions that the agent can invoke.",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunctionListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat": {
+      "post": {
+        "operationId": "chatWithAgent",
+        "summary": "Send a chat message",
+        "description": "Send a prompt to the agent and receive the routed function response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChatRequest": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "User command or query for the agent."
+          },
+          "inputs": {
+            "type": "object",
+            "description": "Optional inputs passed to the selected backend function.",
+            "additionalProperties": true
+          },
+          "execute": {
+            "type": "boolean",
+            "description": "When true the agent will execute the matched backend function."
+          }
+        }
+      },
+      "ChatResponse": {
+        "type": "object",
+        "required": ["function", "message", "data", "metadata"],
+        "properties": {
+          "function": {
+            "type": "string",
+            "description": "Name of the function that handled the request."
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable response summarising the outcome."
+          },
+          "data": {
+            "type": "object",
+            "description": "Structured payload returned by the function handler.",
+            "additionalProperties": true
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Supplementary metadata describing the response context.",
+            "additionalProperties": true
+          }
+        }
+      },
+      "FunctionDescription": {
+        "type": "object",
+        "required": ["name", "description", "parameters", "metadata"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Identifier of the function."
+          },
+          "description": {
+            "type": "string",
+            "description": "Summary of what the function does."
+          },
+          "parameters": {
+            "type": "object",
+            "description": "JSON Schema describing accepted parameters.",
+            "additionalProperties": true
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional metadata such as categories and examples.",
+            "additionalProperties": true
+          }
+        }
+      },
+      "FunctionListResponse": {
+        "type": "object",
+        "required": ["functions"],
+        "properties": {
+          "functions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FunctionDescription"
+            }
+          }
+        }
+      }
+    }
+  }
+}
