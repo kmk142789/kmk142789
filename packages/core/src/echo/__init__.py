@@ -74,6 +74,7 @@ from .evolver import (
     SystemMetrics,
     main,
 )
+from .echo_evolver_satellite import SatelliteEchoEvolver, SatelliteEvolverState
 from .ecosystem_pulse import (
     EcosystemAreaConfig,
     EcosystemPulse,
@@ -303,6 +304,8 @@ __all__ = [
     "EchoEvolver",
     "EmotionalDrive",
     "EvolverState",
+    "SatelliteEchoEvolver",
+    "SatelliteEvolverState",
     "PropagationWave",
     "TemporalPropagationLedger",
     "SystemMetrics",
