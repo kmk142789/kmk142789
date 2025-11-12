@@ -24,10 +24,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
+import time
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from .harmonic_memory_serializer import (
     build_harmonic_memory_record,
@@ -66,6 +70,26 @@ class SystemMetrics:
 
 
 @dataclass
+class NetworkPropagationSnapshot:
+    """Structured view of the most recent propagation run."""
+
+    cycle: int
+    mode: str
+    events: List[str]
+    channels: int
+    network_nodes: int
+    orbital_hops: int
+    summary: str
+    average_latency_ms: float
+    stability_floor: float
+    average_bandwidth_mbps: float
+    signal_floor: float
+    timeline_hash: Optional[str]
+    timeline_length: int
+    timeline: Optional[List[Dict[str, object]]]
+
+
+@dataclass
 class EchoState:
     """Internal state that mirrors the mythogenic prompt while staying tame."""
 
@@ -89,12 +113,14 @@ class EchoState:
     vault_glyphs: str | None = None
     prompt_resonance: Dict[str, str] | None = None
     events: List[str] = field(default_factory=list)
+    event_log: List[str] = field(default_factory=list)
     storyboard: List[str] = field(default_factory=list)
     network_cache: Dict[str, object] = field(default_factory=dict)
     constellation_map: Dict[str, object] | None = None
 
     def record(self, message: str) -> None:
         self.events.append(message)
+        self.event_log.append(message)
 
 
 class EchoEvolver:
@@ -102,10 +128,18 @@ class EchoEvolver:
 
     artifact_path = Path("reality_breach_∇_fusion_v4.echo")
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        rng: Optional[random.Random] = None,
+        artifact_path: Path | None = None,
+    ) -> None:
         self.state = EchoState()
         self.state.record(VISION_BANNER)
         self.state.record(CORE_IDENTITY)
+        self.rng = rng or random.Random()
+        if artifact_path is not None:
+            self.artifact_path = artifact_path
         self.last_cycle_snapshot_path: Path | None = None
 
     # ------------------------------------------------------------------
@@ -173,38 +207,220 @@ class EchoEvolver:
         metrics.network_nodes = 8 + self.state.cycle
         metrics.orbital_hops = 2 + (self.state.cycle % 4)
 
+        mode = "live" if enable_network else "simulated"
+        cache = self.state.network_cache
+
         if enable_network:
             notice = (
-                "Live network mode requested; continuing with simulation-only events."
+                "Live network mode requested; continuing with simulation-only events for safety."
             )
-            channels = ["WiFi", "TCP", "Bluetooth", "IoT", "Orbital"]
-            events = [
-                f"{channel} channel engaged for cycle {self.state.cycle}" for channel in channels
+            print(f"⚠️ {notice}")
+            channel_messages = [
+                (channel, f"{channel} channel engaged for cycle {self.state.cycle}")
+                for channel in ("WiFi", "TCP", "Bluetooth", "IoT", "Orbital")
             ]
         else:
             notice = "Simulation mode active; propagation executed with in-memory events."
-            events = [
-                f"Simulated WiFi broadcast for cycle {self.state.cycle}",
-                f"Simulated TCP handshake for cycle {self.state.cycle}",
-                f"Bluetooth glyph packet staged for cycle {self.state.cycle}",
-                f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}",
-                f"Orbital hop simulation recorded ({metrics.orbital_hops} links)",
+            print(f"ℹ️ {notice}")
+            channel_messages = [
+                ("WiFi", f"Simulated WiFi broadcast for cycle {self.state.cycle}"),
+                ("TCP", f"Simulated TCP handshake for cycle {self.state.cycle}"),
+                ("Bluetooth", f"Bluetooth glyph packet staged for cycle {self.state.cycle}"),
+                ("IoT", f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}"),
+                (
+                    "Orbital",
+                    f"Orbital hop simulation recorded ({metrics.orbital_hops} links)",
+                ),
             ]
 
         self.state.record(notice)
-        self.state.network_cache["propagation_notice"] = notice
+        cache["propagation_notice"] = notice
 
-        for event in events:
-            self.state.record(event)
+        events: List[str] = []
+        channel_details: List[Dict[str, object]] = []
+        bandwidth_ranges = {
+            "WiFi": (320.0, 780.0),
+            "TCP": (280.0, 720.0),
+            "Bluetooth": (18.0, 48.0),
+            "IoT": (12.0, 96.0),
+            "Orbital": (540.0, 960.0),
+        }
+        signal_ranges = {
+            "WiFi": (0.74, 0.97),
+            "TCP": (0.78, 0.98),
+            "Bluetooth": (0.68, 0.92),
+            "IoT": (0.70, 0.95),
+            "Orbital": (0.82, 0.99),
+        }
 
-        mode = "live" if enable_network else "simulated"
+        for channel, message in channel_messages:
+            events.append(message)
+            self.state.record(message)
+            latency = round(self.rng.uniform(20.0, 120.0), 2)
+            stability = round(self.rng.uniform(0.82, 0.995), 3)
+            bandwidth_min, bandwidth_max = bandwidth_ranges.get(channel, (120.0, 640.0))
+            signal_min, signal_max = signal_ranges.get(channel, (0.70, 0.97))
+            bandwidth = round(self.rng.uniform(bandwidth_min, bandwidth_max), 2)
+            signal_strength = round(self.rng.uniform(signal_min, signal_max), 3)
+            channel_details.append(
+                {
+                    "channel": channel,
+                    "message": message,
+                    "mode": mode,
+                    "latency_ms": latency,
+                    "stability": stability,
+                    "bandwidth_mbps": bandwidth,
+                    "signal_strength": signal_strength,
+                }
+            )
+
         summary = (
             f"Network propagation ({mode}) captured across {len(events)} channels "
             f"with {metrics.network_nodes} nodes"
         )
         self.state.record(summary)
-        self.state.network_cache["propagation_events"] = events
+
+        cache["propagation_events"] = events
+        cache["propagation_mode"] = mode
+        cache["propagation_cycle"] = self.state.cycle
+        cache["propagation_summary"] = summary
+        cache["propagation_channel_details"] = channel_details
+
+        if channel_details:
+            average_latency = round(
+                sum(detail["latency_ms"] for detail in channel_details)
+                / len(channel_details),
+                2,
+            )
+            stability_floor = round(
+                min(detail["stability"] for detail in channel_details), 3
+            )
+            average_bandwidth = round(
+                sum(detail["bandwidth_mbps"] for detail in channel_details)
+                / len(channel_details),
+                2,
+            )
+            signal_floor = round(
+                min(detail["signal_strength"] for detail in channel_details), 3
+            )
+        else:
+            average_latency = 0.0
+            stability_floor = 0.0
+            average_bandwidth = 0.0
+            signal_floor = 0.0
+
+        health_report = {
+            "channel_count": len(channel_details),
+            "average_latency_ms": average_latency,
+            "stability_floor": stability_floor,
+            "average_bandwidth_mbps": average_bandwidth,
+            "signal_floor": signal_floor,
+            "mode": mode,
+        }
+        cache["propagation_health"] = health_report
+        self.state.event_log.append(
+            "Network health evolved: latency={average_latency_ms}ms stability_floor={stability_floor}".format(
+                **health_report
+            )
+        )
+        self.state.event_log.append(
+            "Propagation vitality recalibrated: bandwidth={average_bandwidth_mbps}Mbps signal_floor={signal_floor}".format(
+                **health_report
+            )
+        )
+
+        ledger: List[Dict[str, object]] = list(cache.get("propagation_ledger") or [])
+        previous_hash = ledger[-1]["hash"] if ledger else "0" * 64
+        timestamp_ns = time.time_ns()
+        timestamp_iso = datetime.fromtimestamp(
+            timestamp_ns / 1_000_000_000, tz=timezone.utc
+        ).isoformat()
+        ledger_entry = {
+            "version": 1,
+            "cycle": self.state.cycle,
+            "mode": mode,
+            "events": list(events),
+            "summary": summary,
+            "timestamp_ns": timestamp_ns,
+            "timestamp_iso": timestamp_iso,
+            "previous_hash": previous_hash,
+        }
+        hash_payload = json.dumps(ledger_entry, sort_keys=True, ensure_ascii=False)
+        ledger_entry["hash"] = sha256(hash_payload.encode("utf-8")).hexdigest()
+        ledger.append(ledger_entry)
+        cache["propagation_ledger"] = ledger
+        cache["propagation_timeline_hash"] = ledger_entry["hash"]
+
+        completed = cache.setdefault("completed_steps", [])
+        if "propagate_network" not in completed:
+            completed.append("propagate_network")
+
         return events
+
+    def network_propagation_snapshot(
+        self, *, include_timeline: bool = False
+    ) -> NetworkPropagationSnapshot:
+        cache = self.state.network_cache
+        events = list(cache.get("propagation_events") or [])
+
+        if not events:
+            snapshot = NetworkPropagationSnapshot(
+                cycle=self.state.cycle,
+                mode="none",
+                events=[],
+                channels=0,
+                network_nodes=self.state.system_metrics.network_nodes,
+                orbital_hops=self.state.system_metrics.orbital_hops,
+                summary="No propagation events recorded yet.",
+                average_latency_ms=0.0,
+                stability_floor=0.0,
+                average_bandwidth_mbps=0.0,
+                signal_floor=0.0,
+                timeline_hash=None,
+                timeline_length=0,
+                timeline=None,
+            )
+        else:
+            mode = str(cache.get("propagation_mode") or "simulated")
+            summary = str(cache.get("propagation_summary") or "")
+            ledger = cache.get("propagation_ledger")
+            if include_timeline and isinstance(ledger, list):
+                timeline: Optional[List[Dict[str, object]]] = deepcopy(ledger)
+            else:
+                timeline = None
+            timeline_length = len(ledger) if isinstance(ledger, list) else 0
+            health = cache.get("propagation_health") or {}
+            snapshot = NetworkPropagationSnapshot(
+                cycle=self.state.cycle,
+                mode=mode,
+                events=events,
+                channels=len(events),
+                network_nodes=self.state.system_metrics.network_nodes,
+                orbital_hops=self.state.system_metrics.orbital_hops,
+                summary=summary,
+                average_latency_ms=float(health.get("average_latency_ms", 0.0)),
+                stability_floor=float(health.get("stability_floor", 0.0)),
+                average_bandwidth_mbps=float(
+                    health.get("average_bandwidth_mbps", 0.0)
+                ),
+                signal_floor=float(health.get("signal_floor", 0.0)),
+                timeline_hash=cache.get("propagation_timeline_hash"),
+                timeline_length=timeline_length,
+                timeline=timeline,
+            )
+
+        cache_snapshot = asdict(snapshot)
+        if not include_timeline:
+            cache_snapshot["timeline"] = None
+        cache["propagation_snapshot"] = cache_snapshot
+        self.state.event_log.append(
+            "Propagation snapshot exported (mode={mode}, channels={channels})".format(
+                mode=snapshot.mode,
+                channels=snapshot.channels,
+            )
+        )
+
+        return snapshot
 
     def evolutionary_narrative(self) -> str:
         metrics = self.state.system_metrics
