@@ -225,7 +225,10 @@ def generate_loop(seed: LoopSeed) -> LoopResult:
 
 
 def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
-    """Create a creative loop in the requested output format."""
+    """Create a creative loop in the requested output format.
+
+    Supported formats are ``"text"``, ``"json"``, and ``"markdown"``.
+    """
 
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     header = f"Loop for '{seed.motif}' at {timestamp} ({seed.tempo})"
@@ -245,7 +248,33 @@ def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
         }
         return json.dumps(payload, indent=2)
 
-    raise ValueError("Unsupported format; expected 'text' or 'json'.")
+    if format == "markdown":
+        markdown_header = f"## Loop for '{seed.motif}'"
+        metadata_line = (
+            f"*Composed {timestamp} · Tempo: {seed.tempo} · Pulses: {seed.pulses}*"
+        )
+        bullet_lines = "\n".join(f"- {line}" for line in loop_result.lines)
+        diagnostics_line = f"> Diagnostics: {loop_result.diagnostics.render_report()}"
+        rhythm = loop_result.rhythm
+        rhythm_line = (
+            "> Rhythm: "
+            f"tempo={rhythm.tempo}; pulses={rhythm.pulses}; "
+            f"accents={','.join(str(value) for value in rhythm.accents)}; "
+            f"dynamic={','.join(rhythm.dynamic_tempi)}"
+        )
+        return "\n".join(
+            [
+                markdown_header,
+                metadata_line,
+                "",
+                bullet_lines,
+                "",
+                diagnostics_line,
+                rhythm_line,
+            ]
+        )
+
+    raise ValueError("Unsupported format; expected 'text', 'json', or 'markdown'.")
 
 
 def demo(
@@ -303,9 +332,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json"],
+        choices=["text", "json", "markdown"],
         default="text",
-        help="Choose between human-readable text or JSON output",
+        help="Choose between human-readable text, JSON, or Markdown output",
     )
 
     args = parser.parse_args()
