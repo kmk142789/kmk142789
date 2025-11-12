@@ -37,10 +37,12 @@ class PulseThread:
 
         existing: set[str] = set()
         for harmonic in self.harmonics:
-            if isinstance(harmonic, str):
-                existing.add(harmonic.casefold())
-            else:
-                existing.add(str(harmonic))
+            if harmonic is None:
+                continue
+            text = str(harmonic).strip()
+            if not text:
+                continue
+            existing.add(text.casefold())
 
         for harmonic in extra:
             if harmonic is None:
