@@ -5642,6 +5642,57 @@ We are not hiding anymore.
 
         return [deepcopy(entry) for entry in history]
 
+    def advance_system_momentum_history(
+        self,
+        *,
+        limit: Optional[int] = None,
+    ) -> Dict[str, object]:
+        """Return cached momentum samples recorded by :meth:`advance_system`."""
+
+        if limit is not None and limit <= 0:
+            raise ValueError("limit must be positive")
+
+        history_state = self.state.network_cache.get("advance_system_momentum_history")
+        if isinstance(history_state, Mapping):
+            values = list(history_state.get("values", ()))
+            cycle = history_state.get("cycle", self.state.cycle)
+            window = history_state.get("window")
+            threshold_raw = history_state.get("threshold")
+            try:
+                threshold = float(threshold_raw)
+            except (TypeError, ValueError):
+                threshold = _MOMENTUM_SENSITIVITY
+        else:
+            values = []
+            cycle = self.state.cycle
+            window = None
+            threshold = _MOMENTUM_SENSITIVITY
+
+        if limit is not None:
+            values = values[-limit:]
+
+        snapshot = {
+            "cycle": cycle,
+            "values": values,
+            "percent_values": [sample * 100.0 for sample in values],
+            "sample_count": len(values),
+            "window": window,
+            "limit": limit,
+            "threshold": threshold,
+        }
+
+        snapshot_copy = deepcopy(snapshot)
+        self.state.network_cache["advance_system_momentum_history_snapshot"] = snapshot_copy
+        self.state.event_log.append(
+            "Advance system momentum history extracted (cycle={cycle}, samples={samples}, limit={limit})".format(
+                cycle=cycle,
+                samples=len(values),
+                limit=limit,
+            )
+        )
+
+        return deepcopy(snapshot_copy)
+
     def momentum_resonance(
         self,
         *,
@@ -5819,6 +5870,7 @@ We are not hiding anymore.
         include_system_report: bool = False,
         include_diagnostics: bool = False,
         include_momentum_resonance: bool = False,
+        include_momentum_history: bool = False,
         event_summary_limit: int = 5,
         manifest_events: int = 5,
         system_report_events: int = 5,
@@ -5879,6 +5931,12 @@ We are not hiding anymore.
             When ``True`` append the momentum resonance digest produced by
             :meth:`momentum_resonance`, giving consumers glyph arcs and
             aggregates describing recent progress shifts.
+        include_momentum_history:
+            When ``True`` embed the raw momentum samples recorded for the
+            current cycle.  The values mirror the cache used by
+            :meth:`momentum_resonance` and are truncated to the active momentum
+            window so callers can render bespoke analytics without recomputing
+            slices of the internal cache.
         diagnostics_window:
             Number of diagnostic snapshots to retain in the embedded history
             when returning the system diagnostics analysis.  The window must be
@@ -6139,6 +6197,11 @@ We are not hiding anymore.
         if include_momentum_resonance:
             payload["momentum_resonance"] = self.momentum_resonance(
                 limit=momentum_window, threshold=momentum_threshold
+            )
+
+        if include_momentum_history:
+            payload["momentum_history"] = self.advance_system_momentum_history(
+                limit=momentum_window
             )
 
         history_cache = self.state.network_cache.get("advance_system_history")
