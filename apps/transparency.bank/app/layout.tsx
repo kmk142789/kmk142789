@@ -1,4 +1,5 @@
 import "../styles/globals.css";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 
@@ -19,6 +20,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               Real-time inflows, outflows, compliance credentials, and governance posture for the
               donation-only sovereign trust.
             </p>
+            <nav className="site-nav">
+              <Link href="/">Snapshot</Link>
+              <Link href="/requests">Approvals queue</Link>
+            </nav>
           </div>
         </header>
         <main className="container">{children}</main>
