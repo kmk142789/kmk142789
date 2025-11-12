@@ -8,12 +8,16 @@ import { promises as fs, createReadStream } from 'node:fs';
 import process from 'node:process';
 import { Pool } from 'pg';
 import bs58check from 'bs58check';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRoot = resolve(__dirname, '../../..');
 export const LOG_DIRECTORY = join(repoRoot, 'logs');
 export const PUZZLE_DIRECTORY = join(repoRoot, 'puzzle_solutions');
+export const WHISPERVAULT_POLICY_PATH = process.env.WHISPERVAULT_POLICY_PATH
+  ? resolve(repoRoot, process.env.WHISPERVAULT_POLICY_PATH)
+  : join(repoRoot, 'whispervault', 'policies', 'spending_policy.yaml');
 const CLI_ENTRYPOINT = join(repoRoot, 'echo_cli', 'main.py');
 const CODEX_REGISTRY_PATH = join(repoRoot, 'codex', 'registry.json');
 const PUZZLE_INDEX_PATH = join(repoRoot, 'data', 'puzzle_index.json');
@@ -26,6 +30,111 @@ const MAX_ARGS = 16;
 const DEFAULT_LOG_CHUNK_BYTES = 8192;
 const MIN_LOG_CHUNK_BYTES = 512;
 const MAX_LOG_CHUNK_BYTES = 262144;
+const DEFAULT_POLICY_ID = 'whispervault-spending';
+
+function normalisePolicyNumber(value) {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+  const numeric = Number.parseFloat(value);
+  if (!Number.isFinite(numeric) || numeric < 0) {
+    return null;
+  }
+  return Number.isInteger(numeric) ? numeric : Number.parseFloat(numeric.toFixed(2));
+}
+
+async function readWhispervaultPolicyDocument() {
+  try {
+    const payload = await fs.readFile(WHISPERVAULT_POLICY_PATH, 'utf8');
+    const parsed = parseYaml(payload) ?? {};
+    const thresholds = parsed.thresholds ?? {};
+    return {
+      raw: parsed,
+      id: typeof parsed.id === 'string' && parsed.id.trim() ? parsed.id.trim() : DEFAULT_POLICY_ID,
+      thresholds: {
+        selfApproveMax: normalisePolicyNumber(thresholds.self_approve_max) ?? 0,
+        dualApproveMin: normalisePolicyNumber(thresholds.dual_approve_min) ?? 0,
+        governanceMin: normalisePolicyNumber(thresholds.governance_min) ?? 0,
+        cashWithdrawalCap: normalisePolicyNumber(thresholds.cash_withdrawal_cap) ?? 0,
+      },
+    };
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      console.warn('Unable to read WhisperVault policy', error.message);
+    }
+    throw new Error('policy_read_failed');
+  }
+}
+
+async function loadWhispervaultPolicy() {
+  const document = await readWhispervaultPolicyDocument();
+  return {
+    id: document.id,
+    selfApproveMax: document.thresholds.selfApproveMax,
+    dualApproveMin: document.thresholds.dualApproveMin,
+    governanceMin: document.thresholds.governanceMin,
+    cashWithdrawalCap: document.thresholds.cashWithdrawalCap,
+  };
+}
+
+function parsePolicyRequest(body = {}) {
+  const id = typeof body.id === 'string' && body.id.trim() ? body.id.trim() : DEFAULT_POLICY_ID;
+  const fields = [
+    ['selfApproveMax', 'selfApproveMax'],
+    ['dualApproveMin', 'dualApproveMin'],
+    ['governanceMin', 'governanceMin'],
+    ['cashWithdrawalCap', 'cashWithdrawalCap'],
+  ];
+  const result = { id };
+  const invalid = [];
+  for (const [sourceKey, targetKey] of fields) {
+    const value = normalisePolicyNumber(body[sourceKey]);
+    if (value === null) {
+      invalid.push(sourceKey);
+    } else {
+      result[targetKey] = value;
+    }
+  }
+  if (invalid.length > 0) {
+    const error = new Error('invalid_policy_fields');
+    error.fields = invalid;
+    throw error;
+  }
+  return result;
+}
+
+async function writeWhispervaultPolicy(update) {
+  const baseDocument = await readWhispervaultPolicyDocument().catch(() => ({
+    raw: {},
+    id: DEFAULT_POLICY_ID,
+    thresholds: {
+      selfApproveMax: 0,
+      dualApproveMin: 0,
+      governanceMin: 0,
+      cashWithdrawalCap: 0,
+    },
+  }));
+  const nextDocument = {
+    ...baseDocument.raw,
+    id: update.id || baseDocument.id || DEFAULT_POLICY_ID,
+    thresholds: {
+      ...(baseDocument.raw?.thresholds ?? {}),
+      self_approve_max: update.selfApproveMax,
+      dual_approve_min: update.dualApproveMin,
+      governance_min: update.governanceMin,
+      cash_withdrawal_cap: update.cashWithdrawalCap,
+    },
+  };
+  await fs.mkdir(dirname(WHISPERVAULT_POLICY_PATH), { recursive: true });
+  await fs.writeFile(WHISPERVAULT_POLICY_PATH, stringifyYaml(nextDocument, { lineWidth: 0 }));
+  return {
+    id: nextDocument.id || DEFAULT_POLICY_ID,
+    selfApproveMax: update.selfApproveMax,
+    dualApproveMin: update.dualApproveMin,
+    governanceMin: update.governanceMin,
+    cashWithdrawalCap: update.cashWithdrawalCap,
+  };
+}
 
 const ALLOWED_CLI_COMMANDS = new Map([
   ['refresh', { label: 'Refresh Atlas', defaultArgs: ['--json'] }],
@@ -744,6 +853,30 @@ function routeAssistantMessage(message) {
 export const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
+
+app.get('/whispervault/policy', async (_req, res) => {
+  try {
+    const policy = await loadWhispervaultPolicy();
+    res.json({ policy });
+  } catch (error) {
+    const status = error.message === 'policy_read_failed' ? 500 : 500;
+    res.status(status).json({ error: error.message || 'policy_read_failed' });
+  }
+});
+
+app.put('/whispervault/policy', async (req, res) => {
+  try {
+    const payload = parsePolicyRequest(req.body || {});
+    const policy = await writeWhispervaultPolicy(payload);
+    res.json({ policy });
+  } catch (error) {
+    if (error.message === 'invalid_policy_fields') {
+      res.status(400).json({ error: error.message, fields: error.fields || [] });
+      return;
+    }
+    res.status(500).json({ error: 'policy_write_failed' });
+  }
+});
 
 app.get('/health', async (_req, res) => {
   try {

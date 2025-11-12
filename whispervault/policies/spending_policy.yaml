@@ -2,6 +2,7 @@ thresholds:
   self_approve_max: 500
   dual_approve_min: 500
   governance_min: 10000
+  cash_withdrawal_cap: 200
 rules:
   - "No cash withdrawals > $200."
   - "No transfers from unverified sources."

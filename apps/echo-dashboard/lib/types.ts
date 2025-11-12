@@ -67,6 +67,14 @@ export interface CodexRegistryResponse {
   repository?: string;
 }
 
+export interface Policy {
+  id: string;
+  selfApproveMax: number;
+  dualApproveMin: number;
+  governanceMin: number;
+  cashWithdrawalCap: number;
+}
+
 export interface MetricSeriesPoint {
   ts: string;
   value: number;
