@@ -8,6 +8,7 @@ export const NAV_ITEMS = [
   { href: '/', label: 'Pulse' },
   { href: '/codex', label: 'Codex' },
   { href: '/assistant', label: 'Assistant' },
+  { href: '/wallets', label: 'Wallets' },
 ];
 
 export default function SiteNav() {
