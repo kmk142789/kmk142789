@@ -99,3 +99,15 @@ export interface AssistantResponse {
   data: Record<string, unknown> | null;
   logs: string[];
 }
+
+export interface Wallet {
+  id: string;
+  chain: string;
+  address: string;
+  label: string;
+  verified: boolean;
+  signature?: string;
+  explorerUrl?: string;
+  balance?: number;
+  updatedAt: string;
+}
