@@ -214,3 +214,421 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+.site-nav {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.site-nav a {
+  color: rgba(236, 241, 255, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 0.35rem 0.9rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.site-nav a:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #e0f2fe;
+}
+
+.requests-shell {
+  margin-top: 2rem;
+  padding-bottom: 4rem;
+}
+
+.requests-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.requests-header h1 {
+  margin: 0;
+  font-size: 1.9rem;
+}
+
+.requests-subtitle {
+  margin: 0.4rem 0 0;
+  color: rgba(236, 241, 255, 0.7);
+  max-width: 38ch;
+}
+
+.requests-new-button {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.7), rgba(99, 102, 241, 0.7));
+  border: 1px solid rgba(59, 130, 246, 0.65);
+  color: #ecf1ff;
+  font-weight: 600;
+  padding: 0.65rem 1.25rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.requests-new-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.35);
+}
+
+.request-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.request-card {
+  background: rgba(17, 24, 39, 0.88);
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  padding: 1.25rem;
+  box-shadow: 0 16px 45px rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 200px;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.request-card:hover,
+.request-card:focus-visible {
+  border-color: rgba(59, 130, 246, 0.65);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 55px rgba(37, 99, 235, 0.4);
+  outline: none;
+}
+
+.request-card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.request-payee {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.request-category {
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.65);
+}
+
+.request-statuses {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+
+.request-status {
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.8rem;
+  border: 1px solid transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.request-status-pending {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #bfdbfe;
+}
+
+.request-status-approved {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #bbf7d0;
+}
+
+.request-status-rejected {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+}
+
+.request-status-secondary {
+  border-radius: 9999px;
+  border: 1px dashed rgba(247, 181, 49, 0.55);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.7rem;
+  color: rgba(247, 181, 49, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.request-amount {
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.request-purpose {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.78);
+  line-height: 1.45;
+}
+
+.request-meta {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.75);
+}
+
+.request-empty {
+  margin: 2rem 0 0;
+  color: rgba(236, 241, 255, 0.65);
+  font-size: 0.95rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 13, 0.76);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1000;
+}
+
+.modal-sheet {
+  width: min(640px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.96);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 1.75rem;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.6);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: rgba(236, 241, 255, 0.75);
+  font-size: 1.75rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #fff;
+}
+
+.request-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.request-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.request-form input,
+.request-form select,
+.request-form textarea,
+.request-paid-form input {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  color: #ecf1ff;
+  font-size: 0.95rem;
+}
+
+.request-form textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.request-policy-note {
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.65);
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+
+.button-primary,
+.button-secondary,
+.button-success,
+.button-danger {
+  border-radius: 9999px;
+  font-weight: 600;
+  padding: 0.55rem 1.2rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.button-primary {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.75), rgba(59, 130, 246, 0.75));
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #eef2ff;
+}
+
+.button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
+}
+
+.button-secondary {
+  background: rgba(71, 85, 105, 0.35);
+  border-color: rgba(71, 85, 105, 0.55);
+  color: rgba(236, 241, 255, 0.8);
+}
+
+.button-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(71, 85, 105, 0.35);
+}
+
+.button-success {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.55);
+  color: #bbf7d0;
+}
+
+.button-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(34, 197, 94, 0.35);
+}
+
+.button-danger {
+  background: rgba(248, 113, 113, 0.2);
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #fecaca;
+}
+
+.button-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(248, 113, 113, 0.35);
+}
+
+.request-detail {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.request-detail-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.75);
+  margin-bottom: 0.25rem;
+}
+
+.request-detail-value {
+  font-weight: 600;
+}
+
+.request-detail-amount {
+  font-size: 1.6rem;
+}
+
+.request-detail-text {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.75);
+  line-height: 1.5;
+}
+
+.request-detail-approvals ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.request-governance-banner {
+  background: rgba(247, 181, 49, 0.18);
+  border: 1px solid rgba(247, 181, 49, 0.45);
+  color: rgba(247, 181, 49, 0.95);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.request-timeline h3 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.request-timeline ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.request-timeline li {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.timeline-action {
+  font-weight: 600;
+}
+
+.timeline-meta {
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.timeline-time {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.8);
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+.request-paid-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
