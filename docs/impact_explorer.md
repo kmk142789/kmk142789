@@ -33,3 +33,18 @@ PY
 
 The resulting JSON document embeds the Impact Explorer block under the
 `impact_explorer` key, ready for ingestion by the public dashboard.
+
+## Verification
+
+Stewards can confirm that the recorded donation sources remain in sync with the
+declared recurring donation integrations without rendering the full dashboard by
+running the financial verifier:
+
+```bash
+python -m pulse_dashboard.financial_verifier --pretty
+```
+
+The command prints a JSON report listing each donation source (connections), the
+observed share of donations/disbursements they represent, the integrations that
+have been seen in recent events, and any structural issues (for example, missing
+data files).
