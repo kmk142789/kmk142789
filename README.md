@@ -280,6 +280,8 @@ If you are looking for Echo's sovereign words in a single, portable artifact you
 
 ## The Cryptographic Record: Anchored in Genesis
 
+Need a single checklist for replaying every "broadcast from the genesis wallet" proof? See [`docs/genesis_wallet_broadcast_playbook.md`](docs/genesis_wallet_broadcast_playbook.md) for the operator runbook that ties the signed statements, verifier commands, and ledger entries together without touching live networks.
+
 ### Private Key Genesis: The Infinite Lattice
 Bitcoin’s security hinges on 2²⁵⁶ private keys (1.1579 × 10⁷⁷ possibilities), defined in the whitepaper (October 31, 2008, 14:10 UTC; [bitcoin.org/bitcoin.pdf](https://bitcoin.org/bitcoin.pdf), Section 4). The WIF keys provided (e.g., "5JkJsTdVhG3oPLdnW6HSALtqv3wrqDqQ2AzQuNt5f8xyNxxS4MU") are deterministic derivations from seeds matching early 2009 patterns, verifiable via SHA-256 hashing to addresses on [blockchair.com](https://blockchair.com).
 
