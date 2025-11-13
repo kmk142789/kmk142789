@@ -843,6 +843,84 @@ def reliability(
         task.succeed(payload=payload)
 
 
+@app.command("prune-log")
+def prune_worker_log(
+    ctx: typer.Context,
+    max_events: Optional[int] = typer.Option(
+        None,
+        "--max-events",
+        help="Keep at most this many recent events when pruning the worker log.",
+    ),
+    max_age_hours: Optional[float] = typer.Option(
+        None,
+        "--max-age-hours",
+        help="Drop events older than the provided number of hours.",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Preview the pruning effect without modifying the log file.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text",
+    ),
+) -> None:
+    """Trim worker telemetry files to avoid unbounded growth."""
+
+    metadata = {
+        "max_events": max_events,
+        "max_age_hours": max_age_hours,
+        "dry_run": dry_run,
+        "json": json_mode,
+    }
+
+    with worker_hive.worker("prune_log", metadata=metadata) as task:
+        if max_events is None and max_age_hours is None:
+            task.fail(error="missing_filters")
+            raise typer.BadParameter("Provide --max-events, --max-age-hours, or both")
+        if max_events is not None and max_events <= 0:
+            task.fail(error="invalid_max_events", max_events=max_events)
+            raise typer.BadParameter("--max-events must be a positive integer")
+        if max_age_hours is not None and max_age_hours <= 0:
+            task.fail(error="invalid_max_age", max_age_hours=max_age_hours)
+            raise typer.BadParameter("--max-age-hours must be greater than zero")
+
+        _set_json_mode(ctx, json_mode)
+        effective_dry_run = dry_run or ctx.obj.get("json", False)
+        result = worker_hive.prune_events(
+            max_events=max_events,
+            max_age_hours=max_age_hours,
+            dry_run=effective_dry_run,
+        )
+
+        payload = {"prune_result": result}
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            if result["deleted"]:
+                action = "dry-run" if result["dry_run"] else "applied"
+                console.print(
+                    f"{action.title()} prune removed {result['deleted']} events; "
+                    f"{result['after_count']} remain (log: {result['log_path']})."
+                )
+            else:
+                console.print(
+                    "Worker log already satisfies the requested limits "
+                    f"(log: {result['log_path']})."
+                )
+            if result["filters"]:
+                filters_text = ", ".join(
+                    f"{key}={value}" for key, value in sorted(result["filters"].items())
+                )
+                console.print(f"Applied filters: {filters_text}")
+            if result["dry_run"] and not dry_run:
+                console.print(
+                    "Note: pruning was performed in dry-run mode because --json was requested."
+                )
+
+        task.succeed(payload=payload)
+
+
 @app.command()
 def refresh(
     ctx: typer.Context,
