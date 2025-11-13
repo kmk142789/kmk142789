@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 1,
+  "blockHash": "00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048",
+  "address": "12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX",
+  "message": "Bitcoin block 1 coinbase script proving Satoshi's post-genesis mining payout — directly reconstructed from the raw block at height 1.",
+  "pkScript": "410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeac",
+  "signature": "BP//AB0BBA=="
+}
