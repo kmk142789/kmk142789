@@ -10,6 +10,10 @@
         },
         {
           "command": "echo",
+          "target": "echo.cli:main"
+        },
+        {
+          "command": "echo-manifest",
           "target": "echo.manifest_cli:main"
         },
         {

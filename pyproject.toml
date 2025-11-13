@@ -62,7 +62,8 @@ line-length = 100
 target-version = "py310"
 
 [project.scripts]
-echo = "echo.manifest_cli:main"
+echo = "echo.cli:main"
+echo-manifest = "echo.manifest_cli:main"
 echo-evolver = "echo_evolver:main"
 echo-evolve = "echo_evolve:main"
 echo-sync = "echo_sync:main"

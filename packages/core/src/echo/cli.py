@@ -1,9 +1,11 @@
-"""Legacy compatibility CLI for the Echo project.
+"""Unified Echo CLI exposing evolution, manifest, and orchestration helpers.
 
-The primary command entry point for the ``echo`` console script now lives in
-``echo.manifest_cli``.  This shim keeps the old module importable while
-delegating to the new implementation.  It exposes a reduced set of commands
-that mirror the previous behaviour but rely on the modern manifest helpers.
+This module now powers the ``echo`` console script directly.  It retains the
+manifest-focused commands provided by :mod:`echo.manifest_cli` while also
+exposing the broader orchestration surface (``echo evolve``, semantic
+negotiation, timeline refreshes, etc.).  The legacy manifest CLI remains
+importable as :mod:`echo.manifest_cli` for workflows that require the narrower
+interface.
 """
 
 from __future__ import annotations
