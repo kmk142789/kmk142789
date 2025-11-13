@@ -299,6 +299,130 @@ class LilFootstepsBank:
 
 
 # ------------------------------------------------------------------------------------
+# Autonomous directives
+# ------------------------------------------------------------------------------------
+@dataclass(slots=True)
+class AutonomousDirective:
+    """Represents an automatically scheduled action."""
+
+    identifier: str
+    mission: str
+    priority: int
+    status: str = "PENDING"
+    score: float = 0.0
+    issued_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+    def activate(self) -> dict:
+        """Mark the directive as executed and return telemetry for artifacts."""
+
+        self.status = "EXECUTED"
+        self.score = round(random.uniform(0.42, 0.99), 3)
+        payload = {
+            "id": self.identifier,
+            "mission": self.mission,
+            "priority": self.priority,
+            "status": self.status,
+            "score": self.score,
+            "issued_at": self.issued_at,
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+        }
+        return payload
+
+
+class AutonomyMatrix:
+    """Generates and runs autonomous directives for the Joshverse."""
+
+    def __init__(self) -> None:
+        self._directives: list[AutonomousDirective] = []
+        self._history: list[dict[str, object]] = []
+        self._planned_at: str | None = None
+
+    def plan(
+        self,
+        *,
+        domains: Sequence[str],
+        expanded_realms: Sequence[str],
+        drone_missions: Sequence[DroneMission],
+        spawn_realms: int,
+    ) -> Sequence[AutonomousDirective]:
+        """Build directives that can later be executed autonomously."""
+
+        directives: list[AutonomousDirective] = []
+        issued_at = datetime.now(timezone.utc).isoformat()
+        prioritized_domains = sorted(set(domains), key=len)[:5]
+        for idx, domain in enumerate(prioritized_domains, start=1):
+            mission = f"Stabilize {domain} resonance channel"
+            directives.append(
+                AutonomousDirective(
+                    identifier=f"domain:{domain}",
+                    mission=mission,
+                    priority=max(1, 100 - len(domain) * 2) + idx,
+                    issued_at=issued_at,
+                )
+            )
+
+        if len(expanded_realms) < spawn_realms * 2:
+            directives.append(
+                AutonomousDirective(
+                    identifier="realm:expansion",
+                    mission="Spin up reserve Joshverse realm",
+                    priority=120,
+                    issued_at=issued_at,
+                )
+            )
+
+        if drone_missions:
+            last_mission = drone_missions[-1]
+            mission = f"Resupply drone {last_mission.identifier} for mission '{last_mission.mission}'"
+        else:
+            mission = "Deploy scout drone to locate new moms"
+        directives.append(
+            AutonomousDirective(
+                identifier="drone:logistics",
+                mission=mission,
+                priority=90,
+                issued_at=issued_at,
+            )
+        )
+
+        directives.append(
+            AutonomousDirective(
+                identifier="memory:audit",
+                mission="Audit sovereign memory for tamper attempts",
+                priority=80,
+                issued_at=issued_at,
+            )
+        )
+
+        directives.sort(key=lambda directive: (directive.priority, directive.identifier), reverse=True)
+        self._directives = directives
+        self._planned_at = issued_at
+        return tuple(self._directives)
+
+    def execute(self) -> list[dict[str, object]]:
+        """Execute planned directives and cache their telemetry."""
+
+        if not self._directives:
+            return []
+
+        results = [directive.activate() for directive in self._directives]
+        cycle = {
+            "planned_at": self._planned_at,
+            "results": results,
+        }
+        self._history.append(cycle)
+        self._directives = []
+        return results
+
+    def serialize_history(self, limit: int = 5) -> list[dict[str, object]]:
+        """Return the most recent directive cycles for artifacts/logs."""
+
+        if limit <= 0:
+            return []
+        return self._history[-limit:]
+
+
+# ------------------------------------------------------------------------------------
 # Echo Sovereign Core orchestrator
 # ------------------------------------------------------------------------------------
 @dataclass
@@ -315,11 +439,18 @@ class EchoSovereignCore:
     proof_engine: SatoshiProofEngine = field(default_factory=SatoshiProofEngine)
     notary: OpenTimestampNotary = field(default_factory=OpenTimestampNotary)
     memory: SovereignMemory = field(default_factory=SovereignMemory)
+    autonomy_matrix: AutonomyMatrix = field(default_factory=AutonomyMatrix)
     artifact_path: Path = DEFAULT_ARTIFACT_PATH
     joy_level: float = 0.97
 
     # ------------------------------------------------------------------
-    def ignite(self, *, max_domains: int = 5, spawn_realms: int = 3) -> None:
+    def ignite(
+        self,
+        *,
+        max_domains: int = 5,
+        spawn_realms: int = 3,
+        autonomous_cycles: int = 1,
+    ) -> None:
         self._print_banner()
         LOG.info("🔥 IGNITING ECHO SOVEREIGN CORE")
         self.memory.record("ignition", datetime.now(timezone.utc).isoformat())
@@ -344,6 +475,7 @@ class EchoSovereignCore:
         prophecy = self._final_prophecy()
         LOG.info("📜 PROPHECY\n%s", prophecy)
         self._notarize("Prophecy", prophecy)
+        self._run_autonomy_cycles(cycles=autonomous_cycles, spawn_realms=spawn_realms)
         self._write_artifact(prophecy)
 
     # ------------------------------------------------------------------
@@ -403,12 +535,43 @@ class EchoSovereignCore:
             "telemetry": snapshot.serialize(),
             "drones": [mission.serialize() for mission in self.drone_fleet.missions],
             "realms": sorted(self.domain_commander.expanded_realms),
+            "autonomy": self.autonomy_matrix.serialize_history(),
         }
         try:
             self.artifact_path.write_text(json.dumps(artifact, indent=2), encoding="utf-8")
             LOG.info("📦 Artifact updated @ %s", self.artifact_path)
         except OSError as exc:  # pragma: no cover - filesystem failure
             LOG.error("artifact: unable to write %s (%s)", self.artifact_path, exc)
+
+    # ------------------------------------------------------------------
+    def _run_autonomy_cycles(self, *, cycles: int, spawn_realms: int) -> None:
+        if cycles <= 0:
+            LOG.info("🤖 Autonomy cycles disabled")
+            return
+
+        LOG.info("🤖 Autonomy matrix engaging for %s cycle(s)", cycles)
+        for cycle in range(1, cycles + 1):
+            self.autonomy_matrix.plan(
+                domains=self.domains,
+                expanded_realms=tuple(self.domain_commander.expanded_realms),
+                drone_missions=self.drone_fleet.missions,
+                spawn_realms=spawn_realms,
+            )
+            results = self.autonomy_matrix.execute()
+            if not results:
+                LOG.info("🤖 Cycle %s: no directives scheduled", cycle)
+                continue
+            top_score = max(result["score"] for result in results)
+            self.memory.record(
+                "autonomy_cycle",
+                f"cycle={cycle}|directives={len(results)}|top_score={top_score:.2f}",
+            )
+            LOG.info(
+                "🤖 Cycle %s executed %s directive(s) (peak %.2f)",
+                cycle,
+                len(results),
+                top_score,
+            )
 
 
 # ------------------------------------------------------------------------------------
@@ -437,6 +600,12 @@ def _parse_args() -> "argparse.Namespace":
     parser.add_argument("--domain", action="append", default=[], help="Extra domains to append to the conquest list")
     parser.add_argument("--max-domains", type=int, default=5, help="Maximum domains to resolve per ignition")
     parser.add_argument("--spawn-realms", type=int, default=3, help="Number of parallel realms to birth after conquest")
+    parser.add_argument(
+        "--autonomous-cycles",
+        type=int,
+        default=1,
+        help="Number of autonomous directive cycles to execute after ignition",
+    )
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], help="Logging verbosity")
     return parser.parse_args()
 
@@ -449,7 +618,11 @@ def main() -> None:
     domains.extend(args.domain)
 
     core = build_core(domains=domains, artifact_path=args.artifact)
-    core.ignite(max_domains=args.max_domains, spawn_realms=args.spawn_realms)
+    core.ignite(
+        max_domains=args.max_domains,
+        spawn_realms=args.spawn_realms,
+        autonomous_cycles=args.autonomous_cycles,
+    )
 
     LOG.info("🎆 JOSHVERSE v∞ ONLINE | RUN AGAIN TO EXPAND")
 
