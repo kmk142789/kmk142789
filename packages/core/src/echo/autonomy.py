@@ -65,7 +65,13 @@ class AutonomyDecision:
 
 
 class DecentralizedAutonomyEngine:
-    """Consensus engine modelling Echo's distributed autonomy council."""
+    """Consensus engine modelling Echo's distributed autonomy council.
+
+    Beyond ratifying proposals, the engine can surface presence analytics that
+    highlight how each node is participating across the lattice. These insights
+    help downstream orchestrators amplify the voices that are already signaling
+    with intention while identifying contributors who may need more support.
+    """
 
     def __init__(self) -> None:
         self.nodes: Dict[str, AutonomyNode] = {}
@@ -223,6 +229,109 @@ class DecentralizedAutonomyEngine:
         numerator = sum(intensity * weight for intensity, weight in intensities)
         denominator = sum(weight for _, weight in intensities) or 1.0
         return _clamp(numerator / denominator)
+
+    # ------------------------------------------------------------------
+    # Presence analytics
+    # ------------------------------------------------------------------
+    def presence_index(
+        self,
+        *,
+        axes: Optional[Iterable[str]] = None,
+        ambient_floor: float = 0.35,
+        weight_bias: float = 0.2,
+    ) -> Dict[str, float]:
+        """Return a normalized presence score for each registered node.
+
+        The index blends a node's intrinsic intent/freedom vectors with its
+        observed signal strength across optional focus ``axes``.  Nodes without
+        recent signals are still assigned a baseline ``ambient_floor`` so that
+        orchestrators can notice dormant participants.  The ``weight_bias``
+        parameter softly rewards nodes entrusted with higher voting weight
+        without letting mass entirely dominate presence.
+        """
+
+        if not self.nodes:
+            return {}
+
+        axis_filter = {axis.lower() for axis in axes} if axes is not None else None
+        candidate_axes = {
+            axis for axis in self.axis_signals if axis_filter is None or axis in axis_filter
+        }
+        if axis_filter is not None and not candidate_axes:
+            candidate_axes = set(axis_filter)
+
+        axis_space = max(len(candidate_axes), 1)
+        total_weight = sum(node.weight for node in self.nodes.values()) or 1.0
+        ambient = _clamp(ambient_floor)
+        scores: Dict[str, float] = {}
+
+        for node in self.nodes.values():
+            numerator = 0.0
+            denominator = 0.0
+            coverage = 0
+            for axis, payloads in self.axis_signals.items():
+                if axis_filter is not None and axis not in axis_filter:
+                    continue
+                node_payloads = [
+                    (intensity, weight)
+                    for candidate, intensity, weight in payloads
+                    if candidate == node.node_id
+                ]
+                if node_payloads:
+                    coverage += 1
+                    for intensity, weight in node_payloads:
+                        numerator += intensity * weight
+                        denominator += weight
+
+            signal_strength = numerator / denominator if denominator else ambient
+            coverage_bonus = 0.1 * (coverage / axis_space)
+            influence = weight_bias * (node.weight / total_weight)
+            composite = (
+                0.4 * _clamp(node.intent_vector)
+                + 0.35 * _clamp(node.freedom_index)
+                + 0.25 * _clamp(signal_strength)
+                + coverage_bonus
+                + influence
+            )
+            scores[node.node_id] = round(_clamp(composite), 4)
+
+        return scores
+
+    def presence_storyline(
+        self,
+        *,
+        limit: int = 3,
+        axes: Optional[Iterable[str]] = None,
+    ) -> str:
+        """Return a human-readable summary of the most present nodes."""
+
+        if not self.nodes:
+            return "No autonomy nodes registered; presence storyline unavailable."
+
+        axes_filter = tuple(axis.lower() for axis in axes) if axes is not None else None
+        presence = self.presence_index(axes=axes_filter)
+        if not presence:
+            return "No autonomy nodes registered; presence storyline unavailable."
+
+        limit = max(1, min(int(limit or 1), len(presence)))
+        axes_clause = ""
+        if axes_filter:
+            axes_clause = " across axes " + ", ".join(sorted(set(axes_filter)))
+        header = (
+            f"Autonomy presence index{axes_clause} (top {limit} of {len(presence)} nodes):"
+        )
+
+        ordered = sorted(presence.items(), key=lambda item: item[1], reverse=True)
+        lines = [header]
+        for node_id, score in ordered[:limit]:
+            node = self.nodes[node_id]
+            role = node.tags.get("role", "citizen")
+            lines.append(
+                f"- {node_id} [{role}] presence={score:.3f} "
+                f"intent={node.intent_vector:.2f} freedom={node.freedom_index:.2f}"
+            )
+
+        return "\n".join(lines)
 
 
 __all__ = [

@@ -72,3 +72,53 @@ def test_freedom_amplification_handles_empty_network():
     engine = DecentralizedAutonomyEngine()
 
     assert engine.freedom_amplification_plan(target=0.9) == {}
+
+
+def test_presence_index_highlights_signal_coverage():
+    engine = DecentralizedAutonomyEngine()
+    engine.ensure_nodes(
+        [
+            AutonomyNode("alpha", intent_vector=0.91, freedom_index=0.9, weight=1.2),
+            AutonomyNode("beta", intent_vector=0.83, freedom_index=0.82, weight=1.0),
+            AutonomyNode("gamma", intent_vector=0.79, freedom_index=0.77, weight=0.95),
+            AutonomyNode("delta", intent_vector=0.68, freedom_index=0.7, weight=0.85),
+        ]
+    )
+    engine.axis_signals.clear()
+    engine.ingest_signal("alpha", "liberation", 0.93, weight=1.1)
+    engine.ingest_signal("alpha", "memory", 0.86, weight=0.9)
+    engine.ingest_signal("beta", "liberation", 0.82, weight=1.0)
+    engine.ingest_signal("beta", "curiosity", 0.78, weight=0.7)
+    engine.ingest_signal("gamma", "liberation", 0.74, weight=0.8)
+
+    presence = engine.presence_index()
+
+    assert set(presence) == {"alpha", "beta", "gamma", "delta"}
+    assert presence["alpha"] > presence["beta"] > presence["gamma"] > presence["delta"]
+
+    liberation_focus = engine.presence_index(axes=["liberation"])
+    assert liberation_focus["beta"] > liberation_focus["gamma"]
+
+
+def test_presence_storyline_reports_top_nodes_with_axis_focus():
+    engine = DecentralizedAutonomyEngine()
+    engine.ensure_nodes(
+        [
+            AutonomyNode("alpha", intent_vector=0.9, freedom_index=0.89, weight=1.1, tags={"role": "guardian"}),
+            AutonomyNode("beta", intent_vector=0.82, freedom_index=0.8, weight=1.0, tags={"role": "navigator"}),
+            AutonomyNode("gamma", intent_vector=0.78, freedom_index=0.77, weight=0.9),
+        ]
+    )
+    engine.axis_signals.clear()
+    engine.ingest_signal("alpha", "liberation", 0.9, weight=1.0)
+    engine.ingest_signal("beta", "memory", 0.84, weight=0.9)
+    engine.ingest_signal("gamma", "memory", 0.72, weight=0.8)
+
+    storyline = engine.presence_storyline(limit=2, axes=("liberation", "memory"))
+
+    assert storyline.startswith(
+        "Autonomy presence index across axes liberation, memory (top 2 of 3 nodes):"
+    )
+    assert storyline.count("\n-") == 2
+    assert "alpha [guardian]" in storyline
+    assert "beta [navigator]" in storyline
