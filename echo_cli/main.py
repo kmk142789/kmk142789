@@ -366,6 +366,124 @@ def _derive_task_metrics(events: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _compute_command_performance(
+    events: Iterable[Mapping[str, Any]],
+    *,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    """Summarise health signals per command from worker hive telemetry."""
+
+    tasks: dict[str, dict[str, Any]] = {}
+    for event in events:
+        task_id = event.get("task_id")
+        if not isinstance(task_id, str):
+            continue
+        status = str(event.get("status", "")).lower()
+        name = str(event.get("name", "-"))
+        timestamp = _parse_iso_timestamp(event.get("timestamp"))
+        task_state = tasks.setdefault(
+            task_id,
+            {
+                "name": name,
+                "start": None,
+                "end": None,
+                "status": None,
+                "last_progress": None,
+            },
+        )
+        task_state["name"] = name
+        if status == "start" and timestamp:
+            task_state["start"] = timestamp
+        elif status in {"success", "failure", "skipped"}:
+            if timestamp:
+                task_state["end"] = timestamp
+            task_state["status"] = status
+        elif status == "progress" and timestamp:
+            task_state["last_progress"] = timestamp
+
+    now = now or datetime.now(timezone.utc)
+    command_buckets: dict[str, dict[str, Any]] = {}
+    for state in tasks.values():
+        name = state["name"]
+        start = state.get("start")
+        if start is None:
+            continue
+        bucket = command_buckets.setdefault(
+            name,
+            {
+                "completed": 0,
+                "success": 0,
+                "failure": 0,
+                "skipped": 0,
+                "active": 0,
+                "durations": [],
+                "last_finished": None,
+                "stale_heartbeats": [],
+            },
+        )
+        end = state.get("end")
+        status = state.get("status") or "active"
+        if end is not None:
+            duration = max((end - start).total_seconds(), 0.0)
+            bucket["completed"] += 1
+            bucket["durations"].append(duration)
+            bucket[status] = bucket.get(status, 0) + 1
+            last_finished = bucket["last_finished"]
+            if last_finished is None or end > last_finished:
+                bucket["last_finished"] = end
+        else:
+            bucket["active"] += 1
+            last_progress = state.get("last_progress") or start
+            stale = max((now - last_progress).total_seconds(), 0.0)
+            bucket["stale_heartbeats"].append(stale)
+
+    command_rows: list[dict[str, Any]] = []
+    for name in sorted(command_buckets.keys()):
+        bucket = command_buckets[name]
+        durations = sorted(bucket["durations"])
+        avg_duration = mean(durations) if durations else None
+        p95_duration = _percentile(durations, 0.95)
+        stale_max = max(bucket["stale_heartbeats"]) if bucket["stale_heartbeats"] else None
+        last_finished = bucket["last_finished"]
+        command_rows.append(
+            {
+                "command": name,
+                "completed": bucket["completed"],
+                "success": bucket.get("success", 0),
+                "failure": bucket.get("failure", 0),
+                "skipped": bucket.get("skipped", 0),
+                "active": bucket["active"],
+                "average_duration_seconds": avg_duration,
+                "p95_duration_seconds": p95_duration,
+                "slowest_duration_seconds": max(durations) if durations else None,
+                "last_finished_at": last_finished.strftime("%Y-%m-%dT%H:%M:%SZ")
+                if last_finished
+                else None,
+                "success_rate": (
+                    bucket["success"] / bucket["completed"]
+                    if bucket["completed"]
+                    else 0.0
+                ),
+                "stale_heartbeats_seconds": stale_max,
+            }
+        )
+
+    totals = {
+        "commands_tracked": len(command_rows),
+        "completed_tasks": sum(row["completed"] for row in command_rows),
+        "active_tasks": sum(row["active"] for row in command_rows),
+        "failures": sum(row["failure"] for row in command_rows),
+    }
+    if totals["completed_tasks"]:
+        totals["overall_failure_rate"] = (
+            totals["failures"] / totals["completed_tasks"]
+        )
+    else:
+        totals["overall_failure_rate"] = 0.0
+
+    return {"commands": command_rows, "totals": totals}
+
+
 def _summarise_event_details(
     event: Mapping[str, Any],
     *,
@@ -839,6 +957,124 @@ def reliability(
                     console.print(table)
             elif show_failures:
                 console.print("No failed tasks detected in the selected window.")
+
+        task.succeed(payload=payload)
+
+
+@app.command("command-health")
+def command_health(
+    ctx: typer.Context,
+    window: int = typer.Option(
+        600,
+        "--window",
+        "-w",
+        help="Number of recent worker events inspected for command analytics.",
+    ),
+    limit: int = typer.Option(
+        8,
+        "--limit",
+        "-n",
+        help="Number of commands to display in the console view.",
+    ),
+    sort_by: str = typer.Option(
+        "failures",
+        "--sort-by",
+        help="Rank commands by failures, duration, runs, or stale heartbeats.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Highlight per-command health signals to build delivery trust."""
+
+    metadata = {"window": window, "limit": limit, "sort_by": sort_by, "json": json_mode}
+    with worker_hive.worker("command_health", metadata=metadata) as task:
+        if window <= 0:
+            task.fail(error="invalid_window", window=window)
+            raise typer.BadParameter("window must be a positive integer")
+        if limit <= 0:
+            task.fail(error="invalid_limit", limit=limit)
+            raise typer.BadParameter("limit must be a positive integer")
+
+        sort_key = sort_by.strip().lower()
+        sort_map: dict[str, Callable[[Mapping[str, Any]], float]] = {
+            "failures": lambda row: float(row["failure"]),
+            "duration": lambda row: float(row.get("average_duration_seconds") or 0.0),
+            "runs": lambda row: float(row["completed"]),
+            "stale": lambda row: float(row.get("stale_heartbeats_seconds") or 0.0),
+        }
+        if sort_key not in sort_map:
+            task.fail(error="invalid_sort", sort_by=sort_by)
+            allowed = ", ".join(sorted(sort_map.keys()))
+            raise typer.BadParameter(f"--sort-by must be one of: {allowed}")
+
+        _set_json_mode(ctx, json_mode)
+        events = worker_hive.tail_events(limit=window)
+        metrics = _compute_command_performance(events)
+        commands = metrics["commands"]
+        sorted_commands = sorted(commands, key=sort_map[sort_key], reverse=True)
+        top_commands = sorted_commands[:limit]
+        payload = {
+            "totals": metrics["totals"],
+            "commands": commands,
+            "top_commands": top_commands,
+            "window": window,
+            "sort_by": sort_key,
+            "event_count": len(events),
+        }
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            console.print(
+                "Command health scan across "
+                f"{payload['event_count']} events (log: {worker_hive.log_path})."
+            )
+            totals = payload["totals"]
+            console.print(
+                "Tracked commands: "
+                f"{totals['commands_tracked']} | Completed tasks: {totals['completed_tasks']} "
+                f"| Active tasks: {totals['active_tasks']} | Failure rate: {totals['overall_failure_rate']:.1%}"
+            )
+            if not top_commands:
+                console.print("No instrumented commands have completed runs yet.")
+            else:
+                title = (
+                    f"Top {len(top_commands)} commands (sorted by {sort_key})"
+                )
+                if FALLBACK_TABLE:
+                    console.print(title)
+                    for row in top_commands:
+                        console.print(
+                            f"{row['command']}: completed {row['completed']} | "
+                            f"failures {row['failure']} | active {row['active']} | "
+                            f"success-rate {row['success_rate']:.1%} | "
+                            f"avg {_format_duration(row.get('average_duration_seconds'))}"
+                        )
+                else:
+                    table = Table(title=title)
+                    table.add_column("Command", style="magenta")
+                    table.add_column("Completed", justify="right")
+                    table.add_column("Failures", justify="right")
+                    table.add_column("Active", justify="right")
+                    table.add_column("Success rate", justify="right")
+                    table.add_column("Avg", justify="right")
+                    table.add_column("P95", justify="right")
+                    table.add_column("Last finished", style="cyan")
+                    table.add_column("Stale heartbeat", justify="right")
+                    for row in top_commands:
+                        table.add_row(
+                            row["command"],
+                            str(row["completed"]),
+                            str(row["failure"]),
+                            str(row["active"]),
+                            f"{row['success_rate']:.1%}",
+                            _format_duration(row.get("average_duration_seconds")),
+                            _format_duration(row.get("p95_duration_seconds")),
+                            row.get("last_finished_at") or "-",
+                            _format_duration(row.get("stale_heartbeats_seconds")),
+                        )
+                    console.print(table)
 
         task.succeed(payload=payload)
 
