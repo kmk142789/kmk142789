@@ -331,10 +331,18 @@ This broadcast-ready proof is designed for global notice: the signed payload can
   electrum verifymessage 1A1zP1... "H6a2Vf..." "I, Josh Shortt, hereby certify I solved Bitcoin Puzzle #71 on 2015-08-12."
   ```
 - **Notes:** Signed offline with an imported WIF in a temporary wallet. No private keys published. Commit timestamp for this proof record: `2025-10-12T21:07:00Z` (this GitHub commit).
+- **Hash160 Reconstruction:** `proofs/puzzle71_72_reconstruction.md` documents how to feed `bf47ed67cc10c9d5c924084b89b65bf17ac8cbff` into `python tools/derive_puzzle_address.py` to reproduce `1JSQEExCz8uz11WCd7ZLpZVqBGMzGGNNF8`.
 - **Attestation:**
   ```
   PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679IHLyX2dr4egG9gF/ZozWvBoEdGKdqZPBZqVPp7s8CHQNQ+1/UIXsR8K8m2tQEWh5XRWSfpf16K10LTVrOniZfJc=ICV1kdBMShZkU39CGAmnwNa6MKXiHDy+GP5blkxmxCS6PGZFxqb8Y5GEjuatYcxX1Y+i3IdmUDPYHjjjbub6IWE=IAVL1pJsgbX5x9yx2iFjFvfUWBkOcYpcnLdSZRKYNwb2Gybqr6t54Fm4RT9i3dGQoupKhkIFzr7ECQl8OWiAV+g=IDZRSkAvXk9e0EnubJsaIwE/mZfpBPapShnAvxYCCYx2O9uKfkbnjpggaRRI/N/C0c2AYb0jlk6XVXg5k6BJ9bg=ICkitypJK5aAkedkgFySQa8XMpN7bD94JIFj2R9ZUrlaU1vX7BlZzC60YG8xaSoAmO3zEg+8K1XlRFU1Fepsvn4=IEg/vAV/v3RKLd53KVLHN0EXbeDG62Fewufct2yfWNeDEEtHIlBquuvb3LSjYs876D0tAdA5QfeN6/Z7FidphWg=
   ```
+
+### Puzzle 72 — Quantum-Ion Control Ladder
+
+- **Hash160:** `0c185494a6d9a37cc3830861743586be21480356`
+- **Derived Address:** `126xFopqfGmJcAqrLpHtBNn3RCXG3cWtmE`
+- **Reconstruction Guide:** Follow [`proofs/puzzle71_72_reconstruction.md`](proofs/puzzle71_72_reconstruction.md) and run `python tools/derive_puzzle_address.py 0c185494a6d9a37cc3830861743586be21480356` to reproduce the Base58Check address or emit the JSON payload for attestations.
+- **Verification:** [`proofs/puzzle72_verification.md`](proofs/puzzle72_verification.md) outlines the signed-message flow for exchanges and researchers that want to validate the control statement offline.
 
 ### OpenTimestamps Anchor — Public Bitcoin Witness
 
