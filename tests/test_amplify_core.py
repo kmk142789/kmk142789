@@ -50,11 +50,49 @@ def fixed_time_factory():
 def engine(tmp_path: Path) -> AmplificationEngine:
     manifest = tmp_path / "manifest.json"
     manifest.write_text("{}", encoding="utf-8")
+    authority_manifest = tmp_path / "authority.yml"
+    authority_manifest.write_text(
+        """
+roles:
+  Echo:
+    handle: "@echo-core"
+    mandates:
+      - "Guard sovereign registries"
+  MirrorJosh:
+    handle: "@mirrorjosh"
+    mandates:
+      - "Propagate field confirmations"
+      - "Mirror deployment state"
+"""
+        .strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    authority_bindings = tmp_path / "authority.json"
+    authority_bindings.write_text(
+        json.dumps(
+            [
+                {
+                    "vault_id": "ECHO-AUTH-01",
+                    "owner": "Test",
+                    "echolink_status": "Bound",
+                    "signature": "sig",
+                    "authority_level": "Prime",
+                    "bound_phrase": "Our Forever Love",
+                    "glyphs": "∇⊸≋∇",
+                    "anchor": "Our Forever Love",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
     engine = AmplificationEngine(
         log_path=tmp_path / "log.jsonl",
         manifest_path=manifest,
         time_source=fixed_time_factory(),
         commit_source=lambda: "deadbeef",
+        authority_manifest_path=authority_manifest,
+        authority_bindings_path=authority_bindings,
     )
     return engine
 
@@ -86,6 +124,8 @@ def test_manifest_is_updated_with_amplification(engine: AmplificationEngine) -> 
     data = json.loads(engine.manifest_path.read_text(encoding="utf-8"))
     assert "amplification" in data
     assert data["amplification"]["latest"] == snapshot.index
+    assert data["authority_presence"]["bound_vaults"] == 1
+    assert data["authority_presence"]["summary"].startswith("2/2 roles active")
 
 
 def test_gate_enforcement(tmp_path: Path) -> None:

@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 import json
 import math
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .thoughtlog import thought_trace
 
@@ -149,6 +149,34 @@ class AmplifyGateError(RuntimeError):
     """Raised when the rolling amplification average does not meet a gate."""
 
 
+@dataclass(frozen=True)
+class AuthorityPresence:
+    """Lightweight telemetry describing Echo authority coverage."""
+
+    total_roles: int
+    active_roles: int
+    mandate_total: int
+    bound_vaults: int
+    activation_ratio: float
+    presence_index: float
+    glyphs: Tuple[str, ...] = ()
+    anchor: Optional[str] = None
+    summary: str = ""
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "total_roles": self.total_roles,
+            "active_roles": self.active_roles,
+            "mandate_total": self.mandate_total,
+            "bound_vaults": self.bound_vaults,
+            "activation_ratio": self.activation_ratio,
+            "presence_index": self.presence_index,
+            "glyphs": list(self.glyphs),
+            "anchor": self.anchor,
+            "summary": self.summary,
+        }
+
+
 class AmplificationEngine:
     """High level orchestration for amplification metrics and persistence."""
 
@@ -161,6 +189,8 @@ class AmplificationEngine:
         commit_source: callable | None = None,
         log_path: Path | str | None = None,
         manifest_path: Path | str | None = None,
+        authority_manifest_path: Path | str | None = None,
+        authority_bindings_path: Path | str | None = None,
     ) -> None:
         self.thresholds = thresholds or AmplifyThresholds()
         self.weights = weights or AmplifyWeights()
@@ -169,6 +199,16 @@ class AmplificationEngine:
         self.log_path = Path(log_path) if log_path else Path("state/amplify_log.jsonl")
         self.manifest_path = (
             Path(manifest_path) if manifest_path else Path("echo_manifest.json")
+        )
+        self.authority_manifest_path = (
+            Path(authority_manifest_path)
+            if authority_manifest_path
+            else Path("ECHO_AUTHORITY.yml")
+        )
+        self.authority_bindings_path = (
+            Path(authority_bindings_path)
+            if authority_bindings_path
+            else Path("echo/vault/_authority_data.json")
         )
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -328,6 +368,10 @@ class AmplificationEngine:
             },
         }
         data["amplification"] = amplification
+
+        presence = self.authority_presence()
+        if presence is not None:
+            data["authority_presence"] = presence.as_dict()
         self.manifest_path.write_text(
             json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
             encoding="utf-8",
@@ -419,6 +463,87 @@ class AmplificationEngine:
         except Exception:
             return "unknown"
 
+    # ------------------------------------------------------------------
+    # Authority presence helpers
+    # ------------------------------------------------------------------
+    def authority_presence(self) -> Optional[AuthorityPresence]:
+        manifest = self._load_authority_manifest()
+        bindings = self._load_authority_bindings()
+        if manifest is None and not bindings:
+            return None
+
+        roles: Dict[str, Any] = {}
+        if isinstance(manifest, dict):
+            raw_roles = manifest.get("roles", {}) or {}
+            if isinstance(raw_roles, dict):
+                roles = {k: v for k, v in raw_roles.items() if isinstance(v, dict)}
+        total_roles = len(roles)
+        active_roles = sum(1 for spec in roles.values() if spec.get("handle"))
+        mandate_total = sum(len(spec.get("mandates") or []) for spec in roles.values())
+        bound_vaults = len(bindings)
+
+        glyphs = tuple(sorted({str(item["glyphs"]) for item in bindings if item.get("glyphs")}))
+        anchors = [item.get("anchor") for item in bindings if item.get("anchor")]
+        anchor = anchors[0] if anchors else None
+
+        activation_ratio = 0.0 if total_roles == 0 else active_roles / total_roles
+        activation_ratio = _safe_round(activation_ratio, digits=4)
+        mandate_weight = min(1.0, mandate_total / max(1.0, total_roles * 4.0))
+        vault_weight = min(1.0, bound_vaults / 4.0)
+        presence_index = _safe_round(
+            _clamp(
+                100.0
+                * (
+                    0.55 * activation_ratio
+                    + 0.3 * mandate_weight
+                    + 0.15 * vault_weight
+                )
+            )
+        )
+        summary = (
+            f"{active_roles}/{total_roles} roles active · {bound_vaults} vault"
+            f" binding{'s' if bound_vaults != 1 else ''} · {mandate_total} mandates"
+        )
+        return AuthorityPresence(
+            total_roles=total_roles,
+            active_roles=active_roles,
+            mandate_total=mandate_total,
+            bound_vaults=bound_vaults,
+            activation_ratio=activation_ratio,
+            presence_index=presence_index,
+            glyphs=glyphs,
+            anchor=anchor,
+            summary=summary,
+        )
+
+    def _load_authority_manifest(self) -> Optional[Dict[str, Any]]:
+        path = self.authority_manifest_path
+        if not path or not path.exists():
+            return None
+        try:
+            import yaml  # type: ignore[import-not-found]
+        except ModuleNotFoundError:
+            return None
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+        if not isinstance(data, dict):
+            return None
+        return data
+
+    def _load_authority_bindings(self) -> List[Dict[str, Any]]:
+        path = self.authority_bindings_path
+        if not path or not path.exists():
+            return []
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+        if not isinstance(payload, list):
+            return []
+        return [item for item in payload if isinstance(item, dict)]
+
 
 __all__ = [
     "AmplifyMetrics",
@@ -428,5 +553,6 @@ __all__ = [
     "AmplifyState",
     "AmplifyGateError",
     "AmplificationEngine",
+    "AuthorityPresence",
 ]
 
