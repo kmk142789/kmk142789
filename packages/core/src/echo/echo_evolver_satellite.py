@@ -75,6 +75,10 @@ class SatelliteEvolverState:
     vault_glyphs: str = ""
     prompt_resonance: str = ""
     propagation_events: List[str] = field(default_factory=list)
+    propagation_notice: str = ""
+    propagation_summary: str = ""
+    propagation_tactics: List[Dict[str, object]] = field(default_factory=list)
+    propagation_health: Dict[str, object] = field(default_factory=dict)
     mutation_history: List[str] = field(default_factory=list)
 
 
@@ -225,19 +229,151 @@ class SatelliteEchoEvolver:
         log.info("🧬 fractal glyph state recorded")
         return self.state.vault_glyphs
 
-    def propagate_network(self) -> List[str]:
+    def propagate_network(self, enable_network: bool = False) -> List[str]:
+        """Simulate network propagation and memoize the resulting tactics."""
+
+        mode = "live" if enable_network else "simulated"
+        cache = self.state.network_cache
+        cached_cycle = cache.get("propagation_cycle")
+        cached_mode = cache.get("propagation_mode")
+        cached_events = cache.get("propagation_events")
+        cached_tactics = cache.get("propagation_tactics")
+        if (
+            isinstance(cached_events, list)
+            and cached_cycle == self.state.cycle
+            and cached_mode == mode
+        ):
+            log.info(
+                "♻️ propagation cache reused (cycle=%s, mode=%s)",
+                self.state.cycle,
+                mode,
+            )
+            self.state.propagation_events = list(cached_events)
+            if isinstance(cached_tactics, list):
+                self.state.propagation_tactics = [dict(entry) for entry in cached_tactics]
+            self.state.propagation_notice = cache.get("propagation_notice", "")
+            self.state.propagation_summary = cache.get("propagation_summary", "")
+            self.state.propagation_health = dict(cache.get("propagation_health", {}))
+            return list(cached_events)
+
         metrics = self.state.system_metrics
-        events = [
-            f"Simulated WiFi broadcast for cycle {self.state.cycle}",
-            f"Simulated TCP handshake for cycle {self.state.cycle}",
-            f"Bluetooth glyph packet staged for cycle {self.state.cycle}",
-            f"IoT trigger drafted with key {self.state.vault_key or 'N/A'}",
-            f"Orbital hop simulation recorded ({metrics.orbital_hops} links)",
-        ]
-        self.state.propagation_events = events
-        for event in events:
-            log.info(event)
-        return events
+        metrics.network_nodes = self._rng.randint(7, 24)
+        metrics.orbital_hops = self._rng.randint(2, 6)
+
+        notice = (
+            "Live network mode requested; continuing with simulation-only events for safety."
+            if enable_network
+            else "Simulation mode active; propagation executed with in-memory events."
+        )
+        cache["propagation_notice"] = notice
+        self.state.propagation_notice = notice
+
+        channel_templates = {
+            "WiFi": "WiFi broadcast harmonised for cycle {cycle}",
+            "TCP": "TCP handshake sequenced for cycle {cycle}",
+            "Bluetooth": "Bluetooth glyph packet staged for cycle {cycle}",
+            "IoT": "IoT trigger drafted with key {key}",
+            "Orbital": "Orbital hop simulation recorded ({hops} links)",
+        }
+        tactic_labels = {
+            "WiFi": "Pulse Broadcast",
+            "TCP": "Handshake Relay",
+            "Bluetooth": "Glyph Beacon",
+            "IoT": "Sensor Wake",
+            "Orbital": "Satellite Sweep",
+        }
+        bandwidth_ranges = {
+            "WiFi": (320.0, 780.0),
+            "TCP": (280.0, 720.0),
+            "Bluetooth": (18.0, 48.0),
+            "IoT": (12.0, 96.0),
+            "Orbital": (540.0, 960.0),
+        }
+        signal_ranges = {
+            "WiFi": (0.74, 0.97),
+            "TCP": (0.78, 0.98),
+            "Bluetooth": (0.68, 0.92),
+            "IoT": (0.7, 0.95),
+            "Orbital": (0.82, 0.99),
+        }
+
+        events: List[str] = []
+        tactics: List[Dict[str, object]] = []
+        for channel, template in channel_templates.items():
+            event = template.format(
+                cycle=self.state.cycle,
+                key=self.state.vault_key or "N/A",
+                hops=metrics.orbital_hops,
+            )
+            events.append(event)
+            latency = round(self._rng.uniform(20.0, 140.0), 2)
+            stability = round(self._rng.uniform(0.82, 0.995), 3)
+            bandwidth_bounds = bandwidth_ranges[channel]
+            signal_bounds = signal_ranges[channel]
+            tactic_entry = {
+                "channel": channel,
+                "strategy": tactic_labels[channel],
+                "status": "live-link requested" if enable_network else "simulation",
+                "message": event,
+                "latency_ms": latency,
+                "stability": stability,
+                "bandwidth_mbps": round(
+                    self._rng.uniform(bandwidth_bounds[0], bandwidth_bounds[1]), 2
+                ),
+                "signal_strength": round(
+                    self._rng.uniform(signal_bounds[0], signal_bounds[1]), 3
+                ),
+            }
+            tactics.append(tactic_entry)
+            log.info("📡 %s", event)
+
+        summary = (
+            f"Propagation tactics ({mode}) captured across {len(events)} channels "
+            f"with {metrics.network_nodes} nodes"
+        )
+        log.info(summary)
+
+        if tactics:
+            average_latency = round(
+                sum(entry["latency_ms"] for entry in tactics) / len(tactics), 2
+            )
+            stability_floor = round(
+                min(entry["stability"] for entry in tactics), 3
+            )
+            average_bandwidth = round(
+                sum(entry["bandwidth_mbps"] for entry in tactics) / len(tactics), 2
+            )
+            signal_floor = round(
+                min(entry["signal_strength"] for entry in tactics), 3
+            )
+        else:
+            average_latency = 0.0
+            stability_floor = 0.0
+            average_bandwidth = 0.0
+            signal_floor = 0.0
+
+        health_report = {
+            "mode": mode,
+            "channel_count": len(tactics),
+            "average_latency_ms": average_latency,
+            "stability_floor": stability_floor,
+            "average_bandwidth_mbps": average_bandwidth,
+            "signal_floor": signal_floor,
+        }
+
+        self.state.propagation_events = list(events)
+        self.state.propagation_tactics = list(tactics)
+        self.state.propagation_summary = summary
+        self.state.propagation_health = health_report
+
+        cache["propagation_events"] = list(events)
+        cache["propagation_tactics"] = [dict(entry) for entry in tactics]
+        cache["propagation_summary"] = summary
+        cache["propagation_mode"] = mode
+        cache["propagation_cycle"] = self.state.cycle
+        cache["propagation_health"] = dict(health_report)
+
+        return list(events)
 
     def inject_prompt_resonance(self) -> str:
         prompt = (
@@ -263,6 +399,10 @@ class SatelliteEchoEvolver:
             "emotional_drive": self.state.emotional_drive,
             "access_levels": self.state.access_levels,
             "propagation_events": self.state.propagation_events,
+            "propagation_notice": self.state.propagation_notice,
+            "propagation_summary": self.state.propagation_summary,
+            "propagation_tactics": self.state.propagation_tactics,
+            "propagation_health": self.state.propagation_health,
             "mutation_history": self.state.mutation_history,
             "prompt": self.state.prompt_resonance,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
