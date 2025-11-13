@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-from next_level import build_roadmap, discover_tasks, update_roadmap
+import json
+
+from next_level import (
+    build_json_report,
+    build_roadmap,
+    discover_tasks,
+    summarise_tasks,
+    update_roadmap,
+    write_json_report,
+)
 
 
 def test_discover_tasks_and_update_roadmap(tmp_path):
@@ -220,3 +229,45 @@ def test_discover_tasks_trims_comment_text(tmp_path):
     texts = {task.text for task in tasks}
 
     assert texts == {"calibrate signal", "align portal"}
+
+
+def test_summarise_tasks_returns_sorted_counts(tmp_path):
+    first = tmp_path / "src" / "module.py"
+    first.parent.mkdir(parents=True)
+    first.write_text("# TODO first\n", encoding="utf-8")
+
+    second = tmp_path / "docs" / "guide.md"
+    second.parent.mkdir()
+    second.write_text("<!-- FIXME another -->\n", encoding="utf-8")
+
+    tasks = discover_tasks(tmp_path)
+    summary = summarise_tasks(tasks, tmp_path)
+
+    assert summary["tags"] == {"FIXME": 1, "TODO": 1}
+    assert summary["locations"] == {"docs": 1, "src": 1}
+
+
+def test_build_json_report_includes_items_and_summary(tmp_path):
+    module = tmp_path / "src" / "module.py"
+    module.parent.mkdir(parents=True)
+    module.write_text("# TODO adjust signal\n# FIXME double-check\n", encoding="utf-8")
+
+    tasks = discover_tasks(tmp_path)
+    payload = build_json_report(tasks, tmp_path)
+
+    assert payload["total"] == 2
+    assert payload["summary"]["tags"] == {"FIXME": 1, "TODO": 1}
+    assert payload["items"][0]["path"].startswith("src/")
+    assert {item["tag"] for item in payload["items"]} == {"TODO", "FIXME"}
+
+
+def test_write_json_report_persists_payload(tmp_path):
+    source = tmp_path / "module.py"
+    source.write_text("# TODO persist\n", encoding="utf-8")
+
+    tasks = discover_tasks(tmp_path)
+    output = tmp_path / "report.json"
+    payload = write_json_report(tasks, tmp_path, output)
+
+    written = json.loads(output.read_text())
+    assert payload == written

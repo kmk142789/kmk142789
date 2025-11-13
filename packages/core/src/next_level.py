@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import os
+import json
 import re
 from fnmatch import fnmatch
 from pathlib import Path
@@ -412,6 +413,60 @@ def build_roadmap(tasks: Iterable[Task], base_path: Path) -> str:
     return "".join(lines)
 
 
+def summarise_tasks(tasks: Sequence[Task], base_path: Path) -> dict[str, dict[str, int]]:
+    """Return aggregate counts for tags and top-level locations.
+
+    The helper is shared between the markdown roadmap builder and the new JSON
+    export flow exposed via the CLI.  Counts are returned in sorted order so the
+    output remains stable across runs.
+    """
+
+    tag_counts = Counter(task.tag for task in tasks)
+    location_counts: dict[str, int] = defaultdict(int)
+    for task in tasks:
+        relative = task.path.relative_to(base_path)
+        top_level = relative.parts[0] if relative.parts else str(relative)
+        location_counts[top_level] += 1
+
+    return {
+        "tags": {tag: tag_counts[tag] for tag in sorted(tag_counts)},
+        "locations": {location: location_counts[location] for location in sorted(location_counts)},
+    }
+
+
+def build_json_report(tasks: Sequence[Task], base_path: Path) -> dict[str, object]:
+    """Return a JSON-serialisable structure describing ``tasks``.
+
+    The payload mirrors the roadmap while also exposing machine-friendly
+    summaries that downstream automation (dashboards, bots) can ingest.
+    """
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    summary = summarise_tasks(tasks, base_path) if tasks else {"tags": {}, "locations": {}}
+    return {
+        "generated_at": timestamp,
+        "total": len(tasks),
+        "summary": summary,
+        "items": [
+            {
+                "path": str(task.path.relative_to(base_path)),
+                "line": task.line,
+                "tag": task.tag,
+                "text": task.text,
+            }
+            for task in tasks
+        ],
+    }
+
+
+def write_json_report(tasks: Sequence[Task], base_path: Path, output_path: Path) -> dict[str, object]:
+    """Serialise ``tasks`` to ``output_path`` and return the payload."""
+
+    payload = build_json_report(tasks, base_path)
+    output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return payload
+
+
 def update_roadmap(
     base_path: Path,
     roadmap_path: Path,
@@ -435,21 +490,16 @@ def update_roadmap(
 
 
 def _build_summary(tasks: Sequence[Task], base_path: Path) -> List[str]:
-    tag_counts = Counter(task.tag for task in tasks)
-    location_counts: dict[str, int] = defaultdict(int)
-    for task in tasks:
-        relative = task.path.relative_to(base_path)
-        top_level = relative.parts[0] if relative.parts else str(relative)
-        location_counts[top_level] += 1
+    summary = summarise_tasks(tasks, base_path)
 
     summary_lines = ["## Summary\n\n", "| Category | Count |\n", "| --- | ---: |\n"]
-    for tag, count in sorted(tag_counts.items()):
+    for tag, count in summary["tags"].items():
         summary_lines.append(f"| {tag} | {count} |\n")
     summary_lines.append("\n")
     summary_lines.append("### Top-Level Locations\n\n")
     summary_lines.append("| Path | Count |\n")
     summary_lines.append("| --- | ---: |\n")
-    for location, count in sorted(location_counts.items()):
+    for location, count in summary["locations"].items():
         summary_lines.append(f"| {location} | {count} |\n")
     summary_lines.append("\n")
     return summary_lines
@@ -504,9 +554,21 @@ def main() -> int:
         metavar="GLOB",
         help="Glob pattern for paths to ignore (repeatable)",
     )
+    parser.add_argument(
+        "--json-out",
+        type=Path,
+        default=None,
+        metavar="FILE",
+        help="Optional path to write a JSON report mirroring the roadmap",
+    )
+    parser.add_argument(
+        "--print-summary",
+        action="store_true",
+        help="Emit the summary section to stdout in addition to updating the roadmap",
+    )
     args = parser.parse_args()
     max_bytes = args.max_bytes if args.max_bytes and args.max_bytes > 0 else None
-    update_roadmap(
+    tasks = update_roadmap(
         args.base,
         args.roadmap,
         skip_dirs=args.skip,
@@ -515,6 +577,10 @@ def main() -> int:
         allowed_extensions=args.ext,
         ignore_patterns=args.ignore,
     )
+    if args.json_out:
+        write_json_report(tasks, args.base, args.json_out)
+    if args.print_summary and tasks:
+        print("".join(_build_summary(tasks, args.base)))
     return 0
 
 
