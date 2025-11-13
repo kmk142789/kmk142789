@@ -8,9 +8,12 @@ import pytest
 from echo_module_registry import (
     ModuleRecord,
     ModuleRegistryError,
+    RegistrySummary,
+    list_modules,
     load_registry,
     register_module,
     store_registry,
+    summarize_registry,
 )
 
 
@@ -84,3 +87,61 @@ def test_store_registry_uses_atomic_write(tmp_path: Path) -> None:
 
     store_registry([record], registry_path)
     assert load_registry(registry_path) == [record]
+
+
+def test_list_modules_filters_and_sorts(tmp_path: Path) -> None:
+    registry_path = tmp_path / "modules.json"
+
+    register_module(
+        "alpha", "desc", "governance", registry_path=registry_path
+    )
+    register_module(
+        "beta", "desc", "observability", registry_path=registry_path
+    )
+    register_module(
+        "gamma", "desc", "Governance", registry_path=registry_path
+    )
+
+    all_records = list_modules(registry_path=registry_path)
+    assert [record.name for record in all_records] == ["alpha", "gamma", "beta"]
+
+    filtered = list_modules(category="governance", registry_path=registry_path)
+    assert [record.name for record in filtered] == ["alpha", "gamma"]
+
+
+def test_summarize_registry_returns_expected_metrics() -> None:
+    records = [
+        ModuleRecord(
+            name="alpha",
+            description="desc",
+            category="governance",
+            timestamp="2023-01-01T00:00:00+00:00",
+            hash="1",
+        ),
+        ModuleRecord(
+            name="beta",
+            description="desc",
+            category="governance",
+            timestamp="2023-02-01T00:00:00+00:00",
+            hash="2",
+        ),
+        ModuleRecord(
+            name="gamma",
+            description="desc",
+            category="observability",
+            timestamp="2023-01-15T00:00:00+00:00",
+            hash="3",
+        ),
+    ]
+
+    summary = summarize_registry(records)
+
+    assert isinstance(summary, RegistrySummary)
+    assert summary.total_modules == 3
+    assert summary.categories == {"governance": 2, "observability": 1}
+    assert summary.last_updated == "2023-02-01T00:00:00+00:00"
+
+    empty_summary = summarize_registry([])
+    assert empty_summary.total_modules == 0
+    assert empty_summary.categories == {}
+    assert empty_summary.last_updated is None
