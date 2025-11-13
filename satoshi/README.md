@@ -218,6 +218,9 @@ leaving the tree:
 - [`proofs/puzzle005_signature_proof.md`](../proofs/puzzle005_signature_proof.md)
   performs the same exercise for Puzzle #5
   (`1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k`).
+- [`proofs/puzzle006_signature_proof.md`](../proofs/puzzle006_signature_proof.md)
+  validates the published message for Puzzle #6
+  (`1PitScNLyp2HCygzadCh7FveTnfmpPbfp8`) without touching the underlying key.
 
 For quick offline inspection, fresh verifier output for Puzzles #2, #4, #5, and
 #6 also lives under `verifier/results/`. Each JSON blob lists every signature
