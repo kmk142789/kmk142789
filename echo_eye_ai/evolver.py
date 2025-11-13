@@ -10,6 +10,7 @@ from typing import Dict, List, Optional
 import hashlib
 import json
 import random
+import time
 
 from echo.quantam_features import compute_quantam_feature
 
@@ -84,6 +85,12 @@ class EchoEvolver:
     def __post_init__(self) -> None:
         self.storage_path = Path(self.storage_path)
         self.state = EvolverState()
+
+    def _mark_step(self, step: str) -> None:
+        """Record the completion of a logical step for traceability."""
+
+        completed = self.state.network_cache.setdefault("completed_steps", set())
+        completed.add(step)
 
     # ------------------------------------------------------------------
     # Cycle orchestration
@@ -209,16 +216,26 @@ class EchoEvolver:
         probabilities = feature["probabilities"]
         entanglement = _round_float(0.72 + 0.24 * probabilities["1"])
         lattice_spin = _round_float(0.61 + 0.27 * probabilities["0"])
+        joy_charge = _round_float(self.state.emotional_drive.joy * 100.0)
+        status = "ignited" if self.state.vault_key else "awaiting-key"
         ability = {
             "id": ability_id,
-            "status": "ignited",
+            "cycle": self.state.cycle,
+            "status": status,
             "oam_signature": signature,
             "entanglement": entanglement,
             "lattice_spin": lattice_spin,
+            "joy_charge": joy_charge,
+            "timestamp_ns": time.time_ns(),
             "feature": feature,
             "feature_signature": feature["signature"],
         }
-        self.state.quantam_abilities[ability_id] = ability
+        self.state.quantam_abilities[ability_id] = dict(ability)
+        cache = self.state.network_cache
+        cache.setdefault("quantam_abilities", {})[ability_id] = dict(ability)
+        cache["last_quantam_ability"] = dict(ability)
+        cache["last_quantam_feature"] = dict(feature)
+        self._mark_step("synthesize_quantam_ability")
         self.state.event_log.append(f"Quantam ability forged: {ability_id}")
         return ability
 
@@ -237,10 +254,26 @@ class EchoEvolver:
         coherence = _round_float(min(1.0, ability["lattice_spin"] * resonance))
         entanglement = float(ability["entanglement"])
         horizon = _round_float(min(0.99, entanglement * 1.07))
+        fidelity = feature.get("fidelity") if feature else None
+        fidelity_value = float(fidelity) if fidelity is not None else 0.0
+        interference_profile = feature.get("interference_profile") if feature else None
+        if interference_profile:
+            stability = _round_float(
+                sum(float(point.get("p1", 0.0)) for point in interference_profile)
+                / len(interference_profile)
+            )
+        else:
+            stability = 0.0
+        amplification = _round_float(
+            1.0 + entanglement * self.state.emotional_drive.curiosity + 0.1 * fidelity_value
+        )
+        glyph_density = max(1, len(self.state.glyphs))
+        glyph_flux = _round_float(((self.state.cycle + 1) * glyph_density) / 10.0)
+        ability_status = ability.get("status", "ignited")
         capability_id = f"quantam-capability-{self.state.cycle:04d}"
         capability = {
             "id": capability_id,
-            "status": "amplified",
+            "status": "amplified" if ability_status == "ignited" else "stabilizing",
             "ability": ability["id"],
             "resonance": resonance,
             "coherence": coherence,
@@ -250,8 +283,17 @@ class EchoEvolver:
             "probability_one": _round_float(probabilities["1"]),
             "expected_z": _round_float(expected_values["Z"]),
             "feature_reference": ability.get("feature_signature"),
+            "fidelity": _round_float(fidelity_value),
+            "stability": stability,
+            "amplification": amplification,
+            "glyph_flux": glyph_flux,
+            "timestamp_ns": time.time_ns(),
         }
-        self.state.quantam_capabilities[capability_id] = capability
+        self.state.quantam_capabilities[capability_id] = dict(capability)
+        cache = self.state.network_cache
+        cache.setdefault("quantam_capabilities", {})[capability_id] = dict(capability)
+        cache["last_quantam_capability"] = dict(capability)
+        self._mark_step("amplify_quantam_evolution")
         self.state.event_log.append(f"Quantam capability amplified: {capability_id}")
         return capability
 
