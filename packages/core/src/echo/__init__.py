@@ -66,6 +66,7 @@ from .echo_nexus_hub import EchoNexusHub, ScheduleLoopDigest, WorkerStory
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .echo_visionary_kernel import BitwisePixelEngine, EchoVisionaryKernel, WorkerBot
 from .evolver import (
+    CycleGuidanceFrame,
     EchoEvolver,
     EmotionalDrive,
     EvolverState,
@@ -302,6 +303,7 @@ __all__ = [
     "bridge_harmonix_main",
     "EchoBridgeSession",
     "harmonix_connect",
+    "CycleGuidanceFrame",
     "EchoEvolver",
     "EmotionalDrive",
     "EvolverState",
