@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -394,8 +395,14 @@ def _record_task(
     tasks.append(Task(path=file_path, line=line_no, tag=tag, text=normalized))
 
 
+def _current_timestamp() -> str:
+    """Return the canonical timestamp used for generated artifacts."""
+
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
+
+
 def build_roadmap(tasks: Iterable[Task], base_path: Path) -> str:
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
+    timestamp = _current_timestamp()
     lines = [
         "# Echo Evolution Roadmap\n\n",
         f"_Last updated: {timestamp}_\n\n",
@@ -420,6 +427,7 @@ def update_roadmap(
     max_file_size: Optional[int] = None,
     allowed_extensions: Optional[Sequence[str]] = None,
     ignore_patterns: Optional[Sequence[str]] = None,
+    json_output_path: Optional[Path] = None,
 ) -> List[Task]:
     tasks = discover_tasks(
         base_path,
@@ -431,6 +439,12 @@ def update_roadmap(
     )
     roadmap = build_roadmap(tasks, base_path)
     roadmap_path.write_text(roadmap, encoding="utf-8")
+    if json_output_path is not None:
+        payload = build_summary_payload(tasks, base_path)
+        json_output_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     return tasks
 
 
@@ -453,6 +467,40 @@ def _build_summary(tasks: Sequence[Task], base_path: Path) -> List[str]:
         summary_lines.append(f"| {location} | {count} |\n")
     summary_lines.append("\n")
     return summary_lines
+
+
+def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, object]:
+    """Return a JSON-friendly payload describing the current TODO landscape."""
+
+    entries = list(tasks)
+    per_tag = Counter(task.tag for task in entries)
+    per_location: dict[str, int] = defaultdict(int)
+    serialised_tasks = []
+
+    for task in entries:
+        try:
+            relative_path = task.path.relative_to(base_path)
+        except ValueError:
+            relative_path = task.path
+        per_location[relative_path.parts[0] if relative_path.parts else str(relative_path)] += 1
+        serialised_tasks.append(
+            {
+                "path": relative_path.as_posix(),
+                "line": task.line,
+                "tag": task.tag,
+                "text": task.text,
+            }
+        )
+
+    return {
+        "generated_at": _current_timestamp(),
+        "totals": {
+            "overall": len(entries),
+            "per_tag": dict(sorted(per_tag.items())),
+            "per_location": dict(sorted(per_location.items())),
+        },
+        "tasks": serialised_tasks,
+    }
 
 
 def main() -> int:
@@ -504,6 +552,13 @@ def main() -> int:
         metavar="GLOB",
         help="Glob pattern for paths to ignore (repeatable)",
     )
+    parser.add_argument(
+        "--json-out",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="Optional path to store a machine-readable summary (JSON)",
+    )
     args = parser.parse_args()
     max_bytes = args.max_bytes if args.max_bytes and args.max_bytes > 0 else None
     update_roadmap(
@@ -514,6 +569,7 @@ def main() -> int:
         max_file_size=max_bytes,
         allowed_extensions=args.ext,
         ignore_patterns=args.ignore,
+        json_output_path=args.json_out,
     )
     return 0
 

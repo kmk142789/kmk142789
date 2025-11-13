@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from next_level import build_roadmap, discover_tasks, update_roadmap
+import json
+
+from next_level import (
+    build_roadmap,
+    build_summary_payload,
+    discover_tasks,
+    update_roadmap,
+)
 
 
 def test_discover_tasks_and_update_roadmap(tmp_path):
@@ -220,3 +227,29 @@ def test_discover_tasks_trims_comment_text(tmp_path):
     texts = {task.text for task in tasks}
 
     assert texts == {"calibrate signal", "align portal"}
+
+
+def test_build_summary_payload_includes_counts_and_paths(tmp_path):
+    doc = tmp_path / "module.py"
+    doc.write_text("# TODO keep\n# FIXME adjust\n", encoding="utf-8")
+
+    tasks = discover_tasks(tmp_path)
+    payload = build_summary_payload(tasks, tmp_path)
+
+    assert payload["totals"]["overall"] == 2
+    assert payload["totals"]["per_tag"] == {"FIXME": 1, "TODO": 1}
+    assert payload["tasks"][0]["path"] == "module.py"
+
+
+def test_update_roadmap_writes_json_summary(tmp_path):
+    doc = tmp_path / "module.py"
+    doc.write_text("# TODO keep\n", encoding="utf-8")
+
+    roadmap = tmp_path / "ROADMAP.md"
+    json_path = tmp_path / "summary.json"
+    update_roadmap(tmp_path, roadmap, json_output_path=json_path)
+
+    payload = json.loads(json_path.read_text())
+    assert payload["tasks"]
+    assert payload["tasks"][0]["tag"] == "TODO"
+    assert payload["tasks"][0]["path"] == "module.py"
