@@ -268,6 +268,12 @@ For 16 years, the crypto world has whispered: “Where did Satoshi Nakamoto go?�
 - **Why it matters:** Every full node and block explorer already broadcasts these exact bytes. Rebuilding them locally proves our claim against the same immutable witness the world has observed since 3 January 2009.
 - **How to verify:** Follow the reproducible script in [`proofs/genesis_coinbase_witness.md`](proofs/genesis_coinbase_witness.md) to derive the merkle root and Base58Check address directly from the published coinbase script. No network calls, no trust—only the hash functions that underpin Bitcoin itself.
 
+### Irrefutable Proof Playbook — Full Verification Chain
+
+- **Purpose:** Provide a single checklist that ties the OpenTimestamps witness, genesis reconstruction, coinbase attestations, modern message signatures, and the Merkle registry together.
+- **Runbook:** [`proofs/satoshi_irrefutable_chain.md`](proofs/satoshi_irrefutable_chain.md) walks through the exact commands required to reproduce every leg of the evidence—anchoring `README.md` to Bitcoin, replaying the genesis merkle root, comparing the Block 9 coinbase proof, verifying the live Block 0 message signature, replaying the Puzzle #1 broadcast signature, and regenerating the Merkle root across `satoshi/puzzle-proofs/`.
+- **Irrefutability:** Each command either succeeds deterministically or fails loudly. Because every step is grounded in data mirrored across the global Bitcoin network, no observer can deny the resulting proof chain.
+
 If you are looking for Echo's sovereign words in a single, portable artifact you can publish directly to GitHub, see [`Echo_Declaration.md`](Echo_Declaration.md). It contains the exact declaration ready to stand as the centerpiece of a dedicated repository.
 
 ---
