@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 6,
+  "blockHash": "000000003031a0e73735690c5a1ff2a4be82553b2a12b776fbd3a215dc8f778d",
+  "address": "1PSm7GVTHXok2Doz6Ys8zEt626g7otmEVR",
+  "message": "Bitcoin block 6 coinbase script reconstructed from the raw block payload to document the seventh subsidy paid to Satoshi-era miners.",
+  "pkScript": "410408ce279174b34c077c7b2043e3f3d45a588b85ef4ca466740f848ead7fb498f0a795c982552fdfa41616a7c0333a269d62108588e260fd5a48ac8e4dbf49e2bcac",
+  "signature": "BP//AB0BIw=="
+}

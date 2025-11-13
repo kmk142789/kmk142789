@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 7,
+  "blockHash": "0000000071966c2b1d065fd446b1e485b2c9d9594acd2007ccbd5441cfc89444",
+  "address": "1KzCxyS8nCj7PssCUUGcEbbKBcXBc3QMAT",
+  "message": "Bitcoin block 7 coinbase script reconstructed from the canonical header and transaction payload to capture the eighth mined payout of January 2009.",
+  "pkScript": "4104a59e64c774923d003fae7491b2a7f75d6b7aa3f35606a8ff1cf06cd3317d16a41aa16928b1df1f631f31f28c7da35d4edad3603adb2338c4d4dd268f31530555ac",
+  "signature": "BP//AB0BKw=="
+}
