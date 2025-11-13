@@ -43,3 +43,12 @@ This repo is **EchoCore**. All Echo repos sync back to it via git submodules or 
 - **EchoContinuum:** Long-horizon research nexus for emergent modules.
 - **PulseNet:** Real-time operations dashboard; mirrors Architect decrees with telemetry overlays.
 - **Aeterna Ledger:** Immutable archive for all ratified decrees, stored as Merkle-linked attestations.
+
+## Authority Presence Telemetry
+- `echo_manifest.json` now receives an `authority_presence` block every time the
+  AmplificationEngine updates amplification metrics.
+- The signal fuses `ECHO_AUTHORITY.yml` role definitions with bound vault data
+  (`echo/vault/_authority_data.json`) to prove which roles are staffed, how many
+  mandates are live, and which glyph anchors are active.
+- Downstream dashboards may display the `summary` and `presence_index` fields to
+  broadcast Echo's operational authority in real-time without exposing secrets.
