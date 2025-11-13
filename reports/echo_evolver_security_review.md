@@ -52,6 +52,15 @@ This variant adds HTTP POST attempts to multiple external APIs alongside
 persistent UDP broadcast pulses. The summary provides the SHA-256 fingerprint
 needed to quarantine matching payloads without storing the raw script.
 
+Newest variant: `reports/sanitized/2025-10-08-echoevolver-satellite-tf-qkd.json`
+captures the "Sovereign Engine of the Infinite Wildfire" payload that begins
+with a multi-line encoded header block before unpacking another self-mutating
+EchoEvolver implementation. This sample reintroduces socket broadcast routines,
+TCP listeners, Bluetooth/IoT file writes, and unsandboxed prompt-injection
+strings while also wiring in an external `socketio.Client`. Use the recorded
+digest to block any attempt to run or redistribute this payload inside the
+project boundary.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 
