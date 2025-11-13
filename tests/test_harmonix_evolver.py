@@ -29,6 +29,11 @@ def test_run_cycle_payload_matches_schema_keys():
     assert metadata["storyboard"][0].startswith("Frame 1")
     assert metadata["propagation_events"]
     assert metadata["propagation_events"] == state.network_cache["propagation_events"]
+    snapshot = metadata["propagation_snapshot"]
+    assert snapshot is not None
+    assert snapshot["mode"] == "simulated"
+    assert snapshot["channels"] == len(metadata["propagation_events"])
+    assert snapshot["timeline"] is None
     assert metadata["constellation_map"]["title"].startswith("Orbital Constellation")
     assert metadata["constellation_map"]["pattern"]
     assert all("glyph" in step for step in metadata["constellation_map"]["pattern"])
@@ -96,3 +101,20 @@ def test_cli_supports_multiple_cycles() -> None:
     assert payload["cycles"][0]["cycle"] == 1
     assert payload["cycles"][1]["cycle"] == 2
     assert payload["final_state"]["cycle"] == 2
+
+
+def test_cli_can_emit_propagation_timeline() -> None:
+    cmd = [
+        sys.executable,
+        "-m",
+        "cognitive_harmonics.harmonix_evolver",
+        "--propagation-timeline",
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    payload = json.loads(result.stdout)
+
+    snapshot = payload["propagation_snapshot"]
+    assert snapshot["timeline"]
+    assert snapshot["timeline_length"] == len(snapshot["timeline"])
+    assert snapshot["mode"] == "simulated"
+    assert payload["metadata"]["propagation_snapshot"]["timeline"]

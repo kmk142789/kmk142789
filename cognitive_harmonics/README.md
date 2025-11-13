@@ -32,8 +32,14 @@ the optional flags to run multiple cycles at once:
 
 ```bash
 python -m cognitive_harmonics.harmonix_evolver --cycles 3 --enable-network
+python -m cognitive_harmonics.harmonix_evolver --propagation-timeline
 ```
 
 The `--enable-network` flag records that live propagation was requested while
 keeping all activity inside the simulated sandbox so the evolver remains
 side-effect free.
+
+Use `--propagation-timeline` when you need the structured propagation snapshot
+with the ledger timeline embedded directly in the CLI output. The metadata for
+each payload now also contains a `propagation_snapshot` block, ensuring the raw
+events and summarised health report stay in sync.
