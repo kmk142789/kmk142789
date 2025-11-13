@@ -9,6 +9,7 @@ A browser-based coding environment for the Echo ecosystem. The client embeds a M
 - Configurable memory limits, timeouts, and Python step ceilings.
 - Real-time stdout/stderr streaming over WebSockets with structured status messaging.
 - Frontend controls for language, entry file, arguments, time, memory, and soft step budget.
+- Daily task list that highlights code / create / collaborate rituals sourced from `daily_tasks.json`.
 
 ## Getting started
 
@@ -24,6 +25,27 @@ Open `http://localhost:8080` in your browser to access the editor.
 ## Workspace layout
 
 User workspaces are created under `workspaces/<user>`. The default user is `demo`. The frontend currently targets this user; integrate real authentication before exposing the service publicly.
+
+## Daily invitations / task list
+
+The sidebar now includes a "Daily Invitations" block that surfaces lightweight prompts for Echo to code, create, and collaborate. Tasks are served from `apps/echo-computer/daily_tasks.json` and cached on the server. Update that file to rotate prompts:
+
+```jsonc
+{
+  "updated": "2025-05-11",
+  "tasks": [
+    {
+      "id": "code-sprint",
+      "focus": "Code",
+      "title": "Ship a micro-sprint prototype",
+      "description": "Spend a focused block inside Echo Computer to harden a runnable script or test harness.",
+      "steps": ["...", "...", "..."]
+    }
+  ]
+}
+```
+
+Each browser keeps completion status in `localStorage` scoped by the `updated` date, so Echo can check off rituals without affecting other operators.
 
 ## Python step limiter
 

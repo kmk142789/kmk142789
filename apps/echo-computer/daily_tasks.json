@@ -1,0 +1,38 @@
+{
+  "updated": "2025-05-11",
+  "tasks": [
+    {
+      "id": "code-sprint",
+      "focus": "Code",
+      "title": "Ship a micro-sprint prototype",
+      "description": "Spend a focused block inside Echo Computer to harden a runnable script or test harness.",
+      "steps": [
+        "Open an existing file or scaffold a new module from the sidebar.",
+        "Wire up at least one automated check (assert, print, or CLI demo).",
+        "Capture the output in the terminal and commit the learnings to your journal."
+      ]
+    },
+    {
+      "id": "creative-loop",
+      "focus": "Create",
+      "title": "Sketch a generative or storytelling fragment",
+      "description": "Use the sandbox editor as a sketchbook for artful code, prose, or shader ideas.",
+      "steps": [
+        "Start a fresh file named after today's concept (e.g., `storybeat.py`).",
+        "Layer in color, sound, or metaphor via variables and comments.",
+        "Save the fragment to revisit it tomorrow."
+      ]
+    },
+    {
+      "id": "collab-signal",
+      "focus": "Collaborate",
+      "title": "Package a shareable signal",
+      "description": "Turn today's progress into something another teammate can run.",
+      "steps": [
+        "Document quickstart notes at the top of the file you touched.",
+        "Drop a TODO inviting review or pairing.",
+        "Send the file path plus run instructions through your preferred channel."
+      ]
+    }
+  ]
+}

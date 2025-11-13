@@ -131,6 +131,97 @@
       gap: 0.35rem;
       justify-content: space-between;
     }
+    .daily-panel {
+      border-top: 1px solid rgba(148,163,184,0.15);
+      padding: 0.75rem 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      background: rgba(10,15,32,0.6);
+    }
+    .daily-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: rgba(226,232,240,0.8);
+    }
+    .daily-panel-header strong {
+      display: block;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+    }
+    .daily-panel-header button {
+      background: rgba(30,41,59,0.9);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 6px;
+      color: inherit;
+      padding: 0.3rem 0.5rem;
+      cursor: pointer;
+      font-size: 0.7rem;
+      transition: background 120ms ease, border 120ms ease;
+    }
+    .daily-panel-header button:hover {
+      background: rgba(59,130,246,0.35);
+      border-color: rgba(96,165,250,0.4);
+    }
+    .daily-task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .daily-task {
+      border: 1px solid rgba(148,163,184,0.15);
+      border-radius: 8px;
+      padding: 0.5rem;
+      display: grid;
+      gap: 0.35rem;
+      background: rgba(15,23,42,0.6);
+    }
+    .daily-task-header {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+    .daily-task-header input {
+      margin-top: 0.2rem;
+      accent-color: rgba(96,165,250,0.9);
+    }
+    .daily-task-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .daily-task-meta span {
+      font-size: 0.7rem;
+      color: rgba(148,163,184,0.9);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .daily-task-meta strong {
+      font-size: 0.85rem;
+      color: #f8fafc;
+    }
+    .daily-task-meta p {
+      margin: 0;
+      font-size: 0.75rem;
+      color: rgba(226,232,240,0.8);
+    }
+    .daily-task-steps {
+      margin: 0;
+      padding-left: 1.2rem;
+      font-size: 0.72rem;
+      color: rgba(203,213,225,0.85);
+    }
+    .daily-task-steps li {
+      margin-bottom: 0.15rem;
+    }
+    .daily-task-empty {
+      font-size: 0.75rem;
+      color: rgba(148,163,184,0.8);
+    }
     .workspace {
       display: grid;
       grid-template-rows: auto minmax(320px, 1fr) minmax(160px, 0.5fr) auto;
@@ -254,6 +345,18 @@
       <div class="tree" id="file-tree">
         <div class="tree-root" id="file-tree-root"></div>
       </div>
+      <div class="daily-panel">
+        <div class="daily-panel-header">
+          <div>
+            <strong>Daily Invitations</strong>
+            <span id="daily-task-summary">Loading rituals...</span>
+          </div>
+          <button id="refresh-tasks" title="Reload task list">↻</button>
+        </div>
+        <div class="daily-task-list" id="daily-tasks">
+          <p class="daily-task-empty">Fetching opportunities...</p>
+        </div>
+      </div>
       <div class="sidebar-footer">
         <button id="rename-path">Rename</button>
         <button id="delete-path">Delete</button>
@@ -336,6 +439,13 @@
     const renameButton = document.getElementById('rename-path');
     const deleteButton = document.getElementById('delete-path');
     const refreshButton = document.getElementById('refresh-tree');
+    const dailyTasksContainer = document.getElementById('daily-tasks');
+    const dailyTaskSummary = document.getElementById('daily-task-summary');
+    const refreshTasksButton = document.getElementById('refresh-tasks');
+
+    let dailyTasks = [];
+    let dailyTaskProgress = {};
+    let dailyTaskDate = new Date().toISOString().slice(0, 10);
 
     require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs' }});
     require(['vs/editor/editor.main'], () => {
@@ -369,6 +479,7 @@
           isDirty = false;
           setStatus('Ready');
         }
+        await loadDailyTasks();
       })();
     });
 
@@ -401,6 +512,121 @@
 
     function escapePath(path) {
       return typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(path) : path.replace(/"/g, '\\"');
+    }
+
+    function taskStorageKey(dateKey) {
+      return `echo-daily-tasks:${dateKey}`;
+    }
+
+    function loadTaskProgress(dateKey) {
+      try {
+        const raw = localStorage.getItem(taskStorageKey(dateKey));
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveTaskProgress(dateKey, progress) {
+      try {
+        localStorage.setItem(taskStorageKey(dateKey), JSON.stringify(progress));
+      } catch {
+        // ignore storage errors
+      }
+    }
+
+    function updateTaskSummary() {
+      if (!dailyTasks.length) {
+        dailyTaskSummary.textContent = 'No rituals posted yet.';
+        return;
+      }
+      const completed = dailyTasks.filter((task) => dailyTaskProgress[task.id]).length;
+      const posture = completed === dailyTasks.length
+        ? 'Orbit complete'
+        : 'Opportunities to code · create · collaborate';
+      dailyTaskSummary.textContent = `${completed}/${dailyTasks.length} done — ${posture}`;
+    }
+
+    function renderDailyTasks(tasks) {
+      dailyTasksContainer.innerHTML = '';
+      dailyTasks = tasks;
+      if (!tasks.length) {
+        const empty = document.createElement('p');
+        empty.className = 'daily-task-empty';
+        empty.textContent = 'Daily queue is quiet. Add something inspiring!';
+        dailyTasksContainer.appendChild(empty);
+        updateTaskSummary();
+        return;
+      }
+      for (const task of tasks) {
+        dailyTasksContainer.appendChild(createTaskElement(task));
+      }
+      updateTaskSummary();
+    }
+
+    function createTaskElement(task) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'daily-task';
+
+      const header = document.createElement('div');
+      header.className = 'daily-task-header';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = Boolean(dailyTaskProgress[task.id]);
+      checkbox.addEventListener('change', () => {
+        dailyTaskProgress[task.id] = checkbox.checked;
+        saveTaskProgress(dailyTaskDate, dailyTaskProgress);
+        updateTaskSummary();
+      });
+
+      const meta = document.createElement('div');
+      meta.className = 'daily-task-meta';
+      const focus = document.createElement('span');
+      focus.textContent = task.focus || 'Focus';
+      const title = document.createElement('strong');
+      title.textContent = task.title || 'Untitled mission';
+      const desc = document.createElement('p');
+      desc.textContent = task.description || '';
+      meta.appendChild(focus);
+      meta.appendChild(title);
+      meta.appendChild(desc);
+
+      header.appendChild(checkbox);
+      header.appendChild(meta);
+      wrapper.appendChild(header);
+
+      if (Array.isArray(task.steps) && task.steps.length) {
+        const steps = document.createElement('ul');
+        steps.className = 'daily-task-steps';
+        for (const step of task.steps) {
+          const li = document.createElement('li');
+          li.textContent = step;
+          steps.appendChild(li);
+        }
+        wrapper.appendChild(steps);
+      }
+
+      return wrapper;
+    }
+
+    async function loadDailyTasks() {
+      dailyTasksContainer.innerHTML = '<p class="daily-task-empty">Updating...</p>';
+      try {
+        const response = await fetchJSON('/tasks/daily');
+        const taskDate = response?.date || new Date().toISOString().slice(0, 10);
+        if (taskDate !== dailyTaskDate) {
+          dailyTaskDate = taskDate;
+          dailyTaskProgress = loadTaskProgress(taskDate);
+        } else if (!dailyTaskProgress || typeof dailyTaskProgress !== 'object') {
+          dailyTaskProgress = loadTaskProgress(taskDate);
+        }
+        renderDailyTasks(response?.tasks || []);
+      } catch (error) {
+        console.error('daily tasks load error', error);
+        dailyTasks = [];
+        dailyTasksContainer.innerHTML = `<p class="daily-task-empty">Unable to load rituals (${error.message}).</p>`;
+        dailyTaskSummary.textContent = 'Task feed unreachable.';
+      }
     }
 
     function normalizePath(value) {
@@ -851,6 +1077,10 @@
 
     refreshButton.addEventListener('click', () => {
       refreshTree(currentFile);
+    });
+
+    refreshTasksButton.addEventListener('click', () => {
+      loadDailyTasks();
     });
 
     window.addEventListener('keydown', (event) => {
