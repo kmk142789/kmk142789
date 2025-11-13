@@ -117,3 +117,48 @@ def test_universal_advancement_on_empty_engine() -> None:
     assert report["total_pulses"] == 0
     assert report["advancement_score"] == 0.0
     assert report["enhancement_focus"] == []
+
+def test_create_enhance_and_advance_summary_tracks_creation_and_advancement() -> None:
+    engine = EchoPulseEngine(anchor="Portal Anchor")
+    engine.create_pulse("alpha", priority="critical")
+    engine.create_pulse("beta", priority="low")
+    engine.crystallize("beta")
+    engine.archive("beta", reason="complete")
+
+    summary = engine.create_enhance_and_advance(
+        include_archived=True, creation_limit=2, focus_limit=1
+    )
+
+    assert summary["anchor"] == "Portal Anchor"
+
+    created = summary["created"]
+    assert created["total_active"] == 1
+    assert created["total_archived"] == 1
+    assert len(created["recent_highlights"]) == 2
+    assert created["recent_highlights"][0]["status"] == "archived"
+    assert created["recent_highlights"][0]["hash"].isalnum()
+
+    enhancement = summary["enhancement"]
+    assert enhancement["focus_limit"] == 1
+    assert 0.0 <= enhancement["recommendation_coverage"] <= 1.0
+
+    advancement = summary["advancement"]
+    assert advancement["include_archived"] is True
+    assert advancement["total_pulses"] == 2
+    assert advancement["status_breakdown"]["archived"] == 1
+
+
+def test_create_enhance_and_advance_limits_and_validation() -> None:
+    engine = EchoPulseEngine()
+    engine.create_pulse("alpha")
+
+    summary = engine.create_enhance_and_advance(creation_limit=0, focus_limit=0)
+    assert summary["created"]["recent_highlights"] == []
+    assert summary["enhancement"]["focus"] == []
+    assert summary["enhancement"]["recommendation_coverage"] == 0.0
+
+    with pytest.raises(ValueError):
+        engine.create_enhance_and_advance(creation_limit=-1)
+
+    with pytest.raises(ValueError):
+        engine.create_enhance_and_advance(focus_limit=-1)
