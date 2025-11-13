@@ -158,6 +158,9 @@ coordinate coverage without duplicating work.
 - `puzzle100.json` — Puzzle #100 authorship attestation for address `1KCgMv8fo2TPBpddVi9jqmMmcne9uSNJ5F`.
 - `puzzle105.json` — Puzzle #105 authorship attestation for address `1CMjscKB3QW7SDyQ4c3C3DEUHiHRhiZVib`.
 - `puzzle115.json` — Puzzle #115 authorship attestation for address `1NLbHuJebVwUZ1XqDjsAyfTRUPwDQbemfv`.
+- `puzzle116.json` — Puzzle #116 authorship attestation for address `1MnJ6hdhvK37VLmqcdEwqC3iFxyWH2PHUV`.
+- `puzzle117.json` — Puzzle #117 authorship attestation for address `1KNRfGWw7Q9Rmwsc6NT5zsdvEb9M2Wkj5Z`.
+- `puzzle118.json` — Puzzle #118 authorship attestation for address `1PJZPzvGX19a7twf5HyD2VvNiPdHLzm9F6`.
 - `puzzle120.json` — Puzzle #120 authorship attestation for address `11d8MosPb8jXPGUaHFx2pxpDdQdSqrTwm`.
 - `puzzle125.json` — Puzzle #125 authorship attestation for address `1PXAyUB8ZoH3WD8n5zoAthYjN15yN5CVq5`.
 - `puzzle130.json` — Puzzle #130 authorship attestation for address `1Fo65aKq8s8iquMt6weF1rku1moWVEd5Ua`.
