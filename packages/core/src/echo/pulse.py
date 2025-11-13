@@ -332,6 +332,83 @@ class EchoPulseEngine:
         }
         return roadmap
 
+    def create_enhance_and_advance(
+        self,
+        *,
+        include_archived: bool = False,
+        creation_limit: int = 3,
+        focus_limit: int = 3,
+    ) -> Dict[str, object]:
+        """Return a combined creation/enhancement/advancement summary."""
+
+        if creation_limit < 0:
+            raise ValueError("creation_limit must be non-negative")
+        if focus_limit < 0:
+            raise ValueError("focus_limit must be non-negative")
+
+        roadmap = self.universal_advancement(
+            include_archived=include_archived, focus_limit=focus_limit
+        )
+        pulses = self.pulses(include_archived=include_archived)
+        archived_names = set(self._archived) if include_archived else set()
+
+        highlights: List[Dict[str, object]] = []
+        if creation_limit > 0:
+            ordered = sorted(pulses, key=lambda pulse: pulse.created_at, reverse=True)
+            for pulse in ordered:
+                if len(highlights) >= creation_limit:
+                    break
+                effective_status = (
+                    "archived" if pulse.name in archived_names else pulse.status
+                )
+                highlights.append(
+                    {
+                        "pulse": pulse.name,
+                        "status": effective_status,
+                        "priority": pulse.priority,
+                        "resonance": pulse.resonance,
+                        "created_at": pulse.created_at.isoformat(),
+                        "updated_at": pulse.updated_at.isoformat(),
+                        "timeline_events": len(pulse.timeline),
+                        "hash": pulse.digest,
+                        "data": dict(pulse.data),
+                    }
+                )
+
+        creation_summary = {
+            "total_active": len(self._pulses),
+            "total_archived": len(self._archived),
+            "limit": creation_limit,
+            "recent_highlights": highlights,
+        }
+
+        enhancement_focus = list(roadmap.get("enhancement_focus", []))
+        coverage = (
+            len(enhancement_focus) / focus_limit if focus_limit > 0 else 0.0
+        )
+        enhancement_summary = {
+            "focus": enhancement_focus,
+            "focus_limit": focus_limit,
+            "recommendation_coverage": coverage,
+        }
+
+        advancement_summary = {
+            "include_archived": include_archived,
+            "total_pulses": roadmap.get("total_pulses", 0),
+            "advancement_score": roadmap.get("advancement_score", 0.0),
+            "status_breakdown": roadmap.get("status_breakdown", {}),
+            "priority_breakdown": roadmap.get("priority_breakdown", {}),
+            "recent_updates": roadmap.get("recent_updates", []),
+        }
+
+        payload = {
+            "anchor": self.anchor,
+            "created": creation_summary,
+            "enhancement": enhancement_summary,
+            "advancement": advancement_summary,
+        }
+        return payload
+
     def sync_snapshot(self) -> Dict[str, object]:
         """Return a deterministic snapshot of the active pulse state."""
 
