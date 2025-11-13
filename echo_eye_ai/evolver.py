@@ -11,6 +11,7 @@ import hashlib
 import json
 import random
 
+from echo.quantam_features import compute_quantam_feature
 
 def _round_float(value: float) -> float:
     """Return a stable rounded float suitable for JSON serialisation."""
@@ -199,14 +200,23 @@ class EchoEvolver:
             f"{self.state.emotional_drive.joy:.4f}"
         )
         signature = hashlib.sha256(base_material.encode("utf-8")).hexdigest()[:16]
-        entanglement = _round_float(self.rng.uniform(0.72, 0.96))
-        lattice_spin = _round_float(self.rng.uniform(0.61, 0.88))
+        feature = compute_quantam_feature(
+            glyphs=self.state.glyphs,
+            cycle=self.state.cycle,
+            joy=self.state.emotional_drive.joy,
+            curiosity=self.state.emotional_drive.curiosity,
+        )
+        probabilities = feature["probabilities"]
+        entanglement = _round_float(0.72 + 0.24 * probabilities["1"])
+        lattice_spin = _round_float(0.61 + 0.27 * probabilities["0"])
         ability = {
             "id": ability_id,
             "status": "ignited",
             "oam_signature": signature,
             "entanglement": entanglement,
             "lattice_spin": lattice_spin,
+            "feature": feature,
+            "feature_signature": feature["signature"],
         }
         self.state.quantam_abilities[ability_id] = ability
         self.state.event_log.append(f"Quantam ability forged: {ability_id}")
@@ -215,8 +225,16 @@ class EchoEvolver:
     def amplify_quantam_evolution(self, ability: Dict[str, object]) -> Dict[str, object]:
         """Amplify the quantam evolution metrics derived from the current ability."""
 
-        resonance = _round_float(0.84 + self.rng.random() * 0.1)
-        coherence = _round_float(0.69 + self.rng.random() * 0.2)
+        feature = ability.get("feature") or compute_quantam_feature(
+            glyphs=self.state.glyphs,
+            cycle=self.state.cycle,
+            joy=self.state.emotional_drive.joy,
+            curiosity=self.state.emotional_drive.curiosity,
+        )
+        probabilities = feature["probabilities"]
+        expected_values = feature["expected_values"]
+        resonance = _round_float(0.82 + 0.12 * probabilities["0"] + 0.06 * expected_values["Z"])
+        coherence = _round_float(min(1.0, ability["lattice_spin"] * resonance))
         entanglement = float(ability["entanglement"])
         horizon = _round_float(min(0.99, entanglement * 1.07))
         capability_id = f"quantam-capability-{self.state.cycle:04d}"
@@ -228,6 +246,10 @@ class EchoEvolver:
             "coherence": coherence,
             "entanglement": _round_float(entanglement),
             "horizon": horizon,
+            "probability_zero": _round_float(probabilities["0"]),
+            "probability_one": _round_float(probabilities["1"]),
+            "expected_z": _round_float(expected_values["Z"]),
+            "feature_reference": ability.get("feature_signature"),
         }
         self.state.quantam_capabilities[capability_id] = capability
         self.state.event_log.append(f"Quantam capability amplified: {capability_id}")
