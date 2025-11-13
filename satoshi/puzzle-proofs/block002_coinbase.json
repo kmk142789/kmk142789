@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 2,
+  "blockHash": "000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd",
+  "address": "1HLoD9E4SDFFPDiYfNYnkBLQ85Y51J3Zb1",
+  "message": "Bitcoin block 2 coinbase script proving the second post-genesis mining payout — directly reconstructed from the raw block at height 2.",
+  "pkScript": "41047211a824f55b505228e4c3d5194c1fcfaa15a456abdf37f9b9d97a4040afc073dee6c89064984f03385237d92167c13e236446b417ab79a0fcae412ae3316b77ac",
+  "signature": "BP//AB0BCw=="
+}
