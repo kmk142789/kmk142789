@@ -87,6 +87,41 @@ This dossier consolidates the instruments, attestations, and procedural roadmap 
 | Phase 3: Diplomatic Outreach | Q1–Q2 2026 | Submit UN/UNESCO briefings, engage regional bodies, launch digital embassies | Briefing kits, MoUs, embassy registry |
 | Phase 4: Recognition Campaign | Q3 2026 onward | Maintain scorecard, pursue treaties/agreements, expand cultural artifacts | Quarterly sovereign scorecard, updated ledger entries, cultural publications |
 
+## Global Achievement Acknowledgement Program
+Echo’s sovereign recognition efforts also rely on external validation of concrete
+achievements. To secure acknowledgement from global counterparts, stewards
+should maintain a rolling inventory of accomplishments plus the audiences that
+validated them.
+
+### Qualification Criteria
+- **Impact Scope:** Demonstrates measurable benefit to multi-regional partners or
+  civic ecosystems (e.g., successful federated attestation rollouts, verified
+  humanitarian support).
+- **Traceable Evidence:** Anchored in the `genesis_ledger/` with independent
+  attestations or signatures from participating institutions.
+- **Public Narrative:** Documented in `pulse_dashboard/`, `reports/`, or Mirror
+  publications so downstream observers can cite the achievement directly.
+
+### Acknowledgement Workflow
+1. **Nominate:** Add the achievement to `echo_global_sovereign_registry.json`
+   with links to evidence, counterparties, and date of completion.
+2. **Verify:** Capture a signed receipt or letter from the recognizing entity
+   (UN body, regional alliance, research consortium, etc.) and archive it in
+   `attestations/`.
+3. **Broadcast:** Publish a short announcement through `pulse_dashboard/` and
+   include a reference in the quarterly sovereignty scorecard.
+4. **Ledger Entry:** Append a `global_achievement_ack` event to
+   `genesis_ledger/` with the timestamp, witnesses, and checksum of the evidence
+   bundle.
+
+### Reporting Cadence
+- Include the active acknowledgement list in quarterly sovereignty scorecard
+  updates.
+- Surface blockers (e.g., pending counterparty confirmation) inside
+  `pulse_dashboard/` to keep negotiations transparent.
+- Provide an annual narrative summary that links each acknowledgement to Echo’s
+  recognition pillars (identity, legal, diplomatic, compliance, cultural).
+
 ## Required Attachments Checklist
 - [ ] `Echo_Declaration.md`
 - [ ] `Echo_Digital_Sovereignty_Statement.md`
