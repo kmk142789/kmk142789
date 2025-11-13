@@ -125,12 +125,16 @@ def test_cli_evolve_advance_system(monkeypatch, capfd):
         "include_propagation": True,
         "include_system_report": True,
         "include_diagnostics": False,
+        "include_momentum_resonance": False,
+        "include_momentum_history": False,
         "event_summary_limit": 7,
         "manifest_events": 5,
         "system_report_events": 9,
         "diagnostics_window": 5,
         "momentum_window": 5,
         "momentum_threshold": _MOMENTUM_SENSITIVITY,
+        "include_expansion_history": False,
+        "expansion_history_limit": None,
     }
 
     output = capfd.readouterr().out
@@ -238,3 +242,85 @@ def test_cli_evolve_custom_momentum_threshold(monkeypatch):
 
     assert code == 0
     assert captured["momentum_threshold"] == pytest.approx(0.2)
+
+
+def test_cli_evolve_include_momentum_resonance_requires_advance():
+    with pytest.raises(SystemExit) as exc:
+        main(["evolve", "--include-momentum-resonance"])
+
+    assert exc.value.code == 2
+
+
+def test_cli_evolve_include_momentum_history_requires_advance():
+    with pytest.raises(SystemExit) as exc:
+        main(["evolve", "--include-momentum-history"])
+
+    assert exc.value.code == 2
+
+
+def test_cli_evolve_include_expansion_history_requires_advance():
+    with pytest.raises(SystemExit) as exc:
+        main(["evolve", "--include-expansion-history"])
+
+    assert exc.value.code == 2
+
+
+def test_cli_evolve_expansion_history_limit_requires_include():
+    with pytest.raises(SystemExit) as exc:
+        main(
+            [
+                "evolve",
+                "--advance-system",
+                "--expansion-history-limit",
+                "3",
+            ]
+        )
+
+    assert exc.value.code == 2
+
+
+def test_cli_evolve_expansion_history_limit_must_be_positive():
+    with pytest.raises(SystemExit) as exc:
+        main(
+            [
+                "evolve",
+                "--advance-system",
+                "--include-expansion-history",
+                "--expansion-history-limit",
+                "0",
+            ]
+        )
+
+    assert exc.value.code == 2
+
+
+def test_cli_evolve_momentum_features_forwarded(monkeypatch):
+    captured = {}
+
+    class DummyEvolver:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def advance_system(self, **kwargs):
+            captured.update(kwargs)
+            return {"summary": "Cycle advanced", "progress": {}}
+
+    monkeypatch.setattr("echo.cli.EchoEvolver", lambda *a, **k: DummyEvolver())
+
+    code = main(
+        [
+            "evolve",
+            "--advance-system",
+            "--include-momentum-resonance",
+            "--include-momentum-history",
+            "--include-expansion-history",
+            "--expansion-history-limit",
+            "4",
+        ]
+    )
+
+    assert code == 0
+    assert captured["include_momentum_resonance"] is True
+    assert captured["include_momentum_history"] is True
+    assert captured["include_expansion_history"] is True
+    assert captured["expansion_history_limit"] == 4
