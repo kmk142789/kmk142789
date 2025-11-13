@@ -24,19 +24,22 @@ publications and operational policies.
 
 The repository blends runtime code, governance artefacts, and narrative
 archives. Start with the high-level tour in
-[`docs/REPO_OVERVIEW.md`](docs/REPO_OVERVIEW.md), then keep the creative
-compass in [`docs/ECHO_CREATIVE_COMPASS.md`](docs/ECHO_CREATIVE_COMPASS.md)
-alongside the quick directory map below while navigating:
+[`docs/REPO_OVERVIEW.md`](docs/REPO_OVERVIEW.md), keep the creative compass in
+[`docs/ECHO_CREATIVE_COMPASS.md`](docs/ECHO_CREATIVE_COMPASS.md), and open the
+new [`docs/REPO_NAVIGATOR.md`](docs/REPO_NAVIGATOR.md) for a reorganised map
+while navigating.
 
-- `packages/core` — Echo runtime, CLI entry points, bridge adapters, and legacy
-  libraries.
-- `packages/mirror-sync` — scheduled snapshots of every Mirror.xyz post along
-  with sync tooling.
-- `packages/glyphs` — glyph asset manifests and integrity reports.
-- `packages/cli`, `packages/sim`, `packages/bridge` — staging areas for future
-  package splits.
-- `docs/`, `ops/`, `proofs/`, and other supporting directories that make the
-  governance and attestations legible.
+### Directory taxonomy (capsule view)
+
+| Lane | Purpose | Primary directories |
+| --- | --- | --- |
+| Execution stack | Runtime libraries, bridge adapters, CLI surfaces, and FastAPI endpoints. | `packages/core`, `packages/cli`, `packages/bridge`, `packages/sim`, `fastapi/`, `services/` |
+| Interfaces & dashboards | Web dashboards, verifier UI, visualization experiments, and published dashboards. | `apps/`, `verifier/`, `viewer/`, `visualizer/`, `pulse_dashboard/`, `public/`, `docs/pulse.html` |
+| Governance & policy | Sovereign declarations, governance artefacts, and policy documents. | Root `ECHO_*.md`/`Echo_*.md`, `GOVERNANCE.md`, `docs/` |
+| Proofs & attestations | Cryptographic proofs, append-only ledgers, registries, and attestations. | `proofs/`, `attestations/`, `attestation/`, `genesis_ledger/`, `logs/`, `ledger/`, `registry.json`, `federated_*` |
+| Data & research | Structured datasets and mythogenic research archives. | `data/`, `memory/`, `cognitive_harmonics/`, `harmonic_memory/`, `atlas/`, `atlas_os/`, `wildlight/` |
+| Automation & ops | Tooling, ops playbooks, deploy scripts, and orchestration manifests. | `scripts/`, `tools/`, `ops/`, `deploy/`, `docker-compose.*`, `Makefile`, `noxfile.py`, `run.sh` |
+| Distribution & mirrors | Public artifacts consumed by downstream mirrors and registries. | `artifacts/`, `public/`, `packages/glyphs/`, `echo_map.json`, `echo_manifest.json` |
 
 ## Getting started
 
