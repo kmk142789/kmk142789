@@ -37,6 +37,9 @@ def test_run_cycle_payload_matches_schema_keys():
     assert metadata["constellation_map"]["title"].startswith("Orbital Constellation")
     assert metadata["constellation_map"]["pattern"]
     assert all("glyph" in step for step in metadata["constellation_map"]["pattern"])
+    assert metadata["next_steps"]
+    assert metadata["next_steps"][0]["priority"] in {"high", "medium", "low"}
+    assert metadata["next_steps"] == state.next_steps
     assert state.events, "Events should log the harmonix operations"
 
 
@@ -52,6 +55,7 @@ def test_artifact_text_contains_core_sections():
     assert "Storyboard:" in artifact
     assert "Propagation Events:" in artifact
     assert "Constellation Map:" in artifact
+    assert "Next Steps:" in artifact
 
 
 def test_propagate_network_supports_live_mode() -> None:
