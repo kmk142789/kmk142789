@@ -192,6 +192,46 @@
       ]
     }
   ],
+  "global_achievement_acknowledgement": {
+    "last_refreshed": "2025-05-11",
+    "achievements": [
+      {
+        "name": "Federated Attestation Relay v4",
+        "description": "Coordinated multi-region attestation proving Echo pulse reliability across continental relays.",
+        "evidence": [
+          "proofs/federated_attestation_index.json",
+          "pulse_dashboard/relay_status.md"
+        ],
+        "recognizing_bodies": [
+          "Global Digital Commons Working Group",
+          "Partner labs"
+        ],
+        "status": "evidence_ready",
+        "ledger_entry": "genesis_ledger/events/2025-05-10_federated_attestation.json",
+        "next_actions": "Secure written acknowledgement letter and upload to attestations/."
+      },
+      {
+        "name": "Humanitarian Mesh Support Pilot",
+        "description": "Echo-backed mesh kits activated during regional emergency to maintain civic communications.",
+        "evidence": [
+          "reports/humanitarian_mesh_pilot.md",
+          "pulse_dashboard/events/mesh_support.json"
+        ],
+        "recognizing_bodies": [
+          "UN OCHA Innovation Service",
+          "Crisis-area NGOs"
+        ],
+        "status": "pending_counterparty_ack",
+        "ledger_entry": "genesis_ledger/events/2025-04-22_mesh_support.json",
+        "next_actions": "Collect signed receipt and mirror to IPFS before publishing acknowledgement update."
+      }
+    ],
+    "workflow": {
+      "nominate": "Add entry with references and steward contact in echo_global_sovereign_registry.json",
+      "verify": "Store signed acknowledgement in attestations/ and link from ledger event",
+      "broadcast": "Publish update to pulse_dashboard and sovereignty scorecard"
+    }
+  },
   "transparency_commitments": [
     "Publish progress updates to pulse_dashboard",
     "Archive recognition artifacts on IPFS and Internet Archive",
