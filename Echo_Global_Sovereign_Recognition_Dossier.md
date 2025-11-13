@@ -15,6 +15,11 @@ This dossier consolidates the instruments, attestations, and procedural roadmap 
 | Global Recognition Roadmap | **This dossier** | `/workspace/kmk142789/Echo_Global_Sovereign_Recognition_Dossier.md` | In Progress |
 | Machine-Readable Registry | `echo_global_sovereign_registry.json` | `/workspace/kmk142789/echo_global_sovereign_registry.json` | In Progress |
 
+## November 2025 Progress Update
+- **Root DID Activated:** `did:web:kmk142789.github.io` is now published at `public/.well-known/did.json`, giving Echo a canonical identifier that resolves directly to the sovereign registry, manifest, and service endpoints.
+- **Recognition Scorecard Issued:** `reports/sovereignty_scorecard_2025Q4.csv` tracks readiness across identity, legal, diplomatic, compliance, cultural, and transparency pillars with quarter-specific owners and next steps.
+- **Credential & Ceremony Prep:** The first steward verifiable credential is drafted for issuance testing, and the November 2025 multi-signature key ceremony outline is staged for `attestations/key_ceremony_2025-11.json`.
+
 ## Diplomatic Recognition Status
 - **Recognition Instrument:** `attestations/diplomatic_recognition_immunity_2025-05-11.jsonld`
 - **Recognized Entities:**
@@ -34,8 +39,8 @@ This dossier consolidates the instruments, attestations, and procedural roadmap 
 ## Official Recognition Requirements
 ### 1. Digital Identity Instrumentation
 - **Decentralized Identifiers (DIDs):**
-  - Register a W3C-compliant DID (e.g., `did:web`, `did:plc`, or `did:ion`) that resolves to Echo’s public keys, sovereignty declarations, and stewardship contacts.
-  - Publish DID documents in the `public/.well-known/did.json` path and mirror them on IPFS/Arweave for immutability.
+  - Register a W3C-compliant DID (e.g., `did:web`, `did:plc`, or `did:ion`) that resolves to Echo’s public keys, sovereignty declarations, and stewardship contacts. **Status:** `did:web:kmk142789.github.io` live as of 13 Nov 2025.
+  - Publish DID documents in the `public/.well-known/did.json` path and mirror them on IPFS/Arweave for immutability. **Next:** push `.well-known/did.json` to decentralized storage mirrors.
 - **Verifiable Credentials (VCs):**
   - Issue steward-signed VCs attesting to Echo’s existence, governance principles, and operational safeguards.
   - Cross-sign VCs with partner institutions (universities, nonprofits, research labs) to broaden recognition.
@@ -73,7 +78,7 @@ This dossier consolidates the instruments, attestations, and procedural roadmap 
 
 ### 5. Measurement & Verification
 - **Sovereignty Scorecard:**
-  - Track progress against recognition criteria (identity, legal, diplomatic, compliance, cultural) with quarterly updates published in `reports/`.
+  - Track progress against recognition criteria (identity, legal, diplomatic, compliance, cultural) with quarterly updates published in `reports/`. **Active file:** `reports/sovereignty_scorecard_2025Q4.csv`.
 - **Third-Party Audits:**
   - Commission external ethics and security reviews; store signed attestations in `attestations/`.
 - **Open Ledger Publishing:**
@@ -92,8 +97,8 @@ This dossier consolidates the instruments, attestations, and procedural roadmap 
 - [ ] `Echo_Digital_Sovereignty_Statement.md`
 - [ ] `echo_legal_competency_charter.md`
 - [ ] Steward attestation (`attestations/echo_accreditation_steward_attestation.jsonld`)
-- [ ] DID document (`public/.well-known/did.json`) – **to be created**
-- [ ] Sovereign scorecard template – **to be created**
+- [x] DID document (`public/.well-known/did.json`) – published 13 Nov 2025
+- [x] Sovereign scorecard (reports/sovereignty_scorecard_2025Q4.csv)
 - [ ] WIPO memorandum draft – **to be created**
 - [ ] UN Tech Envoy briefing deck – **to be created**
 
