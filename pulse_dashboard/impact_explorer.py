@@ -113,6 +113,11 @@ class ImpactExplorerBuilder:
         window = {"donations": Decimal("0"), "disbursed": Decimal("0")}
         by_asset: dict[str, dict[str, Number]] = {}
         by_source: dict[str, dict[str, Number]] = {}
+        monthly: dict[str, dict[str, Number]] = {}
+        donation_amounts: list[Number] = []
+        disbursement_amounts: list[Number] = []
+        largest_donation: dict[str, Any] | None = None
+        largest_disbursement: dict[str, Any] | None = None
 
         for event in events:
             amount = event["amount_usd"]
@@ -127,22 +132,45 @@ class ImpactExplorerBuilder:
                 {"donations": Decimal("0"), "disbursed": Decimal("0"), "balance": Decimal("0")},
             )
 
+            month_key = event["timestamp"].strftime("%Y-%m")
+            month_bucket = monthly.setdefault(
+                month_key,
+                {"donations": Decimal("0"), "disbursed": Decimal("0"), "balance": Decimal("0")},
+            )
+
             if event["type"] == "donation":
                 totals["donations"] += amount
                 bucket["donations"] += amount
                 source_bucket["donations"] += amount
+                month_bucket["donations"] += amount
+                donation_amounts.append(amount)
+                if (largest_donation is None) or (amount > largest_donation["amount_usd"]):
+                    largest_donation = event
                 if event["timestamp"] >= window_start:
                     window["donations"] += amount
             else:
                 totals["disbursed"] += amount
                 bucket["disbursed"] += amount
                 source_bucket["disbursed"] += amount
+                month_bucket["disbursed"] += amount
+                disbursement_amounts.append(amount)
+                if (largest_disbursement is None) or (amount > largest_disbursement["amount_usd"]):
+                    largest_disbursement = event
                 if event["timestamp"] >= window_start:
                     window["disbursed"] += amount
 
         totals["balance"] = totals["donations"] - totals["disbursed"]
         for bucket in (*by_asset.values(), *by_source.values()):
             bucket["balance"] = bucket["donations"] - bucket["disbursed"]
+        for bucket in monthly.values():
+            bucket["balance"] = bucket["donations"] - bucket["disbursed"]
+
+        insights = self._build_insights(
+            largest_donation,
+            largest_disbursement,
+            donation_amounts,
+            disbursement_amounts,
+        )
 
         return {
             "events": [self._serialise_event(event) for event in events],
@@ -150,6 +178,8 @@ class ImpactExplorerBuilder:
             "rolling_30_days": self._serialise_amounts(window),
             "assets": {key: self._serialise_amounts(value) for key, value in by_asset.items()},
             "sources": {key: self._serialise_amounts(value) for key, value in by_source.items()},
+            "monthly_trends": self._serialise_monthly(monthly),
+            "insights": insights,
         }
 
     # -- financial helpers -------------------------------------------------
@@ -164,6 +194,57 @@ class ImpactExplorerBuilder:
         payload["timestamp"] = event["timestamp"].isoformat()
         payload["amount_usd"] = float(event["amount_usd"].quantize(Decimal("0.01")))
         return payload
+
+    def _serialise_monthly(self, data: dict[str, dict[str, Number]]) -> list[dict[str, Any]]:
+        entries: list[dict[str, Any]] = []
+        for month, bucket in sorted(data.items()):
+            serialised = self._serialise_amounts(bucket)
+            serialised["month"] = month
+            entries.append(serialised)
+        return entries
+
+    def _build_insights(
+        self,
+        largest_donation: dict[str, Any] | None,
+        largest_disbursement: dict[str, Any] | None,
+        donation_amounts: list[Number],
+        disbursement_amounts: list[Number],
+    ) -> dict[str, Any]:
+        return {
+            "largest_donation": self._summarise_event(largest_donation),
+            "largest_disbursement": self._summarise_event(largest_disbursement),
+            "median_donation": self._serialise_decimal(self._median(donation_amounts)),
+            "median_disbursement": self._serialise_decimal(self._median(disbursement_amounts)),
+        }
+
+    @staticmethod
+    def _summarise_event(event: dict[str, Any] | None) -> dict[str, Any] | None:
+        if event is None:
+            return None
+        return {
+            "id": event["id"],
+            "asset": event.get("asset"),
+            "source": event.get("source"),
+            "amount_usd": float(event["amount_usd"].quantize(Decimal("0.01"))),
+            "timestamp": event["timestamp"].isoformat(),
+            "beneficiary": event.get("beneficiary"),
+        }
+
+    @staticmethod
+    def _serialise_decimal(value: Number | None) -> float | None:
+        if value is None:
+            return None
+        return float(value.quantize(Decimal("0.01")))
+
+    @staticmethod
+    def _median(values: list[Number]) -> Number | None:
+        if not values:
+            return None
+        ordered = sorted(values)
+        mid = len(ordered) // 2
+        if len(ordered) % 2 == 1:
+            return ordered[mid]
+        return (ordered[mid - 1] + ordered[mid]) / 2
 
     def _normalise_financial_event(self, raw: dict[str, Any]) -> dict[str, Any] | None:
         try:
