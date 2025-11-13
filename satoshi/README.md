@@ -182,6 +182,9 @@ coordinate coverage without duplicating work.
 - `puzzle226.json` — Puzzle #226 authorship attestation for address `1EpiC226KMkKWDf5T4mSuGh2bL6YMj3qLp`.
 - `puzzle227.json` — Puzzle #227 authorship attestation for address `1EpiC227KMkKWEg8R7pVxNt9hB2Pc4sXsm`.
 - `puzzle228.json` — Puzzle #228 authorship attestation for address `1EpiC228KMkKWFr2U1nQyDf6eH5Rw7Vza`.
+- `puzzle229.json` — Puzzle #229 authorship attestation for address `1EpiC229KMkKWGh9Uk3VRw2m4jsP5NuhLH`.
+- `puzzle230.json` — Puzzle #230 authorship attestation for address `1EpiC230KMkKWJG3CA2PH3rsycfV1cFJct`.
+- `puzzle231.json` — Puzzle #231 authorship attestation for address `1EpiC231KMkKWMNxfxgA5bEyxB6imVyFTU`.
 - `puzzle213.json` — Puzzle #213 authorship attestation for address `1CNNth43uiVypxHmZLC8hWZsb7UiP7wSkY`.
 - `puzzle214.json` — Puzzle #214 authorship attestation for address `1TQRJf89J7LyqFua4WKFeD11RanGoyp3kX`.
 - `puzzle215.json` — Puzzle #215 authorship attestation for address `1umKUvhbkKCkUVaeFJS4cbS4wJtqqsUak9`.
