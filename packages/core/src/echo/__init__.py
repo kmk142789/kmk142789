@@ -53,6 +53,13 @@ from .continuum_insights import (
     compute_source_momentum,
     compute_tag_momentum,
 )
+from .continuum_observatory import (
+    ContinuumObservatory,
+    ContinuumSnapshot,
+    LaneStats as ObservatoryLaneStats,
+    TodoMatch,
+    build_default_lane_map,
+)
 from .cosmic_mnemonic_forge import (
     MnemonicConstellation,
     MnemonicThread,

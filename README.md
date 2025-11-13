@@ -75,6 +75,10 @@ next-level --roadmap ROADMAP.md
 
 # prune telemetry older than 3 days without modifying disk
 python -m echo_cli prune-log --max-age-hours 72 --dry-run
+
+# capture a quick repository health snapshot
+python -m echo.continuum_observatory summary
+python -m echo.continuum_observatory todo --limit 10
 ```
 
 ### Need a guide?
