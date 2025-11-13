@@ -1,23 +1,24 @@
 # Echo Evolution Roadmap
 
-_Last updated: 2025-11-10 05:32:26Z_
+_Last updated: 2025-11-13 19:41:24Z_
 
 ## Summary
 
 | Category | Count |
 | --- | ---: |
-| FIXME | 1 |
-| TODO | 2 |
+| TODO | 5 |
 
 ### Top-Level Locations
 
 | Path | Count |
 | --- | ---: |
 | docs | 1 |
-| tests | 2 |
+| echo-sovereign-dae | 4 |
 
 ## Active TODO/FIXME Items
 
 - `docs/lil_footsteps_treasury_scaling_plan.md:238` — **TODO** send alert to compliance channel
-- `tests/test_next_level.py:60` — **TODO** align portal
-- `tests/test_next_level.py:89` — **FIXME** tighten constraint
+- `echo-sovereign-dae/CODEX_MARKETPLACE.sh:174` — **TODO** replace with deployed token
+- `echo-sovereign-dae/CODEX_MARKETPLACE.sh:258` — **TODO** paste CodexMarketplace ABI
+- `echo-sovereign-dae/frontend/market.html:44` — **TODO** paste CodexMarketplace ABI
+- `echo-sovereign-dae/scripts/deploy_marketplace.js:13` — **TODO** replace with deployed token
