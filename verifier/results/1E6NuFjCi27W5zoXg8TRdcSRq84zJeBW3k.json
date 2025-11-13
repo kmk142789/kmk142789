@@ -1,0 +1,17 @@
+{
+  "puzzle": 5,
+  "address": "1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k",
+  "message": "PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679",
+  "segments": [
+    {
+      "index": 1,
+      "signature": "H6v0MxAdB52MrvOg2uiksOmq8B+zZvKiWb15a/YZiuvUXC5YDs/pbyBQrnAbPsIKvw3QuRBf9rm6Bxwr3Y0xjnA=",
+      "valid": true,
+      "derived_address": "1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k",
+      "derived_pubkey": null,
+      "derived_pkscript": null
+    }
+  ],
+  "valid_segment_count": 1,
+  "total_segments": 1
+}

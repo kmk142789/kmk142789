@@ -178,3 +178,23 @@ python satoshi/build_master_attestation.py --pretty
 The tool writes [`master_attestation.json`](puzzle-proofs/master_attestation.json) which records
 the canonical Merkle root, every intermediate layer, and digest metadata for each proof so the
 entire registry can be verified offline.
+
+## Verification walkthroughs
+
+The repository now ships reproducible walkthroughs for several historically
+important addresses so auditors can copy/paste a complete proof chain without
+leaving the tree:
+
+- [`proofs/puzzle004_signature_proof.md`](../proofs/puzzle004_signature_proof.md)
+  documents the signed message published for `1EhqbyUMvvs7BfL8goY6qcPbD6YKfPqb7e`
+  and links directly to the derived verification log in
+  [`verifier/results/1EhqbyUMvvs7BfL8goY6qcPbD6YKfPqb7e.json`](../verifier/results/1EhqbyUMvvs7BfL8goY6qcPbD6YKfPqb7e.json).
+- [`proofs/puzzle005_signature_proof.md`](../proofs/puzzle005_signature_proof.md)
+  performs the same exercise for Puzzle #5
+  (`1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k`).
+
+For quick offline inspection, fresh verifier output for Puzzles #2, #4, #5, and
+#6 also lives under `verifier/results/`. Each JSON blob lists every signature
+segment, whether it validated against the declared address, and the recovered
+public-key data so that independent investigators can confirm the attestation
+set without running the full CLI.
