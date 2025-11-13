@@ -37,7 +37,7 @@ This plan converts the Little Footsteps reserves stewarded through the Satoshi V
 7. **Final license (Week 16).** After 90-day operational review, submit ledger-based utilization report and guardian testimonials as supporting evidence.
 
 ## 5. Building Acquisition Flow
-1. **Site short list (Week 0-2).** Use county GIS and MLS feeds to isolate properties within 10 minutes of I-94 for commuting families; target parcels already zoned Institutional or Commercial.
+1. **Site short list (Week 0-2).** Use county GIS and MLS feeds to isolate properties within 10 minutes of I-94 for commuting families; target parcels already zoned Institutional or Commercial. Track the resulting shortlist and preferred option inside the [Port Huron Facility Dossier](./port_huron_facility_dossier.md) so trustees can see the live assumptions.
 2. **Letter of Intent & PSA (Week 3-4).** Offer $750k with seller-paid roof repairs; include contingency for licensing approval and environmental clearance.
 3. **Due diligence (Week 4-8).** Order Phase I ESA, structural inspection, asbestos testing. Budget stored in USD stable reserve; all invoices logged through Little Footsteps ledger for transparency.
 4. **Financing & conversion (Week 6-8).** Trigger BTC-to-USD conversion from the Satoshi Vault for the balance; record signed conversion statement and broadcast via trust registry update.

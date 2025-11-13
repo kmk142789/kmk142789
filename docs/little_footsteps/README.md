@@ -8,6 +8,7 @@ This directory collects the artifacts required to bootstrap the Little Footsteps
 - [`credentials/`](./credentials) stores example verifiable credential payloads for QA and demos.
 - [`satoshi_vault_trust.md`](./satoshi_vault_trust.md) codifies the reserve relationship that backs the trust.
 - [`plans/little_footsteps/st_clair_facility_plan.md`](../../plans/little_footsteps/st_clair_facility_plan.md) details the funding, licensing, and acquisition path for the first St. Clair County facility.
+- [`plans/little_footsteps/port_huron_facility_dossier.md`](../../plans/little_footsteps/port_huron_facility_dossier.md) tracks the Port Huron property shortlist, funding allocations, and acquisition steps for the inaugural site.
 
 ## Deployment checklist
 
