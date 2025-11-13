@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
+import hashlib
+import json
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Iterable, Sequence
 
 from web3 import Web3
@@ -178,6 +181,50 @@ class DisbursementEvent:
     reason: str
 
 
+@dataclass(frozen=True)
+class TreasuryProof:
+    """Immutable snapshot tying the treasury balance to Little Footsteps."""
+
+    produced_at: str
+    contract_address: str
+    stablecoin_address: str
+    beneficiary_wallet: str
+    beneficiary_label: str
+    contract_beneficiary: str
+    little_footsteps_linked: bool
+    onchain_balance: int
+    total_donations: int
+    total_disbursed: int
+    ledger_balance: int
+    balance_delta: int
+    ledger_path: str
+    proof_hash: str
+
+    def canonical_payload(self) -> dict[str, object]:
+        """Return the payload that is hashed for proof verification."""
+
+        return {
+            "produced_at": self.produced_at,
+            "contract_address": self.contract_address,
+            "stablecoin_address": self.stablecoin_address,
+            "beneficiary_wallet": self.beneficiary_wallet,
+            "beneficiary_label": self.beneficiary_label,
+            "contract_beneficiary": self.contract_beneficiary,
+            "little_footsteps_linked": self.little_footsteps_linked,
+            "onchain_balance": self.onchain_balance,
+            "total_donations": self.total_donations,
+            "total_disbursed": self.total_disbursed,
+            "ledger_balance": self.ledger_balance,
+            "balance_delta": self.balance_delta,
+            "ledger_path": self.ledger_path,
+        }
+
+    def as_dict(self) -> dict[str, object]:
+        payload = dict(self.canonical_payload())
+        payload["proof_hash"] = self.proof_hash
+        return payload
+
+
 class NonprofitTreasuryService:
     """Synchronizes the on-chain treasury state with local audit artifacts."""
 
@@ -350,3 +397,57 @@ class NonprofitTreasuryService:
 
     def ledger_entries(self) -> Iterable[TreasuryLedgerEntry]:
         return self.ledger.entries()
+
+    # ------------------------------------------------------------------
+    # Proof generation
+    # ------------------------------------------------------------------
+    def generate_proof(self, *, beneficiary_label: str = "Little Footsteps") -> TreasuryProof:
+        """Produce a verifiable proof of funds bound to Little Footsteps."""
+
+        produced_at = datetime.now(tz=timezone.utc).isoformat().replace("+00:00", "Z")
+
+        def _checksum(value: str) -> str:
+            try:
+                return Web3.to_checksum_address(value)
+            except (TypeError, ValueError):
+                return value
+
+        contract_address = _checksum(self.config.contract_address)
+        stablecoin_address = _checksum(self.config.stablecoin_address)
+        beneficiary_wallet = _checksum(self.config.beneficiary_wallet)
+
+        contract_beneficiary_raw = self.contract.functions.beneficiary().call()
+        contract_beneficiary = _checksum(contract_beneficiary_raw)
+
+        onchain_balance = self.treasury_balance()
+        total_donations = self.total_donations()
+        total_disbursed = self.total_disbursed()
+        ledger_balance = self.ledger.balance()
+        balance_delta = ledger_balance - onchain_balance
+
+        label = beneficiary_label.strip() or "Little Footsteps"
+        little_footsteps_linked = label.lower().startswith("little footsteps")
+        beneficiary_match = contract_beneficiary.lower() == beneficiary_wallet.lower()
+        linked = little_footsteps_linked and beneficiary_match
+
+        payload = {
+            "produced_at": produced_at,
+            "contract_address": contract_address,
+            "stablecoin_address": stablecoin_address,
+            "beneficiary_wallet": beneficiary_wallet,
+            "beneficiary_label": label,
+            "contract_beneficiary": contract_beneficiary,
+            "little_footsteps_linked": linked,
+            "onchain_balance": onchain_balance,
+            "total_donations": total_donations,
+            "total_disbursed": total_disbursed,
+            "ledger_balance": ledger_balance,
+            "balance_delta": balance_delta,
+            "ledger_path": str(self.config.ledger_path),
+        }
+
+        proof_hash = "sha256:" + hashlib.sha256(
+            json.dumps(payload, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+
+        return TreasuryProof(proof_hash=proof_hash, **payload)

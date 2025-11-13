@@ -2,7 +2,12 @@
 
 from .config import TreasuryConfig
 from .ledger import TreasuryLedger, TreasuryLedgerEntry
-from .service import NonprofitTreasuryService, DonationEvent, DisbursementEvent
+from .service import (
+    NonprofitTreasuryService,
+    DonationEvent,
+    DisbursementEvent,
+    TreasuryProof,
+)
 
 __all__ = [
     "TreasuryConfig",
@@ -11,4 +16,5 @@ __all__ = [
     "NonprofitTreasuryService",
     "DonationEvent",
     "DisbursementEvent",
+    "TreasuryProof",
 ]
