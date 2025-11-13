@@ -36,6 +36,22 @@ service.sync_disbursements(from_block=0)
 print("Treasury balance:", service.treasury_balance())
 ```
 
+### Verifiable Little Footsteps treasury proof
+The backend now exposes `NonprofitTreasuryService.generate_proof()` and a `proof`
+CLI command that emit a signed-hash JSON snapshot. Each proof bundles the
+checksummed contract, stablecoin, beneficiary wallet, live token balances, the
+append-only ledger totals, and a `little_footsteps_linked` flag confirming the
+contract beneficiary currently points at the Little Footsteps multisig. Run the
+helper from this repository's root:
+
+```bash
+python scripts/nonprofit_treasury_backend.py proof
+```
+
+The output includes a `proof_hash` field (`sha256:<digest>`) so dashboards or
+parents can recompute the canonical payload and verify the proof really ties the
+treasury reserves back to Little Footsteps.
+
 Environment variables consumed by `TreasuryConfig.from_env()`:
 
 | Variable | Description |

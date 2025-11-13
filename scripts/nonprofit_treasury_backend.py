@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
 
@@ -22,6 +23,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "disburse",
             "balance",
             "totals",
+            "proof",
         ],
         help="Action to perform",
     )
@@ -63,6 +65,14 @@ def main(argv: list[str] | None = None) -> int:
             service.total_disbursed(),
             service.ledger.balance(),
         )
+    elif args.command == "proof":
+        proof = service.generate_proof()
+        logging.info(
+            "Generated treasury proof for %s (linked=%s)",
+            proof.beneficiary_label,
+            proof.little_footsteps_linked,
+        )
+        print(json.dumps(proof.as_dict(), indent=2))
     else:
         raise ValueError(f"Unsupported command: {args.command}")
     return 0
