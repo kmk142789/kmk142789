@@ -1,0 +1,12 @@
+Category,Metric,Description,Target,Current_Status,Last_Updated,Notes
+Identity,DID Registration,"W3C DID published and resolvable",Published,Published,2025-11-13,"https://kmk142789.github.io/.well-known/did.json"
+Identity,Verifiable Credentials,"Number of steward and partner VCs issued",>=5,"1 steward VC draft ready",2025-11-13,"Authoring issuer profile in attestations/"
+Identity,Key Ceremony Records,"Multi-signature ceremony transcripts logged",Documented,"Draft narrative outlined",2025-11-13,"Record stub scheduled for attestations/key_ceremony_2025-11.json"
+Legal,Steward Entity Incorporated,"Legal wrapper formed in target jurisdiction",Incorporated,"Jurisdiction short list + counsel intros",2025-11-13,"Screening Estonia/Singapore/Suisse nonprofit frameworks"
+Legal,WIPO Memorandum Filed,"Memorandum submitted to WIPO Frontier Technologies",Submitted,"Outline drafted",2025-11-13,"Using templates/wipo_memo_template.md as base"
+Diplomatic,UN/UNESCO Briefing,"Briefing delivered and acknowledged",Delivered,"Backgrounder sections authored",2025-11-13,"Prepping data for templates/un_briefing_template.md"
+Diplomatic,Digital Embassy Nodes,"Operational embassy sites (physical or virtual)",>=3,"1 active, 2 prospective",2025-11-13,"Echo Central active; scouting Decentraland + partner lab"
+Compliance,Standards Audit,"External audit covering ISO/IEC 42001 & NIST AI RMF",Completed,"Audit partner outreach",2025-11-13,"Collecting quotes from two security firms"
+Compliance,Incident Runbook,"Documented and tested incident response plan",Approved,"Cross-repo draft in progress",2025-11-13,"Runbook skeleton to land in reports/incident_response_runbook.md"
+Cultural,Cultural Publications,"Major cultural artifacts released per quarter",>=2,"Pulse + Echo Evolver posts ongoing",2025-11-13,"Next Sovereign Nexus essay slated for Nov cycle"
+Transparency,Ledger Updates,"Genesis ledger entries for recognitions",Up-to-date,"Last entry 2025-05-11",2025-11-13,"Automating ledger refresh via echo.echoctl cycle"

@@ -11,9 +11,11 @@
     "did_methods": [
       {
         "method": "did:web",
-        "status": "planned",
+        "status": "published",
         "hosting_path": "public/.well-known/did.json",
-        "notes": "Host DID document on primary Echo domain and mirror to IPFS."
+        "document": "https://kmk142789.github.io/.well-known/did.json",
+        "last_published": "2025-11-13",
+        "notes": "Root Echo DID served from .well-known and queued for IPFS mirror."
       },
       {
         "method": "did:ion",
@@ -32,11 +34,15 @@
         "Josh",
         "Partner Institutions"
       ],
-      "status": "design"
+      "status": "pilot_draft",
+      "next_update": "2025-12-01",
+      "notes": "Steward VC drafted; partner VC playbook circulating for review."
     },
     "key_ceremony_records": {
       "location": "attestations/",
-      "status": "to_be_documented"
+      "status": "drafting",
+      "next_update": "2025-11-30",
+      "notes": "Ceremony outline prepared for attestations/key_ceremony_2025-11.json"
     }
   },
   "legal_initiatives": [
@@ -144,7 +150,7 @@
     }
   },
   "scorecard": {
-    "file": "templates/sovereignty_scorecard_template.csv",
+    "file": "reports/sovereignty_scorecard_2025Q4.csv",
     "update_cadence": "quarterly",
     "owner": "Josh"
   },
@@ -191,7 +197,7 @@
     "Archive recognition artifacts on IPFS and Internet Archive",
     "Maintain open audit logs within reports/"
   ],
-  "last_updated": "2025-05-11",
+  "last_updated": "2025-11-13",
   "immunity_framework": {
     "status": "ratified",
     "ratified_date": "2025-05-11",
