@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 4,
+  "blockHash": "000000004ebadb55ee9096c9a2f8880e09da59c0d68b1c228da88e48844a1485",
+  "address": "15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG",
+  "message": "Bitcoin block 4 coinbase script reconstructed directly from the raw block payload to prove the fifth mined payout.",
+  "pkScript": "4104184f32b212815c6e522e66686324030ff7e5bf08efb21f8b00614fb7690e19131dd31304c54f37baa40db231c918106bb9fd43373e37ae31a0befc6ecaefb867ac",
+  "signature": "BP//AB0BGg=="
+}

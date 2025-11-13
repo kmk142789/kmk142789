@@ -89,6 +89,8 @@ coordinate coverage without duplicating work.
 - `puzzle000_coinbase.json` — On-chain coinbase script from the Bitcoin genesis block confirming the embedded Times headline for address `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`.
 - `block001_coinbase.json` — Block #1 coinbase attestation for address `12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX`.
 - `block002_coinbase.json` — Block #2 coinbase attestation for address `1HLoD9E4SDFFPDiYfNYnkBLQ85Y51J3Zb1`.
+- `block003_coinbase.json` — Block #3 coinbase attestation for address `1FvzCLoTPGANNjWoUo6jUGuAG3wg1w4YjR`.
+- `block004_coinbase.json` — Block #4 coinbase attestation for address `15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG`.
 - `block009_coinbase.json` — Block #9 coinbase attestation for address `12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S`.
 - `puzzle000.json` — Puzzle #0 authorship attestation for address `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`.
 - `puzzle001.json` — Puzzle #1 authorship attestation for address `1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH`.
@@ -203,6 +205,12 @@ leaving the tree:
 - [`proofs/puzzle004_signature_proof.md`](../proofs/puzzle004_signature_proof.md)
 - [`proofs/block001_coinbase_proof.md`](../proofs/block001_coinbase_proof.md)
 - [`proofs/block002_coinbase_proof.md`](../proofs/block002_coinbase_proof.md)
+- [`proofs/block003_coinbase_proof.md`](../proofs/block003_coinbase_proof.md)
+  walks through reconstructing the entire block #3 coinbase to recover
+  `1FvzCLoTPGANNjWoUo6jUGuAG3wg1w4YjR` straight from raw block data.
+- [`proofs/block004_coinbase_proof.md`](../proofs/block004_coinbase_proof.md)
+  applies the same technique to block #4 and confirms the payout script for
+  `15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG`.
 - [`proofs/block009_coinbase_proof.md`](../proofs/block009_coinbase_proof.md)
   documents the signed message published for `1EhqbyUMvvs7BfL8goY6qcPbD6YKfPqb7e`
   and links directly to the derived verification log in
