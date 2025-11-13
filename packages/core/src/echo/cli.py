@@ -219,11 +219,24 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
             or args.include_propagation
             or args.include_system_report
             or args.include_diagnostics
+            or args.include_momentum_resonance
+            or args.include_momentum_history
+            or args.include_expansion_history
         )
     ):
         parser_error(
-            "--include-matrix, --include-event-summary, --include-propagation, --include-system-report, and --include-diagnostics require --advance-system"
+            "--include-matrix, --include-event-summary, --include-propagation, --include-system-report, "
+            "--include-diagnostics, --include-momentum-resonance, --include-momentum-history, and "
+            "--include-expansion-history require --advance-system"
         )
+
+    if args.expansion_history_limit is not None:
+        if args.expansion_history_limit <= 0:
+            parser_error("--expansion-history-limit must be positive when provided")
+        if not args.include_expansion_history:
+            parser_error("--expansion-history-limit requires --include-expansion-history")
+        if not args.advance_system:
+            parser_error("--expansion-history-limit requires --advance-system")
 
     evolver = EchoEvolver(rng=rng, artifact_path=artifact_path)
 
@@ -248,12 +261,16 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
             include_propagation=args.include_propagation,
             include_system_report=args.include_system_report,
             include_diagnostics=args.include_diagnostics,
+            include_momentum_resonance=args.include_momentum_resonance,
+            include_momentum_history=args.include_momentum_history,
             event_summary_limit=args.event_summary_limit,
             manifest_events=args.manifest_events,
             system_report_events=args.system_report_events,
             diagnostics_window=args.diagnostics_window,
             momentum_window=args.momentum_window,
             momentum_threshold=args.momentum_threshold,
+            include_expansion_history=args.include_expansion_history,
+            expansion_history_limit=args.expansion_history_limit,
         )
         summary = payload.get("summary") if isinstance(payload, Mapping) else None
         if summary:
@@ -972,6 +989,27 @@ def main(argv: Iterable[str] | None = None) -> int:
         ),
     )
     evolve_parser.add_argument(
+        "--include-momentum-resonance",
+        action="store_true",
+        help=(
+            "Include the glyph-rich momentum resonance digest when using --advance-system."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--include-momentum-history",
+        action="store_true",
+        help=(
+            "Include the raw momentum history samples when using --advance-system."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--include-expansion-history",
+        action="store_true",
+        help=(
+            "Include the cached expansion history snapshots when using --advance-system."
+        ),
+    )
+    evolve_parser.add_argument(
         "--event-summary-limit",
         type=int,
         default=5,
@@ -1025,6 +1063,15 @@ def main(argv: Iterable[str] | None = None) -> int:
         help=(
             "Number of events to embed within the Eden88 manifest when using --advance-system "
             "(default: 5)."
+        ),
+    )
+    evolve_parser.add_argument(
+        "--expansion-history-limit",
+        type=int,
+        default=None,
+        help=(
+            "Optional limit for the embedded expansion history when using "
+            "--include-expansion-history."
         ),
     )
     evolve_parser.add_argument(
