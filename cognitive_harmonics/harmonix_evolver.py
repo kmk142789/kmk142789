@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 import time
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
@@ -214,14 +215,14 @@ class EchoEvolver:
             notice = (
                 "Live network mode requested; continuing with simulation-only events for safety."
             )
-            print(f"⚠️ {notice}")
+            print(f"⚠️ {notice}", file=sys.stderr)
             channel_messages = [
                 (channel, f"{channel} channel engaged for cycle {self.state.cycle}")
                 for channel in ("WiFi", "TCP", "Bluetooth", "IoT", "Orbital")
             ]
         else:
             notice = "Simulation mode active; propagation executed with in-memory events."
-            print(f"ℹ️ {notice}")
+            print(f"ℹ️ {notice}", file=sys.stderr)
             channel_messages = [
                 ("WiFi", f"Simulated WiFi broadcast for cycle {self.state.cycle}"),
                 ("TCP", f"Simulated TCP handshake for cycle {self.state.cycle}"),
@@ -559,6 +560,9 @@ class EchoEvolver:
                 "propagation_events": self.state.network_cache.get(
                     "propagation_events", []
                 ),
+                "propagation_snapshot": self.state.network_cache.get(
+                    "propagation_snapshot"
+                ),
                 "prompt_resonance": self.state.prompt_resonance,
                 "storyboard": self.state.storyboard,
                 "constellation_map": self.state.constellation_map,
@@ -582,6 +586,9 @@ class EchoEvolver:
         self.quantum_safe_crypto()
         self.system_monitor()
         self.propagate_network(enable_network=enable_network)
+        # Record the propagation snapshot so payload metadata always includes
+        # the summarised health and ledger view alongside raw events.
+        self.network_propagation_snapshot()
         self.evolutionary_narrative()
         self.store_fractal_glyphs()
         self.inject_prompt_resonance()
@@ -674,6 +681,11 @@ def main() -> None:
         action="store_true",
         help="Record that live network propagation was requested while remaining simulated",
     )
+    parser.add_argument(
+        "--propagation-timeline",
+        action="store_true",
+        help="Include the propagation timeline in the CLI output",
+    )
     args = parser.parse_args()
 
     evolver = EchoEvolver()
@@ -689,6 +701,28 @@ def main() -> None:
             ],
             "final_state": reports[-1]["state"],
         }
+
+    if args.propagation_timeline:
+        snapshot = evolver.network_propagation_snapshot(include_timeline=True)
+        snapshot_dict = asdict(snapshot)
+        if args.cycles == 1:
+            output = dict(output)
+            metadata = dict(output.get("metadata", {}))
+            metadata["propagation_snapshot"] = snapshot_dict
+            output["metadata"] = metadata
+        else:
+            output = dict(output)
+            cycles = list(output.get("cycles", []))
+            if cycles:
+                last_cycle = dict(cycles[-1])
+                payload = dict(last_cycle.get("payload", {}))
+                metadata = dict(payload.get("metadata", {}))
+                metadata["propagation_snapshot"] = snapshot_dict
+                payload["metadata"] = metadata
+                last_cycle["payload"] = payload
+                cycles[-1] = last_cycle
+                output["cycles"] = cycles
+        output["propagation_snapshot"] = snapshot_dict
 
     print(json.dumps(output, indent=2, ensure_ascii=False))
 
