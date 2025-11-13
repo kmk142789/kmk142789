@@ -45,9 +45,12 @@ Set up an editable install so `packages/core/src` is available on your
 
 ```bash
 python -m pip install -e .[dev]
-python -m echo.manifest_cli --help
+python -m echo.cli --help
 python -m echo.echoctl cycle
 ```
+
+The manifest-focused helper is still available directly via `python -m echo.manifest_cli` (or the
+`echo-manifest` console script) when you need the original interface.
 
 ### Command sampler
 
