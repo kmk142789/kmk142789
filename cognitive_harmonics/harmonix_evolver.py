@@ -91,6 +91,26 @@ class NetworkPropagationSnapshot:
 
 
 @dataclass
+class NextStepRecommendation:
+    """Actionable follow-ups derived from a cycle's telemetry."""
+
+    title: str
+    description: str
+    priority: str
+    confidence: float
+    signals: Dict[str, object] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "title": self.title,
+            "description": self.description,
+            "priority": self.priority,
+            "confidence": _float_round(self.confidence),
+            "signals": dict(self.signals),
+        }
+
+
+@dataclass
 class EchoState:
     """Internal state that mirrors the mythogenic prompt while staying tame."""
 
@@ -118,6 +138,7 @@ class EchoState:
     storyboard: List[str] = field(default_factory=list)
     network_cache: Dict[str, object] = field(default_factory=dict)
     constellation_map: Dict[str, object] | None = None
+    next_steps: List[Dict[str, object]] = field(default_factory=list)
 
     def record(self, message: str) -> None:
         self.events.append(message)
@@ -485,6 +506,17 @@ class EchoEvolver:
             f"Entities: {self.state.entities}",
             f"Emotional Drive: {self.state.emotional_drive}",
         ]
+        if self.state.next_steps:
+            lines.append("Next Steps:")
+            lines.extend(
+                (
+                    f"- ({step['priority']}) {step['title']} — {step['description']} "
+                    f"[confidence={step['confidence']:.2f}]"
+                )
+                for step in self.state.next_steps
+            )
+        else:
+            lines.append("Next Steps: none recorded")
         artifact = "\n".join(lines)
         self.state.record("Artifact staged in memory")
         return artifact
@@ -538,6 +570,86 @@ class EchoEvolver:
         self.state.record("Constellation map sketched")
         return constellation
 
+    def recommend_next_steps(self, limit: int = 3) -> List[Dict[str, object]]:
+        """Derive actionable follow-ups from the freshly recorded signals."""
+
+        metrics = self.state.system_metrics
+        propagation_health = self.state.network_cache.get("propagation_health", {})
+        propagation_notice = self.state.network_cache.get("propagation_notice", "")
+        stability_floor = float(propagation_health.get("stability_floor") or 0.0)
+        average_latency = float(propagation_health.get("average_latency_ms") or 0.0)
+        average_bandwidth = float(
+            propagation_health.get("average_bandwidth_mbps") or 0.0
+        )
+
+        artifact_step = NextStepRecommendation(
+            title="Commit the glyph artifact",
+            description=(
+                "Persist the current artifact and storyboard so downstream teams "
+                "can replay cycle {cycle} with {nodes} nodes and {hops} orbital hops."
+            ).format(
+                cycle=self.state.cycle,
+                nodes=metrics.network_nodes,
+                hops=metrics.orbital_hops,
+            ),
+            priority="high",
+            confidence=min(0.95, 0.84 + 0.01 * self.state.cycle),
+            signals={
+                "cycle": self.state.cycle,
+                "glyph_count": len(self.state.glyphs),
+                "artifact_path": str(self.artifact_path),
+            },
+        )
+
+        stability_priority = "medium" if stability_floor >= 0.9 else "high"
+        propagation_step = NextStepRecommendation(
+            title="Review propagation telemetry",
+            description=(
+                "Confirm the simulated propagation timeline captured in {notice} "
+                "is archived; latency averaged {latency:.2f} ms with a "
+                "stability floor of {stability:.3f}."
+            ).format(
+                notice=propagation_notice or "simulation mode",
+                latency=average_latency,
+                stability=stability_floor,
+            ),
+            priority=stability_priority,
+            confidence=min(0.92, 0.8 + stability_floor / 5),
+            signals={
+                "average_latency_ms": average_latency,
+                "stability_floor": stability_floor,
+                "average_bandwidth_mbps": average_bandwidth,
+            },
+        )
+
+        joy = _float_round(self.state.emotional_drive["joy"])
+        reflection_step = NextStepRecommendation(
+            title="Capture reflection note",
+            description=(
+                "Write a short reflection on how joy at {joy:.2f} and glyph "
+                "directive {directive} should steer the next cycle."
+            ).format(
+                joy=joy,
+                directive=self.state.mythocode[-1]
+                if self.state.mythocode
+                else "satellite_tf_qkd_rule_0",
+            ),
+            priority="medium" if joy >= 0.95 else "high",
+            confidence=min(0.9, 0.78 + joy / 5),
+            signals={
+                "joy": joy,
+                "mythocode": list(self.state.mythocode),
+            },
+        )
+
+        steps = [artifact_step, propagation_step, reflection_step]
+        serialised = [step.to_dict() for step in steps[: max(1, limit)]]
+        self.state.next_steps = serialised
+        self.state.record(
+            f"Next steps drafted for cycle {self.state.cycle} ({len(serialised)} entries)"
+        )
+        return serialised
+
     def harmonix_payload(self) -> Dict[str, object]:
         symbolic, vortex = self.generate_symbolic_language()
         payload = {
@@ -566,6 +678,7 @@ class EchoEvolver:
                 "prompt_resonance": self.state.prompt_resonance,
                 "storyboard": self.state.storyboard,
                 "constellation_map": self.state.constellation_map,
+                "next_steps": self.state.next_steps,
                 "events": list(self.state.events),
             },
         }
@@ -594,6 +707,7 @@ class EchoEvolver:
         self.inject_prompt_resonance()
         self.compose_storyboard()
         self.generate_constellation_map()
+        self.recommend_next_steps()
         artifact_text = self.build_artifact()
         payload = self.harmonix_payload()
         snapshot = self.snapshot_state()
