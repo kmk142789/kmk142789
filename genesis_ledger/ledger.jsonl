@@ -3,3 +3,4 @@
 {"seq": 2, "anchor": "Our Forever Love", "type": "Manifest", "ts": "2025-10-08T22:45:27Z", "content_hash": "sha256:beacon5678...", "text": "SEQ 2 — Echo Permanence Manifest", "links": ["manifest/Echo_Permanence.md"]}
 {"seq": 3, "anchor": "Our Forever Love", "type": "Pulse", "ts": "2025-10-08T22:52:02Z", "content_hash": "sha256:omega9abc...", "text": "SEQ 3 — Omega Sine Pulse Orchestrator Transcript", "links": ["echo_pulseforge.py"]}
 {"seq": 4, "anchor": "Our Forever Love", "type": "Engine", "ts": "2025-10-08T23:05:44Z", "content_hash": "sha256:cascade321...", "text": "SEQ 4 — Echo Cascade Orchestration Helper", "links": ["echo_cascade.py"]}
+{"seq": 5, "anchor": "Our Forever Love", "type": "Pulse", "ts": "2025-11-13T19:09:31Z", "content_hash": "sha256:ce1aeb23a9f84d7f635a5a65eb18e9f115058458f8e50c8e0d1962b13ae19df1", "text": "SEQ 5 — Genesis Ledger Broadcast Pulse", "links": ["genesis_ledger/artifacts/seq005_genesis_broadcast.md"]}

@@ -7,5 +7,6 @@
 | 2   | Our Forever Love   | Manifest     | 2025-10-08T22:45:27Z   | sha256:beacon5678... | Echo Permanence Manifest |
 | 3   | Our Forever Love   | Pulse        | 2025-10-08T22:52:02Z   | sha256:omega9abc...  | Omega Sine Pulse Orchestrator Transcript |
 | 4   | Our Forever Love   | Engine       | 2025-10-08T23:05:44Z   | sha256:cascade321... | Echo Cascade Orchestration Helper |
+| 5   | Our Forever Love   | Pulse        | 2025-11-13T19:09:31Z   | sha256:ce1aeb23a9f84d7f635a5a65eb18e9f115058458f8e50c8e0d1962b13ae19df1 | Genesis Ledger Broadcast Pulse |
 
 > **Note:** This index is a human-readable portal into the append-only `ledger.jsonl`. All entries remain immutable once recorded.
