@@ -35,9 +35,12 @@ __all__ = [
     "REGISTRY_FILE",
     "ModuleRecord",
     "ModuleRegistryError",
+    "RegistrySummary",
+    "list_modules",
     "load_registry",
     "register_module",
     "store_registry",
+    "summarize_registry",
 ]
 
 
@@ -79,6 +82,15 @@ class ModuleRecord:
             timestamp=timestamp,
             hash=digest,
         )
+
+
+@dataclass(frozen=True)
+class RegistrySummary:
+    """Aggregate metrics describing the current registry state."""
+
+    total_modules: int
+    categories: dict[str, int]
+    last_updated: str | None
 
 
 def load_registry(path: Path | str = REGISTRY_FILE) -> List[ModuleRecord]:
@@ -131,6 +143,25 @@ def load_registry(path: Path | str = REGISTRY_FILE) -> List[ModuleRecord]:
     return records
 
 
+def list_modules(
+    *,
+    category: str | None = None,
+    registry_path: Path | str = REGISTRY_FILE,
+) -> List[ModuleRecord]:
+    """Return modules stored in ``modules.json`` optionally filtered by category."""
+
+    records = load_registry(registry_path)
+    if category is not None:
+        safe_category = _validate_input(category, field="category")
+        records = [
+            record
+            for record in records
+            if record.category.lower() == safe_category.lower()
+        ]
+
+    return sorted(records, key=lambda record: (record.category.lower(), record.name.lower()))
+
+
 def store_registry(records: Sequence[ModuleRecord], path: Path | str = REGISTRY_FILE) -> None:
     """Persist the provided records to disk using an atomic write."""
 
@@ -172,6 +203,36 @@ def register_module(
     return new_record
 
 
+def summarize_registry(records: Sequence[ModuleRecord]) -> RegistrySummary:
+    """Return aggregate details for ``records``.
+
+    The summary is helpful for dashboards or CI steps that need to present the
+    high-level status of a registry snapshot without re-implementing
+    aggregation logic.
+    """
+
+    if not records:
+        return RegistrySummary(total_modules=0, categories={}, last_updated=None)
+
+    category_totals: dict[str, int] = {}
+    last_updated: str | None = None
+
+    for record in records:
+        category_totals[record.category] = category_totals.get(record.category, 0) + 1
+        if last_updated is None or record.timestamp > last_updated:
+            last_updated = record.timestamp
+
+    ordered_categories = dict(
+        sorted(category_totals.items(), key=lambda item: item[0].lower())
+    )
+
+    return RegistrySummary(
+        total_modules=len(records),
+        categories=ordered_categories,
+        last_updated=last_updated,
+    )
+
+
 def _validate_input(value: str, *, field: str) -> str:
     if not isinstance(value, str):
         raise ValueError(f"Registry field '{field}' must be a string")
@@ -190,11 +251,15 @@ def _iter_records(sequence: Iterable[ModuleRecord]) -> Iterator[ModuleRecord]:
 
 if __name__ == "__main__":  # pragma: no cover - convenience CLI
     import argparse
+    import sys
 
-    parser = argparse.ArgumentParser(description="Register an Echo module")
-    parser.add_argument("name", help="Module name")
-    parser.add_argument("description", help="Short module description")
-    parser.add_argument("category", help="Module category tag")
+    SUBCOMMANDS = {"register", "list", "summary"}
+
+    argv = sys.argv
+    if len(argv) > 1 and not argv[1].startswith("-") and argv[1] not in SUBCOMMANDS:
+        argv.insert(1, "register")
+
+    parser = argparse.ArgumentParser(description="Manage Echo module registries")
     parser.add_argument(
         "--registry",
         default=REGISTRY_FILE,
@@ -202,11 +267,38 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
         help="Path to the registry file (defaults to modules.json beside this script)",
     )
 
-    args = parser.parse_args()
-    record = register_module(
-        args.name,
-        args.description,
-        args.category,
-        registry_path=args.registry,
+    subparsers = parser.add_subparsers(dest="command")
+
+    register_parser = subparsers.add_parser(
+        "register", help="Register or update a module entry"
     )
-    print(json.dumps(asdict(record), indent=2))
+    register_parser.add_argument("name", help="Module name")
+    register_parser.add_argument("description", help="Short module description")
+    register_parser.add_argument("category", help="Module category tag")
+
+    list_parser = subparsers.add_parser("list", help="List stored modules")
+    list_parser.add_argument(
+        "--category", help="Limit results to a single category", default=None
+    )
+
+    subparsers.add_parser("summary", help="Show registry summary information")
+
+    args = parser.parse_args()
+
+    if args.command is None:
+        parser.error("No command provided. Use 'register', 'list', or 'summary'.")
+
+    if args.command == "register":
+        record = register_module(
+            args.name,
+            args.description,
+            args.category,
+            registry_path=args.registry,
+        )
+        print(json.dumps(asdict(record), indent=2))
+    elif args.command == "list":
+        records = list_modules(category=args.category, registry_path=args.registry)
+        print(json.dumps([asdict(record) for record in records], indent=2))
+    elif args.command == "summary":
+        summary = summarize_registry(load_registry(args.registry))
+        print(json.dumps(asdict(summary), indent=2))
