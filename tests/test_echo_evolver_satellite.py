@@ -34,4 +34,28 @@ def test_satellite_artifact_includes_propagation_tactics(tmp_path: Path) -> None
     assert payload["propagation_tactics"]
     assert payload["propagation_notice"]
     assert payload["propagation_summary"].startswith("Propagation tactics")
+    assert payload["propagation_report"].startswith("=== Propagation Report ===")
+
+
+def test_satellite_propagation_report_includes_tactics(tmp_path: Path) -> None:
+    evolver = SatelliteEchoEvolver(artifact_path=tmp_path / "artifact.json", seed=3)
+    evolver.propagate_network(enable_network=False)
+
+    report = evolver.propagation_report(include_tactics=True)
+
+    assert "=== Propagation Report ===" in report
+    assert "Notice:" in report
+    assert "Health snapshot" in report
+    assert "Tactics:" in report
+    assert "WiFi" in report or "TCP" in report
+    assert evolver.state.network_cache["propagation_report"] == report
+
+
+def test_satellite_run_honours_network_and_report_flags(tmp_path: Path) -> None:
+    evolver = SatelliteEchoEvolver(artifact_path=tmp_path / "artifact.json", seed=5)
+
+    evolver.run(enable_network=True, emit_report=True)
+
+    assert "Live network mode requested" in evolver.state.propagation_notice
+    assert evolver.state.propagation_report.startswith("=== Propagation Report ===")
 

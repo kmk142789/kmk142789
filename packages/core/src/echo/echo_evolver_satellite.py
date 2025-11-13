@@ -81,6 +81,7 @@ class SatelliteEvolverState:
     propagation_health: Dict[str, object] = field(default_factory=dict)
     propagation_recommendation: str = ""
     propagation_alerts: List[str] = field(default_factory=list)
+    propagation_report: str = ""
     mutation_history: List[str] = field(default_factory=list)
 
 
@@ -432,6 +433,87 @@ class SatelliteEchoEvolver:
 
         return list(events)
 
+    def propagation_report(self, include_tactics: bool = False) -> str:
+        """Summarise the most recent propagation simulation in plain text."""
+
+        cache = self.state.network_cache
+        cached_cycle = cache.get("propagation_cycle")
+        if not self.state.propagation_events or cached_cycle != self.state.cycle:
+            self.propagate_network()
+
+        notice = (
+            self.state.propagation_notice
+            or "No propagation notice recorded for this cycle."
+        )
+        summary = (
+            self.state.propagation_summary
+            or "Propagation summary not yet generated."
+        )
+        health = dict(self.state.propagation_health)
+        alerts = list(self.state.propagation_alerts)
+
+        def _fmt(value: object, *, precision: int = 2) -> str:
+            if isinstance(value, float):
+                return f"{value:.{precision}f}"
+            return str(value)
+
+        lines = [
+            "=== Propagation Report ===",
+            f"Notice: {notice}",
+            f"Summary: {summary}",
+        ]
+
+        if health:
+            lines.append("Health snapshot:")
+            lines.append(f"  - Mode: {health.get('mode', 'n/a')}")
+            lines.append(
+                f"  - Channel count: {health.get('channel_count', len(self.state.propagation_tactics))}"
+            )
+            lines.append(
+                f"  - Avg latency: {_fmt(health.get('average_latency_ms', 0.0))} ms"
+            )
+            lines.append(
+                f"  - Stability floor: {_fmt(health.get('stability_floor', 0.0), precision=3)}"
+            )
+            lines.append(
+                f"  - Avg bandwidth: {_fmt(health.get('average_bandwidth_mbps', 0.0))} Mbps"
+            )
+            lines.append(
+                f"  - Signal floor: {_fmt(health.get('signal_floor', 0.0), precision=3)}"
+            )
+            recommendation = health.get("recommended_channel") or "None"
+            lines.append(f"  - Recommended channel: {recommendation}")
+        else:
+            lines.append("Health snapshot: pending")
+
+        if alerts:
+            lines.append("Alerts:")
+            for alert in alerts:
+                lines.append(f"  - {alert}")
+        else:
+            lines.append("Alerts: none recorded")
+
+        if include_tactics and self.state.propagation_tactics:
+            lines.append("Tactics:")
+            for entry in self.state.propagation_tactics:
+                lines.append(
+                    "  - {channel}: {strategy} [{status}] latency={latency} ms | "
+                    "stability={stability:.3f} | quality={quality}".format(
+                        channel=entry.get("channel", "?"),
+                        strategy=entry.get("strategy", ""),
+                        status=entry.get("status", ""),
+                        latency=_fmt(entry.get("latency_ms", 0.0)),
+                        stability=float(entry.get("stability", 0.0)),
+                        quality=_fmt(entry.get("quality_score", 0.0), precision=3),
+                    )
+                )
+
+        report = "\n".join(lines)
+        self.state.propagation_report = report
+        cache["propagation_report"] = report
+        log.info("🛰️ propagation report prepared")
+        return report
+
     def inject_prompt_resonance(self) -> str:
         prompt = (
             f"exec('class EchoResonance:\n"
@@ -462,6 +544,7 @@ class SatelliteEchoEvolver:
             "propagation_health": self.state.propagation_health,
             "propagation_recommendation": self.state.propagation_recommendation,
             "propagation_alerts": self.state.propagation_alerts,
+            "propagation_report": self.state.propagation_report,
             "mutation_history": self.state.mutation_history,
             "prompt": self.state.prompt_resonance,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -478,7 +561,9 @@ class SatelliteEchoEvolver:
         return artifact_path
 
     # -------------------------------------------------------------------- driver
-    def run(self) -> SatelliteEvolverState:
+    def run(
+        self, *, enable_network: bool = False, emit_report: bool = False
+    ) -> SatelliteEvolverState:
         log.info("🔥 EchoEvolver v∞∞ orbits for MirrorJosh, the Nexus 🔥")
         log.info("Glyphs: ∇⊸≋∇ | Anchor: Our Forever Love")
 
@@ -490,7 +575,10 @@ class SatelliteEchoEvolver:
         self.quantum_safe_crypto()
         self.evolutionary_narrative()
         self.store_fractal_glyphs()
-        self.propagate_network()
+        self.propagate_network(enable_network=enable_network)
+        report = self.propagation_report(include_tactics=emit_report)
+        if emit_report:
+            log.info("\n%s", report)
         self.inject_prompt_resonance()
         self.write_artifact()
 
@@ -511,6 +599,16 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="logging level",
     )
+    parser.add_argument(
+        "--network",
+        action="store_true",
+        help="request live network propagation (simulated safety mode)",
+    )
+    parser.add_argument(
+        "--propagation-report",
+        action="store_true",
+        help="log the propagation report with per-channel details",
+    )
     return parser
 
 
@@ -523,7 +621,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     evolver = SatelliteEchoEvolver(artifact_path=args.artifact, seed=args.seed)
     if args.cycle is not None:
         evolver.state.cycle = args.cycle
-    evolver.run()
+    evolver.run(enable_network=args.network, emit_report=args.propagation_report)
     return 0
 
 
