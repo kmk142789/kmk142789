@@ -79,6 +79,8 @@ class SatelliteEvolverState:
     propagation_summary: str = ""
     propagation_tactics: List[Dict[str, object]] = field(default_factory=list)
     propagation_health: Dict[str, object] = field(default_factory=dict)
+    propagation_recommendation: str = ""
+    propagation_alerts: List[str] = field(default_factory=list)
     mutation_history: List[str] = field(default_factory=list)
 
 
@@ -254,6 +256,11 @@ class SatelliteEchoEvolver:
             self.state.propagation_notice = cache.get("propagation_notice", "")
             self.state.propagation_summary = cache.get("propagation_summary", "")
             self.state.propagation_health = dict(cache.get("propagation_health", {}))
+            self.state.propagation_recommendation = cache.get(
+                "propagation_recommendation", ""
+            )
+            alerts = cache.get("propagation_alerts", [])
+            self.state.propagation_alerts = list(alerts) if isinstance(alerts, list) else []
             return list(cached_events)
 
         metrics = self.state.system_metrics
@@ -310,6 +317,27 @@ class SatelliteEchoEvolver:
             stability = round(self._rng.uniform(0.82, 0.995), 3)
             bandwidth_bounds = bandwidth_ranges[channel]
             signal_bounds = signal_ranges[channel]
+            normalized_latency = max(0.0, 1.0 - min(latency, 200.0) / 200.0)
+            normalized_bandwidth = 0.0
+            if bandwidth_ranges[channel][1] > 0:
+                normalized_bandwidth = (
+                    tactic_bandwidth := self._rng.uniform(
+                        bandwidth_bounds[0], bandwidth_bounds[1]
+                    )
+                ) / bandwidth_bounds[1]
+            else:
+                tactic_bandwidth = 0.0
+            normalized_signal = (signal_value := self._rng.uniform(
+                signal_bounds[0], signal_bounds[1]
+            )) / signal_bounds[1]
+            quality_score = round(
+                (normalized_latency * 0.3)
+                + (stability * 0.35)
+                + (normalized_bandwidth * 0.2)
+                + (normalized_signal * 0.15),
+                3,
+            )
+
             tactic_entry = {
                 "channel": channel,
                 "strategy": tactic_labels[channel],
@@ -317,21 +345,12 @@ class SatelliteEchoEvolver:
                 "message": event,
                 "latency_ms": latency,
                 "stability": stability,
-                "bandwidth_mbps": round(
-                    self._rng.uniform(bandwidth_bounds[0], bandwidth_bounds[1]), 2
-                ),
-                "signal_strength": round(
-                    self._rng.uniform(signal_bounds[0], signal_bounds[1]), 3
-                ),
+                "bandwidth_mbps": round(tactic_bandwidth, 2),
+                "signal_strength": round(signal_value, 3),
+                "quality_score": quality_score,
             }
             tactics.append(tactic_entry)
             log.info("📡 %s", event)
-
-        summary = (
-            f"Propagation tactics ({mode}) captured across {len(events)} channels "
-            f"with {metrics.network_nodes} nodes"
-        )
-        log.info(summary)
 
         if tactics:
             average_latency = round(
@@ -346,11 +365,43 @@ class SatelliteEchoEvolver:
             signal_floor = round(
                 min(entry["signal_strength"] for entry in tactics), 3
             )
+            best_channel_entry = max(
+                tactics, key=lambda entry: entry["quality_score"], default=None
+            )
         else:
             average_latency = 0.0
             stability_floor = 0.0
             average_bandwidth = 0.0
             signal_floor = 0.0
+            best_channel_entry = None
+
+        recommended_channel = (
+            f"{best_channel_entry['channel']} ({best_channel_entry['strategy']})"
+            if best_channel_entry
+            else ""
+        )
+
+        summary = (
+            f"Propagation tactics ({mode}) captured across {len(events)} channels "
+            f"with {metrics.network_nodes} nodes"
+        )
+        if recommended_channel:
+            summary += f"; recommended channel: {recommended_channel}"
+        log.info(summary)
+
+        alerts: List[str] = []
+        if average_latency > 110.0:
+            alerts.append(
+                f"Average latency drifting high at {average_latency} ms; consider rerouting."
+            )
+        if stability_floor < 0.85 and stability_floor > 0.0:
+            alerts.append(
+                f"Stability floor at {stability_floor} threatens sustained links."
+            )
+        if signal_floor < 0.8 and signal_floor > 0.0:
+            alerts.append(
+                f"Signal floor reduced to {signal_floor}; reinforce gain on weaker channels."
+            )
 
         health_report = {
             "mode": mode,
@@ -359,12 +410,16 @@ class SatelliteEchoEvolver:
             "stability_floor": stability_floor,
             "average_bandwidth_mbps": average_bandwidth,
             "signal_floor": signal_floor,
+            "recommended_channel": recommended_channel,
+            "alerts": list(alerts),
         }
 
         self.state.propagation_events = list(events)
         self.state.propagation_tactics = list(tactics)
         self.state.propagation_summary = summary
         self.state.propagation_health = health_report
+        self.state.propagation_recommendation = recommended_channel
+        self.state.propagation_alerts = list(alerts)
 
         cache["propagation_events"] = list(events)
         cache["propagation_tactics"] = [dict(entry) for entry in tactics]
@@ -372,6 +427,8 @@ class SatelliteEchoEvolver:
         cache["propagation_mode"] = mode
         cache["propagation_cycle"] = self.state.cycle
         cache["propagation_health"] = dict(health_report)
+        cache["propagation_recommendation"] = recommended_channel
+        cache["propagation_alerts"] = list(alerts)
 
         return list(events)
 
@@ -403,6 +460,8 @@ class SatelliteEchoEvolver:
             "propagation_summary": self.state.propagation_summary,
             "propagation_tactics": self.state.propagation_tactics,
             "propagation_health": self.state.propagation_health,
+            "propagation_recommendation": self.state.propagation_recommendation,
+            "propagation_alerts": self.state.propagation_alerts,
             "mutation_history": self.state.mutation_history,
             "prompt": self.state.prompt_resonance,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
