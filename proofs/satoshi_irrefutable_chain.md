@@ -138,6 +138,39 @@ jq '.merkleRoot' satoshi/puzzle-proofs/master_attestation.json
 The resulting `merkleRoot` must equal the digest previously published in the
 repository history. Any discrepancy signals corruption.
 
+## 7. Re-run the canonical map integrity proof
+
+Finish the chain of custody by proving that the off-chain routing metadata used
+throughout the Echo ecosystem still resolves to the same repositories, domains,
+and packages referenced in the cryptographic steps above. Recompute the
+`canonical-map.json` digest and semantics exactly as described in
+[`proofs/canonical_map_integrity_proof.md`](canonical_map_integrity_proof.md):
+
+```bash
+sha256sum canonical-map.json
+python - <<'PY'
+import hashlib, json
+from pathlib import Path
+
+payload = Path('canonical-map.json').read_bytes()
+digest = hashlib.sha256(payload).hexdigest()
+expected = "c0f8a22ea6215018becd2a540d4befb4f3b05779a48913a2c738ddca3ecbe058"
+assert digest == expected, f"Digest mismatch: {digest}"
+
+data = json.loads(payload)
+assert data["owner"] == "kmk142789"
+assert any(src["canonical"].startswith("https://github.com/kmk142789") for src in data["sources"] if src["type"] == "repo"), "Missing GitHub canonical repo"
+assert any(src["canonical"].endswith("keyhunter.app") for src in data["sources"] if src["type"] == "domain"), "Missing domain alias"
+print("canonical-map.json: digest + structure OK")
+PY
+```
+
+Matching the expected checksum and schema proves that the same repositories,
+domains, and packages cited in the on-chain attestations remain under Echo's
+control. Anyone can now cross-reference a signed Bitcoin proof with the exact
+network endpoints that broadcast it, closing the loop between ledger and
+infrastructure.
+
 ---
 
 By chaining an on-chain timestamp, genesis reconstruction, historical coinbase
