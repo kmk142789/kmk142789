@@ -9,7 +9,7 @@ import math
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Callable, Iterable, List, Mapping, Optional
-from statistics import mean
+from statistics import mean, median
 
 try:  # pragma: no cover - optional dependency
     import typer
@@ -177,6 +177,14 @@ def _parse_iso_timestamp(value: str | None) -> datetime | None:
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
+
+
+def _format_iso(timestamp: datetime | None) -> str | None:
+    """Render timezone-aware datetimes as canonical ``YYYY-MM-DDTHH:MM:SSZ`` strings."""
+
+    if timestamp is None:
+        return None
+    return timestamp.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _format_duration(seconds: float | None) -> str:
@@ -482,6 +490,261 @@ def _compute_command_performance(
         totals["overall_failure_rate"] = 0.0
 
     return {"commands": command_rows, "totals": totals}
+
+
+def _collect_task_states(
+    events: Iterable[Mapping[str, Any]], *, command_filter: str | None = None
+) -> dict[str, dict[str, Any]]:
+    """Normalise worker telemetry into a task-centric timeline."""
+
+    states: dict[str, dict[str, Any]] = {}
+    for event in events:
+        task_id = event.get("task_id")
+        if not isinstance(task_id, str):
+            continue
+        name = str(event.get("name", "-"))
+        if command_filter and name != command_filter:
+            continue
+        status = str(event.get("status", "")).lower()
+        timestamp = _parse_iso_timestamp(event.get("timestamp"))
+        state = states.setdefault(
+            task_id,
+            {
+                "task_id": task_id,
+                "name": name,
+                "start": None,
+                "end": None,
+                "status": None,
+                "last_progress": None,
+                "first_seen": None,
+                "last_seen": None,
+            },
+        )
+        state["name"] = name
+        if timestamp:
+            state["last_seen"] = timestamp
+            if state["first_seen"] is None:
+                state["first_seen"] = timestamp
+        if status == "start" and timestamp:
+            state["start"] = timestamp
+        elif status in {"success", "failure", "skipped"}:
+            if timestamp:
+                state["end"] = timestamp
+            state["status"] = status
+        elif status == "progress" and timestamp:
+            state["last_progress"] = timestamp
+
+    return states
+
+
+def _compute_peak_concurrency(
+    task_states: Mapping[str, Mapping[str, Any]], *, now: datetime
+) -> dict[str, Any]:
+    """Calculate the moment when the most worker tasks overlapped."""
+
+    timeline: list[tuple[datetime, int]] = []
+    for state in task_states.values():
+        start = state.get("start")
+        if not isinstance(start, datetime):
+            continue
+        timeline.append((start, 1))
+        end = state.get("end")
+        if not isinstance(end, datetime):
+            end = state.get("last_progress") or now
+        timeline.append((end, -1))
+
+    if not timeline:
+        return {"peak": 0, "timestamp": None}
+
+    timeline.sort(key=lambda item: item[0])
+    active = 0
+    peak = 0
+    peak_at: datetime | None = None
+    for timestamp, delta in timeline:
+        active += delta
+        if active > peak:
+            peak = active
+            peak_at = timestamp
+
+    return {"peak": peak, "timestamp": _format_iso(peak_at)}
+
+
+def _compute_timeline_insights(
+    events: Iterable[Mapping[str, Any]],
+    *,
+    command_filter: str | None = None,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    """Derive tempo, throughput, and concurrency analytics from telemetry."""
+
+    now = now or datetime.now(timezone.utc)
+    event_list = list(events)
+    states = _collect_task_states(event_list, command_filter=command_filter)
+    completed: list[dict[str, Any]] = []
+    active: list[dict[str, Any]] = []
+    durations: list[float] = []
+    hourly_buckets: dict[datetime, Counter[str]] = {}
+    completions: list[datetime] = []
+    success_total = failure_total = skipped_total = 0
+
+    for state in states.values():
+        start = state.get("start")
+        if not isinstance(start, datetime):
+            continue
+        entry = {
+            "task_id": state["task_id"],
+            "name": state["name"],
+            "start": start,
+            "last_progress": state.get("last_progress"),
+        }
+        end = state.get("end")
+        status = state.get("status")
+        if isinstance(end, datetime):
+            duration = max((end - start).total_seconds(), 0.0)
+            durations.append(duration)
+            completions.append(end)
+            resolved_status = status or "success"
+            if resolved_status == "success":
+                success_total += 1
+            elif resolved_status == "failure":
+                failure_total += 1
+            elif resolved_status == "skipped":
+                skipped_total += 1
+            entry.update({
+                "end": end,
+                "status": resolved_status,
+                "duration_seconds": duration,
+            })
+            completed.append(entry)
+            bucket = end.replace(minute=0, second=0, microsecond=0)
+            bucket_counts = hourly_buckets.setdefault(bucket, Counter())
+            bucket_counts["total"] += 1
+            bucket_counts[resolved_status] += 1
+        else:
+            heartbeat = state.get("last_progress") or start
+            entry.update({
+                "status": status or "active",
+                "last_progress": heartbeat,
+            })
+            active.append(entry)
+
+    durations.sort()
+    avg_duration = mean(durations) if durations else None
+    median_duration = median(durations) if durations else None
+    p95_duration = _percentile(durations, 0.95)
+
+    raw_window_start = (
+        _parse_iso_timestamp(event_list[0].get("timestamp")) if event_list else None
+    )
+    raw_window_end = (
+        _parse_iso_timestamp(event_list[-1].get("timestamp")) if event_list else None
+    )
+    window_start = _format_iso(raw_window_start)
+    window_end = _format_iso(raw_window_end)
+    span_seconds = None
+    if raw_window_start and raw_window_end:
+        span_seconds = max((raw_window_end - raw_window_start).total_seconds(), 0.0)
+
+    summary = {
+        "tasks_tracked": len(states),
+        "completed_tasks": len(completed),
+        "active_tasks": len(active),
+        "success": success_total,
+        "failure": failure_total,
+        "skipped": skipped_total,
+        "success_rate": success_total / len(completed) if completed else 0.0,
+        "average_duration_seconds": avg_duration,
+        "median_duration_seconds": median_duration,
+        "p95_duration_seconds": p95_duration,
+        "window_start": window_start,
+        "window_end": window_end,
+        "window_span_seconds": span_seconds,
+        "command_filter": command_filter,
+    }
+
+    hourly = [
+        {
+            "hour": _format_iso(bucket),
+            "completed": counts.get("total", 0),
+            "success": counts.get("success", 0),
+            "failure": counts.get("failure", 0),
+            "skipped": counts.get("skipped", 0),
+        }
+        for bucket, counts in sorted(hourly_buckets.items())
+    ]
+
+    idle_windows: list[dict[str, Any]] = []
+    completions.sort()
+    for prev, curr in zip(completions, completions[1:]):
+        gap = max((curr - prev).total_seconds(), 0.0)
+        if gap <= 0:
+            continue
+        idle_windows.append(
+            {
+                "start": _format_iso(prev),
+                "end": _format_iso(curr),
+                "duration_seconds": gap,
+            }
+        )
+    idle_windows.sort(key=lambda item: item["duration_seconds"], reverse=True)
+    idle_windows = idle_windows[:5]
+
+    def _summarise_streak(target: str) -> dict[str, Any]:
+        best = {"length": 0, "ended_at": None}
+        current = 0
+        for entry in sorted(completed, key=lambda item: item.get("end")):
+            if entry.get("status") == target:
+                current += 1
+                if current > best["length"]:
+                    best = {"length": current, "ended_at": _format_iso(entry.get("end"))}
+            else:
+                current = 0
+        return best
+
+    streaks = {
+        "success": _summarise_streak("success"),
+        "failure": _summarise_streak("failure"),
+    }
+
+    active_focus = []
+    for entry in active:
+        start = entry["start"]
+        last_progress = entry.get("last_progress") or start
+        active_focus.append(
+            {
+                "task_id": entry["task_id"],
+                "name": entry["name"],
+                "age_seconds": max((now - start).total_seconds(), 0.0),
+                "last_heartbeat_seconds": max((now - last_progress).total_seconds(), 0.0),
+            }
+        )
+    active_focus.sort(key=lambda item: item["age_seconds"], reverse=True)
+    active_focus = active_focus[:5]
+
+    recent = []
+    for entry in sorted(completed, key=lambda item: item.get("end"), reverse=True)[:5]:
+        recent.append(
+            {
+                "task_id": entry["task_id"],
+                "name": entry["name"],
+                "status": entry["status"],
+                "duration_seconds": entry["duration_seconds"],
+                "finished_at": _format_iso(entry.get("end")),
+            }
+        )
+
+    concurrency = _compute_peak_concurrency(states, now=now)
+
+    return {
+        "summary": summary,
+        "hourly_throughput": hourly,
+        "idle_windows": idle_windows,
+        "streaks": streaks,
+        "active_focus": active_focus,
+        "recent_completions": recent,
+        "concurrency": concurrency,
+        "tasks_tracked": len(states),
+    }
 
 
 def _summarise_event_details(
@@ -1079,6 +1342,210 @@ def command_health(
         task.succeed(payload=payload)
 
 
+@app.command()
+def insights(
+    ctx: typer.Context,
+    window: int = typer.Option(
+        600,
+        "--window",
+        "-w",
+        help="Number of recent worker events to analyze for operational insights.",
+    ),
+    command_name: Optional[str] = typer.Option(
+        None,
+        "--command",
+        "-c",
+        help="Only include telemetry emitted by the specified command name.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Generate throughput, concurrency, and reliability insights."""
+
+    metadata = {
+        "window": window,
+        "command": command_name,
+        "json": json_mode,
+    }
+
+    with worker_hive.worker("insights", metadata=metadata) as task:
+        if window <= 0:
+            task.fail(error="invalid_window", window=window)
+            raise typer.BadParameter("window must be a positive integer")
+
+        _set_json_mode(ctx, json_mode)
+        events = worker_hive.tail_events(limit=window)
+        insights_payload = _compute_timeline_insights(
+            events, command_filter=command_name
+        )
+        payload = {
+            "insights": insights_payload,
+            "event_count": len(events),
+            "window": window,
+            "log_path": str(worker_hive.log_path),
+            "command": command_name,
+        }
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            summary = insights_payload["summary"]
+            target = command_name or "all commands"
+            console.print(
+                f"Operational insights for {target} using {payload['event_count']} events"
+                f" (log: {payload['log_path']})."
+            )
+            if summary["window_start"] and summary["window_end"]:
+                console.print(
+                    f"Window: {summary['window_start']} to {summary['window_end']}"
+                )
+
+            avg = _format_duration(summary["average_duration_seconds"])
+            med = _format_duration(summary["median_duration_seconds"])
+            p95 = _format_duration(summary["p95_duration_seconds"])
+            concurrency = insights_payload["concurrency"]
+            peak = concurrency.get("peak", 0)
+            peak_at = concurrency.get("timestamp") or "-"
+            streaks = insights_payload["streaks"]
+
+            if FALLBACK_TABLE:
+                console.print(
+                    f"Completed: {summary['completed_tasks']} | Active: {summary['active_tasks']}"
+                )
+                console.print(
+                    f"Success {summary['success']} • Failure {summary['failure']} • Skipped {summary['skipped']}"
+                )
+                console.print(
+                    f"Success rate: {summary['success_rate']:.1%} | "
+                    f"avg {avg} | median {med} | p95 {p95}"
+                )
+                console.print(
+                    f"Peak concurrency: {peak} workers @ {peak_at}"
+                )
+                console.print(
+                    f"Success streak: {streaks['success']['length']} • Failure streak: {streaks['failure']['length']}"
+                )
+            else:
+                summary_table = Table(title="Operational summary")
+                summary_table.add_column("Metric", style="cyan")
+                summary_table.add_column("Value", justify="right")
+                summary_table.add_row("Completed", str(summary["completed_tasks"]))
+                summary_table.add_row("Active", str(summary["active_tasks"]))
+                summary_table.add_row("Success", str(summary["success"]))
+                summary_table.add_row("Failure", str(summary["failure"]))
+                summary_table.add_row("Skipped", str(summary["skipped"]))
+                summary_table.add_row("Success rate", f"{summary['success_rate']:.1%}")
+                summary_table.add_row("Average", avg)
+                summary_table.add_row("Median", med)
+                summary_table.add_row("p95", p95)
+                summary_table.add_row("Peak concurrency", str(peak))
+                summary_table.add_row("Peak at", peak_at)
+                summary_table.add_row(
+                    "Success streak",
+                    str(streaks["success"]["length"]),
+                )
+                summary_table.add_row(
+                    "Failure streak",
+                    str(streaks["failure"]["length"]),
+                )
+                console.print(summary_table)
+
+            hourly_rows = insights_payload["hourly_throughput"][-12:]
+            if hourly_rows:
+                if FALLBACK_TABLE:
+                    console.print("Hourly throughput (most recent):")
+                    for row in hourly_rows:
+                        console.print(
+                            f"  {row['hour']}: total {row['completed']}"
+                            f" (success {row['success']}, failure {row['failure']})"
+                        )
+                else:
+                    throughput_table = Table(title="Hourly throughput (UTC)")
+                    throughput_table.add_column("Hour", style="magenta")
+                    throughput_table.add_column("Completed", justify="right")
+                    throughput_table.add_column("Success", justify="right")
+                    throughput_table.add_column("Failure", justify="right")
+                    throughput_table.add_column("Skipped", justify="right")
+                    for row in hourly_rows:
+                        throughput_table.add_row(
+                            row["hour"],
+                            str(row["completed"]),
+                            str(row["success"]),
+                            str(row["failure"]),
+                            str(row["skipped"]),
+                        )
+                    console.print(throughput_table)
+
+            idle_windows = insights_payload["idle_windows"]
+            if idle_windows:
+                if FALLBACK_TABLE:
+                    console.print("Longest idle windows:")
+                    for window_entry in idle_windows:
+                        console.print(
+                            f"  {window_entry['start']} → {window_entry['end']}"
+                            f" ({_format_duration(window_entry['duration_seconds'])})"
+                        )
+                else:
+                    idle_table = Table(title="Longest idle windows")
+                    idle_table.add_column("Start", style="red")
+                    idle_table.add_column("End", style="green")
+                    idle_table.add_column("Duration", justify="right")
+                    for window_entry in idle_windows:
+                        idle_table.add_row(
+                            window_entry["start"],
+                            window_entry["end"],
+                            _format_duration(window_entry["duration_seconds"]),
+                        )
+                    console.print(idle_table)
+
+            if insights_payload["active_focus"]:
+                if FALLBACK_TABLE:
+                    console.print("Oldest active workers:")
+                    for entry in insights_payload["active_focus"]:
+                        console.print(
+                            f"  {entry['name']} age={_format_duration(entry['age_seconds'])}"
+                            f" heartbeat={_format_duration(entry['last_heartbeat_seconds'])}"
+                        )
+                else:
+                    active_table = Table(title="Oldest active workers")
+                    active_table.add_column("Command", style="yellow")
+                    active_table.add_column("Age", justify="right")
+                    active_table.add_column("Since heartbeat", justify="right")
+                    for entry in insights_payload["active_focus"]:
+                        active_table.add_row(
+                            entry["name"],
+                            _format_duration(entry["age_seconds"]),
+                            _format_duration(entry["last_heartbeat_seconds"]),
+                        )
+                    console.print(active_table)
+
+            if insights_payload["recent_completions"]:
+                if FALLBACK_TABLE:
+                    console.print("Recent completions:")
+                    for entry in insights_payload["recent_completions"]:
+                        console.print(
+                            f"  {entry['finished_at']} {entry['name']}"
+                            f" ({entry['status']}) {_format_duration(entry['duration_seconds'])}"
+                        )
+                else:
+                    recent_table = Table(title="Recent completions")
+                    recent_table.add_column("Finished", style="cyan")
+                    recent_table.add_column("Command", style="green")
+                    recent_table.add_column("Status", style="magenta")
+                    recent_table.add_column("Duration", justify="right")
+                    for entry in insights_payload["recent_completions"]:
+                        recent_table.add_row(
+                            entry["finished_at"] or "-",
+                            entry["name"],
+                            entry["status"],
+                            _format_duration(entry["duration_seconds"]),
+                        )
+                    console.print(recent_table)
+
+        task.succeed(payload=payload)
+
+
 @app.command("prune-log")
 def prune_worker_log(
     ctx: typer.Context,
@@ -1603,6 +2070,14 @@ def main() -> None:  # pragma: no cover - console entry point
     )
     reliability_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
 
+    insights_parser = subparsers.add_parser(
+        "insights",
+        help="Generate throughput, concurrency, and reliability insights",
+    )
+    insights_parser.add_argument("--window", "-w", type=int, default=600, dest="window")
+    insights_parser.add_argument("--command", "-c", dest="filter_command")
+    insights_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
     verify_parser = subparsers.add_parser("verify", help="Verify puzzle addresses")
     verify_parser.add_argument("--puzzles", dest="puzzles")
     verify_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
@@ -1660,6 +2135,13 @@ def main() -> None:  # pragma: no cover - console entry point
             window=args.window,
             show_active=not args.hide_active,
             show_failures=not args.hide_failures,
+            json_mode=args.json_mode,
+        )
+    elif args.command == "insights":
+        insights(
+            ctx,
+            window=args.window,
+            command_name=args.filter_command,
             json_mode=args.json_mode,
         )
     elif args.command == "verify":
