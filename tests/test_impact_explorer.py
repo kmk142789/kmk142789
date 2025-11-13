@@ -54,6 +54,14 @@ def test_financials_aggregate_amounts(tmp_path: Path) -> None:
     assert financials["totals"]["balance"] == 1100.0
     assert financials["assets"]["USDC"]["balance"] == 600.0
     assert financials["sources"]["Collective"]["donations"] == 1500.0
+    assert financials["monthly_trends"] == [
+        {"month": "2024-05", "donations": 500.0, "disbursed": 0.0, "balance": 500.0},
+        {"month": "2024-06", "donations": 1000.0, "disbursed": 400.0, "balance": 600.0},
+    ]
+    assert financials["insights"]["largest_donation"]["id"] == "donation-1"
+    assert financials["insights"]["largest_disbursement"]["amount_usd"] == 400.0
+    assert financials["insights"]["median_donation"] == 750.0
+    assert financials["insights"]["median_disbursement"] == 400.0
 
 
 def test_missing_inputs_return_defaults(tmp_path: Path) -> None:
@@ -63,3 +71,10 @@ def test_missing_inputs_return_defaults(tmp_path: Path) -> None:
     assert payload["financials"]["totals"]["donations"] == 0.0
     assert payload["impact_metrics"] == {}
     assert payload["community_voice"] == {}
+    assert payload["financials"]["monthly_trends"] == []
+    assert payload["financials"]["insights"] == {
+        "largest_donation": None,
+        "largest_disbursement": None,
+        "median_donation": None,
+        "median_disbursement": None,
+    }
