@@ -7,6 +7,7 @@ import uuid
 from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping, MutableMapping
 
@@ -139,6 +140,62 @@ class WorkerHive:
             return events
         return list(events_deque)
 
+    def prune_events(
+        self,
+        *,
+        max_events: int | None = None,
+        max_age_hours: float | None = None,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        """Delete stale worker telemetry to keep the log manageable."""
+
+        if max_events is None and max_age_hours is None:
+            raise ValueError("at least one of max_events or max_age_hours must be provided")
+        if max_events is not None and max_events < 1:
+            raise ValueError("max_events must be a positive integer")
+        if max_age_hours is not None and max_age_hours <= 0:
+            raise ValueError("max_age_hours must be greater than zero")
+
+        events = self.tail_events()
+        filters: dict[str, Any] = {}
+        kept = events
+
+        cutoff_dt: datetime | None = None
+        if max_age_hours is not None:
+            cutoff_dt = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+            filters["max_age_hours"] = max_age_hours
+            cutoff_iso = cutoff_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            filters["cutoff_timestamp"] = cutoff_iso
+            filtered_events: list[dict[str, Any]] = []
+            for event in kept:
+                timestamp = _parse_event_timestamp(event)
+                if timestamp is None or timestamp >= cutoff_dt:
+                    filtered_events.append(event)
+            kept = filtered_events
+
+        if max_events is not None and len(kept) > max_events:
+            filters["max_events"] = max_events
+            kept = kept[-max_events:]
+
+        result = {
+            "before_count": len(events),
+            "after_count": len(kept),
+            "deleted": len(events) - len(kept),
+            "dry_run": dry_run,
+            "filters": filters,
+            "log_path": str(self._config.log_path),
+        }
+
+        if dry_run or len(kept) == len(events):
+            return result
+
+        with self._config.log_path.open("w", encoding="utf-8") as handle:
+            for event in kept:
+                handle.write(json.dumps(event, sort_keys=True))
+                handle.write("\n")
+
+        return result
+
 
 class WorkerTaskHandle:
     """Lifecycle controller for a worker invocation."""
@@ -192,3 +249,21 @@ class WorkerTaskHandle:
 
 
 __all__ = ["WorkerHive", "WorkerTaskHandle"]
+
+
+def _parse_event_timestamp(event: Mapping[str, Any]) -> datetime | None:
+    """Parse an event timestamp into a timezone-aware datetime."""
+
+    timestamp = event.get("timestamp")
+    if not isinstance(timestamp, str) or not timestamp.strip():
+        return None
+    value = timestamp.strip()
+    if value.endswith("Z"):
+        value = value[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)

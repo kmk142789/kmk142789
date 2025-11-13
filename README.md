@@ -69,6 +69,9 @@ python -m echo.echoctl wish "MirrorJosh" "Make joy reproducible" "listening,empa
 
 # refresh the roadmap from TODO/FIXME markers
 next-level --roadmap ROADMAP.md
+
+# prune telemetry older than 3 days without modifying disk
+python -m echo_cli prune-log --max-age-hours 72 --dry-run
 ```
 
 ### Need a guide?
