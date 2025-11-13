@@ -14,6 +14,7 @@ const DEFAULT_USER = process.env.ECHO_USER || 'demo';
 const WORKSPACE_ROOT = path.resolve(
   process.env.ECHO_WORKSPACE_ROOT || path.join(process.cwd(), 'workspaces')
 );
+const TASKS_FILE = path.join(__dirname, 'daily_tasks.json');
 
 await fs.mkdir(WORKSPACE_ROOT, { recursive: true });
 
@@ -22,6 +23,46 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const activeRuns = new Map();
+const fallbackDailyTasks = {
+  updated: new Date().toISOString().slice(0, 10),
+  tasks: [
+    {
+      id: 'code-sprint',
+      focus: 'Code',
+      title: 'Ship a micro-sprint prototype',
+      description: 'Spend a focused block inside Echo Computer to harden a runnable script or test harness.',
+      steps: [
+        'Open an existing file or scaffold a new module from the sidebar.',
+        'Wire up at least one automated check (assert, print, or CLI demo).',
+        'Capture the output in the terminal and commit the learnings to your journal.'
+      ]
+    },
+    {
+      id: 'creative-loop',
+      focus: 'Create',
+      title: 'Sketch a generative or storytelling fragment',
+      description: 'Use the sandbox editor as a sketchbook for artful code, prose, or shader ideas.',
+      steps: [
+        "Start a fresh file named after today's concept (e.g., `storybeat.py`).",
+        'Layer in color, sound, or metaphor via variables and comments.',
+        'Save the fragment to revisit it tomorrow.'
+      ]
+    },
+    {
+      id: 'collab-signal',
+      focus: 'Collaborate',
+      title: 'Package a shareable signal',
+      description: 'Turn today\'s progress into something another teammate can run.',
+      steps: [
+        'Document quickstart notes at the top of the file you touched.',
+        'Drop a TODO inviting review or pairing.',
+        'Send the file path plus run instructions through your preferred channel.'
+      ]
+    }
+  ]
+};
+let cachedDailyTasks = null;
+let cachedDailyTasksMtime = 0;
 
 const ensureWorkspace = async (user) => {
   const safeUser = user?.replace(/[^a-zA-Z0-9_-]/g, '') || DEFAULT_USER;
@@ -42,6 +83,16 @@ const resolveUserPath = async (user, target = '.') => {
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, workspaces: WORKSPACE_ROOT });
+});
+
+app.get('/tasks/daily', async (_req, res) => {
+  try {
+    const daily = await loadDailyTasks();
+    res.json({ ok: true, date: daily.updated, tasks: daily.tasks });
+  } catch (error) {
+    console.error('tasks error', error);
+    res.status(500).json({ ok: false, error: 'failed to load tasks' });
+  }
 });
 
 app.get('/fs/list', async (req, res) => {
@@ -368,6 +419,32 @@ async function exists(file) {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+async function loadDailyTasks() {
+  try {
+    const stats = await fs.stat(TASKS_FILE);
+    if (!cachedDailyTasks || cachedDailyTasksMtime !== stats.mtimeMs) {
+      const raw = await fs.readFile(TASKS_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed?.tasks)) {
+        cachedDailyTasks = fallbackDailyTasks;
+      } else {
+        cachedDailyTasks = {
+          updated: typeof parsed.updated === 'string' && parsed.updated
+            ? parsed.updated
+            : fallbackDailyTasks.updated,
+          tasks: parsed.tasks
+        };
+      }
+      cachedDailyTasksMtime = stats.mtimeMs;
+    }
+  } catch (error) {
+    if (!cachedDailyTasks) {
+      cachedDailyTasks = fallbackDailyTasks;
+    }
+  }
+  return cachedDailyTasks;
 }
 
 process.on('SIGTERM', () => {
