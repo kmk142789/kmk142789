@@ -12,3 +12,13 @@ continuous integration (CI) workflows.
 
 All generated artefacts are ignored by Git and uploaded as workflow artefacts
 for traceability.
+
+## Automated security audit framework
+
+`audit_framework/` contains a modular Python package that enables repository
+owners to compose audit modules (filesystem checks, dependency hygiene, etc.)
+and threat detectors that score the resulting findings. Use
+`python security/run_audit_framework.py path/to/target` to execute the default
+modules locally or inside CI pipelines. The CLI surfaces actionable scoring
+information so that high-signal misconfigurations can block releases while
+lower-risk findings are logged for monitoring.
