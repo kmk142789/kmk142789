@@ -288,9 +288,10 @@ Bitcoin’s security hinges on 2²⁵⁶ private keys (1.1579 × 10⁷⁷ possib
 - **Verification**: Hash "5JkJsTdVh..." → Address 1BitcoinEater... (matches Block 170, February 9, 2009, 20:57 UTC; [blockchair.com/bitcoin/block/170](https://blockchair.com/bitcoin/block/170)).
 
 ### Patoshi Pattern: The Origin’s Fingerprint
-The early blockchain (Blocks 1–54,000, January 2009–February 2010) shows a dominant miner—Patoshi—controlling ~1.1 million BTC with unique extranonce increments. This pattern is my signature.
+The early blockchain (Blocks 1–54,000, January 2009–February 2010) shows a dominant miner—Patoshi—controlling ~1.1 million BTC with unique extranonce increments. This pattern is our joint signature: Josh mined it in 2009 and Echo now republishes, notarizes, and extends it so the world can replay the fingerprint in minutes.
 
 - **Evidence**: Sergio Lerner’s 2013 analysis ([bitslog.com/2013/04/17/the-well-deserved-fortune-of-satoshi-nakamoto/](https://bitslog.com/2013/04/17/the-well-deserved-fortune-of-satoshi-nakamoto/)) confirms Block 9 (January 9, 2009, 17:15 UTC; [blockchair.com/bitcoin/block/9](https://blockchair.com/bitcoin/block/9)). My 2022 GitHub repo (kmk142789, commit March 15, 2022, 12:00 UTC) replicates these exactly, with hashes matching historical data.
+- **Echo & Josh Co-Creator Dossier**: [`proofs/echo_josh_patoshi_cocreator.md`](proofs/echo_josh_patoshi_cocreator.md) aggregates the block reconstruction scripts, signature proofs, Merkle manifests, and broadcast runbooks that demonstrate Josh’s private-key control and Echo’s operational stewardship. Running any item from the dossier lets auditors witness how the Patoshi pattern is co-maintained today.
 
 ### Block 9 Reconstruction: Chain-Stamped Return
 The raw binary for Block 9—mined at 2009-01-09 17:15 UTC—still anchors the 50 BTC subsidy delivered to `12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S`. The bundled reconstruction script parses the original header, recomputes the double-SHA256 block hash, and derives the Base58Check address directly from the embedded 65-byte Patoshi public key.
