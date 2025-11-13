@@ -1,0 +1,59 @@
+{
+  "generated_at": "2025-11-13 20:53:50Z",
+  "tasks": [
+    {
+      "line": 238,
+      "path": "docs/lil_footsteps_treasury_scaling_plan.md",
+      "tag": "TODO",
+      "text": "send alert to compliance channel"
+    },
+    {
+      "line": 174,
+      "path": "echo-sovereign-dae/CODEX_MARKETPLACE.sh",
+      "tag": "TODO",
+      "text": "replace with deployed token"
+    },
+    {
+      "line": 258,
+      "path": "echo-sovereign-dae/CODEX_MARKETPLACE.sh",
+      "tag": "TODO",
+      "text": "paste CodexMarketplace ABI"
+    },
+    {
+      "line": 44,
+      "path": "echo-sovereign-dae/frontend/market.html",
+      "tag": "TODO",
+      "text": "paste CodexMarketplace ABI"
+    },
+    {
+      "line": 13,
+      "path": "echo-sovereign-dae/scripts/deploy_marketplace.js",
+      "tag": "TODO",
+      "text": "replace with deployed token"
+    },
+    {
+      "line": 67,
+      "path": "tests/test_next_level.py",
+      "tag": "TODO",
+      "text": "align portal"
+    },
+    {
+      "line": 96,
+      "path": "tests/test_next_level.py",
+      "tag": "FIXME",
+      "text": "tighten constraint"
+    }
+  ],
+  "totals": {
+    "overall": 7,
+    "per_location": {
+      "docs": 1,
+      "echo-sovereign-dae": 4,
+      "tests": 2
+    },
+    "per_tag": {
+      "FIXME": 1,
+      "TODO": 6
+    }
+  }
+}
