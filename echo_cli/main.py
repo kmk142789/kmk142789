@@ -5,9 +5,11 @@ import argparse
 import json
 from collections import Counter
 from datetime import datetime, timezone
+import math
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Callable, Iterable, List, Mapping, Optional
+from statistics import mean
 
 try:  # pragma: no cover - optional dependency
     import typer
@@ -158,6 +160,49 @@ def _normalise_iso_timestamp(value: str) -> str:
     return parsed.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _parse_iso_timestamp(value: str | None) -> datetime | None:
+    """Parse ISO 8601 timestamps returning timezone-aware datetimes when possible."""
+
+    if not value:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _format_duration(seconds: float | None) -> str:
+    """Render durations as ``H:MM:SS`` strings for console output."""
+
+    if seconds is None:
+        return "-"
+    seconds = max(seconds, 0.0)
+    whole_seconds = int(seconds)
+    minutes, secs = divmod(whole_seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        return f"{hours}:{minutes:02d}:{secs:02d}"
+    return f"{minutes}:{secs:02d}"
+
+
+def _percentile(values: List[float], fraction: float) -> float | None:
+    if not values:
+        return None
+    if len(values) == 1:
+        return values[0]
+    fraction = min(max(fraction, 0.0), 1.0)
+    index = int(math.ceil(fraction * (len(values) - 1)))
+    return values[index]
+
+
 def _format_mapping_preview(mapping: Mapping[str, Any], *, limit: int = 3) -> str:
     """Render a concise preview of mapping contents for console output."""
 
@@ -215,6 +260,109 @@ def _aggregate_worker_events(
         "unique_commands": len(command_counts),
         "active_tasks": active_tasks,
         "last_event": last_event_timestamp,
+    }
+
+
+def _derive_task_metrics(events: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    """Compute lifecycle analytics from worker hive telemetry."""
+
+    tasks: dict[str, dict[str, Any]] = {}
+    for event in events:
+        task_id = event.get("task_id")
+        if not isinstance(task_id, str):
+            continue
+        status = str(event.get("status", "")).lower()
+        name = str(event.get("name", "-"))
+        timestamp = _parse_iso_timestamp(event.get("timestamp"))
+        task_state = tasks.setdefault(
+            task_id,
+            {
+                "name": name,
+                "start": None,
+                "end": None,
+                "status": None,
+                "progress_updates": 0,
+                "last_progress": None,
+            },
+        )
+        task_state["name"] = name
+        if status == "start" and timestamp:
+            task_state["start"] = timestamp
+        elif status in {"success", "failure", "skipped"}:
+            if timestamp:
+                task_state["end"] = timestamp
+            task_state["status"] = status
+        elif status == "progress":
+            task_state["progress_updates"] += 1
+            if timestamp:
+                task_state["last_progress"] = timestamp
+
+    completed: list[dict[str, Any]] = []
+    active: list[dict[str, Any]] = []
+    duration_values: list[float] = []
+    now = datetime.now(timezone.utc)
+
+    for task_id, state in tasks.items():
+        start = state.get("start")
+        if start is None:
+            continue
+        end = state.get("end")
+        status = state.get("status") or "active"
+        if end is not None:
+            duration = max((end - start).total_seconds(), 0.0)
+            duration_values.append(duration)
+            completed.append(
+                {
+                    "task_id": task_id,
+                    "name": state["name"],
+                    "status": status,
+                    "duration_seconds": duration,
+                    "finished_at": end.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                }
+            )
+        else:
+            last_progress = state.get("last_progress") or start
+            age = max((now - start).total_seconds(), 0.0)
+            since_heartbeat = max((now - last_progress).total_seconds(), 0.0)
+            active.append(
+                {
+                    "task_id": task_id,
+                    "name": state["name"],
+                    "age_seconds": age,
+                    "last_heartbeat_seconds": since_heartbeat,
+                    "progress_updates": state["progress_updates"],
+                }
+            )
+
+    completed.sort(key=lambda item: item["duration_seconds"], reverse=True)
+    active.sort(key=lambda item: item["age_seconds"], reverse=True)
+
+    duration_values.sort()
+    avg_duration = mean(duration_values) if duration_values else None
+    p90_duration = _percentile(duration_values, 0.9)
+
+    stats = {
+        "completed_total": len(completed),
+        "success_total": sum(1 for task in completed if task["status"] == "success"),
+        "failure_total": sum(1 for task in completed if task["status"] == "failure"),
+        "skipped_total": sum(1 for task in completed if task["status"] == "skipped"),
+        "active_total": len(active),
+        "average_duration_seconds": avg_duration,
+        "p90_duration_seconds": p90_duration,
+    }
+    if stats["completed_total"]:
+        stats["failure_rate"] = stats["failure_total"] / stats["completed_total"]
+    else:
+        stats["failure_rate"] = 0.0
+
+    recent_failures = [task for task in completed if task["status"] == "failure"]
+    recent_failures.sort(key=lambda item: item.get("finished_at", ""), reverse=True)
+
+    return {
+        "stats": stats,
+        "slowest_tasks": completed[:5],
+        "active_tasks": active[:5],
+        "recent_failures": recent_failures[:5],
     }
 
 
@@ -551,6 +699,148 @@ def status(
                     console.print(command_table)
 
         task.succeed(payload=aggregates)
+
+
+@app.command()
+def reliability(
+    ctx: typer.Context,
+    window: int = typer.Option(
+        400,
+        "--window",
+        "-w",
+        help="Number of recent worker events inspected for reliability analytics.",
+    ),
+    show_active: bool = typer.Option(
+        True,
+        "--show-active/--hide-active",
+        help="Display tasks that started but never completed in the inspected window.",
+    ),
+    show_failures: bool = typer.Option(
+        True,
+        "--show-failures/--hide-failures",
+        help="Display the most recent failed tasks in the inspected window.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Surface slow, failing, and stuck workers to build delivery trust."""
+
+    metadata = {
+        "window": window,
+        "show_active": show_active,
+        "show_failures": show_failures,
+        "json": json_mode,
+    }
+    with worker_hive.worker("reliability", metadata=metadata) as task:
+        if window <= 0:
+            task.fail(error="invalid_window", window=window)
+            raise typer.BadParameter("window must be a positive integer")
+
+        _set_json_mode(ctx, json_mode)
+        events = worker_hive.tail_events(limit=window)
+        metrics = _derive_task_metrics(events)
+        payload: dict[str, Any] = {
+            **metrics,
+            "log_path": str(worker_hive.log_path),
+            "event_count": len(events),
+            "window": window,
+        }
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            stats = metrics["stats"]
+            console.print(
+                f"Reliability scan over {payload['event_count']} events (log: {payload['log_path']})."
+            )
+            console.print(
+                "Completed tasks: "
+                f"{stats['completed_total']} (success {stats['success_total']}, "
+                f"failures {stats['failure_total']}, skipped {stats['skipped_total']})."
+            )
+            console.print(
+                f"Failure rate: {stats['failure_rate']:.1%} | Active tasks: {stats['active_total']}"
+            )
+            avg = _format_duration(stats["average_duration_seconds"])
+            p90 = _format_duration(stats["p90_duration_seconds"])
+            console.print(f"Average duration: {avg} | p90 duration: {p90}")
+
+            slowest = metrics["slowest_tasks"]
+            if slowest:
+                if FALLBACK_TABLE:
+                    console.print("Slowest completed tasks:")
+                    for task_info in slowest:
+                        console.print(
+                            f"{task_info['name']} ({task_info['status']}) - "
+                            f"{_format_duration(task_info['duration_seconds'])}"
+                        )
+                else:
+                    table = Table(title="Slowest completed tasks")
+                    table.add_column("Command", style="magenta")
+                    table.add_column("Status", style="green")
+                    table.add_column("Duration", justify="right")
+                    table.add_column("Finished at", style="cyan")
+                    for task_info in slowest:
+                        table.add_row(
+                            task_info["name"],
+                            task_info["status"],
+                            _format_duration(task_info["duration_seconds"]),
+                            task_info.get("finished_at", "-"),
+                        )
+                    console.print(table)
+            else:
+                console.print("No completed tasks recorded in the selected window yet.")
+
+            if show_active and metrics["active_tasks"]:
+                if FALLBACK_TABLE:
+                    console.print("Active tasks:")
+                    for task_info in metrics["active_tasks"]:
+                        console.print(
+                            f"{task_info['name']} age={_format_duration(task_info['age_seconds'])} "
+                            f"heartbeat={_format_duration(task_info['last_heartbeat_seconds'])}"
+                        )
+                else:
+                    table = Table(title="Active / incomplete tasks")
+                    table.add_column("Command", style="yellow")
+                    table.add_column("Age", justify="right")
+                    table.add_column("Since heartbeat", justify="right")
+                    table.add_column("Progress updates", justify="right")
+                    for task_info in metrics["active_tasks"]:
+                        table.add_row(
+                            task_info["name"],
+                            _format_duration(task_info["age_seconds"]),
+                            _format_duration(task_info["last_heartbeat_seconds"]),
+                            str(task_info["progress_updates"]),
+                        )
+                    console.print(table)
+            elif show_active:
+                console.print("No active worker tasks detected in the selected window.")
+
+            if show_failures and metrics["recent_failures"]:
+                if FALLBACK_TABLE:
+                    console.print("Recent failures:")
+                    for task_info in metrics["recent_failures"]:
+                        console.print(
+                            f"{task_info['name']} failed after "
+                            f"{_format_duration(task_info['duration_seconds'])}"
+                        )
+                else:
+                    table = Table(title="Recent failures")
+                    table.add_column("Command", style="red")
+                    table.add_column("Duration", justify="right")
+                    table.add_column("Finished at", style="cyan")
+                    for task_info in metrics["recent_failures"]:
+                        table.add_row(
+                            task_info["name"],
+                            _format_duration(task_info["duration_seconds"]),
+                            task_info.get("finished_at", "-"),
+                        )
+                    console.print(table)
+            elif show_failures:
+                console.print("No failed tasks detected in the selected window.")
+
+        task.succeed(payload=payload)
 
 
 @app.command()
@@ -987,6 +1277,18 @@ def main() -> None:  # pragma: no cover - console entry point
     )
     history_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
 
+    reliability_parser = subparsers.add_parser(
+        "reliability", help="Surface slow, failing, and stuck worker tasks"
+    )
+    reliability_parser.add_argument("--window", "-w", type=int, default=400, dest="window")
+    reliability_parser.add_argument(
+        "--hide-active", action="store_true", dest="hide_active"
+    )
+    reliability_parser.add_argument(
+        "--hide-failures", action="store_true", dest="hide_failures"
+    )
+    reliability_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
     verify_parser = subparsers.add_parser("verify", help="Verify puzzle addresses")
     verify_parser.add_argument("--puzzles", dest="puzzles")
     verify_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
@@ -1036,6 +1338,14 @@ def main() -> None:  # pragma: no cover - console entry point
             since=args.since,
             show_metadata=args.show_metadata,
             show_payload=args.show_payload,
+            json_mode=args.json_mode,
+        )
+    elif args.command == "reliability":
+        reliability(
+            ctx,
+            window=args.window,
+            show_active=not args.hide_active,
+            show_failures=not args.hide_failures,
             json_mode=args.json_mode,
         )
     elif args.command == "verify":
