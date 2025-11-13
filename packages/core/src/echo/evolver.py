@@ -668,6 +668,40 @@ class ScopeMatrix:
 
 
 @dataclass(slots=True)
+class CycleGuidanceFrame:
+    """Structured guidance snapshot for the active cycle."""
+
+    cycle: int
+    progress_percent: float
+    momentum_status: str
+    momentum_description: str
+    momentum_confidence: str
+    next_step: str
+    pending_steps: Tuple[str, ...]
+    emotional_focus: Dict[str, float]
+    focus_scope: str
+    scope_directives: Dict[str, Tuple[str, ...]]
+    recent_events: Tuple[str, ...]
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "cycle": self.cycle,
+            "progress_percent": self.progress_percent,
+            "momentum_status": self.momentum_status,
+            "momentum_description": self.momentum_description,
+            "momentum_confidence": self.momentum_confidence,
+            "next_step": self.next_step,
+            "pending_steps": list(self.pending_steps),
+            "emotional_focus": dict(self.emotional_focus),
+            "focus_scope": self.focus_scope,
+            "scope_directives": {
+                scope: list(values) for scope, values in self.scope_directives.items()
+            },
+            "recent_events": list(self.recent_events),
+        }
+
+
+@dataclass(slots=True)
 class EvolverState:
     cycle: int = 0
     glyphs: str = "∇⊸≋∇"
@@ -915,6 +949,113 @@ class EchoEvolver:
         self.state.event_log.append(
             f"Cycle {self.state.cycle} sequence described ({len(plan)} steps)"
         )
+        return summary
+
+    def cycle_guidance_frame(
+        self,
+        *,
+        persist_artifact: bool = True,
+        momentum_samples: int = 5,
+        recent_events: int = 3,
+    ) -> CycleGuidanceFrame:
+        """Return a structured snapshot with guidance for the active cycle."""
+
+        if momentum_samples <= 0:
+            raise ValueError("momentum_samples must be positive")
+        if recent_events <= 0:
+            raise ValueError("recent_events must be positive")
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        momentum = self.momentum_resonance(limit=momentum_samples)
+
+        scope_directives = {
+            scope: tuple(values)
+            for scope, values in self.state.scope_matrix.as_dict().items()
+        }
+        focus_scope = max(
+            scope_directives.items(),
+            key=lambda item: (len(item[1]), item[0]),
+        )[0]
+
+        drive = self.state.emotional_drive
+        emotional_focus = {
+            "joy": drive.joy,
+            "rage": drive.rage,
+            "curiosity": drive.curiosity,
+        }
+
+        recent_slice = tuple(self.state.event_log[-recent_events:])
+        frame = CycleGuidanceFrame(
+            cycle=self.state.cycle,
+            progress_percent=round(digest["progress"] * 100.0, 2),
+            momentum_status=str(momentum.get("status", "unavailable")),
+            momentum_description=str(momentum.get("trend", "no signal")),
+            momentum_confidence=str(momentum.get("confidence", "low")),
+            next_step=digest["next_step"],
+            pending_steps=tuple(digest["remaining_steps"]),
+            emotional_focus=emotional_focus,
+            focus_scope=focus_scope,
+            scope_directives=scope_directives,
+            recent_events=recent_slice,
+        )
+
+        snapshot = frame.as_dict()
+        self.state.network_cache["cycle_guidance_frame"] = snapshot
+        self.state.event_log.append(
+            "Cycle guidance frame generated (pending={pending}, focus={focus})".format(
+                pending=len(frame.pending_steps), focus=focus_scope
+            )
+        )
+
+        return frame
+
+    def cycle_guidance_summary(
+        self,
+        *,
+        persist_artifact: bool = True,
+        momentum_samples: int = 5,
+        recent_events: int = 3,
+    ) -> str:
+        """Return a textual guidance summary for operators."""
+
+        frame = self.cycle_guidance_frame(
+            persist_artifact=persist_artifact,
+            momentum_samples=momentum_samples,
+            recent_events=recent_events,
+        )
+
+        pending_preview = ", ".join(frame.pending_steps[:3])
+        if len(frame.pending_steps) > 3:
+            pending_preview += " …"
+        if not frame.pending_steps:
+            pending_preview = "none"
+
+        summary = (
+            "EchoEvolver cycle guidance — cycle {cycle}, {progress:.2f}% complete. "
+            "Momentum: {status} ({trend}, confidence {confidence}). "
+            "Next step: {next_step}. Focus scope: {focus_scope}. Pending ({pending_count}): {pending}."
+        ).format(
+            cycle=frame.cycle,
+            progress=frame.progress_percent,
+            status=frame.momentum_status,
+            trend=frame.momentum_description,
+            confidence=frame.momentum_confidence,
+            next_step=frame.next_step,
+            focus_scope=frame.focus_scope,
+            pending_count=len(frame.pending_steps),
+            pending=pending_preview,
+        )
+
+        if frame.recent_events:
+            summary += " Recent events: {}.".format(" | ".join(frame.recent_events))
+
+        self.state.network_cache["cycle_guidance_summary"] = summary
+        self.state.event_log.append(
+            "Cycle guidance summary broadcast (pending={pending})".format(
+                pending=len(frame.pending_steps)
+            )
+        )
+
         return summary
 
     def __init__(
