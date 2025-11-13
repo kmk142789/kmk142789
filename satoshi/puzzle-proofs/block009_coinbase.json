@@ -1,0 +1,9 @@
+{
+  "puzzle": -9,
+  "block": 9,
+  "blockHash": "000000008d9dc510f23c2657fc4f67bea30078cc05a90eb89e84cc475c080805",
+  "address": "12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S",
+  "message": "Bitcoin block 9 coinbase script showing the earliest batch-mined reward attributed to Satoshi's key set.",
+  "pkScript": "410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac",
+  "signature": "BP//AB0BNA=="
+}
