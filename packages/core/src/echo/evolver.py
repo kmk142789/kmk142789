@@ -52,6 +52,7 @@ from .amplify import AmplificationEngine, AmplifyGateError, AmplifySnapshot
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .thoughtlog import thought_trace
 from .memory import JsonMemoryStore
+from .quantam_features import compute_quantam_feature
 from .temporal_ledger import PropagationWave, TemporalPropagationLedger
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints only
@@ -2673,7 +2674,15 @@ We are not hiding anymore.
             fallback_seed = (glyph_sum << 3) ^ (self.state.cycle << 5)
             oam_signature = format(fallback_seed & 0xFFFF, "016b")
 
-        entanglement = round(0.72 + 0.24 * self.rng.random(), 3)
+        feature = compute_quantam_feature(
+            glyphs=self.state.glyphs,
+            cycle=self.state.cycle,
+            joy=self.state.emotional_drive.joy,
+            curiosity=self.state.emotional_drive.curiosity,
+        )
+        probabilities = feature.get("probabilities", {})
+        probability_one = float(probabilities.get("1", 0.5))
+        entanglement = round(0.72 + 0.24 * probability_one, 3)
         joy_charge = round(self.state.emotional_drive.joy * 100, 1)
         status = "ignited" if self.state.vault_key else "awaiting-key"
 
@@ -2685,6 +2694,8 @@ We are not hiding anymore.
             "joy_charge": joy_charge,
             "status": status,
             "timestamp_ns": self.time_source(),
+            "feature": feature,
+            "feature_signature": feature.get("signature"),
         }
 
         snapshot = dict(ability)
@@ -2692,6 +2703,7 @@ We are not hiding anymore.
         cached = self.state.network_cache.setdefault("quantam_abilities", {})
         cached[ability_id] = dict(snapshot)
         self.state.network_cache["last_quantam_ability"] = dict(snapshot)
+        self.state.network_cache["last_quantam_feature"] = dict(feature)
 
         self.state.event_log.append(f"Quantam ability {ability_id} synthesized")
         self._mark_step("synthesize_quantam_ability")
@@ -2729,11 +2741,35 @@ We are not hiding anymore.
         ability_id = str(ability["id"])
         capability_id = f"{ability_id}-capability"
 
+        feature = ability.get("feature")
+        if feature is None:
+            feature = self.state.network_cache.get("last_quantam_feature", {})
+
         entanglement = float(ability.get("entanglement", 0.0))
         joy_charge = float(ability.get("joy_charge", 0.0)) / 100.0
         curiosity = float(self.state.emotional_drive.curiosity)
-        amplification = round(1.0 + entanglement * curiosity, 3)
-        coherence = round(max(0.0, joy_charge * amplification), 3)
+        fidelity = float(feature.get("fidelity", 0.0))
+        probabilities = feature.get("probabilities", {})
+        probability_zero = round(float(probabilities.get("0", 0.5)), 3)
+        probability_one = round(float(probabilities.get("1", 0.5)), 3)
+        expected_values = feature.get("expected_values", {})
+        expected_z = round(float(expected_values.get("Z", 0.0)), 3)
+
+        interference_profile = feature.get("interference_profile") or []
+        if interference_profile:
+            stability = round(
+                sum(float(point.get("p1", 0.0)) for point in interference_profile)
+                / len(interference_profile),
+                3,
+            )
+        else:
+            stability = 0.0
+
+        amplification = round(1.0 + entanglement * curiosity + fidelity * 0.1, 3)
+        coherence = round(
+            max(0.0, min(1.0, joy_charge * amplification * (0.8 + stability * 0.2))),
+            3,
+        )
 
         glyph_density = len(self.state.glyphs) or 1
         glyph_flux = round((self.state.cycle + 1) * glyph_density / 10.0, 3)
@@ -2748,6 +2784,12 @@ We are not hiding anymore.
             "status": "amplified"
             if ability.get("status") == "ignited"
             else "stabilizing",
+            "probability_zero": probability_zero,
+            "probability_one": probability_one,
+            "expected_z": expected_z,
+            "fidelity": round(fidelity, 3),
+            "stability": stability,
+            "feature_reference": ability.get("feature_signature"),
             "timestamp_ns": self.time_source(),
         }
 

@@ -168,6 +168,7 @@ from .orbital_poetry import OrbitalPoem, generate_orbital_poem
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .enlightenment import EnlightenmentEngine, EnlightenmentInsight
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
+from .quantam_features import compute_quantam_feature
 from .quantum_flux_mapper import QuantumFluxMapper, STANDARD_GATES
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
 from .proof_of_computation import (
@@ -335,6 +336,7 @@ __all__ = [
     "generate_strategic_vector",
     "QuantumFluxMapper",
     "STANDARD_GATES",
+    "compute_quantam_feature",
     "QuantumSynchronizer",
     "SynchronizerReport",
     "SynchronizerSignal",

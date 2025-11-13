@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from echo.evolver import EchoEvolver
 
 
@@ -15,6 +17,9 @@ def test_synthesize_quantam_ability_records_cache() -> None:
     assert ability["status"] == "ignited"
     assert len(ability["oam_signature"]) == 16
     assert 0.72 <= ability["entanglement"] <= 0.96
+    feature = ability["feature"]
+    assert feature["signature"] == ability["feature_signature"]
+    assert pytest.approx(sum(feature["probabilities"].values()), rel=1e-6, abs=1e-6) == 1.0
 
     completed = evolver.state.network_cache["completed_steps"]
     assert "synthesize_quantam_ability" in completed
@@ -39,6 +44,7 @@ def test_artifact_payload_includes_quantam_abilities() -> None:
     amplified = payload["quantam_capabilities"][capability["id"]]
     assert amplified["ability"] == ability["id"]
     assert amplified["status"] == capability["status"]
+    assert amplified["feature_reference"] == ability["feature_signature"]
 
 
 def test_amplify_quantam_evolution_tracks_capability_cache() -> None:
@@ -53,6 +59,8 @@ def test_amplify_quantam_evolution_tracks_capability_cache() -> None:
     assert capability["id"] in evolver.state.quantam_capabilities
     assert capability["status"] == "amplified"
     assert capability["amplification"] >= 1.0
+    assert capability["feature_reference"] == ability["feature_signature"]
+    assert capability["probability_zero"] + capability["probability_one"] == pytest.approx(1.0)
 
     cache = evolver.state.network_cache
     assert cache["last_quantam_capability"]["id"] == capability["id"]

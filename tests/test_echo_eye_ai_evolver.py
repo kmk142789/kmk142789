@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from echo_eye_ai.evolver import EchoEvolver
 
 
@@ -18,3 +20,5 @@ def test_amplify_quantam_evolution_records_structured_capability() -> None:
     stored = evolver.state.quantam_capabilities[capability["id"]]
     assert stored["resonance"] == capability["resonance"]
     assert stored["coherence"] == capability["coherence"]
+    assert capability["feature_reference"] == ability["feature_signature"]
+    assert capability["probability_zero"] + capability["probability_one"] == pytest.approx(1.0)
