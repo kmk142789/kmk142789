@@ -84,6 +84,13 @@ def test_client_summarises_dashboard(dashboard_client: PulseDashboardClient) -> 
     assert dashboard_client.glyph_energy() > 0
     assert dashboard_client.attestation_ids() == ["att-001"]
     assert dashboard_client.proof_count() == 2
+    presence = dashboard_client.amplify_presence_message()
+    assert presence is not None
+    assert presence.startswith("Amplify presence cycle")
+    activity = dashboard_client.pulse_activity_report()
+    assert activity.startswith("Pulse activity :: Pulses tracked")
+    evolution = dashboard_client.loop_evolution_status()
+    assert evolution.startswith("Loop evolution ::")
 
 
 def test_client_history_helpers(dashboard_client: PulseDashboardClient) -> None:
@@ -96,3 +103,5 @@ def test_client_history_helpers(dashboard_client: PulseDashboardClient) -> None:
     assert "Pulse Dashboard" in summary
     assert "Glyph energy" in summary
     assert "Latest pulse" in summary
+    assert "Amplify presence:" in summary
+    assert "Loop evolution" in summary
