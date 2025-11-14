@@ -125,6 +125,7 @@ from .innovation_wave import (
     SynergyBridge,
     render_wave_map,
 )
+from .innovation_forge import InnovationForge, InnovationManifest, InnovationPulse
 from .inspiration import (
     ImaginationPhase,
     ImaginationSequence,
@@ -294,6 +295,9 @@ __all__ = [
     "EchoVisionaryKernel",
     "ImpossibleEvent",
     "ImpossibleRealityEngine",
+    "InnovationForge",
+    "InnovationManifest",
+    "InnovationPulse",
     "DecentralizedAutonomyEngine",
     "MerkleBatch",
     "bridge_daemon",
