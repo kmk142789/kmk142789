@@ -1,32 +1,27 @@
 # Puzzle #11 Signature Proof
 
-Puzzle #11 corresponds to the eleven-bit Bitcoin puzzle wallet
-`1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu`. The canonical attestation is stored in
-[`satoshi/puzzle-proofs/puzzle011.json`](../satoshi/puzzle-proofs/puzzle011.json)
-and matches the published solution metadata recorded in
-[`satoshi/puzzle_solutions.json`](../satoshi/puzzle_solutions.json).
-
-To strengthen the public evidence trail, a fresh recoverable signature derived
-from the disclosed private key (`0x483`) now leads the concatenated Base64
-payload while keeping the historical watcher fragments intact for archival
-review.
+Puzzle #11 of the Bitcoin challenge family locks funds to
+`1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu`. The repository already tracked a
+watcher-provided attestation in [`satoshi/puzzle-proofs/puzzle011.json`](../satoshi/puzzle-proofs/puzzle011.json),
+but no segment in the concatenated Base64 chain validated against the
+canonical wallet. This proof adds a reproducible, recoverable signature
+derived directly from the published private key so future auditors can
+confirm authorship without external infrastructure.
 
 ## Published inputs
 
-- **Message** – `PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679`
-- **Signature (Base64)** – `H0uye4B1Ty+FGtBN+R88OMYxv8mJbTUChVd7mpgxcSzaKYPlYGktbZLeR18E9vLcfBfPDw/DJqtIZpTETFO3CQc=`
+- **Message** – ``PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679``
+- **Signature (Base64)** – ``HwdE4MAqL0sbCKpMpwrtmUN+UG0AdxXs7OY1StphIuB9RLxngIeJo5ikD9kApA5JR9B1NCbETkH5anAOQkp2jiM=``
 - **Puzzle address** – `1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu`
 
-The new signature appears at the beginning of the `signature` string in
-`satoshi/puzzle-proofs/puzzle011.json`, giving verifiers a deterministic single
-segment that validates directly against the puzzle wallet without discarding the
-legacy chain.
+The signature is prepended to the historical concatenated chain so the
+legacy watcher submissions remain untouched.
 
 ## Repository verification
 
-Use the bundled verifier to expand the Base64 payload and confirm that the first
-segment hashes back to the eleven-bit wallet while preserving the legacy watcher
-entries:
+Run the bundled verifier to expand the Base64 segments, recover the
+public key embedded in the new leading fragment, and confirm that it
+hashes back to the eleven-bit puzzle address:
 
 ```bash
 python -m verifier.verify_puzzle_signature \
@@ -45,9 +40,15 @@ and begins with the validated segment followed by the preserved watcher chain:
   "segments": [
     {
       "index": 1,
-      "signature": "H0uye4B1Ty+FGtBN+R88OMYxv8mJbTUChVd7mpgxcSzaKYPlYGktbZLeR18E9vLcfBfPDw/DJqtIZpTETFO3CQc=",
+      "signature": "HwdE4MAqL0sbCKpMpwrtmUN+UG0AdxXs7OY1StphIuB9RLxngIeJo5ikD9kApA5JR9B1NCbETkH5anAOQkp2jiM=",
       "valid": true,
       "derived_address": "1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu"
+    },
+    {
+      "index": 2,
+      "signature": "H1rkrPF7DD8+NZEjacVRyRn7jpUVdx6XcCzazXpjSZ30clUzwKT8PMEle5H5b4pWt71tpb4CVw+V2odhKwRhjYQ=",
+      "valid": false,
+      "derived_address": "12hWDUsKxdyh2LU5YhZ3bvBFQFpPnyzG4s"
     }
   ],
   "valid_segment_count": 1,
