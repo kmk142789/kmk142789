@@ -216,6 +216,19 @@ original HKDF + scrypt derivation scheme and works without external
 dependencies.  When the optional ``ecdsa`` package is available the claim
 signer automatically upgrades to secp256k1 signatures.
 
+### Puzzle brute-force scanner
+
+Hook a modernised Mizogg-style hunt directly into the shared puzzle dataset:
+
+```bash
+python scripts/puzzle_bruteforce.py --minimum 1 --maximum 1048575 --iterations 250000 --workers 4 \
+  --output out/puzzle_hits.jsonl
+```
+
+The script (documented in [`docs/puzzle_bruteforce.md`](docs/puzzle_bruteforce.md))
+loads targets from `data/puzzle_index.json`, fans out to multiple workers, and
+records any hits as JSON lines so discoveries can be reproduced later.
+
 ### Show, don't tell checklist
 
 - [x] Human report: `docs/federated_colossus_index.md` (cycle timelines, tables)
