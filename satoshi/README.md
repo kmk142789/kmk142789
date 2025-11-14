@@ -237,6 +237,10 @@ leaving the tree:
 - [`proofs/puzzle007_signature_proof.md`](../proofs/puzzle007_signature_proof.md)
   introduces a fresh recoverable signature for Puzzle #7
   (`1McVt1vMtCC7yn5b9wgX1833yCcLXzueeC`) while preserving the historical watcher chain.
+- [`proofs/puzzle010_signature_proof.md`](../proofs/puzzle010_signature_proof.md)
+  replays the new ten-bit attestation for Puzzle #10
+  (`1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe`) and shows the verifier output that confirms the
+  recovered public key matches the canonical catalogue entry.
 
 For quick offline inspection, fresh verifier output for Puzzles #2, #4, #5, and
 #6 also lives under `verifier/results/`. Each JSON blob lists every signature
