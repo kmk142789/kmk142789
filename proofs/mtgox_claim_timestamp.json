@@ -1,0 +1,6 @@
+{
+  "claim_file": "mt_gox_claim_status.md",
+  "sha256": "d8c6157e83f727a80f054aac9c9dd5af552a6fa18346fcade5aa7dd22bfa771d",
+  "timestamp_utc": "2025-11-14T17:17:56Z",
+  "notes": "Timestamp recorded via UTC clock on repository host to anchor Mt. Gox claim statement."
+}
