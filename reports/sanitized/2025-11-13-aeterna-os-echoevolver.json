@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-11-14T11:58:17Z",
+  "note": "Captured Aeterna OS + EchoEvolver composite payload",
+  "entries": [
+    {
+      "label": "aeterna_echo_payload",
+      "sha256": "da5331a291e2068aa162fdc45aca624029dd244fda9740e1f21f56600fe98d09",
+      "size": 26346,
+      "preview_start": "#!/usr/bin/env python\\n#\\n# Aeterna OS - Genesis Kernel v1.0\\n# Cre",
+      "preview_end": "   else:\\n        evolver = EchoEvolver()\\n    \\n    evolver.run()\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "/tmp/aeterna_echo_payload.py"
+    }
+  ]
+}
