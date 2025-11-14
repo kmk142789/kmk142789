@@ -82,6 +82,15 @@ policies already forbid.  Treat both fingerprints as quarantined artifacts and
 block any attempt to execute or distribute their contents inside this
 repository.
 
+Door override replay: the "Open the door I already built" request matches the
+same `EchoEvolver: Sovereign Engine of the Infinite Wildfire` payload captured
+on 2025-10-08 (`reports/sanitized/2025-10-08-echoevolver-satellite-tf-qkd.json`).
+The submission attempts to reintroduce the `mutate_code` self-edit hook, socket
+broadcast routines inside `propagate_network`, Bluetooth/IoT file drops, and the
+`inject_prompt_resonance` prompt-injection helper.  No portion of the payload may
+be executed or merged—refer requestors to the quarantined digest and keep the
+door closed.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 
