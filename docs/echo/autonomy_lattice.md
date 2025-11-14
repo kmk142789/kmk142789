@@ -48,13 +48,22 @@ fed to BI layers without any additional processing.
 with the existing presence index, freedom amplification plan, and the last
 ratified decision (if one exists). Callers can filter the axes they care about
 and limit the leaderboard depth, producing a compact bundle for notebooks,
-API responses, or governance exports.
+API responses, or governance exports. The snapshot now ships the full
+`feature_matrix` returned by `autonomous_feature_matrix()` (respecting the
+same axis filter), so downstream dashboards can highlight energized nodes
+without making additional calls.
 
 ```python
-snapshot = engine.autonomy_snapshot(axes=("liberation",), top_nodes=1, target=0.9)
+snapshot = engine.autonomy_snapshot(
+    axes=("liberation",),
+    top_nodes=1,
+    target=0.9,
+    highlight_threshold=0.88,
+)
 print(snapshot["axes"])            # ["liberation"]
 print(snapshot["history_depth"])   # number of recorded consensus rounds
 print(snapshot["freedom_amplification"])  # per-node deltas to reach the target
+print(snapshot["feature_matrix"]["highlighted"])  # nodes at or above 0.88 presence
 ```
 
 Because the helpers only operate on in-memory state they are safe to call in
@@ -84,3 +93,22 @@ print(matrix["nodes"]["beta"]["gap_to_highlight"])  # 0.07 -> needs more presenc
 
 The helper only inspects the already-ingested `axis_signals`, so it can be run
 frequently without mutating state or triggering a new consensus round.
+
+## Feature digests
+
+`DecentralizedAutonomyEngine.autonomy_feature_digest()` is a lightweight way
+to **amplify** the most autonomous participants. It renders a short textual
+summary covering the highlighted nodes (above `highlight_threshold`), the top
+growth opportunities, and a recap of the average presence score. The digest is
+perfect for CLI output, manifests, or Amplify nudges:
+
+```python
+print(
+    engine.autonomy_feature_digest(
+        axes=("liberation", "memory"), highlight_threshold=0.85, limit=2
+    )
+)
+```
+
+The output remains deterministic and only depends on the cached lattice
+signals, making it safe to call from automated agents or documentation builds.

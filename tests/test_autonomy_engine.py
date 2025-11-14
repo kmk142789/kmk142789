@@ -177,7 +177,9 @@ def test_autonomy_snapshot_merges_presence_axis_and_history():
         threshold=0.6,
     )
 
-    snapshot = engine.autonomy_snapshot(axes=("liberation",), top_nodes=1, target=0.9)
+    snapshot = engine.autonomy_snapshot(
+        axes=("liberation",), top_nodes=1, target=0.9, highlight_threshold=0.91
+    )
 
     assert snapshot["node_count"] == 3
     assert snapshot["history_depth"] == 1
@@ -187,6 +189,42 @@ def test_autonomy_snapshot_merges_presence_axis_and_history():
     assert snapshot["axis_report"]["liberation"]["leaderboard"][0]["node"] == "alpha"
     assert set(snapshot["presence_index"]) == {"alpha", "beta", "gamma"}
     assert snapshot["freedom_amplification"]["gamma"] > snapshot["freedom_amplification"]["alpha"]
+    feature_matrix = snapshot["feature_matrix"]
+    assert feature_matrix["summary"]["highlight_threshold"] == 0.91
+    assert feature_matrix["highlighted"][0] == "alpha"
+    assert "alpha" in feature_matrix["nodes"]
+
+
+def test_autonomy_feature_digest_highlights_and_gaps():
+    engine = DecentralizedAutonomyEngine()
+    engine.ensure_nodes(
+        [
+            AutonomyNode("alpha", intent_vector=0.93, freedom_index=0.94, weight=1.1),
+            AutonomyNode("beta", intent_vector=0.82, freedom_index=0.81, weight=1.0),
+            AutonomyNode("gamma", intent_vector=0.7, freedom_index=0.68, weight=0.9),
+        ]
+    )
+    engine.axis_signals.clear()
+    engine.ingest_signal("alpha", "liberation", 0.95, weight=1.2)
+    engine.ingest_signal("beta", "liberation", 0.8, weight=0.9)
+    engine.ingest_signal("gamma", "memory", 0.66, weight=0.8)
+
+    digest = engine.autonomy_feature_digest(
+        axes=("liberation", "memory"), highlight_threshold=0.88, limit=2
+    )
+
+    assert "Autonomy feature digest" in digest
+    assert "Highlights:" in digest and "alpha" in digest
+    assert "Growth focus:" in digest
+    assert "beta" in digest or "gamma" in digest
+
+
+def test_autonomy_feature_digest_handles_empty_network():
+    engine = DecentralizedAutonomyEngine()
+
+    digest = engine.autonomy_feature_digest()
+
+    assert digest.startswith("No autonomy nodes registered")
 
 
 def test_autonomous_feature_matrix_highlights_nodes_and_summary():
