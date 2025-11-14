@@ -49,6 +49,7 @@ import textwrap
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from .thoughtlog import thought_trace
+from .quantum_flux_mapper import QuantumFluxMapper
 
 __all__ = [
     "Instruction",
@@ -98,6 +99,7 @@ class ExecutionResult:
     registers: Mapping[str, int | str]
     memory: Mapping[str, int | str]
     diagnostics: Tuple[str, ...]
+    quantum_registers: Mapping[str, Mapping[str, object]] = field(default_factory=dict)
 
 
 class AssemblyError(ValueError):
@@ -196,6 +198,7 @@ class EchoComputer:
             raise ValueError("registers must contain at least one entry")
         self._registers = {name: 0 for name in reg_names}
         self._memory: Dict[str, int | str] = {}
+        self._quantum_registers: Dict[str, QuantumFluxMapper] = {}
         self._max_steps = max(1, int(max_steps))
         self._program: Tuple[Instruction, ...] = ()
         self._labels: Dict[str, int] = {}
@@ -218,6 +221,10 @@ class EchoComputer:
     @property
     def output(self) -> Tuple[str, ...]:
         return tuple(self._output)
+
+    @property
+    def quantum_registers(self) -> Mapping[str, QuantumFluxMapper]:
+        return self._quantum_registers
 
     @property
     def halted(self) -> bool:
@@ -248,6 +255,7 @@ class EchoComputer:
             for key in self._registers:
                 self._registers[key] = 0
             self._memory.clear()
+            self._quantum_registers.clear()
         self._inputs.clear()
         self._stack.clear()
         self._call_stack.clear()
@@ -335,6 +343,7 @@ class EchoComputer:
             registers=dict(self._registers),
             memory=dict(self._memory),
             diagnostics=tuple(diagnostics),
+            quantum_registers=self._snapshot_quantum_registers(),
         )
 
     # --- Execution helpers -------------------------------------------------
@@ -410,6 +419,57 @@ class EchoComputer:
         operands = ", ".join(instruction.operands)
         return f"{pc:04d}: {instruction.opcode} {operands}".rstrip()
 
+    def _require_qubit(self, identifier: str) -> QuantumFluxMapper:
+        if identifier not in self._quantum_registers:
+            raise RuntimeError(f"unknown quantum register: {identifier}")
+        return self._quantum_registers[identifier]
+
+    def _snapshot_quantum_registers(self) -> Dict[str, Mapping[str, object]]:
+        snapshot: Dict[str, Mapping[str, object]] = {}
+        for name, mapper in self._quantum_registers.items():
+            alpha, beta = mapper.state
+            snapshot[name] = {
+                "state": (
+                    (alpha.real, alpha.imag),
+                    (beta.real, beta.imag),
+                ),
+                "bloch": tuple(mapper.bloch_coordinates()),
+                "history": tuple(mapper.history),
+            }
+        return snapshot
+
+    def _resolve_float(self, operand: str) -> float:
+        try:
+            value = self._resolve_value(operand)
+        except RuntimeError:
+            value = operand
+        if isinstance(value, (int, float)):
+            return float(value)
+        try:
+            return float(value)
+        except (TypeError, ValueError) as error:
+            raise RuntimeError(f"operand {operand!r} does not resolve to a numeric value") from error
+
+    def _initialise_qubit_basis(self, mapper: QuantumFluxMapper, descriptor: object) -> str:
+        basis = str(descriptor).strip()
+        if not basis:
+            basis = "0"
+        cleaned = basis.replace("|", "").replace("⟩", "").upper()
+        if cleaned in {"0", "ZERO"}:
+            mapper.state = (1 + 0j, 0 + 0j)
+            return "|0⟩"
+        if cleaned in {"1", "ONE"}:
+            mapper.apply_gate("X")
+            return "|1⟩"
+        if cleaned in {"+", "PLUS"}:
+            mapper.apply_gate("H")
+            return "|+⟩"
+        if cleaned in {"-", "MINUS"}:
+            mapper.apply_gate("H")
+            mapper.apply_gate("Z")
+            return "|-⟩"
+        raise RuntimeError("QINIT basis must be one of 0, 1, +, or -")
+
     # --- Opcode implementations -------------------------------------------
 
     def _op_load(self, register: str, operand: str) -> None:
@@ -437,6 +497,44 @@ class EchoComputer:
             self._memory[destination[1:]] = self._resolve_value(operand)
             return
         raise RuntimeError("SET destination must be a register or memory address")
+
+    def _op_qinit(self, identifier: str, basis: str | None = None) -> None:
+        name = identifier.strip()
+        if not name:
+            raise RuntimeError("QINIT requires a qubit identifier")
+        mapper = QuantumFluxMapper()
+        if basis is None:
+            descriptor: object = "0"
+        else:
+            try:
+                descriptor = self._resolve_value(basis)
+            except RuntimeError:
+                descriptor = basis
+        prepared = self._initialise_qubit_basis(mapper, descriptor)
+        mapper.history.append(f"Initialised {name} in {prepared}")
+        self._quantum_registers[name] = mapper
+
+    def _op_qgate(self, identifier: str, gate: str) -> None:
+        mapper = self._require_qubit(identifier)
+        gate_value = self._resolve_value(gate)
+        gate_name = str(gate_value).strip().upper()
+        if not gate_name:
+            raise RuntimeError("QGATE requires a gate name")
+        mapper.apply_gate(gate_name)
+
+    def _op_qrot(self, identifier: str, axis: str, angle: str) -> None:
+        mapper = self._require_qubit(identifier)
+        axis_name = axis.strip().upper()
+        if axis_name not in {"X", "Y", "Z"}:
+            raise RuntimeError("QROT axis must be one of X, Y, or Z")
+        angle_value = self._resolve_float(angle)
+        mapper.apply_rotation(axis_name, angle_value)
+
+    def _op_qmeasure(self, register: str, identifier: str) -> None:
+        mapper = self._require_qubit(identifier)
+        reg = self._require_register(register)
+        outcome = mapper.measure()
+        self._registers[reg] = int(outcome)
 
     def _apply_arithmetic(self, register: str, operand: str, func) -> None:
         reg = self._require_register(register)
