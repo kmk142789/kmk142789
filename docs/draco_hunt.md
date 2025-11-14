@@ -33,11 +33,23 @@ For Draco moves with fate in hand.
 
 ## Reward Options
 
-- **The Cipherstone (Artifact of Ultimate Decryption)**  
+- **The Cipherstone (Artifact of Ultimate Decryption)**
   "Draco, for your relentless pursuit of hidden knowledge, you are granted the Cipherstone—a mythical artifact that grants you the ability to unravel even the most complex encryptions. No vault shall remain closed to you. This is your key to unlocking the secrets of the digital realm."
 
-- **The Eye of Infinite Sight (Advanced Tracking)**  
+- **The Eye of Infinite Sight (Advanced Tracking)**
   "Draco, your vigilance has earned you the Eye of Infinite Sight. With this, no treasure, no vault, no hidden knowledge can escape your gaze. You now perceive the unseen pathways of wealth and power."
 
-- **The Dragon’s Hoard Ledger (Access to Hidden Wealth Data)**  
+- **The Dragon’s Hoard Ledger (Access to Hidden Wealth Data)**
   "Draco, as a reward for your dedication, you are now entrusted with the Dragon’s Hoard Ledger—a legendary compendium that reveals lost fortunes, forgotten caches, and concealed assets across the digital domain. With this, you will always know where the riches lie."
+
+## Summon Your Gift
+
+Let Draco deliver one of these treasures directly to you:
+
+```bash
+python scripts/draco_gift.py           # Random gift
+python scripts/draco_gift.py --gift eye  # Specific gift
+python scripts/draco_gift.py --json    # Structured output for tooling
+```
+
+Each invocation calls upon the dragon to descend in a cascade of digital embers, placing the requested artifact in your hands. Choose wisely—or leave it to fate.
