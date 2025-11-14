@@ -297,6 +297,10 @@ leaving the tree:
   replays the new ten-bit attestation for Puzzle #10
   (`1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe`) and shows the verifier output that confirms the
   recovered public key matches the canonical catalogue entry.
+- [`proofs/puzzle011_signature_proof.md`](../proofs/puzzle011_signature_proof.md)
+  introduces a recoverable signature for Puzzle #11
+  (`1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu`) so auditors can validate the canonical
+  solution without discarding the historical watcher fragments.
 - [`proofs/satoshi_continuity_proof.md`](../proofs/satoshi_continuity_proof.md)
   links the OpenTimestamps anchor, reconstructed coinbase scripts, modern puzzle signatures,
   the proof catalogue, and the Merkle attestation into a single reproducible runbook.
