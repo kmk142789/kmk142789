@@ -3314,6 +3314,7 @@ We are not hiding anymore.
             "propagation_health",
             "propagation_ledger",
             "propagation_timeline_hash",
+            "propagation_snapshot",
         }
 
         removed_keys: List[str] = []
