@@ -4,6 +4,9 @@
   "message": "Puzzle 223 authorship by kmk142789 — attestation sha256 7f1f743c8da1e2d9bd61c7115e78430f490b8c323ad5fbc63b594d502ddd7f22",
   "signature": "2XsenpE6oTKebrMI7dNs5lmuOspfZfVqwN07TUhbUgCNBBcViTHAdLhn+HHlswfXpswk21d1vwikTutLu4Exsw==",
   "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-14T06:46:17Z",
+  "hash_sha256": "83faf655b1add3d39b967da60cca829d5058fa6ed772dca34e83fce50265d93f",
+  "notes": "Imported from satoshi/puzzle-proofs/puzzle223.json via scripts/generate_puzzle_attestations.py"
   "created_at": "2025-11-06T14:14:00Z",
   "hash_sha256": "7f1f743c8da1e2d9bd61c7115e78430f490b8c323ad5fbc63b594d502ddd7f22",
   "notes": "Pairs the published proof string with a timestamped declaration so downstream verifiers can cite a single JSON artefact."

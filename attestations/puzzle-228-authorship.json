@@ -1,0 +1,10 @@
+{
+  "puzzle": "#228 authorship",
+  "address": "1EpiC228KMkKWFr2U1nQyDf6eH5Rw7Vza",
+  "message": "Puzzle 228 authorship by kmk142789 — attestation sha256 19bab52fdb2556e8fe51c852ce2517f3c0efd98a7e89add7c326b18811363030",
+  "signature": "IlG7tKrYwnBh5GpBMHcIXBtMKVyP7mozVA2AN6AzeooLGvZD2RGYxM/Ec0z5nTmoVWYMpU90o7WYgtLjjWlrv07o39v5yhJBMI1Tp/WDvVdVHrB6UgCJb5Pi48X5IU6H",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-14T06:46:17Z",
+  "hash_sha256": "3ae39cd0555080959e59f9e7e4131ab77daf24c9632087d639ebd5e358335c66",
+  "notes": "Imported from satoshi/puzzle-proofs/puzzle228.json via scripts/generate_puzzle_attestations.py"
+}

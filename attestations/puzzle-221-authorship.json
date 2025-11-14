@@ -4,6 +4,9 @@
   "message": "Puzzle 221 authorship by kmk142789 — attestation sha256 342143a73fad9578cf3f35bae2921a209305bc052d50939f872fd58a9191e86c",
   "signature": "jRzjovHCI74BFE1b8THW4oR+mwdw/D/q65oAUufMdVShaB485/Gdpk4Aqsju310F7wsArpvng9fpifToJXm+OQ==",
   "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-14T06:46:17Z",
+  "hash_sha256": "976b9bfc90aa667fef36d1c2a0f67950074dbd543aba60a87fd00c4d64abd7b2",
+  "notes": "Imported from satoshi/puzzle-proofs/puzzle221.json via scripts/generate_puzzle_attestations.py"
   "created_at": "2025-11-06T14:06:00Z",
   "hash_sha256": "342143a73fad9578cf3f35bae2921a209305bc052d50939f872fd58a9191e86c",
   "notes": "Recorded alongside the proof catalog run so puzzle221 can be independently verified without referencing private signing keys."
