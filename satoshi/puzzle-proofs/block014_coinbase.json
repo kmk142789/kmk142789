@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 14,
+  "blockHash": "0000000080f17a0c5a67f663a9bc9969eb37e81666d9321125f0e293656f8a37",
+  "address": "1DMGtVnRrgZaji7C9noZS3a1QtoaAN2uRG",
+  "message": "Bitcoin block 14 coinbase script traced directly to the archived block data, confirming the reward assigned to one of Satoshi's keys.",
+  "pkScript": "41043e8ac6b8ea64e85928b6469f17db0096de0bcae7d09a4497413d9bba49c00ffdf9cb0ce07c404784928b3976f0beea42fe2691a8f0430bcb2b0daaf5aa02b30eac",
+  "signature": "BP//AB0BPg=="
+}
