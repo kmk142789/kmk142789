@@ -3,7 +3,10 @@
 This module assembles the transparency, community, and operational
 signals that underpin the Impact Explorer dashboard.  It fuses on-chain
 treasury events, childcare impact metrics, governance feedback, and the
-supporting operating model into a single serialisable payload.
+supporting operating model into a single serialisable payload.  The
+builder now also derives capital efficiency insights such as donor
+concentration and treasury runway to help readers contextualise the
+financial movements.
 """
 
 from __future__ import annotations
@@ -165,11 +168,16 @@ class ImpactExplorerBuilder:
         for bucket in monthly.values():
             bucket["balance"] = bucket["donations"] - bucket["disbursed"]
 
+        donor_concentration = self._donation_concentration(by_source, totals["donations"])
+        runway = self._estimate_runway(totals["balance"], monthly)
+
         insights = self._build_insights(
             largest_donation,
             largest_disbursement,
             donation_amounts,
             disbursement_amounts,
+            donor_concentration,
+            runway,
         )
 
         return {
@@ -209,12 +217,55 @@ class ImpactExplorerBuilder:
         largest_disbursement: dict[str, Any] | None,
         donation_amounts: list[Number],
         disbursement_amounts: list[Number],
+        donor_concentration: dict[str, Any] | None,
+        runway: dict[str, Any] | None,
     ) -> dict[str, Any]:
         return {
             "largest_donation": self._summarise_event(largest_donation),
             "largest_disbursement": self._summarise_event(largest_disbursement),
             "median_donation": self._serialise_decimal(self._median(donation_amounts)),
             "median_disbursement": self._serialise_decimal(self._median(disbursement_amounts)),
+            "donor_concentration": donor_concentration,
+            "runway": runway,
+        }
+
+    def _donation_concentration(
+        self, by_source: dict[str, dict[str, Number]], total_donations: Number
+    ) -> dict[str, Any] | None:
+        """Return the share contributed by the most significant donor."""
+        if not by_source or total_donations <= Decimal("0"):
+            return None
+
+        source, bucket = max(by_source.items(), key=lambda item: item[1]["donations"])
+        if bucket["donations"] <= Decimal("0"):
+            return None
+
+        share = bucket["donations"] / total_donations
+        return {
+            "source": source,
+            "share": float(share.quantize(Decimal("0.0001"))),
+            "amount_usd": float(bucket["donations"].quantize(Decimal("0.01"))),
+        }
+
+    def _estimate_runway(
+        self, balance: Number, monthly: dict[str, dict[str, Number]]
+    ) -> dict[str, Any] | None:
+        """Estimate cash runway in months from historical disbursements."""
+        if not monthly:
+            return None
+
+        disbursements = [bucket["disbursed"] for bucket in monthly.values() if bucket["disbursed"] > 0]
+        if not disbursements:
+            return None
+
+        average = sum(disbursements) / Decimal(len(disbursements))
+        if average <= Decimal("0"):
+            return None
+
+        months = balance / average if balance > Decimal("0") else Decimal("0")
+        return {
+            "average_monthly_disbursement": float(average.quantize(Decimal("0.01"))),
+            "months": float(months.quantize(Decimal("0.01"))),
         }
 
     @staticmethod
