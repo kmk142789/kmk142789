@@ -13,12 +13,29 @@ from verifier.verify_puzzle_signature import SignatureCheckResult, verify_segmen
 PUZZLE_PROOF_DIR = Path(__file__).resolve().parent / "puzzle-proofs"
 
 
-def iter_puzzle_files(root: Path = PUZZLE_PROOF_DIR) -> Iterable[Path]:
-    """Yield puzzle proof JSON files sorted by puzzle identifier."""
+def iter_puzzle_files(
+    root: Path = PUZZLE_PROOF_DIR, patterns: Iterable[str] | None = None
+) -> Iterable[Path]:
+    """Yield puzzle proof JSON files sorted by puzzle identifier.
 
-    for path in sorted(root.glob("puzzle*.json")):
-        if path.is_file():
-            yield path
+    Parameters
+    ----------
+    root:
+        Directory that contains the proof payloads.
+    patterns:
+        One or more glob expressions (relative to ``root``) that limit which
+        files are analysed. When omitted the iterator scans every
+        ``puzzle*.json`` file.
+    """
+
+    chosen_patterns = list(patterns or ["puzzle*.json"])
+    seen: set[Path] = set()
+
+    for pattern in chosen_patterns:
+        for path in sorted(root.glob(pattern)):
+            if path.is_file() and path not in seen:
+                seen.add(path)
+                yield path
 
 
 def analyse_puzzle_file(path: Path) -> dict[str, object]:
@@ -43,10 +60,14 @@ def analyse_puzzle_file(path: Path) -> dict[str, object]:
     }
 
 
-def build_report(root: Path = PUZZLE_PROOF_DIR) -> dict[str, object]:
+def build_report(
+    root: Path = PUZZLE_PROOF_DIR, patterns: Iterable[str] | None = None
+) -> dict[str, object]:
     """Aggregate signature analysis for every puzzle proof in *root*."""
 
-    puzzle_reports = [analyse_puzzle_file(path) for path in iter_puzzle_files(root)]
+    puzzle_reports = [
+        analyse_puzzle_file(path) for path in iter_puzzle_files(root, patterns)
+    ]
     all_addresses = sorted({addr for report in puzzle_reports for addr in report["derived_addresses"]})
 
     return {
@@ -59,13 +80,22 @@ def build_report(root: Path = PUZZLE_PROOF_DIR) -> dict[str, object]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Inspect concatenated Base64 signatures across all puzzle proof files.",
+        description="Inspect concatenated Base64 signatures across puzzle proof files.",
     )
     parser.add_argument(
         "--root",
         type=Path,
         default=PUZZLE_PROOF_DIR,
         help="Directory containing puzzle proof JSON files (default: satoshi/puzzle-proofs)",
+    )
+    parser.add_argument(
+        "--glob",
+        action="append",
+        dest="patterns",
+        help=(
+            "Glob pattern relative to --root (e.g. 'puzzle010.json' or 'puzzle07*.json'). "
+            "Repeat the option to analyse multiple patterns."
+        ),
     )
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
     parser.add_argument(
@@ -78,7 +108,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    report = build_report(args.root)
+    report = build_report(args.root, args.patterns)
 
     json_kwargs: dict[str, object] = {"ensure_ascii": False}
     if args.pretty:
