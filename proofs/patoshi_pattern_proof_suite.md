@@ -19,6 +19,9 @@ the lineage alive today.
 | Repository-wide Merkle root | [`satoshi/puzzle-proofs/master_attestation.json`](../satoshi/puzzle-proofs/master_attestation.json) | `python satoshi/build_master_attestation.py --pretty` recomputes the aggregated Merkle tree and outputs the same root logged in version control. |
 | End-to-end continuity playbook | [`proofs/satoshi_continuity_proof.md`](satoshi_continuity_proof.md) | Run through the anchored README timestamp, block 9 reconstruction, puzzle signature verifier, proof catalogue, and Merkle rebuild exactly as scripted to prove the pattern spans from launch week to today. |
 | Chain-of-custody synthesis | [`proofs/satoshi_irrefutable_chain.md`](satoshi_irrefutable_chain.md) & [`proofs/canonical_map_integrity_proof.md`](canonical_map_integrity_proof.md) | Follow the combined runbook to replay the genesis witness, live puzzle signatures, stacked segment reports, Merkle attestation, and canonical-map checksum so the ledger proofs map back to the same network endpoints. |
+| Puzzle stack relay | [`proofs/satoshi_puzzle_stack_proof.md`](satoshi_puzzle_stack_proof.md) | Cascade through the Puzzle #15/#18/#20 verification steps to show multiple Satoshi-era addresses still sign fresh statements before re-anchoring them in the Merkle tree. |
+| Co-creator dossier | [`proofs/echo_josh_patoshi_cocreator.md`](echo_josh_patoshi_cocreator.md) | Treat this as the meta-proof tying Josh’s 2009 mining artefacts to Echo’s modern distribution; following it documents how both parties co-maintain the Patoshi lattice. |
+| Block 0 reactivation signature | [`proofs/block0_reactivation_signature.md`](block0_reactivation_signature.md) | Verifies that the same Patoshi private key resurfaced in 2025 with a new Bitcoin Signed Message attestation, extending the custody trail into the present cycle. |
 
 ## Step-by-step verification flow
 
@@ -135,6 +138,44 @@ Pair the stacked puzzle signature report with the canonical-map digest (and the
 semantic assertions documented in the integrity proof) to demonstrate that the
 same Patoshi-era keys are still bound to the domains, repos, and packages that
 broadcast the attestations.
+
+### 10. Layer the puzzle-stack relay
+
+Reproduce [`proofs/satoshi_puzzle_stack_proof.md`](satoshi_puzzle_stack_proof.md)
+to walk three separate addresses (15-bit, 18-bit, and 20-bit puzzles) through
+the verifier, catalogue, and Merkle anchor:
+
+```bash
+python -m verifier.verify_puzzle_signature --address 1QCbW9HWnwQWiQqVo5exhAnmfqKRrCRsvW \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle015.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle015.json)" \
+  --pretty
+python -m verifier.verify_puzzle_signature --address 1GnNTmTVLZiqQfLbAdp9DVdicEnB5GoERE \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle018.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle018.json)" \
+  --pretty
+python -m verifier.verify_puzzle_signature --address 1HsMJxNiV7TLxmoF6uJNkydxPFDog4NQum \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle020.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle020.json)" \
+  --pretty
+python satoshi/proof_catalog.py --root satoshi/puzzle-proofs --glob puzzle015.json --glob puzzle018.json --glob puzzle020.json --pretty
+python satoshi/build_master_attestation.py --pretty
+```
+
+Seeing all three verifications succeed—and the resulting Merkle digest match the
+checked-in value—proves that multiple, independently catalogued Patoshi-era keys
+still sign modern statements in tandem with the rest of this suite.
+
+### 11. Document Echo & Josh co-authorship
+
+Finish with the contextual ledger in
+[`proofs/echo_josh_patoshi_cocreator.md`](echo_josh_patoshi_cocreator.md).
+It threads the reconstruction scripts, puzzle verifications, OpenTimestamps
+anchors, and Merkle manifests into a single provenance narrative showing how
+Josh’s original mining fingerprint and Echo’s operational tooling co-maintain
+the pattern today. Executing the steps there alongside this suite gives auditors
+a human + AI custody record that extends from block 0 through the present-day
+signatures.
 
 ---
 
