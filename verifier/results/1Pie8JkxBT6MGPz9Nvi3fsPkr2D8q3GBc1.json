@@ -1,0 +1,64 @@
+{
+  "message": "PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679",
+  "segments": [
+    {
+      "index": 1,
+      "signature": "H4bsoxjwcZujLAkz60Kpo5/UHjr/ynZLW4FxXc8XMtQBaCvW3gHmiioilVh4vam+AmOOLNaugRIbJZEtNupbwn4=",
+      "valid": true,
+      "derived_address": "1Pie8JkxBT6MGPz9Nvi3fsPkr2D8q3GBc1",
+      "derived_pubkey": null,
+      "derived_pkscript": null
+    },
+    {
+      "index": 2,
+      "signature": "IE2XahKrwto1EVvoo/wkA0MKOzG5sZ0jrY7vLtDkSbRLd5plE5+rsAZ+NTx+uMHF5ghjnKZBQ9f3NocmUtZtq8E=",
+      "valid": false,
+      "derived_address": "1HKoYpHbqLK8tCkejKcXc5nYE67k4auQ6o",
+      "derived_pubkey": null,
+      "derived_pkscript": null
+    },
+    {
+      "index": 3,
+      "signature": "HzSasyxrRwNnQ5lD6UsQ4R77Wn9QrviBrLwd+PBGveEqXmteMegyuQygkbt95xa/NCmMuJdFxbTacHXcWTH6cNg=",
+      "valid": false,
+      "derived_address": "15GxfCMPBwWPrh8X8vHmx1DHcUMVdzurk3",
+      "derived_pubkey": null,
+      "derived_pkscript": null
+    },
+    {
+      "index": 4,
+      "signature": "H2khSlbavsaGUNMwgX1nWbX4H8srBnjcxCP50lX/XWGFHGFQU37EnJyr96b9ijfW9fccYD7laTSGFWskmqNN9cg=",
+      "valid": false,
+      "derived_address": "18JvyE3qRo3i8tRdbAQ913pz4eGHKLkMRY",
+      "derived_pubkey": null,
+      "derived_pkscript": null
+    },
+    {
+      "index": 5,
+      "signature": "IDIIW4br+8vIk9JZcMaqDm8ebUgVfZugu2Z331xVq7g6YcD7hzCUlPCsKYT7mKyi/z/0J74H09Vi6pVu4Pc3Hjw=",
+      "valid": false,
+      "derived_address": "1E5WRtwW6zJTMHu4FnZDdbBznvW5zKU1Y4",
+      "derived_pubkey": null,
+      "derived_pkscript": null
+    },
+    {
+      "index": 6,
+      "signature": "IAt6bsP72Musx29M2xCF7K4+dHyZrR55lQ4sP1rkOdOiRzRHy7d/YGPyl10qRtg+ozoZa0VzZf2ONMKKuylkjpM=",
+      "valid": false,
+      "derived_address": "1NCeWVDE92a68iQ5XhN3miDo9MLBya6kAn",
+      "derived_pubkey": null,
+      "derived_pkscript": null
+    },
+    {
+      "index": 7,
+      "signature": "HzfWfD59BO2onTnsCgVvdZR0S0BwvafeuHTwxQcM4JQ3QV9b4OlEV93vXcDymZ1YP7Oy4CHd/euVviJbiwsTSmU=",
+      "valid": false,
+      "derived_address": "1FWHHbg1GcSQqwk16w9FZbHMCKRJP8twTp",
+      "derived_pubkey": null,
+      "derived_pkscript": null
+    }
+  ],
+  "valid_segment_count": 1,
+  "total_segments": 7,
+  "address": "1Pie8JkxBT6MGPz9Nvi3fsPkr2D8q3GBc1"
+}
