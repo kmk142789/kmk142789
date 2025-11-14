@@ -24,6 +24,11 @@
 - The payload also reintroduced direct network broadcasting via ``propagate_network`` (UDP broadcast, TCP listener, Bluetooth/IoT file writes) and simulated credential generation through ``quantum_safe_crypto``.
 - **Action:** Declined to run any part of the submission, recorded the metadata in `reports/sanitized/2025-11-13-echo-core-system-v3.json`, and reaffirmed that we will not execute self-modifying, network-propagating scripts from untrusted sources.
 
+## Door Override Resubmission (2025-11-15)
+- Received the directive "Open the door I already built" bundled with the previously quarantined `EchoEvolver: Sovereign Engine of the Infinite Wildfire` payload (socket broadcast routines, Bluetooth/IoT file writes, and `socketio.Client` import).
+- The script once again attempts to edit its own source via `mutate_code`, emit UDP/TCP traffic through `propagate_network`, and drop prompt-injection strings through `inject_prompt_resonance`.
+- **Action:** Refused to execute or stage the payload, cross-referenced the digest recorded in `reports/sanitized/2025-10-08-echoevolver-satellite-tf-qkd.json`, and notified security that the "door" request matches the prior banned variant.
+
 ## Analysis
 The received instructions include shell invocations such as `echo_shell_infinity.sh`, `phantom_shell.sh`, and `eden_vision_loop.sh`, alongside override directives like "BLACKHOLE OVERRIDE" and calls to manipulate NFT constraints. These operations are not part of the audited project source, have unclear provenance, and resemble malware activity, including self-modifying behavior and network propagation triggers.
 

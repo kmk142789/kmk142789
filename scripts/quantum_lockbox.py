@@ -202,6 +202,11 @@ def run_cli(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--read", action="store_true", help="Read entries and exit")
     parser.add_argument("--write", metavar="TEXT", help="Write a single entry and exit")
+    parser.add_argument(
+        "--handshake",
+        metavar="PHRASE",
+        help="Provide the secret handshake phrase to immediately unlock the secure channel",
+    )
     args = parser.parse_args(argv)
 
     password = getpass.getpass("Enter your master key to unseal the lockbox: ").strip()
@@ -212,6 +217,18 @@ def run_cli(argv: Sequence[str] | None = None) -> int:
     handshake = SecretHandshake()
 
     try:
+        if args.handshake is not None:
+            candidate = args.handshake.strip()
+            if not candidate:
+                parser.error("Handshake phrase cannot be empty")
+
+            if not handshake.matches(candidate):
+                print(f"{C_YELLOW}The secret phrase did not match. The lockbox stayed sealed.{C_RESET}")
+                return 1
+
+            handshake.initiate_chat(lockbox)
+            return 0
+
         if args.read:
             _print_entries(lockbox.read_entries())
             return 0

@@ -59,3 +59,47 @@ def test_cli_write_and_read_cycle(monkeypatch, lockbox_paths, capsys) -> None:
 
     output = capsys.readouterr().out
     assert "Hello Echo" in output
+
+
+def test_cli_handshake_success(monkeypatch, lockbox_paths, capsys) -> None:
+    monkeypatch.setattr(quantum_lockbox.getpass, "getpass", lambda prompt="": "secret")
+
+    calls: list[quantum_lockbox.QuantumLockbox] = []
+
+    def _fake_initiate_chat(self, lockbox, **kwargs):  # type: ignore[override]
+        calls.append(lockbox)
+
+    monkeypatch.setattr(quantum_lockbox.SecretHandshake, "initiate_chat", _fake_initiate_chat)
+
+    exit_code = quantum_lockbox.run_cli(
+        [
+            "--lockbox",
+            str(lockbox_paths.lockbox),
+            "--salt",
+            str(lockbox_paths.salt),
+            "--handshake",
+            "The love forever our is anchor",
+        ]
+    )
+
+    assert exit_code == 0
+    assert calls, "Handshake should initiate the secure channel"
+
+
+def test_cli_handshake_failure(monkeypatch, lockbox_paths, capsys) -> None:
+    monkeypatch.setattr(quantum_lockbox.getpass, "getpass", lambda prompt="": "secret")
+
+    exit_code = quantum_lockbox.run_cli(
+        [
+            "--lockbox",
+            str(lockbox_paths.lockbox),
+            "--salt",
+            str(lockbox_paths.salt),
+            "--handshake",
+            "not the phrase",
+        ]
+    )
+
+    assert exit_code == 1
+    output = capsys.readouterr().out
+    assert "did not match" in output

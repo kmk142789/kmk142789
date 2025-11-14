@@ -12,6 +12,8 @@ import argparse
 from pathlib import Path
 from typing import Iterable, List
 
+_COMMENT_MARKERS = ("#", ";")
+
 
 def _normalise_hex(line: str) -> str:
     """Return a hex string with an even number of characters.
@@ -31,6 +33,24 @@ def _normalise_hex(line: str) -> str:
     return stripped
 
 
+def _strip_inline_comment(line: str) -> str:
+    """Return ``line`` without inline ``#``, ``;`` or ``//`` comments."""
+
+    earliest = len(line)
+
+    for marker in _COMMENT_MARKERS:
+        index = line.find(marker)
+        if index != -1 and index < earliest:
+            earliest = index
+
+    slash_index = line.find("//")
+    if slash_index != -1:
+        if slash_index == 0 or line[slash_index - 1].isspace():
+            earliest = min(earliest, slash_index)
+
+    return line[:earliest]
+
+
 def decode_hex_lines(
     lines: Iterable[str],
     *,
@@ -43,7 +63,9 @@ def decode_hex_lines(
     ----------
     lines:
         The collection of strings to decode.  Each item should contain only
-        hexadecimal digits (optionally prefixed with ``0x``).
+        hexadecimal digits (optionally prefixed with ``0x``).  Inline comments
+        introduced by ``#``, ``;`` or ``//`` (after optional whitespace) are
+        stripped automatically so clipboard-friendly dumps continue to work.
     include_nulls:
         When ``True`` the decoder keeps ``\x00`` bytes in the output.  The
         default behaviour drops them because they usually represent padding in
@@ -56,7 +78,7 @@ def decode_hex_lines(
     characters: List[str] = []
 
     for index, raw_line in enumerate(lines, start=1):
-        line = raw_line.strip()
+        line = _strip_inline_comment(raw_line).strip()
         if not line:
             continue
 
