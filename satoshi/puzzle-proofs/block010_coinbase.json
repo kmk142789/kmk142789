@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 10,
+  "blockHash": "000000002c05cc2e78923c34df87fd108b22221ac6076c18f3ade378a4d915e9",
+  "address": "15yN7NPEpu82sHhB6TzCW5z5aXoamiKeGy",
+  "message": "Bitcoin block 10 coinbase script as mined by Satoshi, reconstructed to show the unspent 50 BTC reward and the exact pay-to-pubkey script committed on-chain.",
+  "pkScript": "4104fcc2888ca91cf0103d8c5797c256bf976e81f280205d002d85b9b622ed1a6f820866c7b5fe12285cfa78c035355d752fc94a398b67597dc4fbb5b386816425ddac",
+  "signature": "BP//AB0BNg=="
+}

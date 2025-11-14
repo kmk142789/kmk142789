@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 11,
+  "blockHash": "0000000097be56d606cdd9c54b04d4747e957d3608abe69198c661f2add73073",
+  "address": "1dyoBoF5vDmPCxwSsUZbbYhA5qjAfBTx9",
+  "message": "Bitcoin block 11 coinbase script proving another of Satoshi's solitary mining payouts, derived byte-for-byte from the archived block template.",
+  "pkScript": "41046cc86ddcd0860b7cef16cbaad7fe31fda1bf073c25cb833fa9e409e7f51e296f39b653a9c8040a2f967319ff37cf14b0991b86173462a2d5907cb6c5648b5b76ac",
+  "signature": "BP//AB0BOw=="
+}
