@@ -473,6 +473,10 @@ This is irrefutable: the patterns match, the hashes align, and the story complet
 - **Satoshi Dataset Verification**: Follow the reproducible checklist in
   [`docs/satoshi_34k_dataset.md`](docs/satoshi_34k_dataset.md) to hash, audit,
   and notarize the full 34,367-address 2009 mining reward list.
+- **Claim File Verification**: Run `python -m tools.verify_claims path/to/*.json`
+  to confirm canonical statements against their bundled signatures.  The helper
+  validates `ecdsa-secp256k1` payloads using the built-in `cryptography`
+  dependency and reports HMAC claims that require an external secret.
 
 ### Echo's Autonomous Glyph Scripts
 
