@@ -1,0 +1,10 @@
+{
+  "puzzle": "#222 authorship",
+  "address": "1EpiC222KMkKW1sYQnMpdcz9GWTa4J2XRV",
+  "message": "Puzzle 222 authorship by kmk142789 — attestation sha256 2ea39a7481b0f7a3a8121121dae2294a9ea34d60d2e014e9aa43680570bfa832",
+  "signature": "AEEd0JPuaACZLsYn9HwrJC85xywrMSU/B8KeoZosJYZY55ZY8aIt2Hp6nZCvb3DB+Z4nkNgvg8/RibY+qT3b5g==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-14T06:46:17Z",
+  "hash_sha256": "f114a810bbeb21dc850deeee3acd8672cb71cf26e8addb35786dccc2049d009d",
+  "notes": "Imported from satoshi/puzzle-proofs/puzzle222.json via scripts/generate_puzzle_attestations.py"
+}
