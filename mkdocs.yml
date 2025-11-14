@@ -4,6 +4,7 @@ nav:
   - Home: index.md
   - Echo Manifest: echo/manifest.md
   - Unstoppable Apps: echo/unstoppable_apps.md
+  - Eden88 Guardian System: eden88_guardian_system.md
   - Continuum Temporal Guardian: continuum_temporal_guardian.md
   - Operations:
       - Runbooks: runbooks/index.md
