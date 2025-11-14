@@ -59,8 +59,8 @@ def test_parse_compass_payload(sample_payload: dict[str, object]) -> None:
     assert pytest.approx(report.stability_score.delta, rel=1e-9) == 0.19
 
     summary = report.render_summary()
-    assert "decrease from 70.00 to 65.00" in summary
-    assert "increase from 20.00 to 30.00" in summary
+    assert "↓ decrease from 70.00 to 65.00" in summary
+    assert "↑ increase from 20.00 to 30.00" in summary
     assert "guardian-mesh" in summary
     assert "Stability shifts +0.19" in summary
 
@@ -73,7 +73,9 @@ def test_weight_direction_with_small_delta() -> None:
         rationale="balance",
     )
     assert recommendation.direction() == "maintain"
-    assert "hold" in recommendation.render_summary()
+    summary = recommendation.render_summary()
+    assert "hold" in summary
+    assert summary.startswith("echo: → hold")
 
 
 def test_render_summary_handles_empty_sections() -> None:

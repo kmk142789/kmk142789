@@ -61,10 +61,17 @@ class WeightRecommendation:
         """Return a compact summary sentence for the recommendation."""
 
         direction = self.direction()
+        symbol = {
+            "increase": "↑",
+            "decrease": "↓",
+            "maintain": "→",
+        }.get(direction, "→")
         if direction == "maintain":
-            change = f"hold at {self.current:.2f}"
+            change = f"{symbol} hold at {self.current:.2f}"
         else:
-            change = f"{direction} from {self.current:.2f} to {self.recommended:.2f}"
+            change = (
+                f"{symbol} {direction} from {self.current:.2f} to {self.recommended:.2f}"
+            )
         if self.rationale:
             return f"{self.name}: {change} ({self.rationale})"
         return f"{self.name}: {change}"
