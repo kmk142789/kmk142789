@@ -9,3 +9,6 @@
   {"path":"artifacts/policies/privacy_statement.md","sha256":"b9ac30a8ff2de7bbc3ddd4e769a422ed9fc6800b718c0a981aa30cbe301adbfb"},
   {"path":"artifacts/policies/sexual_violence_policy.md","sha256":"2b70ab8b203c26f8dc8d9828ca78cba4dac2c6d57a1248ec0add5366940697ab"}
 ],"review":"pending","notes":"Ontario PCC registration kit assembled; requires legal QA before submission."}
+{"timestamp":"2025-05-11T12:00:00Z","action":"instructor_qualifications_compiled","artifacts":[
+  {"path":"artifacts/instructor_qualifications_register.yaml","sha256":"6e8e0fb9cd304a9c4acaa02314d28a2dc205bd74b02efca2143774b648ad330e"}
+],"review":"pending","notes":"Instructor qualification roster created with regulatory citations, background checks, and VC evidence references."}

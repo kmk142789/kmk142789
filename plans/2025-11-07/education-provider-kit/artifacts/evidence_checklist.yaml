@@ -18,7 +18,8 @@ submission_checklist:
   - item: Instructor CVs + background checks
     reference: "O. Reg. 415/06 s.11"
     owner: "HR Lead"
-    status: "to-collect"
+    status: "attached"
+    evidence_ref: "artifacts/instructor_qualifications_register.yaml"
   - item: Program outlines and learning outcomes
     reference: "O. Reg. 415/06 s.20"
     owner: "Curriculum Committee"
