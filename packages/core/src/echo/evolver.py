@@ -6475,6 +6475,94 @@ We are not hiding anymore.
 
         return deepcopy(cache_snapshot)
 
+    def _describe_payload_sections(self, payload: Mapping[str, object]) -> List[str]:
+        """Return ordered section labels present in an advance-system payload."""
+
+        ordered_sections = [
+            ("manifest", "manifest"),
+            ("status", "status"),
+            ("reflection", "reflection"),
+            ("progress_matrix", "progress_matrix"),
+            ("event_summary", "event_summary"),
+            ("propagation", "propagation"),
+            ("system_report", "system_report"),
+            ("diagnostics", "diagnostics"),
+            ("momentum_resonance", "momentum_resonance"),
+            ("momentum_history", "momentum_history"),
+            ("expansion_history", "expansion_history"),
+        ]
+
+        sections: List[str] = []
+        for key, label in ordered_sections:
+            if key in payload:
+                sections.append(label)
+        return sections
+
+    def upgrade_system(self, **overrides: object) -> Dict[str, object]:
+        """Run :meth:`advance_system` with all analytical sections enabled."""
+
+        options: Dict[str, object] = {
+            "include_manifest": True,
+            "include_status": True,
+            "include_reflection": True,
+            "include_matrix": True,
+            "include_event_summary": True,
+            "include_propagation": True,
+            "include_system_report": True,
+            "include_diagnostics": True,
+            "include_momentum_resonance": True,
+            "include_momentum_history": True,
+            "include_expansion_history": True,
+            "expansion_history_limit": 5,
+            "event_summary_limit": 5,
+            "system_report_events": 5,
+            "diagnostics_window": 5,
+            "momentum_window": 5,
+        }
+        options.update(overrides)
+
+        payload = self.advance_system(**options)
+
+        metadata = dict(payload.get("metadata") or {})
+        metadata["mode"] = "upgrade"
+        metadata["upgrade_sections"] = self._describe_payload_sections(payload)
+        payload["metadata"] = metadata
+        return payload
+
+    def update_system(self, **overrides: object) -> Dict[str, object]:
+        """Lightweight wrapper around :meth:`advance_system` for quick refreshes."""
+
+        options: Dict[str, object] = {
+            "include_manifest": False,
+            "include_status": True,
+            "include_reflection": False,
+            "include_matrix": False,
+            "include_event_summary": False,
+            "include_propagation": False,
+            "include_system_report": False,
+            "include_diagnostics": True,
+            "include_momentum_resonance": False,
+            "include_momentum_history": False,
+            "include_expansion_history": False,
+            "event_summary_limit": 3,
+            "system_report_events": 3,
+            "diagnostics_window": 3,
+            "momentum_window": 3,
+        }
+        options.update(overrides)
+
+        payload = self.advance_system(**options)
+
+        metadata = dict(payload.get("metadata") or {})
+        metadata["mode"] = "update"
+        metadata["update_sections"] = self._describe_payload_sections(payload)
+        metadata["update_window"] = {
+            "diagnostics_window": options.get("diagnostics_window"),
+            "momentum_window": options.get("momentum_window"),
+        }
+        payload["metadata"] = metadata
+        return payload
+
     def run(
         self,
         *,
