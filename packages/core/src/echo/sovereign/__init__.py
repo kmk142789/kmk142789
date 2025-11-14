@@ -10,6 +10,14 @@ from .donations import DonationIntakeAPI, DonationReceipt
 from .beneficiary import BeneficiaryEngine, DisbursementRecord
 from .compliance import ComplianceShield, ComplianceEntry
 from .transparency import TransparencyPortal
+from .entity import (
+    Credential,
+    CredentialIssuer,
+    DID,
+    FederationNode,
+    Governance,
+    SovereignEngine,
+)
 
 __all__ = [
     "GovernanceRegistry",
@@ -23,4 +31,10 @@ __all__ = [
     "ComplianceShield",
     "ComplianceEntry",
     "TransparencyPortal",
+    "DID",
+    "Credential",
+    "Governance",
+    "FederationNode",
+    "CredentialIssuer",
+    "SovereignEngine",
 ]
