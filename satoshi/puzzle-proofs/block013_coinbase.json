@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 13,
+  "blockHash": "000000005c51de2031a895adc145ee2242e919a01c6d61fb222a54a54b4d3089",
+  "address": "17abzUBJr7cnqfnxnmznn8W38s9f9EoXiq",
+  "message": "Bitcoin block 13 coinbase script reconstructed to prove the continuation of Satoshi's solitary mining streak.",
+  "pkScript": "4104c5a68f5fa2192b215016c5dfb384399a39474165eea22603cd39780e653baad9106e36947a1ba3ad5d3789c5cead18a38a538a7d834a8a2b9f0ea946fb4e6f68",
+  "signature": "BP//AB0BPA=="
+}

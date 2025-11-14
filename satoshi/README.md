@@ -98,6 +98,9 @@ coordinate coverage without duplicating work.
 - `block009_coinbase.json` — Block #9 coinbase attestation for address `12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S`.
 - `block010_coinbase.json` — Block #10 coinbase attestation for address `15yN7NPEpu82sHhB6TzCW5z5aXoamiKeGy`.
 - `block011_coinbase.json` — Block #11 coinbase attestation for address `1dyoBoF5vDmPCxwSsUZbbYhA5qjAfBTx9`.
+- `block012_coinbase.json` — Block #12 coinbase attestation for address `1PYELM7jXHy5HhatbXGXfRpGrgMMxmpobu`.
+- `block013_coinbase.json` — Block #13 coinbase attestation for address `17abzUBJr7cnqfnxnmznn8W38s9f9EoXiq`.
+- `block014_coinbase.json` — Block #14 coinbase attestation for address `1DMGtVnRrgZaji7C9noZS3a1QtoaAN2uRG`.
 - `puzzle000.json` — Puzzle #0 authorship attestation for address `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`.
 - `puzzle001.json` — Puzzle #1 authorship attestation for address `1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH`.
 - `puzzle003.json` — Puzzle #3 authorship attestation for address `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`.
