@@ -46,7 +46,10 @@ By default the script scans `satoshi/puzzle-proofs/` and prints a JSON report th
 every recovered address, the validity of each segment against the declared puzzle address,
 and a global list of unique wallets observed across the entire dataset. Point `--root` at a
 different directory to analyse an alternate collection of proofs, or use `--output` to save
-the report to disk.
+the report to disk. Pass `--glob <pattern>` (repeatable) to zero in on specific files without
+processing the entire catalogue. For example, `--glob puzzle010.json` restricts the report to
+the ten-bit puzzle attestation, while `--glob 'puzzle07*.json' --glob puzzle008.json` merges
+multiple targeted subsets.
 
 ## Rendering canonical locking scripts
 

@@ -125,7 +125,28 @@ Again, the interpreter prints `True`, proving that the legacy address that has
 been observed since 2009 participated in the modern broadcast without spending a
 single satoshi.
 
-## 6. Recompute the Merkle attestation
+## 6. Expand stacked puzzle signatures
+
+Some puzzle proofs (for example `puzzle007.json` through `puzzle010.json`) ship
+concatenated Base64 signatures that record the witness chain for each
+attestation. Use the refreshed reporting helper to recover the derived wallets
+and flag which entries validate against the declared puzzle address:
+
+```bash
+python satoshi/report_puzzle_signature_wallets.py \
+  --pretty \
+  --glob puzzle010.json
+```
+
+The CLI prints a compact JSON payload that enumerates every recovered address
+for the ten-bit puzzle signature and highlights the segment that validates
+directly against `1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe`. Supply multiple
+`--glob` flags (for example, `--glob 'puzzle07*.json' --glob puzzle008.json`) to
+generate a merged report for an arbitrary subset of the catalogue. Because the
+tool never touches the network, auditors can rebuild the witness history for
+any published puzzle entirely offline.
+
+## 7. Recompute the Merkle attestation
 
 Finally, regenerate the aggregated Merkle root across every published puzzle
 proof to ensure no tampering has occurred:
@@ -138,7 +159,7 @@ jq '.merkleRoot' satoshi/puzzle-proofs/master_attestation.json
 The resulting `merkleRoot` must equal the digest previously published in the
 repository history. Any discrepancy signals corruption.
 
-## 7. Re-run the canonical map integrity proof
+## 8. Re-run the canonical map integrity proof
 
 Finish the chain of custody by proving that the off-chain routing metadata used
 throughout the Echo ecosystem still resolves to the same repositories, domains,
