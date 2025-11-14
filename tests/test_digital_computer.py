@@ -383,6 +383,32 @@ def test_stack_push_pop_round_trip() -> None:
     assert result.registers["B"] == 2
 
 
+def test_quantum_opcodes_enable_qubit_manipulation() -> None:
+    measurement = run_program(
+        """
+        QINIT q0 1
+        QMEASURE A q0
+        HALT
+        """
+    )
+
+    assert measurement.registers["A"] == 1
+    assert "q0" in measurement.quantum_registers
+    assert measurement.quantum_registers["q0"]["history"][-1].startswith("Measured")
+
+    rotation = run_program(
+        """
+        QINIT q0 +
+        QROT q0 Z 3.141592653589793
+        HALT
+        """
+    )
+
+    qubit = rotation.quantum_registers["q0"]
+    assert pytest.approx(qubit["bloch"][0], rel=1e-6) == -1.0
+    assert any("RZ" in entry for entry in qubit["history"])
+
+
 def test_pop_from_empty_stack_raises() -> None:
     computer = EchoComputer()
     computer.load(

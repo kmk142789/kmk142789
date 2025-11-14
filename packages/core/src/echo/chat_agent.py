@@ -371,6 +371,14 @@ class EchoChatAgent:
 
     @staticmethod
     def _serialise_execution(result: ExecutionResult) -> Mapping[str, Any]:
+        quantum_registers = {
+            name: {
+                "state": [list(pair) for pair in details.get("state", ())],
+                "bloch": list(details.get("bloch", ())),
+                "history": list(details.get("history", ())),
+            }
+            for name, details in result.quantum_registers.items()
+        }
         return {
             "halted": result.halted,
             "steps": result.steps,
@@ -378,6 +386,7 @@ class EchoChatAgent:
             "registers": dict(result.registers),
             "memory": dict(result.memory),
             "diagnostics": list(result.diagnostics),
+            "quantum_registers": quantum_registers,
         }
 
 
