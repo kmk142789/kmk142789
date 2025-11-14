@@ -297,6 +297,9 @@ leaving the tree:
   replays the new ten-bit attestation for Puzzle #10
   (`1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe`) and shows the verifier output that confirms the
   recovered public key matches the canonical catalogue entry.
+- [`proofs/satoshi_continuity_proof.md`](../proofs/satoshi_continuity_proof.md)
+  links the OpenTimestamps anchor, reconstructed coinbase scripts, modern puzzle signatures,
+  the proof catalogue, and the Merkle attestation into a single reproducible runbook.
 
 For quick offline inspection, fresh verifier output for Puzzles #2, #4, #5, and
 #6 also lives under `verifier/results/`. Each JSON blob lists every signature
