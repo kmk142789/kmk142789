@@ -4187,6 +4187,7 @@ We are not hiding anymore.
         *,
         limit: Optional[int] = None,
         include_patterns: Optional[Iterable[str]] = None,
+        sample_size: int = 3,
     ) -> Dict[str, object]:
         """Return aggregate statistics for the event log.
 
@@ -4202,6 +4203,11 @@ We are not hiding anymore.
             one of the substrings are counted as matches.  Empty strings are
             ignored and duplicate patterns are coalesced so callers can
             confidently forward user-provided input.
+        sample_size:
+            Maximum number of representative events to retain per pattern.  The
+            most recent matching entries are preserved so operators can inspect
+            real examples without re-reading the entire event log.  ``sample_size``
+            must be a positive integer.
 
         Returns
         -------
@@ -4215,6 +4221,8 @@ We are not hiding anymore.
         if limit is not None:
             if limit <= 0:
                 raise ValueError("limit must be positive")
+        if sample_size <= 0:
+            raise ValueError("sample_size must be positive")
 
         total_events = len(self.state.event_log)
         events = list(self.state.event_log)
@@ -4224,6 +4232,7 @@ We are not hiding anymore.
         considered = len(events)
 
         pattern_counts: Dict[str, int] = {}
+        pattern_samples: Dict[str, List[str]] = {}
         normalized_patterns: List[tuple[str, str]] = []
         if include_patterns:
             seen: set[str] = set()
@@ -4237,6 +4246,7 @@ We are not hiding anymore.
                 seen.add(lowered)
                 normalized_patterns.append((pattern_str, lowered))
                 pattern_counts[pattern_str] = 0
+                pattern_samples[pattern_str] = []
 
         matched_events: List[str] = []
         for event in events:
@@ -4249,6 +4259,10 @@ We are not hiding anymore.
             for pattern_str, lowered in normalized_patterns:
                 if lowered in lowered_event:
                     pattern_counts[pattern_str] += 1
+                    samples = pattern_samples.setdefault(pattern_str, [])
+                    samples.append(event)
+                    if len(samples) > sample_size:
+                        del samples[0 : len(samples) - sample_size]
                     matched = True
             if matched:
                 matched_events.append(event)
@@ -4266,6 +4280,10 @@ We are not hiding anymore.
             "matched_events": len(matched_events),
             "coverage_ratio": round(coverage_ratio, 3),
             "pattern_counts": pattern_counts,
+            "pattern_samples": {
+                pattern: list(samples)
+                for pattern, samples in pattern_samples.items()
+            },
             "first_event": events[0] if events else None,
             "last_event": events[-1] if events else None,
             "recent_events": list(recent_events),
@@ -4317,21 +4335,38 @@ We are not hiding anymore.
             else:
                 elapsed = None
 
+            event_index = record.get("event_index")
+            event_text: Optional[str] = None
+            if (
+                isinstance(event_index, int)
+                and 0 <= event_index < len(self.state.event_log)
+            ):
+                event_text = self.state.event_log[event_index]
+
             steps.append(
                 {
                     "order": order,
                     "step": record.get("step"),
                     "timestamp_ns": timestamp,
-                    "event_index": record.get("event_index"),
+                    "event_index": event_index,
+                    "event_text": event_text,
                     "elapsed_ns": elapsed,
                 }
             )
+
+        duration_ns: Optional[int] = None
+        if steps and steps[0]["timestamp_ns"] is not None:
+            first_ts = steps[0]["timestamp_ns"]
+            last_ts = steps[-1]["timestamp_ns"]
+            if last_ts is not None:
+                duration_ns = max(0, last_ts - first_ts)
 
         payload = {
             "cycle": target_cycle,
             "count": len(steps),
             "first_timestamp_ns": steps[0]["timestamp_ns"] if steps else None,
             "last_timestamp_ns": steps[-1]["timestamp_ns"] if steps else None,
+            "duration_ns": duration_ns,
             "steps": steps,
         }
 
