@@ -1,0 +1,30 @@
+{
+  "root": "satoshi/puzzle-proofs",
+  "file_total": 2,
+  "verified_proofs": 2,
+  "fully_verified": 2,
+  "segments_checked": 2,
+  "valid_segments": 2,
+  "skipped": [],
+  "entries": [
+    {
+      "path": "satoshi/puzzle-proofs/puzzle001-genesis-broadcast.json",
+      "label": "puzzle001-genesis-broadcast.json",
+      "segments": 1,
+      "valid_segments": 1,
+      "fully_verified": true,
+      "target_kind": "address",
+      "address": "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH"
+    },
+    {
+      "path": "satoshi/puzzle-proofs/puzzle010.json",
+      "label": "puzzle010.json",
+      "segments": 1,
+      "valid_segments": 1,
+      "fully_verified": true,
+      "target_kind": "address",
+      "puzzle": 10,
+      "address": "1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe"
+    }
+  ]
+}
