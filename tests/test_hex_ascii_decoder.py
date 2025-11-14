@@ -68,3 +68,15 @@ def test_allowing_non_printable_bytes():
 
     # ``\x07`` is kept when the flag is enabled.
     assert result == "\x07A"
+
+
+def test_decoding_skips_inline_comments():
+    lines = [
+        "41 # A",
+        "42    // keep B",
+        "43 ; semicolon",
+        "   # comment-only line is ignored",
+        "44\t // with leading whitespace",
+    ]
+
+    assert decode_hex_lines(lines) == "ABCD"
