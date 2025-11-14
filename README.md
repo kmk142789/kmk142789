@@ -216,6 +216,21 @@ original HKDF + scrypt derivation scheme and works without external
 dependencies.  When the optional ``ecdsa`` package is available the claim
 signer automatically upgrades to secp256k1 signatures.
 
+### Initiate a lightweight ceremonial protocol
+
+Use the new `protocol_initiator.py` helper whenever you want to capture a
+small "protocol" run for testing, demos, or storytelling exercises:
+
+```bash
+python protocol_initiator.py --protocol harmony --output protocol_result.json
+
+# Alternate pulse mode with custom beats
+python protocol_initiator.py --protocol pulse --beats 6 --output pulse_result.json
+```
+
+Each invocation stores structured metadata about the selected protocol run in
+the target JSON file so other tools can inspect or replay the ritual context.
+
 ### Puzzle brute-force scanner
 
 Hook a modernised Mizogg-style hunt directly into the shared puzzle dataset:
