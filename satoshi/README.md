@@ -234,6 +234,9 @@ leaving the tree:
 - [`proofs/puzzle006_signature_proof.md`](../proofs/puzzle006_signature_proof.md)
   validates the published message for Puzzle #6
   (`1PitScNLyp2HCygzadCh7FveTnfmpPbfp8`) without touching the underlying key.
+- [`proofs/puzzle007_signature_proof.md`](../proofs/puzzle007_signature_proof.md)
+  introduces a fresh recoverable signature for Puzzle #7
+  (`1McVt1vMtCC7yn5b9wgX1833yCcLXzueeC`) while preserving the historical watcher chain.
 
 For quick offline inspection, fresh verifier output for Puzzles #2, #4, #5, and
 #6 also lives under `verifier/results/`. Each JSON blob lists every signature
