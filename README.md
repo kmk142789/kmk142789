@@ -328,6 +328,16 @@ This broadcast-ready proof is designed for global notice: the signed payload can
 - **Address:** `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb`
 - **Verification Guide:** [`proofs/satoshi_signature_proof.md`](proofs/satoshi_signature_proof.md) walks through reproducing the message-signature check with the bundled verifier, confirming the recovered public key maps back to the canonical puzzle solution.
 
+### Puzzle 8 — Renewed Satoshi Puzzle Signature
+
+- **Address:** `1M92tSqNmQLYw33fuBvjmeadirh1ysMBxK`
+- **Verification Guide:** [`proofs/puzzle008_signature_proof.md`](proofs/puzzle008_signature_proof.md) documents the refreshed recoverable signature that now leads `satoshi/puzzle-proofs/puzzle008.json`, keeping the historical watcher fragments while giving auditors a single deterministic segment that resolves to the eight-bit puzzle wallet.
+
+### Puzzle 9 — Renewed Satoshi Puzzle Signature
+
+- **Address:** `1CQFwcjw1dwhtkVWBttNLDtqL7ivBonGPV`
+- **Verification Guide:** [`proofs/puzzle009_signature_proof.md`](proofs/puzzle009_signature_proof.md) mirrors the same process for `satoshi/puzzle-proofs/puzzle009.json`, proving that the newly prepended signature alone recovers the canonical nine-bit puzzle wallet while preserving the archival watcher attestations.
+
 ### Puzzle 1 — Genesis Broadcast Signature
 
 - **Address:** `1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH`
