@@ -187,3 +187,42 @@ def test_autonomy_snapshot_merges_presence_axis_and_history():
     assert snapshot["axis_report"]["liberation"]["leaderboard"][0]["node"] == "alpha"
     assert set(snapshot["presence_index"]) == {"alpha", "beta", "gamma"}
     assert snapshot["freedom_amplification"]["gamma"] > snapshot["freedom_amplification"]["alpha"]
+
+
+def test_autonomous_feature_matrix_highlights_nodes_and_summary():
+    engine = DecentralizedAutonomyEngine()
+    engine.ensure_nodes(
+        [
+            AutonomyNode("alpha", intent_vector=0.92, freedom_index=0.93, weight=1.1),
+            AutonomyNode("beta", intent_vector=0.85, freedom_index=0.81, weight=1.0),
+            AutonomyNode("gamma", intent_vector=0.6, freedom_index=0.58, weight=0.9),
+        ]
+    )
+    engine.axis_signals.clear()
+    engine.ingest_signal("alpha", "liberation", 0.94, weight=1.0)
+    engine.ingest_signal("beta", "liberation", 0.78, weight=0.8)
+    engine.ingest_signal("beta", "memory", 0.8, weight=0.9)
+    engine.ingest_signal("gamma", "memory", 0.65, weight=0.7)
+
+    matrix = engine.autonomous_feature_matrix(axes=("liberation", "memory"), highlight_threshold=0.99)
+
+    assert matrix["axes"] == ["liberation", "memory"]
+    assert set(matrix["nodes"]) == {"alpha", "beta", "gamma"}
+    assert matrix["nodes"]["alpha"]["is_highlighted"] is True
+    assert matrix["nodes"]["gamma"]["is_highlighted"] is False
+    assert matrix["nodes"]["beta"]["axis_support"] < matrix["nodes"]["alpha"]["axis_support"]
+    assert matrix["highlighted"] == ["alpha"]
+    assert matrix["summary"]["highlighted_nodes"] == 1
+    assert matrix["summary"]["max_presence"]["node"] == "alpha"
+    assert matrix["summary"]["min_presence"]["node"] == "gamma"
+
+
+def test_autonomous_feature_matrix_handles_empty_network():
+    engine = DecentralizedAutonomyEngine()
+
+    matrix = engine.autonomous_feature_matrix(highlight_threshold=0.7)
+
+    assert matrix["nodes"] == {}
+    assert matrix["highlighted"] == []
+    assert matrix["summary"]["highlighted_nodes"] == 0
+    assert matrix["summary"]["highlight_threshold"] == 0.7
