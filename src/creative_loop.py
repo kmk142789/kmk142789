@@ -18,6 +18,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 import json
+from pathlib import Path
 import random
 from typing import Dict, Iterable, List, Tuple
 
@@ -95,6 +96,7 @@ class LoopResult:
     lines: List[str]
     diagnostics: LoopDiagnostics
     rhythm: LoopRhythm
+    timeline: List[Dict[str, object]] = field(default_factory=list)
 
     def render(self) -> List[str]:
         diagnostic_line = f"[diagnostics] {self.diagnostics.render_report()}"
@@ -117,7 +119,25 @@ class LoopResult:
                 "accents": list(self.rhythm.accents),
                 "dynamic_tempi": list(self.rhythm.dynamic_tempi),
             },
+            "timeline": list(self.timeline),
         }
+
+
+def load_fragments_from_file(path: str | Path) -> List[str]:
+    """Load textual fragments from a newline-delimited file.
+
+    Empty lines and comments (``#`` prefix) are ignored.
+    """
+
+    file_path = Path(path)
+    contents = file_path.read_text(encoding="utf-8")
+    fragments: List[str] = []
+    for raw_line in contents.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        fragments.append(line)
+    return fragments
 
 
 def _choose_voice(random_state: random.Random, *, previous: str | None = None) -> str:
@@ -166,7 +186,7 @@ def _render_line(
     index: int,
     *,
     previous_voice: str | None,
-) -> Tuple[str, str, str | None]:
+) -> Tuple[str, str, str | None, int, str, str]:
     """Build a single statement within the loop."""
 
     fragment = random_state.choice(seed.fragments) if seed.fragments else None
@@ -197,7 +217,7 @@ def _render_line(
             f" keeping the {texture} cadence {('steady' if accent else 'open')}.",
         ]
     )
-    return line, voice, fragment
+    return line, voice, fragment, accent, tempo_hint, texture
 
 
 def generate_loop(seed: LoopSeed) -> LoopResult:
@@ -208,26 +228,66 @@ def generate_loop(seed: LoopSeed) -> LoopResult:
     diagnostics = LoopDiagnostics()
 
     lines: List[str] = []
+    timeline: List[Dict[str, object]] = []
     previous_voice: str | None = None
     for index in range(seed.pulses):
-        line, voice, fragment = _render_line(
+        line, voice, fragment, accent, tempo_hint, texture = _render_line(
             seed,
             random_state,
             rhythm,
             index,
             previous_voice=previous_voice,
         )
-        diagnostics.register(voice, fragment, rhythm.accent_for(index))
+        diagnostics.register(voice, fragment, accent)
         lines.append(line)
+        timeline_entry = {
+            "index": index,
+            "voice": voice,
+            "fragment": fragment,
+            "accent": accent,
+            "tempo_hint": tempo_hint,
+            "texture": texture,
+            "line": line,
+        }
+        timeline.append(timeline_entry)
         previous_voice = voice
 
-    return LoopResult(lines=lines, diagnostics=diagnostics, rhythm=rhythm)
+    return LoopResult(lines=lines, diagnostics=diagnostics, rhythm=rhythm, timeline=timeline)
+
+
+def _render_table(loop_result: LoopResult) -> str:
+    """Render the loop timeline as a simple ASCII table."""
+
+    headers = ["#", "voice", "fragment", "accent", "tempo", "texture", "line"]
+    rows = [
+        [
+            str(entry["index"] + 1),
+            entry["voice"],
+            entry["fragment"] or "-",
+            str(entry["accent"]),
+            entry["tempo_hint"],
+            entry["texture"],
+            entry["line"],
+        ]
+        for entry in loop_result.timeline
+    ]
+    columns = list(zip(headers, *rows)) if rows else [(header,) for header in headers]
+    widths = [max(len(cell) for cell in column) for column in columns]
+
+    def _format_row(row: List[str]) -> str:
+        padded = [cell.ljust(width) for cell, width in zip(row, widths)]
+        return " | ".join(padded)
+
+    divider = "-+-".join("-" * width for width in widths)
+    rendered_rows = [_format_row(headers), divider]
+    rendered_rows.extend(_format_row(row) for row in rows)
+    return "\n".join(rendered_rows)
 
 
 def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
     """Create a creative loop in the requested output format.
 
-    Supported formats are ``"text"``, ``"json"``, and ``"markdown"``.
+    Supported formats are ``"text"``, ``"json"``, ``"markdown"``, and ``"table"``.
     """
 
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
@@ -274,7 +334,11 @@ def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
             ]
         )
 
-    raise ValueError("Unsupported format; expected 'text', 'json', or 'markdown'.")
+    if format == "table":
+        table_body = _render_table(loop_result)
+        return "\n".join([header, "", table_body])
+
+    raise ValueError("Unsupported format; expected 'text', 'json', 'markdown', or 'table'.")
 
 
 def demo(
@@ -311,6 +375,12 @@ if __name__ == "__main__":
         help="Optional fragment to weave into the loop",
     )
     parser.add_argument(
+        "-F",
+        "--fragments-file",
+        dest="fragments_file",
+        help="Path to a newline-delimited fragments file",
+    )
+    parser.add_argument(
         "-t",
         "--tempo",
         default="andante",
@@ -332,15 +402,21 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json", "markdown"],
+        choices=["text", "json", "markdown", "table"],
         default="text",
-        help="Choose between human-readable text, JSON, or Markdown output",
+        help="Choose between human-readable text, JSON, Markdown, or table output",
     )
 
     args = parser.parse_args()
+    fragments = list(args.fragments)
+    if args.fragments_file:
+        try:
+            fragments.extend(load_fragments_from_file(args.fragments_file))
+        except OSError as exc:
+            parser.error(f"Unable to load fragments from {args.fragments_file}: {exc}")
     seed = LoopSeed(
         motif=args.motif,
-        fragments=args.fragments,
+        fragments=fragments,
         tempo=args.tempo,
         pulses=args.pulses,
         seed=args.seed,
