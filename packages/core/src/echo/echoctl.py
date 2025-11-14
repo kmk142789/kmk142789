@@ -8,6 +8,7 @@ import importlib.machinery
 import types
 import json
 import os
+import random
 import sys
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -75,6 +76,19 @@ except ImportError:  # pragma: no cover - executed when run as script
     sys.modules[_IDEA_SPEC.name] = _IDEA
     _IDEA_SPEC.loader.exec_module(_IDEA)  # type: ignore[attr-defined]
     derive_action_plan = _IDEA.derive_action_plan  # type: ignore[attr-defined]
+
+try:  # pragma: no cover - executed when run as module
+    from .evolver import EchoEvolver
+except ImportError:  # pragma: no cover - executed when run as script
+    _EVOLVER_SPEC = importlib.util.spec_from_file_location(
+        "echo.evolver", (Path(__file__).resolve().parent / "evolver.py")
+    )
+    if _EVOLVER_SPEC is None or _EVOLVER_SPEC.loader is None:
+        raise
+    _EVOLVER = importlib.util.module_from_spec(_EVOLVER_SPEC)
+    sys.modules[_EVOLVER_SPEC.name] = _EVOLVER
+    _EVOLVER_SPEC.loader.exec_module(_EVOLVER)  # type: ignore[attr-defined]
+    EchoEvolver = _EVOLVER.EchoEvolver  # type: ignore[attr-defined]
 
 try:  # pragma: no cover - executed when run as module
     from .inspiration import forge_inspiration
@@ -485,6 +499,78 @@ def run_idea(argv: List[str]) -> int:
     else:
         print(plan.to_markdown())
 
+    return 0
+
+
+def run_next_step(argv: List[str]) -> int:
+    """Reveal the evolver's current next-step recommendation."""
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl next-step",
+        description="Reveal actionable next-step guidance from EchoEvolver.",
+    )
+    parser.add_argument(
+        "--persist-artifact",
+        action="store_true",
+        help="Allow the snapshot to persist artifacts while computing the digest.",
+    )
+    parser.add_argument(
+        "--preview",
+        type=int,
+        default=3,
+        help="Number of pending steps to preview in the text output (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        help="Seed the evolver RNG before generating the recommendation.",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the recommendation payload as JSON.",
+    )
+
+    options = parser.parse_args(argv)
+    preview_count = max(0, options.preview)
+
+    rng = random.Random(options.seed) if options.seed is not None else None
+    evolver = EchoEvolver(rng=rng)
+
+    digest = evolver.cycle_digest(persist_artifact=options.persist_artifact)
+    remaining_steps = list(digest.get("remaining_steps", []))
+
+    payload = {
+        "next_step": digest.get("next_step", "Next step: advance_cycle() to begin a new orbit"),
+        "cycle": int(digest.get("cycle", 0)),
+        "progress": float(digest.get("progress", 0.0)),
+        "remaining_steps": remaining_steps,
+        "timestamp_ns": int(digest.get("timestamp_ns", 0)),
+    }
+
+    if options.json:
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
+
+    preview_steps = remaining_steps[:preview_count]
+    remainder = len(remaining_steps) - len(preview_steps)
+
+    lines = [
+        f"🧭 {payload['next_step']}",
+        "Cycle {cycle} progress: {progress:.1f}% ({remaining} steps remaining)".format(
+            cycle=payload["cycle"],
+            progress=payload["progress"] * 100,
+            remaining=len(remaining_steps),
+        ),
+    ]
+
+    if preview_steps:
+        preview_line = f"Pending: {', '.join(preview_steps)}"
+        if remainder > 0:
+            preview_line += f" (+{remainder} more)"
+        lines.append(preview_line)
+
+    print("\n".join(lines))
     return 0
 
 
@@ -979,7 +1065,7 @@ def run_puzzle(argv: List[str]) -> int:
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
         print(
-            "usage: echoctl [cycle|plan|summary|wish-report|health|pulse|groundbreaking|moonshot|wish|idea|inspire|ledger|flux|telemetry|advance|puzzle] ..."
+            "usage: echoctl [cycle|plan|summary|wish-report|health|pulse|groundbreaking|moonshot|wish|idea|next-step|inspire|ledger|flux|telemetry|advance|puzzle] ..."
         )
         return 1
     cmd = argv[1]
@@ -1014,6 +1100,8 @@ def main(argv: List[str]) -> int:
         return run_puzzle(argv[2:])
     if cmd == "idea":
         return run_idea(argv[2:])
+    if cmd == "next-step":
+        return run_next_step(argv[2:])
     if cmd == "inspire":
         return run_inspire(argv[2:])
     if cmd == "wish":
