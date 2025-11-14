@@ -7,4 +7,7 @@
   "created_at": "2025-11-14T06:46:17Z",
   "hash_sha256": "a1033f446ae46277c5d00786a80bd389b97106f2a9620a0dc816380c5633ebf6",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle220.json via scripts/generate_puzzle_attestations.py"
+  "created_at": "2025-11-06T14:02:00Z",
+  "hash_sha256": "a7f0d99b18ec45f1990eae1c63ee0e47e680e9a7640ec276b90bb8dadfcd3c15",
+  "notes": "Extends the authorship audit trail into the 220-bit range using the recoverable signature captured in satoshi/puzzle-proofs/puzzle220.json."
 }
