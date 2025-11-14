@@ -214,11 +214,25 @@ class DecentralizedAutonomyEngine:
 
         return amplification
 
-    def _axis_support_for_node(self, node_id: str) -> float:
-        """Return the blended axis support intensity for the given node."""
+    def _axis_support_for_node(
+        self, node_id: str, *, axes: Optional[Iterable[str]] = None
+    ) -> float:
+        """Return the blended axis support intensity for the given node.
 
+        Parameters
+        ----------
+        node_id:
+            Identifier of the node whose signals should be measured.
+        axes:
+            Optional iterable restricting the evaluation to a subset of axes.
+            When omitted all known axes are considered.
+        """
+
+        axes_filter = {axis.lower() for axis in axes} if axes is not None else None
         intensities: List[Tuple[float, float]] = []
-        for payloads in self.axis_signals.values():
+        for axis, payloads in self.axis_signals.items():
+            if axes_filter is not None and axis not in axes_filter:
+                continue
             for candidate, intensity, weight in payloads:
                 if candidate == node_id:
                     intensities.append((intensity, weight))
@@ -229,6 +243,113 @@ class DecentralizedAutonomyEngine:
         numerator = sum(intensity * weight for intensity, weight in intensities)
         denominator = sum(weight for _, weight in intensities) or 1.0
         return _clamp(numerator / denominator)
+
+    # ------------------------------------------------------------------
+    # Feature matrix
+    # ------------------------------------------------------------------
+    def autonomous_feature_matrix(
+        self,
+        *,
+        axes: Optional[Iterable[str]] = None,
+        highlight_threshold: float = 0.8,
+    ) -> Dict[str, object]:
+        """Return a per-node feature bundle for downstream dashboards.
+
+        The matrix fuses each node's intrinsic configuration with derived
+        analytics (presence, axis support, and core alignment).  Nodes whose
+        presence meets or exceeds ``highlight_threshold`` are surfaced in a
+        dedicated list so orchestration layers can focus on the most active
+        participants.
+        """
+
+        threshold = _clamp(highlight_threshold)
+        axes_filter = (
+            tuple(axis.lower() for axis in axes)
+            if axes is not None
+            else None
+        )
+
+        if not self.nodes:
+            return {
+                "axes": list(axes_filter or ()),
+                "nodes": {},
+                "highlighted": [],
+                "summary": {
+                    "highlight_threshold": round(threshold, 4),
+                    "highlighted_nodes": 0,
+                    "average_presence": 0.0,
+                    "max_presence": None,
+                    "min_presence": None,
+                },
+            }
+
+        presence = self.presence_index(axes=axes_filter)
+        features: Dict[str, Dict[str, object]] = {}
+        highlighted: List[str] = []
+        presence_values: List[Tuple[str, float]] = []
+
+        for node in self.nodes.values():
+            presence_score = presence.get(node.node_id, 0.0)
+            axis_support = self._axis_support_for_node(
+                node.node_id, axes=axes_filter
+            )
+            core = node.core_alignment()
+            gap = max(0.0, threshold - presence_score)
+            is_highlighted = presence_score >= threshold
+
+            vector = {
+                "intent_vector": round(_clamp(node.intent_vector), 4),
+                "freedom_index": round(_clamp(node.freedom_index), 4),
+                "weight": round(node.weight, 4),
+                "core_alignment": round(core, 4),
+                "axis_support": round(axis_support, 4),
+                "presence": round(presence_score, 4),
+                "gap_to_highlight": round(gap, 4),
+                "is_highlighted": is_highlighted,
+            }
+            features[node.node_id] = vector
+            presence_values.append((node.node_id, presence_score))
+            if is_highlighted:
+                highlighted.append(node.node_id)
+
+        average_presence = (
+            sum(score for _, score in presence_values) / len(presence_values)
+            if presence_values
+            else 0.0
+        )
+        max_presence = (
+            max(presence_values, key=lambda item: item[1]) if presence_values else None
+        )
+        min_presence = (
+            min(presence_values, key=lambda item: item[1]) if presence_values else None
+        )
+
+        summary = {
+            "highlight_threshold": round(threshold, 4),
+            "highlighted_nodes": len(highlighted),
+            "average_presence": round(_clamp(average_presence), 4),
+            "max_presence":
+                {
+                    "node": max_presence[0],
+                    "score": round(_clamp(max_presence[1]), 4),
+                }
+                if max_presence
+                else None,
+            "min_presence":
+                {
+                    "node": min_presence[0],
+                    "score": round(_clamp(min_presence[1]), 4),
+                }
+                if min_presence
+                else None,
+        }
+
+        return {
+            "axes": list(axes_filter or ()),
+            "nodes": features,
+            "highlighted": highlighted,
+            "summary": summary,
+        }
 
     # ------------------------------------------------------------------
     # Axis diagnostics

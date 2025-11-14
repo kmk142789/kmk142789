@@ -60,3 +60,27 @@ print(snapshot["freedom_amplification"])  # per-node deltas to reach the target
 Because the helpers only operate on in-memory state they are safe to call in
 CI, during local simulations, or from documentation build steps without
 triggering any network activity.
+
+## Autonomous feature matrix
+
+`DecentralizedAutonomyEngine.autonomous_feature_matrix()` exposes a
+dashboard-friendly feature bundle for each registered node.  It blends the
+intrinsic intent/freedom vectors with derived analytics:
+
+* `core_alignment` and `axis_support` give quick context on how a node is
+  behaving relative to the axes you care about.
+* `presence` and `gap_to_highlight` quantify whether the node is inside the
+  active band defined by `highlight_threshold`.
+* `is_highlighted` and the aggregate `summary` block make it trivial to surface
+  the most energized participants inside UI or reporting layers.
+
+Example:
+
+```python
+matrix = engine.autonomous_feature_matrix(axes=("liberation", "memory"), highlight_threshold=0.82)
+print(matrix["highlighted"])     # ['alpha']
+print(matrix["nodes"]["beta"]["gap_to_highlight"])  # 0.07 -> needs more presence
+```
+
+The helper only inspects the already-ingested `axis_signals`, so it can be run
+frequently without mutating state or triggering a new consensus round.
