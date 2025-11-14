@@ -235,7 +235,13 @@ export const handler = async (event) => {
 
   if (riskScore >= RISK_THRESHOLD) {
     // Optionally call contract function to pause stream
-    // TODO: send alert to compliance channel
+    await axios.post(
+      process.env.COMPLIANCE_CHANNEL_WEBHOOK,
+      {
+        text: `Little Footsteps alert – donor ${donorAddress} scored ${riskScore} on the latest transfer (${amount} USDC). Review and confirm treasury pause status.`,
+      },
+      { timeout: 5000 }
+    );
   }
 
   return { statusCode: 200, body: JSON.stringify({ status: "ok", riskScore }) };
@@ -243,6 +249,7 @@ export const handler = async (event) => {
 ```
 
 - When a flag fires, call the streaming contract's `setPaused` function and notify the compliance Matrix/Slack channel.
+- Provision a `COMPLIANCE_CHANNEL_WEBHOOK` secret per environment (Matrix, Slack, or Discord incoming webhook) so the Lambda can deliver the alert payload without leaking credentials.
 
 ### 4.2 Reporting
 - Generate daily summaries using scheduled Lambdas or GitHub Actions that compile flagged addresses, total volume, and status updates.
