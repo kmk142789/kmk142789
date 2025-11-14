@@ -220,14 +220,17 @@ class ImpactExplorerBuilder:
         donor_concentration: dict[str, Any] | None,
         runway: dict[str, Any] | None,
     ) -> dict[str, Any]:
-        return {
+        insights = {
             "largest_donation": self._summarise_event(largest_donation),
             "largest_disbursement": self._summarise_event(largest_disbursement),
             "median_donation": self._serialise_decimal(self._median(donation_amounts)),
             "median_disbursement": self._serialise_decimal(self._median(disbursement_amounts)),
-            "donor_concentration": donor_concentration,
-            "runway": runway,
         }
+        if donor_concentration is not None:
+            insights["donor_concentration"] = donor_concentration
+        if runway is not None:
+            insights["runway"] = runway
+        return insights
 
     def _donation_concentration(
         self, by_source: dict[str, dict[str, Number]], total_donations: Number
