@@ -26,13 +26,17 @@ def test_event_log_statistics_filters_and_caches_patterns() -> None:
     evolver.pending_steps()
     evolver.cycle_digest()
 
-    stats = evolver.event_log_statistics(limit=4, include_patterns=["cycle", "mutation", "cycle"])
+    stats = evolver.event_log_statistics(
+        limit=4, include_patterns=["cycle", "mutation", "cycle"]
+    )
 
     assert stats["total_events"] == 5
     assert stats["considered_events"] == 4
     assert stats["matched_events"] == 3
     assert stats["coverage_ratio"] == 0.75
     assert stats["pattern_counts"] == {"cycle": 3, "mutation": 1}
+    assert "Cycle 1 initiated" in stats["pattern_samples"]["cycle"]
+    assert stats["pattern_samples"]["mutation"][-1].startswith("Mutation seeded")
     assert stats["first_event"] == "Cycle 1 initiated"
     assert stats["last_event"].startswith("Cycle digest computed")
     assert stats["recent_events"][-1].startswith("Cycle digest computed")
@@ -53,6 +57,7 @@ def test_cycle_timeline_orders_history_and_records_cache() -> None:
         "count": 0,
         "first_timestamp_ns": None,
         "last_timestamp_ns": None,
+        "duration_ns": None,
         "steps": [],
     }
     assert "Cycle timeline exported (cycle=0, steps=0)" in evolver.state.event_log[-1]
@@ -64,6 +69,7 @@ def test_cycle_timeline_orders_history_and_records_cache() -> None:
     timeline = evolver.cycle_timeline()
     assert timeline["cycle"] == 1
     assert timeline["count"] == 3
+    assert timeline["duration_ns"] > 0
     assert [entry["step"] for entry in timeline["steps"]] == [
         "advance_cycle",
         "mutate_code",
@@ -71,6 +77,7 @@ def test_cycle_timeline_orders_history_and_records_cache() -> None:
     ]
     assert timeline["steps"][0]["elapsed_ns"] == 0
     assert timeline["steps"][1]["elapsed_ns"] > 0
+    assert timeline["steps"][0]["event_text"] == "Cycle 1 initiated"
 
     cache = evolver.state.network_cache["cycle_timelines"][1]
     assert cache["count"] == 3
