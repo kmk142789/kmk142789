@@ -351,6 +351,73 @@ class DecentralizedAutonomyEngine:
             "summary": summary,
         }
 
+    def autonomy_feature_digest(
+        self,
+        *,
+        axes: Optional[Iterable[str]] = None,
+        highlight_threshold: float = 0.8,
+        limit: int = 3,
+    ) -> str:
+        """Return a condensed textual digest of the feature matrix."""
+
+        matrix = self.autonomous_feature_matrix(
+            axes=axes, highlight_threshold=highlight_threshold
+        )
+        nodes = matrix["nodes"]
+        if not nodes:
+            return "No autonomy nodes registered; feature digest unavailable."
+
+        limit = max(1, int(limit or 1))
+        threshold = _clamp(highlight_threshold)
+
+        highlighted = sorted(
+            matrix["highlighted"],
+            key=lambda node_id: matrix["nodes"][node_id]["presence"],
+            reverse=True,
+        )
+        opportunities = [
+            node_id
+            for node_id in sorted(
+                nodes,
+                key=lambda node_id: nodes[node_id]["gap_to_highlight"],
+                reverse=True,
+            )
+            if node_id not in highlighted
+        ]
+
+        lines = [f"Autonomy feature digest (threshold {threshold:.2f})"]
+
+        if highlighted:
+            lines.append("Highlights:")
+            for node_id in highlighted[:limit]:
+                vector = nodes[node_id]
+                lines.append(
+                    f"- {node_id}: presence {vector['presence']:.2f}, axis"
+                    f" {vector['axis_support']:.2f}, core {vector['core_alignment']:.2f}"
+                )
+        else:
+            lines.append(
+                f"No nodes met the highlight threshold {threshold:.2f}; focus on uplift."
+            )
+
+        if opportunities:
+            lines.append("Growth focus:")
+            for node_id in opportunities[:limit]:
+                vector = nodes[node_id]
+                lines.append(
+                    f"- boost {node_id}: gap {vector['gap_to_highlight']:.2f}"
+                    f" to reach {threshold:.2f}"
+                )
+
+        summary = matrix["summary"]
+        highlighted_count = summary.get("highlighted_nodes", len(highlighted))
+        lines.append(
+            f"Summary: {highlighted_count} highlighted · average presence"
+            f" {summary['average_presence']:.2f}"
+        )
+
+        return "\n".join(lines)
+
     # ------------------------------------------------------------------
     # Axis diagnostics
     # ------------------------------------------------------------------
@@ -561,12 +628,16 @@ class DecentralizedAutonomyEngine:
         axes: Optional[Iterable[str]] = None,
         top_nodes: int = 3,
         target: float = 0.85,
+        highlight_threshold: float = 0.8,
     ) -> Dict[str, object]:
         """Return a consolidated view of the autonomy lattice state."""
 
         axis_report = self.axis_signal_report(axes=axes, top_nodes=top_nodes)
         presence = self.presence_index(axes=axes)
         amplification = self.freedom_amplification_plan(target=target)
+        feature_matrix = self.autonomous_feature_matrix(
+            axes=axes, highlight_threshold=highlight_threshold
+        )
 
         snapshot: Dict[str, object] = {
             "node_count": len(self.nodes),
@@ -575,6 +646,7 @@ class DecentralizedAutonomyEngine:
             "presence_index": presence,
             "axis_report": axis_report,
             "freedom_amplification": amplification,
+            "feature_matrix": feature_matrix,
             "last_decision": self.history[-1].to_dict() if self.history else None,
         }
 
