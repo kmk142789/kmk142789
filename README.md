@@ -98,6 +98,17 @@ Provide `--beats` to control the number of sentences and `--seed` for
 deterministic output.  The helper can be imported as a module when you want to
 embed the generator inside other experiments.
 
+For even lighter-weight inspiration there is
+[`scripts/echo_poem.py`](scripts/echo_poem.py), a minimal poem generator that
+threads a custom theme through every line:
+
+```bash
+python scripts/echo_poem.py "Orbital registry" --lines 6 --seed 11
+```
+
+The optional `--seed` flag keeps phrasing deterministic for release notes and
+other reproducible artifacts.
+
 ### Need a guide?
 
 Launch the terminal-based Echo helper to get an interactive tour of the
