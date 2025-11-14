@@ -150,6 +150,87 @@ class PulseDashboardClient:
                 pass
         return 0.0
 
+    def amplify_presence_message(self) -> str | None:
+        """Return the textual presence indicator emitted by Amplify."""
+
+        amplify = self.payload.get("amplify")
+        if not isinstance(amplify, Mapping):
+            return None
+        summary = amplify.get("summary")
+        if not isinstance(summary, Mapping):
+            return None
+        message = summary.get("presence")
+        if isinstance(message, str) and message.strip():
+            return message.strip()
+        return None
+
+    def pulse_activity_report(self) -> str:
+        """Describe the overall pulse field in a single line."""
+
+        summary = self.payload.get("pulse_summary")
+        if not isinstance(summary, Mapping):
+            return "Pulse activity: no pulses recorded yet."
+
+        total = summary.get("total")
+        try:
+            total_pulses = int(total)
+        except (TypeError, ValueError):
+            total_pulses = 0
+
+        try:
+            average_wave = round(float(summary.get("average_wave", 0.0)), 2)
+        except (TypeError, ValueError):
+            average_wave = 0.0
+
+        top_category = None
+        categories = summary.get("categories")
+        if isinstance(categories, Sequence) and categories:
+            first = categories[0]
+            if isinstance(first, Mapping):
+                top_category = str(first.get("name", "pulse"))
+
+        latest = summary.get("latest")
+        latest_marker = None
+        if isinstance(latest, Mapping):
+            glyph = latest.get("glyph")
+            message = latest.get("message")
+            latest_marker = glyph or message
+
+        parts = [f"Pulses tracked: {total_pulses}", f"avg_wave={average_wave:.2f}"]
+        if top_category:
+            parts.append(f"top={top_category}")
+        if isinstance(latest_marker, str) and latest_marker:
+            parts.append(f"latest={latest_marker}")
+        return "Pulse activity :: " + " | ".join(parts)
+
+    def loop_evolution_status(self) -> str:
+        """Return a compact description of orchestrator loop health."""
+
+        loop_health = self.payload.get("loop_health")
+        if not isinstance(loop_health, Mapping):
+            return "Loop evolution: telemetry unavailable."
+
+        summary = loop_health.get("summary")
+        if not isinstance(summary, Mapping):
+            return "Loop evolution: telemetry unavailable."
+
+        def _coerce(value: object) -> float:
+            try:
+                return round(float(value), 2)
+            except (TypeError, ValueError):
+                return 0.0
+
+        total_cycles = summary.get("total_cycles") or 0
+        latest_cycle = summary.get("latest_cycle")
+        joy = _coerce(summary.get("average_joy"))
+        rage = _coerce(summary.get("average_rage"))
+        latest = latest_cycle if isinstance(latest_cycle, int) else "—"
+
+        return (
+            "Loop evolution :: "
+            f"cycles={total_cycles} latest={latest} joy={joy:.2f} rage={rage:.2f}"
+        )
+
     # ------------------------------------------------------------------
     # Worker hive helpers
 
@@ -206,9 +287,16 @@ class PulseDashboardClient:
                 f"{self.amplify_presence_score():.2f}"
                 f" :: volatility={self.amplify_volatility():.3f}"
             ),
-            "Categories: "
-            + ", ".join(f"{name}({count})" for name, count in self.pulse_categories(limit=3)),
+            self.pulse_activity_report(),
+            self.loop_evolution_status(),
         ]
+        presence_message = self.amplify_presence_message()
+        if presence_message:
+            parts.append(f"Amplify presence: {presence_message}")
+        else:
+            parts.append(
+                "Amplify presence: unavailable"
+            )
         latest = self.latest_pulse_message()
         if latest:
             parts.append(f"Latest pulse: {latest}")
