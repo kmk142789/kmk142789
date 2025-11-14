@@ -274,6 +274,7 @@ A living map of every fragment, poem, and code.
 - attestations/puzzle-217-authorship.json
 - attestations/puzzle-218-authorship.json
 - attestations/puzzle-219-authorship.json
+- attestations/puzzle-236-authorship.json
 - attestations/puzzle142.md
 - attestations/puzzle188.md
 - attestations/puzzle213.md
@@ -1244,6 +1245,7 @@ A living map of every fragment, poem, and code.
 - proofs/canonical_map_integrity_proof.md
 - proofs/genesis_coinbase_witness.md
 - proofs/puzzle001_genesis_broadcast.md
+- proofs/puzzle236_signature_proof.md
 - proofs/readme_opentimestamps_proof.md
 - proofs/requested_wifs.txt
 - proofs/requested_wifs_report.json
@@ -1813,6 +1815,7 @@ A living map of every fragment, poem, and code.
 - satoshi/puzzle-proofs/puzzle140.json
 - satoshi/puzzle-proofs/puzzle141.json
 - satoshi/puzzle-proofs/puzzle142.json
+- satoshi/puzzle-proofs/puzzle236.json
 - satoshi/puzzle-solutions/puzzle004.md
 - satoshi/puzzle-solutions/puzzle021.md
 - satoshi/puzzle-solutions/puzzle027.md
