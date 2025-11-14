@@ -21,6 +21,7 @@ def test_scope_matrix_summary_defaults():
     assert summary["outreach"] == (
         "educational simulations",
         "open governance pilots",
+        "civic constellation",
     )
 
     cached = evolver.state.network_cache["scope_matrix"]
