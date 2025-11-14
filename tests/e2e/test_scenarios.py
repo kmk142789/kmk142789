@@ -33,6 +33,7 @@ def _load_scenarios() -> list[tuple[str, dict[str, object], Path]]:
 
 
 _SCENARIOS = _load_scenarios()
+_SCENARIO_IDS = [name for name, _, _ in _SCENARIOS]
 
 
 @pytest.fixture(scope="session")
@@ -63,7 +64,7 @@ def _truncate_body(body: str, limit: int = 4096) -> str:
     return body[:limit] + "...<truncated>"
 
 
-@pytest.mark.parametrize("name,data,path", _SCENARIOS, ids=lambda item: item[0])
+@pytest.mark.parametrize("name,data,path", _SCENARIOS, ids=_SCENARIO_IDS)
 def test_scenario(name: str, data: dict[str, object], path: Path, e2e_artifact_dir: Path) -> None:
     base_url_value = data.get("base_url")
     if not isinstance(base_url_value, str):
