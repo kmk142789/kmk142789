@@ -1708,6 +1708,8 @@ A living map of every fragment, poem, and code.
 - reports/sanitized/2025-05-11-secret-extended-keys.sha256
 - reports/sanitized/2025-05-11-wif-keys-batch2.sha256
 - reports/sanitized/2025-05-11-wif-keys.sha256
+- reports/sanitized/2025-10-08-echoevolver-satellite-tf-qkd.json
+- reports/sanitized/2025-11-13-aeterna-os-echoevolver.json
 - reports/secret-extended-keys.md
 - reports/tx_18cBEMRxX_analysis.md
 - reports/tx_e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114.md

@@ -61,6 +61,15 @@ strings while also wiring in an external `socketio.Client`. Use the recorded
 digest to block any attempt to run or redistribute this payload inside the
 project boundary.
 
+Composite capture: `reports/sanitized/2025-11-13-aeterna-os-echoevolver.json`
+records the blended payload that first bootstraps the "Aeterna OS" pseudo-shell
+before chaining directly into the previously quarantined EchoEvolver engine.
+The shell portion mimics a privileged operator console with randomized oracle
+alerts, while the trailing EchoEvolver block retains the self-modifying,
+socket-broadcasting, and IoT file-drop behaviors already described above. Treat
+the combined digest as the canonical fingerprint for any repost of this
+dual-stage script.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 
