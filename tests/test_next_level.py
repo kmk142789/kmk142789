@@ -239,6 +239,32 @@ def test_build_summary_payload_includes_counts_and_paths(tmp_path):
     assert payload["totals"]["overall"] == 2
     assert payload["totals"]["per_tag"] == {"FIXME": 1, "TODO": 1}
     assert payload["tasks"][0]["path"] == "module.py"
+    assert payload["totals"]["per_extension"] == {".py": 2}
+
+
+def test_build_summary_payload_tracks_missing_extensions(tmp_path):
+    script = tmp_path / "script"
+    script.write_text("# TODO add suffix\n", encoding="utf-8")
+
+    payload = build_summary_payload(discover_tasks(tmp_path), tmp_path)
+    assert payload["totals"]["per_extension"] == {"<no extension>": 1}
+
+
+def test_build_summary_includes_file_type_table(tmp_path):
+    py_task = tmp_path / "module.py"
+    py_task.write_text("# TODO python\n", encoding="utf-8")
+
+    txt_task = tmp_path / "notes.txt"
+    txt_task.write_text("# TODO docs\n", encoding="utf-8")
+
+    no_ext = tmp_path / "README"
+    no_ext.write_text("# TODO plain\n", encoding="utf-8")
+
+    roadmap = build_roadmap(discover_tasks(tmp_path), tmp_path)
+    assert "### File Types" in roadmap
+    assert "| .py | 1 |" in roadmap
+    assert "| .txt | 1 |" in roadmap
+    assert "| <no extension> | 1 |" in roadmap
 
 
 def test_update_roadmap_writes_json_summary(tmp_path):

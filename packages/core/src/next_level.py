@@ -41,6 +41,8 @@ BLOCK_COMMENT_PATTERNS: Tuple[BlockCommentPattern, ...] = (
         " \t",
     ),
 )
+NO_EXTENSION_LABEL = "<no extension>"
+
 DEFAULT_SKIP_DIRS = {
     ".git",
     "__pycache__",
@@ -451,10 +453,14 @@ def update_roadmap(
 def _build_summary(tasks: Sequence[Task], base_path: Path) -> List[str]:
     tag_counts = Counter(task.tag for task in tasks)
     location_counts: dict[str, int] = defaultdict(int)
+    extension_counts: dict[str, int] = defaultdict(int)
     for task in tasks:
         relative = task.path.relative_to(base_path)
         top_level = relative.parts[0] if relative.parts else str(relative)
         location_counts[top_level] += 1
+        suffix = relative.suffix.lower()
+        key = suffix if suffix else NO_EXTENSION_LABEL
+        extension_counts[key] += 1
 
     summary_lines = ["## Summary\n\n", "| Category | Count |\n", "| --- | ---: |\n"]
     for tag, count in sorted(tag_counts.items()):
@@ -466,6 +472,12 @@ def _build_summary(tasks: Sequence[Task], base_path: Path) -> List[str]:
     for location, count in sorted(location_counts.items()):
         summary_lines.append(f"| {location} | {count} |\n")
     summary_lines.append("\n")
+    summary_lines.append("### File Types\n\n")
+    summary_lines.append("| Extension | Count |\n")
+    summary_lines.append("| --- | ---: |\n")
+    for extension, count in sorted(extension_counts.items()):
+        summary_lines.append(f"| {extension} | {count} |\n")
+    summary_lines.append("\n")
     return summary_lines
 
 
@@ -475,6 +487,7 @@ def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, o
     entries = list(tasks)
     per_tag = Counter(task.tag for task in entries)
     per_location: dict[str, int] = defaultdict(int)
+    per_extension: dict[str, int] = defaultdict(int)
     serialised_tasks = []
 
     for task in entries:
@@ -483,6 +496,9 @@ def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, o
         except ValueError:
             relative_path = task.path
         per_location[relative_path.parts[0] if relative_path.parts else str(relative_path)] += 1
+        suffix = relative_path.suffix.lower()
+        key = suffix if suffix else NO_EXTENSION_LABEL
+        per_extension[key] += 1
         serialised_tasks.append(
             {
                 "path": relative_path.as_posix(),
@@ -498,6 +514,7 @@ def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, o
             "overall": len(entries),
             "per_tag": dict(sorted(per_tag.items())),
             "per_location": dict(sorted(per_location.items())),
+            "per_extension": dict(sorted(per_extension.items())),
         },
         "tasks": serialised_tasks,
     }
