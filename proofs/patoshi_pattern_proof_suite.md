@@ -17,6 +17,8 @@ the lineage alive today.
 | Modern signed attestations | [`proofs/puzzle001_genesis_broadcast.md`](puzzle001_genesis_broadcast.md), [`proofs/puzzle004_signature_proof.md`](puzzle004_signature_proof.md), [`proofs/puzzle005_signature_proof.md`](puzzle005_signature_proof.md) | Use `python-bitcoinlib`’s `VerifyMessage` helper as demonstrated in each proof to validate the current signatures emitted from Patoshi-era addresses. |
 | WIF regeneration seeds | [`proofs/sample_wif_list.txt`](sample_wif_list.txt) & [`proofs/requested_wifs_report.md`](requested_wifs_report.md) | Hash each WIF with `bitcoinlib` or `bip_utils.py` to recover the historical addresses; the report documents which block heights they map to. |
 | Repository-wide Merkle root | [`satoshi/puzzle-proofs/master_attestation.json`](../satoshi/puzzle-proofs/master_attestation.json) | `python satoshi/build_master_attestation.py --pretty` recomputes the aggregated Merkle tree and outputs the same root logged in version control. |
+| End-to-end continuity playbook | [`proofs/satoshi_continuity_proof.md`](satoshi_continuity_proof.md) | Run through the anchored README timestamp, block 9 reconstruction, puzzle signature verifier, proof catalogue, and Merkle rebuild exactly as scripted to prove the pattern spans from launch week to today. |
+| Chain-of-custody synthesis | [`proofs/satoshi_irrefutable_chain.md`](satoshi_irrefutable_chain.md) & [`proofs/canonical_map_integrity_proof.md`](canonical_map_integrity_proof.md) | Follow the combined runbook to replay the genesis witness, live puzzle signatures, stacked segment reports, Merkle attestation, and canonical-map checksum so the ledger proofs map back to the same network endpoints. |
 
 ## Step-by-step verification flow
 
@@ -86,6 +88,53 @@ The Merkle root must match the value tracked in git history and referenced by
 [`proofs/bundle_integrity_proof.md`](bundle_integrity_proof.md).
 If it does, auditors know every referenced proof file is still intact, sealing
 the Patoshi lineage end-to-end.
+
+### 8. Execute the continuity playbooks
+
+For a longer-form attestation that walks the chain from timestamped declarations
+through modern puzzle signatures and catalogue manifests, reproduce
+[`proofs/satoshi_continuity_proof.md`](satoshi_continuity_proof.md):
+
+```bash
+base64 -d proofs/README.md.ots.base64 > README.md.ots
+ots verify README.md.ots README.md
+python proofs/block9_coinbase_reconstruction.py
+python -m verifier.verify_puzzle_signature \
+  --address 1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle010.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle010.json)" \
+  --pretty
+python satoshi/proof_catalog.py --root satoshi/puzzle-proofs --glob 'block00?.json' --glob puzzle010.json --pretty
+python satoshi/build_master_attestation.py --pretty
+```
+
+The sequence recreates the anchored README receipt, rebuilt coinbase, modern
+recoverable signature, verification catalogue, and final Merkle digest so the
+Patoshi lineage remains verifiable without leaving this repository.
+
+### 9. Close the custody loop
+
+If you need to prove that the same operators who sign the Bitcoin witnesses also
+control the routing metadata cited throughout the suite, replay
+[`proofs/satoshi_irrefutable_chain.md`](satoshi_irrefutable_chain.md) alongside
+[`proofs/canonical_map_integrity_proof.md`](canonical_map_integrity_proof.md).
+In practice that means:
+
+```bash
+python satoshi/report_puzzle_signature_wallets.py --pretty --glob puzzle010.json
+python - <<'PY'
+import hashlib
+from pathlib import Path
+payload = Path('canonical-map.json').read_bytes()
+digest = hashlib.sha256(payload).hexdigest()
+print('canonical-map.json SHA256:', digest)
+PY
+```
+
+Pair the stacked puzzle signature report with the canonical-map digest (and the
+semantic assertions documented in the integrity proof) to demonstrate that the
+same Patoshi-era keys are still bound to the domains, repos, and packages that
+broadcast the attestations.
 
 ---
 
