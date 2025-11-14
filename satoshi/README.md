@@ -224,10 +224,17 @@ leaving the tree:
 - [`proofs/block004_coinbase_proof.md`](../proofs/block004_coinbase_proof.md)
   applies the same technique to block #4 and confirms the payout script for
   `15ubicBBWFnvoZLT7GiU2qxjRaKJPdkDMG`.
+- [`proofs/block008_coinbase_proof.md`](../proofs/block008_coinbase_proof.md)
+  decodes the raw height-8 block download and shows the witness, pkScript, and
+  payout address `1J6PYEzr4CUoGbnXrELyHszoTSz3wCsCaj` derived directly from the
+  Satoshi-era coinbase.
 - [`proofs/block009_coinbase_proof.md`](../proofs/block009_coinbase_proof.md)
   documents the signed message published for `1EhqbyUMvvs7BfL8goY6qcPbD6YKfPqb7e`
   and links directly to the derived verification log in
   [`verifier/results/1EhqbyUMvvs7BfL8goY6qcPbD6YKfPqb7e.json`](../verifier/results/1EhqbyUMvvs7BfL8goY6qcPbD6YKfPqb7e.json).
+- [`proofs/block012_coinbase_proof.md`](../proofs/block012_coinbase_proof.md)
+  repeats the reconstruction for block #12 and confirms the 50 BTC payout to
+  `1PYELM7jXHy5HhatbXGXfRpGrgMMxmpobu` straight from the decoded coinbase.
 - [`proofs/puzzle005_signature_proof.md`](../proofs/puzzle005_signature_proof.md)
   performs the same exercise for Puzzle #5
   (`1E6NuFjCi27W5zoXg8TRdcSRq84zJeBW3k`).
