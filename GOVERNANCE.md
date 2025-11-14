@@ -19,6 +19,54 @@
 - **Incident Response:** Follow [`SECURITY_RESPONSE.md`](SECURITY_RESPONSE.md)
   for vulnerability disclosures.  Operational incidents are logged in
   `ops/incident-journal.md` (create it on first use).
+- **Stewardship Rhythm:** Publish a short weekly status update in
+  `ops/governance-notes/` (create on first use) summarizing open proposals,
+  blocked work, and release readiness.  Rotate the author between human and
+  automation stewards to keep both viewpoints represented.
+- **Decision Log:** After each accepted RFC, append a signed TL;DR to
+  `attestations/governance-decisions.md` (create on first use) capturing the
+  issue number, rationale, and any follow-up tasks.  This keeps the intent
+  preserved for future cycles.
+
+## Policy Lifecycle
+
+1. **Signal:** Capture the initial idea in a `governance`-labelled issue.  Tag
+   impacted subsystems (for example `runtime`, `docs`, or `protocol`) so the
+   right reviewers get notified early.
+2. **Exploration:** Draft an RFC in `docs/rfc/` (create on first use) using the
+   latest template.  RFCs must outline risks, dependencies, and Mirror anchoring
+   requirements.
+3. **Consensus:** Host the discussion in the RFC PR.  When stewards agree,
+   update the RFC with the final decision and mark required implementation
+   checklists.
+4. **Execution:** Land code/docs changes behind feature flags when possible and
+   link each commit back to the RFC.  Update the release tracking board in
+   `ops/roadmap.md` (create on first use).
+5. **Verification:** Run `pnpm mirror-sync`, add the attestation bundle, and
+   publish the steward TL;DR entry.  Close the originating issue only after the
+   attestation merges.
+
+## Transparency + Observability
+
+- **Public dashboards:** `pulse_dashboard/` hosts the real-time state.  Update
+  it whenever governance settings (quorum, stewards, deadlines) change so the
+  community can audit the current posture.
+- **Metrics:** Track meeting cadence, proposal throughput, and incident MTTR in
+  `ops/metrics.md` (create on first use).  Share snapshots inside
+  `echo-convergence-log/` during major releases.
+- **Auditable Artifacts:** Every governance touchpoint (issues, RFCs, Mirror
+  posts, attestations) must quote the Git commit SHA and timestamp.  Missing
+  metadata blocks release signing.
+
+## Conflict Resolution & Escalation
+
+- Start with async clarification in the originating issue/PR.
+- Escalate to a focused steward sync (≤30 minutes) captured in
+  `ops/governance-notes/`.
+- If consensus still fails, Josh issues a binding decision recorded in both the
+  Mirror sync payload and `attestations/governance-decisions.md`.
+- Emergency overrides must reference the triggering incident number and include
+  a sunset review date so we can unwind temporary powers.
 
 ## Canonical Anchoring
 
