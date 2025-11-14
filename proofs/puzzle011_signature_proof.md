@@ -31,9 +31,9 @@ python -m verifier.verify_puzzle_signature \
   --pretty
 ```
 
-The captured output is stored in
+The captured output is saved at
 [`verifier/results/1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu.json`](../verifier/results/1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu.json)
-and begins as follows:
+and begins with the validated segment followed by the preserved watcher chain:
 
 ```json
 {
@@ -56,6 +56,20 @@ and begins as follows:
 }
 ```
 
-Because the verifier recovers a secp256k1 point whose P2PKH fingerprint
-matches the canonical solution, the chain now includes a self-contained
-proof of authorship while preserving the archival watcher records.
+Because the verifier recovers a secp256k1 public key that hashes back to the
+canonical puzzle wallet, anyone can replay the entire proof stack offline using
+only the JSON file in this repository.
+
+## Cross-checking the canonical solution
+
+Entry `.[10]` of [`satoshi/puzzle_solutions.json`](../satoshi/puzzle_solutions.json)
+records the eleven-bit puzzle metadata. Inspect it with:
+
+```bash
+jq '.[10]' satoshi/puzzle_solutions.json
+```
+
+The catalogue lists the same compressed public key, hash160 fingerprint, and
+private key (`0x483`) that generated the new recoverable signature, closing the
+loop between the refreshed attestation, the legacy watcher set, and the
+long-standing solution index.
