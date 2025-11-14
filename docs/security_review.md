@@ -12,7 +12,8 @@
    - `caution`: explicit guidance that the payload is descriptive text and must not be executed as code.
    The evolver records the sanitized payload in its event log so audits can confirm no executable content is emitted.
 2. **`cognitive_harmonics.harmonix_evolver.EchoEvolver.inject_prompt_resonance`** mirrors the safe payload contract used by the core engine and serialises the metadata through `json.dumps` when rendering text artifacts.
-3. **Regression tests** were updated to assert the presence of the non-executable caution in both evolver implementations, preventing accidental reintroduction of code-bearing payloads.
+3. **`echo.echo_evolver_satellite.SatelliteEchoEvolver.inject_prompt_resonance`** now emits the same descriptive payload contract so downstream tooling receives a JSON-safe dictionary instead of the legacy `exec` string.
+4. **Regression tests** were updated to assert the presence of the non-executable caution in all evolver implementations, preventing accidental reintroduction of code-bearing payloads.
 
 ## Outstanding Risks & Recommendations
 - The `echo_unified_all.EchoEvolver.propagate_network` helper now mirrors the hardened behaviour from the primary engine: propagation events are simulated in-memory and no UDP/TCP sockets are opened. When callers request "live" mode the helper logs a warning and still emits descriptive entries only.
