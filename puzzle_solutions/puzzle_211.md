@@ -1,13 +1,13 @@
 # Puzzle #211 Solution
 
-- **Provided hash160**: `627a0fd9f1c2034f9d643a355621842288cf4551`
+- **Provided hash160**: `9231490ce3980d2919289fa85e1b3c9b4142c7cf`
 - **Bitcoin network version byte**: `0x00` (P2PKH on mainnet)
-- **Payload**: `00 62 7a 0f d9 f1 c2 03 4f 9d 64 3a 35 56 21 84 22 88 cf 45 51`
+- **Payload**: `00 92 31 49 0c e3 98 0d 29 19 28 9f a8 5e 1b 3c 9b 41 42 c7 cf`
 - **Checksum**: First four bytes of `SHA256(SHA256(payload))`
-- **Base58Check encoding**: `19yhSoza8oK3ioCSydMuAGJs4Mm3FwCTht`
+- **Base58Check encoding**: `1EKzhQzLZeEUvhSS7rC8RvUyFCJUbCPJmw`
 
-So the complete address that satisfies the given locking script is:
+Therefore, the corresponding Bitcoin address for the given locking script is:
 
 ```
-19yhSoza8oK3ioCSydMuAGJs4Mm3FwCTht
+1EKzhQzLZeEUvhSS7rC8RvUyFCJUbCPJmw
 ```
