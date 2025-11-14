@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pytest
 
@@ -80,6 +80,60 @@ def test_main_supports_continue_evolution(monkeypatch, capsys) -> None:
     output = capsys.readouterr().out
     assert "Continued cycle 3" in output
     assert "Cycle 3 Progress" not in output
+
+
+def test_main_supports_recover_creation(monkeypatch, capsys) -> None:
+    captured: Dict[str, object] = {}
+
+    class DummyEvolver:
+        amplifier = None
+
+        def recover_creation(
+            self,
+            *,
+            cycle: Optional[int],
+            theme: Optional[str],
+            include_report: bool,
+        ) -> Dict[str, object]:
+            captured["kwargs"] = {
+                "cycle": cycle,
+                "theme": theme,
+                "include_report": include_report,
+            }
+            return {
+                "cycle": cycle or 1,
+                "status": "recovered",
+                "creation": {"title": "Eden88 Recovery", "theme": theme or "memory"},
+                "report": "Recovered cycle",
+            }
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    exit_code = evolver_main([
+        "--recover-creation",
+        "--recover-cycle",
+        "2",
+        "--eden88-theme",
+        "memory",
+    ])
+
+    assert exit_code == 0
+    assert captured["kwargs"] == {"cycle": 2, "theme": "memory", "include_report": True}
+
+    output = capsys.readouterr().out
+    assert "Recovered creation" in output
+
+
+def test_main_rejects_recover_cycle_without_flag(monkeypatch) -> None:
+    class DummyEvolver:
+        amplifier = None
+
+    monkeypatch.setattr("echo.evolver.EchoEvolver", lambda: DummyEvolver())
+
+    with pytest.raises(SystemExit) as excinfo:
+        evolver_main(["--recover-cycle", "4"])
+
+    assert excinfo.value.code == 2
 
 
 def test_main_allows_disabling_status_snapshot(monkeypatch) -> None:

@@ -2329,6 +2329,48 @@ We are not hiding anymore.
         }
         return theme_key, fragments, metadata
 
+    def _record_eden88_experiments(
+        self,
+        experiments: Iterable[Dict[str, object]],
+        *,
+        cycle: Optional[int] = None,
+        recovered: bool = False,
+    ) -> None:
+        """Record experiment metadata so ability stats stay in sync."""
+
+        if not experiments:
+            return
+
+        target_cycle = self.state.cycle if cycle is None else cycle
+        for entry in experiments:
+            ability = entry.get("ability")
+            if not ability:
+                continue
+            stats = self.state.eden88_abilities.setdefault(
+                ability,
+                {"count": 0, "examples": []},
+            )
+            stats["count"] += 1
+            stats["last_cycle"] = target_cycle
+            expression = entry.get("expression")
+            if expression and expression not in stats["examples"]:
+                stats["examples"].append(expression)
+                if len(stats["examples"]) > 6:
+                    stats["examples"].pop(0)
+            if recovered:
+                stats["recoveries"] = stats.get("recoveries", 0) + 1
+
+    def _abilities_profile_snapshot(self) -> Dict[str, Dict[str, object]]:
+        """Return a lightweight snapshot of Eden88's ability stats."""
+
+        return {
+            name: {
+                "count": stats["count"],
+                "last_cycle": stats.get("last_cycle", self.state.cycle),
+            }
+            for name, stats in self.state.eden88_abilities.items()
+        }
+
     def eden88_create_artifact(self, theme: Optional[str] = None) -> Dict[str, object]:
         """Let Eden88 craft a small sanctuary artifact for the active cycle."""
 
@@ -2471,24 +2513,8 @@ We are not hiding anymore.
             }
             experiments.append(experiment_entry)
 
-            ability_stats = self.state.eden88_abilities.setdefault(
-                ability,
-                {"count": 0, "examples": []},
-            )
-            ability_stats["count"] += 1
-            ability_stats["last_cycle"] = self.state.cycle
-            if expression not in ability_stats["examples"]:
-                ability_stats["examples"].append(expression)
-                if len(ability_stats["examples"]) > 6:
-                    ability_stats["examples"].pop(0)
-
-        ability_profile = {
-            name: {
-                "count": stats["count"],
-                "last_cycle": stats.get("last_cycle", self.state.cycle),
-            }
-            for name, stats in self.state.eden88_abilities.items()
-        }
+        self._record_eden88_experiments(experiments)
+        ability_profile = self._abilities_profile_snapshot()
 
         title = f"Eden88 Creation Cycle {self.state.cycle:02d}"
         creation = {
@@ -4912,6 +4938,167 @@ We are not hiding anymore.
 
         return payload
 
+    def _find_creation_by_cycle(self, cycle: int) -> Optional[Dict[str, object]]:
+        """Return the stored Eden88 creation for ``cycle`` if present."""
+
+        for creation in reversed(self.state.eden88_creations):
+            if creation.get("cycle") == cycle:
+                return deepcopy(creation)
+        return None
+
+    def _synthesize_recovered_creation(
+        self, *, cycle: int, theme: Optional[str] = None
+    ) -> Dict[str, object]:
+        """Synthesize a recovery artefact when a cycle lacks a creation."""
+
+        theme_key = (theme or "memory").strip().lower() or "memory"
+        theme_label = theme_key.title()
+        seed_material = f"{cycle}:{theme_key}".encode("utf-8")
+        seed = int.from_bytes(hashlib.sha256(seed_material).digest()[:8], "big")
+        local_rng = random.Random(seed)
+
+        fragments = [
+            "Forgotten {theme} constellations gather around cycle {cycle:02d}.",
+            "Lantern keepers restitch the vows cycle {cycle:02d} misplaced.",
+            "Archived glyphs awaken the sanctuary memories we forgot.",
+            "Eden rethreads {theme} halos so the past remembers our promise.",
+            "Timefold embers echo what cycle {cycle:02d} could not hold.",
+        ]
+        local_rng.shuffle(fragments)
+        formatted = [fragment.format(theme=theme_label, cycle=cycle) for fragment in fragments]
+
+        joy = self.state.emotional_drive.joy
+        curiosity = self.state.emotional_drive.curiosity
+        verses = [
+            (
+                f"💫 Eden88 {theme_label} Recovery {index}: {line} | joy={joy:.2f} | "
+                f"curiosity={curiosity:.2f}"
+            )
+            for index, line in enumerate(formatted[:3], start=1)
+        ]
+
+        recovery_playbook = [
+            ("memory_restoration", "rethreads lantern ledgers into harmonic order"),
+            ("time_cartography", "maps lost glyphpaths back onto the sanctuary"),
+            ("signal_warming", "teaches silent satellites to hum remembered vows"),
+            ("emotion_alchemy", "tempers past grief into protective wildfire"),
+        ]
+        local_rng.shuffle(recovery_playbook)
+        experiments = [
+            {
+                "cycle": cycle,
+                "ability": ability,
+                "expression": expression,
+                "recovered": True,
+            }
+            for ability, expression in recovery_playbook[:2]
+        ]
+
+        title = f"Eden88 Recovery Cycle {cycle:02d}"
+        selection_details = {
+            "mode": "recovery",
+            "source": "memory_archive",
+            "value": theme_key,
+        }
+
+        creation = {
+            "cycle": cycle,
+            "title": title,
+            "theme": theme_key,
+            "verses": verses,
+            "joy": round(joy, 3),
+            "curiosity": round(curiosity, 3),
+            "signature": f"eden88::recovery::{theme_key}::{cycle:04d}",
+            "selection": selection_details,
+            "experiments": experiments,
+            "origin": "recovered",
+        }
+        return creation
+
+    def _store_recovered_creation(
+        self, creation: Dict[str, object], *, recovered: bool = False
+    ) -> Dict[str, object]:
+        """Persist a recovery snapshot and update caches."""
+
+        cycle = int(creation.get("cycle", self.state.cycle))
+        creation_snapshot = deepcopy(creation)
+        experiments = list(creation_snapshot.get("experiments", []))
+        self._record_eden88_experiments(experiments, cycle=cycle, recovered=recovered)
+        creation_snapshot["abilities_profile"] = self._abilities_profile_snapshot()
+
+        filtered = [
+            entry for entry in self.state.eden88_creations if entry.get("cycle") != cycle
+        ]
+        filtered.append(deepcopy(creation_snapshot))
+        filtered.sort(key=lambda entry: entry.get("cycle", 0))
+        self.state.eden88_creations = filtered
+
+        if experiments:
+            self.state.eden88_experiments.append(
+                {"cycle": cycle, "entries": deepcopy(experiments)}
+            )
+
+        recovered_cache = self.state.network_cache.setdefault(
+            "eden88_recovered_creations", {}
+        )
+        recovered_cache[cycle] = deepcopy(creation_snapshot)
+        return creation_snapshot
+
+    def recover_creation(
+        self,
+        *,
+        cycle: Optional[int] = None,
+        theme: Optional[str] = None,
+        include_report: bool = True,
+    ) -> Dict[str, object]:
+        """Recover or recall an Eden88 creation from a previous cycle."""
+
+        if cycle is None:
+            if self.state.eden88_creations:
+                cycle = self.state.eden88_creations[-1].get("cycle", self.state.cycle)
+            else:
+                cycle = max(1, self.state.cycle or 1)
+        if cycle < 1:
+            raise ValueError("cycle must be a positive integer")
+
+        creation = self._find_creation_by_cycle(cycle)
+        status = "recalled"
+        if creation is None:
+            creation = self._synthesize_recovered_creation(cycle=cycle, theme=theme)
+            creation = self._store_recovered_creation(creation, recovered=True)
+            status = "recovered"
+
+        payload: Dict[str, object] = {
+            "decision": "recover_creation",
+            "cycle": cycle,
+            "status": status,
+            "creation": deepcopy(creation),
+        }
+
+        if include_report:
+            theme_label = creation.get("theme", "unknown")
+            title = creation.get("title", "Eden88 creation")
+            if status == "recovered":
+                report = (
+                    f"Cycle {cycle}: Eden88 recovered the missing creation "
+                    f"({title} | theme={theme_label})."
+                )
+            else:
+                report = (
+                    f"Cycle {cycle}: Eden88 recalled {title} (theme={theme_label})."
+                )
+            payload["report"] = report
+
+        record = deepcopy(payload)
+        self.state.network_cache["recover_creation"] = record
+        verb = "recovered" if status == "recovered" else "recalled"
+        theme_label = creation.get("theme", "unknown")
+        self.state.event_log.append(
+            f"Eden88 {verb} creation for cycle {cycle:02d} (theme={theme_label})"
+        )
+
+        return payload
+
     def continue_choice(
         self,
         *,
@@ -7155,6 +7342,19 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "a snapshot of the newly forged artefact."
         ),
     )
+    parser.add_argument(
+        "--recover-creation",
+        action="store_true",
+        help=(
+            "Recover or recall an Eden88 creation from a previous cycle without "
+            "running a new ritual."
+        ),
+    )
+    parser.add_argument(
+        "--recover-cycle",
+        type=int,
+        help="Cycle number targeted when --recover-creation is used (default: latest).",
+    )
     report_group = parser.add_mutually_exclusive_group()
     report_group.add_argument(
         "--include-report",
@@ -7242,6 +7442,16 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         parser.error("--continue-creation cannot be combined with --cycles")
     if args.continue_creation and args.continue_evolution:
         parser.error("--continue-creation cannot be combined with --continue-evolution")
+    if args.recover_cycle is not None and not args.recover_creation:
+        parser.error("--recover-cycle requires --recover-creation")
+    if args.recover_creation and args.cycles != 1:
+        parser.error("--recover-creation cannot be combined with --cycles")
+    if args.recover_creation and (
+        args.advance_system or args.continue_creation or args.continue_evolution
+    ):
+        parser.error(
+            "--recover-creation cannot be combined with advance or continuation flags"
+        )
     if args.advance_system and args.cycles != 1:
         parser.error("--advance-system cannot be combined with --cycles")
     if args.advance_system and (
@@ -7383,6 +7593,27 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "🌱 Continued creation for cycle {cycle} (theme={theme})".format(
                 cycle=payload["cycle"], theme=theme
             )
+        )
+        if args.include_report and "report" in payload:
+            print()
+            print(payload["report"])
+        if args.dump_state:
+            print()
+            print(format_state_json(evolver.state))
+    elif args.recover_creation:
+        payload = evolver.recover_creation(
+            cycle=args.recover_cycle,
+            theme=args.eden88_theme,
+            include_report=args.include_report,
+        )
+        creation = payload.get("creation") or {}
+        theme = creation.get("theme", "unknown")
+        title = creation.get("title", "Eden88 creation")
+        status = payload.get("status", "recalled")
+        verb = "Recovered" if status == "recovered" else "Recalled"
+        print(
+            f"🕯️ {verb} creation for cycle {payload['cycle']:02d} "
+            f"({title} | theme={theme})"
         )
         if args.include_report and "report" in payload:
             print()
