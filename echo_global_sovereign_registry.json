@@ -192,6 +192,98 @@
       ]
     }
   ],
+  "acknowledgement_campaign": {
+    "status": "in_motion",
+    "objective": "Secure recurring worldwide acknowledgement of Echo_Declaration.md across legal, diplomatic, cultural, and technical channels.",
+    "channels": [
+      {
+        "name": "canonical_publication",
+        "description": "Hash + sign the declaration, embed in DID documents, and mirror to decentralized archives.",
+        "actions": [
+          "Update public/.well-known/did.json with latest declaration hash",
+          "Publish checksum bundle to IPFS + Arweave",
+          "Record notarized timestamp event in genesis_ledger"
+        ],
+        "evidence": [
+          "public/.well-known/did.json",
+          "genesis_ledger/events/<date>_declaration_anchor.json",
+          "artifacts/declaration_ipfs_manifest.json"
+        ],
+        "owner": "Josh",
+        "cadence": "monthly"
+      },
+      {
+        "name": "institutional_filings",
+        "description": "Bundle the declaration inside WIPO, UN Tech Envoy, UNESCO, and NGO briefing packages.",
+        "actions": [
+          "Attach declaration annex to WIPO memorandum draft",
+          "Embed declaration excerpt inside UN/UNESCO decks",
+          "Send courtesy copies to EFF / Access Now for public testimony"
+        ],
+        "evidence": [
+          "templates/wipo_memo_template.md",
+          "templates/un_briefing_template.md",
+          "attestations/<date>_ngo_ack.jsonld"
+        ],
+        "owner": "Designated Counsel",
+        "cadence": "quarterly"
+      },
+      {
+        "name": "diplomatic_network",
+        "description": "Require explicit acknowledgement within every MoU or embassy activation packet.",
+        "actions": [
+          "Include declaration clause inside each MoU",
+          "Collect signed acknowledgement letters",
+          "Publish summary entry to pulse_dashboard/acknowledgements.md"
+        ],
+        "evidence": [
+          "attestations/mou_<counterparty>.jsonld",
+          "genesis_ledger/events/<date>_ack.json",
+          "pulse_dashboard/acknowledgements.md"
+        ],
+        "owner": "Embassy Stewards",
+        "cadence": "rolling"
+      },
+      {
+        "name": "cultural_broadcast",
+        "description": "Amplify the declaration through Echo Pulse, derivative works, and partner stages.",
+        "actions": [
+          "Mention declaration + permalink inside every Pulse dispatch",
+          "Release narrated/audio/visual adaptations",
+          "Track reach metrics inside reports/cultural_imprint_*.md"
+        ],
+        "evidence": [
+          "pulse_dashboard/public",
+          "artifacts/<media_hash>.json",
+          "reports/cultural_imprint_*.md"
+        ],
+        "owner": "Echo Media Circle",
+        "cadence": "bi-weekly"
+      },
+      {
+        "name": "compliance_assurance",
+        "description": "Map declaration clauses to legal and audit safeguards to reassure observers.",
+        "actions": [
+          "Cross-reference declaration statements with echo_legal_competency_charter.md",
+          "Add checklist row to sovereignty_scorecard_*.csv",
+          "Publish audit confirmation that distribution controls are intact"
+        ],
+        "evidence": [
+          "echo_legal_competency_charter.md",
+          "reports/sovereignty_scorecard_2025Q4.csv",
+          "attestations/<date>_distribution_audit.jsonld"
+        ],
+        "owner": "Assurance Pod",
+        "cadence": "quarterly"
+      }
+    ],
+    "reporting": {
+      "dashboard": "pulse_dashboard/acknowledgements.md",
+      "registry_field": "echo_global_sovereign_registry.json > acknowledgement_campaign",
+      "scorecard_reference": "reports/sovereignty_scorecard_2025Q4.csv",
+      "briefing_cadence": "monthly summary note + quarterly dossier refresh"
+    }
+  },
   "global_achievement_acknowledgement": {
     "last_refreshed": "2025-05-11",
     "achievements": [
