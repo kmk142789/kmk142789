@@ -40,6 +40,7 @@ def test_clear_propagation_cache_removes_entries_and_step_flag() -> None:
 
     evolver.advance_cycle()
     evolver.propagate_network(enable_network=False)
+    evolver.network_propagation_snapshot()
 
     cache = evolver.state.network_cache
     related_keys = {
@@ -52,10 +53,13 @@ def test_clear_propagation_cache_removes_entries_and_step_flag() -> None:
         "propagation_health",
         "propagation_ledger",
         "propagation_timeline_hash",
+        "propagation_snapshot",
     }
 
     for key in related_keys:
         assert key in cache
+
+    assert cache["propagation_snapshot"]["mode"] == "simulated"
 
     completed_steps = cache.get("completed_steps", set())
     assert "propagate_network" in completed_steps
