@@ -4,6 +4,7 @@ from pathlib import Path
 
 from nonprofit_treasury import TreasuryConfig, NonprofitTreasuryService
 from nonprofit_treasury.ledger import TreasuryLedgerEntry
+from scripts import nonprofit_treasury_backend as treasury_cli
 
 
 class _CallResult:
@@ -126,3 +127,16 @@ def test_generate_proof_links_funds_to_little_footsteps(tmp_path: Path) -> None:
         json.dumps(canonical, sort_keys=True).encode("utf-8")
     ).hexdigest()
     assert recalculated == proof.proof_hash
+
+
+def test_cli_writes_timestamped_proof_snapshot(tmp_path: Path) -> None:
+    payload = {"proof_hash": "sha256:deadbeef", "produced_at": "2024-05-01T12:34:56.789Z"}
+    destination = treasury_cli.write_proof_snapshot(
+        payload,
+        payload["produced_at"],
+        directory=tmp_path,
+    )
+
+    assert destination.name == "little-footsteps-proof-20240501T123456789Z.json"
+    saved = json.loads(destination.read_text())
+    assert saved == payload

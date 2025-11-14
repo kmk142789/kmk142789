@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 import sys
+from pathlib import Path
 
 from nonprofit_treasury import NonprofitTreasuryService, TreasuryConfig
 
@@ -30,7 +32,32 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--from-block", type=int, default=0, help="Block number to start syncing from")
     parser.add_argument("--amount", type=int, help="Token amount (base units) for disburse command")
     parser.add_argument("--reason", help="Reason memo for the disburse command")
+    parser.add_argument(
+        "--proof-dir",
+        default="proofs",
+        help=(
+            "Directory where the proof command will store timestamped JSON snapshots. "
+            "Set to '-' to skip writing to disk."
+        ),
+    )
     return parser.parse_args(argv)
+
+
+def _timestamp_slug(value: str) -> str:
+    """Return a filesystem-safe slug derived from an ISO 8601 timestamp."""
+
+    # Keep only digits plus T/Z markers so the filename reflects the precise proof moment.
+    return re.sub(r"[^0-9TZ]", "", value)
+
+
+def write_proof_snapshot(payload: dict[str, object], produced_at: str, *, directory: Path) -> Path:
+    """Persist a proof payload to a timestamped JSON file and return the path."""
+
+    directory.mkdir(parents=True, exist_ok=True)
+    filename = f"little-footsteps-proof-{_timestamp_slug(produced_at)}.json"
+    destination = directory / filename
+    destination.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return destination
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -72,7 +99,11 @@ def main(argv: list[str] | None = None) -> int:
             proof.beneficiary_label,
             proof.little_footsteps_linked,
         )
-        print(json.dumps(proof.as_dict(), indent=2))
+        payload = proof.as_dict()
+        print(json.dumps(payload, indent=2))
+        if args.proof_dir != "-":
+            destination = write_proof_snapshot(payload, proof.produced_at, directory=Path(args.proof_dir))
+            logging.info("Stored timestamped proof snapshot at %s", destination)
     else:
         raise ValueError(f"Unsupported command: {args.command}")
     return 0

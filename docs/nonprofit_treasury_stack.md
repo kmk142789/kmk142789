@@ -48,6 +48,12 @@ helper from this repository's root:
 python scripts/nonprofit_treasury_backend.py proof
 ```
 
+Each invocation also writes the proof JSON to `proofs/` using the ISO-8601
+timestamp embedded in the payload (e.g.,
+`proofs/little-footsteps-proof-20240501T123456789Z.json`). Pass
+`--proof-dir /custom/path` to store the snapshots elsewhere or `--proof-dir -`
+to skip writing to disk entirely while still printing the proof to stdout.
+
 The output includes a `proof_hash` field (`sha256:<digest>`) so dashboards or
 parents can recompute the canonical payload and verify the proof really ties the
 treasury reserves back to Little Footsteps.
