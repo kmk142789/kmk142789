@@ -72,7 +72,28 @@
         "additionalProperties": false
       }
     },
-    "rhyme": {"type": "string"}
+    "rhyme": {"type": "string"},
+    "glyph_cycle": {
+      "type": "object",
+      "required": ["glyph", "title", "mantra", "cycle", "energy", "window"],
+      "properties": {
+        "glyph": {"type": "string"},
+        "title": {"type": "string"},
+        "mantra": {"type": "string"},
+        "cycle": {"type": "string"},
+        "energy": {"type": "number"},
+        "window": {
+          "type": "object",
+          "required": ["start", "end"],
+          "properties": {
+            "start": {"type": "string"},
+            "end": {"type": "string"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": false
 }

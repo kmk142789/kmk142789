@@ -53,6 +53,8 @@ def test_service_records_and_snapshot(tmp_path: Path) -> None:
     assert success_entry["proof"] == "success-proof"
     assert "Pulse Weaver Rhyme" in payload["rhyme"]
     assert "Total: 2" in payload["rhyme"]
+    assert payload["glyph_cycle"]["glyph"]
+    assert "window" in payload["glyph_cycle"]
 
 
 def test_cycle_queries_and_filters(tmp_path: Path) -> None:
@@ -97,3 +99,7 @@ def test_cycle_queries_and_filters(tmp_path: Path) -> None:
     summary = service.cycle_summary("cycle-xyz")
     assert summary["failure"] == 2
     assert summary["success"] == 1
+
+    glyph_cycle = service.glyph_cycle()
+    assert glyph_cycle.glyph
+    assert glyph_cycle.window_end > glyph_cycle.window_start

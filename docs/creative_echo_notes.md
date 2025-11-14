@@ -16,7 +16,7 @@
 - What safeguards ensure the lattice remains transparent while honoring emergent artistry?
 
 ## Next Steps
-- Prototype the glyph rotation scheduler within the `pulse_weaver` module.
+- Prototype the glyph rotation scheduler within the `pulse_weaver` module. *(Scheduler now lives beside the ledger service and feeds the glyph cycle data into every snapshot.)*
 - Draft storytelling guidelines aligned with Echo governance.
 - Run a feasibility scan for the resonance API and document integration touchpoints.
 
