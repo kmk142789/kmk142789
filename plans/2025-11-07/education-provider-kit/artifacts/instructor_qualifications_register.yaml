@@ -1,0 +1,113 @@
+meta:
+  jurisdiction: Ontario, Canada
+  regulation_reference: "O. Reg. 415/06 s.11"
+  description: "Roster of instructors with documented qualifications, background checks, and currency of practice."
+  last_verified: "2025-05-11"
+  vc_anchor_list: "did:web:echo.example/education/instructors"
+instructors:
+  - name: "Leila Ortiz"
+    role: "Lead Instructor – Digital Trust Steward"
+    program_assignments:
+      - "Digital Trust Steward (300h)"
+    education:
+      - credential: "M.Ed., Adult Education"
+        institution: "University of Toronto"
+        year_awarded: 2016
+    professional_designations:
+      - "OCT #576912"
+      - "ISC2 Certified Information Systems Security Professional (CISSP)"
+    recent_industry_experience:
+      organization: "Ontario Digital Service"
+      role: "Trust Framework Architect"
+      years: 4
+    teaching_experience_years: 8
+    regulatory_alignment:
+      - clause: "O. Reg. 415/06 s.11(2)(a)"
+        evidence: "Graduate degree in education"
+      - clause: "O. Reg. 415/06 s.11(2)(c)"
+        evidence: "Documented industry practice within last 5 years"
+    background_check:
+      type: "CPIC"
+      completed_on: "2025-04-15"
+      clearance_id: "CPIC-ON-2025-44718"
+    first_aid_cpr:
+      provider: "Canadian Red Cross"
+      expiry: "2026-02-28"
+    vc_evidence:
+      - type: "Employment Verification VC"
+        credential_id: "vc:echo:employment:leila-2025"
+        status_endpoint: "https://status.echo.example/lists/employment.json"
+    dossier_files:
+      - "vault_v1/hr/ortiz_leila_cv.pdf"
+      - "vault_v1/hr/ortiz_leila_background_check.pdf"
+    status: "verified"
+
+  - name: "Marcus Hwang"
+    role: "Instructor – Verifiable Credential Specialist"
+    program_assignments:
+      - "Verifiable Credential Specialist (180h)"
+    education:
+      - credential: "B.Sc., Computer Science"
+        institution: "University of Waterloo"
+        year_awarded: 2014
+    professional_designations:
+      - "Digital Identity and Authentication Council of Canada (DIACC) Verified Professional"
+    recent_industry_experience:
+      organization: "GovTech Ontario"
+      role: "Senior VC Engineer"
+      years: 3
+    teaching_experience_years: 5
+    regulatory_alignment:
+      - clause: "O. Reg. 415/06 s.11(2)(b)"
+        evidence: "Documented skill mastery and teaching experience"
+    background_check:
+      type: "Enhanced Police Information Check"
+      completed_on: "2025-03-28"
+      clearance_id: "EPIC-ON-2025-11892"
+    first_aid_cpr:
+      provider: "St. John Ambulance"
+      expiry: "2025-12-31"
+    vc_evidence:
+      - type: "Skills Credential VC"
+        credential_id: "vc:echo:skills:marcus-vcs"
+        status_endpoint: "https://status.echo.example/lists/skills.json"
+    dossier_files:
+      - "vault_v1/hr/hwang_marcus_cv.pdf"
+      - "vault_v1/hr/hwang_marcus_background_check.pdf"
+    status: "verified"
+
+  - name: "Sana El-Badry"
+    role: "Instructor – Digital Trust Steward"
+    program_assignments:
+      - "Digital Trust Steward (300h)"
+      - "Micro-credential Intensives (40h)"
+    education:
+      - credential: "B.A., Public Policy"
+        institution: "Carleton University"
+        year_awarded: 2012
+    professional_designations:
+      - "Certified Privacy Professional/Canada (CIPP/C)"
+      - "Lean Six Sigma Green Belt"
+    recent_industry_experience:
+      organization: "Echo Labs Cooperative"
+      role: "Data Governance Lead"
+      years: 5
+    teaching_experience_years: 6
+    regulatory_alignment:
+      - clause: "O. Reg. 415/06 s.11(3)"
+        evidence: "Documented subject-matter expertise and curriculum leadership"
+    background_check:
+      type: "CPIC"
+      completed_on: "2025-04-02"
+      clearance_id: "CPIC-ON-2025-42011"
+    first_aid_cpr:
+      provider: "Canadian Red Cross"
+      expiry: "2026-04-30"
+    vc_evidence:
+      - type: "Credential Instructor VC"
+        credential_id: "vc:echo:instructor:sana-2025"
+        status_endpoint: "https://status.echo.example/lists/instructors.json"
+    dossier_files:
+      - "vault_v1/hr/elbadry_sana_cv.pdf"
+      - "vault_v1/hr/elbadry_sana_background_check.pdf"
+    status: "verified"

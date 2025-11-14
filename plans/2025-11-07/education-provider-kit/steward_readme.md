@@ -7,13 +7,13 @@ Authorize the enclosed documents for legal review and subsequent submission to t
 - Completed application data (`application_form.json`) ready for PDF merge.
 - Cover letter for Responsible Officer signature.
 - Policy set meeting statutory requirements (sexual violence, refund, accessibility, privacy, student contract).
+- Instructor qualifications register with background check confirmations.
 - Evidence checklist assigning ownership and cross-references to legislation.
 - VC mapping ensuring issued credentials meet PCTF and W3C requirements.
 
 ## Outstanding Inputs
 - Audited financial statements attachment.
 - Signed trust account agreement and surety bond certificate.
-- Instructor CV packets and background check confirmations.
 
 ## Approvals Requested
 - ✅ Confirm narratives accurately represent Echo operations.

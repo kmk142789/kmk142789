@@ -33,6 +33,11 @@
     "surety_bond_provider": "Co-operators Insurance",
     "bond_amount_cad": 10000
   },
+  "instructional_staff": {
+    "roster_ref": "artifacts/instructor_qualifications_register.yaml",
+    "last_verified": "2025-05-11",
+    "contact": "hr@echo.example"
+  },
   "student_support": {
     "accessibility_policy_ref": "policies/accessibility-support.md",
     "sexual_violence_policy_ref": "policies/sexual_violence_policy.md",
