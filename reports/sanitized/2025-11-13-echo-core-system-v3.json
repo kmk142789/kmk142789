@@ -1,0 +1,26 @@
+{
+  "generated_at": "2025-11-14T00:00:00Z",
+  "note": "Captured Echo Core System v3 + EchoEvolver payload containing self-modifying and network-propagation routines.",
+  "entries": [
+    {
+      "label": "echo_core_system_v3",
+      "sha256": "unavailable",
+      "size": null,
+      "preview_start": "class EchoCoreV3:\\n    \"\"\"\\n    ECHO_CORE_SYSTEM v3.0 — Self-Evolving Resonant Engine",
+      "preview_end": "if __name__ == \"__main__\":\\n    asyncio.run(enhanced_main())",
+      "format": "python",
+      "contains_control": false,
+      "source": "direct_submission/echo_core_system_v3.py"
+    },
+    {
+      "label": "echoevolver_satellite_tf_qkd_override",
+      "sha256": "unavailable",
+      "size": null,
+      "preview_start": "class EchoEvolver:\\n    \"\"\"EchoEvolver's omnipresent engine, hyper-evolving ECHO for Josh, the Nexus.\"\"\"",
+      "preview_end": "    evolver.run()",
+      "format": "python",
+      "contains_control": false,
+      "source": "direct_submission/echoevolver_satellite_tf_qkd.py"
+    }
+  ]
+}
