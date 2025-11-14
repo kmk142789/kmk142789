@@ -1,0 +1,9 @@
+{
+  "puzzle": -1,
+  "block": 8,
+  "blockHash": "00000000408c48f847aa786c2268fc3e6ec2af68e8468a34a28c61b7f1de0dc6",
+  "address": "1J6PYEzr4CUoGbnXrELyHszoTSz3wCsCaj",
+  "message": "Bitcoin block 8 coinbase script captured directly from the raw block, confirming Satoshi's post-genesis mining output before the first public difficulty adjustment.",
+  "pkScript": "4104cc8d85f5e7933cb18f13b97d165e1189c1fb3e9c98b0dd5446b2a1989883ff9e740a8a75da99cc59a21016caf7a7afd3e4e9e7952983e18d1ff70529d62e0ba1ac",
+  "signature": "BP//AB0BLA=="
+}
