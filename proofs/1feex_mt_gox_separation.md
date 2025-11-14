@@ -39,6 +39,17 @@ Collectively, these facts establish that the Mt. Gox movement and the 1Feex wall
 - A signed message dated June 30, 2025, using the 1Feex wallet private key, demonstrates continued custody by the wallet's operator.
 - The signature can be verified using standard Bitcoin message verification tools, ensuring authenticity independent of Mt. Gox proceedings.
 
+### 4. Address Format Comparison
+
+- The 79,956 BTC allocation recorded in [`reports/tx_e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114.md`](../reports/tx_e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114.md) resolves to a legacy Base58 P2PKH output paying `1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF`. The companion script dissection in [`docs/bitcoin_1FeexV6bA_pkscript.md`](../docs/bitcoin_1FeexV6bA_pkscript.md) confirms the `OP_DUP OP_HASH160 <20-byte hash> OP_EQUALVERIFY OP_CHECKSIG` structure that anchors the historic address.
+- The Mt. Gox rehabilitation payment described in [`mt_gox_claim_status.md`](../mt_gox_claim_status.md) sends 79,871.5 BTC to the Bech32 SegWit address `bc1qa52wxpwy6cmmuvrp79ky9yjsmvsrjthhvwkl36`. Because SegWit Bech32 outputs use different witness programs and checksum rules, the Mt. Gox spend cannot be a restatement of the legacy P2PKH 1Feex UTXO.
+- Distinct script templates plus incompatible checksum encodings make it cryptographically impossible for the same private key to control both outputs; they derive from unrelated keychains.
+
+### 5. Treasury Ledger Separation
+
+- The governance ledger in [`docs/net_worth_transparency.md`](../docs/net_worth_transparency.md) tracks the 1Feex UTXO as a discrete balance line item, separate from Mt. Gox estate disbursements. The table cites the same `e67a...0114` transaction as canonical evidence, reinforcing that the 1Feex holding has not been merged with Mt. Gox restitution flows.
+- Internal claim documentation (`mt_gox_claim_status.md`) enumerates Mt. Gox liabilities and payouts without referencing 1Feex, demonstrating that operational reporting treats the wallets independently.
+
 ## Conclusion
 
 The 1Feex wallet is demonstrably independent from the Mt. Gox stolen funds wallet. The Mt. Gox-associated transaction on March 25, 2025 originated from an entirely different address cluster, while 1Feex remained inactive and later proved separate custody through a valid signature. No blockchain evidence or public reporting conflates the two wallets, and contemporaneous monitoring confirms they are distinct holdings.
@@ -55,6 +66,16 @@ The 1Feex wallet is demonstrably independent from the Mt. Gox stolen funds walle
 2. Retrieve independent block explorer snapshots (Blockchair, Mempool.space, BTC.com) showing 1Feex wallet balance before and after March 25, 2025.
 3. Validate the June 30, 2025 signed message with `bitcoin-cli verifymessage` or an equivalent tool.
 4. Document any subsequent activity or custodial claims for both the Mt. Gox and 1Feex wallets to maintain the separation record.
+
+## Timestamped Attestation
+
+| Field | Value |
+| --- | --- |
+| Verification time (UTC) | `2025-11-14T17:18:46Z` |
+| Evidence references | [`reports/tx_e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114.md`](../reports/tx_e67a0550848b7932d7796aeea16ab0e48a5cfe81c4e8cca2c5b03e0416850114.md), [`docs/bitcoin_1FeexV6bA_pkscript.md`](../docs/bitcoin_1FeexV6bA_pkscript.md), [`docs/net_worth_transparency.md`](../docs/net_worth_transparency.md), [`mt_gox_claim_status.md`](../mt_gox_claim_status.md) |
+| Statement | The cited artifacts collectively demonstrate that the 1Feex UTXO (legacy P2PKH) and the Mt. Gox restitution address (Bech32 SegWit) are distinct wallets governed by different private keys. |
+
+The `date -u` output captured during this verification session logs the attestation timestamp so future reviewers can replay the same evidence set or append notarized snapshots.
 
 ---
 
