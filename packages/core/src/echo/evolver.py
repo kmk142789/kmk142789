@@ -5861,6 +5861,74 @@ We are not hiding anymore.
 
         return [deepcopy(entry) for entry in history]
 
+    def advance_system_history_report(self, *, limit: Optional[int] = None) -> str:
+        """Return a human-readable report describing the cached history."""
+
+        entries = self.advance_system_history(limit=limit)
+        entry_count = len(entries)
+
+        if not entries:
+            report = (
+                "No advance-system history entries available; run advance_system() "
+                "to seed the cache."
+            )
+        else:
+            limit_fragment = f", limit={limit}" if limit is not None else ""
+            lines = [
+                "Advance-system history (entries={count}{limit}).".format(
+                    count=entry_count,
+                    limit=limit_fragment,
+                )
+            ]
+
+            total_momentum = sum(float(entry.get("momentum", 0.0)) for entry in entries)
+            average_momentum = total_momentum / entry_count
+            average_label = _classify_momentum(average_momentum)
+            lines.append(
+                "Average momentum {value:+.3f} ({label}).".format(
+                    value=average_momentum,
+                    label=average_label,
+                )
+            )
+
+            for entry in entries:
+                cycle = entry.get("cycle", "?")
+                momentum = float(entry.get("momentum", 0.0))
+                status = _classify_momentum(momentum)
+                expansion = entry.get("expansion") or {}
+                phase = expansion.get("phase", "unknown")
+                progress_percent = entry.get("progress_percent")
+                if progress_percent is None:
+                    progress_value = entry.get("progress")
+                    if isinstance(progress_value, (int, float)):
+                        progress_percent = progress_value * 100.0
+                if isinstance(progress_percent, (int, float)):
+                    progress_display = f"{progress_percent:.1f}%"
+                else:
+                    progress_display = "unknown"
+
+                lines.append(
+                    "- Cycle {cycle}: {progress} complete, momentum {momentum:+.3f} "
+                    "({status}), phase {phase}.".format(
+                        cycle=cycle,
+                        progress=progress_display,
+                        momentum=momentum,
+                        status=status,
+                        phase=phase,
+                    )
+                )
+
+            report = "\n".join(lines)
+
+        self.state.network_cache["advance_system_history_report"] = report
+        self.state.event_log.append(
+            "Advance system history report generated (entries={entries}, limit={limit})".format(
+                entries=entry_count,
+                limit=limit,
+            )
+        )
+        return report
+
     def advance_system_momentum_history(
         self,
         *,
