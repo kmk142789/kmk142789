@@ -25,7 +25,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, Tuple
 
 import hashlib
 import hmac
@@ -40,6 +40,7 @@ SECP256K1_GX = 55066263022277343669578718895168534326250603453777594175500187360
 SECP256K1_GY = 32670510020758816978083085130507043184471273380659243275938904335757337482424
 SALT = hashlib.sha256(b"EchoSkeletonKey::salt").digest()
 _BASE58_ALPHABET = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+_BASE58_MAP = {byte: idx for idx, byte in enumerate(_BASE58_ALPHABET)}
 
 
 @dataclass(slots=True)
@@ -98,6 +99,28 @@ def _b58encode(raw: bytes) -> str:
     return (_BASE58_ALPHABET[:1] * padding + encoded).decode()
 
 
+def _b58decode(value: str) -> bytes:
+    data = value.encode("ascii")
+    num = 0
+    for char in data:
+        try:
+            idx = _BASE58_MAP[char]
+        except KeyError:
+            raise ValueError("Invalid base58 character in WIF") from None
+        num = num * 58 + idx
+    if num == 0:
+        decoded = b""
+    else:
+        decoded = num.to_bytes((num.bit_length() + 7) // 8, "big")
+    pad = 0
+    for char in data:
+        if char == _BASE58_ALPHABET[0]:
+            pad += 1
+        else:
+            break
+    return b"\x00" * pad + decoded
+
+
 def _derive_eth_address(privkey32: bytes) -> Optional[str]:
     pub = _derive_public_key(privkey32)
     address = _keccak256(pub[1:])[-20:]
@@ -150,6 +173,96 @@ def _btc_wif(privkey32: bytes, *, compressed: bool = True, testnet: bool = False
     payload = prefix + privkey32 + (b"\x01" if compressed else b"")
     checksum = _double_sha256(payload)[:4]
     return _b58encode(payload + checksum)
+
+
+def _privkey_from_wif(value: str) -> bytes:
+    decoded = _b58decode(value)
+    if len(decoded) < 4:
+        raise ValueError("WIF payload is too short")
+    payload, checksum = decoded[:-4], decoded[-4:]
+    if _double_sha256(payload)[:4] != checksum:
+        raise ValueError("Invalid WIF checksum")
+    if not payload:
+        raise ValueError("Empty WIF payload")
+    flag = payload[-1]
+    if len(payload) == 34 and flag == 0x01:
+        priv = payload[1:-1]
+    elif len(payload) == 33:
+        priv = payload[1:]
+    else:
+        raise ValueError("Unsupported WIF payload length")
+    if len(priv) != 32:
+        raise ValueError("WIF must encode a 32-byte private key")
+    return priv
+
+
+def _aes_128_ctr_decrypt(key: bytes, iv: bytes, ciphertext: bytes) -> bytes:
+    try:
+        from Crypto.Cipher import AES as CryptoAES
+    except Exception:
+        CryptoAES = None
+
+    if CryptoAES is not None:
+        cipher = CryptoAES.new(key, CryptoAES.MODE_CTR, nonce=b"", initial_value=iv)
+        return cipher.decrypt(ciphertext)
+
+    try:
+        from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+        from cryptography.hazmat.backends import default_backend
+    except Exception as exc:  # pragma: no cover - requires optional deps
+        raise RuntimeError("AES backend is required to decrypt the keystore") from exc
+
+    decryptor = Cipher(algorithms.AES(key), modes.CTR(iv), backend=default_backend()).decryptor()
+    return decryptor.update(ciphertext) + decryptor.finalize()
+
+
+def _privkey_from_keystore(path: str | Path, password: str) -> bytes:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    crypto = payload.get("crypto") or payload.get("Crypto")
+    if not crypto:
+        raise ValueError("Keystore JSON is missing 'crypto' block")
+    kdf = crypto.get("kdf", "").lower()
+    params = crypto.get("kdfparams", {})
+    salt = bytes.fromhex(params.get("salt", ""))
+    dklen = int(params.get("dklen", 32))
+    password_bytes = password.encode("utf-8")
+    if kdf == "scrypt":
+        derived = hashlib.scrypt(
+            password=password_bytes,
+            salt=salt,
+            n=int(params.get("n", 262144)),
+            r=int(params.get("r", 8)),
+            p=int(params.get("p", 1)),
+            dklen=dklen,
+        )
+    elif kdf == "pbkdf2":
+        derived = hashlib.pbkdf2_hmac(
+            "sha256",
+            password_bytes,
+            salt,
+            int(params.get("c", 262144)),
+            dklen=dklen,
+        )
+    else:
+        raise ValueError("Unsupported keystore kdf")
+
+    cipher = crypto.get("cipher", "").lower()
+    if cipher != "aes-128-ctr":
+        raise ValueError("Only aes-128-ctr keystores are supported")
+    cipher_params = crypto.get("cipherparams", {})
+    iv_hex = cipher_params.get("iv")
+    if not iv_hex:
+        raise ValueError("Keystore missing IV")
+    iv = bytes.fromhex(iv_hex)
+    ciphertext = bytes.fromhex(crypto.get("ciphertext", ""))
+    mac_expected = bytes.fromhex(crypto.get("mac", ""))
+    mac_actual = _keccak256(derived[16:32] + ciphertext)
+    if mac_expected != mac_actual:
+        raise ValueError("Keystore MAC mismatch")
+    plaintext = _aes_128_ctr_decrypt(derived[:16], iv, ciphertext)
+    if len(plaintext) != 32:
+        raise ValueError("Keystore did not decrypt to 32 bytes")
+    return plaintext
 
 
 # ---------------------------------------------------------------------------
@@ -277,11 +390,55 @@ def derive_cli(argv: Optional[Iterable[str]] = None) -> int:
     return 0
 
 
+def _claim_key_from_args(
+    args: argparse.Namespace,
+) -> Tuple[str, Optional[Dict[str, int]], Dict[str, object]]:
+    if args.privhex is not None:
+        try:
+            priv = bytes.fromhex(args.privhex)
+        except ValueError as exc:
+            raise SystemExit("--privhex must be valid hex") from exc
+        if len(priv) != 32:
+            raise SystemExit("--privhex must represent 32 bytes")
+        return priv.hex(), None, {"type": "raw-hex"}
+
+    if args.wif is not None:
+        try:
+            priv = _privkey_from_wif(args.wif)
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
+        return priv.hex(), None, {"type": "btc-wif"}
+
+    if args.keystore is not None:
+        if not args.password:
+            raise SystemExit("--password is required with --keystore")
+        try:
+            priv = _privkey_from_keystore(args.keystore, args.password)
+        except (RuntimeError, ValueError) as exc:
+            raise SystemExit(str(exc)) from exc
+        return priv.hex(), None, {
+            "type": "eth-keystore",
+            "file": str(Path(args.keystore).name),
+        }
+
+    secret = _read_secret(args)
+    derived = derive_from_skeleton(secret, args.ns, args.index)
+    return (
+        derived.priv_hex,
+        {"index": args.index},
+        {"type": "skeleton", "namespace": args.ns, "index": args.index},
+    )
+
+
 def claim_cli(argv: Optional[Iterable[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Sign EchoClaim/v1 payloads")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--phrase", help="skeleton key phrase")
     group.add_argument("--file", help="path to skeleton key file")
+    group.add_argument("--privhex", help="32-byte hex private key")
+    group.add_argument("--wif", help="Bitcoin WIF (decoded to private key)")
+    group.add_argument("--keystore", help="Ethereum keystore JSON path (V3)")
+    parser.add_argument("--password", help="Password for --keystore input")
     parser.add_argument("--ns", default="claim", help="derivation namespace (default: claim)")
     parser.add_argument("--index", type=int, default=0, help="derivation index")
     parser.add_argument("--asset", required=True, help="claim subject asset identifier")
@@ -294,8 +451,7 @@ def claim_cli(argv: Optional[Iterable[str]] = None) -> int:
     parser.add_argument("--stdout", action="store_true", help="echo JSON to stdout")
     args = parser.parse_args(list(argv) if argv is not None else None)
 
-    secret = _read_secret(args)
-    derived = derive_from_skeleton(secret, args.ns, args.index)
+    priv_hex, derivation_info, key_source = _claim_key_from_args(args)
 
     issued_at = datetime.now(tz=timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     nonce = os.urandom(8).hex()
@@ -310,7 +466,7 @@ def claim_cli(argv: Optional[Iterable[str]] = None) -> int:
         f"pub_hint={pub_hint}",
     ]
     message = "\n".join(lines)
-    signature = sign_claim(derived.priv_hex, message)
+    signature = sign_claim(priv_hex, message)
 
     claim_payload: Dict[str, object] = {
         "type": "EchoClaim/v1",
@@ -319,9 +475,12 @@ def claim_cli(argv: Optional[Iterable[str]] = None) -> int:
         "issued_at": issued_at,
         "nonce": nonce,
         "pub_hint": pub_hint,
-        "derivation": {"index": args.index},
         "signature": signature,
+        "key_source": key_source,
     }
+
+    if derivation_info is not None:
+        claim_payload["derivation"] = derivation_info
 
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)

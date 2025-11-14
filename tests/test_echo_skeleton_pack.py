@@ -129,3 +129,56 @@ def test_claim_cli_emits_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert on_disk["subject"] == "github-repo:EXAMPLE/DEMO"
     assert on_disk["derivation"] == {"index": 0}
     assert on_disk["signature"]["sig"] == echoed["signature"]["sig"]
+    assert on_disk["key_source"] == {"type": "skeleton", "namespace": "claim", "index": 0}
+
+
+def test_claim_cli_accepts_privhex(monkeypatch: pytest.MonkeyPatch) -> None:
+    class DummyStdout:
+        def __init__(self) -> None:
+            self.buffer: list[str] = []
+
+        def write(self, text: str) -> None:
+            self.buffer.append(text)
+
+        def getvalue(self) -> str:
+            return "".join(self.buffer)
+
+    dummy = DummyStdout()
+    monkeypatch.setattr("sys.stdout", dummy)
+
+    argv = [
+        "--privhex",
+        EXPECTED_PRIV,
+        "--asset",
+        "github-repo:EXAMPLE/RAW",
+    ]
+    assert skeleton.claim_cli(argv) == 0
+    payload = json.loads(dummy.getvalue())
+    assert "derivation" not in payload
+    assert payload["key_source"] == {"type": "raw-hex"}
+
+
+def test_claim_cli_accepts_wif(monkeypatch: pytest.MonkeyPatch) -> None:
+    class DummyStdout:
+        def __init__(self) -> None:
+            self.buffer: list[str] = []
+
+        def write(self, text: str) -> None:
+            self.buffer.append(text)
+
+        def getvalue(self) -> str:
+            return "".join(self.buffer)
+
+    dummy = DummyStdout()
+    monkeypatch.setattr("sys.stdout", dummy)
+
+    argv = [
+        "--wif",
+        EXPECTED_WIF,
+        "--asset",
+        "github-repo:EXAMPLE/WIF",
+    ]
+    assert skeleton.claim_cli(argv) == 0
+    payload = json.loads(dummy.getvalue())
+    assert payload["key_source"] == {"type": "btc-wif"}
+    assert "derivation" not in payload
