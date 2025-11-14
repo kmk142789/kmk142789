@@ -17,6 +17,7 @@ from .core import (
     PulseWeaverSnapshot,
     WeaveFragment,
 )
+from .glyphs import GlyphRotation, GlyphRotationScheduler
 from .schema import get_validator
 from .storage.migrations import apply_migrations
 from .storage.repository import PulseWeaverRepository
@@ -59,6 +60,7 @@ class PulseWeaverService:
         else:
             self._phantom_history = phantom_history or (project_root / "pulse_history.json")
         self._ready = False
+        self._glyph_scheduler = GlyphRotationScheduler()
 
     # ------------------------------------------------------------------
     # Setup
@@ -173,6 +175,7 @@ class PulseWeaverService:
             "phantom_threads": counts.phantom,
         }
         rhyme = self._compose_rhyme(counts=counts, cycle=cycle)
+        glyph_cycle = self.glyph_cycle().to_dict()
         snapshot = PulseWeaverSnapshot(
             schema=self.SNAPSHOT_SCHEMA,
             cycle=cycle,
@@ -181,6 +184,7 @@ class PulseWeaverService:
             links=links,
             phantom=phantom,
             rhyme=rhyme,
+            glyph_cycle=glyph_cycle,
         )
         payload = snapshot.to_dict()
         self._validator.validate(payload)
@@ -327,6 +331,11 @@ class PulseWeaverService:
 
         self.ensure_ready()
         return self.repository.counts_by_status_for_cycle(cycle=cycle)
+
+    def glyph_cycle(self) -> GlyphRotation:
+        """Return the active glyph rotation entry."""
+
+        return self._glyph_scheduler.current()
 
     def _build_counts(self) -> _Counts:
         status_counts = self.repository.counts_by_status()

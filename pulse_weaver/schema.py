@@ -70,6 +70,17 @@ def _validate_phantom(entries: list[Any]) -> None:
             _require(field in entry, f"phantom entry missing '{field}'")
 
 
+def _validate_glyph_cycle(entry: Dict[str, Any]) -> None:
+    _require(isinstance(entry, dict), "glyph_cycle must be an object")
+    for field in ("glyph", "title", "mantra", "cycle", "energy", "window"):
+        _require(field in entry, f"glyph_cycle missing '{field}'")
+    _require(isinstance(entry["energy"], (int, float)), "glyph_cycle energy must be numeric")
+    window = entry["window"]
+    _require(isinstance(window, dict), "glyph_cycle window must be an object")
+    for field in ("start", "end"):
+        _require(field in window, f"glyph_cycle window missing '{field}'")
+
+
 def validate_snapshot(payload: Dict[str, Any]) -> None:
     _require(isinstance(payload, dict), "payload must be an object")
     for field in ("schema", "summary", "ledger", "links", "phantom", "rhyme"):
@@ -80,6 +91,8 @@ def validate_snapshot(payload: Dict[str, Any]) -> None:
     _validate_links(payload["links"])
     _validate_phantom(payload["phantom"])
     _require(isinstance(payload["rhyme"], str), "rhyme must be a string")
+    if "glyph_cycle" in payload:
+        _validate_glyph_cycle(payload["glyph_cycle"])
 
 
 __all__ = ["get_validator", "validate_snapshot", "ValidationError"]

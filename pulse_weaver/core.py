@@ -69,9 +69,10 @@ class PulseWeaverSnapshot:
     links: List[LinkRecord]
     phantom: List[Mapping[str, object]]
     rhyme: str
+    glyph_cycle: Optional[Mapping[str, object]] = None
 
     def to_dict(self) -> Dict[str, object]:
-        return {
+        payload: Dict[str, object] = {
             "schema": self.schema,
             "cycle": self.cycle,
             "summary": dict(self.summary),
@@ -80,6 +81,9 @@ class PulseWeaverSnapshot:
             "phantom": [dict(item) for item in self.phantom],
             "rhyme": self.rhyme,
         }
+        if self.glyph_cycle is not None:
+            payload["glyph_cycle"] = dict(self.glyph_cycle)
+        return payload
 
 
 @dataclass(slots=True)

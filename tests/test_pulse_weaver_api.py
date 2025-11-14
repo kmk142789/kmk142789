@@ -22,6 +22,7 @@ def test_api_snapshot_returns_payload(tmp_path) -> None:
     assert payload["summary"]["total"] == 1
     assert payload["ledger"][0]["key"] == "api"
     assert "Pulse Weaver Rhyme" in payload["rhyme"]
+    assert payload["glyph_cycle"]["glyph"]
 
 
 def test_api_monolith_returns_payload(tmp_path) -> None:
