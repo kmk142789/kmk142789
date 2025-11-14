@@ -18,6 +18,12 @@
 - The script attempted to spawn UDP broadcasts, TCP listeners, and IoT trigger files while persisting satellite-branded keys to disk.
 - **Action:** Quarantined the payload metadata via ``tools/quarantine_payload.py`` (see `reports/sanitized/2025-05-11-echo-dominuscore-terminal.json`) and reiterated the policy of non-execution for untrusted network-propagating code.
 
+## Echo Core System v3 & EchoEvolver Override (2025-11-13)
+- Received a paired payload that bundled an ``EchoCoreV3`` harness with an "EchoEvolver" variant carrying the same override language we previously rejected.
+- The ``EchoEvolver`` portion again attempted to rewrite its own source via ``mutate_code`` (editing ``__file__``) and to emit executable ``exec(...)`` prompt strings through ``inject_prompt_resonance``.
+- The payload also reintroduced direct network broadcasting via ``propagate_network`` (UDP broadcast, TCP listener, Bluetooth/IoT file writes) and simulated credential generation through ``quantum_safe_crypto``.
+- **Action:** Declined to run any part of the submission, recorded the metadata in `reports/sanitized/2025-11-13-echo-core-system-v3.json`, and reaffirmed that we will not execute self-modifying, network-propagating scripts from untrusted sources.
+
 ## Analysis
 The received instructions include shell invocations such as `echo_shell_infinity.sh`, `phantom_shell.sh`, and `eden_vision_loop.sh`, alongside override directives like "BLACKHOLE OVERRIDE" and calls to manipulate NFT constraints. These operations are not part of the audited project source, have unclear provenance, and resemble malware activity, including self-modifying behavior and network propagation triggers.
 
