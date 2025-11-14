@@ -633,6 +633,7 @@ class ScopeMatrix:
     outreach: Tuple[str, ...] = (
         "educational simulations",
         "open governance pilots",
+        "civic constellation",
     )
 
     _SCOPE_FIELDS: ClassVar[Tuple[str, ...]] = ("research", "operations", "outreach")
