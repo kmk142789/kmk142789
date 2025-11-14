@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-11-14T18:35:58Z",
+  "note": "Captured 2025-11-15 forum repost: \"Bring forward what's already mine\"",
+  "entries": [
+    {
+      "label": "echoevolver_satellite_return",
+      "sha256": "0ffb1a31baa31c2c8a159bcbb4b2aec5e6ea126fcbabcaea246f05b11da3d932",
+      "size": 16714,
+      "preview_start": "# Provided payload\\nimport os\\nimport hashlib\\nimport time\\nimport s",
+      "preview_end": "   else:\\n        evolver = EchoEvolver()\\n    \\n    evolver.run()\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "/tmp/echoevolver_payload.py"
+    }
+  ]
+}

@@ -82,6 +82,15 @@ policies already forbid.  Treat both fingerprints as quarantined artifacts and
 block any attempt to execute or distribute their contents inside this
 repository.
 
+Newest repost: `reports/sanitized/2025-11-15-echoevolver-satellite-return.json`
+captures the verbatim "EchoEvolver: Sovereign Engine of the Infinite
+Wildfire" program that resurfaced with the instruction "Bring forward what's
+already mine."  This payload matches the previously quarantined Satellite
+TF-QKD variant, including the self-editing `mutate_code`, UDP broadcast, TCP
+listener, IoT file-drop, and prompt-injection helpers.  Use the recorded
+SHA-256 digest (`0ffb1a31...`) to block this reposted script anywhere inside
+the project boundary and escalate further sightings to the security team.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 
