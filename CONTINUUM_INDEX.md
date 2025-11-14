@@ -491,6 +491,7 @@ A living map of every fragment, poem, and code.
 - docs/Puzzle_165.md
 - docs/Puzzle_166.md
 - docs/Puzzle_167.md
+- docs/Puzzle_253.md
 - docs/Puzzle_169.md
 - docs/Puzzle_170.md
 - docs/Puzzle_171.md
