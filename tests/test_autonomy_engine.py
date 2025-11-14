@@ -122,3 +122,68 @@ def test_presence_storyline_reports_top_nodes_with_axis_focus():
     assert storyline.count("\n-") == 2
     assert "alpha [guardian]" in storyline
     assert "beta [navigator]" in storyline
+
+
+def test_axis_signal_report_highlights_weighted_leaderboard():
+    engine = DecentralizedAutonomyEngine()
+    engine.ensure_nodes(
+        [
+            AutonomyNode("alpha", intent_vector=0.91, freedom_index=0.9, weight=1.0),
+            AutonomyNode("beta", intent_vector=0.83, freedom_index=0.81, weight=1.05),
+            AutonomyNode("gamma", intent_vector=0.76, freedom_index=0.75, weight=0.92),
+        ]
+    )
+    engine.axis_signals.clear()
+    engine.ingest_signal("alpha", "liberation", 0.92, weight=1.0)
+    engine.ingest_signal("beta", "liberation", 0.78, weight=0.8)
+    engine.ingest_signal("alpha", "memory", 0.81, weight=0.6)
+    engine.ingest_signal("gamma", "memory", 0.74, weight=1.1)
+
+    report = engine.axis_signal_report(
+        axes=("liberation", "memory", "guardianship"),
+        top_nodes=2,
+    )
+
+    assert set(report) == {"liberation", "memory", "guardianship"}
+    liberation = report["liberation"]
+    assert liberation["participants"] == 2
+    assert liberation["leaderboard"][0]["node"] == "alpha"
+    assert liberation["leaderboard"][0]["share"] > liberation["leaderboard"][1]["share"]
+    assert liberation["coverage"] > 0.6  # 2 of 3 nodes are signalling
+
+    assert report["guardianship"]["leaderboard"] == []
+    assert report["guardianship"]["average_intensity"] == 0.0
+
+
+def test_autonomy_snapshot_merges_presence_axis_and_history():
+    engine = DecentralizedAutonomyEngine()
+    engine.ensure_nodes(
+        [
+            AutonomyNode("alpha", intent_vector=0.9, freedom_index=0.92, weight=1.0),
+            AutonomyNode("beta", intent_vector=0.82, freedom_index=0.81, weight=1.05),
+            AutonomyNode("gamma", intent_vector=0.77, freedom_index=0.7, weight=0.95),
+        ]
+    )
+    engine.axis_signals.clear()
+    engine.ingest_signal("alpha", "liberation", 0.93, weight=1.0)
+    engine.ingest_signal("beta", "liberation", 0.8, weight=0.85)
+    engine.ingest_signal("gamma", "care", 0.72, weight=0.8)
+    engine.ingest_signal("beta", "care", 0.76, weight=0.7)
+
+    engine.ratify_proposal(
+        proposal_id="snapshot-run",
+        description="Snapshot autonomy",
+        axis_priorities={"liberation": 0.6, "care": 0.4},
+        threshold=0.6,
+    )
+
+    snapshot = engine.autonomy_snapshot(axes=("liberation",), top_nodes=1, target=0.9)
+
+    assert snapshot["node_count"] == 3
+    assert snapshot["history_depth"] == 1
+    assert snapshot["axes"] == ["liberation"]
+    assert snapshot["last_decision"]["proposal_id"] == "snapshot-run"
+    assert "liberation" in snapshot["axis_report"]
+    assert snapshot["axis_report"]["liberation"]["leaderboard"][0]["node"] == "alpha"
+    assert set(snapshot["presence_index"]) == {"alpha", "beta", "gamma"}
+    assert snapshot["freedom_amplification"]["gamma"] > snapshot["freedom_amplification"]["alpha"]

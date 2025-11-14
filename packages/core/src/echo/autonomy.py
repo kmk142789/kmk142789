@@ -231,6 +231,104 @@ class DecentralizedAutonomyEngine:
         return _clamp(numerator / denominator)
 
     # ------------------------------------------------------------------
+    # Axis diagnostics
+    # ------------------------------------------------------------------
+    def axis_signal_report(
+        self,
+        *,
+        axes: Optional[Iterable[str]] = None,
+        top_nodes: int = 3,
+    ) -> Dict[str, Dict[str, object]]:
+        """Return weighted participation analytics for each monitored axis.
+
+        Parameters
+        ----------
+        axes:
+            Optional iterable restricting the report to the supplied axes.
+            When provided, the method preserves the caller's ordering and
+            produces placeholder entries for axes that currently lack signals
+            so downstream dashboards can highlight the absence of data.
+        top_nodes:
+            Number of per-axis leaderboard entries to include.  Values are
+            clamped to the ``[1, len(nodes)]`` range to keep the payload
+            deterministic.
+        """
+
+        if not self.axis_signals and not axes:
+            return {}
+
+        limit = max(1, min(int(top_nodes or 1), max(len(self.nodes), 1)))
+
+        if axes is None:
+            candidate_axes = sorted(self.axis_signals)
+        else:
+            candidate_axes = []
+            seen = set()
+            for axis in axes:
+                normalized = axis.lower()
+                if normalized not in seen:
+                    candidate_axes.append(normalized)
+                    seen.add(normalized)
+
+        if not candidate_axes:
+            return {}
+
+        report: Dict[str, Dict[str, object]] = {}
+        node_count = max(len(self.nodes), 1)
+
+        for axis in candidate_axes:
+            payloads = list(self.axis_signals.get(axis, ()))
+            if not payloads:
+                report[axis] = {
+                    "average_intensity": 0.0,
+                    "weight_sum": 0.0,
+                    "participants": 0,
+                    "coverage": 0.0,
+                    "leaderboard": [],
+                }
+                continue
+
+            total_weight = sum(weight for _, _, weight in payloads) or 1.0
+            weighted_intensity = sum(
+                intensity * weight for _, intensity, weight in payloads
+            )
+            average = weighted_intensity / total_weight
+
+            node_scores: Dict[str, List[float]] = {}
+            for node_id, intensity, weight in payloads:
+                entry = node_scores.setdefault(node_id, [0.0, 0.0])
+                entry[0] += intensity * weight
+                entry[1] += weight
+
+            leaderboard = []
+            for node_id, (score, node_weight) in node_scores.items():
+                contribution = score / (node_weight or 1.0)
+                share = node_weight / total_weight if total_weight else 0.0
+                leaderboard.append(
+                    {
+                        "node": node_id,
+                        "intensity": round(_clamp(contribution), 4),
+                        "share": round(_clamp(share), 4),
+                    }
+                )
+
+            leaderboard.sort(
+                key=lambda item: (item["intensity"], item["share"]), reverse=True
+            )
+            coverage = len(node_scores)
+            coverage_ratio = coverage / node_count if node_count else 0.0
+
+            report[axis] = {
+                "average_intensity": round(_clamp(average), 4),
+                "weight_sum": round(total_weight, 4),
+                "participants": coverage,
+                "coverage": round(_clamp(coverage_ratio), 4),
+                "leaderboard": leaderboard[:limit],
+            }
+
+        return report
+
+    # ------------------------------------------------------------------
     # Presence analytics
     # ------------------------------------------------------------------
     def presence_index(
@@ -332,6 +430,34 @@ class DecentralizedAutonomyEngine:
             )
 
         return "\n".join(lines)
+
+    # ------------------------------------------------------------------
+    # Snapshot bundle
+    # ------------------------------------------------------------------
+    def autonomy_snapshot(
+        self,
+        *,
+        axes: Optional[Iterable[str]] = None,
+        top_nodes: int = 3,
+        target: float = 0.85,
+    ) -> Dict[str, object]:
+        """Return a consolidated view of the autonomy lattice state."""
+
+        axis_report = self.axis_signal_report(axes=axes, top_nodes=top_nodes)
+        presence = self.presence_index(axes=axes)
+        amplification = self.freedom_amplification_plan(target=target)
+
+        snapshot: Dict[str, object] = {
+            "node_count": len(self.nodes),
+            "axes": list(axis_report.keys()),
+            "history_depth": len(self.history),
+            "presence_index": presence,
+            "axis_report": axis_report,
+            "freedom_amplification": amplification,
+            "last_decision": self.history[-1].to_dict() if self.history else None,
+        }
+
+        return snapshot
 
 
 __all__ = [
