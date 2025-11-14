@@ -87,6 +87,46 @@ segments that have been swept inside the 71-bit puzzle range for
 hexadecimal start and end of a search window so that contributors can
 coordinate coverage without duplicating work.
 
+## Bulk verification reports
+
+Generate a proof census with [`proof_catalog.py`](proof_catalog.py) to
+summarise every recoverable Bitcoin message signature stored in
+[`puzzle-proofs/`](puzzle-proofs/). The utility wires directly into the
+existing verifier module, so each JSON entry is expanded into the same
+secp256k1 recovery routine that powers the walkthrough guides.
+
+```bash
+python satoshi/proof_catalog.py \
+  --root satoshi/puzzle-proofs \
+  --glob 'puzzle00?.json' \
+  --pretty
+```
+
+The output is a JSON document containing global statistics (`file_total`,
+`verified_proofs`, `segments_checked`, `valid_segments`) plus a per-proof
+breakdown of segment counts and addresses. For the ten `puzzle00?.json`
+files the report begins as follows:
+
+```json
+{
+  "root": "satoshi/puzzle-proofs",
+  "file_total": 10,
+  "verified_proofs": 10,
+  "fully_verified": 4,
+  "segments_checked": 59,
+  "valid_segments": 7,
+  "entries": [
+    { "label": "puzzle000.json", "segments": 16, "valid_segments": 0 },
+    { "label": "puzzle001.json", "segments": 11, "valid_segments": 0 },
+    { "label": "puzzle002.json", "segments": 1, "valid_segments": 1 }
+  ]
+}
+```
+
+Use `--glob` repeatedly to mix additional filename filters (for example
+`'puzzle07*.json'`), or pass `--output out/proof_report.json` to persist
+the full JSON payload for notarisation alongside other artefacts.
+
 ## Entries
 
 - `puzzle000_coinbase.json` — On-chain coinbase script from the Bitcoin genesis block confirming the embedded Times headline for address `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`.
