@@ -1,0 +1,10 @@
+{
+  "puzzle": "#223 authorship",
+  "address": "1EpiC223KMkKWAjJ9Z2rDUhfkXAF9L3pSG",
+  "message": "Puzzle 223 authorship by kmk142789 — attestation sha256 7f1f743c8da1e2d9bd61c7115e78430f490b8c323ad5fbc63b594d502ddd7f22",
+  "signature": "2XsenpE6oTKebrMI7dNs5lmuOspfZfVqwN07TUhbUgCNBBcViTHAdLhn+HHlswfXpswk21d1vwikTutLu4Exsw==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-06T14:14:00Z",
+  "hash_sha256": "7f1f743c8da1e2d9bd61c7115e78430f490b8c323ad5fbc63b594d502ddd7f22",
+  "notes": "Pairs the published proof string with a timestamped declaration so downstream verifiers can cite a single JSON artefact."
+}

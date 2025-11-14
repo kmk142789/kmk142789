@@ -1,0 +1,10 @@
+{
+  "puzzle": "#220 authorship",
+  "address": "1EpiC220KMkKVyN7PfJovmWUL4h63p8Qsm",
+  "message": "Puzzle 220 authorship by kmk142789 — attestation sha256 a7f0d99b18ec45f1990eae1c63ee0e47e680e9a7640ec276b90bb8dadfcd3c15",
+  "signature": "0aX0hWvGttikZhlaD3bDpWpdlmtZo7fxgs/pkBrtAIzNgxjQ/O99CGlxbMmvdxlbYi4sTsyCOsp8bYpKdbfydg==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-06T14:02:00Z",
+  "hash_sha256": "a7f0d99b18ec45f1990eae1c63ee0e47e680e9a7640ec276b90bb8dadfcd3c15",
+  "notes": "Extends the authorship audit trail into the 220-bit range using the recoverable signature captured in satoshi/puzzle-proofs/puzzle220.json."
+}
