@@ -1,0 +1,14 @@
+{
+  "type": "echo_attestation",
+  "ts": 1763140264,
+  "timestamp_iso": "2025-11-14T17:11:04Z",
+  "signer_id": "dev-shell",
+  "context": "Satoshi claim verification: block9 reconstruction, puzzle001 genesis broadcast, puzzle010 authorship, Merkle root ebcb6154742e452b79c8c762a5bdfcfcd234f69bf3aa75606b8f332f4af352f0",
+  "sha256": "b1023583d014360829337270832601dc1f5d98e56c58082abedb8036d76be157",
+  "evidence": [
+    "proofs/satoshi_claim_timestamp.md",
+    "out/puzzle010_verification.json",
+    "out/satoshi_claim_catalog.json",
+    "satoshi/puzzle-proofs/master_attestation.json"
+  ]
+}

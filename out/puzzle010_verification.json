@@ -1,0 +1,16 @@
+{
+  "message": "PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679",
+  "segments": [
+    {
+      "index": 1,
+      "signature": "H67CcJduMgO+9JrdqheivrLSr7mlQX70LvNqB2equEOWAcOkshjkO9zRFKNlcBeogwkImhQivi7tfY9RgeFVNqg=",
+      "valid": true,
+      "derived_address": "1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe",
+      "derived_pubkey": null,
+      "derived_pkscript": null
+    }
+  ],
+  "valid_segment_count": 1,
+  "total_segments": 1,
+  "address": "1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe"
+}
