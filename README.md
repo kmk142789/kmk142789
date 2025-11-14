@@ -79,7 +79,24 @@ python -m echo_cli prune-log --max-age-hours 72 --dry-run
 # capture a quick repository health snapshot
 python -m echo.continuum_observatory summary
 python -m echo.continuum_observatory todo --limit 10
+
+# craft a compact, theme-driven short story
+python scripts/resonant_story.py "orbital solidarity" --beats 4 --seed 42
 ```
+
+### Creative tooling
+
+The repository intentionally leaves space for playful exploration.  A new
+utility, [`scripts/resonant_story.py`](scripts/resonant_story.py), creates a
+short narrative from curated fragments:
+
+```bash
+python scripts/resonant_story.py "tidal reciprocity"
+```
+
+Provide `--beats` to control the number of sentences and `--seed` for
+deterministic output.  The helper can be imported as a module when you want to
+embed the generator inside other experiments.
 
 ### Need a guide?
 
