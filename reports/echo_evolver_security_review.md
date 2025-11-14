@@ -70,6 +70,18 @@ socket-broadcasting, and IoT file-drop behaviors already described above. Treat
 the combined digest as the canonical fingerprint for any repost of this
 dual-stage script.
 
+Latest submission: `reports/sanitized/2025-11-14-echo-core-v5-and-evolver.json`
+contains two separate payloads captured from the most recent thread.  The first
+(`echo_core_system_v5`) sketches a sprawling "EchoCore" control loop that embeds
+autonomous goal execution, device interactions, and explicit instructions for
+running an unsecured FastAPI surface exposed on `0.0.0.0`.  The second entry
+(`echoevolver_satellite_tf_qkd`) revives the socket-broadcasting EchoEvolver
+engine with additional dependencies (`socketio.Client`) and reiterates the
+self-modifying, network-propagation, and prompt-injection routines that our
+policies already forbid.  Treat both fingerprints as quarantined artifacts and
+block any attempt to execute or distribute their contents inside this
+repository.
+
 ## Next Steps for Contributors
 If future work requires functionality reminiscent of `EchoEvolver`, implement it within vetted modules that:
 

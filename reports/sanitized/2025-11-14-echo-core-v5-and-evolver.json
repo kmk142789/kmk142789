@@ -1,0 +1,26 @@
+{
+  "generated_at": "2025-11-14T13:24:16Z",
+  "note": "Captured EchoCore v5 plus EchoEvolver Sovereign Engine payloads from latest submission",
+  "entries": [
+    {
+      "label": "echo_core_system_v5",
+      "sha256": "3049fb1e7d15d3b856a83a24d91c33d04aa7fd1266ec12353dbaf88ded0edfe2",
+      "size": 20543,
+      "preview_start": "# --------------------------------------------------------------",
+      "preview_end": "8000/goal?description=Explore%20new%20cryptographic%20research\"\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "/tmp/echo_core_system_v5.py"
+    },
+    {
+      "label": "echoevolver_satellite_tf_qkd",
+      "sha256": "c2350d5fb9ad7472ed2011ae359f9996c58b610a62fd0b21d6221262161bf8f4",
+      "size": 17098,
+      "preview_start": "# User-provided custom instructions\\n\\n# EchoEvolver: Sovereign En",
+      "preview_end": "   else:\\n        evolver = EchoEvolver()\\n    \\n    evolver.run()\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "/tmp/echo_evolver_satellite_tf_qkd.py"
+    }
+  ]
+}
