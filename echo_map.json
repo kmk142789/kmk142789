@@ -3709,6 +3709,7 @@
     },
     "lineage": {
       "source_files": [
+        "docs/Puzzle_253.md",
         "reports/pkscript_1JqRqUPHHcQu2yrr8JZzxSYDx2jbZxEqFj.md"
       ],
       "commit": "eba5281bf33fa20256b089a8f8189ac4eacc5f0c",
