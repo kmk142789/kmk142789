@@ -42,6 +42,9 @@ def test_evolutionary_manifest_includes_expected_sections() -> None:
     )
     assert len(manifest["events"]) <= 3
     assert evolver.state.network_cache["evolutionary_manifest"]["cycle"] == manifest["cycle"]
+    assert "within reach" in manifest["affirmation"].lower()
+    percent_fragment = f"{manifest['progress'] * 100:.1f}%"
+    assert percent_fragment in manifest["affirmation"]
 
     # Returned snapshot should be decoupled from internal cache.
     manifest["cycle"] = 99
@@ -66,3 +69,10 @@ def test_evolutionary_manifest_rejects_negative_window() -> None:
 
     with pytest.raises(ValueError):
         evolver.evolutionary_manifest(max_events=-1)
+
+
+def test_manifest_affirmation_handles_unexpected_progress() -> None:
+    evolver = EchoEvolver()
+    affirmation = evolver._manifest_affirmation(progress=float("nan"))
+    assert "within reach" in affirmation.lower()
+    assert affirmation.endswith("foundations gathering their spark.")

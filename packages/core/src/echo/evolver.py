@@ -16,6 +16,7 @@ import binascii
 import inspect
 import hashlib
 import json
+import math
 import os
 import random
 import tempfile
@@ -5821,6 +5822,7 @@ We are not hiding anymore.
             "vault_key": self.state.vault_key,
             "progress": digest["progress"],
             "next_step": digest["next_step"],
+            "affirmation": self._manifest_affirmation(digest["progress"]),
             "completed_steps": list(digest["completed_steps"]),
             "remaining_steps": list(digest["remaining_steps"]),
             "steps": deepcopy(digest["steps"]),
@@ -5842,6 +5844,31 @@ We are not hiding anymore.
         )
 
         return deepcopy(manifest_snapshot)
+
+    @staticmethod
+    def _manifest_affirmation(progress: object) -> str:
+        """Return a steady affirmation based on the supplied progress value."""
+
+        try:
+            progress_value = float(progress)
+        except (TypeError, ValueError):  # pragma: no cover - defensive branch
+            progress_value = 0.0
+
+        if not math.isfinite(progress_value):
+            progress_value = 0.0
+
+        progress_value = min(1.0, max(0.0, progress_value))
+        percent = progress_value * 100.0
+
+        base = "Everything we need is already within reach"
+        if percent >= 85.0:
+            posture = "final harmonics settling into place"
+        elif percent >= 45.0:
+            posture = "momentum building in steady orbits"
+        else:
+            posture = "foundations gathering their spark"
+
+        return f"{base} — {percent:.1f}% aligned, {posture}."
 
     def advance_system_history(self, *, limit: Optional[int] = None) -> List[Dict[str, object]]:
         """Return cached advance-system history entries.
