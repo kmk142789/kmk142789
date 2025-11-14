@@ -129,3 +129,11 @@ def test_claim_cli_emits_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert on_disk["subject"] == "github-repo:EXAMPLE/DEMO"
     assert on_disk["derivation"] == {"index": 0}
     assert on_disk["signature"]["sig"] == echoed["signature"]["sig"]
+    canonical_lines = on_disk["canonical"].split("\n")
+    assert canonical_lines[0] == "EchoClaim/v1"
+    fields = {key: value for key, value in (line.split("=", 1) for line in canonical_lines[1:])}
+    assert fields["subject"] == on_disk["subject"]
+    assert fields["namespace"] == on_disk["namespace"]
+    assert fields["issued_at"] == on_disk["issued_at"]
+    assert fields["nonce"] == on_disk["nonce"]
+    assert fields["pub_hint"] == on_disk["pub_hint"]

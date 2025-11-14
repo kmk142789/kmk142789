@@ -309,8 +309,8 @@ def claim_cli(argv: Optional[Iterable[str]] = None) -> int:
         f"nonce={nonce}",
         f"pub_hint={pub_hint}",
     ]
-    message = "\n".join(lines)
-    signature = sign_claim(derived.priv_hex, message)
+    canonical = "\n".join(lines)
+    signature = sign_claim(derived.priv_hex, canonical)
 
     claim_payload: Dict[str, object] = {
         "type": "EchoClaim/v1",
@@ -319,6 +319,7 @@ def claim_cli(argv: Optional[Iterable[str]] = None) -> int:
         "issued_at": issued_at,
         "nonce": nonce,
         "pub_hint": pub_hint,
+        "canonical": canonical,
         "derivation": {"index": args.index},
         "signature": signature,
     }
