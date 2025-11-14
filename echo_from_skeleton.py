@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 from typing import Iterable, Optional
 
 from skeleton_key_core import (
@@ -22,44 +23,78 @@ def _build_parser() -> argparse.ArgumentParser:
     group.add_argument("--file", help="path to skeleton key file (any bytes)")
     parser.add_argument("--ns", default="core", help="namespace (e.g., core, eth, btc, harmonix)")
     parser.add_argument("--index", type=int, default=0, help="derivation index")
+    parser.add_argument(
+        "--count",
+        type=int,
+        default=1,
+        help="number of sequential derivations to produce (>=1)",
+    )
     parser.add_argument("--testnet", action="store_true", help="derive a testnet WIF")
     parser.add_argument("--json", action="store_true", help="output JSON")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="optional path to write the JSON payload (directories auto-created)",
+    )
     return parser
 
 
-def _derive_payload(args: argparse.Namespace) -> dict[str, object]:
+def _derive_payloads(args: argparse.Namespace) -> list[dict[str, object]]:
     secret = (
         read_secret_from_phrase(args.phrase)
         if args.phrase is not None
         else read_secret_from_file(args.file)
     )
-    derived = derive_from_skeleton(secret, args.ns, args.index, testnet_btc=args.testnet)
-    return {
-        "namespace": args.ns,
-        "index": args.index,
-        "eth_priv_hex": derived.priv_hex,
-        "eth_address": derived.eth_address,
-        "btc_wif": derived.btc_wif,
-        "btc_network": "testnet" if args.testnet else "mainnet",
-    }
+    payloads: list[dict[str, object]] = []
+    for offset in range(args.count):
+        index = args.index + offset
+        derived = derive_from_skeleton(secret, args.ns, index, testnet_btc=args.testnet)
+        payloads.append(
+            {
+                "namespace": args.ns,
+                "index": index,
+                "eth_priv_hex": derived.priv_hex,
+                "eth_address": derived.eth_address,
+                "btc_wif": derived.btc_wif,
+                "btc_network": "testnet" if args.testnet else "mainnet",
+            }
+        )
+    return payloads
 
 
-def main(argv: Optional[Iterable[str]] = None) -> int:
-    parser = _build_parser()
-    args = parser.parse_args(list(argv) if argv is not None else None)
-    payload = _derive_payload(args)
-
-    if args.json:
-        print(json.dumps(payload))
-    else:
+def _print_payloads(payloads: list[dict[str, object]], show_testnet: bool) -> None:
+    separator_needed = len(payloads) > 1
+    for position, payload in enumerate(payloads, start=1):
+        if separator_needed and position > 1:
+            print("-" * 32)
         print(f"Namespace: {payload['namespace']}")
         print(f"Index: {payload['index']}")
         print(f"ETH private key (hex): {payload['eth_priv_hex']}")
         eth_address = payload["eth_address"] or "(install 'ecdsa' to compute)"
         print(f"ETH address: {eth_address}")
         print(f"BTC WIF (compressed): {payload['btc_wif']}")
-        if args.testnet:
+        if show_testnet:
             print("Network: testnet")
+
+
+def main(argv: Optional[Iterable[str]] = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(list(argv) if argv is not None else None)
+    if args.count < 1:
+        parser.error("--count must be at least 1")
+
+    payloads = _derive_payloads(args)
+    payload_data: dict[str, object] | list[dict[str, object]]
+    payload_data = payloads[0] if len(payloads) == 1 else payloads
+
+    if args.json:
+        print(json.dumps(payload_data, indent=2))
+    else:
+        _print_payloads(payloads, args.testnet)
+
+    if args.output is not None:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(payload_data, indent=2))
     return 0
 
 
