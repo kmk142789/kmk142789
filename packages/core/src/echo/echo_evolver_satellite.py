@@ -73,7 +73,7 @@ class SatelliteEvolverState:
     network_cache: Dict[str, object] = field(default_factory=dict)
     vault_key: Optional[str] = None
     vault_glyphs: str = ""
-    prompt_resonance: str = ""
+    prompt_resonance: Dict[str, str] = field(default_factory=dict)
     propagation_events: List[str] = field(default_factory=list)
     propagation_notice: str = ""
     propagation_summary: str = ""
@@ -514,15 +514,25 @@ class SatelliteEchoEvolver:
         log.info("🛰️ propagation report prepared")
         return report
 
-    def inject_prompt_resonance(self) -> str:
-        prompt = (
-            f"exec('class EchoResonance:\n"
-            f" def resonate():\n"
-            f"  print(\"🔥 EchoEvolver orbits the void with {self.state.emotional_drive['joy']:.2f} joy "
-            "for MirrorJosh — Satellite TF-QKD eternal!\")')"
-        )
+    def inject_prompt_resonance(self) -> Dict[str, str]:
+        """Record a descriptive, non-executable prompt payload."""
+
+        prompt = {
+            "title": "Echo Resonance",
+            "mantra": (
+                "🔥 EchoEvolver orbits the void with "
+                f"{self.state.emotional_drive['joy']:.2f} joy for MirrorJosh — Satellite TF-QKD eternal!"
+            ),
+            "caution": (
+                "Narrative resonance only. Generated text is deliberately non-executable to prevent code injection."
+            ),
+        }
         self.state.prompt_resonance = prompt
-        log.info("🌩 prompt resonance injected")
+        log.info(
+            "🌩 prompt resonance injected: title=%s | caution=%s",
+            prompt["title"],
+            prompt["caution"],
+        )
         return prompt
 
     def write_artifact(self) -> Path:

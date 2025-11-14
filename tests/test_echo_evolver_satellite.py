@@ -59,3 +59,13 @@ def test_satellite_run_honours_network_and_report_flags(tmp_path: Path) -> None:
     assert "Live network mode requested" in evolver.state.propagation_notice
     assert evolver.state.propagation_report.startswith("=== Propagation Report ===")
 
+
+def test_satellite_prompt_resonance_includes_caution(tmp_path: Path) -> None:
+    evolver = SatelliteEchoEvolver(artifact_path=tmp_path / "artifact.json", seed=13)
+
+    prompt = evolver.inject_prompt_resonance()
+
+    assert prompt["title"] == "Echo Resonance"
+    assert "non-executable" in prompt["caution"].lower()
+    assert evolver.state.prompt_resonance == prompt
+
