@@ -5,6 +5,7 @@ import json
 from next_level import (
     build_roadmap,
     build_summary_payload,
+    DEFAULT_HOTSPOT_LIMIT,
     discover_tasks,
     update_roadmap,
 )
@@ -250,6 +251,18 @@ def test_build_summary_payload_tracks_missing_extensions(tmp_path):
     assert payload["totals"]["per_extension"] == {"<no extension>": 1}
 
 
+def test_build_summary_payload_includes_ranked_hotspots(tmp_path):
+    for idx in range(6):
+        path = tmp_path / f"module_{idx}.py"
+        contents = "\n".join("# TODO entry" for _ in range(idx + 1)) + "\n"
+        path.write_text(contents, encoding="utf-8")
+
+    payload = build_summary_payload(discover_tasks(tmp_path), tmp_path)
+    hotspots = payload["hotspots"]
+    assert len(hotspots) == DEFAULT_HOTSPOT_LIMIT
+    assert hotspots[0] == {"path": "module_5.py", "count": 6}
+
+
 def test_build_summary_includes_file_type_table(tmp_path):
     py_task = tmp_path / "module.py"
     py_task.write_text("# TODO python\n", encoding="utf-8")
@@ -265,6 +278,21 @@ def test_build_summary_includes_file_type_table(tmp_path):
     assert "| .py | 1 |" in roadmap
     assert "| .txt | 1 |" in roadmap
     assert "| <no extension> | 1 |" in roadmap
+
+
+def test_build_roadmap_includes_hotspot_table(tmp_path):
+    busy = tmp_path / "core.py"
+    busy.write_text("# TODO alpha\n# FIXME beta\n", encoding="utf-8")
+
+    quiet = tmp_path / "helper.py"
+    quiet.write_text("# TODO gamma\n", encoding="utf-8")
+
+    roadmap = build_roadmap(discover_tasks(tmp_path), tmp_path)
+    assert "### Hotspots" in roadmap
+    hotspots_section = roadmap.split("### Hotspots", 1)[1]
+    assert "| core.py | 2 |" in hotspots_section
+    assert "| helper.py | 1 |" in hotspots_section
+    assert hotspots_section.index("| core.py | 2 |") < hotspots_section.index("| helper.py | 1 |")
 
 
 def test_update_roadmap_writes_json_summary(tmp_path):

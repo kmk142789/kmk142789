@@ -59,6 +59,8 @@ DEFAULT_SKIP_DIRS = {
     ".nox",
 }
 
+DEFAULT_HOTSPOT_LIMIT = 5
+
 
 def _normalize_task_text(text: str) -> str:
     """Return a cleaned representation of comment text."""
@@ -403,7 +405,11 @@ def _current_timestamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
 
 
-def build_roadmap(tasks: Iterable[Task], base_path: Path) -> str:
+def build_roadmap(
+    tasks: Iterable[Task],
+    base_path: Path,
+    hotspot_limit: int = DEFAULT_HOTSPOT_LIMIT,
+) -> str:
     timestamp = _current_timestamp()
     lines = [
         "# Echo Evolution Roadmap\n\n",
@@ -411,7 +417,7 @@ def build_roadmap(tasks: Iterable[Task], base_path: Path) -> str:
     ]
     entries = list(tasks)
     if entries:
-        lines.extend(_build_summary(entries, base_path))
+        lines.extend(_build_summary(entries, base_path, hotspot_limit=hotspot_limit))
     if not entries:
         lines.append("No TODO or FIXME markers were discovered.\n")
     else:
@@ -450,10 +456,16 @@ def update_roadmap(
     return tasks
 
 
-def _build_summary(tasks: Sequence[Task], base_path: Path) -> List[str]:
+def _build_summary(
+    tasks: Sequence[Task],
+    base_path: Path,
+    *,
+    hotspot_limit: int = DEFAULT_HOTSPOT_LIMIT,
+) -> List[str]:
     tag_counts = Counter(task.tag for task in tasks)
     location_counts: dict[str, int] = defaultdict(int)
     extension_counts: dict[str, int] = defaultdict(int)
+    file_counts: dict[str, int] = defaultdict(int)
     for task in tasks:
         relative = task.path.relative_to(base_path)
         top_level = relative.parts[0] if relative.parts else str(relative)
@@ -461,6 +473,7 @@ def _build_summary(tasks: Sequence[Task], base_path: Path) -> List[str]:
         suffix = relative.suffix.lower()
         key = suffix if suffix else NO_EXTENSION_LABEL
         extension_counts[key] += 1
+        file_counts[relative.as_posix()] += 1
 
     summary_lines = ["## Summary\n\n", "| Category | Count |\n", "| --- | ---: |\n"]
     for tag, count in sorted(tag_counts.items()):
@@ -478,7 +491,33 @@ def _build_summary(tasks: Sequence[Task], base_path: Path) -> List[str]:
     for extension, count in sorted(extension_counts.items()):
         summary_lines.append(f"| {extension} | {count} |\n")
     summary_lines.append("\n")
+
+    hotspots = _rank_hotspots(file_counts, limit=hotspot_limit)
+    if hotspots:
+        summary_lines.append("### Hotspots\n\n")
+        summary_lines.append("| File | Count |\n")
+        summary_lines.append("| --- | ---: |\n")
+        for path, count in hotspots:
+            summary_lines.append(f"| {path} | {count} |\n")
+        summary_lines.append("\n")
     return summary_lines
+
+
+def _rank_hotspots(
+    file_counts: dict[str, int], *, limit: int = DEFAULT_HOTSPOT_LIMIT
+) -> List[Tuple[str, int]]:
+    """Return top files with the highest task counts."""
+
+    if limit is not None and limit < 0:
+        limit = 0
+
+    ordered = sorted(
+        file_counts.items(),
+        key=lambda entry: (-entry[1], entry[0]),
+    )
+    if limit:
+        return ordered[:limit]
+    return ordered
 
 
 def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, object]:
@@ -488,6 +527,7 @@ def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, o
     per_tag = Counter(task.tag for task in entries)
     per_location: dict[str, int] = defaultdict(int)
     per_extension: dict[str, int] = defaultdict(int)
+    per_file: dict[str, int] = defaultdict(int)
     serialised_tasks = []
 
     for task in entries:
@@ -499,6 +539,7 @@ def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, o
         suffix = relative_path.suffix.lower()
         key = suffix if suffix else NO_EXTENSION_LABEL
         per_extension[key] += 1
+        per_file[relative_path.as_posix()] += 1
         serialised_tasks.append(
             {
                 "path": relative_path.as_posix(),
@@ -516,6 +557,10 @@ def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, o
             "per_location": dict(sorted(per_location.items())),
             "per_extension": dict(sorted(per_extension.items())),
         },
+        "hotspots": [
+            {"path": path, "count": count}
+            for path, count in _rank_hotspots(per_file, limit=DEFAULT_HOTSPOT_LIMIT)
+        ],
         "tasks": serialised_tasks,
     }
 
