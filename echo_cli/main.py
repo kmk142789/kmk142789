@@ -124,7 +124,9 @@ from pulse_dashboard import WorkerHive
 from .progressive_features import (
     analyze_text_corpus,
     generate_numeric_intelligence,
+    plan_capacity_allocation,
     simulate_delivery_timeline,
+    simulate_portfolio_outcomes,
 )
 
 try:  # pragma: no cover - optional dependency
@@ -978,6 +980,86 @@ def _load_plan_file(path: Path | None) -> list[dict[str, object]]:
     return milestones
 
 
+def _parse_team_capacity_specs(specs: Sequence[str]) -> dict[str, float]:
+    if not specs:
+        raise ValueError("provide at least one --team entry")
+    capacities: dict[str, float] = {}
+    for spec in specs:
+        parts = spec.split(":")
+        if len(parts) != 2:
+            raise ValueError("team capacity must follow 'Team:hours' format")
+        team = parts[0].strip()
+        if not team:
+            raise ValueError("team name cannot be empty")
+        try:
+            hours = float(parts[1])
+        except ValueError as exc:
+            raise ValueError("capacity must be numeric") from exc
+        if hours <= 0:
+            raise ValueError("capacity must be positive")
+        capacities[team] = capacities.get(team, 0.0) + hours
+    return capacities
+
+
+def _parse_task_specs(specs: Sequence[str]) -> list[dict[str, object]]:
+    tasks: list[dict[str, object]] = []
+    for spec in specs:
+        parts = spec.split(":")
+        if len(parts) not in {3, 4}:
+            raise ValueError(
+                "tasks must follow 'Name:Team:effort[:priority]' format"
+            )
+        name, team, effort_text, *priority_part = [segment.strip() for segment in parts]
+        if not name or not team:
+            raise ValueError("task name and team cannot be empty")
+        try:
+            effort = float(effort_text)
+        except ValueError as exc:
+            raise ValueError("effort must be numeric") from exc
+        priority = 3
+        if priority_part and priority_part[0]:
+            try:
+                priority = int(priority_part[0])
+            except ValueError as exc:
+                raise ValueError("priority must be an integer") from exc
+        tasks.append({"name": name, "team": team, "effort": effort, "priority": priority})
+    return tasks
+
+
+def _load_tasks_file(path: Path | None) -> list[dict[str, object]]:
+    if path is None:
+        return []
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("tasks file must contain a JSON array") from exc
+    if not isinstance(data, list):
+        raise ValueError("tasks file must contain a JSON array")
+    tasks: list[dict[str, object]] = []
+    for idx, entry in enumerate(data):
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"invalid task at index {idx}")
+        tasks.append(dict(entry))
+    return tasks
+
+
+def _load_portfolio_file(path: Path | None) -> list[dict[str, object]]:
+    if path is None:
+        return []
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("portfolio file must contain a JSON array") from exc
+    if not isinstance(data, list):
+        raise ValueError("portfolio file must contain a JSON array")
+    initiatives: list[dict[str, object]] = []
+    for idx, entry in enumerate(data):
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"invalid initiative at index {idx}")
+        initiatives.append(dict(entry))
+    return initiatives
+
+
 def _format_meta_causal_summary(config: MetaCausalRollout, *, applied: bool) -> str:
     checks = ", ".join(config.preflight_checks) if config.preflight_checks else "none"
     status_text = "enabled" if config.enabled else "disabled"
@@ -1240,6 +1322,166 @@ def complexity_timeline(
             ["Milestone", "Start", "End", "Buffer end", "Duration", "Confidence"],
             rows,
             title="Delivery timeline",
+        )
+    )
+
+
+@complexity_app.command("capacity")
+def complexity_capacity(
+    ctx: typer.Context,
+    team: List[str] = typer.Option(
+        [],
+        "--team",
+        "-T",
+        help="Team capacity definition formatted as 'Team:hours'.",
+    ),
+    task: List[str] = typer.Option(
+        [],
+        "--task",
+        "-t",
+        help="Task definition formatted as 'Name:Team:effort[:priority]'.",
+    ),
+    tasks_file: Optional[Path] = typer.Option(
+        None,
+        "--tasks-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing an array of task objects.",
+    ),
+    cycle_length: float = typer.Option(
+        14.0,
+        "--cycle-length",
+        help="Length of a planning cycle in days (defaults to 14).",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Plan workloads across teams and highlight load factors."""
+
+    _ensure_ctx(ctx)
+    try:
+        capacities = _parse_team_capacity_specs(team)
+        tasks = _parse_task_specs(task) + _load_tasks_file(tasks_file)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if not tasks:
+        raise typer.BadParameter("provide at least one --task or --tasks-file entry")
+    payload = plan_capacity_allocation(capacities, tasks, cycle_length_days=cycle_length)
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary = payload["summary"]
+    lines = [
+        f"Planned {summary['total_tasks']} task(s) spanning {summary['total_effort']} hours.",
+        f"Cycle length : {summary['cycle_length_days']} days",
+    ]
+    if summary.get("overall_load_factor") is not None:
+        lines.append(f"Overall load factor : {summary['overall_load_factor']}x")
+    if summary.get("critical_teams"):
+        lines.append(
+            f"Overloaded teams : {', '.join(summary['critical_teams'])}"
+        )
+    console.print("\n".join(lines))
+    rows = [
+        (
+            team_name,
+            f"{details['capacity']} h",
+            f"{details['load']} h",
+            f"{details['load_factor']}x" if details["load_factor"] is not None else "-",
+            details.get("cycles_required") or 0,
+            len(details.get("assignments", [])),
+        )
+        for team_name, details in payload["teams"].items()
+    ]
+    console.print(
+        _build_table(
+            ["Team", "Capacity", "Load", "Load factor", "Cycles", "Tasks"],
+            rows,
+            title="Capacity overview",
+        )
+    )
+    if payload["unassigned"]:
+        console.print("Unassigned tasks:")
+        for entry in payload["unassigned"]:
+            console.print(
+                f"  {entry['name']} ({entry['effort']}h) → {entry['reason']} (team={entry['team']})"
+            )
+
+
+@complexity_app.command("portfolio")
+def complexity_portfolio(
+    ctx: typer.Context,
+    portfolio_file: Path = typer.Option(
+        ...,
+        "--portfolio-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file describing the initiatives in the portfolio.",
+    ),
+    start: Optional[str] = typer.Option(
+        None,
+        "--start",
+        help="Optional ISO 8601 timestamp overriding the portfolio start.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Aggregate multiple initiative timelines into a portfolio view."""
+
+    _ensure_ctx(ctx)
+    initiatives = _load_portfolio_file(portfolio_file)
+    if not initiatives:
+        raise typer.BadParameter("portfolio file must contain at least one initiative")
+    start_dt = _parse_iso_timestamp(start) if start else None
+    payload = simulate_portfolio_outcomes(initiatives, start=start_dt)
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    portfolio = payload["portfolio"]
+    summary_lines = [
+        f"Portfolio start : {portfolio['start']}",
+        f"Portfolio end   : {portfolio['end']}",
+        f"Duration        : {portfolio['overall_days']} days",
+        f"Risk index      : {portfolio['risk_index']} ({portfolio['risk_classification']})",
+        f"Critical path   : {portfolio.get('critical_path') or 'n/a'}",
+        f"Weighted value  : {portfolio['weighted_value']}",
+    ]
+    if portfolio.get("average_confidence") is not None:
+        summary_lines.append(
+            f"Average confidence : {portfolio['average_confidence']}"
+        )
+    console.print("\n".join(summary_lines))
+    rows = [
+        (
+            entry["name"],
+            entry["weight"],
+            entry["value"],
+            entry["risk"]["classification"],
+            f"{entry['total_days']} d",
+            entry["start"],
+            entry["end"],
+        )
+        for entry in payload["initiatives"]
+    ]
+    console.print(
+        _build_table(
+            ["Initiative", "Weight", "Value", "Risk", "Duration", "Start", "End"],
+            rows,
+            title="Initiative roll-up",
         )
     )
 
