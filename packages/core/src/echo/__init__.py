@@ -180,6 +180,7 @@ from .digital_computer import (
     assemble_program as assemble_digital_program,
     run_program as run_digital_program,
 )
+from .echo_genesis_coordinator import EchoGenesisCoordinator, SubsystemLink
 from .echo_genesis_core import EchoGenesisCore, SubsystemProbe, SubsystemPulse
 from .echovm import (
     EXAMPLE_PROGRAM as ECHOVM_EXAMPLE_PROGRAM,
@@ -407,8 +408,10 @@ __all__ = [
     "SubsystemAdapter",
     "SubsystemSnapshot",
     "EchoGenesisCore",
+    "EchoGenesisCoordinator",
     "SubsystemProbe",
     "SubsystemPulse",
+    "SubsystemLink",
     "FluxLedgerEntry",
     "FluxVector",
     "RevolutionaryFlux",
