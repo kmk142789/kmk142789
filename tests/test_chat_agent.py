@@ -6,7 +6,7 @@ def test_agent_function_descriptions() -> None:
     agent = EchoChatAgent()
     functions = agent.describe_functions()
     names = {entry["name"] for entry in functions}
-    assert {"solve_puzzle", "launch_application", "digital_computer"} <= names
+    assert {"solve_puzzle", "launch_application", "digital_computer", "daily_invitations"} <= names
 
 
 def test_agent_solves_known_puzzle() -> None:
@@ -27,6 +27,15 @@ def test_agent_launch_instructions() -> None:
     assert "npm run dev" in payload["data"]["commands"]
 
 
+def test_agent_launches_echo_computer() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command("launch Echo Computer")
+    payload = response.to_payload()
+    assert payload["function"] == "launch_application"
+    assert payload["data"]["application"] == "echo.computer"
+    assert "npm run apps:echo-computer" in payload["data"]["commands"]
+
+
 def test_agent_executes_digital_program() -> None:
     agent = EchoChatAgent()
     response = agent.handle_command(
@@ -40,3 +49,24 @@ def test_agent_executes_digital_program() -> None:
     execution = payload["data"].get("execution")
     assert execution is not None
     assert execution["output"] == ["120"]
+
+
+def test_agent_surfaces_daily_invitations() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command("show daily echo computer tasks")
+    payload = response.to_payload()
+    assert payload["function"] == "daily_invitations"
+    tasks = payload["data"]["tasks"]
+    assert isinstance(tasks, list)
+    assert tasks  # file ships with invitations
+    assert payload["metadata"]["updated"] == "2025-05-11"
+
+
+def test_agent_daily_invitation_focus_and_limit() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command("show daily code invitations top 1")
+    payload = response.to_payload()
+    assert payload["function"] == "daily_invitations"
+    tasks = payload["data"]["tasks"]
+    assert len(tasks) == 1
+    assert tasks[0]["focus"] == "Code"
