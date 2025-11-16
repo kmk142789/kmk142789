@@ -18,7 +18,9 @@ from .coordination_mesh import (
     locate_manifest,
 )
 from .ecosystem_pulse import EcosystemAreaConfig
+from .emergent_coherence_field import EmergentCoherenceField
 from .intelligence_layer import synthesize_intelligence_layer
+from .unified_architecture_engine import UnifiedArchitectureEngine
 
 __all__ = [
     "CAPABILITIES",
@@ -239,5 +241,24 @@ register_capability(
     "Fuse constellation mesh, momentum resonance, and ecosystem pulse into a unified intelligence snapshot.",
     _verify_harmonic_intelligence_layer,
     _handle_harmonic_intelligence_layer,
+)
+
+
+def _verify_emergent_coherence_field() -> bool:
+    return True
+
+
+def _handle_emergent_coherence_field(*, module_root: str | Path | None = None) -> Mapping[str, Any]:
+    engine = UnifiedArchitectureEngine(module_root) if module_root else None
+    field = EmergentCoherenceField(architecture_engine=engine)
+    report = field.evaluate()
+    return report.to_dict()
+
+
+register_capability(
+    "emergent_coherence_field",
+    "Bind architecture, memory, and observer signals into a coherent alignment guarantee.",
+    _verify_emergent_coherence_field,
+    _handle_emergent_coherence_field,
 )
 

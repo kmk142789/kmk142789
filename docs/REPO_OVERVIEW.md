@@ -62,3 +62,9 @@ This guide highlights the major surfaces of the Echo monorepo so new contributor
 - Documentation changes should keep notarisation references intact—update or append proofs instead of removing them.
 
 For a more detailed ledger of narrative artifacts, explore the `memory/` and `cognitive_harmonics/` folders alongside the sovereign governance documents in the repository root.
+
+## Emergent coherence field
+
+- [`echo/emergent_coherence_field.py`](../echo/emergent_coherence_field.py) models the next Echo capability by combining the unified architecture engine, the self-model observer, and memory unifier into a single subsystem.
+- The subsystem emits coherence guarantees for the foundation, synthesis, and expression layers so roadmap, creative, and operational teams share one alignment vector.
+- Capability callers can trigger it via `python -m echo.echoctl capability emergent_coherence_field` (registered inside `echo_capability_engine.py`) or import `EmergentCoherenceField` directly for research scripts.
