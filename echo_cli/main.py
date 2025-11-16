@@ -132,6 +132,8 @@ from .progressive_features import (
     evaluate_operational_readiness,
     forecast_portfolio_throughput,
     generate_numeric_intelligence,
+    orchestrate_complexity_summit,
+    orchestrate_complexity_constellation,
     plan_capacity_allocation,
     progressive_complexity_suite,
     simulate_delivery_timeline,
@@ -1075,6 +1077,51 @@ def _load_plan_file(path: Path | None) -> list[dict[str, object]]:
         candidate.setdefault("confidence", 0.8)
         milestones.append(candidate)
     return milestones
+
+
+def _load_strategy_file(path: Path | None) -> tuple[list[dict[str, object]], dict[str, float]]:
+    if path is None:
+        return [], {}
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("strategy file must contain a JSON object") from exc
+    if not isinstance(data, Mapping):
+        raise ValueError("strategy file must contain a JSON object")
+    options_raw = data.get("options", [])
+    if not isinstance(options_raw, list):
+        raise ValueError("strategy file 'options' must be a list")
+    options: list[dict[str, object]] = []
+    for idx, entry in enumerate(options_raw):
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"invalid strategy option at index {idx}")
+        options.append(dict(entry))
+    criteria_raw = data.get("criteria", {})
+    if not isinstance(criteria_raw, Mapping):
+        raise ValueError("strategy file 'criteria' must be a mapping")
+    criteria: dict[str, float] = {}
+    for key, value in criteria_raw.items():
+        try:
+            criteria[str(key).strip()] = float(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"invalid criterion weight for {key!r}") from exc
+
+
+def _load_constellation_file(path: Path) -> dict[str, object]:
+    try:
+        program = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("constellation file must contain a JSON object") from exc
+    if not isinstance(program, Mapping):
+        raise ValueError("constellation file must contain a JSON object")
+    scenarios = program.get("scenarios")
+    if not isinstance(scenarios, list) or not scenarios:
+        raise ValueError("constellation file requires a non-empty 'scenarios' array")
+    defaults = program.get("defaults")
+    if defaults is not None and not isinstance(defaults, Mapping):
+        raise ValueError("constellation file 'defaults' must be a JSON object")
+    return dict(program)
+    return options, {k: v for k, v in criteria.items() if k}
 
 
 def _parse_team_capacity_specs(specs: Sequence[str]) -> dict[str, float]:
@@ -2251,6 +2298,136 @@ def complexity_cascade(
             )
 
 
+@complexity_app.command("escalate")
+def complexity_escalate(
+    ctx: typer.Context,
+    cascade_file: Path = typer.Option(
+        ...,
+        "--cascade-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file describing the ordered cascade of stage definitions.",
+    ),
+    start: Optional[str] = typer.Option(
+        None,
+        "--start",
+        help="Optional ISO 8601 timestamp used as the default cascade start.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Create increasingly complex insights from a cascade specification."""
+
+    _ensure_ctx(ctx)
+    try:
+        stages = _load_cascade_file(cascade_file)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    start_dt = _parse_iso_timestamp(start)
+    try:
+        payload = execute_complexity_cascade(stages, default_start=start_dt)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary_lines = [
+        f"Start reference  : {payload['start_reference']}",
+        f"Cascade stages   : {payload['stage_count']}",
+        f"Complexity score : {payload['complexity_score']}",
+    ]
+    console.print("\n".join(summary_lines))
+
+    distribution = payload.get("stage_type_distribution", {})
+    if distribution:
+        rows = [
+            (stage_type, count)
+            for stage_type, count in sorted(distribution.items())
+        ]
+        console.print(
+            _build_table(["Stage type", "Count"], rows, title="Cascade distribution")
+        )
+
+    rows = [
+        (
+            stage.get("name"),
+            stage.get("type"),
+            stage.get("insight", "-"),
+        )
+        for stage in payload["stages"]
+    ]
+    console.print(
+        _build_table(["Stage", "Type", "Insight"], rows, title="Complexity cascade")
+    )
+
+    evolution_lines = [
+        f"Iterations executed : {payload['iterations']}",
+        f"Aggregate complexity: {payload['aggregate_complexity']} (mean {payload['mean_complexity']})",
+        f"Complexity gradient: {payload['complexity_gradient']} (peak {payload['peak_complexity']})",
+    ]
+    if payload.get("documents_available"):
+        evolution_lines.append(f"Documents analysed : {payload['documents_available']}")
+    if payload.get("milestones_available"):
+        evolution_lines.append(f"Milestones tracked : {payload['milestones_available']}")
+    if payload.get("level_distribution"):
+        distribution = ", ".join(
+            f"{level}={count}" for level, count in payload["level_distribution"].items()
+        )
+        evolution_lines.append(f"Level distribution : {distribution}")
+    console.print("\n".join(evolution_lines))
+
+    phase_rows = [
+        (
+            phase["iteration"],
+            phase["level"],
+            phase["numeric_terms"],
+            phase["documents_used"],
+            phase["milestones_used"],
+            phase["complexity_index"],
+            phase["complexity_delta"],
+        )
+        for phase in payload.get("phases", [])
+    ]
+    console.print(
+        _build_table(
+            [
+                "Iteration",
+                "Level",
+                "Terms",
+                "Docs",
+                "Milestones",
+                "Complexity",
+                "Δ Complexity",
+            ],
+            phase_rows,
+            title="Evolution phases",
+        )
+    )
+
+    if payload.get("insights"):
+        console.print("Insights:")
+        for line in payload["insights"]:
+            console.print(f"- {line}")
+        max_lines = 6
+        for insight in payload["insights"][:max_lines]:
+            console.print(f"- {insight}")
+        remaining = len(payload["insights"]) - max_lines
+        if remaining > 0:
+            console.print(f"… (+{remaining} additional insight(s))")
+
+    if payload.get("final_summary"):
+        console.print(f"Final summary: {payload['final_summary']}")
+
+
 @complexity_app.command("evolve")
 def complexity_evolve(
     ctx: typer.Context,
@@ -2300,6 +2477,7 @@ def complexity_evolve(
     start: Optional[str] = typer.Option(
         None,
         "--start",
+        help="Optional ISO 8601 timestamp used as the default cascade start.",
         help="Optional ISO 8601 timestamp to align all iterations.",
     ),
     json_mode: bool = typer.Option(
@@ -2345,10 +2523,44 @@ def complexity_evolve(
         return
 
     summary_lines = [
+        f"Start reference  : {payload['start_reference']}",
+        f"Cascade stages   : {payload['stage_count']}",
+        f"Complexity score : {payload['complexity_score']}",
+    ]
+    console.print("\n".join(summary_lines))
+
+    distribution = payload.get("stage_type_distribution", {})
+    if distribution:
+        rows = [
+            (stage_type, count)
+            for stage_type, count in sorted(distribution.items())
+        ]
+        console.print(
+            _build_table(["Stage type", "Count"], rows, title="Cascade distribution")
+        )
+
+    rows = [
+        (
+            stage.get("name"),
+            stage.get("type"),
+            stage.get("insight", "-"),
+        )
+        for stage in payload.get("stages", [])
+    ]
+    console.print(
+        _build_table(["Stage", "Type", "Insight"], rows, title="Complexity cascade")
+    )
+
+    evolution_lines = [
+        f"Iterations executed : {payload['iterations']}",
         f"Iterations       : {payload['iterations']}",
         f"Aggregate complexity: {payload['aggregate_complexity']} (mean {payload['mean_complexity']})",
         f"Gradient / peak  : {payload['complexity_gradient']} / {payload['peak_complexity']}",
     ]
+    if payload.get("documents_available"):
+        evolution_lines.append(f"Documents analysed : {payload['documents_available']}")
+    if payload.get("milestones_available"):
+        evolution_lines.append(f"Milestones tracked : {payload['milestones_available']}")
     if payload.get("documents_available") is not None:
         summary_lines.append(f"Documents available : {payload['documents_available']}")
     if payload.get("milestones_available") is not None:
@@ -2357,8 +2569,8 @@ def complexity_evolve(
         distribution = ", ".join(
             f"{level}={count}" for level, count in payload["level_distribution"].items()
         )
-        summary_lines.append(f"Level distribution : {distribution}")
-    console.print("\n".join(summary_lines))
+        evolution_lines.append(f"Level distribution : {distribution}")
+    console.print("\n".join(evolution_lines))
 
     phase_rows = [
         (
@@ -2394,7 +2606,7 @@ def complexity_evolve(
         max_lines = 6
         for insight in payload["insights"][:max_lines]:
             console.print(f"- {insight}")
-        remaining = len(payload["insights"]) - max_lines
+        remaining = len(payload["insights"])-max_lines
         if remaining > 0:
             console.print(f"… (+{remaining} additional insight(s))")
 
@@ -2402,6 +2614,74 @@ def complexity_evolve(
         console.print(f"Final summary: {payload['final_summary']}")
 
 
+@complexity_app.command("summit")
+def complexity_summit(
+    ctx: typer.Context,
+    phases: int = typer.Option(3, "--phases", "-p", min=1, help="Number of progressive phases to execute."),
+    base_terms: int = typer.Option(8, "--base-terms", "-c", min=2, help="Base Fibonacci terms for the first phase."),
+    note: List[str] = typer.Option([], "--note", "-n", help="Context note applied to successive phases (repeatable)."),
+    text: List[str] = typer.Option([], "--text", "-t", help="Inline text snippet for the text stage (repeatable)."),
+    file: List[Path] = typer.Option(
+        [],
+        "--file",
+        "-f",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="Document path for the text stage (repeatable).",
+    ),
+    milestone: List[str] = typer.Option(
+        [],
+        "--milestone",
+        "-m",
+        help="Milestone formatted as 'Name:duration[:confidence]' for advanced phases.",
+    ),
+    plan_file: Optional[Path] = typer.Option(
+        None,
+        "--plan-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing milestone objects for advanced phases.",
+    ),
+    signal: List[str] = typer.Option(
+        [],
+        "--signal",
+        "-s",
+        help="Signal formatted as 'Name:score' powering signal + alignment modules.",
+    ),
+    signals_file: Optional[Path] = typer.Option(
+        None,
+        "--signals-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing a mapping of signal scores.",
+    ),
+    alignment_target: float = typer.Option(
+        0.75,
+        "--alignment-target",
+        help="Desired alignment target when evaluating signals (0-1).",
+    ),
+    option: List[str] = typer.Option(
+        [],
+        "--option",
+        "-o",
+        help="Strategy option formatted as 'Name|criterion=value|...'.",
+    ),
+    criterion: List[str] = typer.Option(
+        [],
+        "--criterion",
+        "-w",
+        help="Strategy criterion weight formatted as 'name=value'.",
+    ),
+    strategy_file: Optional[Path] = typer.Option(
+        None,
+        "--strategy-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing strategy 'options' and 'criteria'.",
 @complexity_app.command("escalate")
 def complexity_escalate(
     ctx: typer.Context,
@@ -2477,6 +2757,7 @@ def complexity_escalate(
     start: Optional[str] = typer.Option(
         None,
         "--start",
+        help="Optional ISO 8601 timestamp anchoring the journey phases.",
         help="Optional ISO 8601 timestamp anchoring advanced stages.",
     ),
     json_mode: bool = typer.Option(
@@ -2486,6 +2767,181 @@ def complexity_escalate(
         help="Emit the raw JSON payload instead of a formatted summary.",
     ),
 ) -> None:
+    """Run the full progressive ladder culminating in the summit feature."""
+
+    _ensure_ctx(ctx)
+
+    documents: List[str] | None = None
+    if text or file:
+        try:
+            documents = _load_text_documents(text, file)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    plan: list[dict[str, object]] | None = None
+    if milestone or plan_file is not None:
+        try:
+            merged = _load_plan_file(plan_file) + _parse_milestone_specs(milestone)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+        plan = merged or None
+
+    try:
+        signals = {**_load_signal_file(signals_file), **_parse_signal_specs(signal)}
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    try:
+        file_options, file_criteria = _load_strategy_file(strategy_file)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    options = list(file_options)
+    if option:
+        try:
+            options.extend(_parse_strategy_option_specs(option))
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    criteria = dict(file_criteria)
+    if criterion:
+        try:
+            criteria.update(_parse_criteria_weights(criterion))
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    criteria = {k: v for k, v in criteria.items() if k}
+
+    strategy_block: dict[str, object] | None = None
+    if options and criteria:
+        strategy_block = {"options": options, "criteria": criteria}
+    elif options or criteria:
+        raise typer.BadParameter(
+            "strategy configuration requires both --option (or --strategy-file) and --criterion"
+        )
+
+    notes = [entry.strip() for entry in note if entry.strip()]
+    start_dt = _parse_iso_timestamp(start)
+    agenda: dict[str, object] = {"phases": phases, "base_numeric_terms": base_terms}
+    if documents:
+        agenda["documents"] = documents
+    if plan:
+        agenda["milestones"] = plan
+    if start_dt:
+        agenda["start"] = start_dt
+    if notes:
+        agenda["notes"] = notes
+    if signals:
+        agenda["signals"] = signals
+        agenda["alignment_target"] = alignment_target
+    if strategy_block:
+        agenda["strategy"] = strategy_block
+
+    try:
+        payload = orchestrate_complexity_summit(agenda)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    console.print(
+        f"Summit grade      : {payload['grade'].title()} (score {payload['score']})"
+    )
+    console.print(f"Summit summary    : {payload['summary']}")
+    journey = payload.get("journey", {})
+    console.print(
+        f"Journey complexity: {journey.get('complexity_index', 0)} across {journey.get('phase_count', 0)} phase(s)"
+    )
+    phase_rows = []
+    for phase in journey.get("phases", []):
+        checkpoint = phase.get("checkpoint", {})
+        text_payload = phase.get("text")
+        timeline_payload = phase.get("timeline")
+        text_summary = text_payload["readability"] if text_payload else "-"
+        timeline_summary = (
+            timeline_payload["risk"]["classification"]
+            if timeline_payload
+            else "-"
+        )
+        phase_rows.append(
+            (
+                phase.get("phase"),
+                phase.get("level"),
+                checkpoint.get("classification"),
+                text_summary,
+                timeline_summary,
+                phase.get("complexity"),
+            )
+        )
+    if phase_rows:
+        console.print(
+            _build_table(
+                ["Phase", "Level", "Momentum", "Readability", "Risk", "Complexity"],
+                phase_rows,
+                title="Summit phases",
+            )
+        )
+
+    supplemental = payload.get("supplemental", {})
+    if supplemental.get("signals"):
+        snapshot = supplemental["signals"]
+        stats = snapshot["stats"]
+        console.print(
+            f"Signals snapshot : avg {stats['average']} ({stats['classification']} | {stats['trend']})"
+        )
+    if supplemental.get("alignment"):
+        alignment = supplemental["alignment"]
+        console.print(
+            f"Alignment        : gap {alignment['gap']} ({alignment['classification']})"
+        )
+    if supplemental.get("strategy"):
+        strategy_payload = supplemental["strategy"]
+        best = strategy_payload.get("best_option", {})
+        console.print(
+            f"Strategy         : best {best.get('name')} scoring {best.get('score')}"
+        )
+
+    insights = payload.get("insights", [])
+    if insights:
+        console.print("Insights:")
+        for insight in insights[:8]:
+            console.print(f"- {insight}")
+        remaining = len(insights) - 8
+        if remaining > 0:
+            console.print(f"… (+{remaining} additional insight(s))")
+
+
+@complexity_app.command("constellate")
+def complexity_constellate(
+    ctx: typer.Context,
+    program_file: Path = typer.Option(
+        ...,
+        "--program-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file describing the constellation defaults and scenarios.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Execute multiple summit agendas and aggregate constellation insights."""
+
+    _ensure_ctx(ctx)
+
+    try:
+        program = _load_constellation_file(program_file)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    try:
+        payload = orchestrate_complexity_constellation(program)
     """Showcase escalating features that grow in complexity with each dataset."""
 
     _ensure_ctx(ctx)
@@ -2539,6 +2995,82 @@ def complexity_escalate(
         _echo(ctx, payload)
         return
 
+    console.print(
+        f"Constellation grade : {payload['constellation_grade'].title()} (avg score {payload['average_score']})"
+    )
+    console.print(
+        f"Scenarios analysed  : {payload['scenario_count']} (stability {payload['stability_index']}, range {payload['score_range']})"
+    )
+
+    best = payload.get("best_scenario")
+    if best:
+        console.print(
+            f"Best scenario       : {best.get('name')} (grade {best.get('grade')}, score {best.get('score')})"
+        )
+    worst = payload.get("worst_scenario")
+    if worst:
+        console.print(
+            f"Floor scenario      : {worst.get('name')} (grade {worst.get('grade')}, score {worst.get('score')})"
+        )
+
+    distribution = payload.get("grade_distribution", {})
+    if distribution:
+        rows = [
+            (grade.title(), count)
+            for grade, count in sorted(distribution.items(), key=lambda item: item[0])
+        ]
+        console.print(
+            _build_table(["Grade", "Count"], rows, title="Constellation grade distribution")
+        )
+
+    scenario_rows = []
+    for scenario in payload.get("scenarios", []):
+        scenario_rows.append(
+            (
+                scenario.get("name"),
+                scenario.get("grade"),
+                scenario.get("score"),
+                scenario.get("phases", "-"),
+                scenario.get("complexity_index", "-"),
+                ", ".join(scenario.get("tags", [])) if scenario.get("tags") else "-",
+            )
+        )
+    if scenario_rows:
+        console.print(
+            _build_table(
+                ["Scenario", "Grade", "Score", "Phases", "Complexity", "Tags"],
+                scenario_rows,
+                title="Constellation scenarios",
+            )
+        )
+
+    progression_rows = []
+    for hop in payload.get("progression", []):
+        progression_rows.append(
+            (
+                hop.get("from"),
+                hop.get("to"),
+                hop.get("score_delta"),
+                hop.get("grade_shift"),
+            )
+        )
+    if progression_rows:
+        console.print(
+            _build_table(
+                ["From", "To", "Δ Score", "Δ Grade"],
+                progression_rows,
+                title="Scenario progression",
+            )
+        )
+
+    insights = payload.get("insights", [])
+    if insights:
+        console.print("Insights:")
+        for insight in insights[:10]:
+            console.print(f"- {insight}")
+        remaining = len(insights) - 10
+        if remaining > 0:
+            console.print(f"… (+{remaining} additional insight(s))")
     coverage = payload.get("coverage", {})
     coverage_summary = ", ".join(
         f"{name}={'✓' if enabled else '–'}" for name, enabled in coverage.items()

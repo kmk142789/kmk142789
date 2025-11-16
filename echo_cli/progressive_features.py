@@ -24,7 +24,11 @@ __all__ = [
     "forecast_portfolio_throughput",
     "generate_signal_snapshot",
     "synthesize_operational_dashboard",
+    "build_complexity_checkpoint",
+    "compose_complexity_journey",
+    "orchestrate_complexity_summit",
     "orchestrate_complexity_progression",
+    "orchestrate_complexity_constellation",
     "execute_complexity_cascade",
     "execute_feature_escalation",
     "CascadeStage",
@@ -1257,6 +1261,459 @@ def generate_signal_snapshot(signals: Mapping[str, float]) -> dict[str, object]:
             "strongest": strongest[0],
             "weakest": weakest[0],
         },
+    }
+
+
+def build_complexity_checkpoint(
+    numeric_terms: int,
+    *,
+    notes: Iterable[str] | None = None,
+    reference: str | None = None,
+) -> dict[str, object]:
+    """Create the entry-level progressive feature payload.
+
+    The checkpoint folds Fibonacci intelligence with optional context notes and
+    returns a concise summary describing the current numeric momentum.  It is
+    intentionally lightweight and meant to act as the "base" feature in the
+    cascading progression.
+    """
+
+    if numeric_terms < 2:
+        raise ValueError("numeric_terms must be at least 2")
+
+    annotations = [str(note).strip() for note in (notes or []) if str(note).strip()]
+    note_text = annotations[0] if annotations else None
+    payload = generate_numeric_intelligence(numeric_terms)
+    derivatives = payload.get("derivatives", [])
+    ratios = payload.get("ratio_trend", [])
+    last_value = payload["sequence"][-1]
+    momentum = float(derivatives[-1]) if derivatives else 0.0
+    phi = payload.get("golden_ratio_estimate")
+    volatility = pstdev(ratios) if len(ratios) > 1 else 0.0
+    relative_momentum = momentum / last_value if last_value else 0.0
+    if momentum < 0:
+        classification = "correcting"
+    elif relative_momentum >= 0.5:
+        classification = "surging"
+    elif relative_momentum >= 0.25:
+        classification = "growing"
+    elif relative_momentum >= 0.05:
+        classification = "steady"
+    else:
+        classification = "baseline"
+    summary = (
+        f"Momentum {momentum:.2f} ({classification})"
+        + (f", φ≈{phi:.5f}" if phi else "")
+    )
+    if note_text:
+        summary += f" — {note_text}"
+    return {
+        "reference": reference or f"checkpoint-{numeric_terms}",
+        "terms": numeric_terms,
+        "payload": payload,
+        "momentum": round(momentum, 3),
+        "ratio_estimate": round(phi, 5) if phi is not None else None,
+        "volatility": round(volatility, 4),
+        "classification": classification,
+        "note": note_text,
+        "summary": summary,
+    }
+
+
+def compose_complexity_journey(
+    phases: int,
+    *,
+    base_numeric_terms: int,
+    documents: Iterable[str] | None = None,
+    milestones: Sequence[Mapping[str, object]] | Sequence[TimelineMilestone] | None = None,
+    start: datetime | None = None,
+    anchor_notes: Iterable[str] | None = None,
+) -> dict[str, object]:
+    """Create a ladder of progressively complex features.
+
+    Each phase adds additional analysis layers once the required inputs are
+    supplied: phase 1 runs the numeric checkpoint, phase 2 adds text analytics,
+    and phase 3+ introduces delivery simulations.  Later phases automatically
+    scale milestone durations and reduce confidence to mimic higher uncertainty.
+    """
+
+    if phases < 1:
+        raise ValueError("phases must be at least 1")
+    if base_numeric_terms < 2:
+        raise ValueError("base_numeric_terms must be at least 2")
+
+    doc_pool = [str(doc).strip() for doc in (documents or []) if str(doc).strip()]
+    milestone_pool: list[TimelineMilestone] = []
+    if milestones is not None:
+        for entry in milestones:
+            if isinstance(entry, TimelineMilestone):
+                milestone_pool.append(entry)
+            elif isinstance(entry, Mapping):
+                milestone_pool.append(TimelineMilestone.from_mapping(entry))
+            else:  # pragma: no cover - defensive
+                raise ValueError("milestones must contain mappings or TimelineMilestone objects")
+    note_pool = [str(note).strip() for note in (anchor_notes or []) if str(note).strip()]
+    start_anchor = _ensure_datetime(start, None) if start is not None else None
+
+    stages: list[dict[str, object]] = []
+    complexity_score = 0.0
+    documents_used = 0
+    milestones_used = 0
+    insights: list[str] = []
+
+    for phase in range(1, phases + 1):
+        terms = base_numeric_terms + phase - 1
+        note = note_pool[(phase - 1) % len(note_pool)] if note_pool else None
+        checkpoint = build_complexity_checkpoint(
+            terms,
+            notes=[note] if note else None,
+            reference=f"phase-{phase}",
+        )
+        stage_entry: dict[str, object] = {
+            "phase": phase,
+            "terms": terms,
+            "level": 1,
+            "checkpoint": checkpoint,
+        }
+        stage_complexity = 1.0 + math.log(max(terms, 2), 2)
+        text_payload: dict[str, object] | None = None
+        if phase >= 2 and doc_pool:
+            doc_count = min(len(doc_pool), max(1, phase))
+            documents_used += doc_count
+            text_payload = analyze_text_corpus(doc_pool[:doc_count])
+            stage_entry["text"] = text_payload
+            stage_entry["level"] = max(stage_entry["level"], 2)
+            stage_complexity += float(text_payload["lexical_density"])
+        elif phase >= 2:
+            insights.append(f"Phase {phase}: text stage skipped (no documents provided)")
+
+        timeline_payload: dict[str, object] | None = None
+        if phase >= 3 and milestone_pool:
+            scale = 1 + 0.12 * (phase - 1)
+            confidence_delta = 0.03 * (phase - 2)
+            adjusted = [
+                TimelineMilestone(
+                    name=item.name,
+                    duration_days=round(item.duration_days * scale, 3),
+                    confidence=max(0.35, min(0.99, item.confidence - confidence_delta)),
+                )
+                for item in milestone_pool
+            ]
+            milestones_used += len(adjusted)
+            stage_start = (
+                start_anchor + timedelta(days=(phase - 1) * 2)
+                if start_anchor is not None
+                else None
+            )
+            timeline_payload = simulate_delivery_timeline(adjusted, start=stage_start)
+            stage_entry["timeline"] = timeline_payload
+            stage_entry["level"] = max(stage_entry["level"], 3)
+            risk_score = float(timeline_payload["risk"]["score"])
+            stage_complexity += max(0.5, risk_score / 5)
+        elif phase >= 3:
+            insights.append(f"Phase {phase}: timeline stage skipped (no milestones provided)")
+
+        stage_entry["complexity"] = round(stage_complexity, 3)
+        stages.append(stage_entry)
+        complexity_score += stage_complexity
+        insights.append(
+            f"Phase {phase}: {checkpoint['summary']} (level {stage_entry['level']})"
+        )
+        if text_payload:
+            insights.append(
+                f"Phase {phase}: text readability {text_payload['readability']} across "
+                f"{text_payload['documents']} documents"
+            )
+        if timeline_payload:
+            risk = timeline_payload["risk"]
+            insights.append(
+                f"Phase {phase}: timeline risk {risk['classification']} (score {risk['score']})"
+            )
+
+    summary_parts = [
+        f"{phases} phase(s)",
+        f"documents used {documents_used}",
+        f"milestones used {milestones_used}",
+    ]
+    summary = ", ".join(summary_parts)
+    return {
+        "phase_count": phases,
+        "base_terms": base_numeric_terms,
+        "documents_available": len(doc_pool),
+        "milestones_available": len(milestone_pool),
+        "notes_available": len(note_pool),
+        "documents_analyzed": documents_used,
+        "milestones_applied": milestones_used,
+        "complexity_index": round(complexity_score, 3),
+        "phases": stages,
+        "insights": insights,
+        "summary": summary,
+        "start_reference": _format_iso(start_anchor) if start_anchor else None,
+    }
+
+
+def orchestrate_complexity_summit(agenda: Mapping[str, object]) -> dict[str, object]:
+    """Fuse multiple progressive features into an apex "summit" insight."""
+
+    if not isinstance(agenda, Mapping) or not agenda:
+        raise ValueError("agenda must be a non-empty mapping")
+
+    try:
+        phases = int(agenda.get("phases", 3))
+        base_terms = int(agenda.get("base_numeric_terms", 8))
+    except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+        raise ValueError("phases and base_numeric_terms must be numeric") from exc
+
+    notes = agenda.get("notes")
+    note_values = [str(note).strip() for note in (notes or []) if str(note).strip()] if notes else None
+    documents = agenda.get("documents")
+    doc_values = None
+    if documents is not None:
+        doc_values = [str(doc).strip() for doc in documents if str(doc).strip()]
+        if not doc_values:
+            raise ValueError("documents must include at least one non-empty entry")
+    milestones = agenda.get("milestones")
+    milestone_sequence = None
+    if milestones is not None:
+        if not isinstance(milestones, Sequence):  # pragma: no cover - defensive
+            raise ValueError("milestones must be a sequence")
+        milestone_sequence = list(milestones)
+        if not milestone_sequence:
+            milestone_sequence = None
+    start_value = agenda.get("start")
+    start_dt = _ensure_datetime(start_value, None) if start_value is not None else None
+
+    journey = compose_complexity_journey(
+        phases,
+        base_numeric_terms=base_terms,
+        documents=doc_values,
+        milestones=milestone_sequence,
+        start=start_dt,
+        anchor_notes=note_values,
+    )
+
+    supplemental: dict[str, object] = {}
+    insights = list(journey.get("insights", []))
+    total_score = float(journey.get("complexity_index", 0.0))
+
+    raw_signals = agenda.get("signals")
+    signals_payload: dict[str, float] | None = None
+    if raw_signals is not None:
+        if not isinstance(raw_signals, Mapping) or not raw_signals:
+            raise ValueError("signals must be a non-empty mapping")
+        signals_payload = {}
+        for key, value in raw_signals.items():
+            name = str(key).strip()
+            if not name:
+                raise ValueError("signal names cannot be empty")
+            try:
+                signals_payload[name] = float(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"signal '{key}' must be numeric") from exc
+        if not signals_payload:
+            raise ValueError("signals must include at least one numeric entry")
+
+    alignment_target = float(agenda.get("alignment_target", 0.75))
+    if signals_payload:
+        snapshot = generate_signal_snapshot(signals_payload)
+        supplemental["signals"] = snapshot
+        total_score += snapshot["stats"]["average"] * 2
+        insights.append(
+            f"Signals trending {snapshot['stats']['trend']} "
+            f"({snapshot['stats']['classification']} strength)"
+        )
+        alignment_payload = assess_alignment_signals(signals_payload, target=alignment_target)
+        supplemental["alignment"] = alignment_payload
+        total_score += max(0.0, 1 - abs(float(alignment_payload["gap"])))
+        insights.append(
+            f"Alignment gap {alignment_payload['gap']} ({alignment_payload['classification']})"
+        )
+
+    strategy_payload: dict[str, object] | None = None
+    raw_strategy = agenda.get("strategy")
+    if raw_strategy is not None:
+        if not isinstance(raw_strategy, Mapping):
+            raise ValueError("strategy must be a mapping with options and criteria")
+        options = raw_strategy.get("options")
+        criteria = raw_strategy.get("criteria")
+        if options is None or criteria is None:
+            raise ValueError("strategy requires 'options' and 'criteria'")
+        strategy_payload = evaluate_strategy_matrix(options, criteria)
+        supplemental["strategy"] = strategy_payload
+        best_option = strategy_payload["best_option"]
+        total_score += float(best_option["score"])
+        insights.append(
+            f"Strategy favours {best_option['name']} (score {best_option['score']})"
+        )
+
+    if total_score >= 16:
+        grade = "apex"
+    elif total_score >= 11:
+        grade = "expedition"
+    elif total_score >= 7:
+        grade = "expansion"
+    else:
+        grade = "foundation"
+
+    summary = (
+        f"Summit executed {journey['phase_count']} phase(s) with {len(supplemental)} "
+        "supplemental module(s)."
+    )
+    return {
+        "phases": phases,
+        "score": round(total_score, 3),
+        "grade": grade,
+        "journey": journey,
+        "supplemental": supplemental,
+        "insights": insights,
+        "summary": summary,
+    }
+
+
+def orchestrate_complexity_constellation(program: Mapping[str, object]) -> dict[str, object]:
+    """Execute multiple summit agendas and synthesise constellation-level insights."""
+
+    if not isinstance(program, Mapping):
+        raise ValueError("program must be a mapping containing scenarios")
+
+    scenarios = program.get("scenarios")
+    if not isinstance(scenarios, Sequence) or not scenarios:
+        raise ValueError("program requires a non-empty 'scenarios' sequence")
+
+    defaults = program.get("defaults") or {}
+    if defaults and not isinstance(defaults, Mapping):
+        raise ValueError("program 'defaults' must be a mapping")
+
+    grade_weights = {"foundation": 1, "expansion": 2, "expedition": 3, "apex": 4}
+    grade_counts: Counter[str] = Counter()
+    scenario_results: list[dict[str, object]] = []
+    score_series: list[float] = []
+    insight_pool: list[str] = []
+    tag_distribution: Counter[str] = Counter()
+    best_entry: dict[str, object] | None = None
+    worst_entry: dict[str, object] | None = None
+    best_score = -math.inf
+    worst_score = math.inf
+
+    for index, raw_scenario in enumerate(scenarios, 1):
+        if not isinstance(raw_scenario, Mapping):
+            raise ValueError(f"scenario at position {index} must be a mapping")
+        name = str(raw_scenario.get("name", "")).strip() or f"scenario-{index}"
+        agenda = dict(defaults)
+        for key, value in raw_scenario.items():
+            if key in {"name", "tags"}:
+                continue
+            agenda[key] = value
+        if not agenda:
+            raise ValueError(f"scenario '{name}' did not define an agenda")
+        try:
+            summit_payload = orchestrate_complexity_summit(agenda)
+        except ValueError as exc:
+            raise ValueError(f"scenario '{name}' invalid: {exc}") from exc
+
+        grade = str(summit_payload["grade"])
+        score = float(summit_payload["score"])
+        grade_counts[grade] += 1
+        score_series.append(score)
+        journey = summit_payload.get("journey", {})
+        scenario_entry: dict[str, object] = {
+            "name": name,
+            "grade": grade,
+            "score": round(score, 3),
+            "summary": summit_payload.get("summary"),
+            "complexity_index": journey.get("complexity_index"),
+            "phases": journey.get("phase_count"),
+            "insights": summit_payload.get("insights", [])[:4],
+        }
+        raw_tags = raw_scenario.get("tags")
+        if isinstance(raw_tags, Sequence) and not isinstance(raw_tags, (str, bytes)):
+            tags = [str(tag).strip() for tag in raw_tags if str(tag).strip()]
+            if tags:
+                scenario_entry["tags"] = tags
+                tag_distribution.update(tags)
+        scenario_results.append(scenario_entry)
+
+        if score > best_score:
+            best_score = score
+            best_entry = scenario_entry
+        if score < worst_score:
+            worst_score = score
+            worst_entry = scenario_entry
+
+        for insight in summit_payload.get("insights", [])[:3]:
+            insight_pool.append(f"[{name}] {insight}")
+
+    total = len(scenario_results)
+    average_score = sum(score_series) / total
+    peak_score = max(score_series)
+    floor_score = min(score_series)
+    score_range = peak_score - floor_score if total > 1 else 0.0
+    stability_index = 1.0
+    if peak_score > 0 and score_range > 0:
+        stability_index = max(0.0, 1 - (score_range / peak_score))
+
+    grade_vector = 0.0
+    if grade_counts:
+        weighted = sum(grade_weights.get(grade, 1) * count for grade, count in grade_counts.items())
+        grade_vector = weighted / sum(grade_counts.values())
+
+    if average_score >= 15 and grade_vector >= 3.5:
+        constellation_grade = "stellar"
+    elif average_score >= 11 and grade_vector >= 2.5:
+        constellation_grade = "orbital"
+    elif average_score >= 8 and grade_vector >= 1.8:
+        constellation_grade = "ascending"
+    else:
+        constellation_grade = "formative"
+
+    progression: list[dict[str, object]] = []
+    if len(scenario_results) > 1:
+        for previous, current in zip(scenario_results, scenario_results[1:]):
+            prev_grade = previous["grade"]
+            curr_grade = current["grade"]
+            grade_shift = grade_weights.get(curr_grade, 1) - grade_weights.get(prev_grade, 1)
+            progression.append(
+                {
+                    "from": previous["name"],
+                    "to": current["name"],
+                    "score_delta": round(float(current["score"]) - float(previous["score"]), 3),
+                    "grade_shift": grade_shift,
+                }
+            )
+
+    if best_entry:
+        best_entry = dict(best_entry)
+    if worst_entry:
+        worst_entry = dict(worst_entry)
+
+    summary = (
+        f"Constellation spanning {total} scenario(s) with average score {average_score:.2f} "
+        f"({constellation_grade})."
+    )
+
+    insights = [
+        f"Average score {average_score:.2f} with range {score_range:.2f}",
+        f"Grade vector {grade_vector:.2f} ({constellation_grade})",
+    ]
+    if tag_distribution:
+        top_tag, tag_count = tag_distribution.most_common(1)[0]
+        insights.append(f"Dominant focus tag '{top_tag}' appears {tag_count} time(s)")
+    insights.extend(insight_pool[:8])
+
+    return {
+        "scenario_count": total,
+        "average_score": round(average_score, 3),
+        "score_range": round(score_range, 3),
+        "stability_index": round(stability_index, 3),
+        "grade_distribution": dict(grade_counts),
+        "grade_vector": round(grade_vector, 3),
+        "constellation_grade": constellation_grade,
+        "best_scenario": best_entry,
+        "worst_scenario": worst_entry,
+        "scenarios": scenario_results,
+        "progression": progression,
+        "insights": insights,
+        "summary": summary,
     }
 
 
