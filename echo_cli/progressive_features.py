@@ -26,6 +26,7 @@ __all__ = [
     "synthesize_operational_dashboard",
     "orchestrate_complexity_progression",
     "execute_complexity_cascade",
+    "execute_feature_escalation",
     "CascadeStage",
 ]
 
@@ -1618,6 +1619,129 @@ def _summarise_stage_insight(
     if previous_payload and stage_type == "timeline":  # pragma: no cover - defensive
         return "timeline contextualised against previous stage"
     return None
+
+
+def execute_feature_escalation(
+    signals: Mapping[str, float],
+    *,
+    capabilities: Sequence[Mapping[str, object]] | None = None,
+    events: Sequence[Mapping[str, object]]
+    | Sequence[ResilienceEvent]
+    | None = None,
+    initiatives: Sequence[Mapping[str, object]]
+    | Sequence[PortfolioInitiative]
+    | None = None,
+    target: float = 0.75,
+    readiness_horizon_weeks: int = 12,
+    resilience_horizon_hours: float = 168.0,
+    throughput_velocity: float = 8.0,
+    throughput_horizon_weeks: int = 12,
+    start: datetime | None = None,
+) -> dict[str, object]:
+    """Run a curated showcase of increasingly complex features.
+
+    The escalation begins with lightweight alignment scoring and expands through
+    readiness, resilience, and portfolio analytics as additional datasets are
+    supplied. Each successive stage compounds the complexity score, allowing
+    callers to see how insights evolve as more sophisticated features are
+    introduced.
+    """
+
+    if not signals:
+        raise ValueError("at least one alignment signal is required")
+
+    capability_list = list(capabilities or [])
+    event_list = list(events or [])
+    initiative_list = list(initiatives or [])
+    start_anchor = _normalise_datetime(start)
+
+    coverage = {
+        "alignment": bool(signals),
+        "readiness": bool(capability_list),
+        "resilience": bool(event_list),
+        "portfolio": bool(initiative_list),
+        "throughput": bool(initiative_list),
+    }
+
+    stages: list[dict[str, object]] = []
+    insights: list[str] = []
+    escalation_curve: list[dict[str, object]] = []
+    previous_payload: Mapping[str, object] | None = None
+    total_complexity = 0.0
+
+    def register_stage(
+        stage_type: str,
+        label: str,
+        payload: Mapping[str, object],
+    ) -> None:
+        nonlocal previous_payload, total_complexity
+        index = len(stages) + 1
+        base_weight = _CASCADE_COMPLEXITY_WEIGHTS.get(stage_type, 1.0)
+        contribution = base_weight * (1 + index / 10)
+        total_complexity += contribution
+        entry: dict[str, object] = {
+            "label": label,
+            "type": stage_type,
+            "payload": payload,
+            "complexity_contribution": round(contribution, 3),
+            "cumulative_complexity": round(total_complexity, 3),
+        }
+        insight = _summarise_stage_insight(
+            stage_type, payload, previous_payload=previous_payload
+        )
+        if insight:
+            entry["insight"] = insight
+            insights.append(f"{label}: {insight}")
+        stages.append(entry)
+        escalation_curve.append(
+            {
+                "stage": label,
+                "cumulative_complexity": entry["cumulative_complexity"],
+            }
+        )
+        previous_payload = payload
+
+    alignment_payload = assess_alignment_signals(signals, target=target)
+    register_stage("alignment", "Alignment baseline", alignment_payload)
+
+    if capability_list:
+        readiness_payload = evaluate_operational_readiness(
+            capability_list, horizon_weeks=readiness_horizon_weeks
+        )
+        register_stage("readiness", "Capability readiness", readiness_payload)
+
+    if event_list:
+        resilience_payload = forecast_operational_resilience(
+            event_list,
+            start=start_anchor,
+            horizon_hours=resilience_horizon_hours,
+        )
+        register_stage("resilience", "Resilience horizon", resilience_payload)
+
+    if initiative_list:
+        portfolio_payload = simulate_portfolio_outcomes(
+            initiative_list, start=start_anchor
+        )
+        register_stage("portfolio", "Portfolio synthesis", portfolio_payload)
+
+        throughput_payload = forecast_portfolio_throughput(
+            initiative_list,
+            velocity=throughput_velocity,
+            horizon_weeks=throughput_horizon_weeks,
+        )
+        register_stage("throughput", "Throughput projection", throughput_payload)
+
+    final_stage = stages[-1]["label"] if stages else None
+    return {
+        "start_reference": _format_iso(start_anchor),
+        "stage_count": len(stages),
+        "complexity_score": round(total_complexity, 3),
+        "stages": stages,
+        "insights": insights,
+        "escalation_curve": escalation_curve,
+        "coverage": {key: bool(value) for key, value in coverage.items()},
+        "final_stage": final_stage,
+    }
 
 
 def _coerce_sequence_of_mappings(value: object, label: str) -> list[Mapping[str, object]]:
