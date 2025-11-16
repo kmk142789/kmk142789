@@ -122,7 +122,10 @@ from echo.resonance_complex import (
 from echo.transcend import TranscendOrchestrator
 from pulse_dashboard import WorkerHive
 from .progressive_features import (
+    assess_alignment_signals,
     analyze_text_corpus,
+    evaluate_operational_readiness,
+    forecast_portfolio_throughput,
     generate_numeric_intelligence,
     progressive_complexity_suite,
     simulate_delivery_timeline,
@@ -979,6 +982,137 @@ def _load_plan_file(path: Path | None) -> list[dict[str, object]]:
     return milestones
 
 
+def _parse_signal_specs(specs: Sequence[str]) -> dict[str, float]:
+    signals: dict[str, float] = {}
+    for spec in specs:
+        parts = spec.split(":")
+        if len(parts) != 2:
+            raise ValueError("signals must follow 'name:score' format")
+        name = parts[0].strip()
+        if not name:
+            raise ValueError("signal name cannot be empty")
+        try:
+            value = float(parts[1])
+        except ValueError as exc:
+            raise ValueError("signal score must be numeric") from exc
+        signals[name] = value
+    return signals
+
+
+def _load_signal_file(path: Path | None) -> dict[str, float]:
+    if path is None:
+        return {}
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("signals file must contain a JSON object") from exc
+    if not isinstance(data, Mapping):
+        raise ValueError("signals file must contain a JSON object")
+    result: dict[str, float] = {}
+    for key, value in data.items():
+        try:
+            result[str(key).strip()] = float(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"invalid score for {key!r}") from exc
+    return {k: v for k, v in result.items() if k}
+
+
+def _parse_capability_specs(specs: Sequence[str]) -> list[dict[str, object]]:
+    parsed: list[dict[str, object]] = []
+    for spec in specs:
+        parts = spec.split(":")
+        if len(parts) != 5:
+            raise ValueError(
+                "capabilities must follow 'name:coverage:automation:runbooks:incidents' format"
+            )
+        name = parts[0].strip()
+        if not name:
+            raise ValueError("capability name cannot be empty")
+        try:
+            coverage = float(parts[1])
+            automation = float(parts[2])
+            runbooks = int(parts[3])
+            incidents = int(parts[4])
+        except ValueError as exc:
+            raise ValueError("invalid capability specification") from exc
+        parsed.append(
+            {
+                "name": name,
+                "coverage": coverage,
+                "automation": automation,
+                "runbooks": runbooks,
+                "incidents": incidents,
+            }
+        )
+    return parsed
+
+
+def _load_capability_file(path: Path | None) -> list[dict[str, object]]:
+    if path is None:
+        return []
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("capability file must contain a JSON array") from exc
+    if not isinstance(data, list):
+        raise ValueError("capability file must contain a JSON array")
+    capabilities: list[dict[str, object]] = []
+    for idx, entry in enumerate(data):
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"invalid capability at index {idx}")
+        capabilities.append(dict(entry))
+    return capabilities
+
+
+def _parse_initiative_specs(specs: Sequence[str]) -> list[dict[str, object]]:
+    parsed: list[dict[str, object]] = []
+    for spec in specs:
+        parts = spec.split(":")
+        if len(parts) not in {4, 5}:
+            raise ValueError(
+                "initiatives must follow 'name:impact:effort:confidence[:dep+dep]' format"
+            )
+        name = parts[0].strip()
+        if not name:
+            raise ValueError("initiative name cannot be empty")
+        try:
+            impact = float(parts[1])
+            effort = float(parts[2])
+            confidence = float(parts[3])
+        except ValueError as exc:
+            raise ValueError("impact, effort, and confidence must be numeric") from exc
+        dependencies: list[str] = []
+        if len(parts) == 5:
+            dependencies = [dep.strip() for dep in parts[4].split("+") if dep.strip()]
+        parsed.append(
+            {
+                "name": name,
+                "impact": impact,
+                "effort": effort,
+                "confidence": confidence,
+                "dependencies": dependencies,
+            }
+        )
+    return parsed
+
+
+def _load_portfolio_file(path: Path | None) -> list[dict[str, object]]:
+    if path is None:
+        return []
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("portfolio file must contain a JSON array") from exc
+    if not isinstance(data, list):
+        raise ValueError("portfolio file must contain a JSON array")
+    initiatives: list[dict[str, object]] = []
+    for idx, entry in enumerate(data):
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"invalid initiative at index {idx}")
+        initiatives.append(dict(entry))
+    return initiatives
+
+
 def _format_meta_causal_summary(config: MetaCausalRollout, *, applied: bool) -> str:
     checks = ", ".join(config.preflight_checks) if config.preflight_checks else "none"
     status_text = "enabled" if config.enabled else "disabled"
@@ -1071,6 +1205,232 @@ def deploy_meta_causal_engine(
         summary = _format_meta_causal_summary(config, applied=payload["applied"])
         _echo(ctx, payload, message=summary)
         task.succeed(payload=payload)
+
+
+@complexity_app.command("alignment")
+def complexity_alignment(
+    ctx: typer.Context,
+    signal: List[str] = typer.Option(
+        [],
+        "--signal",
+        "-s",
+        help="Alignment signal formatted as 'Name:score' (0-1).",
+    ),
+    signals_file: Optional[Path] = typer.Option(
+        None,
+        "--signals-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing a mapping of signal names to scores.",
+    ),
+    target: float = typer.Option(0.75, "--target", help="Desired average alignment score."),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Assess signal alignment as the entry-level progressive feature."""
+
+    _ensure_ctx(ctx)
+    try:
+        signals = {**_load_signal_file(signals_file), **_parse_signal_specs(signal)}
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if not signals:
+        raise typer.BadParameter("provide --signal or --signals-file")
+
+    try:
+        payload = assess_alignment_signals(signals, target=target)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary_lines = [
+        f"Average score : {payload['average_score']} vs target {payload['target']}",
+        f"Gap           : {payload['gap']} ({payload['classification']})",
+        f"Cohesion      : {payload['cohesion']}",
+        f"Focus         : strongest {payload['focus']['strongest']} / weakest {payload['focus']['weakest']}",
+    ]
+    console.print("\n".join(summary_lines))
+    rows = [
+        (entry["name"], entry["score"], entry["weight"])
+        for entry in payload.get("signals", [])
+    ]
+    console.print(
+        _build_table(["Signal", "Score", "Weight"], rows, title="Alignment signals")
+    )
+
+
+@complexity_app.command("readiness")
+def complexity_readiness(
+    ctx: typer.Context,
+    capability: List[str] = typer.Option(
+        [],
+        "--capability",
+        "-c",
+        help="Capability formatted as 'Name:coverage:automation:runbooks:incidents'.",
+    ),
+    capability_file: Optional[Path] = typer.Option(
+        None,
+        "--capability-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing capability objects.",
+    ),
+    horizon: int = typer.Option(12, "--horizon", help="Incident horizon in weeks."),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Evaluate operational readiness as an intermediate feature."""
+
+    _ensure_ctx(ctx)
+    try:
+        capabilities = _load_capability_file(capability_file) + _parse_capability_specs(capability)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if not capabilities:
+        raise typer.BadParameter("provide --capability or --capability-file")
+
+    try:
+        payload = evaluate_operational_readiness(capabilities, horizon_weeks=horizon)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary_lines = [
+        f"Horizon weeks  : {payload['horizon_weeks']}",
+        f"Readiness index: {payload['readiness_index']} ({payload['classification']})",
+        f"Recommendations: {len(payload['recommendations'])}",
+    ]
+    console.print("\n".join(summary_lines))
+    rows = [
+        (
+            entry["name"],
+            entry["score"],
+            entry["coverage"],
+            entry["automation"],
+            entry["runbooks"],
+            entry["incidents"],
+            entry["status"],
+        )
+        for entry in payload["capabilities"]
+    ]
+    console.print(
+        _build_table(
+            ["Capability", "Score", "Coverage", "Automation", "Runbooks", "Incidents", "Status"],
+            rows,
+            title="Operational readiness",
+        )
+    )
+    if payload["recommendations"]:
+        console.print("Recommendations:")
+        for item in payload["recommendations"]:
+            console.print(f"- {item}")
+
+
+@complexity_app.command("portfolio")
+def complexity_portfolio(
+    ctx: typer.Context,
+    initiative: List[str] = typer.Option(
+        [],
+        "--initiative",
+        "-i",
+        help="Initiative formatted as 'Name:impact:effort:confidence[:dep+dep]'.",
+    ),
+    portfolio_file: Optional[Path] = typer.Option(
+        None,
+        "--portfolio-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing initiative objects.",
+    ),
+    velocity: float = typer.Option(8.0, "--velocity", help="Throughput capacity per sprint."),
+    horizon: int = typer.Option(8, "--horizon", help="Number of weeks to schedule."),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Produce an advanced throughput forecast across initiatives."""
+
+    _ensure_ctx(ctx)
+    try:
+        initiatives = _load_portfolio_file(portfolio_file) + _parse_initiative_specs(initiative)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if not initiatives:
+        raise typer.BadParameter("provide --initiative or --portfolio-file")
+
+    try:
+        payload = forecast_portfolio_throughput(
+            initiatives, velocity=velocity, horizon_weeks=horizon
+        )
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary_lines = [
+        f"Velocity         : {payload['throughput_capacity']}",
+        f"Horizon          : {payload['horizon_weeks']} weeks",
+        f"Portfolio value  : {payload['portfolio_value']}",
+        f"Confidence trend : {payload['confidence_projection']}",
+    ]
+    console.print("\n".join(summary_lines))
+    priority_rows = [
+        (
+            entry["name"],
+            entry["priority"],
+            ", ".join(entry.get("dependencies", [])) or "—",
+        )
+        for entry in payload["priority_order"]
+    ]
+    console.print(
+        _build_table(
+            ["Initiative", "Priority", "Dependencies"],
+            priority_rows,
+            title="Portfolio priority order",
+        )
+    )
+    if payload["sprint_plan"]:
+        sprint_rows = [
+            (
+                entry["sprint"],
+                f"week {entry['start_week']}→{entry['end_week']}",
+                entry["load"],
+                ", ".join(
+                    f"{item['name']} ({item['allocated_effort']})"
+                    for item in entry["initiatives"]
+                ),
+            )
+            for entry in payload["sprint_plan"]
+        ]
+        console.print(
+            _build_table(
+                ["Sprint", "Window", "Load", "Initiatives"],
+                sprint_rows,
+                title="Sprint plan",
+            )
+        )
 
 
 @complexity_app.command("numbers")
