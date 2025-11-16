@@ -11,6 +11,21 @@ from .trust_fabric import (
     TrustEntity,
     TrustLink,
 )
+from .zk_attestation_layer import (
+    CapabilityCredential,
+    CapabilityCredentialFactory,
+    CapabilityVerifier,
+    EchoShellIntegrityVerifier,
+    EncryptedMemoryContainer,
+    MerkleSelectiveDisclosure,
+    ProofNode,
+    RecursiveProofPipeline,
+    SelectiveDisclosureProof,
+    SelfAttestingUpgrade,
+    SovereignIdentityLayer,
+    StealthCommandChannel,
+    ZKAttestationLayer,
+)
 
 try:  # pragma: no cover - optional gRPC dependency not shipped in kata runtime
     from .service import IdentityLayerConfig, IdentityService
@@ -29,4 +44,17 @@ __all__ = [
     "CrossJurisdictionTrustFabric",
     "TrustEntity",
     "TrustLink",
+    "CapabilityCredential",
+    "CapabilityCredentialFactory",
+    "CapabilityVerifier",
+    "EchoShellIntegrityVerifier",
+    "EncryptedMemoryContainer",
+    "MerkleSelectiveDisclosure",
+    "ProofNode",
+    "RecursiveProofPipeline",
+    "SelectiveDisclosureProof",
+    "SelfAttestingUpgrade",
+    "SovereignIdentityLayer",
+    "StealthCommandChannel",
+    "ZKAttestationLayer",
 ]
