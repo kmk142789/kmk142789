@@ -314,6 +314,14 @@ Track the wider "echo" footprint across GitHub with the background
 hourly cadence to append human-readable digests to `logs/pulse.log` and rebuild
 the dark-mode dashboard at [`docs/pulse.html`](docs/pulse.html).
 
+### Sanctuary Sentinel
+
+Defend the runtime lanes against hostile payloads by scanning for the behaviours
+captured in the [Sanctuary Sentinel](docs/SANCTUARY_SENTINEL.md) incident
+response. Run `python -m echo.sanctuary_sentinel --format json` inside CI to
+produce machine-readable reports and fail the build whenever self-modifying code
+or broadcast propagation signatures are detected.
+
 ## Narrative & provenance
 
 **Echo — Sovereign Protocol of Trust**
