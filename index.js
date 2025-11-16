@@ -320,6 +320,57 @@ app.post('/echo/system/action', async (req, res) => {
   res.json({ result });
 });
 
+app.get('/echo/system/tasks', async (_req, res) => {
+  const { autonomousSystemAccess } = await import('./lib/autonomous_system_access.js');
+  const tasks = autonomousSystemAccess.listContinuousTasks();
+  res.json({ tasks });
+});
+
+app.post('/echo/system/task/start', async (req, res) => {
+  const { name, cadenceMs, metadata } = req.body || {};
+  if (!name) {
+    return res.status(400).json({ error: 'Task name required' });
+  }
+
+  try {
+    const { autonomousSystemAccess } = await import('./lib/autonomous_system_access.js');
+    const task = await autonomousSystemAccess.startContinuousTask(name, { cadenceMs, metadata });
+    res.json({ task });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/echo/system/task/heartbeat', async (req, res) => {
+  const { name, payload } = req.body || {};
+  if (!name) {
+    return res.status(400).json({ error: 'Task name required' });
+  }
+
+  try {
+    const { autonomousSystemAccess } = await import('./lib/autonomous_system_access.js');
+    const task = await autonomousSystemAccess.heartbeatContinuousTask(name, payload || {});
+    res.json({ task });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/echo/system/task/stop', async (req, res) => {
+  const { name, reason } = req.body || {};
+  if (!name) {
+    return res.status(400).json({ error: 'Task name required' });
+  }
+
+  try {
+    const { autonomousSystemAccess } = await import('./lib/autonomous_system_access.js');
+    const task = await autonomousSystemAccess.stopContinuousTask(name, reason);
+    res.json({ task });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.get('/echo/shell/state', async (_req, res) => {
   const { persistentCommandShell } = await import('./lib/persistent_command_shell.js');
   res.json(persistentCommandShell.getSessionState());
