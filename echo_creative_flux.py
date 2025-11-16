@@ -4,11 +4,15 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 from collections import Counter
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Iterable, Sequence
+
+
+WORD_PATTERN = re.compile(r"[\w']+")
 
 
 @dataclass
@@ -18,9 +22,11 @@ class FluxContext:
     mood: str
     artifact: str
     timestamp: datetime
+    label: str | None = None
 
     def render_header(self) -> str:
-        return f"[{self.timestamp.isoformat()}] {self.artifact} :: {self.mood.title()}"
+        label_fragment = f" [{self.label}]" if self.label else ""
+        return f"[{self.timestamp.isoformat()}] {self.artifact} :: {self.mood.title()}{label_fragment}"
 
     def to_dict(self) -> dict:
         """Return a JSON-serializable representation of the context."""
@@ -29,6 +35,7 @@ class FluxContext:
             "mood": self.mood,
             "artifact": self.artifact,
             "timestamp": self.timestamp.isoformat(),
+            "label": self.label,
         }
 
 
@@ -121,6 +128,65 @@ DEFAULT_LIBRARY = FluxLibrary(
 )
 
 
+def _parse_iso_datetime(raw_value: str) -> datetime:
+    """Parse ISO-8601 timestamps, supporting ``Z`` suffix for UTC."""
+
+    cleaned = raw_value.strip()
+    if cleaned.endswith("Z"):
+        cleaned = cleaned[:-1] + "+00:00"
+    return datetime.fromisoformat(cleaned)
+
+
+@dataclass
+class SessionEntry:
+    """Instruction describing how a single passage should be produced."""
+
+    mood: str | None = None
+    artifact: str | None = None
+    label: str | None = None
+    offset_minutes: float | None = None
+
+
+@dataclass
+class SessionPlan:
+    """Structured plan describing a full creative session."""
+
+    entries: list[SessionEntry]
+    base_timestamp: datetime | None = None
+
+    @classmethod
+    def from_json_file(cls, path: Path) -> "SessionPlan":
+        try:
+            payload = json.loads(path.read_text())
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Session plan file not found: {path}") from exc
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Session plan file is not valid JSON: {path}") from exc
+
+        base_timestamp = None
+        if payload.get("base_timestamp"):
+            base_timestamp = _parse_iso_datetime(payload["base_timestamp"])
+
+        raw_entries = payload.get("entries", [])
+        if not isinstance(raw_entries, list) or not raw_entries:
+            raise ValueError("Session plan requires at least one entry.")
+
+        entries = []
+        for raw_entry in raw_entries:
+            if not isinstance(raw_entry, dict):
+                raise ValueError("Session plan entries must be objects.")
+            entries.append(
+                SessionEntry(
+                    mood=raw_entry.get("mood"),
+                    artifact=raw_entry.get("artifact"),
+                    label=raw_entry.get("label"),
+                    offset_minutes=raw_entry.get("offset_minutes"),
+                )
+            )
+
+        return cls(entries=entries, base_timestamp=base_timestamp)
+
+
 def generate_passage(
     rng: random.Random,
     library: FluxLibrary = DEFAULT_LIBRARY,
@@ -128,6 +194,7 @@ def generate_passage(
     timestamp: datetime | None = None,
     mood: str | None = None,
     artifact: str | None = None,
+    label: str | None = None,
 ) -> FluxPassage:
     """Create a :class:`FluxPassage` instance using the provided RNG."""
 
@@ -143,14 +210,19 @@ def generate_passage(
         valid = ", ".join(sorted(library.artifacts))
         raise ValueError(f"artifact must be one of: {valid}")
 
-    ctx = FluxContext(mood=chosen_mood, artifact=chosen_artifact, timestamp=timestamp or datetime.utcnow())
+    ctx = FluxContext(
+        mood=chosen_mood,
+        artifact=chosen_artifact,
+        timestamp=timestamp or datetime.utcnow(),
+        label=label if label else None,
+    )
 
     prompt = rng.choice(list(library.prompts))
     closing = rng.choice(list(library.closings))
     return FluxPassage(context=ctx, prompt=prompt, closing=closing)
 
 
-def build_passage(seed: int | None = None) -> str:
+def build_passage(seed: int | None = None, *, label: str | None = None) -> str:
     """Return a formatted, multi-line passage.
 
     This helper keeps backward compatibility with the older CLI while
@@ -158,29 +230,9 @@ def build_passage(seed: int | None = None) -> str:
     """
 
     rng = random.Random(seed)
-    return generate_passage(rng).render()
+    return generate_passage(rng, label=label).render()
 
 
-def summarize_passages(passages: Sequence[FluxPassage]) -> str:
-    """Return a human-readable summary of the generated passages."""
-
-    summary_lines = ["Summary", "======="]
-    summary_lines.append(f"Total passages: {len(passages)}")
-
-    def _tally(attribute: str) -> list[str]:
-        counts: dict[str, int] = {}
-        for passage in passages:
-            key = getattr(passage.context, attribute)
-            counts[key] = counts.get(key, 0) + 1
-        return [f"- {name}: {count}" for name, count in sorted(counts.items())]
-
-    if passages:
-        summary_lines.append("\nMoods:")
-        summary_lines.extend(_tally("mood"))
-        summary_lines.append("\nArtifacts:")
-        summary_lines.extend(_tally("artifact"))
-
-    return "\n".join(summary_lines)
 def summarize_passages(passages: Sequence[FluxPassage]) -> dict:
     """Compute aggregate information for a sequence of passages."""
 
@@ -211,10 +263,129 @@ def summarize_passages(passages: Sequence[FluxPassage]) -> dict:
     return summary
 
 
+def format_summary(summary: dict) -> str:
+    """Render the dictionary returned by :func:`summarize_passages`."""
+
+    lines = ["Summary", "=======", f"Total passages: {summary['total']}"]
+    if summary.get("mood_counts"):
+        lines.append("\nMoods:")
+        for mood, count in summary["mood_counts"].items():
+            lines.append(f"- {mood}: {count}")
+    if summary.get("artifact_counts"):
+        lines.append("\nArtifacts:")
+        for artifact, count in summary["artifact_counts"].items():
+            lines.append(f"- {artifact}: {count}")
+
+    time_range = summary.get("time_range")
+    if time_range and time_range.get("start") and time_range.get("end"):
+        lines.append(
+            "\nTime Range:\n- start: {start}\n- end: {end}".format(
+                start=time_range["start"],
+                end=time_range["end"],
+            )
+        )
+
+    return "\n".join(lines)
+
+
+def _tokenize(text: str) -> list[str]:
+    return WORD_PATTERN.findall(text.lower())
+
+
+def compute_passage_metrics(passage: FluxPassage) -> dict:
+    """Return lexical metrics for a single passage."""
+
+    prompt_tokens = _tokenize(passage.prompt)
+    closing_tokens = _tokenize(passage.closing)
+    all_tokens = prompt_tokens + closing_tokens
+    unique_tokens = sorted(set(all_tokens))
+
+    return {
+        "mood": passage.context.mood,
+        "artifact": passage.context.artifact,
+        "label": passage.context.label,
+        "timestamp": passage.context.timestamp.isoformat(),
+        "prompt_words": len(prompt_tokens),
+        "closing_words": len(closing_tokens),
+        "word_count": len(all_tokens),
+        "unique_words": len(unique_tokens),
+    }
+
+
+def analyze_passages(passages: Sequence[FluxPassage]) -> dict:
+    """Compute lexical analytics for an iterable of passages."""
+
+    per_passage = []
+    total_words = 0
+    total_unique: set[str] = set()
+    for index, passage in enumerate(passages, start=1):
+        metrics = compute_passage_metrics(passage)
+        metrics["index"] = index
+        per_passage.append(metrics)
+        total_words += metrics["word_count"]
+        prompt_tokens = _tokenize(passage.prompt)
+        closing_tokens = _tokenize(passage.closing)
+        total_unique.update(prompt_tokens)
+        total_unique.update(closing_tokens)
+
+    aggregate = {
+        "total_passages": len(passages),
+        "total_words": total_words,
+        "average_words": (total_words / len(passages)) if passages else 0,
+        "vocabulary_size": len(total_unique),
+    }
+
+    return {"per_passage": per_passage, "aggregate": aggregate}
+
+
+def format_metrics_table(analysis: dict) -> str:
+    """Render lexical analytics in a table-like layout."""
+
+    if not analysis.get("per_passage"):
+        return "No passages generated."
+
+    headers = ["#", "Mood", "Artifact", "Words", "Unique", "Prompt", "Closing", "Label"]
+    rows = []
+    for metrics in analysis["per_passage"]:
+        rows.append(
+            [
+                str(metrics["index"]),
+                metrics["mood"],
+                metrics["artifact"],
+                str(metrics["word_count"]),
+                str(metrics["unique_words"]),
+                str(metrics["prompt_words"]),
+                str(metrics["closing_words"]),
+                metrics.get("label") or "-",
+            ]
+        )
+
+    widths = [max(len(row[col]) for row in [headers] + rows) for col in range(len(headers))]
+
+    def _format_row(row: list[str]) -> str:
+        return " | ".join(value.ljust(widths[idx]) for idx, value in enumerate(row))
+
+    table_lines = [_format_row(headers), "-+-".join("-" * width for width in widths)]
+    table_lines.extend(_format_row(row) for row in rows)
+
+    aggregate = analysis.get("aggregate", {})
+    table_lines.append(
+        "\nTotals: {words} words across {count} passages | Avg: {avg:.2f} | Vocabulary: {vocab}".format(
+            words=aggregate.get("total_words", 0),
+            count=aggregate.get("total_passages", 0),
+            avg=aggregate.get("average_words", 0),
+            vocab=aggregate.get("vocabulary_size", 0),
+        )
+    )
+
+    return "\n".join(table_lines)
+
+
 def export_passages(
     path: Path,
     passages: Sequence[FluxPassage],
     summary: dict,
+    analytics: dict | None,
     *,
     cli_format: str,
     seed: int | None,
@@ -230,6 +401,7 @@ def export_passages(
         "cli_format": cli_format,
         "count": len(passages),
         "summary": summary,
+        "analytics": analytics,
     }
 
     if export_format == "json":
@@ -284,7 +456,7 @@ def main() -> None:
         "--count",
         type=_positive_int,
         default=1,
-        help="Number of passages to generate (default: 1).",
+        help="Number of passages to generate (ignored when --session-plan is used).",
     )
     parser.add_argument(
         "--format",
@@ -298,6 +470,12 @@ def main() -> None:
         type=str,
         default=None,
         help="Force a specific artifact from the library.",
+    )
+    parser.add_argument(
+        "--label",
+        type=str,
+        default=None,
+        help="Optional label appended to every generated header (unless overridden by a session plan).",
     )
     parser.add_argument(
         "--library",
@@ -315,6 +493,14 @@ def main() -> None:
         "--summary",
         action="store_true",
         help="Print a counts summary for moods and artifacts after generation.",
+    )
+    parser.add_argument(
+        "--analytics",
+        choices=["none", "table", "json"],
+        default="none",
+        help="Optionally display lexical analytics for generated passages.",
+    )
+    parser.add_argument(
         "--list-library",
         action="store_true",
         help="Display the available library entries and exit.",
@@ -331,6 +517,12 @@ def main() -> None:
         default="json",
         help="File format used when --export is provided.",
     )
+    parser.add_argument(
+        "--session-plan",
+        type=Path,
+        default=None,
+        help="JSON file describing a structured session; overrides --count and timestamp spacing.",
+    )
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
@@ -338,26 +530,54 @@ def main() -> None:
     if args.library is not None:
         library = FluxLibrary.from_json_file(args.library, fallback=DEFAULT_LIBRARY)
 
+    session_plan = SessionPlan.from_json_file(args.session_plan) if args.session_plan else None
+
     base_timestamp = datetime.utcnow()
     interval_delta = timedelta(minutes=args.interval) if args.interval else None
     if args.list_library:
         print(format_library_listing(library))
         return
 
-    passages = [
-        generate_passage(
-            rng,
-            library=library,
-            mood=args.mood,
-            artifact=args.artifact,
-            timestamp=(base_timestamp + interval_delta * index)
-            if interval_delta is not None
-            else None,
-        )
-        for index in range(args.count)
-    ]
+    passages: list[FluxPassage] = []
+    if session_plan is not None:
+        plan_base = session_plan.base_timestamp or base_timestamp
+        for index, entry in enumerate(session_plan.entries):
+            timestamp: datetime | None = None
+            if entry.offset_minutes is not None:
+                timestamp = plan_base + timedelta(minutes=float(entry.offset_minutes))
+            elif session_plan.base_timestamp is not None:
+                timestamp = plan_base
+            elif interval_delta is not None:
+                timestamp = plan_base + interval_delta * index
+
+            passages.append(
+                generate_passage(
+                    rng,
+                    library=library,
+                    mood=entry.mood or args.mood,
+                    artifact=entry.artifact or args.artifact,
+                    timestamp=timestamp,
+                    label=entry.label or args.label,
+                )
+            )
+    else:
+        for index in range(args.count):
+            timestamp = (base_timestamp + interval_delta * index) if interval_delta else None
+            passages.append(
+                generate_passage(
+                    rng,
+                    library=library,
+                    mood=args.mood,
+                    artifact=args.artifact,
+                    timestamp=timestamp,
+                    label=args.label,
+                )
+            )
 
     summary = summarize_passages(passages)
+    analytics: dict | None = None
+    if args.analytics != "none" or args.export is not None:
+        analytics = analyze_passages(passages)
 
     if args.format == "json":
         payload = [passage.to_dict() for passage in passages]
@@ -383,18 +603,24 @@ def main() -> None:
                 print("\n---\n")
             print(passage.render())
 
+    if args.analytics == "table" and analytics is not None:
+        print("\n" + format_metrics_table(analytics))
+    elif args.analytics == "json" and analytics is not None:
+        print("\n" + json.dumps(analytics, indent=2))
+
     if args.export is not None:
         export_passages(
             args.export,
             passages,
             summary,
+            analytics,
             cli_format=args.format,
             seed=args.seed,
             export_format=args.export_format,
         )
 
     if args.summary:
-        print("\n" + summarize_passages(passages))
+        print("\n" + format_summary(summary))
 
 
 if __name__ == "__main__":
