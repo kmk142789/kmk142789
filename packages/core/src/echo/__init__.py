@@ -198,6 +198,11 @@ from .sanctuary_sentinel import (
     build_default_signatures,
 )
 from .quantam_features import compute_quantam_feature
+from .recursive_evolution_engine import (
+    CycleReport as RecursiveCycleReport,
+    ModuleSnapshot,
+    RecursiveEvolutionEngine,
+)
 from .quantum_flux_mapper import QuantumFluxMapper, STANDARD_GATES
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
 from .proof_of_computation import (
