@@ -23,6 +23,16 @@ import random
 from typing import Dict, Iterable, List, Tuple
 
 
+VOICE_LIBRARY = [
+    "observer",
+    "cartographer",
+    "chorus",
+    "wanderer",
+    "signal",
+    "dream",
+]
+
+
 @dataclass
 class LoopSeed:
     """Parameters that describe the creative loop we want to generate."""
@@ -32,11 +42,25 @@ class LoopSeed:
     tempo: str = "andante"
     pulses: int = 3
     seed: int | None = None
+    voice_bias: Dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.fragments = list(self.fragments)
         if self.pulses < 1:
             raise ValueError("pulses must be positive")
+        if self.voice_bias:
+            cleaned_bias: Dict[str, float] = {}
+            for voice, weight in self.voice_bias.items():
+                if voice not in VOICE_LIBRARY:
+                    continue
+                try:
+                    numeric_weight = float(weight)
+                except (TypeError, ValueError):
+                    continue
+                if numeric_weight <= 0:
+                    continue
+                cleaned_bias[voice] = numeric_weight
+            self.voice_bias = cleaned_bias
 
 
 @dataclass
@@ -90,6 +114,24 @@ class LoopDiagnostics:
 
 
 @dataclass
+class LoopSummary:
+    """Capture high-level metrics about the rendered loop."""
+
+    voice_diversity: float
+    accent_focus: float
+    dominant_voice: str | None
+    fragment_coverage: int
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "voice_diversity": self.voice_diversity,
+            "accent_focus": self.accent_focus,
+            "dominant_voice": self.dominant_voice,
+            "fragment_coverage": self.fragment_coverage,
+        }
+
+
+@dataclass
 class LoopResult:
     """Bundle the generated lines with diagnostics and rhythm metadata."""
 
@@ -97,6 +139,7 @@ class LoopResult:
     diagnostics: LoopDiagnostics
     rhythm: LoopRhythm
     timeline: List[Dict[str, object]] = field(default_factory=list)
+    summary: LoopSummary | None = None
 
     def render(self) -> List[str]:
         diagnostic_line = f"[diagnostics] {self.diagnostics.render_report()}"
@@ -105,7 +148,18 @@ class LoopResult:
             + ",".join(str(value) for value in self.rhythm.accents)
             + f" :: dynamic={','.join(self.rhythm.dynamic_tempi)}"
         )
-        return self.lines + [diagnostic_line, rhythm_line]
+        rendered = self.lines + [diagnostic_line]
+        if self.summary:
+            summary_line = (
+                "[summary] "
+                f"voice_diversity={self.summary.voice_diversity:.2f}; "
+                f"accent_focus={self.summary.accent_focus:.2f}; "
+                f"dominant={self.summary.dominant_voice or '-'}; "
+                f"fragments={self.summary.fragment_coverage}"
+            )
+            rendered.append(summary_line)
+        rendered.append(rhythm_line)
+        return rendered
 
     def to_dict(self) -> Dict[str, object]:
         """Convert the loop result into a serialisable structure."""
@@ -120,7 +174,29 @@ class LoopResult:
                 "dynamic_tempi": list(self.rhythm.dynamic_tempi),
             },
             "timeline": list(self.timeline),
+            "summary": self.summary.as_dict() if self.summary else None,
         }
+
+
+def summarize_loop(loop_result: LoopResult) -> LoopSummary:
+    """Compute derived insights about a generated loop."""
+
+    total_voices = len(VOICE_LIBRARY)
+    used_voice_count = len(loop_result.diagnostics.voices)
+    voice_diversity = used_voice_count / total_voices if total_voices else 0.0
+    accents = loop_result.diagnostics.accents
+    accent_focus = sum(accents) / len(accents) if accents else 0.0
+    fragments_used = len(loop_result.diagnostics.fragments)
+    dominant_voice: str | None = None
+    if loop_result.diagnostics.voices:
+        dominant_voice = loop_result.diagnostics.voices.most_common(1)[0][0]
+
+    return LoopSummary(
+        voice_diversity=voice_diversity,
+        accent_focus=accent_focus,
+        dominant_voice=dominant_voice,
+        fragment_coverage=fragments_used,
+    )
 
 
 def load_fragments_from_file(path: str | Path) -> List[str]:
@@ -140,19 +216,22 @@ def load_fragments_from_file(path: str | Path) -> List[str]:
     return fragments
 
 
-def _choose_voice(random_state: random.Random, *, previous: str | None = None) -> str:
+def _choose_voice(
+    random_state: random.Random,
+    *,
+    previous: str | None = None,
+    bias_map: Dict[str, float] | None = None,
+) -> str:
     """Pick a narrative voice for a line in the loop."""
 
-    voices = [
-        "observer",
-        "cartographer",
-        "chorus",
-        "wanderer",
-        "signal",
-        "dream",
-    ]
-    pool = [voice for voice in voices if voice != previous] or voices
-    return random_state.choice(pool)
+    pool = [voice for voice in VOICE_LIBRARY if voice != previous] or VOICE_LIBRARY
+    if not bias_map:
+        return random_state.choice(pool)
+
+    weights = [bias_map.get(voice, 1.0) for voice in pool]
+    if sum(weights) == 0:
+        weights = [1.0] * len(pool)
+    return random_state.choices(pool, weights=weights, k=1)[0]
 
 
 def _build_rhythm(seed: LoopSeed, random_state: random.Random) -> LoopRhythm:
@@ -190,7 +269,11 @@ def _render_line(
     """Build a single statement within the loop."""
 
     fragment = random_state.choice(seed.fragments) if seed.fragments else None
-    voice = _choose_voice(random_state, previous=previous_voice)
+    voice = _choose_voice(
+        random_state,
+        previous=previous_voice,
+        bias_map=seed.voice_bias,
+    )
 
     gestures = {
         "observer": ["notes", "catalogues", "celebrates"],
@@ -252,7 +335,14 @@ def generate_loop(seed: LoopSeed) -> LoopResult:
         timeline.append(timeline_entry)
         previous_voice = voice
 
-    return LoopResult(lines=lines, diagnostics=diagnostics, rhythm=rhythm, timeline=timeline)
+    loop_result = LoopResult(
+        lines=lines,
+        diagnostics=diagnostics,
+        rhythm=rhythm,
+        timeline=timeline,
+    )
+    loop_result.summary = summarize_loop(loop_result)
+    return loop_result
 
 
 def _render_table(loop_result: LoopResult) -> str:
@@ -284,7 +374,12 @@ def _render_table(loop_result: LoopResult) -> str:
     return "\n".join(rendered_rows)
 
 
-def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
+def compose_loop(
+    seed: LoopSeed,
+    *,
+    format: str = "text",
+    loop_result: LoopResult | None = None,
+) -> str:
     """Create a creative loop in the requested output format.
 
     Supported formats are ``"text"``, ``"json"``, ``"markdown"``, and ``"table"``.
@@ -292,7 +387,7 @@ def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
 
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     header = f"Loop for '{seed.motif}' at {timestamp} ({seed.tempo})"
-    loop_result = generate_loop(seed)
+    loop_result = loop_result or generate_loop(seed)
 
     if format == "text":
         body = "\n".join(loop_result.render())
@@ -322,6 +417,15 @@ def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
             f"accents={','.join(str(value) for value in rhythm.accents)}; "
             f"dynamic={','.join(rhythm.dynamic_tempi)}"
         )
+        summary_line = None
+        if loop_result.summary:
+            summary_line = (
+                "> Summary: "
+                f"diversity={loop_result.summary.voice_diversity:.2f}; "
+                f"accent_focus={loop_result.summary.accent_focus:.2f}; "
+                f"dominant={loop_result.summary.dominant_voice or '-'}; "
+                f"fragments={loop_result.summary.fragment_coverage}"
+            )
         return "\n".join(
             [
                 markdown_header,
@@ -330,6 +434,7 @@ def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
                 bullet_lines,
                 "",
                 diagnostics_line,
+                summary_line or "> Summary: unavailable",
                 rhythm_line,
             ]
         )
@@ -339,6 +444,36 @@ def compose_loop(seed: LoopSeed, *, format: str = "text") -> str:
         return "\n".join([header, "", table_body])
 
     raise ValueError("Unsupported format; expected 'text', 'json', 'markdown', or 'table'.")
+
+
+def export_loop_result(
+    path: str | Path,
+    loop_result: LoopResult,
+    seed: LoopSeed,
+    *,
+    format: str = "json",
+) -> Path:
+    """Persist a loop result to disk in the requested format."""
+
+    export_path = Path(path)
+    export_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if format == "json":
+        payload = {
+            "motif": seed.motif,
+            "tempo": seed.tempo,
+            "pulses": seed.pulses,
+            "loop": loop_result.to_dict(),
+        }
+        export_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return export_path
+
+    if format == "markdown":
+        markdown = compose_loop(seed, format="markdown", loop_result=loop_result)
+        export_path.write_text(markdown + "\n", encoding="utf-8")
+        return export_path
+
+    raise ValueError("Unsupported export format; use 'json' or 'markdown'.")
 
 
 def demo(
@@ -406,6 +541,23 @@ if __name__ == "__main__":
         default="text",
         help="Choose between human-readable text, JSON, Markdown, or table output",
     )
+    parser.add_argument(
+        "--voice-bias",
+        action="append",
+        default=[],
+        metavar="VOICE=WEIGHT",
+        help="Weight a specific narrative voice (e.g., signal=3.5)",
+    )
+    parser.add_argument(
+        "--export",
+        help="Optional path to persist the generated loop",
+    )
+    parser.add_argument(
+        "--export-format",
+        choices=["json", "markdown"],
+        default="json",
+        help="Format to use when exporting the loop",
+    )
 
     args = parser.parse_args()
     fragments = list(args.fragments)
@@ -414,11 +566,28 @@ if __name__ == "__main__":
             fragments.extend(load_fragments_from_file(args.fragments_file))
         except OSError as exc:
             parser.error(f"Unable to load fragments from {args.fragments_file}: {exc}")
+    voice_bias: Dict[str, float] = {}
+    for entry in args.voice_bias:
+        if "=" not in entry:
+            parser.error("Voice bias must use VOICE=WEIGHT format")
+        voice, weight_text = entry.split("=", 1)
+        try:
+            voice_bias[voice.strip()] = float(weight_text)
+        except ValueError:
+            parser.error(f"Invalid weight for voice '{voice}': {weight_text}")
     seed = LoopSeed(
         motif=args.motif,
         fragments=fragments,
         tempo=args.tempo,
         pulses=args.pulses,
         seed=args.seed,
+        voice_bias=voice_bias,
     )
-    print(compose_loop(seed, format=args.format))
+    loop_result = generate_loop(seed)
+    print(compose_loop(seed, format=args.format, loop_result=loop_result))
+    if args.export:
+        try:
+            export_loop_result(args.export, loop_result, seed, format=args.export_format)
+            print(f"[saved] Exported loop to {args.export} ({args.export_format})")
+        except ValueError as exc:
+            parser.error(str(exc))

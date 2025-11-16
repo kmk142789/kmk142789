@@ -23,5 +23,6 @@ def test_markdown_format_structure() -> None:
     assert lines[1].startswith("*Composed ")
     assert lines[3].startswith("- ")
     assert lines[4].startswith("- ")
-    assert lines[-2].startswith("> Diagnostics: Voices[")
+    assert lines[-3].startswith("> Diagnostics: Voices[")
+    assert lines[-2].startswith("> Summary: diversity=")
     assert lines[-1].startswith("> Rhythm: tempo=andante; pulses=2; accents=")
