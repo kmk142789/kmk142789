@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 import math
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Callable, Iterable, List, Mapping, Optional
+from typing import Any, Callable, Iterable, List, Mapping, Optional, Sequence
 from statistics import mean, median
 
 try:  # pragma: no cover - optional dependency
@@ -121,6 +121,11 @@ from echo.resonance_complex import (
 )
 from echo.transcend import TranscendOrchestrator
 from pulse_dashboard import WorkerHive
+from .progressive_features import (
+    analyze_text_corpus,
+    generate_numeric_intelligence,
+    simulate_delivery_timeline,
+)
 
 try:  # pragma: no cover - optional dependency
     from echo_puzzle_lab.charts import save_charts
@@ -132,6 +137,11 @@ console = Console()
 worker_hive = WorkerHive(project_root=Path(__file__).resolve().parent.parent)
 deploy_app = typer.Typer(help="Deployment automation", no_args_is_help=True)
 app.add_typer(deploy_app, name="deploy")
+complexity_app = typer.Typer(
+    help="Progressively complex analytical utilities",
+    no_args_is_help=True,
+)
+app.add_typer(complexity_app, name="complexity")
 
 
 def _ensure_ctx(ctx: typer.Context) -> None:
@@ -877,6 +887,97 @@ def _echo(ctx: typer.Context, payload: dict[str, object], *, message: str | None
         console.print(message)
 
 
+def _build_table(
+    columns: Sequence[str],
+    rows: Sequence[Sequence[object]],
+    *,
+    title: str | None = None,
+) -> object:
+    if FALLBACK_TABLE:
+        widths = [len(column) for column in columns]
+        for row in rows:
+            for idx, value in enumerate(row):
+                widths[idx] = max(widths[idx], len(str(value)))
+        lines: list[str] = []
+        if title:
+            lines.append(title)
+        header = " | ".join(
+            column.ljust(widths[idx]) for idx, column in enumerate(columns)
+        )
+        divider = "-+-".join("-" * width for width in widths)
+        lines.append(header)
+        lines.append(divider)
+        for row in rows:
+            lines.append(
+                " | ".join(str(value).ljust(widths[idx]) for idx, value in enumerate(row))
+            )
+        return "\n".join(lines)
+
+    table = Table(title=title)
+    for column in columns:
+        table.add_column(column)
+    for row in rows:
+        table.add_row(*[str(value) for value in row])
+    return table
+
+
+def _load_text_documents(snippets: Sequence[str], files: Sequence[Path]) -> List[str]:
+    documents = [text for text in (snippet.strip() for snippet in snippets) if text]
+    for file_path in files:
+        try:
+            documents.append(file_path.read_text(encoding="utf-8"))
+        except UnicodeDecodeError:
+            documents.append(file_path.read_text(errors="ignore"))
+    cleaned = [doc.strip() for doc in documents if doc.strip()]
+    if not cleaned:
+        raise ValueError("provide at least one --text or --file value")
+    return cleaned
+
+
+def _parse_milestone_specs(specs: Sequence[str]) -> list[dict[str, object]]:
+    milestones: list[dict[str, object]] = []
+    for spec in specs:
+        parts = spec.split(":")
+        if len(parts) not in {2, 3}:
+            raise ValueError(
+                "milestones must follow 'name:duration[:confidence]' format"
+            )
+        name = parts[0].strip()
+        if not name:
+            raise ValueError("milestone name cannot be empty")
+        try:
+            duration = float(parts[1])
+        except ValueError as exc:
+            raise ValueError("duration must be numeric") from exc
+        confidence = 0.8
+        if len(parts) == 3 and parts[2].strip():
+            try:
+                confidence = float(parts[2])
+            except ValueError as exc:
+                raise ValueError("confidence must be numeric") from exc
+        milestones.append({"name": name, "duration": duration, "confidence": confidence})
+    return milestones
+
+
+def _load_plan_file(path: Path | None) -> list[dict[str, object]]:
+    if path is None:
+        return []
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("plan file must contain a JSON array") from exc
+    if not isinstance(data, list):
+        raise ValueError("plan file must contain a JSON array")
+    milestones: list[dict[str, object]] = []
+    for idx, entry in enumerate(data):
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"invalid milestone at index {idx}")
+        candidate = dict(entry)
+        candidate.setdefault("confidence", 0.8)
+        milestones.append(candidate)
+    return milestones
+
+
 def _format_meta_causal_summary(config: MetaCausalRollout, *, applied: bool) -> str:
     checks = ", ".join(config.preflight_checks) if config.preflight_checks else "none"
     status_text = "enabled" if config.enabled else "disabled"
@@ -969,6 +1070,178 @@ def deploy_meta_causal_engine(
         summary = _format_meta_causal_summary(config, applied=payload["applied"])
         _echo(ctx, payload, message=summary)
         task.succeed(payload=payload)
+
+
+@complexity_app.command("numbers")
+def complexity_numbers(
+    ctx: typer.Context,
+    count: int = typer.Option(8, "--count", "-c", help="Number of Fibonacci terms to generate."),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Showcase a foundational numerical intelligence feature."""
+
+    _ensure_ctx(ctx)
+    if count < 2:
+        raise typer.BadParameter("--count must be at least 2")
+
+    payload = generate_numeric_intelligence(count)
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    sequence = payload["sequence"]
+    preview = ", ".join(str(value) for value in sequence[:10])
+    if len(sequence) > 10:
+        preview += ", …"
+    stats_rows = [
+        ("Total", payload["stats"]["total"]),
+        ("Mean", round(payload["stats"]["mean"], 2)),
+        ("Max", payload["stats"]["max"]),
+        ("Min", payload["stats"]["min"]),
+        ("Even", payload["stats"]["even"]),
+        ("Odd", payload["stats"]["odd"]),
+    ]
+    summary_lines = [
+        f"Generated {len(sequence)} Fibonacci numbers.",
+        f"Preview : {preview}",
+        f"Golden ratio estimate : {payload['golden_ratio_estimate']:.5f}",
+    ]
+    console.print("\n".join(summary_lines))
+    console.print(_build_table(["Metric", "Value"], stats_rows, title="Sequence statistics"))
+
+
+@complexity_app.command("text")
+def complexity_text(
+    ctx: typer.Context,
+    text: List[str] = typer.Option(
+        [],
+        "--text",
+        "-t",
+        help="Inline text snippet to analyse (may be provided multiple times).",
+    ),
+    file: List[Path] = typer.Option(
+        [],
+        "--file",
+        "-f",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="Path to a text document to include in the analysis.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Perform a lexical analysis across one or more documents."""
+
+    _ensure_ctx(ctx)
+    try:
+        documents = _load_text_documents(text, file)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = analyze_text_corpus(documents)
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary_lines = [
+        f"Analysed {payload['documents']} documents with {payload['total_words']} words.",
+        f"Readability : {payload['readability']} (avg sentence length {payload['avg_sentence_length']} words)",
+        f"Lexical density : {payload['lexical_density']}",
+    ]
+    console.print("\n".join(summary_lines))
+    token_rows = [
+        (token_info["token"], token_info["count"])
+        for token_info in payload.get("top_tokens", [])
+    ]
+    if token_rows:
+        console.print(
+            _build_table(["Token", "Occurrences"], token_rows, title="Top tokens")
+        )
+
+
+@complexity_app.command("timeline")
+def complexity_timeline(
+    ctx: typer.Context,
+    milestone: List[str] = typer.Option(
+        [],
+        "--milestone",
+        "-m",
+        help="Milestone definition formatted as 'Name:duration[:confidence]'.",
+    ),
+    plan_file: Optional[Path] = typer.Option(
+        None,
+        "--plan-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing an array of milestone objects.",
+    ),
+    start: Optional[str] = typer.Option(
+        None,
+        "--start",
+        help="Optional ISO 8601 timestamp marking the start of the simulation.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Simulate a delivery timeline with buffers and risk scoring."""
+
+    _ensure_ctx(ctx)
+    try:
+        milestones = _load_plan_file(plan_file) + _parse_milestone_specs(milestone)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if not milestones:
+        raise typer.BadParameter("provide --plan-file or at least one --milestone")
+
+    start_dt = _parse_iso_timestamp(start)
+    payload = simulate_delivery_timeline(milestones, start=start_dt)
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary = [
+        f"Simulation start : {payload['start']}",
+        f"Projected end   : {payload['end']}",
+        f"Total duration  : {payload['total_days']} days",
+        f"Risk assessment : {payload['risk']['classification']} (score {payload['risk']['score']})",
+    ]
+    console.print("\n".join(summary))
+    rows = [
+        (
+            entry["name"],
+            entry["start"],
+            entry["end"],
+            entry["buffer_end"],
+            f"{entry['duration_days']} d",
+            f"{entry['confidence']:.2f}",
+        )
+        for entry in payload["timeline"]
+    ]
+    console.print(
+        _build_table(
+            ["Milestone", "Start", "End", "Buffer end", "Duration", "Confidence"],
+            rows,
+            title="Delivery timeline",
+        )
+    )
 
 
 @app.callback()
