@@ -36,6 +36,8 @@ __all__ = [
     "construct_complexity_foundation",
     "simulate_complexity_orbit",
     "orchestrate_complexity_supercluster",
+    "synthesize_complexity_continuum",
+    "orchestrate_complexity_hyperdrive",
     "CascadeStage",
 ]
 
@@ -2795,6 +2797,239 @@ def orchestrate_complexity_supercluster(program: Mapping[str, object]) -> dict[s
         "orbits": orbit_payload,
         "escalation": escalation_payload,
         "insights": insights[:12],
+        "summary": summary,
+    }
+
+
+def synthesize_complexity_continuum(
+    observations: Sequence[Mapping[str, object]] | Sequence[object],
+    *,
+    target: float | None = None,
+) -> dict[str, object]:
+    """Analyse sequential observations to measure momentum and stability."""
+
+    if not isinstance(observations, Sequence) or len(observations) < 2:
+        raise ValueError("at least two observations are required")
+
+    clock = datetime.now(timezone.utc).replace(microsecond=0)
+    normalised: list[dict[str, object]] = []
+    for idx, entry in enumerate(observations):
+        if isinstance(entry, Mapping):
+            payload = dict(entry)
+        else:
+            raise ValueError(f"observation at index {idx} must be a mapping")
+
+        timestamp_value = payload.get("timestamp") or payload.get("time") or payload.get("date")
+        if timestamp_value is None:
+            timestamp = clock + timedelta(days=idx)
+        else:
+            timestamp = _ensure_datetime(timestamp_value, None)
+
+        complexity_value = None
+        metrics = payload.get("metrics") if isinstance(payload.get("metrics"), Mapping) else None
+        for key in (
+            "complexity",
+            "complexity_index",
+            "score",
+            "value",
+        ):
+            if key in payload:
+                complexity_value = payload[key]
+                break
+            if metrics and key in metrics and complexity_value is None:
+                complexity_value = metrics[key]
+        if complexity_value is None:
+            raise ValueError(f"observation at index {idx} missing complexity value")
+        try:
+            complexity = float(complexity_value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"complexity value at index {idx} must be numeric") from exc
+        if not isfinite(complexity):
+            raise ValueError("complexity values must be finite")
+
+        confidence_value = payload.get("confidence") or payload.get("confidence_score")
+        if confidence_value is None and metrics and "confidence" in metrics:
+            confidence_value = metrics["confidence"]
+        confidence = 0.7
+        if confidence_value is not None:
+            try:
+                confidence = float(confidence_value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"confidence at index {idx} must be numeric") from exc
+            confidence = max(0.0, min(1.0, confidence))
+
+        normalised.append(
+            {
+                "timestamp": timestamp,
+                "complexity": complexity,
+                "confidence": round(confidence, 3),
+                "label": str(payload.get("label") or payload.get("name") or "").strip() or None,
+                "source": payload.get("source"),
+                "notes": payload.get("insights") or payload.get("notes"),
+            }
+        )
+
+    values = [entry["complexity"] for entry in normalised]
+    for idx in range(1, len(normalised)):
+        previous = normalised[idx - 1]
+        current = normalised[idx]
+        delta = current["complexity"] - previous["complexity"]
+        elapsed_days = max(
+            (current["timestamp"] - previous["timestamp"]).total_seconds() / 86400.0,
+            1e-6,
+        )
+        velocity = delta / elapsed_days
+        current["delta"] = round(delta, 3)
+        current["velocity"] = round(velocity, 3)
+
+    deltas = [entry.get("delta", 0.0) for entry in normalised[1:]]
+    velocities = [entry.get("velocity", 0.0) for entry in normalised[1:]]
+    momentum = sum(delta for delta in deltas if delta > 0)
+    regression_events = [
+        {
+            "timestamp": _format_iso(normalised[idx]["timestamp"]),
+            "delta": round(deltas[idx - 1], 3),
+            "label": normalised[idx].get("label"),
+        }
+        for idx in range(1, len(normalised))
+        if deltas[idx - 1] < 0
+    ]
+    velocity_mean = sum(velocities) / max(len(velocities), 1)
+    velocity_peak = max(velocities, default=0.0)
+    velocity_floor = min(velocities, default=0.0)
+    stability = 1 / (1 + pstdev(values)) if len(values) > 1 else 1.0
+    latest_delta = deltas[-1] if deltas else 0.0
+
+    if velocity_mean > 0.3:
+        trend = "accelerating"
+    elif velocity_mean > 0.05:
+        trend = "improving"
+    elif velocity_mean < -0.2:
+        trend = "contracting"
+    elif velocity_mean < -0.05:
+        trend = "softening"
+    else:
+        trend = "steady"
+
+    projection: dict[str, object] | None = None
+    if target is not None and velocity_mean > 0:
+        remaining = target - values[-1]
+        if remaining <= 0:
+            projection = {"status": "achieved", "target": target}
+        else:
+            days_to_target = remaining / velocity_mean
+            projection = {
+                "status": "projected",
+                "target": target,
+                "eta_weeks": round(days_to_target / 7, 2),
+            }
+    elif target is not None:
+        projection = {"status": "stalled", "target": target}
+
+    observation_payload = []
+    insights: list[str] = []
+    for idx, entry in enumerate(normalised):
+        payload = {
+            "timestamp": _format_iso(entry["timestamp"]),
+            "complexity": round(entry["complexity"], 3),
+            "confidence": entry["confidence"],
+        }
+        if entry.get("label"):
+            payload["label"] = entry["label"]
+        if entry.get("delta") is not None and idx > 0:
+            payload["delta"] = entry["delta"]
+            payload["velocity"] = entry.get("velocity")
+        if entry.get("notes"):
+            payload["notes"] = entry["notes"]
+        observation_payload.append(payload)
+        if idx > 0 and entry.get("delta"):
+            direction = "increased" if entry["delta"] > 0 else "declined"
+            insights.append(
+                f"{payload.get('label') or payload['timestamp']}: complexity {direction} "
+                f"by {abs(entry['delta']):.2f}"
+            )
+
+    summary = (
+        f"Continuum analysed {len(observation_payload)} observations; trend {trend} "
+        f"with momentum {momentum:.2f}."
+    )
+
+    return {
+        "observations": observation_payload,
+        "momentum": round(momentum, 3),
+        "velocity": {
+            "mean": round(velocity_mean, 3),
+            "peak": round(velocity_peak, 3),
+            "floor": round(velocity_floor, 3),
+        },
+        "trend": {
+            "classification": trend,
+            "latest_delta": round(latest_delta, 3),
+        },
+        "stability_index": round(stability, 3),
+        "regressions": regression_events[:5],
+        "projection": projection,
+        "insights": insights[:10],
+        "summary": summary,
+    }
+
+
+def orchestrate_complexity_hyperdrive(program: Mapping[str, object]) -> dict[str, object]:
+    """Amplify the supercluster output with a continuum momentum assessment."""
+
+    if not isinstance(program, Mapping):
+        raise ValueError("hyperdrive program must be a mapping")
+
+    supercluster_payload = orchestrate_complexity_supercluster(program)
+
+    continuum_input = program.get("continuum")
+    observations: Sequence[Mapping[str, object]] | None = None
+    target: float | None = None
+    if isinstance(continuum_input, Mapping):
+        obs_value = continuum_input.get("observations") or continuum_input.get("snapshots")
+        if isinstance(obs_value, Sequence):
+            observations = obs_value  # type: ignore[assignment]
+        target_value = continuum_input.get("target")
+        if target_value is not None:
+            try:
+                target = float(target_value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError("continuum target must be numeric") from exc
+    if observations is None and "observations" in program:
+        raw = program["observations"]
+        if isinstance(raw, Sequence):
+            observations = raw  # type: ignore[assignment]
+    if observations is None:
+        raise ValueError("program requires 'observations' for the hyperdrive continuum")
+
+    continuum_payload = synthesize_complexity_continuum(observations, target=target)
+
+    base_score = float(supercluster_payload.get("score", 0.0))
+    continuum_score = continuum_payload["momentum"] + max(continuum_payload["velocity"]["mean"], 0) * 5
+    total_score = base_score + continuum_score
+
+    if total_score >= 70:
+        grade = "hyperdrive"
+    elif total_score >= 55:
+        grade = "supercluster"
+    elif total_score >= 40:
+        grade = "orbital"
+    else:
+        grade = "formation"
+
+    insights = list(supercluster_payload.get("insights", []))
+    insights.extend(continuum_payload.get("insights", []))
+    summary = (
+        f"Hyperdrive fused supercluster score {base_score:.2f} with continuum momentum "
+        f"{continuum_payload['momentum']:.2f} for total {total_score:.2f}."
+    )
+
+    return {
+        "grade": grade,
+        "score": round(total_score, 3),
+        "supercluster": supercluster_payload,
+        "continuum": continuum_payload,
+        "insights": insights[:15],
         "summary": summary,
     }
 
