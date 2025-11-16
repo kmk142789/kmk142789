@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, MutableMapping, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, Sequence
 import json
 
 ProbeFn = Callable[[], Mapping[str, Any] | MutableMapping[str, Any] | Any]
@@ -43,6 +43,10 @@ class SubsystemPulse:
     delta: float
 
 
+if TYPE_CHECKING:
+    from .privacy.zk_layer import ProofClaim, ProofResult, ZeroKnowledgePrivacyLayer
+
+
 class EchoGenesisCore:
     """Continuously evolving architecture fabric unifying Echo subsystems."""
 
@@ -52,6 +56,7 @@ class EchoGenesisCore:
         probes: Sequence[SubsystemProbe] | None = None,
         state_dir: Path | str | None = None,
         history_limit: int = 256,
+        privacy_layer: "ZeroKnowledgePrivacyLayer" | None = None,
     ) -> None:
         self._probes: list[SubsystemProbe] = list(probes or [])
         self._state_dir = Path(state_dir or "state/echo_genesis_core")
@@ -59,6 +64,7 @@ class EchoGenesisCore:
         self._latest_path = self._state_dir / "genesis_latest.json"
         self._history_path = self._state_dir / "genesis_history.jsonl"
         self._history_limit = max(16, int(history_limit))
+        self._privacy_layer = privacy_layer
 
     # ------------------------------------------------------------------
     # Probe management
@@ -125,8 +131,43 @@ class EchoGenesisCore:
             "history_path": str(self._history_path),
         }
 
+        privacy_snapshot = self._privacy_snapshot()
+        if privacy_snapshot:
+            architecture["privacy"] = privacy_snapshot
+
         self._persist(architecture)
         return architecture
+
+    # ------------------------------------------------------------------
+    # Privacy helpers
+    # ------------------------------------------------------------------
+    @property
+    def privacy_layer(self) -> "ZeroKnowledgePrivacyLayer" | None:
+        return self._privacy_layer
+
+    def attach_privacy_layer(self, privacy_layer: "ZeroKnowledgePrivacyLayer") -> None:
+        self._privacy_layer = privacy_layer
+
+    def request_proof(
+        self,
+        circuit: str,
+        claim: "ProofClaim",
+        *,
+        backend: str | None = None,
+    ) -> "ProofResult":
+        if not self._privacy_layer:
+            raise RuntimeError("privacy layer not configured for EchoGenesisCore")
+        return self._privacy_layer.prove(circuit, claim, backend=backend)
+
+    def _privacy_snapshot(self) -> Mapping[str, Any]:
+        if not self._privacy_layer:
+            return {}
+        return {
+            "available_backends": self._privacy_layer.available_backends(),
+            "privacy_signal": self._privacy_layer.privacy_signal(),
+            "recent_commitments": self._privacy_layer.recent_commitments(limit=8),
+            "receipts": self._privacy_layer.export_receipts(limit=8),
+        }
 
     # ------------------------------------------------------------------
     # Capture + evaluation

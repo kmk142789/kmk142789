@@ -10,13 +10,16 @@ pulse cadence remains stable.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import TYPE_CHECKING, Any, Mapping, Sequence
 
 from .continuum_resonance_field import (
     ContinuumResonanceField,
     ContinuumResonanceReport,
     LaneResonance,
 )
+
+if TYPE_CHECKING:
+    from .privacy.zk_layer import ZeroKnowledgePrivacyLayer
 
 
 @dataclass(slots=True)
@@ -49,10 +52,12 @@ class GenesisResonanceLayer:
         field: ContinuumResonanceField,
         *,
         focus_lanes: int = 3,
+        privacy_layer: "ZeroKnowledgePrivacyLayer" | None = None,
     ) -> None:
         self._field = field
         self._focus_lanes = max(1, int(focus_lanes))
         self._latest: Mapping[str, Any] | None = None
+        self._privacy_layer = privacy_layer
 
     @property
     def field(self) -> ContinuumResonanceField:
@@ -91,6 +96,7 @@ class GenesisResonanceLayer:
         gaps = self._lane_gap(report.lanes)
         signal = self._signal(report)
         recommendations = self._recommendations(report, gaps)
+        privacy_summary = self._privacy_summary()
         return {
             "generated_at": report.generated_at.isoformat(),
             "root": str(report.root),
@@ -102,12 +108,15 @@ class GenesisResonanceLayer:
             "lane_gap": gaps,
             "storylines": list(report.storylines),
             "recommendations": recommendations,
+            "privacy": privacy_summary,
         }
 
     def _signal(self, report: ContinuumResonanceReport) -> float:
         base = report.synchrony_index * 0.7
         stability = report.pulse_drift.stability_index * 0.3
         combined = max(0.0, min(1.0, base + stability))
+        if self._privacy_layer:
+            combined = min(1.0, combined + self._privacy_layer.privacy_signal() * 0.05)
         return round(combined, 4)
 
     def _lane_gap(self, lanes: Sequence[LaneResonance]) -> Mapping[str, Any]:
@@ -144,11 +153,21 @@ class GenesisResonanceLayer:
             recs.append(f"balance activity around {lagging['lane']}")
         if report.pulse_drift.stability_index < 0.5:
             recs.append("stabilize pulse cadence")
+        if self._privacy_layer and self._privacy_layer.privacy_signal() < 0.25:
+            recs.append("request privacy-preserving proofs")
         if not recs:
             recs.append("sustain resonance field alignment")
         if report.storylines:
             recs.append(f"amplify storyline: {report.storylines[0]}")
         return recs
+
+    def _privacy_summary(self) -> Mapping[str, Any] | None:
+        if not self._privacy_layer:
+            return None
+        return {
+            "signal": self._privacy_layer.privacy_signal(),
+            "commitments": self._privacy_layer.recent_commitments(limit=5),
+        }
 
 
 __all__ = ["GenesisResonanceLayer", "LaneFocus"]

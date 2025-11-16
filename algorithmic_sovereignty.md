@@ -20,6 +20,16 @@ Algorithmic sovereignty is the practice of designing, governing, and operating s
 | Verification | Audits, proofs, and transparency portals. | `attestations/`, `proofs/`, `oracle-report.md` |
 | Continuity | Backups, recovery, and forward-looking roadmaps. | `CONTINUUM_INDEX.md`, `ROADMAP.md`, `pulse_history.json` |
 
+## Zero-Knowledge Privacy Layer
+
+Echo now includes a dedicated Zero-Knowledge Privacy Layer (`echo/privacy/zk_layer.py`) that allows subsystems to prove facts
+about actions, identities, or events without leaking sensitive payloads.  The layer exposes stable abstractions—`ProofClaim`
+captures what should be proven, `ProofResult` captures the outcome, while pluggable `ProofCircuit`, `ProofBackend`, and
+`ProofVerifier` interfaces make it easy to attach real SNARK/Bulletproof backends.  The default `HashCommitmentBackend`
+demonstrates how to seal witnesses and emit verifiable commitments that the Genesis Core can store as receipts.  Other
+modules (Genesis Core, Genesis Resonance Layer, Self-Model, and the macro-layer coordinator) depend only on the abstractions,
+so additional cryptographic backends can be swapped in without touching orchestration or governance code.
+
 ## Design Pattern Checklist
 
 - **Contractual Interfaces** – When shipping new modules under `modules/` or `services/`, publish JSON schemas plus test vectors so other sovereigns can independently validate inputs/outputs.

@@ -5,11 +5,14 @@ from __future__ import annotations
 from collections import Counter, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Callable, Deque, Iterable, Mapping, MutableMapping, Sequence
+from typing import TYPE_CHECKING, Callable, Deque, Iterable, Mapping, MutableMapping, Sequence
 
 from .memory.analytics import MemoryAnalytics
 from .memory.store import ExecutionContext, JsonMemoryStore
 from .semantic_negotiation import NegotiationIntent
+
+if TYPE_CHECKING:
+    from .privacy.zk_layer import ProofResult, ZeroKnowledgePrivacyLayer
 
 
 # ---------------------------------------------------------------------------
@@ -318,11 +321,14 @@ class SelfModel:
         intent_resolver: IntentResolver,
         *,
         clock: Callable[[], datetime] = _utc_now,
+        privacy_layer: "ZeroKnowledgePrivacyLayer" | None = None,
     ) -> None:
         self._observer = observer
         self._memory = memory_unifier
         self._intent = intent_resolver
         self._clock = clock
+        self._privacy_layer = privacy_layer
+        self._proof_cache: list["ProofResult"] = []
 
     @property
     def observer(self) -> ObserverSubsystem:
@@ -355,6 +361,13 @@ class SelfModel:
             "memory_coverage": memory_snapshot.coverage,
             "intent_confidence": intent_resolution.confidence,
         }
+        if self._privacy_layer:
+            proofs = self._privacy_layer.recent_proofs(limit=5)
+            self._proof_cache = proofs
+            diagnostics["privacy_signal"] = self._privacy_layer.privacy_signal()
+            diagnostics["privacy_commitments"] = [result.commitment for result in proofs]
+        else:
+            self._proof_cache = []
         return SelfModelSnapshot(
             generated_at=self._clock().isoformat(),
             observer=observer_snapshot,
@@ -362,6 +375,11 @@ class SelfModel:
             intent=intent_resolution,
             diagnostics=diagnostics,
         )
+
+    def latest_proofs(self) -> list["ProofResult"]:
+        """Return the internally cached proofs (full view)."""
+
+        return list(self._proof_cache)
 
 
 __all__ = [
