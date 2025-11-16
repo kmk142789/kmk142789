@@ -123,13 +123,38 @@ from .hypernova import (
     SagaBeat,
     ScoreFragment,
 )
-from .hypermesh_engine import (
-    HyperMesh,
-    HyperMeshBlueprint,
-    PulseCascadePlanner,
-    PulseNode,
-    ResonanceEdge,
-)
+# ``echo.hypermesh_engine`` pulls in heavy optional dependencies such as
+# :mod:`pandas`, :mod:`numpy`, and :mod:`rich`.  Many workflows inside the
+# repository—including the Little Footsteps banking stack exercised by the
+# tests—do not need the HyperMesh helpers.  Importing them unconditionally
+# made ``import echo`` fail in environments that only install the lightweight
+# dependencies.  To keep the public API intact while avoiding a hard
+# dependency, we attempt to import the module and gracefully degrade if the
+# optional stack is missing.
+try:  # pragma: no cover - exercised indirectly via import behavior
+    from .hypermesh_engine import (
+        HyperMesh,
+        HyperMeshBlueprint,
+        PulseCascadePlanner,
+        PulseNode,
+        ResonanceEdge,
+    )
+except ModuleNotFoundError as exc:  # pragma: no cover - import-time guard
+    if exc.name in {"pandas", "numpy", "rich"}:
+        def _raise_hypermesh_optional_dependency(*_args: Any, **_kwargs: Any) -> None:
+            raise ModuleNotFoundError(
+                "HyperMesh utilities require optional dependencies 'numpy', 'pandas', and 'rich'. "
+                "Install the extra stack (e.g. `pip install pandas numpy rich`) to enable these helpers."
+            ) from exc
+
+        class _HyperMeshUnavailable:
+            def __init__(self, *_args: Any, **_kwargs: Any) -> None:  # noqa: D401 - simple shim
+                _raise_hypermesh_optional_dependency()
+
+        HyperMesh = HyperMeshBlueprint = PulseCascadePlanner = _HyperMeshUnavailable  # type: ignore[assignment]
+        PulseNode = ResonanceEdge = _HyperMeshUnavailable  # type: ignore[assignment]
+    else:  # Different import error – surface it to the caller
+        raise
 from .impossible_realities import ImpossibleEvent, ImpossibleRealityEngine
 from .innovation_wave import (
     InnovationSpark,
