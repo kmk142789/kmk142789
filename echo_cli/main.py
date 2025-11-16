@@ -125,6 +125,7 @@ from .progressive_features import (
     assess_alignment_signals,
     analyze_text_corpus,
     execute_complexity_cascade,
+    execute_feature_escalation,
     complexity_evolution_series,
     evaluate_strategy_matrix,
     forecast_operational_resilience,
@@ -2129,7 +2130,7 @@ def complexity_cascade(
         [],
         "--milestone",
         "-m",
-        help="Milestone formatted as 'Name:duration[:confidence]' for level 3.",
+        help="Milestone formatted as 'Name:duration[:confidence]' for advanced stages.",
     ),
     plan_file: Optional[Path] = typer.Option(
         None,
@@ -2137,12 +2138,12 @@ def complexity_cascade(
         exists=True,
         readable=True,
         resolve_path=True,
-        help="JSON file containing an array of milestone objects for level 3.",
+        help="JSON file containing milestone objects for advanced stages.",
     ),
     start: Optional[str] = typer.Option(
         None,
         "--start",
-        help="Optional ISO 8601 timestamp marking the start of the forecast.",
+        help="Optional ISO 8601 timestamp used as the default cascade start.",
     ),
     json_mode: bool = typer.Option(
         False,
@@ -2151,31 +2152,10 @@ def complexity_cascade(
         help="Emit the raw JSON payload instead of a formatted summary.",
     ),
 ) -> None:
-    """Forecast operational resilience across stress scenarios."""
-
-    _ensure_ctx(ctx)
-    try:
-        events = _parse_resilience_event_specs(event)
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-    start_dt = _parse_iso_timestamp(start)
-    payload = forecast_operational_resilience(
-        events,
-        start=start_dt,
-        horizon_hours=horizon_hours,
-    )
-    """Aggregate multiple initiative timelines into a portfolio view."""
-
-    _ensure_ctx(ctx)
-    initiatives = _load_portfolio_file(portfolio_file)
-    if not initiatives:
-        raise typer.BadParameter("portfolio file must contain at least one initiative")
-    start_dt = _parse_iso_timestamp(start) if start else None
-    payload = simulate_portfolio_outcomes(initiatives, start=start_dt)
     """Execute sequential complexity stages, each more advanced than the last."""
 
     _ensure_ctx(ctx)
+
     documents: List[str] | None = None
     if level >= 2 or text or file:
         try:
@@ -2183,10 +2163,10 @@ def complexity_cascade(
         except ValueError as exc:
             raise typer.BadParameter(str(exc)) from exc
 
-    plan: list[dict[str, object]] = []
+    milestones: list[dict[str, object]] | None = None
     if level >= 3 or plan_file or milestone:
         try:
-            plan = _load_plan_file(plan_file) + _parse_milestone_specs(milestone)
+            milestones = _load_plan_file(plan_file) + _parse_milestone_specs(milestone)
         except ValueError as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -2196,7 +2176,7 @@ def complexity_cascade(
             level,
             numeric_terms=count,
             documents=documents,
-            milestones=plan,
+            milestones=milestones,
             start=start_dt,
         )
     except ValueError as exc:
@@ -2207,104 +2187,50 @@ def complexity_cascade(
         _echo(ctx, payload)
         return
 
-    summary = [
-        f"Forecast window  : {payload['start']} → +{payload['horizon_hours']}h",
-        f"Expected downtime: {payload['expected_disruption_hours']} hours",
-        f"Resilience score : {payload['resilience_score']} ({payload['risk']['classification']})",
-    ]
-    console.print("\n".join(summary))
-
-    rows = [
-        (
-            entry["name"],
-            entry["criticality"],
-            entry["likelihood"],
-            entry["expected_hours"],
-            entry["window_start"],
-        )
-        for entry in payload["timeline"]
-    ]
-    console.print(
-        _build_table(
-            ["Event", "Severity", "Likelihood", "Expected hours", "Window start"],
-            rows,
-            title="Resilience outlook",
-        )
-    )
-    portfolio = payload["portfolio"]
     summary_lines = [
-        f"Portfolio start : {portfolio['start']}",
-        f"Portfolio end   : {portfolio['end']}",
-        f"Duration        : {portfolio['overall_days']} days",
-        f"Risk index      : {portfolio['risk_index']} ({portfolio['risk_classification']})",
-        f"Critical path   : {portfolio.get('critical_path') or 'n/a'}",
-        f"Weighted value  : {portfolio['weighted_value']}",
+        f"Level requested  : {payload['level']}",
+        f"Stages completed : {', '.join(payload['completed_stages'])}",
+        f"Complexity index : {payload['complexity_index']} ({payload['summary']})",
     ]
-    if portfolio.get("average_confidence") is not None:
-        summary_lines.append(
-            f"Average confidence : {portfolio['average_confidence']}"
-        )
     console.print("\n".join(summary_lines))
-    rows = [
-        (
-            entry["name"],
-            entry["weight"],
-            entry["value"],
-            entry["risk"]["classification"],
-            f"{entry['total_days']} d",
-            entry["start"],
-            entry["end"],
-        )
-        for entry in payload["initiatives"]
-    ]
-    console.print(
-        _build_table(
-            ["Initiative", "Weight", "Value", "Risk", "Duration", "Start", "End"],
-            rows,
-            title="Initiative roll-up",
-        )
-    )
-    console.print(payload["summary"])
-    if payload["insights"]:
-        insight_lines = [f"- {insight}" for insight in payload["insights"]]
-        console.print("Insights:\n" + "\n".join(insight_lines))
 
-    for stage in payload["stages"]:
-        console.print("\n" + stage["description"])
-        if stage["stage"] == "numbers":
-            numbers = stage["payload"]
+    if payload.get("insights"):
+        console.print("Insights:")
+        for insight in payload["insights"]:
+            console.print(f"- {insight}")
+
+    for stage in payload.get("stages", []):
+        console.print(f"\n{stage['description']}")
+        details = stage.get("payload", {})
+        name = stage.get("stage")
+        if name == "numbers":
+            stats = details.get("stats", {})
             rows = [
-                ("Total", numbers["stats"]["total"]),
-                ("Mean", round(numbers["stats"]["mean"], 2)),
-                ("Max", numbers["stats"]["max"]),
-                ("Min", numbers["stats"]["min"]),
+                ("Total", stats.get("total")),
+                ("Mean", stats.get("mean")),
+                ("Max", stats.get("max")),
+                ("Min", stats.get("min")),
             ]
             console.print(
                 _build_table(["Metric", "Value"], rows, title="Numeric intelligence summary")
             )
-        elif stage["stage"] == "text":
-            text_stage = stage["payload"]
-            summary = (
-                f"Documents analysed: {text_stage['documents']} | "
-                f"Vocabulary: {text_stage['vocabulary']} | "
-                f"Lexical density: {text_stage['lexical_density']}"
-            )
-            console.print(summary)
+        elif name == "text":
+            rows = [
+                ("Documents", details.get("documents")),
+                ("Vocabulary", details.get("vocabulary")),
+                ("Lexical density", details.get("lexical_density")),
+                ("Readability", details.get("readability")),
+            ]
+            console.print(_build_table(["Metric", "Value"], rows, title="Text analysis"))
             token_rows = [
                 (token_info["token"], token_info["count"])
-                for token_info in text_stage.get("top_tokens", [])
+                for token_info in details.get("top_tokens", [])
             ]
             if token_rows:
                 console.print(
                     _build_table(["Token", "Occurrences"], token_rows, title="Top tokens")
                 )
-        elif stage["stage"] == "timeline":
-            timeline_stage = stage["payload"]
-            summary = (
-                f"Timeline: {timeline_stage['start']} → {timeline_stage['end']} "
-                f"({timeline_stage['total_days']} days)"
-            )
-            console.print(summary)
+        elif name == "timeline":
             rows = [
                 (
                     entry["name"],
@@ -2314,7 +2240,7 @@ def complexity_cascade(
                     f"{entry['duration_days']} d",
                     f"{entry['confidence']:.2f}",
                 )
-                for entry in timeline_stage["timeline"]
+                for entry in details.get("timeline", [])
             ]
             console.print(
                 _build_table(
@@ -2325,16 +2251,6 @@ def complexity_cascade(
             )
 
 
-@complexity_app.command("escalate")
-def complexity_escalate(
-    ctx: typer.Context,
-    cascade_file: Path = typer.Option(
-        ...,
-        "--cascade-file",
-        exists=True,
-        readable=True,
-        resolve_path=True,
-        help="JSON file describing the ordered cascade of stage definitions.",
 @complexity_app.command("evolve")
 def complexity_evolve(
     ctx: typer.Context,
@@ -2384,7 +2300,6 @@ def complexity_evolve(
     start: Optional[str] = typer.Option(
         None,
         "--start",
-        help="Optional ISO 8601 timestamp used as the default cascade start.",
         help="Optional ISO 8601 timestamp to align all iterations.",
     ),
     json_mode: bool = typer.Option(
@@ -2394,17 +2309,6 @@ def complexity_evolve(
         help="Emit the raw JSON payload instead of a formatted summary.",
     ),
 ) -> None:
-    """Create increasingly complex insights from a cascade specification."""
-
-    _ensure_ctx(ctx)
-    try:
-        stages = _load_cascade_file(cascade_file)
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-    start_dt = _parse_iso_timestamp(start)
-    try:
-        payload = execute_complexity_cascade(stages, default_start=start_dt)
     """Iteratively execute increasingly complex analysis passes."""
 
     _ensure_ctx(ctx)
@@ -2441,40 +2345,14 @@ def complexity_evolve(
         return
 
     summary_lines = [
-        f"Start reference  : {payload['start_reference']}",
-        f"Cascade stages   : {payload['stage_count']}",
-        f"Complexity score : {payload['complexity_score']}",
-    ]
-    console.print("\n".join(summary_lines))
-
-    distribution = payload.get("stage_type_distribution", {})
-    if distribution:
-        rows = [
-            (stage_type, count)
-            for stage_type, count in sorted(distribution.items())
-        ]
-        console.print(
-            _build_table(["Stage type", "Count"], rows, title="Cascade distribution")
-        )
-
-    rows = [
-        (
-            stage.get("name"),
-            stage.get("type"),
-            stage.get("insight", "-"),
-        )
-        for stage in payload["stages"]
-    ]
-    console.print(
-        _build_table(["Stage", "Type", "Insight"], rows, title="Complexity cascade")
-        f"Iterations executed : {payload['iterations']}",
+        f"Iterations       : {payload['iterations']}",
         f"Aggregate complexity: {payload['aggregate_complexity']} (mean {payload['mean_complexity']})",
-        f"Complexity gradient: {payload['complexity_gradient']} (peak {payload['peak_complexity']})",
+        f"Gradient / peak  : {payload['complexity_gradient']} / {payload['peak_complexity']}",
     ]
-    if payload.get("documents_available"):
-        summary_lines.append(f"Documents analysed : {payload['documents_available']}")
-    if payload.get("milestones_available"):
-        summary_lines.append(f"Milestones tracked : {payload['milestones_available']}")
+    if payload.get("documents_available") is not None:
+        summary_lines.append(f"Documents available : {payload['documents_available']}")
+    if payload.get("milestones_available") is not None:
+        summary_lines.append(f"Milestones available : {payload['milestones_available']}")
     if payload.get("level_distribution"):
         distribution = ", ".join(
             f"{level}={count}" for level, count in payload["level_distribution"].items()
@@ -2494,26 +2372,25 @@ def complexity_evolve(
         )
         for phase in payload.get("phases", [])
     ]
-    console.print(
-        _build_table(
-            [
-                "Iteration",
-                "Level",
-                "Terms",
-                "Docs",
-                "Milestones",
-                "Complexity",
-                "Δ Complexity",
-            ],
-            phase_rows,
-            title="Evolution phases",
+    if phase_rows:
+        console.print(
+            _build_table(
+                [
+                    "Iteration",
+                    "Level",
+                    "Terms",
+                    "Docs",
+                    "Milestones",
+                    "Complexity",
+                    "Δ Complexity",
+                ],
+                phase_rows,
+                title="Evolution phases",
+            )
         )
-    )
 
     if payload.get("insights"):
         console.print("Insights:")
-        for line in payload["insights"]:
-            console.print(f"- {line}")
         max_lines = 6
         for insight in payload["insights"][:max_lines]:
             console.print(f"- {insight}")
@@ -2523,6 +2400,182 @@ def complexity_evolve(
 
     if payload.get("final_summary"):
         console.print(f"Final summary: {payload['final_summary']}")
+
+
+@complexity_app.command("escalate")
+def complexity_escalate(
+    ctx: typer.Context,
+    signal: List[str] = typer.Option(
+        [],
+        "--signal",
+        "-s",
+        help="Alignment signal formatted as 'Name:score' (0-1).",
+    ),
+    signals_file: Optional[Path] = typer.Option(
+        None,
+        "--signals-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file mapping signal names to scores.",
+    ),
+    capability: List[str] = typer.Option(
+        [],
+        "--capability",
+        "-c",
+        help="Capability formatted as 'Name:coverage:automation:runbooks:incidents'.",
+    ),
+    capability_file: Optional[Path] = typer.Option(
+        None,
+        "--capability-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file describing readiness capabilities.",
+    ),
+    event: List[str] = typer.Option(
+        [],
+        "--event",
+        "-e",
+        help="Resilience event formatted as 'Name|likelihood=...|impact=...'.",
+    ),
+    portfolio_file: Optional[Path] = typer.Option(
+        None,
+        "--portfolio-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON file describing portfolio initiatives.",
+    ),
+    initiative: List[str] = typer.Option(
+        [],
+        "--initiative",
+        "-i",
+        help="Inline initiative formatted as 'Name:impact:effort:confidence[:dep+dep]'.",
+    ),
+    target: float = typer.Option(0.75, "--target", help="Desired alignment average."),
+    readiness_horizon: int = typer.Option(
+        12,
+        "--readiness-horizon",
+        help="Incident horizon for the readiness stage (weeks).",
+    ),
+    resilience_horizon: float = typer.Option(
+        168.0,
+        "--resilience-horizon",
+        help="Forecast horizon for the resilience stage (hours).",
+    ),
+    velocity: float = typer.Option(
+        8.0,
+        "--velocity",
+        help="Velocity used for throughput projections (points per week).",
+    ),
+    throughput_horizon: int = typer.Option(
+        12,
+        "--throughput-horizon",
+        help="Horizon for throughput projections (weeks).",
+    ),
+    start: Optional[str] = typer.Option(
+        None,
+        "--start",
+        help="Optional ISO 8601 timestamp anchoring advanced stages.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Showcase escalating features that grow in complexity with each dataset."""
+
+    _ensure_ctx(ctx)
+    try:
+        signals = _load_signal_file(signals_file)
+        signals.update(_parse_signal_specs(signal))
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if not signals:
+        raise typer.BadParameter("provide --signal or --signals-file")
+
+    try:
+        capabilities = _load_capability_file(capability_file) + _parse_capability_specs(
+            capability
+        )
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    try:
+        events = _parse_resilience_event_specs(event)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    try:
+        initiatives: list[dict[str, object]] = []
+        if portfolio_file:
+            initiatives.extend(_load_portfolio_file(portfolio_file))
+        initiatives.extend(_parse_initiative_specs(initiative))
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    start_dt = _parse_iso_timestamp(start)
+    try:
+        payload = execute_feature_escalation(
+            signals,
+            capabilities=capabilities,
+            events=events,
+            initiatives=initiatives,
+            target=target,
+            readiness_horizon_weeks=readiness_horizon,
+            resilience_horizon_hours=resilience_horizon,
+            throughput_velocity=velocity,
+            throughput_horizon_weeks=throughput_horizon,
+            start=start_dt,
+        )
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    coverage = payload.get("coverage", {})
+    coverage_summary = ", ".join(
+        f"{name}={'✓' if enabled else '–'}" for name, enabled in coverage.items()
+    )
+    summary_lines = [
+        f"Start reference  : {payload['start_reference']}",
+        f"Stages executed  : {payload['stage_count']}",
+        f"Complexity score : {payload['complexity_score']}",
+        f"Coverage         : {coverage_summary or 'alignment=✓'}",
+    ]
+    if payload.get("final_stage"):
+        summary_lines.append(f"Final stage     : {payload['final_stage']}")
+    console.print("\n".join(summary_lines))
+
+    stage_rows = [
+        (
+            stage.get("label"),
+            stage.get("type"),
+            stage.get("complexity_contribution"),
+            stage.get("cumulative_complexity"),
+            stage.get("insight", "-"),
+        )
+        for stage in payload.get("stages", [])
+    ]
+    if stage_rows:
+        console.print(
+            _build_table(
+                ["Stage", "Type", "Contribution", "Cumulative", "Insight"],
+                stage_rows,
+                title="Feature escalation",
+            )
+        )
+
+    if payload.get("insights"):
+        console.print("Insights:")
+        for insight in payload["insights"]:
+            console.print(f"- {insight}")
 
 
 @app.callback()
