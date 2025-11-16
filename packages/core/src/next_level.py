@@ -436,6 +436,7 @@ def update_roadmap(
     allowed_extensions: Optional[Sequence[str]] = None,
     ignore_patterns: Optional[Sequence[str]] = None,
     json_output_path: Optional[Path] = None,
+    hotspot_limit: int = DEFAULT_HOTSPOT_LIMIT,
 ) -> List[Task]:
     tasks = discover_tasks(
         base_path,
@@ -445,10 +446,10 @@ def update_roadmap(
         allowed_extensions=allowed_extensions,
         ignore_patterns=ignore_patterns,
     )
-    roadmap = build_roadmap(tasks, base_path)
+    roadmap = build_roadmap(tasks, base_path, hotspot_limit=hotspot_limit)
     roadmap_path.write_text(roadmap, encoding="utf-8")
     if json_output_path is not None:
-        payload = build_summary_payload(tasks, base_path)
+        payload = build_summary_payload(tasks, base_path, hotspot_limit=hotspot_limit)
         json_output_path.write_text(
             json.dumps(payload, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
@@ -520,7 +521,11 @@ def _rank_hotspots(
     return ordered
 
 
-def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, object]:
+def build_summary_payload(
+    tasks: Sequence[Task],
+    base_path: Path,
+    hotspot_limit: int = DEFAULT_HOTSPOT_LIMIT,
+) -> dict[str, object]:
     """Return a JSON-friendly payload describing the current TODO landscape."""
 
     entries = list(tasks)
@@ -559,7 +564,7 @@ def build_summary_payload(tasks: Sequence[Task], base_path: Path) -> dict[str, o
         },
         "hotspots": [
             {"path": path, "count": count}
-            for path, count in _rank_hotspots(per_file, limit=DEFAULT_HOTSPOT_LIMIT)
+            for path, count in _rank_hotspots(per_file, limit=hotspot_limit)
         ],
         "tasks": serialised_tasks,
     }
@@ -621,6 +626,13 @@ def main() -> int:
         metavar="PATH",
         help="Optional path to store a machine-readable summary (JSON)",
     )
+    parser.add_argument(
+        "--hotspots",
+        type=int,
+        default=DEFAULT_HOTSPOT_LIMIT,
+        metavar="N",
+        help="Number of hotspot files to include (set to 0 to omit the table)",
+    )
     args = parser.parse_args()
     max_bytes = args.max_bytes if args.max_bytes and args.max_bytes > 0 else None
     update_roadmap(
@@ -632,6 +644,7 @@ def main() -> int:
         allowed_extensions=args.ext,
         ignore_patterns=args.ignore,
         json_output_path=args.json_out,
+        hotspot_limit=args.hotspots,
     )
     return 0
 

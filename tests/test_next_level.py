@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from next_level import (
+    Task,
     build_roadmap,
     build_summary_payload,
     DEFAULT_HOTSPOT_LIMIT,
@@ -200,6 +201,31 @@ def test_discover_tasks_respects_ignore_patterns(tmp_path):
     assert all(task.path != ignored_dir for task in tasks)
     assert all(task.path != ignored_file for task in tasks)
     assert any(task.path == included for task in tasks)
+
+
+def test_build_summary_payload_respects_hotspot_limit(tmp_path):
+    files = []
+    for idx in range(3):
+        candidate = tmp_path / f"module_{idx}.py"
+        candidate.write_text("# placeholder\n", encoding="utf-8")
+        files.append(candidate)
+
+    tasks = []
+    for file_index, file_path in enumerate(files):
+        for offset in range(file_index + 1):
+            tasks.append(
+                Task(
+                    path=file_path,
+                    line=offset + 1,
+                    tag="TODO",
+                    text=f"task {file_index}-{offset}",
+                )
+            )
+
+    payload = build_summary_payload(tasks, tmp_path, hotspot_limit=2)
+    assert len(payload["hotspots"]) == 2
+    assert payload["hotspots"][0] == {"path": "module_2.py", "count": 3}
+    assert payload["hotspots"][1] == {"path": "module_1.py", "count": 2}
 
 
 def test_discover_tasks_requires_word_boundaries(tmp_path):
