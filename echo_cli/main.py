@@ -134,10 +134,12 @@ from .progressive_features import (
     generate_numeric_intelligence,
     orchestrate_complexity_summit,
     orchestrate_complexity_constellation,
+    orchestrate_complexity_hyperdrive,
     plan_capacity_allocation,
     progressive_complexity_suite,
     simulate_delivery_timeline,
     simulate_portfolio_outcomes,
+    synthesize_complexity_continuum,
 )
 from .innovation import app as innovation_app
 
@@ -1124,6 +1126,50 @@ def _load_constellation_file(path: Path) -> dict[str, object]:
     if defaults is not None and not isinstance(defaults, Mapping):
         raise ValueError("constellation file 'defaults' must be a JSON object")
     return dict(program)
+
+
+def _parse_continuum_specs(specs: Sequence[str]) -> list[dict[str, object]]:
+    observations: list[dict[str, object]] = []
+    for spec in specs:
+        segments = [segment.strip() for segment in spec.split("|") if segment.strip()]
+        if len(segments) < 2:
+            raise ValueError("observations must follow 'timestamp|complexity|...' format")
+        timestamp = segments[0]
+        try:
+            complexity = float(segments[1])
+        except ValueError as exc:
+            raise ValueError("observation complexity must be numeric") from exc
+        payload: dict[str, object] = {"timestamp": timestamp, "complexity": complexity}
+        if len(segments) >= 3:
+            try:
+                payload["confidence"] = float(segments[2])
+            except ValueError as exc:
+                raise ValueError("observation confidence must be numeric") from exc
+        if len(segments) >= 4:
+            payload["label"] = segments[3]
+        observations.append(payload)
+    return observations
+
+
+def _load_continuum_file(path: Path | None) -> list[dict[str, object]]:
+    if path is None:
+        return []
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("continuum file must be valid JSON") from exc
+    if isinstance(data, Mapping):
+        records = data.get("observations") or data.get("snapshots")
+    else:
+        records = data
+    if not isinstance(records, list):
+        raise ValueError("continuum file must contain an array of observations")
+    observations: list[dict[str, object]] = []
+    for idx, entry in enumerate(records):
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"invalid observation at index {idx}")
+        observations.append(dict(entry))
+    return observations
     return options, {k: v for k, v in criteria.items() if k}
 
 
@@ -3111,6 +3157,191 @@ def complexity_constellate(
         console.print("Insights:")
         for insight in payload["insights"]:
             console.print(f"- {insight}")
+
+
+@complexity_app.command("continuum")
+def complexity_continuum(
+    ctx: typer.Context,
+    observation: List[str] = typer.Option(
+        [],
+        "--observation",
+        "-o",
+        help=(
+            "Observation formatted as 'timestamp|complexity|[confidence]|[label]' "
+            "(repeatable)."
+        ),
+    ),
+    observations_file: Optional[Path] = typer.Option(
+        None,
+        "--observations-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help=(
+            "JSON file containing either an array of observations or an object with an "
+            "'observations' array."
+        ),
+    ),
+    target: Optional[float] = typer.Option(
+        None,
+        "--target",
+        help="Optional complexity target for projection calculations.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Analyse sequential observations to measure continuum momentum."""
+
+    _ensure_ctx(ctx)
+
+    try:
+        observations = _parse_continuum_specs(observation)
+        observations.extend(_load_continuum_file(observations_file))
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if len(observations) < 2:
+        raise typer.BadParameter(
+            "provide at least two observations via --observation or --observations-file"
+        )
+
+    try:
+        payload = synthesize_complexity_continuum(observations, target=target)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    trend = payload.get("trend", {})
+    console.print(f"Continuum summary : {payload['summary']}")
+    console.print(
+        "Momentum         : {momentum} | Trend {trend} | Stability {stability}".format(
+            momentum=payload.get("momentum"),
+            trend=trend.get("classification"),
+            stability=payload.get("stability_index"),
+        )
+    )
+    if payload.get("projection"):
+        projection = payload["projection"]
+        status = projection.get("status")
+        target_value = projection.get("target")
+        eta = projection.get("eta_weeks")
+        if status == "projected" and eta is not None:
+            console.print(f"Projection        : target {target_value} in {eta} weeks")
+        elif status == "achieved":
+            console.print(f"Projection        : target {target_value} already achieved")
+        elif status == "stalled":
+            console.print(f"Projection        : stalled against target {target_value}")
+
+    observation_rows = []
+    for obs in payload.get("observations", []):
+        observation_rows.append(
+            (
+                obs.get("timestamp"),
+                obs.get("complexity"),
+                obs.get("delta", "-"),
+                obs.get("velocity", "-"),
+                obs.get("confidence"),
+                obs.get("label", "-"),
+            )
+        )
+    if observation_rows:
+        console.print(
+            _build_table(
+                ["Timestamp", "Complexity", "Δ", "Velocity", "Confidence", "Label"],
+                observation_rows,
+                title="Continuum observations",
+            )
+        )
+
+    regressions = payload.get("regressions", [])
+    if regressions:
+        console.print("Regression alerts:")
+        for event in regressions:
+            console.print(
+                f"- {event.get('timestamp')}: Δ {event.get('delta')} ({event.get('label') or 'unnamed'})"
+            )
+
+    insights = payload.get("insights", [])
+    if insights:
+        console.print("Insights:")
+        for insight in insights:
+            console.print(f"- {insight}")
+
+
+@complexity_app.command("hyperdrive")
+def complexity_hyperdrive(
+    ctx: typer.Context,
+    program_file: Path = typer.Option(
+        ..., 
+        "--program-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file describing the supercluster + continuum program inputs.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Fuse supercluster layers with continuum momentum for a hyperdrive view."""
+
+    _ensure_ctx(ctx)
+
+    try:
+        program = json.loads(program_file.read_text())
+    except json.JSONDecodeError as exc:
+        raise typer.BadParameter("program file must contain a JSON object") from exc
+    if not isinstance(program, Mapping):
+        raise typer.BadParameter("program file must contain a JSON object")
+
+    try:
+        payload = orchestrate_complexity_hyperdrive(program)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    console.print(f"Hyperdrive grade  : {payload['grade'].title()} (score {payload['score']})")
+    console.print(f"Hyperdrive summary: {payload['summary']}")
+
+    supercluster = payload.get("supercluster", {})
+    continuum = payload.get("continuum", {})
+    console.print(f"Supercluster      : {supercluster.get('summary')}")
+    console.print(f"Continuum         : {continuum.get('summary')}")
+    if continuum.get("projection"):
+        projection = continuum["projection"]
+        status = projection.get("status")
+        target = projection.get("target")
+        if status == "projected" and projection.get("eta_weeks") is not None:
+            console.print(
+                f"Continuum target  : {target} in {projection['eta_weeks']} weeks"
+            )
+        elif status == "stalled":
+            console.print(f"Continuum target  : stalled vs {target}")
+        elif status == "achieved":
+            console.print(f"Continuum target  : achieved ({target})")
+
+    insights = payload.get("insights", [])
+    if insights:
+        console.print("Insights:")
+        for insight in insights[:12]:
+            console.print(f"- {insight}")
+        remaining = len(insights) - 12
+        if remaining > 0:
+            console.print(f"… (+{remaining} additional insight(s))")
 
 
 @app.callback()
