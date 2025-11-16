@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+from collections import Counter
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
@@ -160,6 +161,95 @@ def build_passage(seed: int | None = None) -> str:
     return generate_passage(rng).render()
 
 
+def summarize_passages(passages: Sequence[FluxPassage]) -> dict:
+    """Compute aggregate information for a sequence of passages."""
+
+    summary = {
+        "total": len(passages),
+        "mood_counts": {},
+        "artifact_counts": {},
+        "time_range": {"start": None, "end": None},
+    }
+    if not passages:
+        return summary
+
+    mood_counter: Counter[str] = Counter()
+    artifact_counter: Counter[str] = Counter()
+    timestamps = []
+    for passage in passages:
+        mood_counter[passage.context.mood] += 1
+        artifact_counter[passage.context.artifact] += 1
+        timestamps.append(passage.context.timestamp)
+
+    timestamps.sort()
+    summary["mood_counts"] = dict(sorted(mood_counter.items()))
+    summary["artifact_counts"] = dict(sorted(artifact_counter.items()))
+    summary["time_range"] = {
+        "start": timestamps[0].isoformat(),
+        "end": timestamps[-1].isoformat(),
+    }
+    return summary
+
+
+def export_passages(
+    path: Path,
+    passages: Sequence[FluxPassage],
+    summary: dict,
+    *,
+    cli_format: str,
+    seed: int | None,
+    export_format: str,
+) -> None:
+    """Persist generated passages to *path* in the requested format."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    generated_at = datetime.utcnow().isoformat()
+    metadata = {
+        "generated_at": generated_at,
+        "seed": seed,
+        "cli_format": cli_format,
+        "count": len(passages),
+        "summary": summary,
+    }
+
+    if export_format == "json":
+        payload = {**metadata, "passages": [p.to_dict() for p in passages]}
+        path.write_text(json.dumps(payload, indent=2))
+        return
+
+    with path.open("w", encoding="utf-8") as handle:
+        handle.write(json.dumps({"type": "metadata", **metadata}) + "\n")
+        for index, passage in enumerate(passages, start=1):
+            handle.write(
+                json.dumps(
+                    {
+                        "type": "passage",
+                        "index": index,
+                        "payload": passage.to_dict(),
+                    }
+                )
+                + "\n"
+            )
+
+
+def format_library_listing(library: FluxLibrary) -> str:
+    """Return a human-readable representation of the available entries."""
+
+    lines = []
+    for title, values in (
+        ("Prompts", library.prompts),
+        ("Closings", library.closings),
+        ("Artifacts", library.artifacts),
+        ("Moods", library.moods),
+    ):
+        entries = list(values)
+        lines.append(f"{title} ({len(entries)} entries):")
+        for value in entries:
+            lines.append(f"  - {value}")
+        lines.append("")
+    return "\n".join(lines).strip() + "\n"
+
+
 def _positive_int(value: str) -> int:
     as_int = int(value)
     if as_int < 1:
@@ -178,9 +268,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json", "markdown"],
+        choices=["text", "json", "markdown", "journal"],
         default="text",
-        help="Render passages as plain text or JSON.",
+        help="Render passages as plain text, JSON, Markdown, or journal output.",
     )
     parser.add_argument("--mood", type=str, default=None, help="Force a specific mood from the library.")
     parser.add_argument(
@@ -195,12 +285,33 @@ def main() -> None:
         default=None,
         help="Optional JSON file describing prompts, closings, artifacts, and moods.",
     )
+    parser.add_argument(
+        "--list-library",
+        action="store_true",
+        help="Display the available library entries and exit.",
+    )
+    parser.add_argument(
+        "--export",
+        type=Path,
+        default=None,
+        help="Write generated passages to this file (JSON or JSONL).",
+    )
+    parser.add_argument(
+        "--export-format",
+        choices=["json", "jsonl"],
+        default="json",
+        help="File format used when --export is provided.",
+    )
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
     library = DEFAULT_LIBRARY
     if args.library is not None:
         library = FluxLibrary.from_json_file(args.library, fallback=DEFAULT_LIBRARY)
+
+    if args.list_library:
+        print(format_library_listing(library))
+        return
 
     passages = [
         generate_passage(
@@ -212,22 +323,41 @@ def main() -> None:
         for _ in range(args.count)
     ]
 
+    summary = summarize_passages(passages)
+
     if args.format == "json":
         payload = [passage.to_dict() for passage in passages]
         print(json.dumps(payload, indent=2))
-        return
-
-    if args.format == "markdown":
+    elif args.format == "markdown":
         for passage in passages:
             header = passage.context.render_header()
             body = f"> {passage.prompt}\n\n_{passage.closing}_"
             print(f"## {header}\n\n{body}\n")
-        return
+    elif args.format == "journal":
+        for index, passage in enumerate(passages, start=1):
+            header = passage.context.render_header()
+            print(f"### Entry {index}")
+            print(header)
+            print(f"Mood: {passage.context.mood} | Artifact: {passage.context.artifact}")
+            print(f"Prompt: {passage.prompt}")
+            print(f"Closing: {passage.closing}\n")
+        print("Summary:")
+        print(json.dumps(summary, indent=2))
+    else:
+        for index, passage in enumerate(passages):
+            if index:
+                print("\n---\n")
+            print(passage.render())
 
-    for index, passage in enumerate(passages):
-        if index:
-            print("\n---\n")
-        print(passage.render())
+    if args.export is not None:
+        export_passages(
+            args.export,
+            passages,
+            summary,
+            cli_format=args.format,
+            seed=args.seed,
+            export_format=args.export_format,
+        )
 
 
 if __name__ == "__main__":
