@@ -1,0 +1,11 @@
+{
+  "artifact": "packages/core/src/echoshell.py",
+  "measurements": [
+    {
+      "label": "v515X-baseline",
+      "sha256": "6197ede76b809aa3c5f8fc41b7c4f3ae41dc7453a6094bfc7ab48446fea02556",
+      "recorded_at": "2024-11-01T00:00:00Z",
+      "notes": "Baseline EchoShell integrity measurement captured before sovereign identity hardening."
+    }
+  ]
+}

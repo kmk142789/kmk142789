@@ -78,6 +78,7 @@ from .dotnet_sdk import build_dotnet_sdk_download_url
 from .echo_nexus_hub import EchoNexusHub, ScheduleLoopDigest, WorkerStory
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .echo_visionary_kernel import BitwisePixelEngine, EchoVisionaryKernel, WorkerBot
+from .echo_evolutionary_macro_layer import EchoEvolutionaryMacroLayer, EvolutionaryMacroSnapshot
 from .evolver import (
     CycleGuidanceFrame,
     EchoEvolver,
@@ -375,9 +376,11 @@ __all__ = [
     "BitwisePixelEngine",
     "EchoNexusHub",
     "EchoNexusPortal",
+    "EchoEvolutionaryMacroLayer",
     "EchoVisionaryKernel",
     "ImpossibleEvent",
     "ImpossibleRealityEngine",
+    "EvolutionaryMacroSnapshot",
     "InnovationForge",
     "InnovationManifest",
     "InnovationPulse",
