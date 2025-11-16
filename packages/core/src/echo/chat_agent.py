@@ -12,6 +12,7 @@ from .digital_computer import EchoComputerAssistant, ExecutionResult
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_PUZZLE_INDEX = REPO_ROOT / "data" / "puzzle_index.json"
+DEFAULT_DAILY_TASKS = REPO_ROOT / "apps" / "echo-computer" / "daily_tasks.json"
 
 
 def _to_json_compatible(value: Any) -> Any:
@@ -79,6 +80,14 @@ class FunctionRouter:
     """Deterministic rule-based router inspired by OpenAI function calls."""
 
     _PUZZLE_PATTERN = re.compile(r"puzzle\s*#?\s*(\d+)", re.IGNORECASE)
+    _FOCUS_ALIASES = {
+        "code": "Code",
+        "coding": "Code",
+        "create": "Create",
+        "creative": "Create",
+        "collaborate": "Collaborate",
+        "collaboration": "Collaborate",
+    }
 
     def route(self, message: str) -> FunctionCall:
         """Return the function call that should handle ``message``."""
@@ -91,13 +100,52 @@ class FunctionRouter:
                 arguments={"puzzle_id": int(puzzle_match.group(1))},
             )
 
-        if "launch" in normalised and ("echo.bank" in normalised or "echo bank" in normalised):
-            return FunctionCall(
-                name="launch_application",
-                arguments={"application": "echo.bank"},
-            )
+        if "launch" in normalised:
+            if "echo.bank" in normalised or "echo bank" in normalised:
+                return FunctionCall(
+                    name="launch_application",
+                    arguments={"application": "echo.bank"},
+                )
+            if "echo.computer" in normalised or "echo computer" in normalised:
+                return FunctionCall(
+                    name="launch_application",
+                    arguments={"application": "echo.computer"},
+                )
+
+        if "daily" in normalised and (
+            "task" in normalised
+            or "tasks" in normalised
+            or "invitation" in normalised
+            or "invocations" in normalised
+            or "echo computer" in normalised
+        ):
+            arguments: Dict[str, Any] = {}
+            focus = self._match_focus(normalised)
+            if focus:
+                arguments["focus"] = focus
+            limit = self._extract_limit(normalised)
+            if limit is not None:
+                arguments["limit"] = limit
+            return FunctionCall(name="daily_invitations", arguments=arguments)
 
         return FunctionCall(name="digital_computer", arguments={"prompt": message})
+
+    def _match_focus(self, text: str) -> str | None:
+        for keyword, focus in self._FOCUS_ALIASES.items():
+            if keyword in text:
+                return focus
+        return None
+
+    @staticmethod
+    def _extract_limit(text: str) -> int | None:
+        match = re.search(r"(?:top|first|show|list|pick)\s*(\d+)", text)
+        if not match:
+            return None
+        try:
+            value = int(match.group(1))
+        except ValueError:
+            return None
+        return value if value > 0 else None
 
 
 class PuzzleKnowledgeBase:
@@ -178,6 +226,69 @@ class PuzzleKnowledgeBase:
         self._entries = entries
 
 
+class DailyTaskRegistry:
+    """Expose the Echo Computer daily invitations document."""
+
+    def __init__(self, tasks_path: Path | None = None) -> None:
+        self._tasks_path = Path(tasks_path) if tasks_path else DEFAULT_DAILY_TASKS
+        self._cache: Dict[str, Any] | None = None
+        self._cache_mtime: float | None = None
+
+    def snapshot(self, *, focus: str | None = None, limit: int | None = None) -> Dict[str, Any]:
+        payload = self._load_payload()
+        tasks = list(payload.get("tasks", []))
+        total_tasks = len(tasks)
+
+        filtered = tasks
+        focus_label: str | None = None
+        if focus:
+            focus_normalised = focus.lower()
+            filtered = [
+                task
+                for task in tasks
+                if str(task.get("focus", "")).lower() == focus_normalised
+            ]
+            focus_label = focus
+
+        available = len(filtered)
+        selection = filtered
+        if limit is not None and limit > 0:
+            selection = filtered[:limit]
+
+        return {
+            "updated": payload.get("updated"),
+            "tasks": selection,
+            "total_tasks": total_tasks,
+            "available_tasks": available,
+            "focus": focus_label,
+            "limit": limit,
+            "source": str(self._tasks_path),
+        }
+
+    def _load_payload(self) -> Dict[str, Any]:
+        path = self._tasks_path
+        try:
+            mtime = path.stat().st_mtime
+        except FileNotFoundError:
+            self._cache = {"updated": None, "tasks": []}
+            self._cache_mtime = None
+            return self._cache
+
+        if self._cache is not None and self._cache_mtime == mtime:
+            return self._cache
+
+        with path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+
+        if not isinstance(payload, dict):
+            payload = {"updated": None, "tasks": []}
+        payload.setdefault("tasks", [])
+
+        self._cache = payload
+        self._cache_mtime = mtime
+        return payload
+
+
 class EchoChatAgent:
     """Router-driven chatbot agent that exposes backend functions to chat UIs."""
 
@@ -187,10 +298,12 @@ class EchoChatAgent:
         assistant: EchoComputerAssistant | None = None,
         router: FunctionRouter | None = None,
         knowledge_base: PuzzleKnowledgeBase | None = None,
+        task_registry: DailyTaskRegistry | None = None,
     ) -> None:
         self._assistant = assistant or EchoComputerAssistant()
         self._router = router or FunctionRouter()
         self._knowledge_base = knowledge_base or PuzzleKnowledgeBase()
+        self._task_registry = task_registry or DailyTaskRegistry()
 
         self._functions: Dict[str, FunctionSpec] = {
             "solve_puzzle": FunctionSpec(
@@ -220,7 +333,7 @@ class EchoChatAgent:
                     "properties": {
                         "application": {
                             "type": "string",
-                            "enum": ["echo.bank"],
+                            "enum": ["echo.bank", "echo.computer"],
                             "description": "Canonical short-name of the application to launch.",
                         }
                     },
@@ -229,7 +342,36 @@ class EchoChatAgent:
                 handler=self._handle_launch_application,
                 metadata={
                     "category": "operations",
-                    "examples": ["launch echo.bank"],
+                    "examples": ["launch echo.bank", "launch echo computer"],
+                },
+            ),
+            "daily_invitations": FunctionSpec(
+                name="daily_invitations",
+                description="Surface Echo Computer daily invitation tasks with optional filters.",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "focus": {
+                            "type": "string",
+                            "enum": ["Code", "Create", "Collaborate"],
+                            "description": "Optional focus filter to only show Code, Create, or Collaborate invitations.",
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 10,
+                            "description": "Restrict the response to the first N invitations after filtering.",
+                        },
+                    },
+                },
+                handler=self._handle_daily_invitations,
+                metadata={
+                    "category": "echo_computer",
+                    "examples": [
+                        "show daily echo computer tasks",
+                        "daily code invitation",
+                        "list top 2 daily tasks",
+                    ],
                 },
             ),
             "digital_computer": FunctionSpec(
@@ -319,27 +461,87 @@ class EchoChatAgent:
 
     def _handle_launch_application(self, call: FunctionCall, _: CommandContext) -> CommandResponse:
         application = str(call.arguments.get("application", "")).lower()
-        if application != "echo.bank":
+        if application == "echo.bank":
+            app_root = REPO_ROOT / "apps" / "transparency.bank"
+            message = "Run `npm install` followed by `npm run dev` inside apps/transparency.bank."
+            data = {
+                "application": "echo.bank",
+                "path": str(app_root.resolve()),
+                "commands": ["npm install", "npm run dev"],
+                "entrypoint": "server.js",
+            }
             return CommandResponse(
                 function="launch_application",
-                message=f"Application {application!r} is not recognised.",
-                data={"application": application, "status": "unknown"},
-                metadata={"confidence": 0.0},
+                message=message,
+                data=data,
+                metadata={"confidence": 0.9},
             )
 
-        app_root = REPO_ROOT / "apps" / "transparency.bank"
-        message = "Run `npm install` followed by `npm run dev` inside apps/transparency.bank."
-        data = {
-            "application": "echo.bank",
-            "path": str(app_root.resolve()),
-            "commands": ["npm install", "npm run dev"],
-            "entrypoint": "server.js",
-        }
+        if application == "echo.computer":
+            app_root = REPO_ROOT / "apps" / "echo-computer"
+            message = (
+                "Install dependencies then run `npm run apps:echo-computer` and open http://localhost:8080."
+            )
+            data = {
+                "application": "echo.computer",
+                "path": str(app_root.resolve()),
+                "commands": ["npm install", "npm run apps:echo-computer"],
+                "entrypoint": "server.js",
+                "ui": "http://localhost:8080",
+            }
+            return CommandResponse(
+                function="launch_application",
+                message=message,
+                data=data,
+                metadata={"confidence": 0.9},
+            )
+
         return CommandResponse(
             function="launch_application",
+            message=f"Application {application!r} is not recognised.",
+            data={"application": application, "status": "unknown"},
+            metadata={"confidence": 0.0},
+        )
+
+    def _handle_daily_invitations(self, call: FunctionCall, _: CommandContext) -> CommandResponse:
+        focus = call.arguments.get("focus")
+        limit = call.arguments.get("limit")
+        snapshot = self._task_registry.snapshot(
+            focus=str(focus) if focus else None,
+            limit=int(limit) if isinstance(limit, int) else None,
+        )
+        tasks = snapshot.get("tasks", [])
+        focus_label = snapshot.get("focus")
+        updated = snapshot.get("updated")
+        limit_value = snapshot.get("limit")
+
+        if tasks:
+            focus_fragment = f" ({focus_label})" if focus_label else ""
+            limit_fragment = f", first {limit_value}" if limit_value else ""
+            message = f"Echo Computer daily invitations{focus_fragment} ready{limit_fragment}."
+            confidence = 0.95
+        else:
+            message = "No Echo Computer daily invitations were found."
+            confidence = 0.2
+
+        metadata = {
+            "confidence": confidence,
+            "updated": updated,
+            "focus": focus_label,
+            "limit": limit_value,
+        }
+        data = {
+            "tasks": tasks,
+            "total_tasks": snapshot.get("total_tasks", 0),
+            "available_tasks": snapshot.get("available_tasks", 0),
+            "source": snapshot.get("source"),
+        }
+
+        return CommandResponse(
+            function="daily_invitations",
             message=message,
             data=data,
-            metadata={"confidence": 0.9},
+            metadata=metadata,
         )
 
     def _handle_digital_computer(self, call: FunctionCall, context: CommandContext) -> CommandResponse:
@@ -393,6 +595,7 @@ class EchoChatAgent:
 __all__ = [
     "CommandContext",
     "CommandResponse",
+    "DailyTaskRegistry",
     "EchoChatAgent",
     "FunctionCall",
     "FunctionRouter",
