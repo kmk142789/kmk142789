@@ -224,6 +224,17 @@ from .sanctuary_sentinel import (
     SentinelSignature,
     build_default_signatures,
 )
+from .self_model import (
+    IntentResolution,
+    IntentResolver,
+    MemorySnapshot,
+    MemoryUnifier,
+    ObserverEvent,
+    ObserverSnapshot,
+    ObserverSubsystem,
+    SelfModel,
+    SelfModelSnapshot,
+)
 from .quantam_features import compute_quantam_feature
 from .quantum_features import QuantumFeature, generate_quantum_features
 from .quantam_features import (
@@ -501,4 +512,13 @@ __all__ = [
     "ScoreFragment",
     "OrbitalPoem",
     "generate_orbital_poem",
+    "ObserverSubsystem",
+    "ObserverSnapshot",
+    "ObserverEvent",
+    "MemoryUnifier",
+    "MemorySnapshot",
+    "IntentResolver",
+    "IntentResolution",
+    "SelfModel",
+    "SelfModelSnapshot",
 ]
