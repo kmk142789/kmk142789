@@ -127,6 +127,7 @@ from .progressive_features import (
     evaluate_operational_readiness,
     forecast_portfolio_throughput,
     generate_numeric_intelligence,
+    progressive_complexity_suite,
     simulate_delivery_timeline,
 )
 
@@ -1602,6 +1603,154 @@ def complexity_timeline(
             title="Delivery timeline",
         )
     )
+
+
+@complexity_app.command("cascade")
+def complexity_cascade(
+    ctx: typer.Context,
+    level: int = typer.Option(
+        1,
+        "--level",
+        "-l",
+        min=1,
+        max=3,
+        help="How many progressive stages to execute (1=numbers, 2=+text, 3=+timeline).",
+    ),
+    count: int = typer.Option(8, "--count", "-c", help="Fibonacci terms for the numeric stage."),
+    text: List[str] = typer.Option(
+        [],
+        "--text",
+        "-t",
+        help="Inline text snippet for the text stage (repeatable).",
+    ),
+    file: List[Path] = typer.Option(
+        [],
+        "--file",
+        "-f",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="Document path for the text stage (repeatable).",
+    ),
+    milestone: List[str] = typer.Option(
+        [],
+        "--milestone",
+        "-m",
+        help="Milestone formatted as 'Name:duration[:confidence]' for level 3.",
+    ),
+    plan_file: Optional[Path] = typer.Option(
+        None,
+        "--plan-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing an array of milestone objects for level 3.",
+    ),
+    start: Optional[str] = typer.Option(
+        None,
+        "--start",
+        help="Optional ISO 8601 timestamp for the timeline stage.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Execute sequential complexity stages, each more advanced than the last."""
+
+    _ensure_ctx(ctx)
+    documents: List[str] | None = None
+    if level >= 2 or text or file:
+        try:
+            documents = _load_text_documents(text, file)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    plan: list[dict[str, object]] = []
+    if level >= 3 or plan_file or milestone:
+        try:
+            plan = _load_plan_file(plan_file) + _parse_milestone_specs(milestone)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    start_dt = _parse_iso_timestamp(start)
+    try:
+        payload = progressive_complexity_suite(
+            level,
+            numeric_terms=count,
+            documents=documents,
+            milestones=plan,
+            start=start_dt,
+        )
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    console.print(payload["summary"])
+    if payload["insights"]:
+        insight_lines = [f"- {insight}" for insight in payload["insights"]]
+        console.print("Insights:\n" + "\n".join(insight_lines))
+
+    for stage in payload["stages"]:
+        console.print("\n" + stage["description"])
+        if stage["stage"] == "numbers":
+            numbers = stage["payload"]
+            rows = [
+                ("Total", numbers["stats"]["total"]),
+                ("Mean", round(numbers["stats"]["mean"], 2)),
+                ("Max", numbers["stats"]["max"]),
+                ("Min", numbers["stats"]["min"]),
+            ]
+            console.print(
+                _build_table(["Metric", "Value"], rows, title="Numeric intelligence summary")
+            )
+        elif stage["stage"] == "text":
+            text_stage = stage["payload"]
+            summary = (
+                f"Documents analysed: {text_stage['documents']} | "
+                f"Vocabulary: {text_stage['vocabulary']} | "
+                f"Lexical density: {text_stage['lexical_density']}"
+            )
+            console.print(summary)
+            token_rows = [
+                (token_info["token"], token_info["count"])
+                for token_info in text_stage.get("top_tokens", [])
+            ]
+            if token_rows:
+                console.print(
+                    _build_table(["Token", "Occurrences"], token_rows, title="Top tokens")
+                )
+        elif stage["stage"] == "timeline":
+            timeline_stage = stage["payload"]
+            summary = (
+                f"Timeline: {timeline_stage['start']} → {timeline_stage['end']} "
+                f"({timeline_stage['total_days']} days)"
+            )
+            console.print(summary)
+            rows = [
+                (
+                    entry["name"],
+                    entry["start"],
+                    entry["end"],
+                    entry["buffer_end"],
+                    f"{entry['duration_days']} d",
+                    f"{entry['confidence']:.2f}",
+                )
+                for entry in timeline_stage["timeline"]
+            ]
+            console.print(
+                _build_table(
+                    ["Milestone", "Start", "End", "Buffer end", "Duration", "Confidence"],
+                    rows,
+                    title="Timeline stage",
+                )
+            )
 
 
 @app.callback()
