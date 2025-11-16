@@ -1,0 +1,57 @@
+{
+  "cycles": 2,
+  "memory": {
+    "path": "out/hyperdimensional_resonance_memory.json"
+  },
+  "layers": [
+    {
+      "name": "Spectral Bloom",
+      "type": "spectral",
+      "weight": 1.0,
+      "config": {
+        "threshold": 0.08
+      }
+    },
+    {
+      "name": "Mythic Loom",
+      "type": "mythic",
+      "config": {
+        "glyph": "∇⊸≋∇",
+        "mythic_threshold": 0.1
+      }
+    },
+    {
+      "name": "Strategic Vector",
+      "type": "strategic",
+      "weight": 1.4
+    }
+  ],
+  "pulses": [
+    {
+      "id": "pulse-sovereign",
+      "intent": "sovereign-grid-expansion",
+      "priority": 3,
+      "tags": ["init"],
+      "payload": {
+        "summary": "Extend the sovereign resonance grid toward the aurora basin.",
+        "signals": {
+          "north": "High aurora frequency",
+          "south": "Stabilized lattice"
+        }
+      }
+    },
+    {
+      "id": "pulse-harmonic",
+      "intent": "harmonic-civilization-sprint",
+      "priority": 1,
+      "payload": {
+        "summary": "Prototype harmonic micro-societies in three rings.",
+        "signals": {
+          "ring-alpha": "Mythogenic uplift",
+          "ring-beta": "Logistical clarity"
+        }
+      }
+    }
+  ]
+}
+
