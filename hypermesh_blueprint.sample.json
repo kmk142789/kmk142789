@@ -1,0 +1,20 @@
+{
+  "seed": "solstice",
+  "nodes": [
+    {"key": "solstice", "tone": 0.15, "volatility": 0.25, "metadata": {"channel": "sol"}},
+    {"key": "lattice", "tone": 0.6, "volatility": 0.2, "metadata": {"channel": "earth"}},
+    {"key": "chorus", "tone": -0.3, "volatility": 0.4, "metadata": {"channel": "water"}},
+    {"key": "signal", "tone": 0.9, "volatility": 0.35, "metadata": {"channel": "fire"}},
+    {"key": "satellite", "tone": 0.2, "volatility": 0.15, "metadata": {"channel": "ether"}}
+  ],
+  "edges": [
+    {"source": "solstice", "target": "lattice", "weight": 0.9, "coherence": 0.75},
+    {"source": "lattice", "target": "chorus", "weight": 0.8, "coherence": 0.6},
+    {"source": "chorus", "target": "signal", "weight": 1.2, "coherence": 0.5},
+    {"source": "signal", "target": "satellite", "weight": 1.1, "coherence": 0.9},
+    {"source": "satellite", "target": "solstice", "weight": 0.7, "coherence": 0.4},
+    {"source": "solstice", "target": "chorus", "weight": 0.6, "coherence": 0.5},
+    {"source": "chorus", "target": "solstice", "weight": 0.7, "coherence": 0.35},
+    {"source": "lattice", "target": "signal", "weight": 0.9, "coherence": 0.85}
+  ]
+}
