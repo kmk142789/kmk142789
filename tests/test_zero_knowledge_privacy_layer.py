@@ -176,9 +176,30 @@ def test_macro_layer_wiring_with_privacy(tmp_path: Path) -> None:
         event_hash="hash-1",
         payload_secret="payload",
     )
-    snapshot = macro.orchestrate(proof_claim=claim, circuit="event_commitment")
+    snapshot = macro.orchestrate(
+        proof_claim=claim,
+        circuit="event_commitment",
+        intent_query="stability",
+        intent_tags=["pulse"],
+        desired_outcome="steady",
+    )
 
     assert snapshot.latest_proof is not None
     assert snapshot.privacy["commitments"]
     assert snapshot.macro_index > 0
     assert snapshot.genesis_state["coordination_index"] > 0
+    assert snapshot.intent_alignment["topic"] == "stability"
+
+    auto_snapshot = macro.orchestrate(
+        auto_prove=True,
+        capability_subject="orchestrator",
+        capability_token="cap-123",
+        intent_query="stability",
+        intent_tags=["pulse"],
+        desired_outcome="steady",
+        policy_context={"lane": "docs"},
+    )
+
+    assert auto_snapshot.latest_proof is not None
+    assert auto_snapshot.latest_proof["circuit"] == "capability"
+    assert auto_snapshot.intent_alignment["topic"] == "stability"

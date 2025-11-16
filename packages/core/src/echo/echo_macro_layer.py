@@ -1,12 +1,15 @@
 """Macro-layer coordinator that aligns Echo subsystems and privacy controls."""
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
+from uuid import uuid4
 
 from .echo_genesis_coordinator import EchoGenesisCoordinator
 from .genesis_resonance_layer import GenesisResonanceLayer
-from .self_model import SelfModel, SelfModelSnapshot
+from .self_model import IntentResolution, SelfModel, SelfModelSnapshot
 from .privacy.zk_layer import ProofClaim, ProofResult, ZeroKnowledgePrivacyLayer
 
 
@@ -21,6 +24,7 @@ class MacroLayerSnapshot:
     self_model: SelfModelSnapshot
     privacy: Mapping[str, Any]
     latest_proof: Mapping[str, Any] | None
+    intent_alignment: Mapping[str, Any]
 
 
 class EchoMacroLayer:
@@ -45,16 +49,49 @@ class EchoMacroLayer:
         proof_claim: ProofClaim | None = None,
         circuit: str | None = None,
         backend: str | None = None,
+        intent_query: str | None = None,
+        intent_tags: Sequence[str] | None = None,
+        desired_outcome: str | None = None,
+        auto_prove: bool = False,
+        capability_subject: str | None = None,
+        capability_token: str | None = None,
+        policy_context: Mapping[str, Any] | None = None,
     ) -> MacroLayerSnapshot:
         proof_result: ProofResult | None = None
-        if proof_claim and circuit and self._privacy_layer:
-            proof_result = self._privacy_layer.prove(circuit, proof_claim, backend=backend)
         genesis_state = self._coordinator.cycle()
         resonance_state = self._resonance.snapshot()
-        self_snapshot = self._self_model.reflect()
+        self_snapshot = self._self_model.reflect(
+            query=intent_query,
+            tags=intent_tags,
+            desired_outcome=desired_outcome,
+        )
+        if (
+            proof_result is None
+            and proof_claim is not None
+            and circuit
+            and self._privacy_layer
+        ):
+            proof_result = self._privacy_layer.prove(circuit, proof_claim, backend=backend)
+        elif (
+            proof_result is None
+            and auto_prove
+            and self._privacy_layer
+            and capability_subject
+            and capability_token
+        ):
+            intent_resolution = self_snapshot.intent
+            adaptive_claim = self._adaptive_capability_claim(
+                subject=capability_subject,
+                capability_token=capability_token,
+                intent_resolution=intent_resolution,
+                resonance_state=resonance_state,
+                policy_context=policy_context,
+            )
+            proof_result = self._privacy_layer.prove("capability", adaptive_claim, backend=backend)
         privacy_state = self._privacy_state()
         macro_index = self._macro_index(genesis_state, resonance_state, self_snapshot, privacy_state)
         latest = self._latest_proof_summary(proof_result)
+        intent_alignment = self._intent_alignment(self_snapshot.intent, resonance_state, latest)
         return MacroLayerSnapshot(
             generated_at=genesis_state["generated_at"],
             macro_index=macro_index,
@@ -63,6 +100,7 @@ class EchoMacroLayer:
             self_model=self_snapshot,
             privacy=privacy_state,
             latest_proof=latest,
+            intent_alignment=intent_alignment,
         )
 
     # ------------------------------------------------------------------
@@ -101,3 +139,63 @@ class EchoMacroLayer:
             "backend": proof_result.backend,
             "verified": proof_result.verified,
         }
+
+    def _intent_alignment(
+        self,
+        intent_resolution: IntentResolution,
+        resonance_state: Mapping[str, Any],
+        latest_proof: Mapping[str, Any] | None,
+    ) -> Mapping[str, Any]:
+        intent = intent_resolution.intent
+        return {
+            "topic": getattr(intent, "topic", None),
+            "confidence": intent_resolution.confidence,
+            "rationale": intent_resolution.rationale,
+            "resonance_signal": resonance_state.get("signal"),
+            "recommendations": list(resonance_state.get("recommendations", [])),
+            "proof": latest_proof,
+        }
+
+    def _adaptive_capability_claim(
+        self,
+        *,
+        subject: str,
+        capability_token: str,
+        intent_resolution: IntentResolution,
+        resonance_state: Mapping[str, Any],
+        policy_context: Mapping[str, Any] | None,
+    ) -> ProofClaim:
+        if not intent_resolution.intent:
+            raise RuntimeError("intent resolution missing intent; cannot craft adaptive claim")
+        action = intent_resolution.intent.topic or "macro-action"
+        policy_digest = self._policy_digest(intent_resolution, resonance_state, policy_context)
+        return ProofClaim.capability_claim(
+            claim_id=f"macro-{uuid4().hex}",
+            subject=subject,
+            action=action,
+            policy_digest=policy_digest,
+            capability_token=capability_token,
+        )
+
+    def _policy_digest(
+        self,
+        intent_resolution: IntentResolution,
+        resonance_state: Mapping[str, Any],
+        policy_context: Mapping[str, Any] | None,
+    ) -> str:
+        payload = {
+            "intent": {
+                "topic": getattr(intent_resolution.intent, "topic", None),
+                "desired_outcome": getattr(intent_resolution.intent, "desired_outcome", None),
+                "priority": getattr(intent_resolution.intent, "priority", None),
+                "confidence": intent_resolution.confidence,
+            },
+            "resonance": {
+                "signal": resonance_state.get("signal"),
+                "recommendations": resonance_state.get("recommendations", []),
+                "lane_gap": resonance_state.get("lane_gap"),
+            },
+            "context": dict(policy_context or {}),
+        }
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        return hashlib.blake2b(encoded, digest_size=32).hexdigest()
