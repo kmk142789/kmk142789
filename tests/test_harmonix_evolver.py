@@ -40,6 +40,9 @@ def test_run_cycle_payload_matches_schema_keys():
     assert metadata["next_steps"]
     assert metadata["next_steps"][0]["priority"] in {"high", "medium", "low"}
     assert metadata["next_steps"] == state.next_steps
+    assert metadata["resonance_trajectory"] == state.resonance_trajectory
+    assert metadata["resonance_trajectory"]["window"] >= 1
+    assert metadata["resonance_trajectory"]["history_length"] >= 1
     assert state.events, "Events should log the harmonix operations"
 
 
@@ -56,6 +59,7 @@ def test_artifact_text_contains_core_sections():
     assert "Propagation Events:" in artifact
     assert "Constellation Map:" in artifact
     assert "Next Steps:" in artifact
+    assert "Resonance Trajectory:" in artifact
 
 
 def test_propagate_network_supports_live_mode() -> None:
@@ -122,3 +126,19 @@ def test_cli_can_emit_propagation_timeline() -> None:
     assert snapshot["timeline_length"] == len(snapshot["timeline"])
     assert snapshot["mode"] == "simulated"
     assert payload["metadata"]["propagation_snapshot"]["timeline"]
+
+
+def test_cli_supports_trajectory_window() -> None:
+    cmd = [
+        sys.executable,
+        "-m",
+        "cognitive_harmonics.harmonix_evolver",
+        "--trajectory-window",
+        "2",
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    payload = json.loads(result.stdout)
+
+    trajectory = payload["metadata"]["resonance_trajectory"]
+    assert trajectory["window"] == 2
+    assert trajectory["history_length"] >= 1

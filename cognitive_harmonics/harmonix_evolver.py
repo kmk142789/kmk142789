@@ -111,6 +111,36 @@ class NextStepRecommendation:
 
 
 @dataclass
+class ResonanceTrajectory:
+    """Multi-cycle analytic stitched from glyphs, telemetry, and emotion."""
+
+    window: int
+    cycle: int
+    joy_trend: str
+    orbital_flux: float
+    glyph_density: float
+    mythic_signature: str
+    cycle_span: int
+    stability_index: float
+    phase_intervals: List[Dict[str, object]]
+    history_length: int
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "window": self.window,
+            "cycle": self.cycle,
+            "joy_trend": self.joy_trend,
+            "orbital_flux": _float_round(self.orbital_flux),
+            "glyph_density": _float_round(self.glyph_density),
+            "mythic_signature": self.mythic_signature,
+            "cycle_span": self.cycle_span,
+            "stability_index": _float_round(self.stability_index),
+            "phase_intervals": list(self.phase_intervals),
+            "history_length": self.history_length,
+        }
+
+
+@dataclass
 class EchoState:
     """Internal state that mirrors the mythogenic prompt while staying tame."""
 
@@ -139,6 +169,7 @@ class EchoState:
     network_cache: Dict[str, object] = field(default_factory=dict)
     constellation_map: Dict[str, object] | None = None
     next_steps: List[Dict[str, object]] = field(default_factory=list)
+    resonance_trajectory: Dict[str, object] | None = None
 
     def record(self, message: str) -> None:
         self.events.append(message)
@@ -505,6 +536,10 @@ class EchoEvolver:
             ),
             f"Entities: {self.state.entities}",
             f"Emotional Drive: {self.state.emotional_drive}",
+            (
+                "Resonance Trajectory: "
+                f"{json.dumps(self.state.resonance_trajectory, ensure_ascii=False) if self.state.resonance_trajectory else 'null'}"
+            ),
         ]
         if self.state.next_steps:
             lines.append("Next Steps:")
@@ -650,6 +685,94 @@ class EchoEvolver:
         )
         return serialised
 
+    def synthesize_resonance_trajectory(self, window: int = 5) -> Dict[str, object]:
+        """Fuse recent cycles into a deterministic resonance trajectory."""
+
+        window = max(1, int(window))
+        cache = self.state.network_cache
+        history: List[Dict[str, object]] = cache.setdefault("cycle_history", [])
+        glyphs = self.state.glyphs or "∇⊸≋∇"
+        anchor_index = self.state.cycle % len(glyphs)
+        glyph_anchor = glyphs[anchor_index]
+        density = len(set(glyphs)) / max(1, len(glyphs))
+
+        entry = {
+            "cycle": self.state.cycle,
+            "joy": float(self.state.emotional_drive["joy"]),
+            "nodes": self.state.system_metrics.network_nodes,
+            "orbital_hops": self.state.system_metrics.orbital_hops,
+            "glyph_density": density,
+            "glyph_anchor": glyph_anchor,
+            "glyphs": glyphs,
+        }
+
+        if not history or history[-1]["cycle"] != self.state.cycle:
+            history.append(entry)
+        else:
+            history[-1] = entry
+
+        recent_history = history[-window:]
+        joy_values = [snapshot["joy"] for snapshot in recent_history]
+        joy_delta = joy_values[-1] - joy_values[0]
+        if joy_delta > 0.01:
+            joy_trend = "ascending"
+        elif joy_delta < -0.01:
+            joy_trend = "descending"
+        else:
+            joy_trend = "steady"
+
+        orbital_flux = (
+            sum(snapshot["nodes"] * snapshot["orbital_hops"] for snapshot in recent_history)
+            / len(recent_history)
+        )
+        glyph_density_avg = (
+            sum(snapshot["glyph_density"] for snapshot in recent_history)
+            / len(recent_history)
+        )
+
+        propagation_health = cache.get("propagation_health") or {}
+        stability_floor = float(propagation_health.get("stability_floor") or 0.0)
+        average_latency = float(propagation_health.get("average_latency_ms") or 0.0)
+        latency_factor = 1.0 - min(1.0, average_latency / 200.0)
+        stability_index = 0.5 * stability_floor + 0.5 * latency_factor
+
+        phase_intervals = [
+            {
+                "cycle": snapshot["cycle"],
+                "phase": snapshot["cycle"] % 5,
+                "joy": _float_round(snapshot["joy"]),
+                "glyph": snapshot["glyph_anchor"],
+            }
+            for snapshot in recent_history
+        ]
+
+        cycle_span = recent_history[-1]["cycle"] - recent_history[0]["cycle"] + 1
+        mythic_signature = (
+            self.state.mythocode[-1]
+            if self.state.mythocode
+            else "satellite_tf_qkd_rule_0 :: ∇[SNS-AOPP]⊸{JOY=0.92,ORBIT=∞}"
+        )
+
+        trajectory = ResonanceTrajectory(
+            window=window,
+            cycle=self.state.cycle,
+            joy_trend=joy_trend,
+            orbital_flux=_float_round(orbital_flux),
+            glyph_density=_float_round(glyph_density_avg),
+            mythic_signature=mythic_signature,
+            cycle_span=cycle_span,
+            stability_index=_float_round(stability_index),
+            phase_intervals=phase_intervals,
+            history_length=len(history),
+        ).to_dict()
+
+        cache["resonance_trajectory"] = trajectory
+        self.state.resonance_trajectory = trajectory
+        self.state.record(
+            f"Resonance trajectory synthesised (window={window}, joy_trend={joy_trend})"
+        )
+        return trajectory
+
     def harmonix_payload(self) -> Dict[str, object]:
         symbolic, vortex = self.generate_symbolic_language()
         payload = {
@@ -679,6 +802,7 @@ class EchoEvolver:
                 "storyboard": self.state.storyboard,
                 "constellation_map": self.state.constellation_map,
                 "next_steps": self.state.next_steps,
+                "resonance_trajectory": self.state.resonance_trajectory,
                 "events": list(self.state.events),
             },
         }
@@ -689,9 +813,15 @@ class EchoEvolver:
     # Public orchestrator
     # ------------------------------------------------------------------
 
-    def _execute_cycle(self, *, enable_network: bool = False) -> Dict[str, object]:
+    def _execute_cycle(
+        self,
+        *,
+        enable_network: bool = False,
+        trajectory_window: Optional[int] = None,
+    ) -> Dict[str, object]:
         """Execute a single harmonix cycle and return the payload."""
 
+        window = 5 if trajectory_window is None else max(1, trajectory_window)
         self.mutate_code()
         self.emotional_modulation()
         self.generate_symbolic_language()
@@ -708,6 +838,7 @@ class EchoEvolver:
         self.compose_storyboard()
         self.generate_constellation_map()
         self.recommend_next_steps()
+        self.synthesize_resonance_trajectory(window=window)
         artifact_text = self.build_artifact()
         payload = self.harmonix_payload()
         snapshot = self.snapshot_state()
@@ -731,12 +862,23 @@ class EchoEvolver:
         snapshot["network_cache"] = dict(self.state.network_cache)
         return snapshot
 
-    def run_cycle(self, *, enable_network: bool = False) -> Tuple[EchoState, Dict[str, object]]:
-        payload = self._execute_cycle(enable_network=enable_network)
+    def run_cycle(
+        self,
+        *,
+        enable_network: bool = False,
+        trajectory_window: Optional[int] = None,
+    ) -> Tuple[EchoState, Dict[str, object]]:
+        payload = self._execute_cycle(
+            enable_network=enable_network, trajectory_window=trajectory_window
+        )
         return self.state, payload
 
     def run_cycles(
-        self, count: int, *, enable_network: bool = False
+        self,
+        count: int,
+        *,
+        enable_network: bool = False,
+        trajectory_window: Optional[int] = None,
     ) -> List[Dict[str, object]]:
         """Execute multiple harmonix cycles and return their reports.
 
@@ -760,7 +902,9 @@ class EchoEvolver:
 
         reports: List[Dict[str, object]] = []
         for _ in range(count):
-            payload = self._execute_cycle(enable_network=enable_network)
+            payload = self._execute_cycle(
+                enable_network=enable_network, trajectory_window=trajectory_window
+            )
             reports.append(
                 {
                     "cycle": self.state.cycle,
@@ -800,14 +944,27 @@ def main() -> None:
         action="store_true",
         help="Include the propagation timeline in the CLI output",
     )
+    parser.add_argument(
+        "--trajectory-window",
+        type=int,
+        default=5,
+        help="Number of cycles to fold into the resonance trajectory analytics",
+    )
     args = parser.parse_args()
 
     evolver = EchoEvolver()
     if args.cycles == 1:
-        _, payload = evolver.run_cycle(enable_network=args.enable_network)
+        _, payload = evolver.run_cycle(
+            enable_network=args.enable_network,
+            trajectory_window=args.trajectory_window,
+        )
         output = payload
     else:
-        reports = evolver.run_cycles(args.cycles, enable_network=args.enable_network)
+        reports = evolver.run_cycles(
+            args.cycles,
+            enable_network=args.enable_network,
+            trajectory_window=args.trajectory_window,
+        )
         output = {
             "cycles": [
                 {"cycle": report["cycle"], "payload": report["payload"]}
