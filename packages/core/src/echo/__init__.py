@@ -196,7 +196,14 @@ from .echovm import (
     register_default_syscalls as register_echovm_syscalls,
     register_devices as register_echovm_devices,
 )
-from .memory import JsonMemoryStore
+from .memory import (
+    JsonMemoryStore,
+    ShadowDecisionAttestation,
+    ShadowMemoryManager,
+    ShadowMemoryPolicy,
+    ShadowMemoryRecord,
+    ShadowMemorySnapshot,
+)
 from .meta_causal import MetaCausalAwarenessEngine
 from .meta_evolution_charter import MetaEvolutionCharter
 from .moonshot import MoonshotLens, MoonshotReport, PlanSummary, PulseSummary, WishSummary
@@ -383,6 +390,11 @@ __all__ = [
     "launch_portal",
     "render_prompt",
     "JsonMemoryStore",
+    "ShadowDecisionAttestation",
+    "ShadowMemoryManager",
+    "ShadowMemoryPolicy",
+    "ShadowMemoryRecord",
+    "ShadowMemorySnapshot",
     "BridgeSignals",
     "BridgeTuning",
     "EchoBridgeHarmonix",

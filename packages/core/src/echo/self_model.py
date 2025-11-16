@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Callable, Deque, Iterable, Mapping, MutableMapping, Sequence
 
 from .memory.analytics import MemoryAnalytics
+from .memory.shadow import ShadowMemoryManager
 from .memory.store import ExecutionContext, JsonMemoryStore
 from .semantic_negotiation import NegotiationIntent
 
@@ -220,16 +221,26 @@ class IntentResolution:
     confidence: float
     rationale: str
     candidates: list[Mapping[str, object]] = field(default_factory=list)
+    shadow_attestation: "ShadowDecisionAttestation" | None = None
 
 
 class IntentResolver:
     """Score intents against natural language prompts and metadata."""
 
-    def __init__(self, intents: Iterable[NegotiationIntent] | None = None) -> None:
+    def __init__(
+        self,
+        intents: Iterable[NegotiationIntent] | None = None,
+        *,
+        shadow_memory: ShadowMemoryManager | None = None,
+    ) -> None:
         self._intents = list(intents or [])
+        self._shadow_memory = shadow_memory
 
     def register(self, intent: NegotiationIntent) -> None:
         self._intents.append(intent)
+
+    def attach_shadow_memory(self, manager: ShadowMemoryManager) -> None:
+        self._shadow_memory = manager
 
     def resolve(
         self,
@@ -244,6 +255,8 @@ class IntentResolver:
         query_tokens = _tokenize(query)
         query_tokens.update(_tokenize(" ".join(tags)) if tags else set())
         desired_tokens = _tokenize(desired_outcome)
+        if self._shadow_memory:
+            query_tokens.update(self._shadow_memory.intent_tokens())
 
         scored: list[tuple[NegotiationIntent, float, str]] = []
         for intent in self._intents:
@@ -260,11 +273,17 @@ class IntentResolver:
             for intent, score, reason in scored
         ]
         rationale = best[2]
+        attestation = None
+        if self._shadow_memory:
+            attestation = self._shadow_memory.attest_influence(
+                decision_id=best[0].topic
+            )
         return IntentResolution(
             intent=best[0],
             confidence=round(best[1], 4),
             rationale=rationale,
             candidates=candidates,
+            shadow_attestation=attestation,
         )
 
     def _score_intent(
@@ -309,6 +328,7 @@ class SelfModelSnapshot:
     memory: MemorySnapshot
     intent: IntentResolution
     diagnostics: Mapping[str, object]
+    shadow_memory: Mapping[str, object] | None = None
 
 
 class SelfModel:
@@ -322,6 +342,7 @@ class SelfModel:
         *,
         clock: Callable[[], datetime] = _utc_now,
         privacy_layer: "ZeroKnowledgePrivacyLayer" | None = None,
+        shadow_memory_manager: ShadowMemoryManager | None = None,
     ) -> None:
         self._observer = observer
         self._memory = memory_unifier
@@ -329,6 +350,9 @@ class SelfModel:
         self._clock = clock
         self._privacy_layer = privacy_layer
         self._proof_cache: list["ProofResult"] = []
+        self._shadow_memory = shadow_memory_manager
+        if self._shadow_memory:
+            self._intent.attach_shadow_memory(self._shadow_memory)
 
     @property
     def observer(self) -> ObserverSubsystem:
@@ -361,6 +385,14 @@ class SelfModel:
             "memory_coverage": memory_snapshot.coverage,
             "intent_confidence": intent_resolution.confidence,
         }
+        shadow_snapshot_dict = None
+        if self._shadow_memory:
+            shadow_snapshot = self._shadow_memory.snapshot()
+            shadow_snapshot_dict = shadow_snapshot.as_dict()
+            diagnostics["shadow_memory_active"] = shadow_snapshot.active_count
+            diagnostics["shadow_memory_commitments"] = list(
+                shadow_snapshot.commitments
+            )
         if self._privacy_layer:
             proofs = self._privacy_layer.recent_proofs(limit=5)
             self._proof_cache = proofs
@@ -374,6 +406,7 @@ class SelfModel:
             memory=memory_snapshot,
             intent=intent_resolution,
             diagnostics=diagnostics,
+            shadow_memory=shadow_snapshot_dict,
         )
 
     def latest_proofs(self) -> list["ProofResult"]:

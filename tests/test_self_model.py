@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Callable
 
 from echo.memory.store import ExecutionContext
+from echo.memory.shadow import ShadowMemoryManager
 from echo.semantic_negotiation import NegotiationIntent
 from echo.self_model import (
     IntentResolver,
@@ -124,4 +125,48 @@ def test_self_model_reflects_composite_state() -> None:
     assert snapshot.intent.intent.topic == "Launch new portal"
     assert snapshot.diagnostics["observer_signal"] == snapshot.observer.signal
     assert snapshot.diagnostics["memory_coverage"] == snapshot.memory.coverage
+    assert snapshot.shadow_memory is None
+
+
+def test_self_model_exposes_shadow_memory_snapshot() -> None:
+    start = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    clock, _ = _fixed_clock(start)
+    manager = ShadowMemoryManager(clock=clock)
+    manager.create_shadow_memory({"insight": "covert"}, tags=["launch signal"])
+
+    observer = ObserverSubsystem(window_seconds=60, clock=clock)
+    observer.record("heartbeat", {"state": "ok"})
+    ctx = ExecutionContext(
+        timestamp="2024-01-01T00:00:00Z",
+        commands=[{"name": "pulse"}],
+        metadata={"phase": "alpha"},
+        summary="Alpha",
+    )
+    memory = MemoryUnifier([ctx])
+    resolver = IntentResolver(
+        [
+            NegotiationIntent(
+                topic="Launch new portal",
+                summary="Coordinate observers",
+                tags=["launch"],
+                desired_outcome="launch",
+                priority="high",
+            )
+        ],
+        shadow_memory=manager,
+    )
+    model = SelfModel(
+        observer,
+        memory,
+        resolver,
+        clock=lambda: start,
+        shadow_memory_manager=manager,
+    )
+
+    snapshot = model.reflect(query="Need direction", tags=None, desired_outcome=None)
+
+    assert snapshot.shadow_memory is not None
+    assert snapshot.shadow_memory["active_count"] == 1
+    assert snapshot.diagnostics["shadow_memory_active"] == 1
+    assert snapshot.intent.shadow_attestation is not None
 

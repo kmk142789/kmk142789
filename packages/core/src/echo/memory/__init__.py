@@ -9,6 +9,13 @@ from .memory_stream import (
     pulse_memory,
     stream_echo,
 )
+from .shadow import (
+    ShadowDecisionAttestation,
+    ShadowMemoryManager,
+    ShadowMemoryPolicy,
+    ShadowMemoryRecord,
+    ShadowMemorySnapshot,
+)
 from .store import ExecutionContext, ExecutionSession, JsonMemoryStore
 
 __all__ = [
@@ -24,4 +31,9 @@ __all__ = [
     "pulse_memory",
     "stream_echo",
     "propagate_echo",
+    "ShadowDecisionAttestation",
+    "ShadowMemoryManager",
+    "ShadowMemoryPolicy",
+    "ShadowMemoryRecord",
+    "ShadowMemorySnapshot",
 ]
