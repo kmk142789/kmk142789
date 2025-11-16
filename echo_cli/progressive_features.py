@@ -17,6 +17,8 @@ __all__ = [
     "forecast_operational_resilience",
     "plan_capacity_allocation",
     "simulate_portfolio_outcomes",
+    "generate_innovation_radar",
+    "generate_innovation_orbit",
     "progressive_complexity_suite",
     "complexity_evolution_series",
     "assess_alignment_signals",
@@ -190,6 +192,48 @@ class PortfolioInitiative:
         elif isinstance(start_value, str) and start_value.strip():
             start_dt = _parse_iso_timestamp(start_value)
         return cls(name=name, milestones=milestones, weight=weight, value=value, start=start_dt)
+
+
+@dataclass(frozen=True)
+class InnovationNode:
+    """Representation of a frontier innovation signal."""
+
+    name: str
+    novelty: float
+    adoption: float
+    risk: float
+    investment: float
+    horizon: str = "core"
+    signal_strength: float = 0.5
+
+    @classmethod
+    def from_mapping(cls, data: Mapping[str, object]) -> "InnovationNode":
+        try:
+            name = str(data["name"]).strip()
+        except KeyError as exc:  # pragma: no cover - defensive
+            raise ValueError("innovation node requires a name") from exc
+        if not name:
+            raise ValueError("innovation node name cannot be empty")
+        novelty = float(data.get("novelty", 0.5))
+        adoption = float(data.get("adoption", 0.5))
+        risk = float(data.get("risk", 0.4))
+        investment = float(data.get("investment", 1.0))
+        signal = float(data.get("signal_strength", data.get("signal", 0.5)))
+        for value, label in ((novelty, "novelty"), (adoption, "adoption"), (risk, "risk"), (signal, "signal_strength")):
+            if not 0 <= value <= 1:
+                raise ValueError(f"{label} must be between 0 and 1")
+        if investment < 0:
+            raise ValueError("investment must be non-negative")
+        horizon = str(data.get("horizon", "core")).strip().lower() or "core"
+        return cls(
+            name=name,
+            novelty=novelty,
+            adoption=adoption,
+            risk=risk,
+            investment=investment,
+            horizon=horizon,
+            signal_strength=signal,
+        )
 
 
 @dataclass(frozen=True)
@@ -719,6 +763,226 @@ def simulate_portfolio_outcomes(
     }
 
     return {"initiatives": initiatives_payload, "portfolio": portfolio_summary}
+
+
+def generate_innovation_radar(
+    nodes: Sequence[InnovationNode] | Sequence[Mapping[str, object]]
+) -> dict[str, object]:
+    """Synthesize a multi-horizon innovation radar and breakthrough tracker."""
+
+    if not nodes:
+        raise ValueError("at least one innovation node is required")
+
+    parsed_nodes = [
+        node if isinstance(node, InnovationNode) else InnovationNode.from_mapping(node)
+        for node in nodes
+    ]
+    count = len(parsed_nodes)
+    novelty_index = sum(node.novelty for node in parsed_nodes) / count
+    adoption_index = sum(node.adoption for node in parsed_nodes) / count
+    risk_index = sum(node.risk for node in parsed_nodes) / count
+    signal_index = sum(node.signal_strength for node in parsed_nodes) / count
+    investment_total = sum(node.investment for node in parsed_nodes)
+    orbital_momentum = sum(
+        math.sqrt(max(node.novelty * node.adoption, 1e-6))
+        * math.log1p(max(node.investment, 0.1))
+        * (1 - 0.55 * node.risk)
+        for node in parsed_nodes
+    ) / count
+    pioneer_ratio = sum(
+        1
+        for node in parsed_nodes
+        if node.novelty >= 0.72 and node.signal_strength >= 0.6 and node.risk <= 0.65
+    ) / count
+
+    horizon_groups: dict[str, list[InnovationNode]] = {}
+    for node in parsed_nodes:
+        horizon_groups.setdefault(node.horizon, []).append(node)
+    horizon_profile: dict[str, dict[str, float]] = {}
+    for horizon, group in horizon_groups.items():
+        horizon_profile[horizon] = {
+            "count": len(group),
+            "avg_signal": sum(item.signal_strength for item in group) / len(group),
+            "momentum": sum(
+                math.sqrt(max(item.novelty * item.adoption, 1e-6)) * (1 - 0.5 * item.risk)
+                for item in group
+            )
+            / len(group),
+            "risk": sum(item.risk for item in group) / len(group),
+        }
+
+    signal_matrix: list[dict[str, float | str]] = []
+    for node in parsed_nodes:
+        momentum = math.sqrt(max(node.novelty * node.adoption, 1e-6)) * (1 - 0.45 * node.risk)
+        portfolio_bias = (1 - node.risk) * (0.5 + 0.5 * node.novelty) * node.signal_strength
+        signal_matrix.append(
+            {
+                "name": node.name,
+                "horizon": node.horizon,
+                "novelty": round(node.novelty, 3),
+                "adoption": round(node.adoption, 3),
+                "risk": round(node.risk, 3),
+                "signal_strength": round(node.signal_strength, 3),
+                "momentum": round(momentum, 3),
+                "portfolio_bias": round(portfolio_bias, 3),
+                "investment": round(node.investment, 2),
+            }
+        )
+
+    breakthrough_candidates = [
+        entry
+        for entry in sorted(signal_matrix, key=lambda item: item["momentum"], reverse=True)
+        if entry["novelty"] >= 0.7 and entry["signal_strength"] >= 0.65 and entry["risk"] <= 0.6
+    ][:5]
+
+    wavefront_projection = [
+        {
+            "horizon": horizon,
+            "activation_window_weeks": 3 * idx + 3,
+            "signal_focus": round(profile["avg_signal"], 3),
+            "momentum_index": round(profile["momentum"], 3),
+        }
+        for idx, (horizon, profile) in enumerate(
+            sorted(horizon_profile.items(), key=lambda item: item[1]["momentum"], reverse=True)
+        )
+    ]
+
+    return {
+        "node_count": count,
+        "novelty_index": novelty_index,
+        "adoption_index": adoption_index,
+        "risk_index": risk_index,
+        "signal_index": signal_index,
+        "investment_total": investment_total,
+        "orbital_momentum": orbital_momentum,
+        "pioneer_ratio": pioneer_ratio,
+        "horizon_profile": horizon_profile,
+        "signal_matrix": signal_matrix,
+        "breakthrough_candidates": breakthrough_candidates,
+        "wavefront_projection": wavefront_projection,
+    }
+
+
+def generate_innovation_orbit(
+    nodes: Sequence[InnovationNode] | Sequence[Mapping[str, object]],
+    *,
+    waves: int = 3,
+    foresight_window_weeks: int = 18,
+) -> dict[str, object]:
+    """Build an orbital innovation storyline with foresight waves."""
+
+    if waves < 1:
+        raise ValueError("waves must be at least 1")
+    if foresight_window_weeks <= 0:
+        raise ValueError("foresight window must be positive")
+    if not nodes:
+        raise ValueError("at least one innovation node is required")
+
+    parsed_nodes = [
+        node if isinstance(node, InnovationNode) else InnovationNode.from_mapping(node)
+        for node in nodes
+    ]
+
+    orbit_scores: list[float] = []
+    resonance_field: list[dict[str, object]] = []
+    horizon_groups: dict[str, list[InnovationNode]] = {}
+    for node in parsed_nodes:
+        base = 0.45 * node.novelty + 0.35 * node.adoption + 0.2 * node.signal_strength
+        damping = max(0.25, 1 - 0.4 * node.risk)
+        capital = math.log1p(max(node.investment, 0.0) + 1.0)
+        orbit_score = max(0.0, base * damping * capital)
+        stability = (1 - node.risk) * (0.5 + 0.5 * node.adoption)
+        expansion = node.novelty * node.signal_strength
+        resonance_field.append(
+            {
+                "name": node.name,
+                "horizon": node.horizon,
+                "orbit_score": round(orbit_score, 3),
+                "stability": round(stability, 3),
+                "expansion": round(expansion, 3),
+            }
+        )
+        orbit_scores.append(orbit_score)
+        horizon_groups.setdefault(node.horizon, []).append(node)
+
+    field_intensity = sum(orbit_scores) / len(orbit_scores)
+    flux_index = pstdev(orbit_scores) if len(orbit_scores) > 1 else 0.0
+    flux_alert: str
+    if flux_index < 0.25:
+        flux_alert = "stable"
+    elif flux_index < 0.45:
+        flux_alert = "dynamic"
+    else:
+        flux_alert = "volatile"
+
+    resonance_field.sort(key=lambda entry: entry["orbit_score"], reverse=True)
+    max_resonance = resonance_field[: min(7, len(resonance_field))]
+
+    horizon_synergy: dict[str, dict[str, object]] = {}
+    for horizon, group in horizon_groups.items():
+        volume = len(group)
+        avg_stability = sum((1 - item.risk) * (0.5 + 0.5 * item.adoption) for item in group) / volume
+        avg_expansion = sum(item.novelty * item.signal_strength for item in group) / volume
+        vanguard = max(group, key=lambda item: item.signal_strength * (1 - item.risk))
+        horizon_synergy[horizon] = {
+            "volume": volume,
+            "stability": round(avg_stability, 3),
+            "expansion": round(avg_expansion, 3),
+            "vanguard": vanguard.name,
+        }
+
+    sorted_synergy = sorted(
+        horizon_synergy.items(), key=lambda item: item[1]["expansion"], reverse=True
+    )
+    wave_count = min(waves, len(sorted_synergy))
+    activation_stride = max(2, foresight_window_weeks // max(wave_count, 1))
+    flux_normalised = min(1.0, flux_index / 2.5)
+
+    orbit_waves: list[dict[str, object]] = []
+    for idx, (horizon, profile) in enumerate(sorted_synergy[:wave_count]):
+        activation_week = activation_stride * (idx + 1)
+        confidence = max(0.35, min(0.95, 0.55 + 0.35 * profile["stability"] - 0.2 * flux_normalised))
+        thesis = (
+            f"Amplify {horizon} via {profile['vanguard']} to harvest {profile['expansion']:.2f} expansion momentum"
+        )
+        orbit_waves.append(
+            {
+                "wave": idx + 1,
+                "horizon": horizon,
+                "activation_week": activation_week,
+                "confidence": round(confidence, 3),
+                "thesis": thesis,
+            }
+        )
+
+    insight_threads: list[str] = []
+    if max_resonance:
+        prime = max_resonance[0]
+        insight_threads.append(
+            f"{prime['name']} anchors the frontier with orbit score {prime['orbit_score']:.2f}"
+        )
+    if len(max_resonance) >= 3:
+        blend = max_resonance[:3]
+        horizons = {entry["horizon"] for entry in blend}
+        insight_threads.append(
+            "Triad fusion across " + ", ".join(sorted(h.title() for h in horizons)) + " horizons"
+        )
+    if flux_alert == "volatile":
+        insight_threads.append("Flux volatility suggests targeted hedging on exploration bets")
+
+    return {
+        "node_count": len(parsed_nodes),
+        "field_intensity": round(field_intensity, 3),
+        "flux_index": round(flux_index, 3),
+        "flux_alert": flux_alert,
+        "foresight_window_weeks": foresight_window_weeks,
+        "horizon_synergy": horizon_synergy,
+        "resonance_field": max_resonance,
+        "orbit_waves": orbit_waves,
+        "insight_threads": insight_threads,
+    }
+
+
 def progressive_complexity_suite(
     level: int,
     *,
