@@ -123,6 +123,8 @@ from echo.transcend import TranscendOrchestrator
 from pulse_dashboard import WorkerHive
 from .progressive_features import (
     analyze_text_corpus,
+    evaluate_strategy_matrix,
+    forecast_operational_resilience,
     generate_numeric_intelligence,
     simulate_delivery_timeline,
 )
@@ -959,6 +961,94 @@ def _parse_milestone_specs(specs: Sequence[str]) -> list[dict[str, object]]:
     return milestones
 
 
+def _parse_criteria_weights(specs: Sequence[str]) -> dict[str, float]:
+    weights: dict[str, float] = {}
+    for spec in specs:
+        parts = spec.split("=", 1)
+        if len(parts) != 2:
+            raise ValueError("criteria must follow 'name=value' format")
+        name = parts[0].strip()
+        if not name:
+            raise ValueError("criterion name cannot be empty")
+        try:
+            weights[name] = float(parts[1])
+        except ValueError as exc:
+            raise ValueError(f"criterion '{name}' weight must be numeric") from exc
+    if not weights:
+        raise ValueError("provide at least one --criterion value")
+    return weights
+
+
+def _parse_strategy_option_specs(specs: Sequence[str]) -> list[dict[str, object]]:
+    options: list[dict[str, object]] = []
+    for spec in specs:
+        segments = [segment.strip() for segment in spec.split("|") if segment.strip()]
+        if len(segments) < 2:
+            raise ValueError(
+                "options must follow 'Name|criterion=value|...' format"
+            )
+        name = segments[0]
+        metrics: dict[str, float] = {}
+        for segment in segments[1:]:
+            if "=" not in segment:
+                raise ValueError(
+                    "each metric must include '=' separating the name and value"
+                )
+            key, value = [part.strip() for part in segment.split("=", 1)]
+            if not key:
+                raise ValueError("metric name cannot be empty")
+            try:
+                metrics[key] = float(value)
+            except ValueError as exc:
+                raise ValueError(f"metric '{key}' must be numeric") from exc
+        option = {"name": name}
+        option.update(metrics)
+        options.append(option)
+    if not options:
+        raise ValueError("provide at least one --option value")
+    return options
+
+
+def _parse_resilience_event_specs(specs: Sequence[str]) -> list[dict[str, object]]:
+    events: list[dict[str, object]] = []
+    for spec in specs:
+        segments = [segment.strip() for segment in spec.split("|") if segment.strip()]
+        if len(segments) < 2:
+            raise ValueError("events must follow 'Name|likelihood=...|impact=...' format")
+        name = segments[0]
+        payload: dict[str, object] = {"name": name}
+        for segment in segments[1:]:
+            if "=" not in segment:
+                raise ValueError(
+                    "each event attribute must include '=' separating the name and value"
+                )
+            key, value = [part.strip() for part in segment.split("=", 1)]
+            if not key:
+                raise ValueError("event attribute name cannot be empty")
+            normalised = key.lower()
+            if normalised in {"impact", "impact_hours"}:
+                normalised = "impact_hours"
+            elif normalised in {"recovery", "recovery_hours"}:
+                normalised = "recovery_hours"
+            elif normalised in {"detection", "detection_hours"}:
+                normalised = "detection_hours"
+            elif normalised in {"likelihood", "probability"}:
+                normalised = "likelihood"
+            elif normalised == "criticality":
+                payload[normalised] = value
+                continue
+            try:
+                payload[normalised] = float(value)
+            except ValueError as exc:
+                raise ValueError(f"event attribute '{key}' must be numeric") from exc
+        if "impact_hours" not in payload:
+            raise ValueError("event definitions require an impact_hours attribute")
+        events.append(payload)
+    if not events:
+        raise ValueError("provide at least one --event value")
+    return events
+
+
 def _load_plan_file(path: Path | None) -> list[dict[str, object]]:
     if path is None:
         return []
@@ -1243,6 +1333,140 @@ def complexity_timeline(
         )
     )
 
+
+@complexity_app.command("strategy")
+def complexity_strategy(
+    ctx: typer.Context,
+    option: List[str] = typer.Option(
+        [],
+        "--option",
+        "-o",
+        help="Strategy definition formatted as 'Name|criterion=value|...'.",
+    ),
+    criterion: List[str] = typer.Option(
+        [],
+        "--criterion",
+        "-k",
+        help="Criterion weight formatted as 'name=value'.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Rank strategy options using weighted criteria."""
+
+    _ensure_ctx(ctx)
+    try:
+        options = _parse_strategy_option_specs(option)
+        weights = _parse_criteria_weights(criterion)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = evaluate_strategy_matrix(options, weights)
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary = [
+        f"Evaluated {len(payload['options'])} options across {len(payload['criteria'])} criteria.",
+        f"Top recommendation : {payload['best_option']['name']} (score {payload['best_option']['score']}).",
+        f"Score gap          : {payload['score_gap']}",
+    ]
+    console.print("\n".join(summary))
+
+    columns = ["Option", "Score", "Relative", "Coverage", "Key contributions"]
+    rows = []
+    for option_entry in payload["options"]:
+        contributions = ", ".join(
+            f"{name}:{value}" for name, value in option_entry["contributions"].items()
+        )
+        rows.append(
+            (
+                option_entry["name"],
+                option_entry["score"],
+                option_entry["relative_score"],
+                f"{round(option_entry['coverage'] * 100)}%",
+                contributions or "-",
+            )
+        )
+    console.print(_build_table(columns, rows, title="Strategy matrix"))
+
+
+@complexity_app.command("resilience")
+def complexity_resilience(
+    ctx: typer.Context,
+    event: List[str] = typer.Option(
+        [],
+        "--event",
+        "-e",
+        help="Event formatted as 'Name|likelihood=...|impact=...|recovery=...'.",
+    ),
+    horizon_hours: float = typer.Option(
+        168.0,
+        "--horizon-hours",
+        "-H",
+        min=1.0,
+        help="Forecasting horizon in hours.",
+    ),
+    start: Optional[str] = typer.Option(
+        None,
+        "--start",
+        help="Optional ISO 8601 timestamp marking the start of the forecast.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Forecast operational resilience across stress scenarios."""
+
+    _ensure_ctx(ctx)
+    try:
+        events = _parse_resilience_event_specs(event)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    start_dt = _parse_iso_timestamp(start)
+    payload = forecast_operational_resilience(
+        events,
+        start=start_dt,
+        horizon_hours=horizon_hours,
+    )
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary = [
+        f"Forecast window  : {payload['start']} → +{payload['horizon_hours']}h",
+        f"Expected downtime: {payload['expected_disruption_hours']} hours",
+        f"Resilience score : {payload['resilience_score']} ({payload['risk']['classification']})",
+    ]
+    console.print("\n".join(summary))
+
+    rows = [
+        (
+            entry["name"],
+            entry["criticality"],
+            entry["likelihood"],
+            entry["expected_hours"],
+            entry["window_start"],
+        )
+        for entry in payload["timeline"]
+    ]
+    console.print(
+        _build_table(
+            ["Event", "Severity", "Likelihood", "Expected hours", "Window start"],
+            rows,
+            title="Resilience outlook",
+        )
+    )
 
 @app.callback()
 def cli_root(ctx: typer.Context) -> None:
