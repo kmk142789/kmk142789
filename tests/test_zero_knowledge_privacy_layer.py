@@ -189,6 +189,8 @@ def test_macro_layer_wiring_with_privacy(tmp_path: Path) -> None:
     assert snapshot.macro_index > 0
     assert snapshot.genesis_state["coordination_index"] > 0
     assert snapshot.intent_alignment["topic"] == "stability"
+    assert snapshot.recursive_proofs["depth"] >= 1
+    assert snapshot.recursive_proofs["verified"] is True
 
     auto_snapshot = macro.orchestrate(
         auto_prove=True,
@@ -203,3 +205,4 @@ def test_macro_layer_wiring_with_privacy(tmp_path: Path) -> None:
     assert auto_snapshot.latest_proof is not None
     assert auto_snapshot.latest_proof["circuit"] == "capability"
     assert auto_snapshot.intent_alignment["topic"] == "stability"
+    assert auto_snapshot.recursive_proofs["depth"] >= snapshot.recursive_proofs["depth"]
