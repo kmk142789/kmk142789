@@ -222,6 +222,8 @@ from .sanctuary_sentinel import (
     SentinelSignature,
     build_default_signatures,
 )
+from .quantam_features import compute_quantam_feature
+from .quantum_features import QuantumFeature, generate_quantum_features
 from .quantam_features import (
     QuantamFeatureLayer,
     compute_quantam_feature,
@@ -415,6 +417,8 @@ __all__ = [
     "STANDARD_GATES",
     "QuantamFeatureLayer",
     "compute_quantam_feature",
+    "QuantumFeature",
+    "generate_quantum_features",
     "generate_quantam_feature_sequence",
     "QuantumSynchronizer",
     "SynchronizerReport",
