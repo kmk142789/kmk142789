@@ -10,8 +10,9 @@ tests and reproducible experiments.
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 from statistics import fmean
 from textwrap import indent
@@ -43,6 +44,7 @@ class ConstellationNode:
     name: str
     intensity: float
     description: str
+    phase: str
 
 
 @dataclass
@@ -65,6 +67,31 @@ class ConstellationDiagnostics:
     stability_index: float
     energy_class: str
     motif_intensity: Dict[str, float]
+
+
+@dataclass
+class ConstellationScheduleEntry:
+    """Timeline entry describing when a node activates."""
+
+    order: int
+    node: str
+    phase: str
+    eta: datetime
+    offset_minutes: int
+    duration_minutes: int
+    commentary: str
+
+
+@dataclass
+class ConstellationBlueprint:
+    """Rich snapshot of a constellation suitable for downstream tooling."""
+
+    nodes: List[ConstellationNode]
+    arcs: List[ConstellationArc]
+    diagnostics: ConstellationDiagnostics | None
+    schedule: List[ConstellationScheduleEntry]
+    energy_profile: Dict[str, float]
+    created_at: datetime
 
 
 class ConstellationWeaver:
@@ -92,10 +119,20 @@ class ConstellationWeaver:
                 f"{self.payload.theme}."
             )
             name = f"Node-{index}:{motif.replace(' ', '_')}"
-            nodes.append(ConstellationNode(name=name, intensity=intensity, description=description))
+            nodes.append(
+                ConstellationNode(
+                    name=name,
+                    intensity=intensity,
+                    description=description,
+                    phase=phase,
+                )
+            )
 
         anchor = ConstellationNode(
-            name="Anchor", intensity=round(base_energy, 3), description=self._anchor_line()
+            name="Anchor",
+            intensity=round(base_energy, 3),
+            description=self._anchor_line(),
+            phase="anchor",
         )
         return [anchor] + nodes
 
@@ -164,12 +201,7 @@ class ConstellationWeaver:
         variance = fmean((value - mean_intensity) ** 2 for value in intensities)
         stability = round(1.0 / (1.0 + variance), 3)
 
-        if peak < 1.0:
-            energy_class = "delicate"
-        elif peak < 2.0:
-            energy_class = "radiant"
-        else:
-            energy_class = "volatile"
+        energy_class = self.classify_intensity(peak)
 
         motif_intensity = {node.name: node.intensity for node in nodes}
         return ConstellationDiagnostics(
@@ -179,6 +211,88 @@ class ConstellationWeaver:
             stability_index=stability,
             energy_class=energy_class,
             motif_intensity=motif_intensity,
+        )
+
+    @staticmethod
+    def classify_intensity(value: float) -> str:
+        """Return a qualitative band for an intensity value."""
+
+        if value < 1.0:
+            return "delicate"
+        if value < 2.0:
+            return "radiant"
+        return "volatile"
+
+    def build_schedule(
+        self,
+        nodes: Sequence[ConstellationNode],
+        *,
+        base_interval_minutes: int = 6,
+    ) -> List[ConstellationScheduleEntry]:
+        """Craft a lightweight activation schedule for nodes.
+
+        Each entry receives an ETA and duration derived from its intensity band.
+        The resulting schedule becomes increasingly complex as intensities rise.
+        """
+
+        if not nodes:
+            return []
+
+        entries: List[ConstellationScheduleEntry] = []
+        current_time = datetime.utcnow()
+        offset = 0
+        for order, node in enumerate(nodes, start=1):
+            duration = max(2, round(node.intensity * base_interval_minutes))
+            commentary = (
+                f"{node.name} anchors a {node.phase} stride for {duration} minutes "
+                f"within the {self.payload.theme} field (badge={self.classify_intensity(node.intensity)})."
+            )
+            entries.append(
+                ConstellationScheduleEntry(
+                    order=order,
+                    node=node.name,
+                    phase=node.phase,
+                    eta=current_time + timedelta(minutes=offset),
+                    offset_minutes=offset,
+                    duration_minutes=duration,
+                    commentary=commentary,
+                )
+            )
+            offset += duration
+
+        return entries
+
+    def _build_energy_profile(self, nodes: Sequence[ConstellationNode]) -> Dict[str, float]:
+        """Return a fractional distribution of intensity badges."""
+
+        if not nodes:
+            return {}
+
+        counts = Counter(self.classify_intensity(node.intensity) for node in nodes)
+        total = sum(counts.values()) or 1
+        return {band: round(count / total, 3) for band, count in counts.items()}
+
+    def assemble_blueprint(
+        self,
+        *,
+        include_arcs: bool = True,
+        include_diagnostics: bool = True,
+        include_schedule: bool = True,
+    ) -> ConstellationBlueprint:
+        """Produce a holistic blueprint that downstream tools can inspect."""
+
+        nodes = self.generate_map()
+        arcs = self.generate_arcs(nodes) if include_arcs else []
+        diagnostics = self.diagnose(nodes) if include_diagnostics else None
+        schedule = self.build_schedule(nodes) if include_schedule else []
+        profile = self._build_energy_profile(nodes)
+        return ConstellationBlueprint(
+            nodes=nodes,
+            arcs=arcs,
+            diagnostics=diagnostics,
+            schedule=schedule,
+            energy_profile=profile,
+            created_at=datetime.utcnow(),
         )
 
     def _anchor_line(self) -> str:
@@ -198,6 +312,8 @@ def compose_constellation(
     *,
     include_arcs: bool = False,
     include_diagnostics: bool = False,
+    include_badges: bool = False,
+    include_schedule: bool = False,
 ) -> str:
     """Create a formatted constellation summary with optional enhancements."""
 
@@ -205,7 +321,12 @@ def compose_constellation(
     nodes = weaver.generate_map()
     lines = [f"Constellation for: {payload.theme}"]
     for node in nodes:
-        lines.append(f"- {node.name} :: intensity {node.intensity:.3f}")
+        badge = (
+            f" [{ConstellationWeaver.classify_intensity(node.intensity)}]"
+            if include_badges
+            else ""
+        )
+        lines.append(f"- {node.name} :: intensity {node.intensity:.3f}{badge}")
         lines.append(indent(node.description, prefix="  "))
 
     if include_arcs:
@@ -232,7 +353,34 @@ def compose_constellation(
         for name, value in diagnostics.motif_intensity.items():
             lines.append(f"  - {name}: {value:.3f}")
 
+    if include_schedule:
+        lines.append("")
+        lines.append("Activation Schedule:")
+        for entry in weaver.build_schedule(nodes):
+            eta_label = entry.eta.strftime("%H:%M")
+            lines.append(
+                f"* T+{entry.offset_minutes:02d}m ({eta_label}) :: {entry.node} "
+                f"[{entry.phase}] for {entry.duration_minutes}m"
+            )
+            lines.append(indent(entry.commentary, prefix="  "))
+
     return "\n".join(lines)
+
+
+def build_constellation_blueprint(
+    payload: ConstellationSeed,
+    *,
+    include_arcs: bool = True,
+    include_diagnostics: bool = True,
+    include_schedule: bool = True,
+) -> ConstellationBlueprint:
+    """High-level helper that assembles a blueprint in one call."""
+
+    return ConstellationWeaver(payload).assemble_blueprint(
+        include_arcs=include_arcs,
+        include_diagnostics=include_diagnostics,
+        include_schedule=include_schedule,
+    )
 
 
 def demo() -> str:
