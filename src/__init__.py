@@ -20,6 +20,11 @@ from .creative_harmony import (
     compose_resonance,
     demo as resonance_demo,
 )
+from .creative_convergence import (
+    ConvergenceBrief,
+    compose_convergence_report,
+    demo as convergence_demo,
+)
 from .creative_constellation import (
     ConstellationNode,
     ConstellationSeed,
@@ -47,6 +52,7 @@ __all__ = [
     "ChronicleEvent",
     "ChroniclePrompt",
     "ChronicleTimeline",
+    "ConvergenceBrief",
     "ConstellationNode",
     "ConstellationSeed",
     "ConstellationWeaver",
@@ -61,8 +67,10 @@ __all__ = [
     "chronicle_demo",
     "compose_constellation",
     "compose_chronicle",
+    "compose_convergence_report",
     "compose_loop",
     "compose_resonance",
+    "convergence_demo",
     "export_loop_result",
     "export_suite_summary",
     "generate_loop",
