@@ -109,6 +109,22 @@ python scripts/echo_poem.py "Orbital registry" --lines 6 --seed 11
 The optional `--seed` flag keeps phrasing deterministic for release notes and
 other reproducible artifacts.
 
+### Resonant Nexus Engine
+
+Need a programmable playground for simulating mythical telemetry?  The new
+[`tools/resonant_nexus_engine.py`](tools/resonant_nexus_engine.py) module ships a
+full orchestration engine with plugin hooks, variance tracking, and structured
+reports:
+
+```bash
+python tools/resonant_nexus_engine.py --cycles 4 --interval 0.1 --report out/nexus.json \
+  --telemetry out/telemetry.json --volatility 0.04
+```
+
+Run it as part of rapid prototyping to capture deterministic JSON artifacts, or
+import ``ResonantNexusEngine`` directly when composing more advanced research
+flows.
+
 ### Need a guide?
 
 Launch the terminal-based Echo helper to get an interactive tour of the
