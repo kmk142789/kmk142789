@@ -4,12 +4,17 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from math import isfinite
+from statistics import pstdev
 from typing import Iterable, Mapping, Sequence
 
 __all__ = [
     "generate_numeric_intelligence",
     "analyze_text_corpus",
     "simulate_delivery_timeline",
+    "assess_alignment_signals",
+    "evaluate_operational_readiness",
+    "forecast_portfolio_throughput",
 ]
 
 
@@ -180,4 +185,271 @@ def simulate_delivery_timeline(
         "total_days": round(cumulative, 2),
         "timeline": schedule,
         "risk": {"score": round(risk_score, 2), "classification": risk_class},
+    }
+
+
+def assess_alignment_signals(
+    signals: Mapping[str, float],
+    *,
+    target: float = 0.75,
+) -> dict[str, object]:
+    """Score alignment signals against a target threshold."""
+
+    if not 0 < target <= 1:
+        raise ValueError("target must be between 0 and 1")
+    if not signals:
+        raise ValueError("at least one signal is required")
+
+    normalised: dict[str, float] = {}
+    for name, raw_value in signals.items():
+        key = str(name).strip()
+        if not key:
+            raise ValueError("signal names cannot be empty")
+        try:
+            value = float(raw_value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"invalid score for {name!r}") from exc
+        if not isfinite(value) or not 0 <= value <= 1:
+            raise ValueError("signal scores must be finite values between 0 and 1")
+        normalised[key] = value
+
+    scores = list(normalised.values())
+    average = sum(scores) / len(scores)
+    variability = pstdev(scores) if len(scores) > 1 else 0.0
+    cohesion = max(0.0, 1 - variability)
+    gap = target - average
+    if average >= target:
+        classification = "aligned"
+    elif average >= target - 0.1:
+        classification = "watch"
+    else:
+        classification = "realign"
+
+    total_score = sum(scores)
+    contributions = [
+        {
+            "name": name,
+            "score": round(score, 3),
+            "weight": round(score / total_score, 3) if total_score else 0.0,
+        }
+        for name, score in sorted(
+            normalised.items(), key=lambda entry: entry[1], reverse=True
+        )
+    ]
+
+    strongest = contributions[0]["name"]
+    weakest = contributions[-1]["name"]
+
+    return {
+        "target": round(target, 2),
+        "average_score": round(average, 3),
+        "gap": round(gap, 3),
+        "classification": classification,
+        "cohesion": round(cohesion, 3),
+        "signals": contributions,
+        "focus": {"strongest": strongest, "weakest": weakest},
+    }
+
+
+def evaluate_operational_readiness(
+    capabilities: Sequence[Mapping[str, object]],
+    *,
+    horizon_weeks: int = 12,
+) -> dict[str, object]:
+    """Compute readiness indicators across a set of capabilities."""
+
+    if horizon_weeks <= 0:
+        raise ValueError("horizon_weeks must be positive")
+    if not capabilities:
+        raise ValueError("at least one capability is required")
+
+    parsed: list[dict[str, object]] = []
+    scores: list[float] = []
+    recommendations: list[str] = []
+    for capability in capabilities:
+        try:
+            name = str(capability["name"]).strip()
+            coverage = float(capability.get("coverage", 0))
+            automation = float(capability.get("automation", 0))
+            runbooks = int(capability.get("runbooks", 0))
+            incidents = int(capability.get("incidents", 0))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError("invalid capability specification") from exc
+        if not name:
+            raise ValueError("capability name cannot be empty")
+        for value in (coverage, automation):
+            if not isfinite(value) or not 0 <= value <= 1:
+                raise ValueError("coverage and automation must be between 0 and 1")
+        if runbooks < 0 or incidents < 0:
+            raise ValueError("runbooks and incidents must be non-negative")
+
+        runbook_score = min(runbooks / 3, 1)
+        incident_penalty = min(incidents / max(horizon_weeks / 4, 1), 2)
+        resilience = max(0.0, 1 - incident_penalty / 2)
+        composite = round(
+            0.4 * coverage + 0.3 * automation + 0.2 * runbook_score + 0.1 * resilience,
+            3,
+        )
+        status = "ready" if composite >= 0.75 else "attention" if composite >= 0.55 else "critical"
+        parsed.append(
+            {
+                "name": name,
+                "score": composite,
+                "coverage": round(coverage, 2),
+                "automation": round(automation, 2),
+                "runbooks": runbooks,
+                "incidents": incidents,
+                "status": status,
+            }
+        )
+        scores.append(composite)
+        if status != "ready":
+            recommendations.append(
+                f"Improve {name} via runbook depth and automation hardening"
+            )
+
+    average_score = sum(scores) / len(scores)
+    classification = (
+        "stable" if average_score >= 0.75 else "elevated" if average_score >= 0.55 else "at-risk"
+    )
+
+    return {
+        "horizon_weeks": horizon_weeks,
+        "readiness_index": round(average_score, 3),
+        "classification": classification,
+        "capabilities": parsed,
+        "recommendations": recommendations[:5],
+    }
+
+
+def forecast_portfolio_throughput(
+    initiatives: Sequence[Mapping[str, object]],
+    *,
+    velocity: float = 8,
+    horizon_weeks: int = 12,
+) -> dict[str, object]:
+    """Create a lightweight throughput forecast for a portfolio of initiatives."""
+
+    if velocity <= 0:
+        raise ValueError("velocity must be positive")
+    if horizon_weeks <= 0:
+        raise ValueError("horizon_weeks must be positive")
+    if not initiatives:
+        raise ValueError("at least one initiative is required")
+
+    class Initiative:
+        def __init__(
+            self,
+            name: str,
+            impact: float,
+            effort: float,
+            confidence: float,
+            dependencies: Sequence[str],
+        ) -> None:
+            self.name = name
+            self.impact = impact
+            self.effort = effort
+            self.confidence = confidence
+            self.dependencies = [dep for dep in dependencies if dep]
+            value_density = impact / max(effort, 1)
+            self.priority = value_density * confidence
+            self.remaining_effort = effort
+
+    registry: dict[str, Initiative] = {}
+    for entry in initiatives:
+        try:
+            name = str(entry["name"]).strip()
+            impact = float(entry.get("impact", 0))
+            effort = float(entry.get("effort", 0))
+            confidence = float(entry.get("confidence", 0.7))
+            dependencies = entry.get("dependencies", [])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError("invalid initiative specification") from exc
+        if not name:
+            raise ValueError("initiative name cannot be empty")
+        if any(not isfinite(value) or value <= 0 for value in (impact, effort)):
+            raise ValueError("impact and effort must be positive numbers")
+        if not isfinite(confidence) or not 0 < confidence <= 1:
+            raise ValueError("confidence must be between 0 and 1")
+        if isinstance(dependencies, str):
+            dependencies = [
+                dep.strip() for dep in dependencies.split(",") if dep.strip()
+            ]
+        elif not isinstance(dependencies, Sequence):
+            raise ValueError("dependencies must be a sequence")
+        registry[name] = Initiative(name, impact, effort, confidence, dependencies)
+
+    ordered: list[Initiative] = []
+    resolved: set[str] = set()
+    pending = dict(registry)
+    while pending:
+        ready = [
+            initiative
+            for initiative in pending.values()
+            if all(dep in resolved or dep not in registry for dep in initiative.dependencies)
+        ]
+        if not ready:
+            raise ValueError("cyclic or missing dependencies detected")
+        ready.sort(key=lambda item: (item.priority, item.confidence), reverse=True)
+        for initiative in ready:
+            ordered.append(initiative)
+            resolved.add(initiative.name)
+            pending.pop(initiative.name)
+
+    schedule: list[dict[str, object]] = []
+    backlog = ordered.copy()
+    sprint = 1
+    week_cursor = 0
+    while backlog and week_cursor < horizon_weeks:
+        capacity = velocity
+        assigned: list[dict[str, object]] = []
+        while backlog and capacity > 0:
+            initiative = backlog[0]
+            load = min(initiative.remaining_effort, capacity)
+            initiative.remaining_effort -= load
+            capacity -= load
+            assigned.append(
+                {
+                    "name": initiative.name,
+                    "allocated_effort": round(load, 2),
+                    "confidence": round(initiative.confidence, 2),
+                }
+            )
+            if initiative.remaining_effort <= 0:
+                backlog.pop(0)
+        if not assigned:
+            break
+        schedule.append(
+            {
+                "sprint": sprint,
+                "start_week": week_cursor,
+                "end_week": min(week_cursor + 1, horizon_weeks),
+                "load": round(1 - capacity / velocity, 2),
+                "initiatives": assigned,
+            }
+        )
+        sprint += 1
+        week_cursor += 1
+
+    total_impact = sum(item.impact for item in ordered)
+    weighted_confidence = (
+        sum(item.confidence * item.impact for item in ordered) / total_impact
+        if total_impact
+        else 0
+    )
+
+    return {
+        "throughput_capacity": velocity,
+        "horizon_weeks": horizon_weeks,
+        "priority_order": [
+            {
+                "name": item.name,
+                "priority": round(item.priority, 3),
+                "dependencies": item.dependencies,
+            }
+            for item in ordered
+        ],
+        "portfolio_value": round(total_impact, 2),
+        "confidence_projection": round(weighted_confidence, 3),
+        "sprint_plan": schedule,
     }
