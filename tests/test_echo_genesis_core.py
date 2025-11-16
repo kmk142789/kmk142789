@@ -107,3 +107,24 @@ def test_echo_genesis_core_tracks_momentum_and_delta(tmp_path) -> None:
     assert momentum["trend"] in {"accelerating", "regressing", "steady"}
     assert second["architecture"]["subsystems"]["quantum"]["delta"] != 0
     assert second["refinement_index"] != first["refinement_index"]
+
+
+def test_from_components_wires_resonance_layer(tmp_path) -> None:
+    class DummyLayer:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def snapshot(self) -> Mapping[str, float]:
+            self.calls += 1
+            return {"signal": 0.81, "synchrony_index": 0.8}
+
+    layer = DummyLayer()
+    core = EchoGenesisCore.from_components(
+        resonance_layer=layer,
+        state_dir=tmp_path / "genesis_state",
+    )
+
+    state = core.synthesize()
+
+    assert "resonance" in state["architecture"]["subsystems"]
+    assert layer.calls == 1

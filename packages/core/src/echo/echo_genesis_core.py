@@ -395,6 +395,7 @@ class EchoGenesisCore:
         orchestrator: Any | None = None,
         analytics_engine: Any | None = None,
         governance_engine: Any | None = None,
+        resonance_layer: Any | None = None,
         state_dir: Path | str | None = None,
     ) -> "EchoGenesisCore":
         probes: list[SubsystemProbe] = []
@@ -510,6 +511,24 @@ class EchoGenesisCore:
                     focus="policy",
                     probe=_governance_probe,
                     weight=0.9,
+                )
+            )
+
+        if resonance_layer is not None:
+            def _resonance_probe(layer: Any = resonance_layer) -> Mapping[str, Any]:
+                if hasattr(layer, "snapshot"):
+                    return layer.snapshot()
+                if hasattr(layer, "state"):
+                    return self_or_dict(layer.state)
+                return {"signal": 0.5, "status": "unknown"}
+
+            probes.append(
+                SubsystemProbe(
+                    name="resonance",
+                    kind="continuum",
+                    focus="coherence",
+                    probe=_resonance_probe,
+                    weight=1.05,
                 )
             )
 
