@@ -37,13 +37,16 @@ are complemented by comparison-aware jumps (``JLT``, ``JGT``, ``JLE``,
 branching decisions without resorting to manual ``CMP`` bookkeeping.  The
 instruction set also offers quality-of-life helpers like ``MIN``/``MAX``
 and ``ABS``/``NEG`` so that programs can clamp or normalise values in a
-single step.  The high-level entry point, :func:`run_program`, parses,
+single step.  Randomness primitives (``RSEED``/``RAND``) and built-in
+instruction profiling further expand the sandbox for more advanced
+experiments.  The high-level entry point, :func:`run_program`, parses,
 executes, and returns a structured :class:`ExecutionResult`.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import random
 import shlex
 import textwrap
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
@@ -100,6 +103,8 @@ class ExecutionResult:
     memory: Mapping[str, int | str]
     diagnostics: Tuple[str, ...]
     quantum_registers: Mapping[str, Mapping[str, object]] = field(default_factory=dict)
+    instruction_counts: Mapping[str, int] = field(default_factory=dict)
+    random_state: Mapping[str, object] = field(default_factory=dict)
 
 
 class AssemblyError(ValueError):
@@ -208,6 +213,10 @@ class EchoComputer:
         self._pc = 0
         self._halted = False
         self._output: List[str] = []
+        self._instruction_counts: Dict[str, int] = {}
+        self._rng = random.Random()
+        self._rng_seed: int | None = None
+        self._rng_history: List[int] = []
         self._opcode_handlers = self._initialise_opcode_handlers()
 
     @property
@@ -262,6 +271,8 @@ class EchoComputer:
         self._pc = 0
         self._halted = False
         self._output.clear()
+        self._instruction_counts.clear()
+        self._rng_history.clear()
 
     def run(
         self,
@@ -344,6 +355,8 @@ class EchoComputer:
             memory=dict(self._memory),
             diagnostics=tuple(diagnostics),
             quantum_registers=self._snapshot_quantum_registers(),
+            instruction_counts=dict(self._instruction_counts),
+            random_state=self._snapshot_random_state(),
         )
 
     # --- Execution helpers -------------------------------------------------
@@ -356,6 +369,7 @@ class EchoComputer:
         if handler is None:
             raise RuntimeError(f"unsupported opcode: {opcode}")
         handler(*operands)
+        self._instruction_counts[opcode] = self._instruction_counts.get(opcode, 0) + 1
 
     def _initialise_opcode_handlers(self) -> Dict[str, Callable[..., None]]:
         """Build and cache opcode handlers for fast dispatch during execution."""
@@ -438,6 +452,12 @@ class EchoComputer:
             }
         return snapshot
 
+    def _snapshot_random_state(self) -> Mapping[str, object]:
+        return {
+            "seed": self._rng_seed,
+            "history": tuple(self._rng_history),
+        }
+
     def _resolve_float(self, operand: str) -> float:
         try:
             value = self._resolve_value(operand)
@@ -497,6 +517,21 @@ class EchoComputer:
             self._memory[destination[1:]] = self._resolve_value(operand)
             return
         raise RuntimeError("SET destination must be a register or memory address")
+
+    def _op_rseed(self, seed: str) -> None:
+        value = self._resolve_int(seed)
+        self._rng.seed(value)
+        self._rng_seed = value
+
+    def _op_rand(self, register: str, low: str, high: str) -> None:
+        reg = self._require_register(register)
+        lower = self._resolve_int(low)
+        upper = self._resolve_int(high)
+        if lower > upper:
+            raise RuntimeError("RAND requires the lower bound to be <= upper bound")
+        generated = self._rng.randint(lower, upper)
+        self._registers[reg] = generated
+        self._rng_history.append(generated)
 
     def _op_qinit(self, identifier: str, basis: str | None = None) -> None:
         name = identifier.strip()

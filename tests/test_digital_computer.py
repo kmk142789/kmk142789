@@ -125,6 +125,37 @@ def test_bitwise_operations_and_shifts() -> None:
     assert result.memory["shr"] == 128 >> 3
 
 
+def test_rand_instruction_respects_seed_and_bounds() -> None:
+    program = """
+    RSEED 42
+    RAND A 1 10
+    RAND B 5 5
+    RAND C -2 2
+    HALT
+    """
+
+    first = run_program(program)
+    second = run_program(program)
+
+    assert first.registers == second.registers
+    assert 1 <= first.registers["A"] <= 10
+    assert first.registers["B"] == 5
+    assert -2 <= first.registers["C"] <= 2
+    assert first.random_state["seed"] == 42
+    assert first.random_state["history"] == second.random_state["history"]
+
+    computer = EchoComputer()
+    computer.load(
+        """
+        RAND A 5 1
+        HALT
+        """
+    )
+
+    with pytest.raises(RuntimeError):
+        computer.run()
+
+
 def test_min_max_and_sign_helpers() -> None:
     program = """
     LOAD A 10
@@ -190,6 +221,23 @@ def test_comparison_jumps_enable_rich_branching() -> None:
     assert result.memory["ge"] == 1
     assert result.memory["ne"] == 1
     assert result.memory["eq"] == 1
+
+
+def test_instruction_counts_profile_execution() -> None:
+    program = """
+    LOAD A 0
+    INC A
+    INC A
+    RAND B 0 0
+    HALT
+    """
+
+    result = run_program(program)
+
+    assert result.instruction_counts["LOAD"] == 1
+    assert result.instruction_counts["INC"] == 2
+    assert result.instruction_counts["RAND"] == 1
+    assert result.random_state["history"] == (0,)
 
 
 def test_shift_negative_amount_raises() -> None:
