@@ -82,6 +82,7 @@ verify-claims = "tools.verify_claims:main"
 dominion-archive = "dominion.archive:main"
 echo-proof-orchestrator = "echo.orchestrator.cli:main"
 next-level = "next_level:main"
+hypermesh-weaver = "echo.hypermesh_cli:main"
 
 [tool.setuptools.package-dir]
 "" = "packages/core/src"

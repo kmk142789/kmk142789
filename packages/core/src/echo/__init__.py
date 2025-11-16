@@ -117,6 +117,13 @@ from .hypernova import (
     SagaBeat,
     ScoreFragment,
 )
+from .hypermesh_engine import (
+    HyperMesh,
+    HyperMeshBlueprint,
+    PulseCascadePlanner,
+    PulseNode,
+    ResonanceEdge,
+)
 from .impossible_realities import ImpossibleEvent, ImpossibleRealityEngine
 from .innovation_wave import (
     InnovationSpark,
