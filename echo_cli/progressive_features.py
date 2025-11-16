@@ -18,6 +18,7 @@ __all__ = [
     "plan_capacity_allocation",
     "simulate_portfolio_outcomes",
     "progressive_complexity_suite",
+    "complexity_evolution_series",
     "assess_alignment_signals",
     "evaluate_operational_readiness",
     "forecast_portfolio_throughput",
@@ -510,6 +511,7 @@ def forecast_operational_resilience(
         "alerts": alerts,
     }
 
+
 def plan_capacity_allocation(
     team_capacity: Mapping[str, float],
     tasks: Sequence[Mapping[str, object]] | Sequence[WorkItem],
@@ -803,6 +805,123 @@ def progressive_complexity_suite(
         "text_stage": text_payload,
         "timeline_stage": timeline_payload,
     }
+
+
+def complexity_evolution_series(
+    iterations: int,
+    *,
+    base_numeric_terms: int,
+    documents: Iterable[str] | None = None,
+    milestones: Sequence[Mapping[str, object]] | Sequence[TimelineMilestone] | None = None,
+    start: datetime | None = None,
+) -> dict[str, object]:
+    """Run successive progressive suites, increasing scope and complexity per iteration."""
+
+    if iterations < 1:
+        raise ValueError("iterations must be at least 1")
+    if base_numeric_terms < 2:
+        raise ValueError("base_numeric_terms must be at least 2")
+
+    document_pool: list[str] = []
+    if documents is not None:
+        for entry in documents:
+            text = str(entry).strip()
+            if text:
+                document_pool.append(text)
+
+    milestone_pool: list[TimelineMilestone] = []
+    if milestones is not None:
+        for milestone in milestones:
+            if isinstance(milestone, TimelineMilestone):
+                milestone_pool.append(milestone)
+            else:
+                milestone_pool.append(TimelineMilestone.from_mapping(milestone))
+
+    if iterations >= 2 and not document_pool:
+        raise ValueError("documents are required for iterations >= 2")
+    if iterations >= 3 and not milestone_pool:
+        raise ValueError("milestones are required for iterations >= 3")
+
+    phases: list[dict[str, object]] = []
+    insights: list[str] = []
+    aggregate_index = 0.0
+    last_index = 0.0
+
+    for iteration in range(1, iterations + 1):
+        level = min(3, iteration)
+        numeric_terms = base_numeric_terms + iteration - 1
+
+        docs_for_iteration: list[str] | None = None
+        if level >= 2:
+            count = min(len(document_pool), max(1, iteration))
+            docs_for_iteration = document_pool[:count]
+
+        milestones_for_iteration: list[TimelineMilestone] | None = None
+        if level >= 3:
+            scale = 1 + (iteration - 1) * 0.15
+            confidence_delta = 0.02 * (iteration - 1)
+            milestones_for_iteration = [
+                TimelineMilestone(
+                    name=item.name,
+                    duration_days=round(item.duration_days * scale, 3),
+                    confidence=max(0.35, min(0.99, item.confidence - confidence_delta)),
+                )
+                for item in milestone_pool
+            ]
+
+        payload = progressive_complexity_suite(
+            level,
+            numeric_terms=numeric_terms,
+            documents=docs_for_iteration,
+            milestones=milestones_for_iteration,
+            start=start,
+        )
+
+        index = float(payload["complexity_index"])
+        aggregate_index += index
+        delta = index - last_index
+        last_index = index
+
+        insights.extend([f"[phase {iteration}] {text}" for text in payload.get("insights", [])])
+        phases.append(
+            {
+                "iteration": iteration,
+                "level": level,
+                "numeric_terms": numeric_terms,
+                "documents_used": len(docs_for_iteration or []),
+                "milestones_used": len(milestones_for_iteration or []),
+                "complexity_index": round(index, 3),
+                "complexity_delta": round(delta, 3),
+                "summary": payload.get("summary"),
+                "stages": payload.get("completed_stages"),
+                "payload": payload,
+            }
+        )
+
+    gradient = (
+        phases[-1]["complexity_index"] - phases[0]["complexity_index"]
+        if len(phases) > 1
+        else 0.0
+    )
+    peak = max((phase["complexity_index"] for phase in phases), default=0.0)
+    level_breakdown = Counter(phase["level"] for phase in phases)
+
+    return {
+        "iterations": iterations,
+        "aggregate_complexity": round(aggregate_index, 3),
+        "mean_complexity": round(aggregate_index / iterations, 3),
+        "complexity_gradient": round(float(gradient), 3),
+        "peak_complexity": round(float(peak), 3),
+        "documents_available": len(document_pool),
+        "milestones_available": len(milestone_pool),
+        "level_distribution": {
+            f"level_{level}": count for level, count in sorted(level_breakdown.items())
+        },
+        "phases": phases,
+        "insights": insights,
+        "final_summary": phases[-1]["summary"] if phases else "",
+    }
+
 
 def assess_alignment_signals(
     signals: Mapping[str, float],

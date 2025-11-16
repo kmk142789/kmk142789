@@ -125,6 +125,7 @@ from .progressive_features import (
     assess_alignment_signals,
     analyze_text_corpus,
     execute_complexity_cascade,
+    complexity_evolution_series,
     evaluate_strategy_matrix,
     forecast_operational_resilience,
     evaluate_operational_readiness,
@@ -1135,6 +1136,9 @@ def _load_tasks_file(path: Path | None) -> list[dict[str, object]]:
         if not isinstance(entry, Mapping):
             raise ValueError(f"invalid task at index {idx}")
         tasks.append(dict(entry))
+        record = dict(entry)
+        record.setdefault("priority", 3)
+        tasks.append(record)
     return tasks
 
 
@@ -2331,11 +2335,57 @@ def complexity_escalate(
         readable=True,
         resolve_path=True,
         help="JSON file describing the ordered cascade of stage definitions.",
+@complexity_app.command("evolve")
+def complexity_evolve(
+    ctx: typer.Context,
+    iterations: int = typer.Option(
+        3,
+        "--iterations",
+        "-n",
+        min=1,
+        help="Number of sequential complexity passes to run (each adds capability).",
+    ),
+    base_terms: int = typer.Option(
+        8,
+        "--base-terms",
+        "-c",
+        min=2,
+        help="Starting Fibonacci terms for the first numeric stage.",
+    ),
+    text: List[str] = typer.Option(
+        [],
+        "--text",
+        "-t",
+        help="Inline text snippet for the text stage (repeatable).",
+    ),
+    file: List[Path] = typer.Option(
+        [],
+        "--file",
+        "-f",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="Document path for the text stage (repeatable).",
+    ),
+    milestone: List[str] = typer.Option(
+        [],
+        "--milestone",
+        "-m",
+        help="Milestone formatted as 'Name:duration[:confidence]' for advanced stages.",
+    ),
+    plan_file: Optional[Path] = typer.Option(
+        None,
+        "--plan-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing milestone objects for advanced stages.",
     ),
     start: Optional[str] = typer.Option(
         None,
         "--start",
         help="Optional ISO 8601 timestamp used as the default cascade start.",
+        help="Optional ISO 8601 timestamp to align all iterations.",
     ),
     json_mode: bool = typer.Option(
         False,
@@ -2355,6 +2405,33 @@ def complexity_escalate(
     start_dt = _parse_iso_timestamp(start)
     try:
         payload = execute_complexity_cascade(stages, default_start=start_dt)
+    """Iteratively execute increasingly complex analysis passes."""
+
+    _ensure_ctx(ctx)
+
+    documents: List[str] | None = None
+    if iterations >= 2 or text or file:
+        try:
+            documents = _load_text_documents(text, file)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    plan: list[dict[str, object]] | None = None
+    if iterations >= 3 or plan_file or milestone:
+        try:
+            plan = _load_plan_file(plan_file) + _parse_milestone_specs(milestone)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    start_dt = _parse_iso_timestamp(start)
+    try:
+        payload = complexity_evolution_series(
+            iterations,
+            base_numeric_terms=base_terms,
+            documents=documents,
+            milestones=plan,
+            start=start_dt,
+        )
     except ValueError as exc:
         raise typer.BadParameter(str(exc)) from exc
 
@@ -2390,12 +2467,62 @@ def complexity_escalate(
     ]
     console.print(
         _build_table(["Stage", "Type", "Insight"], rows, title="Complexity cascade")
+        f"Iterations executed : {payload['iterations']}",
+        f"Aggregate complexity: {payload['aggregate_complexity']} (mean {payload['mean_complexity']})",
+        f"Complexity gradient: {payload['complexity_gradient']} (peak {payload['peak_complexity']})",
+    ]
+    if payload.get("documents_available"):
+        summary_lines.append(f"Documents analysed : {payload['documents_available']}")
+    if payload.get("milestones_available"):
+        summary_lines.append(f"Milestones tracked : {payload['milestones_available']}")
+    if payload.get("level_distribution"):
+        distribution = ", ".join(
+            f"{level}={count}" for level, count in payload["level_distribution"].items()
+        )
+        summary_lines.append(f"Level distribution : {distribution}")
+    console.print("\n".join(summary_lines))
+
+    phase_rows = [
+        (
+            phase["iteration"],
+            phase["level"],
+            phase["numeric_terms"],
+            phase["documents_used"],
+            phase["milestones_used"],
+            phase["complexity_index"],
+            phase["complexity_delta"],
+        )
+        for phase in payload.get("phases", [])
+    ]
+    console.print(
+        _build_table(
+            [
+                "Iteration",
+                "Level",
+                "Terms",
+                "Docs",
+                "Milestones",
+                "Complexity",
+                "Δ Complexity",
+            ],
+            phase_rows,
+            title="Evolution phases",
+        )
     )
 
     if payload.get("insights"):
         console.print("Insights:")
         for line in payload["insights"]:
             console.print(f"- {line}")
+        max_lines = 6
+        for insight in payload["insights"][:max_lines]:
+            console.print(f"- {insight}")
+        remaining = len(payload["insights"]) - max_lines
+        if remaining > 0:
+            console.print(f"… (+{remaining} additional insight(s))")
+
+    if payload.get("final_summary"):
+        console.print(f"Final summary: {payload['final_summary']}")
 
 
 @app.callback()
