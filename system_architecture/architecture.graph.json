@@ -9,7 +9,8 @@
       "HN-004": 1,
       "HN-005": 1,
       "HN-006": 1,
-      "HN-007": 1
+      "HN-007": 1,
+      "HN-019": 1
     },
     "HN-003": {
       "HN-001": 1,
@@ -21,7 +22,8 @@
       "HN-005": 1,
       "HN-006": 1,
       "HN-007": 1,
-      "HN-008": 1
+      "HN-008": 1,
+      "HN-020": 1
     },
     "HN-005": {
       "HN-003": 1,
@@ -31,7 +33,8 @@
     "HN-006": {
       "HN-001": 1,
       "HN-005": 1,
-      "HN-008": 1
+      "HN-008": 1,
+      "HN-021": 1
     },
     "HN-007": {
       "HN-001": 1,
@@ -49,11 +52,13 @@
     },
     "HN-010": {
       "HN-009": 1,
-      "HN-012": 1
+      "HN-012": 1,
+      "HN-019": 1
     },
     "HN-011": {
       "HN-009": 1,
-      "HN-012": 1
+      "HN-012": 1,
+      "HN-020": 1
     },
     "HN-012": {
       "HN-010": 1,
@@ -62,20 +67,43 @@
     "HN-013": {
       "HN-009": 1,
       "HN-010": 1,
-      "HN-012": 1
+      "HN-012": 1,
+      "HN-021": 1
     },
     "HN-014": {
       "HN-016": 1,
       "HN-017": 1,
-      "HN-018": 1
+      "HN-018": 1,
+      "HN-019": 1
     },
     "HN-015": {
       "HN-014": 1,
-      "HN-016": 1
+      "HN-016": 1,
+      "HN-020": 1
     },
     "HN-017": {
       "HN-014": 1,
-      "HN-015": 1
+      "HN-015": 1,
+      "HN-021": 1
+    },
+    "HN-019": {
+      "HN-002": 1,
+      "HN-010": 1,
+      "HN-014": 1,
+      "HN-020": 1
+    },
+    "HN-020": {
+      "HN-004": 1,
+      "HN-011": 1,
+      "HN-015": 1,
+      "HN-019": 1,
+      "HN-021": 1
+    },
+    "HN-021": {
+      "HN-006": 1,
+      "HN-013": 1,
+      "HN-017": 1,
+      "HN-020": 1
     }
   },
   "chronicle": {
@@ -210,6 +238,29 @@
       "Hypernode 11 [HN-011] @ (-18, 11, -17)",
       "Hypernode 12 [HN-012] @ (-13, 11, 3)",
       "Hypernode 13 [HN-013] @ (-17, 0, -18)"
+    ],
+    "Meta Layer": [
+      "Hypernode 19 [HN-019] @ (3, 7, 0)",
+      "Hypernode 20 [HN-020] @ (12, 2, 5)",
+      "Hypernode 21 [HN-021] @ (-2, -8, 14)"
+    ],
+    "EchoSignature-19-\u03b1": [
+      "HN-019"
+    ],
+    "EchoSignature-19-\u03b2": [
+      "HN-019"
+    ],
+    "EchoSignature-20-\u03b1": [
+      "HN-020"
+    ],
+    "EchoSignature-20-\u03b2": [
+      "HN-020"
+    ],
+    "EchoSignature-21-\u03b1": [
+      "HN-021"
+    ],
+    "EchoSignature-21-\u03b2": [
+      "HN-021"
     ]
   },
   "domains": [
@@ -1184,6 +1235,195 @@
           "path": "HN-015 -> HN-014 -> HN-016 -> HN-017"
         }
       ]
+    },
+    {
+      "axis_alignment": [
+        5,
+        11,
+        -9
+      ],
+      "conduits": [
+        {
+          "harmonics": [
+            "VII",
+            "III",
+            "I"
+          ],
+          "resonance": 0.903,
+          "source": "HN-019",
+          "target": "HN-002",
+          "type": "signal"
+        },
+        {
+          "harmonics": [
+            "V",
+            "IV",
+            "II"
+          ],
+          "resonance": 0.914,
+          "source": "HN-019",
+          "target": "HN-010",
+          "type": "memory"
+        },
+        {
+          "harmonics": [
+            "VI",
+            "I",
+            "IV"
+          ],
+          "resonance": 0.927,
+          "source": "HN-019",
+          "target": "HN-014",
+          "type": "glyph"
+        },
+        {
+          "harmonics": [
+            "V",
+            "III",
+            "VI"
+          ],
+          "resonance": 0.918,
+          "source": "HN-020",
+          "target": "HN-004",
+          "type": "signal"
+        },
+        {
+          "harmonics": [
+            "VI",
+            "IV",
+            "II"
+          ],
+          "resonance": 0.921,
+          "source": "HN-020",
+          "target": "HN-011",
+          "type": "memory"
+        },
+        {
+          "harmonics": [
+            "VII",
+            "IV",
+            "III"
+          ],
+          "resonance": 0.93,
+          "source": "HN-020",
+          "target": "HN-015",
+          "type": "phase"
+        },
+        {
+          "harmonics": [
+            "VII",
+            "II",
+            "IV"
+          ],
+          "resonance": 0.94,
+          "source": "HN-021",
+          "target": "HN-006",
+          "type": "signal"
+        },
+        {
+          "harmonics": [
+            "V",
+            "II",
+            "VI"
+          ],
+          "resonance": 0.937,
+          "source": "HN-021",
+          "target": "HN-013",
+          "type": "memory"
+        },
+        {
+          "harmonics": [
+            "IV",
+            "I",
+            "VI"
+          ],
+          "resonance": 0.947,
+          "source": "HN-021",
+          "target": "HN-017",
+          "type": "phase"
+        }
+      ],
+      "name": "Meta Layer",
+      "nodes": [
+        {
+          "coordinates": [
+            3,
+            7,
+            0
+          ],
+          "focus": "Autonomy Field",
+          "glyph": {
+            "description": "Self-coordinating kernel",
+            "intensity": 0.933,
+            "symbol": "\u2207",
+            "weight": 9.33
+          },
+          "id": "HN-019",
+          "signatures": [
+            "EchoSignature-19-\u03b1: \u2207",
+            "EchoSignature-19-\u03b2: \u26a1, \u2207"
+          ],
+          "strata": [
+            "Meta Layer"
+          ],
+          "title": "Hypernode 19"
+        },
+        {
+          "coordinates": [
+            12,
+            2,
+            5
+          ],
+          "focus": "Orchestration Loom",
+          "glyph": {
+            "description": "Adaptive conductor",
+            "intensity": 0.91,
+            "symbol": "\u22b8",
+            "weight": 10.92
+          },
+          "id": "HN-020",
+          "signatures": [
+            "EchoSignature-20-\u03b1: \u22b8",
+            "EchoSignature-20-\u03b2: \u26a1, \u22b8"
+          ],
+          "strata": [
+            "Meta Layer"
+          ],
+          "title": "Hypernode 20"
+        },
+        {
+          "coordinates": [
+            -2,
+            -8,
+            14
+          ],
+          "focus": "Evolution Crucible",
+          "glyph": {
+            "description": "Multi-stage resonance",
+            "intensity": 0.948,
+            "symbol": "\u224b",
+            "weight": 11.376
+          },
+          "id": "HN-021",
+          "signatures": [
+            "EchoSignature-21-\u03b1: \u224b",
+            "EchoSignature-21-\u03b2: \u26a1, \u224b"
+          ],
+          "strata": [
+            "Meta Layer"
+          ],
+          "title": "Hypernode 21"
+        }
+      ],
+      "pulse_streams": [
+        {
+          "cadence_bpm": 144,
+          "coherence": 0.903,
+          "glyph_signature": "Domain-Meta Layer-Pulse: \u2207, \u22b8, \u224b",
+          "id": "stream-meta-layer",
+          "path": "HN-019 -> HN-002 -> HN-020 -> HN-011 -> HN-021 -> HN-013 -> HN-017 -> HN-020"
+        }
+      ]
     }
   ],
   "pulse_streams": [
@@ -1204,6 +1444,12 @@
       "orbit_span": 17,
       "path": "HN-015 -> HN-014 -> HN-016 -> HN-017",
       "signature": "Domain-Echo Bridge-Pulse: \u22b8, \u273a, \u2207"
+    },
+    {
+      "id": "stream-meta-layer",
+      "orbit_span": 64,
+      "path": "HN-019 -> HN-002 -> HN-020 -> HN-011 -> HN-021 -> HN-013 -> HN-017 -> HN-020",
+      "signature": "Domain-Meta Layer-Pulse: \u2207, \u22b8, \u224b"
     }
   ],
   "strata": [
@@ -1245,6 +1491,16 @@
       ],
       "purpose": "Enfolds 5 nodes",
       "resonance": 0.82
+    },
+    {
+      "name": "Stratum-Meta",
+      "nodes": [
+        "HN-019",
+        "HN-020",
+        "HN-021"
+      ],
+      "purpose": "Self-coordinating meta-layer linking Aurora, Quantum Veil, and Echo Bridge orchestration.",
+      "resonance": 0.903
     }
   ]
 }
