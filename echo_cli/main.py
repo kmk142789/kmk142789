@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import math
 from pathlib import Path
 from types import SimpleNamespace
@@ -248,6 +248,21 @@ def _analyse_event_intervals(events: Iterable[Mapping[str, Any]]) -> dict[str, A
     longest = sorted(intervals, key=lambda item: item["seconds"], reverse=True)[:5]
 
     return {"stats": stats, "longest_intervals": longest}
+def _format_hours(hours: float | None) -> str:
+    """Render fractional hours as a concise human readable string."""
+
+    if hours is None:
+        return "-"
+    hours = max(hours, 0.0)
+    total_minutes = int(round(hours * 60))
+    if total_minutes == 0 and hours > 0:
+        return "<1m"
+    hours_part, minutes = divmod(total_minutes, 60)
+    if hours_part and minutes:
+        return f"{hours_part}h {minutes}m"
+    if hours_part:
+        return f"{hours_part}h"
+    return f"{minutes}m"
 
 
 def _percentile(values: List[float], fraction: float) -> float | None:
@@ -1073,6 +1088,12 @@ def history(
         "-c",
         help="Only include events emitted by the specified command (repeatable).",
     ),
+    statuses: List[str] = typer.Option(
+        [],
+        "--status",
+        "-s",
+        help="Only include events whose status matches the provided values.",
+    ),
     show_metadata: bool = typer.Option(
         False, "--show-metadata", help="Include metadata previews in the output"
     ),
@@ -1089,6 +1110,7 @@ def history(
         "limit": limit,
         "since": since,
         "commands": commands,
+        "statuses": statuses,
         "show_metadata": show_metadata,
         "show_payload": show_payload,
         "json": json_mode,
@@ -1110,6 +1132,8 @@ def history(
 
         command_filter = sorted({name.strip() for name in commands if name.strip()})
         command_set = set(command_filter) if command_filter else None
+        status_filter = sorted({status.strip().lower() for status in statuses if status.strip()})
+        status_set = set(status_filter) if status_filter else None
 
         events = worker_hive.tail_events(limit=limit, since=since_marker)
         current_task_id = getattr(task, "task_id", None)
@@ -1118,6 +1142,13 @@ def history(
             for event in reversed(events)
             if event.get("task_id") != current_task_id
             and (command_set is None or str(event.get("name", "")) in command_set)
+            and (
+                status_set is None
+                or str(event.get("status", ""))
+                .strip()
+                .lower()
+                in status_set
+            )
         ]
 
         payload: dict[str, object] = {
@@ -1125,6 +1156,7 @@ def history(
             "log_path": str(worker_hive.log_path),
             "count": len(ordered_events),
             "commands": command_filter,
+            "statuses": status_filter,
         }
 
         if ctx.obj.get("json", False):
@@ -1140,11 +1172,14 @@ def history(
                         "No worker activity recorded yet. Instrumented commands will appear here once executed."
                     )
             else:
-                scope = (
-                    ", ".join(command_filter)
-                    if command_filter
-                    else "all instrumented commands"
-                )
+                scope_parts: list[str] = []
+                if command_filter:
+                    scope_parts.append(", ".join(command_filter))
+                if status_filter:
+                    scope_parts.append(
+                        "status in (" + ", ".join(status_filter) + ")"
+                    )
+                scope = " & ".join(scope_parts) if scope_parts else "all instrumented commands"
                 if FALLBACK_TABLE:
                     console.print(
                         f"Recent worker events ({len(ordered_events)}) from {worker_hive.log_path} (scope: {scope}):"
@@ -1273,6 +1308,160 @@ def status(
                     console.print(command_table)
 
         task.succeed(payload=aggregates)
+
+
+@app.command()
+def digest(
+    ctx: typer.Context,
+    limit: int = typer.Option(
+        800,
+        "--window",
+        "-w",
+        help="Number of recent worker events inspected for the digest.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Summarise the busiest commands, statuses, and time windows."""
+
+    metadata = {"window": limit, "json": json_mode}
+
+    with worker_hive.worker("digest", metadata=metadata) as task:
+        if limit <= 0:
+            task.fail(error="invalid_window", window=limit)
+            raise typer.BadParameter("--window must be a positive integer")
+
+        _set_json_mode(ctx, json_mode)
+        events = worker_hive.tail_events(limit=limit)
+        now = datetime.now(timezone.utc)
+        status_counts: Counter[str] = Counter()
+        command_counts: Counter[str] = Counter()
+        hourly_counts: Counter[str] = Counter()
+        first_dt: datetime | None = None
+        last_dt: datetime | None = None
+
+        for event in events:
+            status = str(event.get("status", "unknown")) or "unknown"
+            command = str(event.get("name", "-")) or "-"
+            status_counts[status] += 1
+            command_counts[command] += 1
+            timestamp = _parse_iso_timestamp(event.get("timestamp"))
+            if not timestamp:
+                continue
+            if first_dt is None or timestamp < first_dt:
+                first_dt = timestamp
+            if last_dt is None or timestamp > last_dt:
+                last_dt = timestamp
+            bucket = timestamp.replace(minute=0, second=0, microsecond=0)
+            hourly_counts[_format_iso(bucket) or "-"] += 1
+
+        span_seconds = None
+        if first_dt and last_dt:
+            span_seconds = max((last_dt - first_dt).total_seconds(), 0.0)
+        freshness_seconds = None
+        if last_dt:
+            freshness_seconds = max((now - last_dt).total_seconds(), 0.0)
+
+        events_per_hour = None
+        if span_seconds and span_seconds > 0:
+            hours = span_seconds / 3600
+            if hours > 0:
+                events_per_hour = len(events) / hours
+
+        try:
+            file_size = worker_hive.log_path.stat().st_size
+        except OSError:
+            file_size = None
+
+        busiest_hours = [
+            {"hour": hour, "events": count}
+            for hour, count in sorted(
+                hourly_counts.items(), key=lambda item: item[1], reverse=True
+            )[:5]
+        ]
+
+        payload = {
+            "log_path": str(worker_hive.log_path),
+            "event_limit": limit,
+            "event_count": len(events),
+            "status_counts": dict(status_counts),
+            "command_counts": dict(command_counts),
+            "hourly_activity": busiest_hours,
+            "window_start": _format_iso(first_dt),
+            "window_end": _format_iso(last_dt),
+            "window_span_seconds": span_seconds,
+            "freshness_seconds": freshness_seconds,
+            "events_per_hour": events_per_hour,
+            "file_size_bytes": file_size,
+        }
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            console.print(
+                f"Digest of {payload['event_count']} events (limit {limit}) "
+                f"from {payload['log_path']}"
+            )
+            if payload["window_start"] and payload["window_end"]:
+                span_text = _format_duration(payload["window_span_seconds"])
+                console.print(
+                    f"Window: {payload['window_start']} → {payload['window_end']} "
+                    f"({span_text})"
+                )
+            if payload["freshness_seconds"] is not None:
+                console.print(
+                    "Last event "
+                    f"{_format_duration(payload['freshness_seconds'])} ago."
+                )
+            if file_size is not None:
+                console.print(f"Log size: {file_size/1024:.1f} KiB")
+            if events_per_hour is not None:
+                console.print(f"Average activity: {events_per_hour:.2f} events/hour")
+
+            if status_counts:
+                if FALLBACK_TABLE:
+                    console.print("Statuses:")
+                    for status, count in sorted(status_counts.items()):
+                        console.print(f"  {status}: {count}")
+                else:
+                    status_table = Table(title="Status distribution")
+                    status_table.add_column("Status", style="green")
+                    status_table.add_column("Events", justify="right")
+                    for status, count in sorted(status_counts.items()):
+                        status_table.add_row(str(status), str(count))
+                    console.print(status_table)
+
+            if command_counts:
+                top_commands = sorted(
+                    command_counts.items(), key=lambda item: (-item[1], item[0])
+                )[:10]
+                if FALLBACK_TABLE:
+                    console.print("Top commands:")
+                    for name, count in top_commands:
+                        console.print(f"  {name}: {count}")
+                else:
+                    command_table = Table(title="Most active commands")
+                    command_table.add_column("Command", style="magenta")
+                    command_table.add_column("Events", justify="right")
+                    for name, count in top_commands:
+                        command_table.add_row(str(name), str(count))
+                    console.print(command_table)
+
+            if busiest_hours:
+                if FALLBACK_TABLE:
+                    console.print("Busiest hours (UTC):")
+                    for row in busiest_hours:
+                        console.print(f"  {row['hour']}: {row['events']} events")
+                else:
+                    hour_table = Table(title="Busiest hours (UTC)")
+                    hour_table.add_column("Hour", style="cyan")
+                    hour_table.add_column("Events", justify="right")
+                    for row in busiest_hours:
+                        hour_table.add_row(row["hour"], str(row["events"]))
+                    console.print(hour_table)
+
+        task.succeed(payload=payload)
 
 
 @app.command()
@@ -2226,8 +2415,196 @@ def timeline(
             else:
                 console.print("No idle gaps detected between observed completions.")
 
-            if export_path:
-                console.print(f"Hourly throughput exported to {export_path}.")
+        if export_path:
+            console.print(f"Hourly throughput exported to {export_path}.")
+
+        task.succeed(payload=payload)
+
+
+@app.command()
+def capacity_plan(
+    ctx: typer.Context,
+    backlog: int = typer.Option(
+        50,
+        "--backlog",
+        "-b",
+        help="Number of outstanding tasks waiting to be processed.",
+    ),
+    window: int = typer.Option(
+        800,
+        "--window",
+        "-w",
+        help="Number of recent worker events to use when forecasting throughput.",
+    ),
+    parallelism: int = typer.Option(
+        1,
+        "--parallelism",
+        "-p",
+        help="Assumed number of workers processing the backlog concurrently.",
+    ),
+    confidence: float = typer.Option(
+        0.8,
+        "--confidence",
+        help="Confidence level (0-1) for the minimum throughput floor.",
+    ),
+    command_name: Optional[str] = typer.Option(
+        None,
+        "--command",
+        "-c",
+        help="Only use telemetry emitted by the specified command name.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Forecast how long it will take to clear the current backlog."""
+
+    metadata = {
+        "backlog": backlog,
+        "window": window,
+        "parallelism": parallelism,
+        "confidence": confidence,
+        "command": command_name,
+        "json": json_mode,
+    }
+
+    with worker_hive.worker("capacity_plan", metadata=metadata) as task:
+        if backlog < 0:
+            task.fail(error="invalid_backlog", backlog=backlog)
+            raise typer.BadParameter("--backlog must be zero or a positive integer")
+        if window <= 0:
+            task.fail(error="invalid_window", window=window)
+            raise typer.BadParameter("--window must be a positive integer")
+        if parallelism <= 0:
+            task.fail(error="invalid_parallelism", parallelism=parallelism)
+            raise typer.BadParameter("--parallelism must be at least 1")
+        if not (0.0 < confidence < 1.0):
+            task.fail(error="invalid_confidence", confidence=confidence)
+            raise typer.BadParameter("--confidence must be between 0 and 1")
+
+        _set_json_mode(ctx, json_mode)
+        events = worker_hive.tail_events(limit=window)
+        insights_payload = _compute_timeline_insights(
+            events, command_filter=command_name
+        )
+        summary = insights_payload["summary"]
+        hourly_rows = insights_payload["hourly_throughput"]
+        hourly_success_values = [
+            row["success"]
+            for row in hourly_rows
+            if isinstance(row.get("success"), int)
+        ]
+
+        avg_success_per_hour = (
+            mean(hourly_success_values) if hourly_success_values else None
+        )
+        span_seconds = summary.get("window_span_seconds") or 0
+        if (avg_success_per_hour is None or avg_success_per_hour == 0) and span_seconds > 0:
+            span_hours = span_seconds / 3600
+            if span_hours > 0:
+                avg_success_per_hour = (
+                    summary.get("success", 0) / span_hours if summary.get("success") else None
+                )
+
+        confident_rate = None
+        if hourly_success_values:
+            confident_fraction = max(0.0, min(1.0, 1.0 - confidence))
+            confident_rate = _percentile(
+                sorted(hourly_success_values), confident_fraction
+            )
+        peak_rate = max(hourly_success_values) if hourly_success_values else None
+        planning_rate = confident_rate or avg_success_per_hour
+        if planning_rate is not None and planning_rate <= 0:
+            planning_rate = None
+
+        eta_hours = None
+        eta_timestamp = None
+        if backlog == 0:
+            eta_hours = 0.0
+            eta_timestamp = _format_iso(datetime.now(timezone.utc))
+        elif planning_rate:
+            eta_hours = backlog / (planning_rate * parallelism)
+            eta_timestamp = _format_iso(
+                datetime.now(timezone.utc) + timedelta(hours=eta_hours)
+            )
+
+        completed_total = summary.get("completed_tasks", 0) or 0
+        failure_rate = (
+            summary.get("failure", 0) / completed_total if completed_total else 0.0
+        )
+        recommended_buffer = math.ceil(backlog * failure_rate) if backlog else 0
+
+        payload = {
+            "event_count": len(events),
+            "window": window,
+            "log_path": str(worker_hive.log_path),
+            "command": command_name,
+            "backlog": backlog,
+            "parallelism": parallelism,
+            "confidence": confidence,
+            "rates": {
+                "hourly_average": avg_success_per_hour,
+                "hourly_confident": confident_rate,
+                "hourly_peak": peak_rate,
+            },
+            "planning_rate": planning_rate,
+            "eta_hours": eta_hours,
+            "eta_timestamp": eta_timestamp,
+            "failure_rate": failure_rate,
+            "recommended_buffer": recommended_buffer,
+            "insights": insights_payload,
+        }
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            target = command_name or "all commands"
+            console.print(
+                f"Capacity plan for {target}: backlog={backlog} tasks using {payload['event_count']} events"
+                f" (log: {payload['log_path']})."
+            )
+            planning_text = (
+                f"{planning_rate:.2f} tasks/hr" if planning_rate is not None else "-"
+            )
+            console.print(
+                f"Parallelism: {parallelism} | Confidence: {confidence:.0%} "
+                f"| Planning rate: {planning_text}"
+            )
+
+            if eta_hours is not None:
+                console.print(
+                    f"Estimated completion: {_format_hours(eta_hours)} (ETA {eta_timestamp or '-'})"
+                )
+            else:
+                console.print(
+                    "Not enough throughput telemetry to estimate completion yet."
+                )
+
+            console.print(
+                f"Failure rate: {failure_rate:.1%} | Recommended buffer: {recommended_buffer} tasks"
+            )
+
+            if not FALLBACK_TABLE:
+                rate_table = Table(title="Hourly throughput scenarios")
+                rate_table.add_column("Scenario", style="cyan")
+                rate_table.add_column("Throughput", justify="right")
+                for label, value in [
+                    ("Average", avg_success_per_hour),
+                    (f"{confidence:.0%} floor", confident_rate),
+                    ("Peak hour", peak_rate),
+                ]:
+                    rate_text = f"{value:.2f} tasks/hr" if value is not None else "-"
+                    rate_table.add_row(label, rate_text)
+                console.print(rate_table)
+            else:
+                console.print("Throughput scenarios:")
+                for label, value in [
+                    ("Average", avg_success_per_hour),
+                    (f"{confidence:.0%} floor", confident_rate),
+                    ("Peak hour", peak_rate),
+                ]:
+                    rate_text = f"{value:.2f} tasks/hr" if value is not None else "-"
+                    console.print(f"  {label}: {rate_text}")
 
         task.succeed(payload=payload)
 
