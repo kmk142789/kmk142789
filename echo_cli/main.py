@@ -115,6 +115,10 @@ from echo.recursive_mythogenic_pulse import (
     PulseVoyageVisualizer,
     compose_voyage,
 )
+from echo.resonance_complex import (
+    load_resonance_blueprint,
+    save_resonance_report,
+)
 from echo.transcend import TranscendOrchestrator
 from pulse_dashboard import WorkerHive
 
@@ -898,6 +902,71 @@ def deploy_meta_causal_engine(
 @app.callback()
 def cli_root(ctx: typer.Context) -> None:
     _ensure_ctx(ctx)
+
+
+@app.command()
+def resonance(
+    ctx: typer.Context,
+    blueprint: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        help="Path to a resonance complex blueprint JSON file.",
+    ),
+    cycles: int = typer.Option(8, "--cycles", "-c", help="Number of simulation cycles to execute."),
+    seed: Optional[int] = typer.Option(
+        None,
+        "--seed",
+        help="Seed for the pseudo-random components (defaults to system entropy).",
+    ),
+    save_report: Optional[Path] = typer.Option(
+        None,
+        "--save-report",
+        help="Persist the full resonance report as JSON.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit JSON instead of a formatted text summary.",
+    ),
+) -> None:
+    """Run a high-order resonance complex simulation."""
+
+    _ensure_ctx(ctx)
+    metadata = {
+        "blueprint": str(blueprint),
+        "cycles": cycles,
+        "seed": seed,
+        "json": json_mode,
+    }
+
+    with worker_hive.worker("resonance.simulation", metadata=metadata) as task:
+        if cycles <= 0:
+            task.fail(error="invalid_cycles", cycles=cycles)
+            raise typer.BadParameter("--cycles must be a positive integer")
+
+        try:
+            complex_model = load_resonance_blueprint(blueprint)
+        except FileNotFoundError:
+            task.fail(error="missing_blueprint", path=str(blueprint))
+            raise typer.BadParameter(f"blueprint not found: {blueprint}") from None
+        except ValueError as exc:
+            task.fail(error="invalid_blueprint", path=str(blueprint), message=str(exc))
+            raise typer.BadParameter(str(exc)) from exc
+
+        report = complex_model.simulate(cycles=cycles, seed=seed)
+        if save_report is not None:
+            save_resonance_report(report, save_report)
+
+        payload = report.to_dict()
+        payload["blueprint"] = str(blueprint)
+        if save_report is not None:
+            payload["report_path"] = str(save_report)
+
+        _set_json_mode(ctx, json_mode)
+        _echo(ctx, payload, message=report.render_summary())
+        task.succeed(payload=payload)
 
 
 @app.command()
