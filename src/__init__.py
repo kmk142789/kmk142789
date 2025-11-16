@@ -38,6 +38,7 @@ from .creative_loop import (
     export_loop_result,
     generate_loop,
     summarize_loop,
+    summarise_loop_suite,
 )
 
 __all__ = [
@@ -64,5 +65,6 @@ __all__ = [
     "generate_loop",
     "loop_demo",
     "summarize_loop",
+    "summarise_loop_suite",
     "resonance_demo",
 ]

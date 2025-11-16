@@ -14,13 +14,16 @@ systems to understand which narrative voices and fragments were emphasised.
 
 from __future__ import annotations
 
+import csv
+import io
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 import json
 from pathlib import Path
 import random
-from typing import Dict, Iterable, List, Tuple
+from statistics import mean
+from typing import Dict, Iterable, List, Mapping, Tuple
 
 
 VOICE_LIBRARY = [
@@ -197,6 +200,16 @@ def summarize_loop(loop_result: LoopResult) -> LoopSummary:
         dominant_voice=dominant_voice,
         fragment_coverage=fragments_used,
     )
+def build_loop_payload(seed: LoopSeed, loop_result: LoopResult, timestamp: str) -> Dict[str, object]:
+    """Build a structured payload describing the loop."""
+
+    return {
+        "motif": seed.motif,
+        "tempo": seed.tempo,
+        "pulses": seed.pulses,
+        "timestamp": timestamp,
+        "loop": loop_result.to_dict(),
+    }
 
 
 def load_fragments_from_file(path: str | Path) -> List[str]:
@@ -379,13 +392,15 @@ def compose_loop(
     *,
     format: str = "text",
     loop_result: LoopResult | None = None,
+    timestamp: str | None = None,
 ) -> str:
     """Create a creative loop in the requested output format.
 
-    Supported formats are ``"text"``, ``"json"``, ``"markdown"``, and ``"table"``.
+    Supported formats are ``"text"``, ``"json"``, ``"markdown"``, ``"table"``, and
+    ``"csv"``.
     """
 
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    timestamp = timestamp or datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     header = f"Loop for '{seed.motif}' at {timestamp} ({seed.tempo})"
     loop_result = loop_result or generate_loop(seed)
 
@@ -394,13 +409,7 @@ def compose_loop(
         return "\n".join([header, "", body])
 
     if format == "json":
-        payload = {
-            "motif": seed.motif,
-            "tempo": seed.tempo,
-            "pulses": seed.pulses,
-            "timestamp": timestamp,
-            "loop": loop_result.to_dict(),
-        }
+        payload = build_loop_payload(seed, loop_result, timestamp)
         return json.dumps(payload, indent=2)
 
     if format == "markdown":
@@ -443,7 +452,166 @@ def compose_loop(
         table_body = _render_table(loop_result)
         return "\n".join([header, "", table_body])
 
-    raise ValueError("Unsupported format; expected 'text', 'json', 'markdown', or 'table'.")
+    if format == "csv":
+        buffer = io.StringIO()
+        fieldnames = [
+            "index",
+            "voice",
+            "fragment",
+            "accent",
+            "tempo",
+            "texture",
+            "line",
+        ]
+        writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+        writer.writeheader()
+        for entry in loop_result.timeline:
+            writer.writerow(
+                {
+                    "index": entry.get("index", 0) + 1,
+                    "voice": entry.get("voice", "-"),
+                    "fragment": entry.get("fragment") or "-",
+                    "accent": entry.get("accent", 0),
+                    "tempo": entry.get("tempo_hint", "-"),
+                    "texture": entry.get("texture", "-"),
+                    "line": entry.get("line", ""),
+                }
+            )
+        return buffer.getvalue().rstrip()
+
+    raise ValueError(
+        "Unsupported format; expected 'text', 'json', 'markdown', 'table', or 'csv'."
+    )
+
+
+def _extension_for_format(output_format: str) -> str:
+    mapping = {
+        "text": "txt",
+        "json": "json",
+        "markdown": "md",
+        "table": "txt",
+        "csv": "csv",
+    }
+    return mapping.get(output_format, "txt")
+
+
+def summarise_loop_suite(loop_results: Iterable[LoopResult]) -> Dict[str, object]:
+    """Aggregate diagnostics across multiple loop results."""
+
+    voice_counts: Counter[str] = Counter()
+    fragment_counts: Counter[str] = Counter()
+    accent_values: List[int] = []
+    tempo_counts: Counter[str] = Counter()
+    total_lines = 0
+
+    for result in loop_results:
+        voice_counts.update(result.diagnostics.voices)
+        fragment_counts.update(result.diagnostics.fragments)
+        accent_values.extend(result.diagnostics.accents)
+        tempo_counts[result.rhythm.tempo] += 1
+        total_lines += len(result.lines)
+
+    average_accent = mean(accent_values) if accent_values else 0.0
+    summary = {
+        "total_loops": sum(tempo_counts.values()),
+        "total_lines": total_lines,
+        "unique_voices": len(voice_counts),
+        "unique_fragments": len(fragment_counts),
+        "top_voices": voice_counts.most_common(3),
+        "top_fragments": fragment_counts.most_common(3),
+        "tempo_distribution": dict(tempo_counts),
+        "average_accent_intensity": average_accent,
+    }
+    return summary
+
+
+def format_suite_summary(summary: Mapping[str, object]) -> str:
+    """Render a textual summary for aggregated suite diagnostics."""
+
+    def _format_pairs(values: List[Tuple[str, int]]) -> str:
+        return ", ".join(f"{key}:{count}" for key, count in values) or "none"
+
+    lines = ["Suite summary:"]
+    lines.append(f"- loops generated: {summary.get('total_loops', 0)}")
+    lines.append(f"- total lines composed: {summary.get('total_lines', 0)}")
+    lines.append(f"- unique voices: {summary.get('unique_voices', 0)}")
+    lines.append(f"- unique fragments: {summary.get('unique_fragments', 0)}")
+    lines.append(
+        f"- top voices: {_format_pairs(summary.get('top_voices', []))}"
+    )
+    lines.append(
+        f"- top fragments: {_format_pairs(summary.get('top_fragments', []))}"
+    )
+    tempo_distribution = summary.get("tempo_distribution", {})
+    if tempo_distribution:
+        tempo_text = ", ".join(
+            f"{tempo}:{count}" for tempo, count in sorted(tempo_distribution.items())
+        )
+    else:
+        tempo_text = "none"
+    lines.append(f"- tempo distribution: {tempo_text}")
+    average_accent = summary.get("average_accent_intensity", 0.0)
+    lines.append(f"- average accent intensity: {average_accent:.2f}")
+    return "\n".join(lines)
+
+
+@dataclass
+class _LoopRenderPackage:
+    index: int
+    seed: LoopSeed
+    result: LoopResult
+    timestamp: str
+    rendered_text: str
+
+
+def _write_rendered_outputs(
+    packages: Iterable[_LoopRenderPackage],
+    destination: Path,
+    *,
+    output_format: str,
+) -> None:
+    entries = list(packages)
+    if not entries:
+        return
+    destination = Path(destination)
+    multiple = len(entries) > 1
+    if multiple:
+        if destination.exists() and destination.is_file():
+            raise ValueError(
+                "Destination must be a directory when saving multiple variations."
+            )
+        destination.mkdir(parents=True, exist_ok=True)
+        extension = _extension_for_format(output_format)
+        for package in entries:
+            target = destination / f"variation_{package.index:02d}.{extension}"
+            target.write_text(package.rendered_text, encoding="utf-8")
+    else:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(entries[0].rendered_text, encoding="utf-8")
+
+
+def _write_structured_outputs(
+    packages: Iterable[_LoopRenderPackage], destination: Path
+) -> None:
+    entries = list(packages)
+    if not entries:
+        return
+    destination = Path(destination)
+    multiple = len(entries) > 1
+    if multiple:
+        if destination.exists() and destination.is_file():
+            raise ValueError(
+                "Destination must be a directory when exporting multiple variations."
+            )
+        destination.mkdir(parents=True, exist_ok=True)
+        for package in entries:
+            payload = build_loop_payload(package.seed, package.result, package.timestamp)
+            target = destination / f"variation_{package.index:02d}.json"
+            target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    else:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        payload = build_loop_payload(entries[0].seed, entries[0].result, entries[0].timestamp)
+        destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
 def export_loop_result(
@@ -537,9 +705,33 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json", "markdown", "table"],
+        choices=["text", "json", "markdown", "table", "csv"],
         default="text",
-        help="Choose between human-readable text, JSON, Markdown, or table output",
+        help="Choose between human-readable text, JSON, Markdown, table, or CSV output",
+    )
+    parser.add_argument(
+        "--variations",
+        type=int,
+        default=1,
+        help="Number of unique loops to generate in a single run",
+    )
+    parser.add_argument(
+        "--save-output",
+        type=Path,
+        dest="save_output",
+        help=(
+            "Optional path to save the rendered output. Provide a directory when"
+            " generating multiple variations."
+        ),
+    )
+    parser.add_argument(
+        "--export-json",
+        type=Path,
+        dest="export_json",
+        help=(
+            "Optional path for structured JSON payloads. Provide a directory when"
+            " generating multiple variations."
+        ),
     )
     parser.add_argument(
         "--voice-bias",
@@ -591,3 +783,59 @@ if __name__ == "__main__":
             print(f"[saved] Exported loop to {args.export} ({args.export_format})")
         except ValueError as exc:
             parser.error(str(exc))
+    if args.variations < 1:
+        parser.error("--variations must be a positive integer")
+
+    packages: List[_LoopRenderPackage] = []
+    system_random = random.SystemRandom()
+    for index in range(1, args.variations + 1):
+        if args.seed is not None:
+            variant_seed_value = args.seed + (index - 1)
+        else:
+            variant_seed_value = system_random.randrange(0, 2**31)
+        seed = LoopSeed(
+            motif=args.motif,
+            fragments=fragments,
+            tempo=args.tempo,
+            pulses=args.pulses,
+            seed=variant_seed_value,
+        )
+        loop_result = generate_loop(seed)
+        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+        rendered = compose_loop(
+            seed,
+            format=args.format,
+            loop_result=loop_result,
+            timestamp=timestamp,
+        )
+        packages.append(
+            _LoopRenderPackage(
+                index=index,
+                seed=seed,
+                result=loop_result,
+                timestamp=timestamp,
+                rendered_text=rendered,
+            )
+        )
+
+    for package in packages:
+        if args.variations > 1:
+            print(f"=== Variation {package.index}/{args.variations} ===")
+        print(package.rendered_text)
+        print()
+
+    if args.variations > 1:
+        summary = summarise_loop_suite(package.result for package in packages)
+        print(format_suite_summary(summary))
+
+    if args.save_output:
+        try:
+            _write_rendered_outputs(packages, args.save_output, output_format=args.format)
+        except (OSError, ValueError) as exc:
+            parser.error(f"Unable to save output: {exc}")
+
+    if args.export_json:
+        try:
+            _write_structured_outputs(packages, args.export_json)
+        except (OSError, ValueError) as exc:
+            parser.error(f"Unable to export JSON: {exc}")
