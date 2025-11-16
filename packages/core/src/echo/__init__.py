@@ -60,6 +60,12 @@ from .continuum_observatory import (
     TodoMatch,
     build_default_lane_map,
 )
+from .continuum_resonance_field import (
+    ContinuumResonanceField,
+    ContinuumResonanceReport,
+    LaneResonance,
+    PulseDrift,
+)
 from .cosmic_mnemonic_forge import (
     MnemonicConstellation,
     MnemonicThread,
