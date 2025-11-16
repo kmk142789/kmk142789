@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    {"name": "sovereign-core", "baseline": 3.6, "capacity": 8.0, "tags": ["core", "signal"]},
+    {"name": "bridge-harmonics", "baseline": 2.0, "capacity": 6.2, "tags": ["bridge"]},
+    {"name": "wildlight", "baseline": 1.7, "capacity": 5.5, "tags": ["edge", "creative"], "drift": 0.03},
+    {"name": "memory-weave", "baseline": 2.4, "capacity": 7.1, "tags": ["memory", "stability"]}
+  ],
+  "edges": [
+    {"source": "sovereign-core", "target": "bridge-harmonics", "weight": 0.44, "mode": "bidirectional"},
+    {"source": "bridge-harmonics", "target": "wildlight", "weight": 0.58},
+    {"source": "wildlight", "target": "memory-weave", "weight": 0.37},
+    {"source": "memory-weave", "target": "sovereign-core", "weight": 0.41}
+  ],
+  "flux": {
+    "decay": 0.13,
+    "amplification": 1.05,
+    "jitter": 0.05
+  }
+}
