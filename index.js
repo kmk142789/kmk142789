@@ -326,6 +326,17 @@ app.get('/echo/system/tasks', async (_req, res) => {
   res.json({ tasks });
 });
 
+app.get('/echo/system/task/report', async (req, res) => {
+  const { warningMultiplier, criticalMultiplier } = req.query;
+  const { autonomousSystemAccess } = await import('./lib/autonomous_system_access.js');
+  const report = autonomousSystemAccess.assessContinuousTasks({
+    warningMultiplier: warningMultiplier ? Number(warningMultiplier) : undefined,
+    criticalMultiplier: criticalMultiplier ? Number(criticalMultiplier) : undefined,
+    includeHistory: req.query.includeHistory === 'true',
+  });
+  res.json({ report });
+});
+
 app.post('/echo/system/task/start', async (req, res) => {
   const { name, cadenceMs, metadata } = req.body || {};
   if (!name) {
@@ -369,6 +380,19 @@ app.post('/echo/system/task/stop', async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
+});
+
+app.post('/echo/system/task/autogovern', async (req, res) => {
+  const { warningMultiplier, criticalMultiplier, autoStopMultiplier, includeHistory } =
+    req.body || {};
+  const { autonomousSystemAccess } = await import('./lib/autonomous_system_access.js');
+  const report = autonomousSystemAccess.autoGovernContinuousTasks({
+    warningMultiplier,
+    criticalMultiplier,
+    autoStopMultiplier,
+    includeHistory: Boolean(includeHistory),
+  });
+  res.json({ report });
 });
 
 app.get('/echo/shell/state', async (_req, res) => {
