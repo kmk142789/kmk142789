@@ -13,8 +13,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 import random
+from statistics import fmean
 from textwrap import indent
-from typing import Iterable, List, Sequence
+from typing import Dict, Iterable, List, Sequence
 
 
 @dataclass
@@ -42,6 +43,28 @@ class ConstellationNode:
     name: str
     intensity: float
     description: str
+
+
+@dataclass
+class ConstellationArc:
+    """Describe a transition between two constellation nodes."""
+
+    source: str
+    target: str
+    resonance: float
+    description: str
+
+
+@dataclass
+class ConstellationDiagnostics:
+    """Aggregate metrics calculated from a constellation map."""
+
+    peak_intensity: float
+    trough_intensity: float
+    spread: float
+    stability_index: float
+    energy_class: str
+    motif_intensity: Dict[str, float]
 
 
 class ConstellationWeaver:
@@ -76,6 +99,88 @@ class ConstellationWeaver:
         )
         return [anchor] + nodes
 
+    def generate_arcs(self, nodes: Sequence[ConstellationNode]) -> List[ConstellationArc]:
+        """Link nodes with transition arcs of increasing narrative complexity."""
+
+        if len(nodes) <= 1:
+            return []
+
+        arcs: List[ConstellationArc] = []
+        anchor = nodes[0]
+        moods = [
+            "harmonic tether",
+            "tidal sweep",
+            "flare bridge",
+            "quiet drift",
+            "lattice surge",
+        ]
+
+        for node in nodes[1:]:
+            midpoint = round((anchor.intensity + node.intensity) / 2, 3)
+            description = (
+                f"Anchor stabilises {node.name} through a {self.random_state.choice(moods)}"
+                f" at resonance {midpoint:.3f}."
+            )
+            arcs.append(
+                ConstellationArc(
+                    source=anchor.name,
+                    target=node.name,
+                    resonance=midpoint,
+                    description=description,
+                )
+            )
+
+        for prev, current in zip(nodes[1:], nodes[2:]):
+            delta = round(current.intensity - prev.intensity, 3)
+            descriptor = "ascending" if delta >= 0 else "descending"
+            detail = self.random_state.choice(
+                ["spiral echo", "chord", "memory current", "pulse"],
+            )
+            arcs.append(
+                ConstellationArc(
+                    source=prev.name,
+                    target=current.name,
+                    resonance=abs(delta),
+                    description=(
+                        f"{prev.name} hands momentum to {current.name} via a {descriptor} {detail}"
+                        f" (|Δ|={abs(delta):.3f})."
+                    ),
+                )
+            )
+
+        return arcs
+
+    def diagnose(self, nodes: Sequence[ConstellationNode]) -> ConstellationDiagnostics:
+        """Return diagnostic metrics for the constellation."""
+
+        if not nodes:
+            raise ValueError("nodes must not be empty")
+
+        intensities = [node.intensity for node in nodes]
+        peak = max(intensities)
+        trough = min(intensities)
+        spread = round(peak - trough, 3)
+        mean_intensity = fmean(intensities)
+        variance = fmean((value - mean_intensity) ** 2 for value in intensities)
+        stability = round(1.0 / (1.0 + variance), 3)
+
+        if peak < 1.0:
+            energy_class = "delicate"
+        elif peak < 2.0:
+            energy_class = "radiant"
+        else:
+            energy_class = "volatile"
+
+        motif_intensity = {node.name: node.intensity for node in nodes}
+        return ConstellationDiagnostics(
+            peak_intensity=round(peak, 3),
+            trough_intensity=round(trough, 3),
+            spread=spread,
+            stability_index=stability,
+            energy_class=energy_class,
+            motif_intensity=motif_intensity,
+        )
+
     def _anchor_line(self) -> str:
         """Return a short line describing the constellation anchor."""
 
@@ -88,8 +193,13 @@ class ConstellationWeaver:
         return f"An {mood} anchor traces the outline of {self.payload.theme} ({timestamp})."
 
 
-def compose_constellation(payload: ConstellationSeed) -> str:
-    """Create a formatted constellation summary."""
+def compose_constellation(
+    payload: ConstellationSeed,
+    *,
+    include_arcs: bool = False,
+    include_diagnostics: bool = False,
+) -> str:
+    """Create a formatted constellation summary with optional enhancements."""
 
     weaver = ConstellationWeaver(payload)
     nodes = weaver.generate_map()
@@ -97,6 +207,31 @@ def compose_constellation(payload: ConstellationSeed) -> str:
     for node in nodes:
         lines.append(f"- {node.name} :: intensity {node.intensity:.3f}")
         lines.append(indent(node.description, prefix="  "))
+
+    if include_arcs:
+        lines.append("")
+        lines.append("Transitions:")
+        for arc in weaver.generate_arcs(nodes):
+            lines.append(
+                f"* {arc.source} -> {arc.target} | resonance {arc.resonance:.3f}"
+            )
+            lines.append(indent(arc.description, prefix="  "))
+
+    if include_diagnostics:
+        diagnostics = weaver.diagnose(nodes)
+        lines.append("")
+        lines.append("Diagnostics:")
+        lines.append(
+            f"* peak={diagnostics.peak_intensity:.3f} | trough={diagnostics.trough_intensity:.3f}"
+        )
+        lines.append(
+            f"* spread={diagnostics.spread:.3f} | stability={diagnostics.stability_index:.3f}"
+        )
+        lines.append(f"* energy-class={diagnostics.energy_class}")
+        lines.append("* motif-intensity:")
+        for name, value in diagnostics.motif_intensity.items():
+            lines.append(f"  - {name}: {value:.3f}")
+
     return "\n".join(lines)
 
 
