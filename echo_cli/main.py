@@ -139,6 +139,7 @@ from .progressive_features import (
     simulate_delivery_timeline,
     simulate_portfolio_outcomes,
 )
+from .innovation import app as innovation_app
 
 try:  # pragma: no cover - optional dependency
     from echo_puzzle_lab.charts import save_charts
@@ -155,6 +156,8 @@ complexity_app = typer.Typer(
     no_args_is_help=True,
 )
 app.add_typer(complexity_app, name="complexity")
+
+app.add_typer(innovation_app, name="innovation")
 
 
 def _ensure_ctx(ctx: typer.Context) -> None:
