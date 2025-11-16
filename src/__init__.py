@@ -31,10 +31,13 @@ from .creative_loop import (
     LoopDiagnostics,
     LoopRhythm,
     LoopSeed,
+    LoopSummary,
     LoopResult,
     compose_loop,
     demo as loop_demo,
+    export_loop_result,
     generate_loop,
+    summarize_loop,
     summarise_loop_suite,
 )
 
@@ -49,6 +52,7 @@ __all__ = [
     "LoopRhythm",
     "LoopSeed",
     "LoopResult",
+    "LoopSummary",
     "ResonanceContext",
     "ResonancePrompt",
     "constellation_demo",
@@ -57,8 +61,10 @@ __all__ = [
     "compose_chronicle",
     "compose_loop",
     "compose_resonance",
+    "export_loop_result",
     "generate_loop",
     "loop_demo",
+    "summarize_loop",
     "summarise_loop_suite",
     "resonance_demo",
 ]
