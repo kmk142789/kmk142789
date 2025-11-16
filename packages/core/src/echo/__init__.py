@@ -84,6 +84,12 @@ from .sovereign_identity_kernel import (
     IdentityKernelConfig,
     IdentityKernelSnapshot,
 )
+from .sovereign_coordination_kernel import (
+    AutonomyDirective,
+    CapabilityPlan,
+    SovereignCoordinationKernel,
+    SovereignKernelReport,
+)
 from .evolver import (
     CycleGuidanceFrame,
     EchoEvolver,
