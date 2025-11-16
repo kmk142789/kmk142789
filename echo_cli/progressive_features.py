@@ -22,6 +22,9 @@ __all__ = [
     "assess_alignment_signals",
     "evaluate_operational_readiness",
     "forecast_portfolio_throughput",
+    "generate_signal_snapshot",
+    "synthesize_operational_dashboard",
+    "orchestrate_complexity_progression",
     "execute_complexity_cascade",
     "CascadeStage",
 ]
@@ -1187,6 +1190,254 @@ def forecast_portfolio_throughput(
         "portfolio_value": round(total_impact, 2),
         "confidence_projection": round(weighted_confidence, 3),
         "sprint_plan": schedule,
+    }
+
+
+def generate_signal_snapshot(signals: Mapping[str, float]) -> dict[str, object]:
+    """Create a lightweight signal summary with variance and focus insights."""
+
+    if not isinstance(signals, Mapping) or not signals:
+        raise ValueError("signals must be a non-empty mapping")
+
+    ordered: list[tuple[str, float]] = []
+    for raw_name, raw_value in signals.items():
+        name = str(raw_name).strip()
+        if not name:
+            raise ValueError("signal names must be non-empty strings")
+        try:
+            value = float(raw_value)
+        except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+            raise ValueError(f"signal '{name}' must be numeric") from exc
+        if not isfinite(value):
+            raise ValueError(f"signal '{name}' must be finite")
+        ordered.append((name, value))
+
+    values = [value for _, value in ordered]
+    average = sum(values) / len(values)
+    deviation = pstdev(values) if len(values) > 1 else 0.0
+    strongest = max(ordered, key=lambda entry: entry[1])
+    weakest = min(ordered, key=lambda entry: entry[1])
+    momentum = (ordered[-1][1] - ordered[0][1]) if len(ordered) > 1 else 0.0
+    spread_ratio = (strongest[1] - weakest[1]) / strongest[1] if strongest[1] else 0.0
+
+    if average >= 0.8:
+        classification = "strong"
+    elif average >= 0.55:
+        classification = "balanced"
+    else:
+        classification = "weak"
+
+    if momentum > 0.1:
+        trend = "accelerating"
+    elif momentum < -0.1:
+        trend = "declining"
+    else:
+        trend = "stable"
+
+    enriched = [
+        {
+            "name": name,
+            "value": round(value, 3),
+            "deviation": round(value - average, 3),
+            "relative_strength": round(value / strongest[1], 3) if strongest[1] else 0.0,
+        }
+        for name, value in ordered
+    ]
+
+    return {
+        "signals": enriched,
+        "stats": {
+            "average": round(average, 3),
+            "stdev": round(deviation, 3),
+            "spread_ratio": round(spread_ratio, 3),
+            "classification": classification,
+            "trend": trend,
+            "momentum": round(momentum, 3),
+            "strongest": strongest[0],
+            "weakest": weakest[0],
+        },
+    }
+
+
+def synthesize_operational_dashboard(
+    *,
+    signals: Mapping[str, float],
+    documents: Iterable[str],
+    milestones: Sequence[Mapping[str, object]] | Sequence[TimelineMilestone],
+    start: datetime | None = None,
+) -> dict[str, object]:
+    """Fuse signal, textual, and delivery insights into a single dashboard."""
+
+    snapshot = generate_signal_snapshot(signals)
+    text_payload = analyze_text_corpus(documents)
+    timeline_payload = simulate_delivery_timeline(milestones, start=start)
+
+    signal_strength = snapshot["stats"]["classification"]
+    readability = text_payload["readability"]
+    risk = timeline_payload["risk"]["classification"]
+
+    blend_score = 0.0
+    blend_score += {"weak": 0.3, "balanced": 0.6, "strong": 0.9}[signal_strength]
+    blend_score += {"complex": 0.4, "balanced": 0.7, "concise": 0.9}[readability]
+    blend_score += {"high": 0.3, "medium": 0.6, "low": 0.9}[risk]
+    blend_score /= 3
+
+    if blend_score >= 0.8:
+        outlook = "confident"
+    elif blend_score >= 0.55:
+        outlook = "watch"
+    else:
+        outlook = "intervene"
+
+    highlights = [
+        f"Signals trending {snapshot['stats']['trend']} with {signal_strength} strength.",
+        f"Text corpus {readability} readability over {text_payload['documents']} documents.",
+        (
+            "Timeline spans "
+            f"{timeline_payload['total_days']} days ({risk} risk, buffers applied)."
+        ),
+    ]
+
+    return {
+        "snapshot": snapshot,
+        "text": text_payload,
+        "timeline": timeline_payload,
+        "outlook": outlook,
+        "composite_score": round(blend_score, 3),
+        "highlights": highlights,
+    }
+
+
+def orchestrate_complexity_progression(plan: Mapping[str, object]) -> dict[str, object]:
+    """Execute increasingly complex feature sets defined within ``plan``."""
+
+    if not isinstance(plan, Mapping) or not plan:
+        raise ValueError("plan must be a non-empty mapping")
+
+    results: dict[str, dict[str, object]] = {}
+    executed: list[str] = []
+    markers: list[dict[str, object]] = []
+    insights: list[str] = []
+    total_complexity = 0.0
+
+    base_start: datetime | None = None
+    if plan.get("start") is not None:
+        base_start = _ensure_datetime(plan["start"], None)
+
+    def _collect_documents(value: object | None) -> list[str] | None:
+        if value is None:
+            return None
+        return _coerce_string_sequence(value, "documents")
+
+    def _collect_milestones(value: object | None) -> list[Mapping[str, object]] | None:
+        if value is None:
+            return None
+        return _coerce_sequence_of_mappings(value, "milestones")
+
+    suite_config = plan.get("progressive_suite")
+    if suite_config:
+        if not isinstance(suite_config, Mapping):
+            raise ValueError("progressive_suite must be a mapping")
+        docs = _collect_documents(suite_config.get("documents"))
+        milestones = _collect_milestones(suite_config.get("milestones"))
+        start_value = suite_config.get("start")
+        start_dt = _ensure_datetime(start_value, base_start) if start_value or base_start else None
+        payload = progressive_complexity_suite(
+            int(suite_config.get("level", 2)),
+            numeric_terms=int(suite_config.get("numeric_terms", 8)),
+            documents=docs,
+            milestones=milestones,
+            start=start_dt,
+        )
+        results["progressive_suite"] = payload
+        executed.append("progressive_suite")
+        total_complexity += float(payload.get("complexity_index", 0.0))
+        markers.append(
+            {
+                "name": "progressive_suite",
+                "complexity": payload.get("complexity_index"),
+                "detail": payload.get("summary"),
+            }
+        )
+        insights.extend([f"[suite] {text}" for text in payload.get("insights", [])])
+
+    series_config = plan.get("evolution_series")
+    if series_config:
+        if not isinstance(series_config, Mapping):
+            raise ValueError("evolution_series must be a mapping")
+        docs = _collect_documents(series_config.get("documents"))
+        milestones = _collect_milestones(series_config.get("milestones"))
+        start_value = series_config.get("start")
+        start_dt = _ensure_datetime(start_value, base_start) if start_value or base_start else None
+        payload = complexity_evolution_series(
+            int(series_config.get("iterations", 2)),
+            base_numeric_terms=int(series_config.get("base_numeric_terms", 6)),
+            documents=docs,
+            milestones=milestones,
+            start=start_dt,
+        )
+        results["evolution_series"] = payload
+        executed.append("evolution_series")
+        total_complexity += float(payload.get("aggregate_complexity", 0.0))
+        markers.append(
+            {
+                "name": "evolution_series",
+                "complexity": payload.get("aggregate_complexity"),
+                "detail": payload.get("final_summary"),
+            }
+        )
+        insights.extend([f"[series] {text}" for text in payload.get("insights", [])])
+
+    cascade_config = plan.get("cascade")
+    if cascade_config:
+        if not isinstance(cascade_config, Mapping):
+            raise ValueError("cascade must be a mapping")
+        stages = cascade_config.get("stages")
+        start_value = cascade_config.get("start")
+        if not stages:
+            raise ValueError("cascade requires stages")
+        payload = execute_complexity_cascade(
+            stages,
+            default_start=_ensure_datetime(start_value, base_start)
+            if start_value or base_start
+            else None,
+        )
+        results["cascade"] = payload
+        executed.append("cascade")
+        total_complexity += float(payload.get("complexity_score", 0.0))
+        markers.append(
+            {
+                "name": "cascade",
+                "complexity": payload.get("complexity_score"),
+                "detail": ", ".join(payload.get("insights", [])[:3]),
+            }
+        )
+        insights.extend([f"[cascade] {text}" for text in payload.get("insights", [])])
+
+    if not results:
+        raise ValueError("plan did not include any executable sections")
+
+    complexity_values = [
+        float(marker.get("complexity", 0.0))
+        for marker in markers
+        if marker.get("complexity")
+    ]
+    escalation = 0.0
+    if len(complexity_values) > 1 and min(complexity_values) > 0:
+        escalation = max(complexity_values) / min(complexity_values)
+
+    profile = {
+        "total_complexity": round(total_complexity, 3),
+        "steps": markers,
+        "executed": executed,
+        "escalation_factor": round(escalation, 3) if escalation else 0.0,
+    }
+
+    return {
+        "results": results,
+        "execution_order": executed,
+        "complexity_profile": profile,
+        "insights": insights,
     }
 
 
