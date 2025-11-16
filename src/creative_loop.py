@@ -229,6 +229,31 @@ def load_fragments_from_file(path: str | Path) -> List[str]:
     return fragments
 
 
+def load_voice_bias_profile(path: str | Path) -> Dict[str, float]:
+    """Load a narrative voice weighting profile from disk."""
+
+    profile_path = Path(path)
+    contents = profile_path.read_text(encoding="utf-8")
+    try:
+        data = json.loads(contents)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Voice bias file is not valid JSON: {exc}") from exc
+    if not isinstance(data, Mapping):
+        raise ValueError("Voice bias file must define an object mapping voices to weights")
+    bias: Dict[str, float] = {}
+    for voice, raw_weight in data.items():
+        if voice not in VOICE_LIBRARY:
+            continue
+        try:
+            weight = float(raw_weight)
+        except (TypeError, ValueError):
+            continue
+        if weight <= 0:
+            continue
+        bias[voice] = weight
+    return bias
+
+
 def _choose_voice(
     random_state: random.Random,
     *,
@@ -396,8 +421,8 @@ def compose_loop(
 ) -> str:
     """Create a creative loop in the requested output format.
 
-    Supported formats are ``"text"``, ``"json"``, ``"markdown"``, ``"table"``, and
-    ``"csv"``.
+    Supported formats are ``"text"``, ``"json"``, ``"markdown"``, ``"table"``,
+    ``"csv"``, and ``"summary"``.
     """
 
     timestamp = timestamp or datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
@@ -479,8 +504,26 @@ def compose_loop(
             )
         return buffer.getvalue().rstrip()
 
+    if format == "summary":
+        summary = loop_result.summary or summarize_loop(loop_result)
+        diagnostics_line = loop_result.diagnostics.render_report()
+        rhythm = loop_result.rhythm
+        lines = [
+            header,
+            "",
+            f"Voice diversity: {summary.voice_diversity:.2f}",
+            f"Accent focus: {summary.accent_focus:.2f}",
+            f"Dominant voice: {summary.dominant_voice or '-'}",
+            f"Fragments highlighted: {summary.fragment_coverage}",
+            f"Lines composed: {len(loop_result.lines)}",
+            f"Rhythm accents: {','.join(str(value) for value in rhythm.accents)}",
+            f"Rhythm dynamics: {','.join(rhythm.dynamic_tempi)}",
+            f"Diagnostics: {diagnostics_line}",
+        ]
+        return "\n".join(lines)
+
     raise ValueError(
-        "Unsupported format; expected 'text', 'json', 'markdown', 'table', or 'csv'."
+        "Unsupported format; expected 'text', 'json', 'markdown', 'table', 'csv', or 'summary'."
     )
 
 
@@ -491,6 +534,7 @@ def _extension_for_format(output_format: str) -> str:
         "markdown": "md",
         "table": "txt",
         "csv": "csv",
+        "summary": "txt",
     }
     return mapping.get(output_format, "txt")
 
@@ -523,6 +567,15 @@ def summarise_loop_suite(loop_results: Iterable[LoopResult]) -> Dict[str, object
         "average_accent_intensity": average_accent,
     }
     return summary
+
+
+def export_suite_summary(summary: Mapping[str, object], path: str | Path) -> Path:
+    """Persist aggregated suite diagnostics as JSON."""
+
+    export_path = Path(path)
+    export_path.parent.mkdir(parents=True, exist_ok=True)
+    export_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    return export_path
 
 
 def format_suite_summary(summary: Mapping[str, object]) -> str:
@@ -705,9 +758,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json", "markdown", "table", "csv"],
+        choices=["text", "json", "markdown", "table", "csv", "summary"],
         default="text",
-        help="Choose between human-readable text, JSON, Markdown, table, or CSV output",
+        help="Choose between human-readable text, JSON, Markdown, table, CSV, or summary output",
     )
     parser.add_argument(
         "--variations",
@@ -734,11 +787,23 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--summary-output",
+        type=Path,
+        dest="summary_output",
+        help="Optional path to store aggregated summary diagnostics as JSON",
+    )
+    parser.add_argument(
         "--voice-bias",
         action="append",
         default=[],
         metavar="VOICE=WEIGHT",
         help="Weight a specific narrative voice (e.g., signal=3.5)",
+    )
+    parser.add_argument(
+        "--voice-bias-file",
+        type=Path,
+        dest="voice_bias_file",
+        help="Optional JSON file describing additional voice weights",
     )
     parser.add_argument(
         "--export",
@@ -759,6 +824,11 @@ if __name__ == "__main__":
         except OSError as exc:
             parser.error(f"Unable to load fragments from {args.fragments_file}: {exc}")
     voice_bias: Dict[str, float] = {}
+    if args.voice_bias_file:
+        try:
+            voice_bias.update(load_voice_bias_profile(args.voice_bias_file))
+        except (OSError, ValueError) as exc:
+            parser.error(f"Unable to load voice bias profile: {exc}")
     for entry in args.voice_bias:
         if "=" not in entry:
             parser.error("Voice bias must use VOICE=WEIGHT format")
@@ -824,9 +894,15 @@ if __name__ == "__main__":
         print(package.rendered_text)
         print()
 
+    suite_summary = summarise_loop_suite(package.result for package in packages)
     if args.variations > 1:
-        summary = summarise_loop_suite(package.result for package in packages)
-        print(format_suite_summary(summary))
+        print(format_suite_summary(suite_summary))
+    if args.summary_output:
+        try:
+            export_suite_summary(suite_summary, args.summary_output)
+            print(f"[saved] Suite summary exported to {args.summary_output}")
+        except OSError as exc:
+            parser.error(f"Unable to export suite summary: {exc}")
 
     if args.save_output:
         try:
