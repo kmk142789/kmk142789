@@ -182,6 +182,7 @@ from .digital_computer import (
 )
 from .echo_genesis_coordinator import EchoGenesisCoordinator, SubsystemLink
 from .echo_genesis_core import EchoGenesisCore, SubsystemProbe, SubsystemPulse
+from .genesis_resonance_layer import GenesisResonanceLayer
 from .echovm import (
     EXAMPLE_PROGRAM as ECHOVM_EXAMPLE_PROGRAM,
     OP_CODES as ECHOVM_OP_CODES,
@@ -409,6 +410,7 @@ __all__ = [
     "SubsystemSnapshot",
     "EchoGenesisCore",
     "EchoGenesisCoordinator",
+    "GenesisResonanceLayer",
     "SubsystemProbe",
     "SubsystemPulse",
     "SubsystemLink",
