@@ -6,7 +6,7 @@ import json
 import random
 from collections import Counter
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Iterable, Sequence
 
@@ -161,6 +161,26 @@ def build_passage(seed: int | None = None) -> str:
     return generate_passage(rng).render()
 
 
+def summarize_passages(passages: Sequence[FluxPassage]) -> str:
+    """Return a human-readable summary of the generated passages."""
+
+    summary_lines = ["Summary", "======="]
+    summary_lines.append(f"Total passages: {len(passages)}")
+
+    def _tally(attribute: str) -> list[str]:
+        counts: dict[str, int] = {}
+        for passage in passages:
+            key = getattr(passage.context, attribute)
+            counts[key] = counts.get(key, 0) + 1
+        return [f"- {name}: {count}" for name, count in sorted(counts.items())]
+
+    if passages:
+        summary_lines.append("\nMoods:")
+        summary_lines.extend(_tally("mood"))
+        summary_lines.append("\nArtifacts:")
+        summary_lines.extend(_tally("artifact"))
+
+    return "\n".join(summary_lines)
 def summarize_passages(passages: Sequence[FluxPassage]) -> dict:
     """Compute aggregate information for a sequence of passages."""
 
@@ -286,6 +306,15 @@ def main() -> None:
         help="Optional JSON file describing prompts, closings, artifacts, and moods.",
     )
     parser.add_argument(
+        "--interval",
+        type=float,
+        default=None,
+        help="Spacing in minutes between timestamps when generating multiple passages.",
+    )
+    parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="Print a counts summary for moods and artifacts after generation.",
         "--list-library",
         action="store_true",
         help="Display the available library entries and exit.",
@@ -309,6 +338,8 @@ def main() -> None:
     if args.library is not None:
         library = FluxLibrary.from_json_file(args.library, fallback=DEFAULT_LIBRARY)
 
+    base_timestamp = datetime.utcnow()
+    interval_delta = timedelta(minutes=args.interval) if args.interval else None
     if args.list_library:
         print(format_library_listing(library))
         return
@@ -319,8 +350,11 @@ def main() -> None:
             library=library,
             mood=args.mood,
             artifact=args.artifact,
+            timestamp=(base_timestamp + interval_delta * index)
+            if interval_delta is not None
+            else None,
         )
-        for _ in range(args.count)
+        for index in range(args.count)
     ]
 
     summary = summarize_passages(passages)
@@ -358,6 +392,9 @@ def main() -> None:
             seed=args.seed,
             export_format=args.export_format,
         )
+
+    if args.summary:
+        print("\n" + summarize_passages(passages))
 
 
 if __name__ == "__main__":
