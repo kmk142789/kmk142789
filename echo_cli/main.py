@@ -124,6 +124,7 @@ from pulse_dashboard import WorkerHive
 from .progressive_features import (
     assess_alignment_signals,
     analyze_text_corpus,
+    execute_complexity_cascade,
     complexity_evolution_series,
     evaluate_strategy_matrix,
     forecast_operational_resilience,
@@ -1134,6 +1135,7 @@ def _load_tasks_file(path: Path | None) -> list[dict[str, object]]:
     for idx, entry in enumerate(data):
         if not isinstance(entry, Mapping):
             raise ValueError(f"invalid task at index {idx}")
+        tasks.append(dict(entry))
         record = dict(entry)
         record.setdefault("priority", 3)
         tasks.append(record)
@@ -1269,6 +1271,24 @@ def _load_portfolio_file(path: Path | None) -> list[dict[str, object]]:
             raise ValueError(f"invalid initiative at index {idx}")
         initiatives.append(dict(entry))
     return initiatives
+
+
+def _load_cascade_file(path: Path) -> list[dict[str, object]]:
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError("cascade file must contain a JSON array") from exc
+    if not isinstance(data, list) or not data:
+        raise ValueError("cascade file must contain a non-empty JSON array")
+    stages: list[dict[str, object]] = []
+    for idx, entry in enumerate(data):
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"stage at index {idx} must be an object")
+        stage = dict(entry)
+        if "type" not in stage:
+            raise ValueError(f"stage at index {idx} must define 'type'")
+        stages.append(stage)
+    return stages
 
 
 def _format_meta_causal_summary(config: MetaCausalRollout, *, applied: bool) -> str:
@@ -1777,6 +1797,54 @@ def complexity_strategy(
         "--criterion",
         "-k",
         help="Criterion weight formatted as 'name=value'.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Rank strategy options using weighted criteria."""
+
+    _ensure_ctx(ctx)
+    try:
+        options = _parse_strategy_option_specs(option)
+        weights = _parse_criteria_weights(criterion)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = evaluate_strategy_matrix(options, weights)
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary = [
+        f"Evaluated {len(payload['options'])} options across {len(payload['criteria'])} criteria.",
+        f"Top recommendation : {payload['best_option']['name']} (score {payload['best_option']['score']}).",
+        f"Score gap          : {payload['score_gap']}",
+    ]
+    console.print("\n".join(summary))
+
+    columns = ["Option", "Score", "Relative", "Coverage", "Key contributions"]
+    rows = []
+    for option_entry in payload["options"]:
+        contributions = ", ".join(
+            f"{name}:{value}" for name, value in option_entry["contributions"].items()
+        )
+        rows.append(
+            (
+                option_entry["name"],
+                option_entry["score"],
+                option_entry["relative_score"],
+                f"{round(option_entry['coverage'] * 100)}%",
+                contributions or "-",
+            )
+        )
+    console.print(_build_table(columns, rows, title="Strategy matrix"))
+
+
 @complexity_app.command("capacity")
 def complexity_capacity(
     ctx: typer.Context,
@@ -1812,16 +1880,6 @@ def complexity_capacity(
         help="Emit the raw JSON payload instead of a formatted summary.",
     ),
 ) -> None:
-    """Rank strategy options using weighted criteria."""
-
-    _ensure_ctx(ctx)
-    try:
-        options = _parse_strategy_option_specs(option)
-        weights = _parse_criteria_weights(criterion)
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-    payload = evaluate_strategy_matrix(options, weights)
     """Plan workloads across teams and highlight load factors."""
 
     _ensure_ctx(ctx)
@@ -1832,52 +1890,13 @@ def complexity_capacity(
         raise typer.BadParameter(str(exc)) from exc
     if not tasks:
         raise typer.BadParameter("provide at least one --task or --tasks-file entry")
+
     payload = plan_capacity_allocation(capacities, tasks, cycle_length_days=cycle_length)
     _set_json_mode(ctx, json_mode)
     if ctx.obj.get("json", False):
         _echo(ctx, payload)
         return
 
-    summary = [
-        f"Evaluated {len(payload['options'])} options across {len(payload['criteria'])} criteria.",
-        f"Top recommendation : {payload['best_option']['name']} (score {payload['best_option']['score']}).",
-        f"Score gap          : {payload['score_gap']}",
-    ]
-    console.print("\n".join(summary))
-
-    columns = ["Option", "Score", "Relative", "Coverage", "Key contributions"]
-    rows = []
-    for option_entry in payload["options"]:
-        contributions = ", ".join(
-            f"{name}:{value}" for name, value in option_entry["contributions"].items()
-        )
-        rows.append(
-            (
-                option_entry["name"],
-                option_entry["score"],
-                option_entry["relative_score"],
-                f"{round(option_entry['coverage'] * 100)}%",
-                contributions or "-",
-            )
-        )
-    console.print(_build_table(columns, rows, title="Strategy matrix"))
-
-
-@complexity_app.command("resilience")
-def complexity_resilience(
-    ctx: typer.Context,
-    event: List[str] = typer.Option(
-        [],
-        "--event",
-        "-e",
-        help="Event formatted as 'Name|likelihood=...|impact=...|recovery=...'.",
-    ),
-    horizon_hours: float = typer.Option(
-        168.0,
-        "--horizon-hours",
-        "-H",
-        min=1.0,
-        help="Forecasting horizon in hours.",
     summary = payload["summary"]
     lines = [
         f"Planned {summary['total_tasks']} task(s) spanning {summary['total_effort']} hours.",
@@ -1890,6 +1909,7 @@ def complexity_resilience(
             f"Overloaded teams : {', '.join(summary['critical_teams'])}"
         )
     console.print("\n".join(lines))
+
     rows = [
         (
             team_name,
@@ -1916,8 +1936,88 @@ def complexity_resilience(
             )
 
 
-@complexity_app.command("portfolio")
-def complexity_portfolio(
+@complexity_app.command("resilience")
+def complexity_resilience(
+    ctx: typer.Context,
+    event: List[str] = typer.Option(
+        [],
+        "--event",
+        "-e",
+        help="Event formatted as 'Name|likelihood=...|impact=...|recovery=...'.",
+    ),
+    horizon_hours: float = typer.Option(
+        168.0,
+        "--horizon-hours",
+        "-H",
+        min=1.0,
+        help="Forecasting horizon in hours.",
+    ),
+    start: Optional[str] = typer.Option(
+        None,
+        "--start",
+        help="Optional ISO 8601 timestamp anchoring the forecast.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Forecast operational resilience across stress scenarios."""
+
+    _ensure_ctx(ctx)
+    try:
+        events = _parse_resilience_event_specs(event)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    start_dt = _parse_iso_timestamp(start)
+    payload = forecast_operational_resilience(
+        events,
+        start=start_dt,
+        horizon_hours=horizon_hours,
+    )
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    summary = [
+        f"Forecast window  : {payload['start']} → +{payload['horizon_hours']}h",
+        f"Expected downtime: {payload['expected_disruption_hours']} hours",
+        f"Resilience score : {payload['resilience_score']} ({payload['risk']['classification']})",
+    ]
+    console.print("\n".join(summary))
+
+    rows = [
+        (
+            entry["name"],
+            entry["criticality"],
+            entry["likelihood"],
+            entry["expected_hours"],
+            entry["window_start"],
+        )
+        for entry in payload["timeline"]
+    ]
+    console.print(
+        _build_table(
+            ["Event", "Severity", "Likelihood", "Expected hours", "Window start"],
+            rows,
+            title="Resilience outlook",
+        )
+    )
+
+    if payload.get("alerts"):
+        console.print("Alerts:")
+        for alert in payload["alerts"]:
+            console.print(
+                f"- {alert['name']} ({alert['severity']}) in {alert['eta']} for {alert['expected_hours']}h"
+            )
+
+
+@complexity_app.command("portfolio-rollup")
+def complexity_portfolio_rollup(
     ctx: typer.Context,
     portfolio_file: Path = typer.Option(
         ...,
@@ -1926,6 +2026,78 @@ def complexity_portfolio(
         readable=True,
         resolve_path=True,
         help="JSON file describing the initiatives in the portfolio.",
+    ),
+    initiative: List[str] = typer.Option(
+        [],
+        "--initiative",
+        "-i",
+        help="Optional inline initiative formatted as 'Name:impact:effort:confidence[:dep+dep]'.",
+    ),
+    start: Optional[str] = typer.Option(
+        None,
+        "--start",
+        help="Optional ISO 8601 timestamp overriding the portfolio start.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Aggregate multiple initiative timelines into a portfolio view."""
+
+    _ensure_ctx(ctx)
+    try:
+        initiatives = _load_portfolio_file(portfolio_file) + _parse_initiative_specs(initiative)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if not initiatives:
+        raise typer.BadParameter("portfolio file must contain at least one initiative")
+
+    start_dt = _parse_iso_timestamp(start) if start else None
+    payload = simulate_portfolio_outcomes(initiatives, start=start_dt)
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    portfolio = payload["portfolio"]
+    summary_lines = [
+        f"Portfolio start : {portfolio['start']}",
+        f"Portfolio end   : {portfolio['end']}",
+        f"Duration        : {portfolio['overall_days']} days",
+        f"Risk index      : {portfolio['risk_index']} ({portfolio['risk_classification']})",
+        f"Critical path   : {portfolio.get('critical_path') or 'n/a'}",
+        f"Weighted value  : {portfolio['weighted_value']}",
+    ]
+    if portfolio.get("average_confidence") is not None:
+        summary_lines.append(
+            f"Average confidence : {portfolio['average_confidence']}"
+        )
+    console.print("\n".join(summary_lines))
+
+    rows = [
+        (
+            entry["name"],
+            entry["weight"],
+            entry["value"],
+            entry["risk"]["classification"],
+            f"{entry['total_days']} d",
+            entry["start"],
+            entry["end"],
+        )
+        for entry in payload["initiatives"]
+    ]
+    console.print(
+        _build_table(
+            ["Initiative", "Weight", "Value", "Risk", "Duration", "Start", "End"],
+            rows,
+            title="Initiative roll-up",
+        )
+    )
+
+
 @complexity_app.command("cascade")
 def complexity_cascade(
     ctx: typer.Context,
@@ -1971,8 +2143,6 @@ def complexity_cascade(
         None,
         "--start",
         help="Optional ISO 8601 timestamp marking the start of the forecast.",
-        help="Optional ISO 8601 timestamp overriding the portfolio start.",
-        help="Optional ISO 8601 timestamp for the timeline stage.",
     ),
     json_mode: bool = typer.Option(
         False,
@@ -2155,6 +2325,16 @@ def complexity_cascade(
             )
 
 
+@complexity_app.command("escalate")
+def complexity_escalate(
+    ctx: typer.Context,
+    cascade_file: Path = typer.Option(
+        ...,
+        "--cascade-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file describing the ordered cascade of stage definitions.",
 @complexity_app.command("evolve")
 def complexity_evolve(
     ctx: typer.Context,
@@ -2204,6 +2384,7 @@ def complexity_evolve(
     start: Optional[str] = typer.Option(
         None,
         "--start",
+        help="Optional ISO 8601 timestamp used as the default cascade start.",
         help="Optional ISO 8601 timestamp to align all iterations.",
     ),
     json_mode: bool = typer.Option(
@@ -2213,6 +2394,17 @@ def complexity_evolve(
         help="Emit the raw JSON payload instead of a formatted summary.",
     ),
 ) -> None:
+    """Create increasingly complex insights from a cascade specification."""
+
+    _ensure_ctx(ctx)
+    try:
+        stages = _load_cascade_file(cascade_file)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    start_dt = _parse_iso_timestamp(start)
+    try:
+        payload = execute_complexity_cascade(stages, default_start=start_dt)
     """Iteratively execute increasingly complex analysis passes."""
 
     _ensure_ctx(ctx)
@@ -2249,6 +2441,32 @@ def complexity_evolve(
         return
 
     summary_lines = [
+        f"Start reference  : {payload['start_reference']}",
+        f"Cascade stages   : {payload['stage_count']}",
+        f"Complexity score : {payload['complexity_score']}",
+    ]
+    console.print("\n".join(summary_lines))
+
+    distribution = payload.get("stage_type_distribution", {})
+    if distribution:
+        rows = [
+            (stage_type, count)
+            for stage_type, count in sorted(distribution.items())
+        ]
+        console.print(
+            _build_table(["Stage type", "Count"], rows, title="Cascade distribution")
+        )
+
+    rows = [
+        (
+            stage.get("name"),
+            stage.get("type"),
+            stage.get("insight", "-"),
+        )
+        for stage in payload["stages"]
+    ]
+    console.print(
+        _build_table(["Stage", "Type", "Insight"], rows, title="Complexity cascade")
         f"Iterations executed : {payload['iterations']}",
         f"Aggregate complexity: {payload['aggregate_complexity']} (mean {payload['mean_complexity']})",
         f"Complexity gradient: {payload['complexity_gradient']} (peak {payload['peak_complexity']})",
@@ -2294,6 +2512,8 @@ def complexity_evolve(
 
     if payload.get("insights"):
         console.print("Insights:")
+        for line in payload["insights"]:
+            console.print(f"- {line}")
         max_lines = 6
         for insight in payload["insights"][:max_lines]:
             console.print(f"- {insight}")

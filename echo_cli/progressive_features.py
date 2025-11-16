@@ -22,6 +22,8 @@ __all__ = [
     "assess_alignment_signals",
     "evaluate_operational_readiness",
     "forecast_portfolio_throughput",
+    "execute_complexity_cascade",
+    "CascadeStage",
 ]
 
 
@@ -182,6 +184,29 @@ class PortfolioInitiative:
         return cls(name=name, milestones=milestones, weight=weight, value=value, start=start_dt)
 
 
+@dataclass(frozen=True)
+class CascadeStage:
+    """Definition for a cascaded analytical stage."""
+
+    name: str
+    kind: str
+    params: Mapping[str, object]
+
+    @classmethod
+    def from_mapping(cls, data: Mapping[str, object]) -> "CascadeStage":
+        if not isinstance(data, Mapping):  # pragma: no cover - defensive
+            raise ValueError("cascade stage must be a mapping")
+        try:
+            name = str(data.get("name", "")).strip() or "stage"
+            kind = str(data["type"]).strip().lower()
+        except KeyError as exc:
+            raise ValueError("cascade stage requires a 'type' attribute") from exc
+        params = data.get("params", {})
+        if not isinstance(params, Mapping):
+            raise ValueError("stage 'params' must be a mapping")
+        return cls(name=name, kind=kind, params=dict(params))
+
+
 def _normalise_datetime(value: datetime | None) -> datetime:
     if value is None:
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -202,6 +227,16 @@ def _parse_iso_timestamp(value: str) -> datetime:
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
+
+
+def _ensure_datetime(value: object | None, fallback: datetime | None) -> datetime | None:
+    if value is None:
+        return fallback
+    if isinstance(value, datetime):
+        return _normalise_datetime(value)
+    if isinstance(value, str) and value.strip():
+        return _parse_iso_timestamp(value)
+    raise ValueError("invalid datetime value supplied to cascade stage")
 
 
 def generate_numeric_intelligence(count: int) -> dict[str, object]:
@@ -1153,3 +1188,222 @@ def forecast_portfolio_throughput(
         "confidence_projection": round(weighted_confidence, 3),
         "sprint_plan": schedule,
     }
+
+
+_CASCADE_COMPLEXITY_WEIGHTS = {
+    "numbers": 1.0,
+    "alignment": 1.1,
+    "text": 1.2,
+    "strategy": 1.4,
+    "capacity": 1.5,
+    "timeline": 1.6,
+    "readiness": 1.7,
+    "resilience": 1.8,
+    "portfolio": 1.9,
+    "throughput": 2.0,
+}
+
+
+def execute_complexity_cascade(
+    stages: Sequence[Mapping[str, object]] | Sequence[CascadeStage],
+    *,
+    default_start: datetime | None = None,
+) -> dict[str, object]:
+    """Execute progressively complex analytical stages defined in ``stages``.
+
+    Each stage dictionary must contain a ``type`` field referencing one of the
+    supported progressive helpers (numbers, text, timeline, strategy, capacity,
+    alignment, readiness, resilience, portfolio, or throughput). Parameters for
+    the underlying helper should be provided via the ``params`` mapping.
+    """
+
+    if not stages:
+        raise ValueError("provide at least one cascade stage")
+
+    parsed: list[CascadeStage] = [
+        stage if isinstance(stage, CascadeStage) else CascadeStage.from_mapping(stage)
+        for stage in stages
+    ]
+
+    start_anchor = _normalise_datetime(default_start)
+    stage_results: list[dict[str, object]] = []
+    insights: list[str] = []
+    distribution: Counter[str] = Counter()
+    complexity_score = 0.0
+    previous_payload: dict[str, object] | None = None
+
+    for index, stage in enumerate(parsed, 1):
+        payload = _run_cascade_stage(stage, default_start=start_anchor)
+        entry: dict[str, object] = {
+            "name": stage.name,
+            "type": stage.kind,
+            "payload": payload,
+        }
+        insight = _summarise_stage_insight(
+            stage.kind, payload, previous_payload=previous_payload
+        )
+        if insight:
+            entry["insight"] = insight
+            insights.append(f"{stage.name}: {insight}")
+        stage_results.append(entry)
+        distribution[stage.kind] += 1
+        complexity_score += _CASCADE_COMPLEXITY_WEIGHTS.get(stage.kind, 1.0) * (
+            1 + index / 10
+        )
+        previous_payload = payload
+
+    return {
+        "start_reference": _format_iso(start_anchor),
+        "stage_count": len(stage_results),
+        "stage_type_distribution": dict(distribution),
+        "stages": stage_results,
+        "insights": insights,
+        "complexity_score": round(complexity_score, 3),
+    }
+
+
+def _run_cascade_stage(
+    stage: CascadeStage,
+    *,
+    default_start: datetime | None,
+) -> dict[str, object]:
+    params = stage.params
+    if stage.kind == "numbers":
+        count = int(params.get("count", 8))
+        return generate_numeric_intelligence(count)
+    if stage.kind == "text":
+        documents = _coerce_string_sequence(params.get("documents"), "documents")
+        return analyze_text_corpus(documents)
+    if stage.kind == "timeline":
+        milestones = _coerce_sequence_of_mappings(params.get("milestones"), "milestones")
+        start = _ensure_datetime(params.get("start"), default_start)
+        return simulate_delivery_timeline(milestones, start=start)
+    if stage.kind == "strategy":
+        options = _coerce_sequence_of_mappings(params.get("options"), "options")
+        criteria = _coerce_float_mapping(params.get("criteria"), "criteria")
+        return evaluate_strategy_matrix(options, criteria)
+    if stage.kind == "capacity":
+        capacity = _coerce_float_mapping(params.get("capacity"), "capacity")
+        tasks = _coerce_sequence_of_mappings(params.get("tasks"), "tasks")
+        cycle = float(params.get("cycle_length_days", 14.0))
+        return plan_capacity_allocation(capacity, tasks, cycle_length_days=cycle)
+    if stage.kind == "alignment":
+        signals = _coerce_float_mapping(params.get("signals"), "signals")
+        target = float(params.get("target", 0.75))
+        return assess_alignment_signals(signals, target=target)
+    if stage.kind == "readiness":
+        capabilities = _coerce_sequence_of_mappings(
+            params.get("capabilities"), "capabilities"
+        )
+        horizon = int(params.get("horizon_weeks", 12))
+        return evaluate_operational_readiness(capabilities, horizon_weeks=horizon)
+    if stage.kind == "resilience":
+        events = _coerce_sequence_of_mappings(params.get("events"), "events")
+        horizon = float(params.get("horizon_hours", 168.0))
+        start = _ensure_datetime(params.get("start"), default_start)
+        return forecast_operational_resilience(events, start=start, horizon_hours=horizon)
+    if stage.kind == "portfolio":
+        initiatives = _coerce_sequence_of_mappings(
+            params.get("initiatives"), "initiatives"
+        )
+        start = _ensure_datetime(params.get("start"), default_start)
+        return simulate_portfolio_outcomes(initiatives, start=start)
+    if stage.kind == "throughput":
+        initiatives = _coerce_sequence_of_mappings(
+            params.get("initiatives"), "initiatives"
+        )
+        velocity = float(params.get("velocity", 8))
+        horizon_weeks = int(params.get("horizon_weeks", 12))
+        return forecast_portfolio_throughput(
+            initiatives, velocity=velocity, horizon_weeks=horizon_weeks
+        )
+    raise ValueError(f"unsupported cascade stage type '{stage.kind}'")
+
+
+def _summarise_stage_insight(
+    stage_type: str,
+    payload: Mapping[str, object],
+    *,
+    previous_payload: Mapping[str, object] | None,
+) -> str | None:
+    if stage_type == "numbers":
+        sequence = payload.get("sequence", [])
+        if sequence:
+            return f"sequence peaked at {sequence[-1]}"
+    elif stage_type == "text":
+        readability = payload.get("readability")
+        vocab = payload.get("vocabulary")
+        if readability and vocab is not None:
+            return f"readability {readability} across {vocab} terms"
+    elif stage_type == "timeline":
+        risk = payload.get("risk", {})
+        classification = risk.get("classification")
+        total_days = payload.get("total_days")
+        if classification:
+            return f"timeline spans {total_days} days ({classification} risk)"
+    elif stage_type == "strategy":
+        best = payload.get("best_option", {})
+        if best:
+            return f"best option {best.get('name')} scored {best.get('score')}"
+    elif stage_type == "capacity":
+        summary = payload.get("summary", {})
+        overloaded = len(summary.get("critical_teams", []) or [])
+        return f"capacity plan flagged {overloaded} overloaded team(s)"
+    elif stage_type == "alignment":
+        return f"alignment {payload.get('classification')} with gap {payload.get('gap')}"
+    elif stage_type == "readiness":
+        return f"readiness index {payload.get('readiness_index')} ({payload.get('classification')})"
+    elif stage_type == "resilience":
+        risk = payload.get("risk", {})
+        return f"resilience score {payload.get('resilience_score')} ({risk.get('classification')})"
+    elif stage_type == "portfolio":
+        portfolio = payload.get("portfolio", {})
+        return f"portfolio value {portfolio.get('weighted_value')} ({portfolio.get('risk_classification')})"
+    elif stage_type == "throughput":
+        return (
+            f"throughput horizon {payload.get('horizon_weeks')}w with confidence "
+            f"{payload.get('confidence_projection')}"
+        )
+    if previous_payload and stage_type == "timeline":  # pragma: no cover - defensive
+        return "timeline contextualised against previous stage"
+    return None
+
+
+def _coerce_sequence_of_mappings(value: object, label: str) -> list[Mapping[str, object]]:
+    if not isinstance(value, Sequence) or not value:
+        raise ValueError(f"{label} must be a non-empty sequence of objects")
+    result: list[Mapping[str, object]] = []
+    for idx, entry in enumerate(value):
+        if isinstance(entry, Mapping):
+            result.append(dict(entry))
+        else:
+            raise ValueError(f"{label} entry at index {idx} must be a mapping")
+    return result
+
+
+def _coerce_string_sequence(value: object, label: str) -> list[str]:
+    if isinstance(value, str):
+        candidates = [value]
+    elif isinstance(value, Sequence):
+        candidates = [str(item) for item in value]
+    else:
+        raise ValueError(f"{label} must be a string or sequence of strings")
+    cleaned = [text.strip() for text in candidates if text.strip()]
+    if not cleaned:
+        raise ValueError(f"{label} must include at least one non-empty entry")
+    return cleaned
+
+
+def _coerce_float_mapping(value: object, label: str) -> dict[str, float]:
+    if not isinstance(value, Mapping) or not value:
+        raise ValueError(f"{label} must be a non-empty mapping")
+    result: dict[str, float] = {}
+    for key, raw in value.items():
+        name = str(key).strip()
+        if not name:
+            raise ValueError(f"{label} keys must be non-empty strings")
+        try:
+            result[name] = float(raw)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{label} value for {name!r} must be numeric") from exc
+    return result
