@@ -33,6 +33,7 @@ the optional flags to run multiple cycles at once:
 ```bash
 python -m cognitive_harmonics.harmonix_evolver --cycles 3 --enable-network
 python -m cognitive_harmonics.harmonix_evolver --propagation-timeline
+python -m cognitive_harmonics.harmonix_evolver --trajectory-window 4
 ```
 
 The `--enable-network` flag records that live propagation was requested while
@@ -43,3 +44,8 @@ Use `--propagation-timeline` when you need the structured propagation snapshot
 with the ledger timeline embedded directly in the CLI output. The metadata for
 each payload now also contains a `propagation_snapshot` block, ensuring the raw
 events and summarised health report stay in sync.
+
+The optional `--trajectory-window` flag folds the specified number of recent
+cycles into the new `resonance_trajectory` analytics block. This block
+describes the joy trend, orbital flux, glyph density, and phase intervals used
+by downstream systems to predict the next evolution.
