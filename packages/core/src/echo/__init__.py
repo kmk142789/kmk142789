@@ -217,6 +217,12 @@ from .proof_of_computation import (
 from .spectral_canvas import PaletteColor, SpectralCanvas, generate_palette
 from .temporal_ledger import PropagationWave, TemporalPropagationLedger
 from .revolutionary_flux import FluxLedgerEntry, FluxVector, RevolutionaryFlux
+from .self_organizing_core import (
+    SelfOrganizingCore,
+    SelfOrganizingPlan,
+    SubsystemAdapter,
+    SubsystemSnapshot,
+)
 from .self_sustaining_loop import DecisionResult, ProgressResult, SelfSustainingLoop
 from .strategic_vector import (
     StrategicSignal,
@@ -364,6 +370,10 @@ __all__ = [
     "DecisionResult",
     "ProgressResult",
     "SelfSustainingLoop",
+    "SelfOrganizingCore",
+    "SelfOrganizingPlan",
+    "SubsystemAdapter",
+    "SubsystemSnapshot",
     "FluxLedgerEntry",
     "FluxVector",
     "RevolutionaryFlux",
