@@ -4,9 +4,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from echo_cli.progressive_features import (
+    assess_alignment_signals,
     analyze_text_corpus,
     evaluate_strategy_matrix,
     forecast_operational_resilience,
+    evaluate_operational_readiness,
+    forecast_portfolio_throughput,
     generate_numeric_intelligence,
     simulate_delivery_timeline,
 )
@@ -77,3 +80,49 @@ def test_forecast_operational_resilience_computes_expected_hours() -> None:
     assert len(forecast["timeline"]) == 2
     assert forecast["timeline"][0]["window_start"] == "2024-05-01T00:00:00Z"
     assert forecast["risk"]["classification"] in {"stable", "watch", "critical"}
+def test_assess_alignment_signals_orders_contributions() -> None:
+    payload = assess_alignment_signals(
+        {"Focus": 0.82, "Clarity": 0.7, "Cadence": 0.9}, target=0.75
+    )
+    assert payload["classification"] == "aligned"
+    assert payload["focus"]["weakest"] == "Clarity"
+    assert payload["signals"][0]["score"] >= payload["signals"][-1]["score"]
+
+
+def test_operational_readiness_identifies_recommendations() -> None:
+    payload = evaluate_operational_readiness(
+        [
+            {"name": "Core", "coverage": 0.9, "automation": 0.8, "runbooks": 3, "incidents": 0},
+            {
+                "name": "Edge",
+                "coverage": 0.4,
+                "automation": 0.3,
+                "runbooks": 0,
+                "incidents": 6,
+            },
+        ],
+        horizon_weeks=12,
+    )
+    assert payload["classification"] in {"stable", "elevated", "at-risk"}
+    assert len(payload["capabilities"]) == 2
+    assert any(entry["status"] != "ready" for entry in payload["capabilities"])
+    assert payload["recommendations"]
+
+
+def test_forecast_portfolio_throughput_respects_dependencies() -> None:
+    payload = forecast_portfolio_throughput(
+        [
+            {"name": "API", "impact": 8, "effort": 5, "confidence": 0.9},
+            {
+                "name": "UI",
+                "impact": 6,
+                "effort": 4,
+                "confidence": 0.85,
+                "dependencies": ["API"],
+            },
+        ],
+        velocity=5,
+        horizon_weeks=4,
+    )
+    assert payload["priority_order"][0]["name"] == "API"
+    assert payload["sprint_plan"]
