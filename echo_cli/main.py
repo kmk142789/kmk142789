@@ -205,6 +205,49 @@ def _format_duration(seconds: float | None) -> str:
     return f"{minutes}:{secs:02d}"
 
 
+def _analyse_event_intervals(events: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    """Measure spacing between worker events to highlight idle pockets."""
+
+    ordered: list[dict[str, Any]] = []
+    for event in events:
+        timestamp = _parse_iso_timestamp(event.get("timestamp"))
+        if timestamp is None:
+            continue
+        ordered.append({
+            "timestamp": timestamp,
+            "name": str(event.get("name", "-")),
+        })
+
+    ordered.sort(key=lambda item: item["timestamp"])
+
+    intervals: list[dict[str, Any]] = []
+    for previous, current in zip(ordered, ordered[1:]):
+        delta = max((current["timestamp"] - previous["timestamp"]).total_seconds(), 0.0)
+        intervals.append(
+            {
+                "seconds": delta,
+                "from": previous["name"],
+                "to": current["name"],
+                "ended_at": current["timestamp"].strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }
+        )
+
+    values = sorted(interval["seconds"] for interval in intervals)
+    stats = {
+        "event_count": len(ordered),
+        "interval_count": len(intervals),
+        "average_seconds": mean(values) if values else None,
+        "median_seconds": median(values) if values else None,
+        "p90_seconds": _percentile(values, 0.9),
+        "shortest_seconds": min(values) if values else None,
+        "longest_seconds": max(values) if values else None,
+        "most_recent_interval_seconds": intervals[-1]["seconds"] if intervals else None,
+        "most_recent_interval_finished_at": intervals[-1]["ended_at"] if intervals else None,
+    }
+
+    longest = sorted(intervals, key=lambda item: item["seconds"], reverse=True)[:5]
+
+    return {"stats": stats, "longest_intervals": longest}
 def _format_hours(hours: float | None) -> str:
     """Render fractional hours as a concise human readable string."""
 
@@ -933,6 +976,38 @@ def cli_root(ctx: typer.Context) -> None:
     _ensure_ctx(ctx)
 
 
+@app.command("normalise-timestamp")
+def normalise_timestamp(
+    ctx: typer.Context,
+    timestamps: List[str] = typer.Argument(
+        ...,
+        metavar="TIMESTAMP",
+        help="One or more ISO 8601 timestamps to normalise to UTC.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Convert timestamp inputs into canonical ``YYYY-MM-DDTHH:MM:SSZ`` form."""
+
+    _set_json_mode(ctx, json_mode)
+    results: list[dict[str, str]] = []
+    for raw in timestamps:
+        try:
+            normalised = _normalise_iso_timestamp(raw)
+        except ValueError as exc:
+            raise typer.BadParameter(f"Invalid ISO timestamp: {raw}") from exc
+        results.append({"input": raw, "normalised": normalised})
+
+    payload = {"count": len(results), "results": results}
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+    else:
+        console.print(f"Normalised {payload['count']} timestamp(s):")
+        for entry in results:
+            console.print(f"  {entry['input']} → {entry['normalised']}")
+
+
 @app.command()
 def resonance(
     ctx: typer.Context,
@@ -1531,6 +1606,128 @@ def reliability(
         task.succeed(payload=payload)
 
 
+@app.command("event-pacing")
+def event_pacing(
+    ctx: typer.Context,
+    window: int = typer.Option(
+        400,
+        "--window",
+        "-w",
+        help="Number of recent worker events inspected for pacing analytics.",
+    ),
+    since: Optional[str] = typer.Option(
+        None,
+        "--since",
+        help="Only include events at or after the provided ISO timestamp.",
+    ),
+    commands: List[str] = typer.Option(
+        [],
+        "--command",
+        "-c",
+        help="Only include the specified command names (repeatable).",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Analyse spacing between worker events to reveal idle pockets."""
+
+    metadata = {"window": window, "since": since, "commands": commands, "json": json_mode}
+    with worker_hive.worker("event_pacing", metadata=metadata) as task:
+        if window <= 0:
+            task.fail(error="invalid_window", window=window)
+            raise typer.BadParameter("window must be a positive integer")
+
+        _set_json_mode(ctx, json_mode)
+
+        since_marker: Optional[str] = None
+        if since is not None:
+            try:
+                since_marker = _normalise_iso_timestamp(since)
+            except ValueError as exc:
+                task.fail(error="invalid_since", since=since)
+                raise typer.BadParameter(f"Invalid ISO timestamp: {since}") from exc
+
+        command_filter = sorted({name.strip() for name in commands if name.strip()})
+        command_set = set(command_filter) if command_filter else None
+
+        events = worker_hive.tail_events(limit=window, since=since_marker)
+        if command_set:
+            filtered_events = [
+                event
+                for event in events
+                if str(event.get("name", "")).strip() in command_set
+            ]
+        else:
+            filtered_events = events
+
+        pacing = _analyse_event_intervals(filtered_events)
+        payload = {
+            "window": window,
+            "since": since_marker,
+            "commands": command_filter,
+            "event_count": len(filtered_events),
+            "log_path": str(worker_hive.log_path),
+            "interval_stats": pacing["stats"],
+            "longest_intervals": pacing["longest_intervals"],
+        }
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            stats = payload["interval_stats"]
+            scope = ", ".join(command_filter) if command_filter else "all commands"
+            console.print(
+                f"Event pacing for {scope} using {payload['event_count']} events (log: {payload['log_path']})."
+            )
+            if stats["interval_count"] == 0:
+                console.print(
+                    "Not enough timestamped worker events were found to compute intervals yet."
+                )
+            else:
+                avg = _format_duration(stats["average_seconds"])
+                med = _format_duration(stats["median_seconds"])
+                p90 = _format_duration(stats["p90_seconds"])
+                shortest = _format_duration(stats["shortest_seconds"])
+                longest = _format_duration(stats["longest_seconds"])
+                console.print(
+                    f"Intervals analysed: {stats['interval_count']} across {stats['event_count']} events."
+                )
+                console.print(f"Average {avg} | Median {med} | p90 {p90}")
+                console.print(f"Shortest {shortest} | Longest {longest}")
+                recent = stats["most_recent_interval_seconds"]
+                if recent is not None:
+                    console.print(
+                        "Most recent interval: "
+                        f"{_format_duration(recent)} ending {stats['most_recent_interval_finished_at']}"
+                    )
+
+                if payload["longest_intervals"]:
+                    if FALLBACK_TABLE:
+                        console.print("Longest idle windows:")
+                        for entry in payload["longest_intervals"]:
+                            console.print(
+                                f"  {entry['from']} → {entry['to']} "
+                                f"({_format_duration(entry['seconds'])}) at {entry['ended_at']}"
+                            )
+                    else:
+                        table = Table(title="Longest idle windows")
+                        table.add_column("From", style="yellow")
+                        table.add_column("To", style="green")
+                        table.add_column("Interval", justify="right")
+                        table.add_column("Ended at", style="cyan")
+                        for entry in payload["longest_intervals"]:
+                            table.add_row(
+                                entry["from"],
+                                entry["to"],
+                                _format_duration(entry["seconds"]),
+                                entry["ended_at"],
+                            )
+                        console.print(table)
+
+        task.succeed(payload=payload)
+
+
 @app.command("command-health")
 def command_health(
     ctx: typer.Context,
@@ -1849,6 +2046,236 @@ def insights(
                             _format_duration(entry["duration_seconds"]),
                         )
                     console.print(recent_table)
+
+        task.succeed(payload=payload)
+
+
+@app.command("operational-snapshot")
+def operational_snapshot(
+    ctx: typer.Context,
+    window: int = typer.Option(
+        800,
+        "--window",
+        "-w",
+        help="Number of recent worker events incorporated into the snapshot.",
+    ),
+    since: Optional[str] = typer.Option(
+        None,
+        "--since",
+        help="Only include events at or after the provided ISO timestamp.",
+    ),
+    commands: List[str] = typer.Option(
+        [],
+        "--command",
+        "-c",
+        help="Only include the specified command names (repeatable).",
+    ),
+    limit: int = typer.Option(
+        5,
+        "--limit",
+        "-n",
+        help="Number of spotlighted commands to display in the console view.",
+    ),
+    export: Optional[Path] = typer.Option(
+        None,
+        "--export",
+        help="Optional path that receives the full JSON snapshot.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Blend reliability, pacing, and command health into one digest."""
+
+    metadata = {
+        "window": window,
+        "since": since,
+        "commands": commands,
+        "limit": limit,
+        "export": str(export) if export else None,
+        "json": json_mode,
+    }
+
+    with worker_hive.worker("operational_snapshot", metadata=metadata) as task:
+        if window <= 0:
+            task.fail(error="invalid_window", window=window)
+            raise typer.BadParameter("window must be a positive integer")
+        if limit <= 0:
+            task.fail(error="invalid_limit", limit=limit)
+            raise typer.BadParameter("limit must be a positive integer")
+
+        _set_json_mode(ctx, json_mode)
+
+        since_marker: Optional[str] = None
+        if since is not None:
+            try:
+                since_marker = _normalise_iso_timestamp(since)
+            except ValueError as exc:
+                task.fail(error="invalid_since", since=since)
+                raise typer.BadParameter(f"Invalid ISO timestamp: {since}") from exc
+
+        command_filter = sorted({name.strip() for name in commands if name.strip()})
+        command_set = set(command_filter) if command_filter else None
+
+        events = worker_hive.tail_events(limit=window, since=since_marker)
+        if command_set:
+            filtered_events = [
+                event
+                for event in events
+                if str(event.get("name", "")).strip() in command_set
+            ]
+        else:
+            filtered_events = events
+
+        aggregates = _aggregate_worker_events(
+            filtered_events, command_filter=command_set if command_set else None
+        )
+        reliability_metrics = _derive_task_metrics(filtered_events)
+        command_metrics = _compute_command_performance(filtered_events)
+        pacing = _analyse_event_intervals(filtered_events)
+
+        commands_rows = command_metrics["commands"]
+        top_failures = sorted(
+            commands_rows,
+            key=lambda row: (row["failure"], row["completed"]),
+            reverse=True,
+        )[:limit]
+        top_duration = sorted(
+            commands_rows,
+            key=lambda row: float(row.get("average_duration_seconds") or 0.0),
+            reverse=True,
+        )[:limit]
+
+        payload: dict[str, Any] = {
+            "window": window,
+            "since": since_marker,
+            "commands": command_filter,
+            "event_count": len(filtered_events),
+            "log_path": str(worker_hive.log_path),
+            "aggregates": aggregates,
+            "reliability": reliability_metrics,
+            "command_totals": command_metrics["totals"],
+            "top_failures": top_failures,
+            "top_durations": top_duration,
+            "event_pacing": pacing["stats"],
+            "longest_intervals": pacing["longest_intervals"],
+        }
+
+        if export is not None:
+            export.parent.mkdir(parents=True, exist_ok=True)
+            export.write_text(json.dumps(payload, indent=2, sort_keys=True))
+            payload["export_path"] = str(export)
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            scope = ", ".join(command_filter) if command_filter else "all commands"
+            console.print(
+                f"Operational snapshot for {scope} built from {payload['event_count']} events"
+                f" (log: {payload['log_path']})."
+            )
+
+            reliability_stats = reliability_metrics["stats"]
+            console.print(
+                "Tasks completed: "
+                f"{reliability_stats['completed_total']} (success {reliability_stats['success_total']} "
+                f"| failure {reliability_stats['failure_total']} | skipped {reliability_stats['skipped_total']})."
+            )
+            console.print(
+                f"Active tasks: {reliability_stats['active_total']} | Failure rate: {reliability_stats['failure_rate']:.1%}"
+            )
+
+            avg = _format_duration(reliability_stats["average_duration_seconds"])
+            p90 = _format_duration(reliability_stats["p90_duration_seconds"])
+            console.print(f"Average duration: {avg} | p90 duration: {p90}")
+
+            totals = payload["command_totals"]
+            console.print(
+                "Tracked commands: "
+                f"{totals['commands_tracked']} | Completed tasks: {totals['completed_tasks']} "
+                f"| Active tasks: {totals['active_tasks']} | Failure rate: {totals['overall_failure_rate']:.1%}"
+            )
+
+            def _render_command_table(title: str, rows: list[dict[str, Any]]) -> None:
+                if not rows:
+                    console.print(f"No {title.lower()} detected in the inspected window yet.")
+                    return
+                if FALLBACK_TABLE:
+                    console.print(title)
+                    for row in rows:
+                        console.print(
+                            f"  {row['command']}: completed {row['completed']} | failures {row['failure']} "
+                            f"| active {row['active']} | success {row['success_rate']:.1%} | "
+                            f"avg {_format_duration(row.get('average_duration_seconds'))}"
+                        )
+                else:
+                    table = Table(title=title)
+                    table.add_column("Command", style="magenta")
+                    table.add_column("Completed", justify="right")
+                    table.add_column("Failures", justify="right")
+                    table.add_column("Active", justify="right")
+                    table.add_column("Success rate", justify="right")
+                    table.add_column("Avg", justify="right")
+                    table.add_column("P95", justify="right")
+                    table.add_column("Last finished", style="cyan")
+                    table.add_column("Stale heartbeat", justify="right")
+                    for row in rows:
+                        table.add_row(
+                            row["command"],
+                            str(row["completed"]),
+                            str(row["failure"]),
+                            str(row["active"]),
+                            f"{row['success_rate']:.1%}",
+                            _format_duration(row.get("average_duration_seconds")),
+                            _format_duration(row.get("p95_duration_seconds")),
+                            row.get("last_finished_at") or "-",
+                            _format_duration(row.get("stale_heartbeats_seconds")),
+                        )
+                    console.print(table)
+
+            _render_command_table(
+                f"Top {len(payload['top_failures'])} commands by failures", payload["top_failures"]
+            )
+            _render_command_table(
+                f"Top {len(payload['top_durations'])} commands by average duration",
+                payload["top_durations"],
+            )
+
+            pacing_stats = payload["event_pacing"]
+            if pacing_stats["interval_count"]:
+                console.print(
+                    f"Event pacing → average {_format_duration(pacing_stats['average_seconds'])} | "
+                    f"p90 {_format_duration(pacing_stats['p90_seconds'])} | longest "
+                    f"{_format_duration(pacing_stats['longest_seconds'])}"
+                )
+            else:
+                console.print("Event pacing metrics are unavailable (no timestamped events).")
+
+            if payload["longest_intervals"]:
+                if FALLBACK_TABLE:
+                    console.print("Longest idle windows:")
+                    for entry in payload["longest_intervals"]:
+                        console.print(
+                            f"  {entry['from']} → {entry['to']} "
+                            f"({_format_duration(entry['seconds'])}) ending {entry['ended_at']}"
+                        )
+                else:
+                    idle_table = Table(title="Longest idle windows")
+                    idle_table.add_column("From", style="yellow")
+                    idle_table.add_column("To", style="green")
+                    idle_table.add_column("Duration", justify="right")
+                    idle_table.add_column("Ended at", style="cyan")
+                    for entry in payload["longest_intervals"]:
+                        idle_table.add_row(
+                            entry["from"],
+                            entry["to"],
+                            _format_duration(entry["seconds"]),
+                            entry["ended_at"],
+                        )
+                    console.print(idle_table)
+
+            if "export_path" in payload:
+                console.print(f"Snapshot exported to {payload['export_path']}")
 
         task.succeed(payload=payload)
 
@@ -2681,6 +3108,12 @@ def main() -> None:  # pragma: no cover - console entry point
     stats_parser.add_argument("--build-charts", action="store_true", dest="build_charts")
     stats_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
 
+    timestamp_parser = subparsers.add_parser(
+        "normalise-timestamp", help="Normalise ISO 8601 timestamps"
+    )
+    timestamp_parser.add_argument("timestamps", nargs="+", metavar="TIMESTAMP")
+    timestamp_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
     history_parser = subparsers.add_parser(
         "history", help="Display recent worker hive telemetry"
     )
@@ -2706,6 +3139,14 @@ def main() -> None:  # pragma: no cover - console entry point
     )
     reliability_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
 
+    pacing_parser = subparsers.add_parser(
+        "event-pacing", help="Analyse spacing between worker events"
+    )
+    pacing_parser.add_argument("--window", "-w", type=int, default=400, dest="window")
+    pacing_parser.add_argument("--since", dest="since")
+    pacing_parser.add_argument("--command", "-c", action="append", dest="commands")
+    pacing_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
     insights_parser = subparsers.add_parser(
         "insights",
         help="Generate throughput, concurrency, and reliability insights",
@@ -2713,6 +3154,17 @@ def main() -> None:  # pragma: no cover - console entry point
     insights_parser.add_argument("--window", "-w", type=int, default=600, dest="window")
     insights_parser.add_argument("--command", "-c", dest="filter_command")
     insights_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
+    snapshot_parser = subparsers.add_parser(
+        "operational-snapshot",
+        help="Blend reliability, pacing, and command health insights",
+    )
+    snapshot_parser.add_argument("--window", "-w", type=int, default=800, dest="window")
+    snapshot_parser.add_argument("--since", dest="since")
+    snapshot_parser.add_argument("--command", "-c", action="append", dest="commands")
+    snapshot_parser.add_argument("--limit", "-n", type=int, default=5, dest="limit")
+    snapshot_parser.add_argument("--export", type=Path, dest="export_path")
+    snapshot_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
 
     verify_parser = subparsers.add_parser("verify", help="Verify puzzle addresses")
     verify_parser.add_argument("--puzzles", dest="puzzles")
@@ -2756,6 +3208,8 @@ def main() -> None:  # pragma: no cover - console entry point
 
     if args.command == "stats":
         stats(ctx, build_charts_flag=args.build_charts, json_mode=args.json_mode)
+    elif args.command == "normalise-timestamp":
+        normalise_timestamp(ctx, timestamps=args.timestamps, json_mode=args.json_mode)
     elif args.command == "history":
         history(
             ctx,
@@ -2773,11 +3227,29 @@ def main() -> None:  # pragma: no cover - console entry point
             show_failures=not args.hide_failures,
             json_mode=args.json_mode,
         )
+    elif args.command == "event-pacing":
+        event_pacing(
+            ctx,
+            window=args.window,
+            since=args.since,
+            commands=args.commands or [],
+            json_mode=args.json_mode,
+        )
     elif args.command == "insights":
         insights(
             ctx,
             window=args.window,
             command_name=args.filter_command,
+            json_mode=args.json_mode,
+        )
+    elif args.command == "operational-snapshot":
+        operational_snapshot(
+            ctx,
+            window=args.window,
+            since=args.since,
+            commands=args.commands or [],
+            limit=args.limit,
+            export=args.export_path,
             json_mode=args.json_mode,
         )
     elif args.command == "verify":
