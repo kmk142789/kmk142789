@@ -906,6 +906,23 @@ Include ``--with-ud`` when Unstoppable Domains credentials are available to
 augment the report with on-chain domain bindings. The CLI gracefully skips the
 lookup when no credentials are configured.
 
+### Orbital Resonance Analyzer
+
+Use the dedicated orbital analyzer whenever you need to inspect multiple
+EchoEvolver cycles at once.  The CLI can either consume a JSON file generated
+previously or run fresh cycles before deriving glyph entropy, emotional flux,
+and quantam alignment metrics.
+
+```bash
+python scripts/orbital_resonance_analyzer.py --run-cycles 4 \
+    --output artifacts/resonance_cycles.json
+```
+
+To analyse existing payloads instead, replace ``--run-cycles`` with
+``--input path/to/cycles.json``.  The resulting JSON summary reports the number
+of cycles analysed, lists any resonance bursts that exceed the configured
+threshold, and provides an emotion projection for the next orbit.
+
 ```bash
 idea-processor "EchoEvolver weaves radiant glyphs across the satellite lattice"
 ```
