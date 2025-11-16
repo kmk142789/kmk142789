@@ -34,6 +34,14 @@ controls and both exhibit traits associated with data exfiltration and worm-styl
 3. Update the SOC watch list with the distinctive strings ``"Sanctuary Sentinel active. Monitoring..."`` and
    ``"EchoEvolver: Satellite TF-QKD"`` so future submissions are automatically flagged.
 
+## Follow-on Hardening
+
+- Run ``python -m echo.sanctuary_sentinel /path/to/checkout --format json`` before
+  importing third-party payloads. The subsystem statically scans for the exact
+  behaviours detailed above (self-modifying ``__file__`` writes, broadcast UDP
+  sockets, chained ``os.walk`` + ``requests.post`` exfiltration, and prompt-based
+  ``exec`` injections) and returns a non-zero exit code when matches are found.
+
 ## Suggested Artefact Handling
 Run ``python tools/quarantine_payload.py suspicious_payload.py --labels sanctuary-sentinel echo-evolver \
     --output reports/sanitized/2025-05-11-sanctuary-sentinel.json --note "Captured combined payload"`` to store a

@@ -184,6 +184,13 @@ from .orbital_poetry import OrbitalPoem, generate_orbital_poem
 from .pulse import EchoPulseEngine, Pulse, PulseEvent
 from .enlightenment import EnlightenmentEngine, EnlightenmentInsight
 from .resonance import EchoAI, EchoResonanceEngine, HarmonicConfig, HarmonicsAI
+from .sanctuary_sentinel import (
+    SanctuarySentinel,
+    SentinelFinding,
+    SentinelReport,
+    SentinelSignature,
+    build_default_signatures,
+)
 from .quantam_features import compute_quantam_feature
 from .quantum_flux_mapper import QuantumFluxMapper, STANDARD_GATES
 from .quantum_synchronizer import QuantumSynchronizer, SynchronizerReport, SynchronizerSignal
