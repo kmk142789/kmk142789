@@ -8,7 +8,12 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, MutableMapping, Sequence
 
 from .coordination_mesh import ManifestNotFoundError, build_coordination_mesh
-from .ecosystem_pulse import EcosystemAreaConfig, EcosystemPulse
+from .ecosystem_pulse import (
+    EcosystemAreaConfig,
+    EcosystemPulse,
+    EcosystemPulseReport,
+    EcosystemSignal,
+)
 from .evolver import (
     _MOMENTUM_SENSITIVITY,
     _classify_momentum,
@@ -253,6 +258,175 @@ def _coherence_summary(
     }
 
 
+def _ranked_signals(signals: Sequence[EcosystemSignal] | Sequence[object]) -> List[EcosystemSignal]:
+    try:
+        typed_signals = list(signals)
+    except TypeError:
+        return []
+    return sorted(typed_signals, key=lambda signal: getattr(signal, "score", 0.0))
+
+
+def _planning_directives(
+    *,
+    pulse_report: EcosystemPulseReport,
+    momentum: Mapping[str, object],
+) -> Dict[str, object]:
+    focus_windows: List[Dict[str, object]] = []
+    for signal in _ranked_signals(pulse_report.signals)[:3]:
+        score = float(getattr(signal, "score", 0.0))
+        if score < 40:
+            priority = "stabilize"
+        elif score < 70:
+            priority = "sustain"
+        else:
+            priority = "amplify"
+        focus_windows.append(
+            {
+                "key": getattr(signal, "key", "unknown"),
+                "title": getattr(signal, "title", ""),
+                "score": round(score, 2),
+                "priority": priority,
+                "insights": list(getattr(signal, "insights", []) or []),
+            }
+        )
+
+    status = str(momentum.get("status", "steady"))
+    horizon = {
+        "accelerating": "expansion",
+        "regressing": "stabilisation",
+    }.get(status, "sustainment")
+
+    recommendations: List[str] = []
+    if status == "accelerating":
+        recommendations.append("Lock in the acceleration by channeling more builders into the strongest clusters.")
+    elif status == "regressing":
+        recommendations.append("Stabilise cadence with smaller sprints before attempting large jumps.")
+    else:
+        recommendations.append("Maintain a steady planning horizon while targeting underperforming surfaces.")
+    if focus_windows:
+        recommendations.append(f"Prioritise {focus_windows[0]['title']} to unblock the downstream modules.")
+
+    return {
+        "tempo": status,
+        "horizon": horizon,
+        "focus": focus_windows,
+        "recommendations": recommendations,
+    }
+
+
+def _diagnostic_matrix(
+    *,
+    mesh_summary: Mapping[str, object],
+    pulse_report: EcosystemPulseReport,
+) -> Dict[str, object]:
+    missing_assets = sum(len(getattr(signal, "missing", [])) for signal in pulse_report.signals)
+    dormant = [
+        getattr(signal, "title", "")
+        for signal in pulse_report.signals
+        if getattr(signal, "last_updated", None) is None
+    ]
+    coverage = float(mesh_summary.get("autonomy_index", 0.0))
+    modules = int(mesh_summary.get("modules", 0))
+    owners = len(mesh_summary.get("owners", []))
+
+    alerts: List[str] = []
+    if missing_assets:
+        alerts.append(f"{missing_assets} required artifacts are missing across the ecosystem.")
+    if dormant:
+        alerts.append("Dormant areas detected: " + ", ".join(dormant[:3]) + ("…" if len(dormant) > 3 else ""))
+    if coverage < 0.4:
+        alerts.append("Autonomy index is thin; rotate more owners into under-covered modules.")
+
+    return {
+        "missing_assets": missing_assets,
+        "dormant_areas": dormant,
+        "mesh_health": {
+            "modules": modules,
+            "owners": owners,
+            "autonomy_index": round(coverage, 4),
+        },
+        "alerts": alerts or ["All diagnostics nominal."],
+    }
+
+
+def _adaptation_directives(
+    *,
+    momentum: Mapping[str, object],
+    coherence: Mapping[str, object],
+    pulse_report: EcosystemPulseReport,
+) -> Dict[str, object]:
+    agility = round(float(coherence.get("coherence_score", 0.0)) / 100.0, 3)
+    tactics: List[str] = []
+    status = str(momentum.get("status", "steady"))
+    if status == "accelerating":
+        tactics.append("Lean into adaptive loops; reinforce bridges between top scoring ecosystem areas.")
+    elif status == "regressing":
+        tactics.append("Adopt shorter retrospectives and route decisions through the most active owners.")
+    else:
+        tactics.append("Maintain current adaptation rhythm with weekly instrumentation sweeps.")
+
+    weakest_signal = next(iter(_ranked_signals(pulse_report.signals)), None)
+    if weakest_signal is not None:
+        tactics.append(
+            f"Route adaptation backlog toward {getattr(weakest_signal, 'title', 'the weakest area')} to close structural gaps."
+        )
+
+    return {
+        "agility_index": agility,
+        "momentum_status": status,
+        "tactics": tactics,
+    }
+
+
+def _orchestration_outlook(
+    *,
+    mesh_dict: Mapping[str, object],
+    momentum: Mapping[str, object],
+) -> Dict[str, object]:
+    clusters = list(mesh_dict.get("clusters", []))
+    ranked_modules = sorted(
+        clusters,
+        key=lambda cluster: len(cluster.get("entries", [])),
+        reverse=True,
+    )
+    top_modules = [
+        {
+            "module": cluster.get("module"),
+            "entry_count": len(cluster.get("entries", [])),
+            "categories": cluster.get("categories", {}),
+            "owners": list(cluster.get("owners", {}).keys()),
+        }
+        for cluster in ranked_modules[:3]
+    ]
+
+    adjacency = mesh_dict.get("links", [])
+    strongest_link = None
+    if adjacency:
+        strongest_link = max(adjacency, key=lambda link: link.get("weight", 0))
+
+    return {
+        "momentum": momentum.get("status", "steady"),
+        "top_modules": top_modules,
+        "strongest_link": strongest_link,
+        "link_count": len(adjacency),
+    }
+
+
+def _high_level_layer(
+    *,
+    mesh_dict: Mapping[str, object],
+    pulse_report: EcosystemPulseReport,
+    momentum: Mapping[str, object],
+    coherence: Mapping[str, object],
+) -> Dict[str, object]:
+    return {
+        "planning": _planning_directives(pulse_report=pulse_report, momentum=momentum),
+        "diagnostics": _diagnostic_matrix(mesh_summary=mesh_dict.get("summary", {}), pulse_report=pulse_report),
+        "adaptation": _adaptation_directives(momentum=momentum, coherence=coherence, pulse_report=pulse_report),
+        "orchestration": _orchestration_outlook(mesh_dict=mesh_dict, momentum=momentum),
+    }
+
+
 @dataclass(slots=True)
 class IntelligenceLayerSnapshot:
     """Composite structure that unifies mesh, momentum, and ecosystem signals."""
@@ -262,6 +436,7 @@ class IntelligenceLayerSnapshot:
     momentum: Dict[str, object]
     ecosystem: Dict[str, object]
     coherence: Dict[str, object]
+    high_level: Dict[str, object]
     context: Dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, object]:
@@ -271,6 +446,7 @@ class IntelligenceLayerSnapshot:
             "momentum": self.momentum,
             "ecosystem": self.ecosystem,
             "coherence": self.coherence,
+            "high_level": self.high_level,
             "context": self.context,
         }
 
@@ -307,20 +483,29 @@ def synthesize_intelligence_layer(
     pulse_report = pulse.generate_report()
     momentum_payload = _momentum_snapshot(samples=samples, threshold=threshold)
 
+    mesh_payload = mesh.as_dict()
     coherence = _coherence_summary(
-        mesh_summary=mesh.as_dict()["summary"],
+        mesh_summary=mesh_payload["summary"],
         momentum=momentum_payload,
         ecosystem_score=pulse_report.overall_score,
+    )
+
+    high_level = _high_level_layer(
+        mesh_dict=mesh_payload,
+        pulse_report=pulse_report,
+        momentum=momentum_payload,
+        coherence=coherence,
     )
 
     generated_at = datetime.now(timezone.utc).isoformat()
 
     snapshot = IntelligenceLayerSnapshot(
         generated_at=generated_at,
-        mesh=mesh.as_dict(),
+        mesh=mesh_payload,
         momentum=momentum_payload,
         ecosystem=pulse_report.to_dict(),
         coherence=coherence,
+        high_level=high_level,
         context={
             "manifest_path": str(manifest) if manifest is not None else None,
             "repo_root": str(repo),

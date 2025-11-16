@@ -109,6 +109,13 @@ def test_synthesize_intelligence_layer(tmp_path: Path) -> None:
     assert payload["ecosystem"]["signals"], "ecosystem report should contain signals"
     assert payload["coherence"]["coherence_score"] > 0
     assert payload["context"]["momentum_sample_count"] == 4
+    high_level = payload["high_level"]
+    assert set(high_level.keys()) == {"planning", "diagnostics", "adaptation", "orchestration"}
+    assert high_level["planning"]["focus"], "planning focus entries should be populated"
+    assert (
+        high_level["diagnostics"]["mesh_health"]["modules"]
+        == payload["mesh"]["summary"]["modules"]
+    )
 
 
 def test_harmonic_intelligence_layer_capability(tmp_path: Path) -> None:
@@ -149,3 +156,4 @@ def test_harmonic_intelligence_layer_capability(tmp_path: Path) -> None:
     assert payload["mesh"]["summary"]["total_entries"] == 4
     assert payload["coherence"]["status"] in {"ascending", "steady", "fragmented"}
     assert payload["context"]["momentum_sample_count"] == 3
+    assert payload["high_level"]["orchestration"]["top_modules"], "orchestration view should highlight modules"
