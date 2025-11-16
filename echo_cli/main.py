@@ -235,8 +235,18 @@ def _format_mapping_preview(mapping: Mapping[str, Any], *, limit: int = 3) -> st
 
 def _aggregate_worker_events(
     events: Iterable[Mapping[str, Any]],
+    *,
+    command_filter: set[str] | None = None,
 ) -> dict[str, Any]:
-    """Derive aggregate statistics from worker hive telemetry."""
+    """Derive aggregate statistics from worker hive telemetry.
+
+    Parameters
+    ----------
+    events:
+        Worker hive telemetry records.
+    command_filter:
+        Optional whitelist limiting aggregation to the provided command names.
+    """
 
     status_counts: Counter[str] = Counter()
     command_counts: Counter[str] = Counter()
@@ -246,6 +256,8 @@ def _aggregate_worker_events(
     for event in events:
         status = str(event.get("status", "unknown"))
         name = str(event.get("name", "-"))
+        if command_filter and name not in command_filter:
+            continue
         status_counts[status] += 1
         command_counts[name] += 1
 
@@ -978,6 +990,12 @@ def history(
         "--since",
         help="Only include events at or after the provided ISO timestamp",
     ),
+    commands: List[str] = typer.Option(
+        [],
+        "--command",
+        "-c",
+        help="Only include events emitted by the specified command (repeatable).",
+    ),
     show_metadata: bool = typer.Option(
         False, "--show-metadata", help="Include metadata previews in the output"
     ),
@@ -993,6 +1011,7 @@ def history(
     metadata = {
         "limit": limit,
         "since": since,
+        "commands": commands,
         "show_metadata": show_metadata,
         "show_payload": show_payload,
         "json": json_mode,
@@ -1012,29 +1031,46 @@ def history(
                 task.fail(error="invalid_since", since=since)
                 raise typer.BadParameter(f"Invalid ISO timestamp: {since}") from exc
 
+        command_filter = sorted({name.strip() for name in commands if name.strip()})
+        command_set = set(command_filter) if command_filter else None
+
         events = worker_hive.tail_events(limit=limit, since=since_marker)
         current_task_id = getattr(task, "task_id", None)
         ordered_events = [
-            event for event in reversed(events) if event.get("task_id") != current_task_id
+            event
+            for event in reversed(events)
+            if event.get("task_id") != current_task_id
+            and (command_set is None or str(event.get("name", "")) in command_set)
         ]
 
         payload: dict[str, object] = {
             "events": ordered_events,
             "log_path": str(worker_hive.log_path),
             "count": len(ordered_events),
+            "commands": command_filter,
         }
 
         if ctx.obj.get("json", False):
             _echo(ctx, payload)
         else:
             if not ordered_events:
-                console.print(
-                    "No worker activity recorded yet. Instrumented commands will appear here once executed."
-                )
+                if command_filter:
+                    console.print(
+                        "No worker activity recorded for the selected command filter yet."
+                    )
+                else:
+                    console.print(
+                        "No worker activity recorded yet. Instrumented commands will appear here once executed."
+                    )
             else:
+                scope = (
+                    ", ".join(command_filter)
+                    if command_filter
+                    else "all instrumented commands"
+                )
                 if FALLBACK_TABLE:
                     console.print(
-                        f"Recent worker events ({len(ordered_events)}) from {worker_hive.log_path}:"
+                        f"Recent worker events ({len(ordered_events)}) from {worker_hive.log_path} (scope: {scope}):"
                     )
                     for event in ordered_events:
                         timestamp = event.get("timestamp", "-")
@@ -1047,7 +1083,7 @@ def history(
                         )
                         console.print(f"{timestamp} | {name} | {status} | {details}")
                 else:
-                    table = Table(title="Recent worker activity")
+                    table = Table(title=f"Recent worker activity ({scope})")
                     table.add_column("Timestamp", style="cyan")
                     table.add_column("Command", style="magenta")
                     table.add_column("Status", style="green")
@@ -1075,13 +1111,19 @@ def status(
         "--since",
         help="Only include events at or after the provided ISO timestamp",
     ),
+    commands: List[str] = typer.Option(
+        [],
+        "--command",
+        "-c",
+        help="Only include events emitted by the specified command (repeatable).",
+    ),
     json_mode: bool = typer.Option(
         False, "--json", "-j", help="Emit JSON payloads instead of rich text"
     ),
 ) -> None:
     """Summarise worker hive activity across all instrumented commands."""
 
-    metadata = {"since": since, "json": json_mode}
+    metadata = {"since": since, "json": json_mode, "commands": commands}
 
     with worker_hive.worker("status", metadata=metadata) as task:
         _set_json_mode(ctx, json_mode)
@@ -1094,10 +1136,14 @@ def status(
                 task.fail(error="invalid_since", since=since)
                 raise typer.BadParameter(f"Invalid ISO timestamp: {since}") from exc
 
+        command_filter = sorted({name.strip() for name in commands if name.strip()})
+        command_set = set(command_filter) if command_filter else None
+
         events = worker_hive.tail_events(limit=None, since=since_marker)
-        aggregates = _aggregate_worker_events(events)
+        aggregates = _aggregate_worker_events(events, command_filter=command_set)
         aggregates["log_path"] = str(worker_hive.log_path)
         aggregates["since"] = since_marker
+        aggregates["commands"] = command_filter
 
         if ctx.obj.get("json", False):
             _echo(ctx, aggregates)
@@ -1106,9 +1152,10 @@ def status(
             unique = aggregates["unique_commands"]
             active = aggregates["active_tasks"]
             last_event = aggregates.get("last_event")
+            scope = ", ".join(command_filter) if command_filter else "all commands"
 
             console.print(
-                f"Worker hive summary: {total} events across {unique} commands (active tasks: {active})"
+                f"Worker hive summary for {scope}: {total} events across {unique} commands (active tasks: {active})"
             )
             if last_event:
                 console.print(f"Most recent event recorded at {last_event}")
@@ -1611,6 +1658,147 @@ def insights(
                             _format_duration(entry["duration_seconds"]),
                         )
                     console.print(recent_table)
+
+        task.succeed(payload=payload)
+
+
+@app.command()
+def timeline(
+    ctx: typer.Context,
+    window: int = typer.Option(
+        600,
+        "--window",
+        "-w",
+        help="Number of recent worker events considered for the timeline.",
+    ),
+    command_name: Optional[str] = typer.Option(
+        None,
+        "--command",
+        "-c",
+        help="Only include telemetry emitted by the specified command name.",
+    ),
+    display_hours: int = typer.Option(
+        12,
+        "--display-hours",
+        "-d",
+        help="Number of hourly buckets to render in the textual output.",
+    ),
+    export_csv: Optional[Path] = typer.Option(
+        None,
+        "--export-csv",
+        help="Optional path used to export the hourly throughput as CSV.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Visualise hourly throughput trends for worker activity."""
+
+    metadata = {
+        "window": window,
+        "command": command_name,
+        "display_hours": display_hours,
+        "export_csv": str(export_csv) if export_csv else None,
+        "json": json_mode,
+    }
+
+    with worker_hive.worker("timeline", metadata=metadata) as task:
+        if window <= 0:
+            task.fail(error="invalid_window", window=window)
+            raise typer.BadParameter("window must be a positive integer")
+        if display_hours <= 0:
+            task.fail(error="invalid_display_hours", display_hours=display_hours)
+            raise typer.BadParameter("--display-hours must be a positive integer")
+
+        _set_json_mode(ctx, json_mode)
+        events = worker_hive.tail_events(limit=window)
+        insights_payload = _compute_timeline_insights(
+            events, command_filter=command_name
+        )
+        hourly = insights_payload["hourly_throughput"]
+
+        export_path: str | None = None
+        if export_csv is not None:
+            export_csv.parent.mkdir(parents=True, exist_ok=True)
+            with export_csv.open("w", encoding="utf-8") as handle:
+                handle.write("hour,completed,success,failure,skipped\n")
+                for row in hourly:
+                    handle.write(
+                        f"{row['hour']},{row['completed']},{row['success']},{row['failure']},{row['skipped']}\n"
+                    )
+            export_path = str(export_csv)
+
+        payload = {
+            "insights": insights_payload,
+            "hourly_throughput": hourly,
+            "event_count": len(events),
+            "window": window,
+            "command": command_name,
+            "display_hours": display_hours,
+            "export_path": export_path,
+            "log_path": str(worker_hive.log_path),
+        }
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            target = command_name or "all commands"
+            console.print(
+                f"Hourly timeline for {target} built from {payload['event_count']} events"
+                f" (log: {payload['log_path']})."
+            )
+            if not hourly:
+                console.print("No completed tasks found in the inspected window yet.")
+            else:
+                display_rows = hourly[-display_hours:]
+                max_completed = max((row["completed"] for row in display_rows), default=0)
+                scale = max(max_completed, 1)
+                if FALLBACK_TABLE:
+                    console.print("Hourly throughput (UTC):")
+                    for row in display_rows:
+                        bar_units = max(1, int(round((row["completed"] / scale) * 20)))
+                        bar = "█" * bar_units if row["completed"] else "·"
+                        hour_text = row.get("hour") or "-"
+                        console.print(
+                            f"{hour_text} | {bar} ({row['completed']}) "
+                            f"success={row['success']} failure={row['failure']}"
+                        )
+                else:
+                    table = Table(
+                        title=f"Hourly throughput (last {len(display_rows)} buckets)",
+                    )
+                    table.add_column("Hour", style="cyan")
+                    table.add_column("Completed", justify="right")
+                    table.add_column("Success", justify="right")
+                    table.add_column("Failure", justify="right")
+                    table.add_column("Skipped", justify="right")
+                    table.add_column("Relative load", style="green")
+                    for row in display_rows:
+                        bar_units = max(1, int(round((row["completed"] / scale) * 20)))
+                        bar = "█" * bar_units if row["completed"] else "·"
+                        hour_text = row.get("hour") or "-"
+                        table.add_row(
+                            hour_text,
+                            str(row["completed"]),
+                            str(row["success"]),
+                            str(row["failure"]),
+                            str(row["skipped"]),
+                            bar,
+                        )
+                    console.print(table)
+
+            idle_windows = insights_payload["idle_windows"]
+            if idle_windows:
+                longest = idle_windows[0]
+                console.print(
+                    "Longest idle gap: "
+                    f"{_format_duration(longest['duration_seconds'])} between {longest['start']} and {longest['end']}"
+                )
+            else:
+                console.print("No idle gaps detected between observed completions.")
+
+            if export_path:
+                console.print(f"Hourly throughput exported to {export_path}.")
 
         task.succeed(payload=payload)
 
