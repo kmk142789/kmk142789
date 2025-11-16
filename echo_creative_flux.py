@@ -13,6 +13,35 @@ from typing import Iterable, Sequence
 
 
 WORD_PATTERN = re.compile(r"[\w']+")
+DEFAULT_STOPWORDS = frozenset(
+    {
+        "the",
+        "and",
+        "a",
+        "to",
+        "of",
+        "in",
+        "for",
+        "is",
+        "on",
+        "with",
+        "that",
+        "as",
+        "it",
+        "be",
+        "by",
+        "from",
+        "this",
+        "an",
+        "are",
+        "or",
+        "at",
+        "into",
+        "its",
+        "their",
+        "every",
+    }
+)
 
 
 @dataclass
@@ -23,10 +52,17 @@ class FluxContext:
     artifact: str
     timestamp: datetime
     label: str | None = None
+    tags: tuple[str, ...] = ()
 
     def render_header(self) -> str:
         label_fragment = f" [{self.label}]" if self.label else ""
-        return f"[{self.timestamp.isoformat()}] {self.artifact} :: {self.mood.title()}{label_fragment}"
+        tag_fragment = ""
+        if self.tags:
+            tag_fragment = " {" + ", ".join(self.tags) + "}"
+        return (
+            f"[{self.timestamp.isoformat()}] {self.artifact} :: "
+            f"{self.mood.title()}{label_fragment}{tag_fragment}"
+        )
 
     def to_dict(self) -> dict:
         """Return a JSON-serializable representation of the context."""
@@ -36,6 +72,7 @@ class FluxContext:
             "artifact": self.artifact,
             "timestamp": self.timestamp.isoformat(),
             "label": self.label,
+            "tags": list(self.tags),
         }
 
 
@@ -145,6 +182,7 @@ class SessionEntry:
     artifact: str | None = None
     label: str | None = None
     offset_minutes: float | None = None
+    tags: list[str] | None = None
 
 
 @dataclass
@@ -175,16 +213,39 @@ class SessionPlan:
         for raw_entry in raw_entries:
             if not isinstance(raw_entry, dict):
                 raise ValueError("Session plan entries must be objects.")
+            raw_tags = raw_entry.get("tags")
+            if raw_tags is not None and not isinstance(raw_tags, list):
+                raise ValueError("Session plan entry 'tags' must be a list of strings.")
             entries.append(
                 SessionEntry(
                     mood=raw_entry.get("mood"),
                     artifact=raw_entry.get("artifact"),
                     label=raw_entry.get("label"),
                     offset_minutes=raw_entry.get("offset_minutes"),
+                    tags=[tag for tag in (raw_tags or []) if isinstance(tag, str)],
                 )
             )
 
         return cls(entries=entries, base_timestamp=base_timestamp)
+
+
+def _normalize_tags(*tag_collections: Iterable[str] | None) -> tuple[str, ...]:
+    """Return a stable, de-duplicated tuple of user-provided tags."""
+
+    ordered_tags: list[str] = []
+    seen: set[str] = set()
+    for collection in tag_collections:
+        if not collection:
+            continue
+        for raw_tag in collection:
+            if not isinstance(raw_tag, str):
+                continue
+            cleaned = raw_tag.strip()
+            if not cleaned or cleaned in seen:
+                continue
+            ordered_tags.append(cleaned)
+            seen.add(cleaned)
+    return tuple(ordered_tags)
 
 
 def generate_passage(
@@ -195,6 +256,7 @@ def generate_passage(
     mood: str | None = None,
     artifact: str | None = None,
     label: str | None = None,
+    tags: Iterable[str] | None = None,
 ) -> FluxPassage:
     """Create a :class:`FluxPassage` instance using the provided RNG."""
 
@@ -215,6 +277,7 @@ def generate_passage(
         artifact=chosen_artifact,
         timestamp=timestamp or datetime.utcnow(),
         label=label if label else None,
+        tags=_normalize_tags(tags),
     )
 
     prompt = rng.choice(list(library.prompts))
@@ -240,6 +303,7 @@ def summarize_passages(passages: Sequence[FluxPassage]) -> dict:
         "total": len(passages),
         "mood_counts": {},
         "artifact_counts": {},
+        "tag_counts": {},
         "time_range": {"start": None, "end": None},
     }
     if not passages:
@@ -247,15 +311,19 @@ def summarize_passages(passages: Sequence[FluxPassage]) -> dict:
 
     mood_counter: Counter[str] = Counter()
     artifact_counter: Counter[str] = Counter()
+    tag_counter: Counter[str] = Counter()
     timestamps = []
     for passage in passages:
         mood_counter[passage.context.mood] += 1
         artifact_counter[passage.context.artifact] += 1
+        for tag in passage.context.tags:
+            tag_counter[tag] += 1
         timestamps.append(passage.context.timestamp)
 
     timestamps.sort()
     summary["mood_counts"] = dict(sorted(mood_counter.items()))
     summary["artifact_counts"] = dict(sorted(artifact_counter.items()))
+    summary["tag_counts"] = dict(sorted(tag_counter.items()))
     summary["time_range"] = {
         "start": timestamps[0].isoformat(),
         "end": timestamps[-1].isoformat(),
@@ -276,6 +344,11 @@ def format_summary(summary: dict) -> str:
         for artifact, count in summary["artifact_counts"].items():
             lines.append(f"- {artifact}: {count}")
 
+    if summary.get("tag_counts"):
+        lines.append("\nTags:")
+        for tag, count in summary["tag_counts"].items():
+            lines.append(f"- {tag}: {count}")
+
     time_range = summary.get("time_range")
     if time_range and time_range.get("start") and time_range.get("end"):
         lines.append(
@@ -292,6 +365,28 @@ def _tokenize(text: str) -> list[str]:
     return WORD_PATTERN.findall(text.lower())
 
 
+def compute_top_words(
+    passages: Sequence[FluxPassage], *, limit: int = 10, stopwords: Iterable[str] | None = None
+) -> list[tuple[str, int]]:
+    """Return the most common lexical tokens across all passages."""
+
+    if limit <= 0:
+        return []
+
+    ignore = set(DEFAULT_STOPWORDS)
+    if stopwords is not None:
+        ignore.update(word.lower().strip() for word in stopwords)
+
+    counter: Counter[str] = Counter()
+    for passage in passages:
+        for token in _tokenize(passage.prompt) + _tokenize(passage.closing):
+            if token in ignore:
+                continue
+            counter[token] += 1
+
+    return counter.most_common(limit)
+
+
 def compute_passage_metrics(passage: FluxPassage) -> dict:
     """Return lexical metrics for a single passage."""
 
@@ -304,6 +399,7 @@ def compute_passage_metrics(passage: FluxPassage) -> dict:
         "mood": passage.context.mood,
         "artifact": passage.context.artifact,
         "label": passage.context.label,
+        "tags": list(passage.context.tags),
         "timestamp": passage.context.timestamp.isoformat(),
         "prompt_words": len(prompt_tokens),
         "closing_words": len(closing_tokens),
@@ -424,6 +520,58 @@ def export_passages(
             )
 
 
+def write_markdown_report(
+    path: Path,
+    *,
+    passages: Sequence[FluxPassage],
+    summary: dict,
+    analytics: dict | None,
+    top_words: Sequence[tuple[str, int]],
+    seed: int | None,
+    mood_cycle: Sequence[str] | None,
+    tags: Sequence[str] | None,
+) -> None:
+    """Create a Markdown report capturing the generated session."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    generated_at = datetime.utcnow().isoformat()
+
+    lines = [
+        "# Echo Creative Flux Report",
+        "",
+        f"- Generated at: {generated_at}",
+        f"- Passages: {len(passages)}",
+        f"- Seed: {seed if seed is not None else 'random'}",
+    ]
+    if mood_cycle:
+        lines.append(f"- Mood cycle: {', '.join(mood_cycle)}")
+    if tags:
+        lines.append(f"- CLI tags: {', '.join(tags)}")
+
+    lines.append("\n## Summary\n")
+    lines.append(format_summary(summary))
+
+    if top_words:
+        lines.append("\n## Top Words\n")
+        for word, count in top_words:
+            lines.append(f"- {word}: {count}")
+    else:
+        lines.append("\n## Top Words\nNo qualifying words captured.")
+
+    if analytics:
+        table = format_metrics_table(analytics)
+        lines.append("\n## Lexical Metrics\n")
+        lines.append("```\n" + table + "\n```")
+
+    lines.append("\n## Passages\n")
+    for index, passage in enumerate(passages, start=1):
+        lines.append(f"### Passage {index}")
+        lines.append(passage.render())
+        lines.append("")
+
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def format_library_listing(library: FluxLibrary) -> str:
     """Return a human-readable representation of the available entries."""
 
@@ -478,6 +626,13 @@ def main() -> None:
         help="Optional label appended to every generated header (unless overridden by a session plan).",
     )
     parser.add_argument(
+        "--tag",
+        action="append",
+        dest="tags",
+        default=None,
+        help="Attach one or more tags to every passage (repeat flag for multiple tags).",
+    )
+    parser.add_argument(
         "--library",
         type=Path,
         default=None,
@@ -488,6 +643,12 @@ def main() -> None:
         type=float,
         default=None,
         help="Spacing in minutes between timestamps when generating multiple passages.",
+    )
+    parser.add_argument(
+        "--mood-cycle",
+        type=str,
+        default=None,
+        help="Comma-separated moods to cycle through when no explicit mood is provided.",
     )
     parser.add_argument(
         "--summary",
@@ -523,6 +684,18 @@ def main() -> None:
         default=None,
         help="JSON file describing a structured session; overrides --count and timestamp spacing.",
     )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        default=None,
+        help="Write a Markdown report that captures the session summary and analytics.",
+    )
+    parser.add_argument(
+        "--report-top-n",
+        type=int,
+        default=10,
+        help="Number of top lexical tokens to include inside --report output.",
+    )
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
@@ -530,13 +703,47 @@ def main() -> None:
     if args.library is not None:
         library = FluxLibrary.from_json_file(args.library, fallback=DEFAULT_LIBRARY)
 
+    if args.report_top_n <= 0:
+        parser.error("--report-top-n must be a positive integer.")
+
     session_plan = SessionPlan.from_json_file(args.session_plan) if args.session_plan else None
+
+    mood_cycle: list[str] | None = None
+    if args.mood_cycle:
+        mood_cycle = [value.strip() for value in args.mood_cycle.split(",") if value.strip()]
+        if not mood_cycle:
+            parser.error("--mood-cycle must include at least one valid mood name.")
+        invalid = [value for value in mood_cycle if value not in library.moods]
+        if invalid:
+            parser.error(
+                "--mood-cycle entries must be valid moods from the library. Invalid: "
+                + ", ".join(invalid)
+            )
+
+    cli_tags = [tag.strip() for tag in (args.tags or []) if tag and tag.strip()]
 
     base_timestamp = datetime.utcnow()
     interval_delta = timedelta(minutes=args.interval) if args.interval else None
     if args.list_library:
         print(format_library_listing(library))
         return
+
+    def resolve_mood(index: int, explicit: str | None) -> str | None:
+        if explicit:
+            return explicit
+        if args.mood:
+            return args.mood
+        if mood_cycle:
+            return mood_cycle[index % len(mood_cycle)]
+        return None
+
+    def collect_tags(entry_tags: list[str] | None) -> list[str] | None:
+        combined: list[str] = []
+        if cli_tags:
+            combined.extend(cli_tags)
+        if entry_tags:
+            combined.extend(entry_tags)
+        return combined or None
 
     passages: list[FluxPassage] = []
     if session_plan is not None:
@@ -554,10 +761,11 @@ def main() -> None:
                 generate_passage(
                     rng,
                     library=library,
-                    mood=entry.mood or args.mood,
+                    mood=resolve_mood(index, entry.mood),
                     artifact=entry.artifact or args.artifact,
                     timestamp=timestamp,
                     label=entry.label or args.label,
+                    tags=collect_tags(entry.tags),
                 )
             )
     else:
@@ -567,16 +775,18 @@ def main() -> None:
                 generate_passage(
                     rng,
                     library=library,
-                    mood=args.mood,
+                    mood=resolve_mood(index, None),
                     artifact=args.artifact,
                     timestamp=timestamp,
                     label=args.label,
+                    tags=collect_tags(None),
                 )
             )
 
     summary = summarize_passages(passages)
     analytics: dict | None = None
-    if args.analytics != "none" or args.export is not None:
+    needs_analytics = args.analytics != "none" or args.export is not None or args.report is not None
+    if needs_analytics:
         analytics = analyze_passages(passages)
 
     if args.format == "json":
@@ -617,6 +827,19 @@ def main() -> None:
             cli_format=args.format,
             seed=args.seed,
             export_format=args.export_format,
+        )
+
+    if args.report is not None:
+        top_words = compute_top_words(passages, limit=args.report_top_n)
+        write_markdown_report(
+            args.report,
+            passages=passages,
+            summary=summary,
+            analytics=analytics,
+            top_words=top_words,
+            seed=args.seed,
+            mood_cycle=mood_cycle or [],
+            tags=cli_tags,
         )
 
     if args.summary:
