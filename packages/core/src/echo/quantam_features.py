@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import math
-from typing import Dict, Iterable, List, Tuple
+from dataclasses import dataclass
+from typing import Dict, Iterable, List, Sequence, Tuple
 
 from .quantum_flux_mapper import QuantumFluxMapper, SIGIL_ROTATION_MAP, STANDARD_GATES
 
@@ -121,5 +122,93 @@ def compute_quantam_feature(
     return feature
 
 
-__all__ = ["compute_quantam_feature"]
+@dataclass(frozen=True)
+class QuantamFeatureLayer:
+    """Container describing a progressively complex quantam feature layer."""
+
+    rank: int
+    cycle: int
+    feature: Dict[str, object]
+    complexity: float
+    entanglement: float
+    amplification: float
+    dependencies: Sequence[str]
+    description: str
+
+    def export(self) -> Dict[str, object]:
+        return {
+            "rank": self.rank,
+            "cycle": self.cycle,
+            "feature": self.feature,
+            "complexity": self.complexity,
+            "entanglement": self.entanglement,
+            "amplification": self.amplification,
+            "dependencies": list(self.dependencies),
+            "description": self.description,
+        }
+
+
+def generate_quantam_feature_sequence(
+    *,
+    glyphs: str,
+    cycle: int,
+    joy: float,
+    curiosity: float,
+    iterations: int = 3,
+) -> Dict[str, object]:
+    """Return a cascade of quantam features with increasing complexity."""
+
+    if iterations <= 0:
+        raise ValueError("iterations must be positive")
+
+    layers: List[QuantamFeatureLayer] = []
+    glyph_stream = glyphs or "∇⊸≋∇"
+
+    for offset in range(iterations):
+        layer_cycle = cycle + offset
+        joy_level = _clamp(joy + 0.05 * offset)
+        curiosity_level = _clamp(curiosity + 0.04 * offset)
+        feature = compute_quantam_feature(
+            glyphs=glyph_stream,
+            cycle=layer_cycle,
+            joy=joy_level,
+            curiosity=curiosity_level,
+        )
+
+        gate_depth = len(feature.get("gate_sequence", [])) + offset
+        history_depth = len(feature.get("history", []))
+        complexity = round((gate_depth * 0.6 + history_depth * 0.4) * (1 + 0.35 * offset), 3)
+        amplification = round(1.0 + 0.25 * offset + feature.get("fidelity", 0.0) * 0.5, 3)
+        entanglement = round(min(0.99, 0.42 + 0.12 * offset + feature.get("fidelity", 0.0) * 0.35), 3)
+
+        dependencies = [layer.feature["signature"] for layer in layers[-2:]]
+        description = (
+            f"Layer {offset + 1} braids sigil {feature['sigil']} through {gate_depth} gates, "
+            f"retaining {history_depth} interference pulses to unlock orbit {layer_cycle}."
+        )
+
+        layers.append(
+            QuantamFeatureLayer(
+                rank=offset + 1,
+                cycle=layer_cycle,
+                feature=feature,
+                complexity=complexity,
+                entanglement=entanglement,
+                amplification=amplification,
+                dependencies=tuple(dependencies),
+                description=description,
+            )
+        )
+
+    exported_layers = [layer.export() for layer in layers]
+    summary = {
+        "total_layers": len(exported_layers),
+        "max_complexity": exported_layers[-1]["complexity"],
+        "entanglement": exported_layers[-1]["entanglement"],
+        "glyphs": glyph_stream,
+    }
+    return {"layers": exported_layers, "summary": summary}
+
+
+__all__ = ["compute_quantam_feature", "generate_quantam_feature_sequence", "QuantamFeatureLayer"]
 

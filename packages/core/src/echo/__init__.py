@@ -222,7 +222,11 @@ from .sanctuary_sentinel import (
     SentinelSignature,
     build_default_signatures,
 )
-from .quantam_features import compute_quantam_feature
+from .quantam_features import (
+    QuantamFeatureLayer,
+    compute_quantam_feature,
+    generate_quantam_feature_sequence,
+)
 from .recursive_evolution_engine import (
     CycleReport as RecursiveCycleReport,
     ModuleSnapshot,
@@ -409,7 +413,9 @@ __all__ = [
     "generate_strategic_vector",
     "QuantumFluxMapper",
     "STANDARD_GATES",
+    "QuantamFeatureLayer",
     "compute_quantam_feature",
+    "generate_quantam_feature_sequence",
     "QuantumSynchronizer",
     "SynchronizerReport",
     "SynchronizerSignal",
