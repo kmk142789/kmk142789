@@ -31,6 +31,9 @@ __all__ = [
     "orchestrate_complexity_constellation",
     "execute_complexity_cascade",
     "execute_feature_escalation",
+    "construct_complexity_foundation",
+    "simulate_complexity_orbit",
+    "orchestrate_complexity_supercluster",
     "CascadeStage",
 ]
 
@@ -2199,6 +2202,372 @@ def execute_feature_escalation(
         "coverage": {key: bool(value) for key, value in coverage.items()},
         "final_stage": final_stage,
     }
+
+
+def construct_complexity_foundation(
+    segments: Sequence[object],
+    *,
+    reference_prefix: str = "segment",
+) -> dict[str, object]:
+    """Create a baseline layer of checkpoints that other features can build on."""
+
+    if not isinstance(segments, Sequence) or not segments:
+        raise ValueError("segments must be a non-empty sequence")
+
+    prefix = reference_prefix.strip() or "segment"
+    entries: list[dict[str, object]] = []
+    classification_counts: Counter[str] = Counter()
+    total_momentum = 0.0
+    volatility_values: list[float] = []
+    insights: list[str] = []
+
+    for index, raw_segment in enumerate(segments, 1):
+        notes: Iterable[str] | None = None
+        reference = None
+        raw_terms: object | None = None
+        if isinstance(raw_segment, Mapping):
+            raw_terms = raw_segment.get("terms", raw_segment.get("count"))
+            reference = raw_segment.get("reference")
+            raw_notes = raw_segment.get("notes")
+            if raw_notes is not None:
+                if isinstance(raw_notes, str):
+                    notes = [raw_notes]
+                elif isinstance(raw_notes, Iterable):
+                    candidate_notes = [
+                        str(note).strip() for note in raw_notes if str(note).strip()
+                    ]
+                    notes = candidate_notes or None
+                else:  # pragma: no cover - defensive
+                    raise ValueError("notes must be a string or iterable of strings")
+        else:
+            raw_terms = raw_segment
+
+        try:
+            terms = int(raw_terms)
+        except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+            raise ValueError(
+                f"segment at position {index} must define numeric 'terms'"
+            ) from exc
+        if terms < 2:
+            raise ValueError("each segment must reference at least two terms")
+
+        checkpoint = build_complexity_checkpoint(
+            terms,
+            notes=notes,
+            reference=reference or f"{prefix}-{index}",
+        )
+        entry = {
+            "reference": checkpoint["reference"],
+            "terms": checkpoint["terms"],
+            "classification": checkpoint["classification"],
+            "momentum": checkpoint["momentum"],
+            "volatility": checkpoint["volatility"],
+            "summary": checkpoint["summary"],
+            "checkpoint": checkpoint,
+        }
+        entries.append(entry)
+        classification_counts[checkpoint["classification"]] += 1
+        total_momentum += float(checkpoint["momentum"])
+        volatility_values.append(float(checkpoint["volatility"]))
+        insights.append(
+            f"{entry['reference']}: {entry['classification']} momentum {entry['momentum']}"
+        )
+
+    momentum_average = total_momentum / len(entries)
+    volatility_range = (
+        max(volatility_values) - min(volatility_values)
+        if len(volatility_values) > 1
+        else volatility_values[0]
+        if volatility_values
+        else 0.0
+    )
+    peak_entry = max(entries, key=lambda item: item["momentum"], default=None)
+    summary = (
+        f"Constructed {len(entries)} foundation segment(s) with average momentum "
+        f"{momentum_average:.2f}."
+    )
+    if peak_entry:
+        summary += (
+            f" Peak segment {peak_entry['reference']} classified"
+            f" {peak_entry['classification']}."
+        )
+
+    return {
+        "segment_count": len(entries),
+        "segments": entries,
+        "classification_distribution": dict(classification_counts),
+        "momentum_average": round(momentum_average, 3),
+        "volatility_range": round(volatility_range, 4),
+        "peak_segment": peak_entry["reference"] if peak_entry else None,
+        "insights": insights[:6],
+        "summary": summary,
+    }
+
+
+def simulate_complexity_orbit(
+    orbits: Sequence[object] | Mapping[str, object],
+    *,
+    documents: Iterable[str] | None = None,
+    milestones: Sequence[Mapping[str, object]] | Sequence[TimelineMilestone] | None = None,
+    start: datetime | None = None,
+) -> dict[str, object]:
+    """Cascade progressive suites across multiple checkpoints."""
+
+    if isinstance(orbits, Mapping) and "segments" in orbits:
+        orbit_candidates = orbits["segments"]
+    else:
+        orbit_candidates = orbits
+
+    if not isinstance(orbit_candidates, Sequence) or not orbit_candidates:
+        raise ValueError("orbits must be a non-empty sequence")
+
+    doc_pool = _normalise_optional_documents(documents)
+    milestone_pool = _normalise_optional_milestones(milestones)
+    start_anchor = _normalise_datetime(start)
+
+    results: list[dict[str, object]] = []
+    aggregate_complexity = 0.0
+    levels: list[int] = []
+    insights: list[str] = []
+    peak_reference: str | None = None
+    peak_complexity = -math.inf
+
+    for position, candidate in enumerate(orbit_candidates, 1):
+        if isinstance(candidate, Mapping):
+            checkpoint = candidate.get("checkpoint")
+            raw_terms = (
+                candidate.get("terms")
+                or (checkpoint or {}).get("terms")
+                or candidate.get("count")
+            )
+            classification = (
+                candidate.get("classification")
+                or (checkpoint or {}).get("classification")
+            )
+            reference = (
+                candidate.get("reference") or (checkpoint or {}).get("reference")
+            )
+            level_override = candidate.get("level")
+            doc_override = _normalise_optional_documents(candidate.get("documents"))
+            milestone_override = _normalise_optional_milestones(
+                candidate.get("milestones")
+            )
+        else:
+            raw_terms = candidate
+            classification = None
+            reference = None
+            level_override = None
+            doc_override = []
+            milestone_override = []
+
+        try:
+            terms = int(raw_terms)
+        except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+            raise ValueError(
+                f"orbit entry at position {position} must define numeric 'terms'"
+            ) from exc
+        if terms < 2:
+            raise ValueError("orbit entries require at least two terms")
+
+        level = 1
+        if level_override is not None:
+            level = max(1, min(3, int(level_override)))
+        else:
+            if doc_override or doc_pool:
+                level = 2
+            if (milestone_override or milestone_pool) and classification in {
+                "growing",
+                "surging",
+            }:
+                level = 3
+
+        docs_for_orbit: list[str] | None = doc_override or None
+        if level >= 2:
+            if not docs_for_orbit:
+                if not doc_pool:
+                    raise ValueError(
+                        f"orbit '{reference or position}' requires documents for level {level}"
+                    )
+                window = max(1, min(len(doc_pool), level + 1))
+                docs_for_orbit = doc_pool[:window]
+        milestones_for_orbit: list[TimelineMilestone] | None = None
+        if level >= 3:
+            pool = milestone_override or milestone_pool
+            if not pool:
+                raise ValueError(
+                    f"orbit '{reference or position}' requires milestones for level {level}"
+                )
+            milestones_for_orbit = pool
+        elif milestone_override:
+            milestones_for_orbit = milestone_override
+
+        payload = progressive_complexity_suite(
+            level,
+            numeric_terms=terms,
+            documents=docs_for_orbit,
+            milestones=milestones_for_orbit,
+            start=start_anchor,
+        )
+
+        entry_insights = payload.get("insights", [])
+        reference_label = reference or f"orbit-{position}"
+        entry = {
+            "reference": reference_label,
+            "terms": terms,
+            "level": level,
+            "classification": classification,
+            "complexity_index": payload.get("complexity_index"),
+            "insights": entry_insights[:3],
+            "suite": payload,
+        }
+        results.append(entry)
+        aggregate_complexity += float(payload.get("complexity_index", 0.0))
+        levels.append(level)
+        for insight in entry["insights"]:
+            insights.append(f"[{reference_label}] {insight}")
+        complexity_value = float(payload.get("complexity_index", 0.0))
+        if complexity_value > peak_complexity:
+            peak_complexity = complexity_value
+            peak_reference = reference_label
+
+    gradient = (
+        results[-1]["complexity_index"] - results[0]["complexity_index"]
+        if len(results) > 1
+        else 0.0
+    )
+    summary = (
+        f"Executed {len(results)} orbit(s) with aggregate complexity {aggregate_complexity:.2f}."
+    )
+    if peak_reference:
+        summary += f" Peak complexity at {peak_reference}."
+
+    return {
+        "orbit_count": len(results),
+        "orbits": results,
+        "aggregate_complexity": round(aggregate_complexity, 3),
+        "mean_level": round(sum(levels) / len(levels), 2),
+        "complexity_gradient": round(float(gradient), 3),
+        "peak_orbit": peak_reference,
+        "insights": insights[:10],
+        "summary": summary,
+        "start_reference": _format_iso(start_anchor),
+    }
+
+
+def orchestrate_complexity_supercluster(program: Mapping[str, object]) -> dict[str, object]:
+    """Fuse foundation, orbit, and escalation layers into a supercluster view."""
+
+    if not isinstance(program, Mapping):
+        raise ValueError("program must be a mapping of execution inputs")
+
+    segments = program.get("segments")
+    if segments is None:
+        raise ValueError("program requires 'segments' to build the foundation")
+
+    reference_prefix = str(program.get("reference_prefix", "segment"))
+    foundation = construct_complexity_foundation(
+        segments,
+        reference_prefix=reference_prefix,
+    )
+
+    documents = _normalise_optional_documents(program.get("documents"))
+    raw_milestones = program.get("milestones")
+    milestone_pool = _normalise_optional_milestones(raw_milestones)
+    start_value = program.get("start")
+    start_dt = _ensure_datetime(start_value, None) if start_value is not None else None
+
+    orbit_input = program.get("orbits") or foundation["segments"]
+    orbit_payload = simulate_complexity_orbit(
+        orbit_input,
+        documents=documents or None,
+        milestones=milestone_pool or None,
+        start=start_dt,
+    )
+
+    signals = program.get("signals")
+    escalation_payload: dict[str, object] | None = None
+    if signals is not None:
+        if not isinstance(signals, Mapping) or not signals:
+            raise ValueError("signals must be a non-empty mapping when provided")
+        capabilities = program.get("capabilities")
+        events = program.get("events")
+        initiatives = program.get("initiatives")
+        escalation_payload = execute_feature_escalation(
+            signals,
+            capabilities=capabilities,
+            events=events,
+            initiatives=initiatives,
+            start=start_dt,
+        )
+
+    total_score = foundation["momentum_average"] + orbit_payload["aggregate_complexity"]
+    modules = ["foundation", "orbits"]
+    if escalation_payload:
+        total_score += float(escalation_payload.get("complexity_score", 0.0))
+        modules.append("escalation")
+
+    if total_score >= 45:
+        grade = "supercluster"
+    elif total_score >= 30:
+        grade = "orbital"
+    elif total_score >= 18:
+        grade = "expansion"
+    else:
+        grade = "formation"
+
+    summary = (
+        f"Supercluster executed {' + '.join(modules)} layers with score {total_score:.2f}."
+    )
+    insights = list(foundation.get("insights", []))
+    insights.extend(orbit_payload.get("insights", [])[:5])
+    if escalation_payload:
+        insights.extend(escalation_payload.get("insights", [])[:5])
+
+    return {
+        "grade": grade,
+        "score": round(total_score, 3),
+        "modules": modules,
+        "foundation": foundation,
+        "orbits": orbit_payload,
+        "escalation": escalation_payload,
+        "insights": insights[:12],
+        "summary": summary,
+    }
+
+
+def _normalise_optional_documents(value: object | None) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, (str, bytes)):
+        candidates = [value]
+    elif isinstance(value, Iterable):
+        candidates = list(value)
+    else:  # pragma: no cover - defensive
+        raise ValueError("documents must be a string or iterable of strings")
+    cleaned = [str(entry).strip() for entry in candidates if str(entry).strip()]
+    return cleaned
+
+
+def _normalise_optional_milestones(
+    value: Sequence[Mapping[str, object]] | Sequence[TimelineMilestone] | None,
+) -> list[TimelineMilestone]:
+    if value is None:
+        return []
+    if isinstance(value, Sequence):
+        candidates = value
+    elif isinstance(value, Iterable):
+        candidates = list(value)
+    else:  # pragma: no cover - defensive
+        raise ValueError("milestones must be a sequence")
+    parsed: list[TimelineMilestone] = []
+    for milestone in candidates:
+        if isinstance(milestone, TimelineMilestone):
+            parsed.append(milestone)
+        elif isinstance(milestone, Mapping):
+            parsed.append(TimelineMilestone.from_mapping(milestone))
+        else:  # pragma: no cover - defensive
+            raise ValueError("milestones must be mappings or TimelineMilestone instances")
+    return parsed
 
 
 def _coerce_sequence_of_mappings(value: object, label: str) -> list[Mapping[str, object]]:
