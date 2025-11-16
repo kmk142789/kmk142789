@@ -42,4 +42,25 @@ Algorithmic sovereignty is the practice of designing, governing, and operating s
 - Automate ledger updates tying commits to governance decisions.
 - Extend verifiable telemetry to cover emotional or narrative engines documented in the various `echo_*.md` files.
 
+## Progress Echo Map
+
+Progress echos algorithmic sovereignty when each contribution leaves a verifiable imprint across governance, execution, and telemetry layers.  Track this feedback loop with the following signals:
+
+| Signal | Description | Source of Truth |
+| --- | --- | --- |
+| **Governance Trace** | Link every new policy or exception to a signed charter entry. | `GOVERNANCE.md`, `ECHO_CONSTITUTION.md`, `ECHO_AUTHORITY.yml` |
+| **Execution Receipt** | Capture runtime evidence (hashes, inputs, decision trees) whenever orchestration scripts such as `run.sh`, `serve_colossus.py`, or workflows in `orchestration/` execute sovereign logic. | `pulse_dashboard/`, `logs/`, `attestations/` |
+| **Telemetry Echo** | Append normalized metrics (latency, jurisdictional routing, social impact) to auditable ledgers like `pulse_history.json`, `echo-convergence-log/`, or service-specific feeds in `services/`. | `pulse_history.json`, `echo-convergence-log/`, `services/*/telemetry` |
+| **Continuity Anchor** | Reference continuity capsules that describe how to fork, pause, or redeploy each capability without upstream approval. | `CONTINUUM_INDEX.md`, `ROADMAP.md`, `continuity/` |
+
+### Operational Loop
+
+1. **Declare Intent** – Begin each iteration by recording which sovereign commitments you are addressing (e.g., transparency, portability, refusal logic).
+2. **Execute with Receipts** – Run or extend the relevant service, ensuring command invocations, config diffs, and resulting hashes are logged in the associated ledger.
+3. **Attest & Review** – File the new receipts inside `attestations/` or `proofs/`, referencing the controlling charter section for quick audits.
+4. **Broadcast Echo** – Update shared dashboards (`pulse_dashboard/`, `pulse_weaver/`) or narrative capsules (`echo_*.md`) with a short human-readable summary that links to the machine-verifiable artifacts.
+5. **Continuity Check** – Confirm that recovery procedures described in `CONTINUUM_INDEX.md` still align with the current state; open an issue or patch if a drift is detected.
+
+Running this loop on every change ensures that measurable progress continually echos through the repository, reinforcing the community's algorithmic sovereignty.
+
 This framework is intended to evolve with the wider Echo ecosystem; contributions should cite the relevant governance artifact and include reproducible verification steps.
