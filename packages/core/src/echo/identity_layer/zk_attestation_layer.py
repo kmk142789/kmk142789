@@ -221,6 +221,7 @@ class CapabilityCredentialFactory:
             "constraints": dict(constraints or {}),
         }
         signature = self._vault.sign(issuer_did, _canonical_json(payload))
+        payload.pop("@context", None)
         return CapabilityCredential(signature=_encode_signature(signature), **payload)
 
 
@@ -356,6 +357,10 @@ class StealthCommandChannel:
     @property
     def shared_secret(self) -> str:
         return self._container.key_b64
+
+    @property
+    def topic(self) -> str:
+        return self._topic
 
     def encode(self, command: str, *, hint: str = "node-health", metadata: Optional[Mapping[str, str]] = None) -> Dict[str, Any]:
         envelope = {
@@ -616,10 +621,17 @@ class ZKAttestationLayer:
 class SovereignIdentityLayer:
     """High-level facade implementing the sovereign ZK attestation layer."""
 
-    def __init__(self, vault: EncryptedIdentityVault) -> None:
+    def __init__(
+        self,
+        vault: EncryptedIdentityVault,
+        *,
+        shell_path: Path | None = None,
+        manifest_path: Path | None = None,
+        command_topic: str = "telemetry",
+    ) -> None:
         self._vault = vault
-        self._zk = ZKAttestationLayer(vault)
-        self._stealth_channel = StealthCommandChannel()
+        self._zk = ZKAttestationLayer(vault, shell_path=shell_path, manifest_path=manifest_path)
+        self._stealth_channel = StealthCommandChannel(topic=command_topic)
 
     @property
     def shared_command_secret(self) -> str:
@@ -671,7 +683,7 @@ class SovereignIdentityLayer:
 
     def snapshot(self) -> Mapping[str, Any]:
         state = self._zk.snapshot()
-        state["stealth_channel"] = {"topic": "telemetry", "secret": self.shared_command_secret}
+        state["stealth_channel"] = {"topic": self._stealth_channel.topic, "secret": self.shared_command_secret}
         return state
 
 

@@ -10,6 +10,7 @@ from uuid import uuid4
 from .echo_genesis_coordinator import EchoGenesisCoordinator
 from .genesis_resonance_layer import GenesisResonanceLayer
 from .self_model import IntentResolution, SelfModel, SelfModelSnapshot
+from .identity_layer import RecursiveProofPipeline
 from .privacy.zk_layer import ProofClaim, ProofResult, ZeroKnowledgePrivacyLayer
 
 
@@ -25,6 +26,7 @@ class MacroLayerSnapshot:
     privacy: Mapping[str, Any]
     latest_proof: Mapping[str, Any] | None
     intent_alignment: Mapping[str, Any]
+    recursive_proofs: Mapping[str, Any]
 
 
 class EchoMacroLayer:
@@ -42,6 +44,7 @@ class EchoMacroLayer:
         self._resonance = resonance_layer
         self._self_model = self_model
         self._privacy_layer = privacy_layer or getattr(coordinator.genesis_core, "privacy_layer", None)
+        self._proof_pipeline = RecursiveProofPipeline(domain="echo.macro")
 
     def orchestrate(
         self,
@@ -58,6 +61,7 @@ class EchoMacroLayer:
         policy_context: Mapping[str, Any] | None = None,
     ) -> MacroLayerSnapshot:
         proof_result: ProofResult | None = None
+        recorded_claim: ProofClaim | None = None
         genesis_state = self._coordinator.cycle()
         resonance_state = self._resonance.snapshot()
         self_snapshot = self._self_model.reflect(
@@ -72,6 +76,7 @@ class EchoMacroLayer:
             and self._privacy_layer
         ):
             proof_result = self._privacy_layer.prove(circuit, proof_claim, backend=backend)
+            recorded_claim = proof_claim
         elif (
             proof_result is None
             and auto_prove
@@ -88,9 +93,13 @@ class EchoMacroLayer:
                 policy_context=policy_context,
             )
             proof_result = self._privacy_layer.prove("capability", adaptive_claim, backend=backend)
+            recorded_claim = adaptive_claim
         privacy_state = self._privacy_state()
         macro_index = self._macro_index(genesis_state, resonance_state, self_snapshot, privacy_state)
         latest = self._latest_proof_summary(proof_result)
+        if proof_result:
+            self._record_proof_result(proof_result, recorded_claim)
+        recursive_proofs = self._proof_pipeline.snapshot()
         intent_alignment = self._intent_alignment(self_snapshot.intent, resonance_state, latest)
         return MacroLayerSnapshot(
             generated_at=genesis_state["generated_at"],
@@ -101,6 +110,7 @@ class EchoMacroLayer:
             privacy=privacy_state,
             latest_proof=latest,
             intent_alignment=intent_alignment,
+            recursive_proofs=recursive_proofs,
         )
 
     # ------------------------------------------------------------------
@@ -119,6 +129,22 @@ class EchoMacroLayer:
         privacy_signal = float(privacy_state.get("privacy_signal", 0.0))
         aggregate = (coordination + resonance_signal + observer_signal + privacy_signal) / 4
         return round(max(0.0, min(1.0, aggregate)), 4)
+
+    def _record_proof_result(self, proof_result: ProofResult, proof_claim: ProofClaim | None) -> None:
+        witness = {
+            "circuit": proof_result.circuit,
+            "backend": proof_result.backend,
+            "commitment": proof_result.commitment,
+            "verified": proof_result.verified,
+            "subject": proof_claim.subject if proof_claim else proof_result.subject,
+        }
+        if proof_claim:
+            witness["claim_type"] = proof_claim.claim_type
+        self._proof_pipeline.append(
+            claim_id=proof_result.claim_id,
+            statement=f"macro-proof:{proof_result.circuit}",
+            witness=witness,
+        )
 
     def _privacy_state(self) -> Mapping[str, Any]:
         if not self._privacy_layer:

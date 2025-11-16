@@ -79,6 +79,11 @@ from .echo_nexus_hub import EchoNexusHub, ScheduleLoopDigest, WorkerStory
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .echo_visionary_kernel import BitwisePixelEngine, EchoVisionaryKernel, WorkerBot
 from .echo_evolutionary_macro_layer import EchoEvolutionaryMacroLayer, EvolutionaryMacroSnapshot
+from .sovereign_identity_kernel import (
+    CapabilityIdentityKernel,
+    IdentityKernelConfig,
+    IdentityKernelSnapshot,
+)
 from .evolver import (
     CycleGuidanceFrame,
     EchoEvolver,
@@ -376,8 +381,11 @@ __all__ = [
     "BitwisePixelEngine",
     "EchoNexusHub",
     "EchoNexusPortal",
+    "CapabilityIdentityKernel",
     "EchoEvolutionaryMacroLayer",
     "EchoVisionaryKernel",
+    "IdentityKernelConfig",
+    "IdentityKernelSnapshot",
     "ImpossibleEvent",
     "ImpossibleRealityEngine",
     "EvolutionaryMacroSnapshot",
