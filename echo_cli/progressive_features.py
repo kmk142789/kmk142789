@@ -10,6 +10,7 @@ __all__ = [
     "generate_numeric_intelligence",
     "analyze_text_corpus",
     "simulate_delivery_timeline",
+    "progressive_complexity_suite",
 ]
 
 
@@ -180,4 +181,100 @@ def simulate_delivery_timeline(
         "total_days": round(cumulative, 2),
         "timeline": schedule,
         "risk": {"score": round(risk_score, 2), "classification": risk_class},
+    }
+
+
+def progressive_complexity_suite(
+    level: int,
+    *,
+    numeric_terms: int,
+    documents: Iterable[str] | None = None,
+    milestones: Sequence[Mapping[str, object]] | Sequence[TimelineMilestone] | None = None,
+    start: datetime | None = None,
+) -> dict[str, object]:
+    """Run progressively complex analytical stages and synthesise their insights."""
+
+    if level not in {1, 2, 3}:
+        raise ValueError("level must be between 1 and 3")
+    if numeric_terms < 2:
+        raise ValueError("numeric_terms must be at least 2")
+
+    completed_stages: list[str] = []
+    stage_payloads: list[dict[str, object]] = []
+    insights: list[str] = []
+
+    numbers = generate_numeric_intelligence(numeric_terms)
+    completed_stages.append("numbers")
+    stage_payloads.append(
+        {
+            "stage": "numbers",
+            "description": "Fibonacci-derived intelligence with derivative and ratio trend.",
+            "payload": numbers,
+        }
+    )
+    momentum = numbers["derivatives"][-1] if numbers["derivatives"] else 0
+    phi = numbers["golden_ratio_estimate"]
+    if phi is None:
+        insights.append(
+            f"Numeric momentum at stage end is {momentum}; insufficient data for golden ratio estimate."
+        )
+    else:
+        insights.append(
+            f"Numeric momentum at stage end is {momentum} with golden ratio estimate {phi:.5f}."
+        )
+    complexity_index = 1.0 + min(1.0, len(numbers["sequence"]) / 25)
+
+    text_payload: dict[str, object] | None = None
+    if level >= 2:
+        docs = [doc for doc in (documents or []) if doc.strip()]
+        if not docs:
+            raise ValueError("documents are required for level 2 and above")
+        text_payload = analyze_text_corpus(docs)
+        completed_stages.append("text")
+        stage_payloads.append(
+            {
+                "stage": "text",
+                "description": "Corpus-level lexical analysis across supplied documents.",
+                "payload": text_payload,
+            }
+        )
+        insights.append(
+            "Lexical field spans "
+            f"{text_payload['vocabulary']} tokens with {text_payload['readability']} readability."
+        )
+        complexity_index += round(float(text_payload["lexical_density"]), 3)
+
+    timeline_payload: dict[str, object] | None = None
+    if level >= 3:
+        if not milestones:
+            raise ValueError("milestones are required for level 3")
+        timeline_payload = simulate_delivery_timeline(milestones, start=start)
+        completed_stages.append("timeline")
+        stage_payloads.append(
+            {
+                "stage": "timeline",
+                "description": "Confidence-aware delivery simulation with buffers and risk scoring.",
+                "payload": timeline_payload,
+            }
+        )
+        risk = timeline_payload["risk"]
+        insights.append(
+            f"Timeline spans {timeline_payload['total_days']} days with {risk['classification']} risk (score {risk['score']})."
+        )
+        complexity_index += max(0.5, float(risk["score"]) / 10)
+
+    summary = (
+        "Executed levels: " + ", ".join(completed_stages)
+        + f"; aggregate complexity index {complexity_index:.3f}"
+    )
+
+    return {
+        "level": level,
+        "completed_stages": completed_stages,
+        "stages": stage_payloads,
+        "insights": insights,
+        "complexity_index": round(complexity_index, 3),
+        "summary": summary,
+        "text_stage": text_payload,
+        "timeline_stage": timeline_payload,
     }
