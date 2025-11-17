@@ -139,6 +139,14 @@
       gap: 0.6rem;
       background: rgba(10,15,32,0.6);
     }
+    .weekly-panel {
+      border-top: 1px solid rgba(148,163,184,0.15);
+      padding: 0.75rem 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      background: rgba(7,11,26,0.6);
+    }
     .daily-panel-header {
       display: flex;
       justify-content: space-between;
@@ -146,6 +154,39 @@
       gap: 0.5rem;
       font-size: 0.75rem;
       color: rgba(226,232,240,0.8);
+    }
+    .weekly-panel-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .weekly-panel-header strong {
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      color: rgba(226,232,240,0.85);
+    }
+    .weekly-panel-actions {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .weekly-panel-actions select,
+    .weekly-panel-actions button {
+      background: rgba(30,41,59,0.85);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 6px;
+      color: inherit;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: background 120ms ease, border 120ms ease;
+    }
+    .weekly-panel-actions button:hover,
+    .weekly-panel-actions select:hover {
+      background: rgba(59,130,246,0.35);
+      border-color: rgba(96,165,250,0.4);
     }
     .daily-panel-header strong {
       display: block;
@@ -219,6 +260,68 @@
       margin-bottom: 0.15rem;
     }
     .daily-task-empty {
+      font-size: 0.75rem;
+      color: rgba(148,163,184,0.8);
+    }
+    .weekly-ritual-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .weekly-ritual {
+      border: 1px solid rgba(148,163,184,0.15);
+      border-radius: 8px;
+      padding: 0.55rem;
+      display: grid;
+      gap: 0.35rem;
+      background: rgba(8,15,32,0.65);
+    }
+    .weekly-ritual-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .weekly-ritual-header strong {
+      font-size: 0.85rem;
+      color: #f8fafc;
+    }
+    .weekly-ritual-meta {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      font-size: 0.7rem;
+      color: rgba(148,163,184,0.85);
+    }
+    .weekly-ritual-meta span {
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .weekly-ritual-description {
+      margin: 0;
+      font-size: 0.75rem;
+      color: rgba(226,232,240,0.85);
+    }
+    .weekly-ritual-steps {
+      margin: 0;
+      padding-left: 1.1rem;
+      font-size: 0.72rem;
+      color: rgba(203,213,225,0.85);
+    }
+    .weekly-tags {
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+      font-size: 0.65rem;
+    }
+    .weekly-tag {
+      padding: 0.1rem 0.35rem;
+      border-radius: 999px;
+      border: 1px solid rgba(96,165,250,0.45);
+      color: rgba(125,211,252,0.95);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .weekly-ritual-empty {
       font-size: 0.75rem;
       color: rgba(148,163,184,0.8);
     }
@@ -305,7 +408,7 @@
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
       }
-      .sidebar {
+      .sidebar { 
         max-height: 260px;
       }
       .workspace {
@@ -355,6 +458,33 @@
         </div>
         <div class="daily-task-list" id="daily-tasks">
           <p class="daily-task-empty">Fetching opportunities...</p>
+        </div>
+      </div>
+      <div class="weekly-panel">
+        <div class="weekly-panel-header">
+          <div>
+            <strong>Weekly Rituals</strong>
+            <span id="weekly-ritual-summary">Calibrating focus grid...</span>
+          </div>
+          <div class="weekly-panel-actions">
+            <select id="weekly-focus" aria-label="Filter weekly rituals by focus">
+              <option value="all">All focuses</option>
+              <option value="Code">Code</option>
+              <option value="Create">Create</option>
+              <option value="Collaborate">Collaborate</option>
+            </select>
+            <select id="weekly-theme" aria-label="Filter weekly rituals by intent">
+              <option value="all">All intents</option>
+              <option value="Create">Create</option>
+              <option value="Advance">Advance</option>
+              <option value="Upgrade">Upgrade</option>
+              <option value="Optimize">Optimize</option>
+            </select>
+            <button id="refresh-weekly" title="Reload weekly rituals">↻</button>
+          </div>
+        </div>
+        <div class="weekly-ritual-list" id="weekly-rituals">
+          <p class="weekly-ritual-empty">Synchronizing upgrades...</p>
         </div>
       </div>
       <div class="sidebar-footer">
@@ -442,10 +572,16 @@
     const dailyTasksContainer = document.getElementById('daily-tasks');
     const dailyTaskSummary = document.getElementById('daily-task-summary');
     const refreshTasksButton = document.getElementById('refresh-tasks');
+    const weeklyRitualContainer = document.getElementById('weekly-rituals');
+    const weeklyRitualSummary = document.getElementById('weekly-ritual-summary');
+    const weeklyFocusSelect = document.getElementById('weekly-focus');
+    const weeklyThemeSelect = document.getElementById('weekly-theme');
+    const refreshWeeklyButton = document.getElementById('refresh-weekly');
 
     let dailyTasks = [];
     let dailyTaskProgress = {};
     let dailyTaskDate = new Date().toISOString().slice(0, 10);
+    let weeklyRituals = [];
 
     require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.0/min/vs' }});
     require(['vs/editor/editor.main'], () => {
@@ -480,6 +616,7 @@
           setStatus('Ready');
         }
         await loadDailyTasks();
+        await loadWeeklyRituals();
       })();
     });
 
@@ -524,6 +661,27 @@
         return raw ? JSON.parse(raw) : {};
       } catch {
         return {};
+      }
+    }
+
+    function weeklyFilterStorageKey() {
+      return 'echo-weekly-ritual-filters';
+    }
+
+    function loadWeeklyFilters() {
+      try {
+        const raw = localStorage.getItem(weeklyFilterStorageKey());
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveWeeklyFilters(filters) {
+      try {
+        localStorage.setItem(weeklyFilterStorageKey(), JSON.stringify(filters));
+      } catch {
+        // ignore storage errors
       }
     }
 
@@ -626,6 +784,143 @@
         dailyTasks = [];
         dailyTasksContainer.innerHTML = `<p class="daily-task-empty">Unable to load rituals (${error.message}).</p>`;
         dailyTaskSummary.textContent = 'Task feed unreachable.';
+      }
+    }
+
+    function ritualFilters() {
+      const focusValue = weeklyFocusSelect?.value || 'all';
+      const themeValue = weeklyThemeSelect?.value || 'all';
+      return {
+        focus: focusValue,
+        theme: themeValue
+      };
+    }
+
+    function applySavedWeeklyFilters() {
+      const saved = loadWeeklyFilters();
+      if (saved.focus && weeklyFocusSelect?.querySelector(`option[value="${saved.focus}"]`)) {
+        weeklyFocusSelect.value = saved.focus;
+      }
+      if (saved.theme && weeklyThemeSelect?.querySelector(`option[value="${saved.theme}"]`)) {
+        weeklyThemeSelect.value = saved.theme;
+      }
+    }
+
+    applySavedWeeklyFilters();
+
+    function updateWeeklySummary(meta) {
+      if (!weeklyRitualSummary) return;
+      const available = meta?.available ?? weeklyRituals.length;
+      const total = meta?.total ?? available;
+      const focus = meta?.focus ? meta.focus : 'All focuses';
+      const qualifierParts = [focus];
+      if (meta?.theme) {
+        qualifierParts.push(meta.theme);
+      }
+      const qualifierText = qualifierParts.join(' • ');
+      const updated = meta?.updated || 'untracked';
+      const focusCounts = meta?.focusCounts || {};
+      const spread = Object.entries(focusCounts)
+        .map(([key, count]) => `${key}: ${count}`)
+        .join(' · ');
+      const spreadText = spread ? ` — ${spread}` : '';
+      weeklyRitualSummary.textContent = `${available}/${total} active — ${qualifierText} • updated ${updated}${spreadText}`;
+    }
+
+    function createRitualElement(ritual) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'weekly-ritual';
+
+      const header = document.createElement('div');
+      header.className = 'weekly-ritual-header';
+      const title = document.createElement('strong');
+      title.textContent = ritual.title || 'Unnamed ritual';
+      const description = document.createElement('p');
+      description.className = 'weekly-ritual-description';
+      description.textContent = ritual.description || '';
+
+      const meta = document.createElement('div');
+      meta.className = 'weekly-ritual-meta';
+      const focus = document.createElement('span');
+      focus.textContent = ritual.focus || 'Focus';
+      const cadence = document.createElement('span');
+      cadence.textContent = (ritual.cadence || 'weekly').toUpperCase();
+      meta.appendChild(focus);
+      meta.appendChild(cadence);
+
+      header.appendChild(title);
+      header.appendChild(meta);
+      wrapper.appendChild(header);
+      wrapper.appendChild(description);
+
+      if (Array.isArray(ritual.tags) && ritual.tags.length) {
+        const tags = document.createElement('div');
+        tags.className = 'weekly-tags';
+        for (const tag of ritual.tags) {
+          const badge = document.createElement('span');
+          badge.className = 'weekly-tag';
+          badge.textContent = String(tag).toUpperCase();
+          tags.appendChild(badge);
+        }
+        wrapper.appendChild(tags);
+      }
+
+      if (Array.isArray(ritual.steps) && ritual.steps.length) {
+        const steps = document.createElement('ol');
+        steps.className = 'weekly-ritual-steps';
+        for (const step of ritual.steps) {
+          const item = document.createElement('li');
+          item.textContent = step;
+          steps.appendChild(item);
+        }
+        wrapper.appendChild(steps);
+      }
+
+      return wrapper;
+    }
+
+    function renderWeeklyRituals(rituals) {
+      weeklyRitualContainer.innerHTML = '';
+      weeklyRituals = rituals;
+      if (!rituals.length) {
+        const empty = document.createElement('p');
+        empty.className = 'weekly-ritual-empty';
+        empty.textContent = 'No weekly rituals matched the filters.';
+        weeklyRitualContainer.appendChild(empty);
+        return;
+      }
+      for (const ritual of rituals) {
+        weeklyRitualContainer.appendChild(createRitualElement(ritual));
+      }
+    }
+
+    async function loadWeeklyRituals() {
+      weeklyRitualContainer.innerHTML = '<p class="weekly-ritual-empty">Updating...</p>';
+      try {
+        const filters = ritualFilters();
+        const params = new URLSearchParams();
+        if (filters.focus && filters.focus !== 'all') {
+          params.set('focus', filters.focus);
+        }
+        if (filters.theme && filters.theme !== 'all') {
+          params.set('theme', filters.theme);
+        }
+        const query = params.toString();
+        const response = await fetchJSON(`/tasks/weekly${query ? `?${query}` : ''}`);
+        const rituals = response?.rituals || [];
+        renderWeeklyRituals(rituals);
+        updateWeeklySummary({
+          available: response?.available,
+          total: response?.total,
+          focus: response?.focus || (filters.focus === 'all' ? null : filters.focus),
+          theme: response?.theme || (filters.theme === 'all' ? null : filters.theme),
+          updated: response?.date,
+          focusCounts: response?.focusCounts
+        });
+      } catch (error) {
+        console.error('weekly rituals load error', error);
+        weeklyRitualContainer.innerHTML = `<p class="weekly-ritual-empty">Unable to load rituals (${error.message}).</p>`;
+        updateWeeklySummary({ available: 0, total: 0, focus: null, theme: null, updated: null, focusCounts: {} });
       }
     }
 
@@ -1082,6 +1377,26 @@
     refreshTasksButton.addEventListener('click', () => {
       loadDailyTasks();
     });
+
+    if (weeklyFocusSelect) {
+      weeklyFocusSelect.addEventListener('change', () => {
+        saveWeeklyFilters(ritualFilters());
+        loadWeeklyRituals();
+      });
+    }
+
+    if (weeklyThemeSelect) {
+      weeklyThemeSelect.addEventListener('change', () => {
+        saveWeeklyFilters(ritualFilters());
+        loadWeeklyRituals();
+      });
+    }
+
+    if (refreshWeeklyButton) {
+      refreshWeeklyButton.addEventListener('click', () => {
+        loadWeeklyRituals();
+      });
+    }
 
     window.addEventListener('keydown', (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
