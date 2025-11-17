@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Optional, Protocol
 
@@ -55,6 +55,10 @@ class SyncReport:
     applied_contexts: int
     known_contexts: int
     sources_contacted: int
+    propagated_contexts: int = 0
+    indexed_contexts: int = 0
+    stale_payloads: int = 0
+    invalid_payloads: int = 0
 
 
 class CloudSyncCoordinator:
@@ -65,11 +69,19 @@ class CloudSyncCoordinator:
         node_id: str,
         store: JsonMemoryStore,
         transport: SyncTransport,
+        *,
+        max_payload_age: timedelta | float | int | None = None,
+        local_context_limit: Optional[int] = None,
     ) -> None:
         self.node_id = node_id
         self.store = store
         self.transport = transport
         self._crdt = LWWMap(node_id=node_id)
+        self._max_payload_age = _coerce_timedelta(max_payload_age)
+        if local_context_limit is not None and local_context_limit <= 0:
+            raise ValueError("local_context_limit must be positive")
+        self._local_context_limit = local_context_limit
+        self._indexed_contexts = 0
         self._refresh_local_contexts()
 
     # ------------------------------------------------------------------
@@ -78,14 +90,21 @@ class CloudSyncCoordinator:
     def sync(self) -> SyncReport:
         """Synchronise the local store with all peers."""
 
-        self._refresh_local_contexts()
+        propagated = self._refresh_local_contexts()
         initial_keys = set(self._crdt.state())
 
         remote_payloads = list(self.transport.pull(exclude=self.node_id))
+        stale_payloads = 0
+        invalid_payloads = 0
         for payload in remote_payloads:
+            if self._payload_is_stale(payload):
+                stale_payloads += 1
+                continue
             decoded = self._decode_state(payload)
             if decoded:
                 self._crdt.merge(decoded)
+            else:
+                invalid_payloads += 1
 
         merged_state = self._crdt.state()
         new_keys = set(merged_state) - initial_keys
@@ -108,6 +127,10 @@ class CloudSyncCoordinator:
             applied_contexts=applied,
             known_contexts=len(merged_state),
             sources_contacted=len(remote_payloads),
+            propagated_contexts=propagated,
+            indexed_contexts=self._indexed_contexts,
+            stale_payloads=stale_payloads,
+            invalid_payloads=invalid_payloads,
         )
 
     # ------------------------------------------------------------------
@@ -116,7 +139,9 @@ class CloudSyncCoordinator:
     def _refresh_local_contexts(self) -> int:
         added = 0
         existing = set(self._crdt.state())
-        for context in self.store.recent_executions():
+        contexts = self.store.recent_executions(limit=self._local_context_limit)
+        self._indexed_contexts = len(contexts)
+        for context in contexts:
             fingerprint = context.fingerprint()
             if fingerprint in existing:
                 continue
@@ -124,6 +149,18 @@ class CloudSyncCoordinator:
             existing.add(fingerprint)
             added += 1
         return added
+
+    def _payload_is_stale(self, payload: Mapping[str, object]) -> bool:
+        if self._max_payload_age is None:
+            return False
+        updated_at = payload.get("updated_at")
+        if not isinstance(updated_at, str):
+            return False
+        timestamp = self._parse_timestamp(updated_at)
+        if timestamp is None:
+            return False
+        cutoff = datetime.now(timezone.utc) - self._max_payload_age
+        return timestamp < cutoff
 
     def _payload_for_context(self, context: ExecutionContext, *, origin: str) -> Dict[str, object]:
         return {
@@ -170,6 +207,33 @@ class CloudSyncCoordinator:
     @staticmethod
     def _now() -> str:
         return datetime.now(timezone.utc).isoformat()
+
+    @staticmethod
+    def _parse_timestamp(value: str) -> Optional[datetime]:
+        try:
+            normalised = value.replace("Z", "+00:00")
+            parsed = datetime.fromisoformat(normalised)
+        except ValueError:
+            return None
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=timezone.utc)
+        return parsed
+
+
+def _coerce_timedelta(value: timedelta | float | int | None) -> Optional[timedelta]:
+    if value is None:
+        return None
+    if isinstance(value, timedelta):
+        if value.total_seconds() <= 0:
+            raise ValueError("max_payload_age must be positive")
+        return value
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError) as exc:
+        raise TypeError("max_payload_age must be expressed in seconds or as a timedelta") from exc
+    if seconds <= 0:
+        raise ValueError("max_payload_age must be positive")
+    return timedelta(seconds=seconds)
 
 
 __all__ = [
