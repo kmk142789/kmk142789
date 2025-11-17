@@ -40,6 +40,7 @@ __all__ = [
     "orchestrate_complexity_hyperdrive",
     "generate_complexity_observatory",
     "orchestrate_complexity_metaweb",
+    "orchestrate_complexity_multiverse",
     "CascadeStage",
 ]
 
@@ -3264,6 +3265,183 @@ def orchestrate_complexity_metaweb(program: Mapping[str, object]) -> dict[str, o
         "throughput": throughput_payload,
         "coverage": coverage,
         "components": breakdown,
+        "insights": insights[:15],
+    }
+
+
+def orchestrate_complexity_multiverse(program: Mapping[str, object]) -> dict[str, object]:
+    """Fuse multiple hyperdrive/metaweb streams into a multiverse portfolio signal."""
+
+    if not isinstance(program, Mapping):
+        raise ValueError("multiverse program must be a mapping")
+
+    name = str(program.get("name", "multiverse")).strip() or "multiverse"
+    universes = program.get("universes")
+    if not isinstance(universes, Sequence) or not universes:
+        raise ValueError("multiverse program requires a non-empty 'universes' sequence")
+
+    raw_weights = program.get("weights")
+    component_weights = {"hyperdrive": 0.45, "metaweb": 0.35, "observatory": 0.2}
+    if raw_weights is not None:
+        if not isinstance(raw_weights, Mapping):
+            raise ValueError("weights must be a mapping of component names to numbers")
+        for key in list(component_weights):
+            if key in raw_weights:
+                try:
+                    value = float(raw_weights[key])
+                except (TypeError, ValueError) as exc:
+                    raise ValueError("weights must be numeric") from exc
+                if value < 0:
+                    raise ValueError("weights must be non-negative")
+                component_weights[key] = value
+    if not any(weight > 0 for weight in component_weights.values()):
+        raise ValueError("at least one component weight must be positive")
+
+    universes_payload: list[dict[str, object]] = []
+    scoring: list[tuple[float, float]] = []
+    coverage_flags = {"hyperdrive": False, "metaweb": False, "observatory": False}
+
+    for idx, entry in enumerate(universes):
+        if not isinstance(entry, Mapping):
+            raise ValueError("each universe must be a mapping of inputs")
+        universe_name = str(entry.get("name", f"universe-{idx + 1}")).strip() or f"universe-{idx + 1}"
+        try:
+            universe_weight = float(entry.get("weight", 1.0))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("universe weight must be numeric") from exc
+        if universe_weight <= 0:
+            raise ValueError("universe weight must be positive")
+
+        components: list[tuple[str, float]] = []
+        component_breakdown: dict[str, float] = {}
+        coverage = {"hyperdrive": False, "metaweb": False, "observatory": False}
+
+        hyperdrive_payload: dict[str, object] | None = None
+        metaweb_payload: dict[str, object] | None = None
+        observatory_payload: dict[str, object] | None = None
+
+        if entry.get("hyperdrive") is not None:
+            hyperdrive_spec = entry["hyperdrive"]
+            if not isinstance(hyperdrive_spec, Mapping):
+                raise ValueError("hyperdrive section must be a mapping")
+            hyperdrive_payload = orchestrate_complexity_hyperdrive(hyperdrive_spec)
+            hyperdrive_score = max(0.0, min(1.0, float(hyperdrive_payload.get("score", 0.0)) / 100))
+            components.append(("hyperdrive", hyperdrive_score))
+            component_breakdown["hyperdrive"] = round(hyperdrive_score, 3)
+            coverage["hyperdrive"] = True
+            coverage_flags["hyperdrive"] = True
+
+        if entry.get("metaweb") is not None:
+            metaweb_spec = entry["metaweb"]
+            if not isinstance(metaweb_spec, Mapping):
+                raise ValueError("metaweb section must be a mapping")
+            metaweb_payload = orchestrate_complexity_metaweb(metaweb_spec)
+            metaweb_score = max(0.0, min(1.0, float(metaweb_payload.get("meta_index", 0.0))))
+            components.append(("metaweb", metaweb_score))
+            component_breakdown["metaweb"] = round(metaweb_score, 3)
+            coverage["metaweb"] = True
+            coverage_flags["metaweb"] = True
+
+        if entry.get("observatory") is not None:
+            observatory_spec = entry["observatory"]
+            if not isinstance(observatory_spec, Mapping):
+                raise ValueError("observatory section must be a mapping")
+            observatory_payload = generate_complexity_observatory(observatory_spec)
+            observatory_score = max(
+                0.0,
+                min(1.0, float(observatory_payload.get("observatory_index", 0.0))),
+            )
+            components.append(("observatory", observatory_score))
+            component_breakdown["observatory"] = round(observatory_score, 3)
+            coverage["observatory"] = True
+            coverage_flags["observatory"] = True
+
+        if not components:
+            raise ValueError(
+                f"universe '{universe_name}' requires at least one of hyperdrive, metaweb, or observatory"
+            )
+
+        weighted_sum = 0.0
+        total_component_weight = 0.0
+        for component_name, component_score in components:
+            component_weight = component_weights.get(component_name, 0.0)
+            if component_weight <= 0:
+                continue
+            weighted_sum += component_score * component_weight
+            total_component_weight += component_weight
+        if total_component_weight <= 0:
+            raise ValueError("component weights must include at least one positive entry")
+        index_value = weighted_sum / total_component_weight
+
+        insights: list[str] = []
+        for payload in (hyperdrive_payload, metaweb_payload, observatory_payload):
+            if payload and isinstance(payload, Mapping):
+                raw_insights = payload.get("insights")
+                if isinstance(raw_insights, Sequence):
+                    insights.extend(str(text) for text in raw_insights if str(text).strip())
+
+        scoring.append((index_value, universe_weight))
+        universe_status = "stellar" if index_value >= 0.82 else "expanding" if index_value >= 0.65 else "turbulent"
+        universes_payload.append(
+            {
+                "name": universe_name,
+                "index": round(index_value, 3),
+                "weight": universe_weight,
+                "status": universe_status,
+                "components": component_breakdown,
+                "hyperdrive": hyperdrive_payload,
+                "metaweb": metaweb_payload,
+                "observatory": observatory_payload,
+                "coverage": coverage,
+                "insights": insights[:12],
+            }
+        )
+
+    total_weight = sum(weight for _, weight in scoring)
+    multiverse_index = sum(score * weight for score, weight in scoring) / total_weight if total_weight else 0.0
+
+    scores = [score for score, _ in scoring]
+    if scores:
+        mean_score = sum(scores) / len(scores)
+        variance = sum((value - mean_score) ** 2 for value in scores) / len(scores)
+        cohesion_index = max(0.0, 1.0 - min(1.0, math.sqrt(variance) * 3))
+    else:  # pragma: no cover - defensive
+        cohesion_index = 0.0
+
+    if multiverse_index >= 0.82:
+        status = "harmonic"
+    elif multiverse_index >= 0.68:
+        status = "aligned"
+    else:
+        status = "fragmented"
+
+    insights: list[str] = []
+    if universes_payload:
+        sorted_universes = sorted(universes_payload, key=lambda item: item["index"], reverse=True)
+        leader = sorted_universes[0]
+        trailer = sorted_universes[-1]
+        insights.append(
+            f"{leader['name']} leads the multiverse with index {leader['index']} ({leader['status']})."
+        )
+        if leader is not trailer:
+            insights.append(
+                f"{trailer['name']} trails at {trailer['index']}; prioritize uplift to reduce divergence."
+            )
+    if cohesion_index < 0.6:
+        insights.append("Cohesion is low; synchronize decision rhythms across universes.")
+    elif cohesion_index > 0.85:
+        insights.append("Cohesion is strong; leverage cross-universe playbooks for acceleration.")
+
+    coverage = {name: flag for name, flag in coverage_flags.items()}
+
+    return {
+        "name": name,
+        "multiverse_index": round(multiverse_index, 3),
+        "status": status,
+        "cohesion_index": round(cohesion_index, 3),
+        "universes": universes_payload,
+        "coverage": coverage,
+        "weights": component_weights,
         "insights": insights[:15],
     }
 
