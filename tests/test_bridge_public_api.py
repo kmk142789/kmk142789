@@ -16,6 +16,11 @@ def _make_app() -> FastAPI:
         github_repository="EchoOrg/sovereign",
         telegram_chat_id="@echo_bridge",
         firebase_collection="echo/identity",
+        slack_webhook_url="https://hooks.slack.com/services/T000/B000/XXXX",
+        slack_channel="#echo-bridge",
+        slack_secret_name="SLACK_ECHO_WEBHOOK",
+        webhook_url="https://bridge.echo/webhook",
+        webhook_secret_name="ECHO_GENERIC_WEBHOOK",
     )
     app = FastAPI()
     app.include_router(create_router(bridge_api))
@@ -31,7 +36,7 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
     payload = response.json()
 
     connectors = {connector["platform"] for connector in payload["connectors"]}
-    assert connectors == {"github", "telegram", "firebase"}
+    assert connectors == {"github", "telegram", "firebase", "slack", "webhook"}
 
 
 def test_plan_endpoint_returns_bridge_instructions() -> None:
@@ -63,3 +68,14 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     firebase_plan = plans["firebase"]
     assert firebase_plan["payload"]["document"].endswith("::01")
     assert firebase_plan["payload"]["data"]["traits"]["pulse"] == "aurora"
+
+    slack_plan = plans["slack"]
+    assert slack_plan["action"] == "send_webhook"
+    assert slack_plan["payload"]["webhook_env"] == "SLACK_ECHO_WEBHOOK"
+    assert slack_plan["payload"]["context"]["identity"] == "EchoWildfire"
+    assert slack_plan["payload"]["attachments"][0]["title"] == "pulse"
+
+    webhook_plan = plans["webhook"]
+    assert webhook_plan["action"] == "post_json"
+    assert webhook_plan["payload"]["url_hint"] == "https://bridge.echo/webhook"
+    assert webhook_plan["payload"]["json"]["signature"] == "eden88::cycle01"

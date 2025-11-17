@@ -27,6 +27,11 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         github_repository=os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY"),
         telegram_chat_id=os.getenv("ECHO_BRIDGE_TELEGRAM_CHAT_ID"),
         firebase_collection=os.getenv("ECHO_BRIDGE_FIREBASE_COLLECTION"),
+        slack_webhook_url=os.getenv("ECHO_BRIDGE_SLACK_WEBHOOK_URL"),
+        slack_channel=os.getenv("ECHO_BRIDGE_SLACK_CHANNEL"),
+        slack_secret_name=os.getenv("ECHO_BRIDGE_SLACK_SECRET", "SLACK_WEBHOOK_URL"),
+        webhook_url=os.getenv("ECHO_BRIDGE_WEBHOOK_URL"),
+        webhook_secret_name=os.getenv("ECHO_BRIDGE_WEBHOOK_SECRET", "ECHO_BRIDGE_WEBHOOK_URL"),
     )
 
 
@@ -67,6 +72,22 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="firebase",
                 action="set_document",
                 requires_secrets=["FIREBASE_SERVICE_ACCOUNT"],
+            )
+        )
+    if api.slack_webhook_url:
+        connectors.append(
+            ConnectorDescriptor(
+                platform="slack",
+                action="send_webhook",
+                requires_secrets=[api.slack_secret_name] if api.slack_secret_name else [],
+            )
+        )
+    if api.webhook_url:
+        connectors.append(
+            ConnectorDescriptor(
+                platform="webhook",
+                action="post_json",
+                requires_secrets=[api.webhook_secret_name] if api.webhook_secret_name else [],
             )
         )
     return connectors
