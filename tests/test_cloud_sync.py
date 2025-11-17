@@ -101,3 +101,32 @@ def test_local_context_limit_restricts_payloads(tmp_path):
     assert len(contexts) == 1
     assert contexts[0].summary == "context 2"
     assert report_b.applied_contexts == 1
+
+
+def test_sync_report_exposes_topology_insights(tmp_path):
+    transport_root = tmp_path / "transport"
+    store_a = JsonMemoryStore(storage_path=tmp_path / "a.json", log_path=tmp_path / "a.md")
+    store_b = JsonMemoryStore(storage_path=tmp_path / "b.json", log_path=tmp_path / "b.md")
+
+    with store_a.session(metadata={"device": "alpha"}) as session:
+        session.set_summary("alpha context")
+        session.record_command("alpha")
+
+    with store_b.session(metadata={"device": "beta"}) as session:
+        session.set_summary("beta context")
+        session.record_command("beta")
+
+    coordinator_a = CloudSyncCoordinator("alpha", store_a, DirectorySyncTransport(transport_root))
+    coordinator_a.sync()
+
+    coordinator_b = CloudSyncCoordinator("beta", store_b, DirectorySyncTransport(transport_root))
+    report_b = coordinator_b.sync()
+
+    assert report_b.topology is not None
+    topology = report_b.topology
+    assert topology.node_count >= 1
+    origins = {ins.origin: ins for ins in topology.node_insights}
+    assert "alpha" in origins
+    alpha_insight = origins["alpha"]
+    assert alpha_insight.contexts >= 1
+    assert alpha_insight.avg_command_count >= 1

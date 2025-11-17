@@ -7,7 +7,7 @@ from collections.abc import Iterable, Iterator, Mapping, MutableMapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, Optional, Protocol
+from typing import Dict, List, Optional, Protocol, Tuple
 
 from ..crdt.lww import Clock, LWWMap
 from ..memory.store import ExecutionContext, JsonMemoryStore
@@ -59,6 +59,31 @@ class SyncReport:
     indexed_contexts: int = 0
     stale_payloads: int = 0
     invalid_payloads: int = 0
+    topology: "TopologyReport | None" = None
+
+
+@dataclass(frozen=True)
+class NodeInsight:
+    """Observability snapshot for a single node in the cloud fabric."""
+
+    origin: str
+    contexts: int
+    newest_context: Optional[str]
+    oldest_context: Optional[str]
+    lag_seconds: Optional[float]
+    avg_command_count: float
+    metadata_keys: Tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class TopologyReport:
+    """Richer network summary produced after a sync pass."""
+
+    node_insights: Tuple[NodeInsight, ...]
+    node_count: int
+    freshest_node: Optional[str]
+    stalest_node: Optional[str]
+    freshness_span_seconds: Optional[float]
 
 
 class CloudSyncCoordinator:
@@ -122,6 +147,8 @@ class CloudSyncCoordinator:
             if self.store.ingest_replica(context, replica_metadata=replica_meta):
                 applied += 1
 
+        topology = self._build_topology_report(merged_state)
+
         self.transport.push(self.node_id, self._encode_state())
         return SyncReport(
             applied_contexts=applied,
@@ -131,6 +158,7 @@ class CloudSyncCoordinator:
             indexed_contexts=self._indexed_contexts,
             stale_payloads=stale_payloads,
             invalid_payloads=invalid_payloads,
+            topology=topology,
         )
 
     # ------------------------------------------------------------------
@@ -204,6 +232,97 @@ class CloudSyncCoordinator:
             decoded[str(key)] = (Clock(node=node, tick=tick_int), value)
         return decoded
 
+    def _build_topology_report(
+        self, state: Mapping[str, tuple[Clock, object]]
+    ) -> Optional[TopologyReport]:
+        now = datetime.now(timezone.utc)
+        stats: Dict[str, Dict[str, object]] = {}
+        for _, (_, value) in state.items():
+            if not isinstance(value, Mapping):
+                continue
+            replica = value.get("replica")
+            if not isinstance(replica, Mapping):
+                continue
+            origin_raw = replica.get("origin")
+            origin = str(origin_raw) if origin_raw is not None else "unknown"
+            entry = stats.setdefault(
+                origin,
+                {
+                    "contexts": 0,
+                    "newest": None,
+                    "oldest": None,
+                    "commands": 0,
+                    "metadata": set(),
+                },
+            )
+            entry["contexts"] = int(entry["contexts"]) + 1
+            timestamp = replica.get("captured_at")
+            parsed = self._parse_timestamp(timestamp) if isinstance(timestamp, str) else None
+            if parsed:
+                newest = entry["newest"]
+                oldest = entry["oldest"]
+                if newest is None or parsed > newest:
+                    entry["newest"] = parsed
+                if oldest is None or parsed < oldest:
+                    entry["oldest"] = parsed
+            context_payload = value.get("context")
+            if isinstance(context_payload, Mapping):
+                commands = context_payload.get("commands")
+                if isinstance(commands, list):
+                    entry["commands"] = int(entry["commands"]) + len(commands)
+                metadata = context_payload.get("metadata")
+                if isinstance(metadata, Mapping):
+                    entry["metadata"].update(str(key) for key in metadata)
+
+        if not stats:
+            return None
+
+        insights: List[NodeInsight] = []
+        freshest_name: Optional[str] = None
+        stalest_name: Optional[str] = None
+        min_lag: Optional[float] = None
+        max_lag: Optional[float] = None
+
+        for origin, payload in stats.items():
+            newest: Optional[datetime] = payload["newest"]
+            oldest: Optional[datetime] = payload["oldest"]
+            lag_seconds: Optional[float] = None
+            if newest:
+                lag_seconds = max(0.0, (now - newest).total_seconds())
+                if min_lag is None or lag_seconds < min_lag:
+                    min_lag = lag_seconds
+                    freshest_name = origin
+                if max_lag is None or lag_seconds > max_lag:
+                    max_lag = lag_seconds
+                    stalest_name = origin
+            metadata_keys = tuple(sorted(payload["metadata"]))
+            contexts = int(payload["contexts"])
+            total_commands = int(payload["commands"])
+            avg_commands = total_commands / contexts if contexts else 0.0
+            insights.append(
+                NodeInsight(
+                    origin=origin,
+                    contexts=contexts,
+                    newest_context=newest.isoformat() if newest else None,
+                    oldest_context=oldest.isoformat() if oldest else None,
+                    lag_seconds=lag_seconds,
+                    avg_command_count=avg_commands,
+                    metadata_keys=metadata_keys,
+                )
+            )
+
+        freshness_span = None
+        if min_lag is not None and max_lag is not None:
+            freshness_span = max_lag - min_lag
+
+        return TopologyReport(
+            node_insights=tuple(sorted(insights, key=lambda insight: insight.origin)),
+            node_count=len(insights),
+            freshest_node=freshest_name,
+            stalest_node=stalest_name,
+            freshness_span_seconds=freshness_span,
+        )
+
     @staticmethod
     def _now() -> str:
         return datetime.now(timezone.utc).isoformat()
@@ -239,6 +358,8 @@ def _coerce_timedelta(value: timedelta | float | int | None) -> Optional[timedel
 __all__ = [
     "CloudSyncCoordinator",
     "DirectorySyncTransport",
+    "NodeInsight",
     "SyncReport",
     "SyncTransport",
+    "TopologyReport",
 ]

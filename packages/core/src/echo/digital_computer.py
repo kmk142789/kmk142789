@@ -46,10 +46,13 @@ executes, and returns a structured :class:`ExecutionResult`.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 import random
 import shlex
 import textwrap
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+
+import copy
 
 from .thoughtlog import thought_trace
 from .quantum_flux_mapper import QuantumFluxMapper
@@ -107,6 +110,7 @@ class ExecutionResult:
     random_state: Mapping[str, object] = field(default_factory=dict)
     stack: Tuple[int | str, ...] = field(default_factory=tuple)
     call_stack: Tuple[int, ...] = field(default_factory=tuple)
+    state_capsules: Mapping[str, Mapping[str, object]] = field(default_factory=dict)
 
 
 class AssemblyError(ValueError):
@@ -212,6 +216,7 @@ class EchoComputer:
         self._inputs: Dict[str, int | str] = {}
         self._stack: List[int | str] = []
         self._call_stack: List[int] = []
+        self._state_capsules: Dict[str, Dict[str, object]] = {}
         self._pc = 0
         self._halted = False
         self._output: List[str] = []
@@ -275,6 +280,8 @@ class EchoComputer:
         self._output.clear()
         self._instruction_counts.clear()
         self._rng_history.clear()
+        if not preserve_state:
+            self._state_capsules.clear()
 
     def run(
         self,
@@ -361,6 +368,7 @@ class EchoComputer:
             random_state=self._snapshot_random_state(),
             stack=tuple(self._stack),
             call_stack=tuple(self._call_stack),
+            state_capsules=self._snapshot_capsules(),
         )
 
     # --- Execution helpers -------------------------------------------------
@@ -462,6 +470,107 @@ class EchoComputer:
             "history": tuple(self._rng_history),
         }
 
+    def _snapshot_capsules(self) -> Dict[str, Mapping[str, object]]:
+        return {name: copy.deepcopy(payload) for name, payload in self._state_capsules.items()}
+
+    def _coerce_capsule_identifier(self, operand: str) -> str:
+        try:
+            value = self._resolve_value(operand)
+        except RuntimeError:
+            value = operand
+        name = str(value).strip()
+        if not name:
+            raise RuntimeError("capsule identifier must not be empty")
+        return name
+
+    def _coerce_capsule_metadata(self, operand: Optional[str]) -> Optional[str]:
+        if operand is None:
+            return None
+        try:
+            value = self._resolve_value(operand)
+        except RuntimeError:
+            value = operand
+        text = str(value).strip()
+        return text or None
+
+    @staticmethod
+    def _iso_timestamp() -> str:
+        return datetime.now(timezone.utc).isoformat()
+
+    def _build_state_capsule(self) -> Dict[str, object]:
+        return {
+            "captured_at": self._iso_timestamp(),
+            "pc": self._pc,
+            "halted": self._halted,
+            "registers": dict(self._registers),
+            "memory": dict(self._memory),
+            "stack": list(self._stack),
+            "call_stack": list(self._call_stack),
+            "quantum": self._snapshot_quantum_registers(),
+            "random": self._snapshot_random_state(),
+        }
+
+    def _apply_capsule(self, capsule: Mapping[str, object], *, include_control: bool = False) -> None:
+        registers = capsule.get("registers")
+        if isinstance(registers, Mapping):
+            for name in self._registers:
+                self._registers[name] = registers.get(name, 0)
+        memory = capsule.get("memory")
+        if isinstance(memory, Mapping):
+            self._memory.clear()
+            self._memory.update({str(k): v for k, v in memory.items()})
+        stack = capsule.get("stack")
+        if isinstance(stack, Iterable):
+            self._stack = list(stack)
+        call_stack = capsule.get("call_stack")
+        if isinstance(call_stack, Iterable):
+            self._call_stack = [int(value) for value in call_stack]
+        if include_control:
+            pc_value = capsule.get("pc")
+            if isinstance(pc_value, int):
+                self._pc = pc_value
+            halted_value = capsule.get("halted")
+            if isinstance(halted_value, bool):
+                self._halted = halted_value
+        quantum_snapshot = capsule.get("quantum")
+        if isinstance(quantum_snapshot, Mapping):
+            self._restore_quantum_registers(quantum_snapshot)
+        random_snapshot = capsule.get("random")
+        if isinstance(random_snapshot, Mapping):
+            self._restore_random_state(random_snapshot)
+
+    def _restore_quantum_registers(self, snapshot: Mapping[str, Mapping[str, object]]) -> None:
+        self._quantum_registers.clear()
+        for name, payload in snapshot.items():
+            mapper = QuantumFluxMapper()
+            state = payload.get("state")
+            if isinstance(state, Iterable):
+                state_pairs = list(state)
+                if len(state_pairs) == 2:
+                    try:
+                        alpha_pair = tuple(state_pairs[0])
+                        beta_pair = tuple(state_pairs[1])
+                        alpha = complex(float(alpha_pair[0]), float(alpha_pair[1]))
+                        beta = complex(float(beta_pair[0]), float(beta_pair[1]))
+                        mapper.state = (alpha, beta)
+                    except Exception:  # pragma: no cover - defensive fallback
+                        mapper.state = (1 + 0j, 0 + 0j)
+            history = payload.get("history")
+            if isinstance(history, Iterable):
+                mapper.history = [str(entry) for entry in history]
+            self._quantum_registers[str(name)] = mapper
+
+    def _restore_random_state(self, payload: Mapping[str, object]) -> None:
+        history = payload.get("history")
+        if isinstance(history, Iterable):
+            self._rng_history = [int(entry) for entry in history]
+        seed = payload.get("seed")
+        if isinstance(seed, int):
+            self._rng_seed = seed
+            self._rng.seed(seed)
+        else:
+            self._rng_seed = None
+            self._rng.seed()
     def _resolve_float(self, operand: str) -> float:
         try:
             value = self._resolve_value(operand)
@@ -512,6 +621,39 @@ class EchoComputer:
         if not destination.startswith("@"):
             raise RuntimeError("STORE destination must reference memory using '@'")
         self._memory[destination[1:]] = self._registers[reg]
+
+    def _op_capture(self, identifier: str, metadata: str | None = None) -> None:
+        name = self._coerce_capsule_identifier(identifier)
+        capsule = self._build_state_capsule()
+        capsule["metadata"] = self._coerce_capsule_metadata(metadata)
+        self._state_capsules[name] = capsule
+
+    def _op_restore(self, identifier: str, mode: str | None = None) -> None:
+        name = self._coerce_capsule_identifier(identifier)
+        capsule = self._state_capsules.get(name)
+        if capsule is None:
+            raise RuntimeError(f"unknown capsule: {name}")
+        include_control = False
+        if mode is not None:
+            try:
+                resolved = self._resolve_value(mode)
+            except RuntimeError:
+                resolved = mode
+            include_control = str(resolved).strip().upper() in {"WITHPC", "FULL"}
+        self._apply_capsule(capsule, include_control=include_control)
+
+    def _op_capdrop(self, identifier: str) -> None:
+        name = self._coerce_capsule_identifier(identifier)
+        self._state_capsules.pop(name, None)
+
+    def _op_capcount(self, register: str) -> None:
+        reg = self._require_register(register)
+        self._registers[reg] = len(self._state_capsules)
+
+    def _op_capexists(self, register: str, identifier: str) -> None:
+        reg = self._require_register(register)
+        name = self._coerce_capsule_identifier(identifier)
+        self._registers[reg] = 1 if name in self._state_capsules else 0
 
     def _op_set(self, destination: str, operand: str) -> None:
         if destination in self._registers:
