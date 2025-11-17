@@ -581,6 +581,10 @@ class EchoChatAgent:
             }
             for name, details in result.quantum_registers.items()
         }
+        random_state = {
+            "seed": result.random_state.get("seed"),
+            "history": list(result.random_state.get("history", ())),
+        }
         return {
             "halted": result.halted,
             "steps": result.steps,
@@ -589,6 +593,10 @@ class EchoChatAgent:
             "memory": dict(result.memory),
             "diagnostics": list(result.diagnostics),
             "quantum_registers": quantum_registers,
+            "instruction_counts": dict(result.instruction_counts),
+            "random_state": random_state,
+            "stack": list(result.stack),
+            "call_stack": list(result.call_stack),
         }
 
 

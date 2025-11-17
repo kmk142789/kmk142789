@@ -429,6 +429,27 @@ def test_stack_push_pop_round_trip() -> None:
 
     assert result.registers["A"] == 1
     assert result.registers["B"] == 2
+    assert result.stack == ()
+
+
+def test_peek_and_stacklen_offer_stack_introspection() -> None:
+    program = """
+    LOAD A 7
+    LOAD B 11
+    PUSH A
+    PUSH B
+    PEEK C
+    PEEK D 1
+    STACKLEN E
+    HALT
+    """
+
+    result = run_program(program)
+
+    assert result.registers["C"] == 11
+    assert result.registers["D"] == 7
+    assert result.registers["E"] == 2
+    assert result.stack == (7, 11)
 
 
 def test_quantum_opcodes_enable_qubit_manipulation() -> None:
@@ -501,4 +522,24 @@ def test_ret_without_call_stack_raises() -> None:
 
     with pytest.raises(RuntimeError):
         computer.run()
+
+
+def test_calldepth_reports_nested_call_stack() -> None:
+    program = """
+    CALL outer
+    HALT
+    outer:
+        CALL inner
+        CALLDEPTH C
+        RET
+    inner:
+        CALLDEPTH D
+        RET
+    """
+
+    result = run_program(program)
+
+    assert result.registers["C"] == 1
+    assert result.registers["D"] == 2
+    assert result.call_stack == ()
 
