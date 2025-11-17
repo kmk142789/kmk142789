@@ -74,6 +74,16 @@ from .continuum_resonance_field import (
     LaneResonance,
     PulseDrift,
 )
+from .challenge_labyrinth import (
+    AdaptiveVectorCatalyst,
+    ChallengeCatalyst,
+    ChallengeLabyrinth,
+    ChallengeStratum,
+    ChallengeVector,
+    LabyrinthEvent,
+    LabyrinthReport,
+    design_extreme_challenge,
+)
 from .cosmic_mnemonic_forge import (
     MnemonicConstellation,
     MnemonicThread,
