@@ -12,6 +12,7 @@ The module doubles as a CLI so practitioners can run::
     python -m echo.continuum_observatory summary
     python -m echo.continuum_observatory lanes --json
     python -m echo.continuum_observatory todo --limit 15
+    python -m echo.continuum_observatory lanes --sort files --descending
 
 The observatory intentionally avoids heavyweight dependencies: it relies on the
 standard library so it can operate in constrained environments such as CI
@@ -390,14 +391,60 @@ def _render_summary(snapshot: ContinuumSnapshot) -> str:
     return "\n".join(lines)
 
 
-def _render_lane_table(snapshot: ContinuumSnapshot) -> str:
+LANE_SORT_FIELDS: Mapping[str, str] = {
+    "lane": "Lane name (A→Z)",
+    "files": "Total file count",
+    "docs": "Documentation file count",
+    "code": "Source file count",
+    "footprint": "Total bytes recorded",
+    "freshness": "Days since last modification",
+}
+
+
+def _sorted_lane_stats(
+    snapshot: ContinuumSnapshot,
+    *,
+    field: str = "lane",
+    descending: bool = False,
+) -> List[LaneStats]:
+    """Return the snapshot's lane stats sorted by ``field``."""
+
+    if field not in LANE_SORT_FIELDS:
+        raise ValueError(f"Unknown sort field: {field}")
+
+    def key_lane(stats: LaneStats) -> object:
+        if field == "lane":
+            return stats.lane
+        if field == "files":
+            return stats.file_count
+        if field == "docs":
+            return stats.doc_count
+        if field == "code":
+            return stats.code_count
+        if field == "footprint":
+            return stats.total_bytes
+        if field == "freshness":
+            return stats.freshness_days if stats.freshness_days is not None else float("inf")
+        return stats.lane  # pragma: no cover - exhaustive
+
+    ordered = list(snapshot.lanes.values())
+    ordered.sort(key=key_lane, reverse=descending)
+    return ordered
+
+
+def _render_lane_table(
+    snapshot: ContinuumSnapshot,
+    *,
+    sort_field: str = "lane",
+    descending: bool = False,
+) -> str:
     header = f"{'Lane':25} | {'Files':>8} | {'Docs':>6} | {'Code':>6} | {'Footprint':>10} | {'Freshness (days)':>16}"
     sep = "-" * len(header)
     lines = [header, sep]
-    for lane, stats in snapshot.lanes.items():
+    for stats in _sorted_lane_stats(snapshot, field=sort_field, descending=descending):
         freshness = f"{stats.freshness_days:.1f}" if stats.freshness_days is not None else "n/a"
         lines.append(
-            f"{lane:25} | {stats.file_count:8} | {stats.doc_count:6} | {stats.code_count:6} | {_human_bytes(stats.total_bytes):>10} | {freshness:>16}"
+            f"{stats.lane:25} | {stats.file_count:8} | {stats.doc_count:6} | {stats.code_count:6} | {_human_bytes(stats.total_bytes):>10} | {freshness:>16}"
         )
     lines.append(sep)
     lines.append(
@@ -406,13 +453,19 @@ def _render_lane_table(snapshot: ContinuumSnapshot) -> str:
     return "\n".join(lines)
 
 
-def _render_heatmap(snapshot: ContinuumSnapshot) -> str:
-    max_files = max((stats.file_count for stats in snapshot.lanes.values()), default=1)
+def _render_heatmap(
+    snapshot: ContinuumSnapshot,
+    *,
+    sort_field: str = "lane",
+    descending: bool = False,
+) -> str:
+    ordered = _sorted_lane_stats(snapshot, field=sort_field, descending=descending)
+    max_files = max((stats.file_count for stats in ordered), default=1)
     lines = ["Lane activity heatmap (relative file counts)", ""]
-    for lane, stats in snapshot.lanes.items():
+    for stats in ordered:
         scale = 0 if max_files == 0 else int((stats.file_count / max_files) * 20)
         bar = "█" * max(scale, 1)
-        lines.append(f"{lane:25} {bar}")
+        lines.append(f"{stats.lane:25} {bar}")
     return "\n".join(lines)
 
 
@@ -449,8 +502,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     subparsers.required = False
 
     subparsers.add_parser("summary", help="Print overall repository metrics")
-    subparsers.add_parser("lanes", help="Render per-lane statistics")
-    subparsers.add_parser("heatmap", help="Render ASCII heatmap for lane activity")
+    lanes_parser = subparsers.add_parser("lanes", help="Render per-lane statistics")
+    lanes_parser.add_argument(
+        "--sort",
+        choices=tuple(LANE_SORT_FIELDS.keys()),
+        default="lane",
+        help="Sort lane table by the specified metric",
+    )
+    lanes_parser.add_argument("--descending", action="store_true", help="Sort in descending order")
+
+    heatmap_parser = subparsers.add_parser("heatmap", help="Render ASCII heatmap for lane activity")
+    heatmap_parser.add_argument(
+        "--sort",
+        choices=tuple(LANE_SORT_FIELDS.keys()),
+        default="lane",
+        help="Sort heatmap lanes by the specified metric",
+    )
+    heatmap_parser.add_argument("--descending", action="store_true", help="Sort in descending order")
     todo_parser = subparsers.add_parser("todo", help="List outstanding TODO/FIXME markers")
     todo_parser.add_argument("--limit", type=int, default=20, help="Maximum TODO markers to display")
 
@@ -463,9 +531,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if command == "summary":
         output = _render_stats_json(snapshot) if args.json else _render_summary(snapshot)
     elif command == "lanes":
-        output = _render_stats_json(snapshot) if args.json else _render_lane_table(snapshot)
+        if args.json:
+            output = _render_stats_json(snapshot)
+        else:
+            output = _render_lane_table(snapshot, sort_field=args.sort, descending=args.descending)
     elif command == "heatmap":
-        output = _render_heatmap(snapshot)
+        output = _render_heatmap(snapshot, sort_field=args.sort, descending=args.descending)
     elif command == "todo":
         matches = observatory.scan_todos(limit=args.limit)
         output = _render_todos_json(matches) if args.json else _render_todos(matches)
