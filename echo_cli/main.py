@@ -137,6 +137,7 @@ from .progressive_features import (
     orchestrate_complexity_constellation,
     orchestrate_complexity_hyperdrive,
     orchestrate_complexity_metaweb,
+    orchestrate_complexity_multiverse,
     plan_capacity_allocation,
     progressive_complexity_suite,
     simulate_delivery_timeline,
@@ -3459,6 +3460,94 @@ def complexity_metaweb(
         remaining = len(insights) - 10
         if remaining > 0:
             console.print(f"… (+{remaining} additional insight(s))")
+
+
+@complexity_app.command("multiverse")
+def complexity_multiverse(
+    ctx: typer.Context,
+    program_file: Path = typer.Option(
+        ...,
+        "--program-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file describing universes plus hyperdrive/metaweb inputs.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Aggregate multiple hyperdrive/metaweb universes into a multiverse index."""
+
+    _ensure_ctx(ctx)
+
+    try:
+        program = json.loads(program_file.read_text())
+    except json.JSONDecodeError as exc:
+        raise typer.BadParameter("program file must contain a JSON object") from exc
+    if not isinstance(program, Mapping):
+        raise typer.BadParameter("program file must contain a JSON object")
+
+    try:
+        payload = orchestrate_complexity_multiverse(program)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    universes = payload.get("universes", [])
+    coverage = payload.get("coverage", {})
+    console.print(
+        "Multiverse index  : {index} ({status})".format(
+            index=payload.get("multiverse_index"),
+            status=payload.get("status", "-"),
+        )
+    )
+    console.print(
+        "Cohesion index    : {cohesion} | Universes {count}".format(
+            cohesion=payload.get("cohesion_index"),
+            count=len(universes),
+        )
+    )
+    if coverage:
+        coverage_line = ", ".join(
+            f"{name}={'✓' if flag else '×'}" for name, flag in coverage.items()
+        )
+        console.print(f"Coverage          : {coverage_line}")
+
+    rows = []
+    for universe in universes:
+        components = universe.get("components", {}) if isinstance(universe, Mapping) else {}
+        rows.append(
+            (
+                universe.get("name", "-"),
+                universe.get("index", "-"),
+                components.get("hyperdrive", "-"),
+                components.get("metaweb", "-"),
+                components.get("observatory", "-"),
+                universe.get("status", "-"),
+            )
+        )
+    if rows:
+        console.print(
+            _build_table(
+                ["Universe", "Index", "Hyperdrive", "Metaweb", "Observatory", "Status"],
+                rows,
+                title="Multiverse orbits",
+            )
+        )
+
+    insights = payload.get("insights", [])
+    if insights:
+        console.print("Insights:")
+        for insight in insights:
+            console.print(f"- {insight}")
 
 
 @app.callback()
