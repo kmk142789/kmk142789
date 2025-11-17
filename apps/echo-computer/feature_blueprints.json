@@ -1,0 +1,44 @@
+{
+  "updated": "2025-05-11",
+  "features": [
+    {
+      "id": "code-multi-runner",
+      "focus": "Code",
+      "status": "Ready",
+      "title": "Modular multi-language runner",
+      "description": "Chain Python and Node executions so Echo can prove new features across stacks from a single request.",
+      "impact": "Cuts the feedback loop for polyglot experiments to minutes.",
+      "blueprint": [
+        "Add a client toggle that queues multiple run targets in order.",
+        "Stream combined stdout/stderr with language labels for each phase.",
+        "Persist the merged log to the workspace for pairing review."
+      ]
+    },
+    {
+      "id": "create-signal-deck",
+      "focus": "Create",
+      "status": "Prototype",
+      "title": "Signal deck overlays",
+      "description": "Design lightweight overlay cards that summarize story, palette, and sound cues above the editor.",
+      "impact": "Keeps creative direction visible while implementing the feature.",
+      "blueprint": [
+        "Expose a `/signals/now` endpoint that returns the latest deck payload.",
+        "Render collapsible cards near the terminal with keyboard shortcuts.",
+        "Allow saving the deck with each workspace checkpoint."
+      ]
+    },
+    {
+      "id": "collab-radar",
+      "focus": "Collaborate",
+      "status": "Research",
+      "title": "Collaboration radar",
+      "description": "Surface who last touched a file plus suggested reviewers to accelerate feature handoffs.",
+      "impact": "Reduces time to handoff by highlighting ready partners.",
+      "blueprint": [
+        "Ingest recent Git commits per workspace file.",
+        "Display avatars and suggested reviewers beside the file tree.",
+        "Offer one-click share links that copy run instructions."
+      ]
+    }
+  ]
+}
