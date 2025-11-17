@@ -22,7 +22,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 import random
-from statistics import mean
+from statistics import fmean, mean
 from typing import Dict, Iterable, List, Mapping, Tuple
 
 
@@ -422,7 +422,7 @@ def compose_loop(
     """Create a creative loop in the requested output format.
 
     Supported formats are ``"text"``, ``"json"``, ``"markdown"``, ``"table"``,
-    ``"csv"``, and ``"summary"``.
+    ``"csv"``, ``"summary"``, and ``"insights"``.
     """
 
     timestamp = timestamp or datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
@@ -472,6 +472,40 @@ def compose_loop(
                 rhythm_line,
             ]
         )
+
+    if format == "insights":
+        summary = loop_result.summary or summarize_loop(loop_result)
+        diagnostics_line = loop_result.diagnostics.render_report()
+        voice_rankings = loop_result.diagnostics.voices.most_common()
+        fragment_rankings = loop_result.diagnostics.fragments.most_common(3)
+        voice_text = ", ".join(f"{voice}×{count}" for voice, count in voice_rankings) or "none"
+        fragment_text = ", ".join(
+            f"{fragment}×{count}" for fragment, count in fragment_rankings
+        ) or "none"
+        lines = [
+            f"Insights for '{seed.motif}'",
+            "",
+            f"tempo={seed.tempo} | pulses={seed.pulses} | generated={timestamp}",
+            "",
+            "Primary metrics:",
+            f"- voice diversity: {summary.voice_diversity:.2f}",
+            f"- accent focus: {summary.accent_focus:.2f}",
+            f"- fragment coverage: {summary.fragment_coverage}",
+            f"- dominant voice: {summary.dominant_voice or 'none'}",
+            f"- voices engaged: {voice_text}",
+            f"- top fragments: {fragment_text}",
+            f"- diagnostics: {diagnostics_line}",
+            "",
+            "Moments:",
+        ]
+        for entry in loop_result.timeline:
+            lines.append(
+                (
+                    f"  {entry['index'] + 1}. {entry['voice']} accent={entry['accent']} "
+                    f"({entry['tempo_hint']}/{entry['texture']}): {entry['line']}"
+                )
+            )
+        return "\n".join(lines)
 
     if format == "table":
         table_body = _render_table(loop_result)
@@ -523,7 +557,7 @@ def compose_loop(
         return "\n".join(lines)
 
     raise ValueError(
-        "Unsupported format; expected 'text', 'json', 'markdown', 'table', 'csv', or 'summary'."
+        "Unsupported format; expected 'text', 'json', 'markdown', 'table', 'csv', 'summary', or 'insights'."
     )
 
 
@@ -535,6 +569,7 @@ def _extension_for_format(output_format: str) -> str:
         "table": "txt",
         "csv": "csv",
         "summary": "txt",
+        "insights": "txt",
     }
     return mapping.get(output_format, "txt")
 
@@ -542,22 +577,35 @@ def _extension_for_format(output_format: str) -> str:
 def summarise_loop_suite(loop_results: Iterable[LoopResult]) -> Dict[str, object]:
     """Aggregate diagnostics across multiple loop results."""
 
+    results = list(loop_results)
     voice_counts: Counter[str] = Counter()
     fragment_counts: Counter[str] = Counter()
     accent_values: List[int] = []
     tempo_counts: Counter[str] = Counter()
+    dominant_voice_counts: Counter[str] = Counter()
+    voice_diversities: List[float] = []
+    fragment_coverages: List[int] = []
     total_lines = 0
 
-    for result in loop_results:
+    for result in results:
         voice_counts.update(result.diagnostics.voices)
         fragment_counts.update(result.diagnostics.fragments)
         accent_values.extend(result.diagnostics.accents)
         tempo_counts[result.rhythm.tempo] += 1
         total_lines += len(result.lines)
+        summary = result.summary or summarize_loop(result)
+        voice_diversities.append(summary.voice_diversity)
+        fragment_coverages.append(summary.fragment_coverage)
+        if summary.dominant_voice:
+            dominant_voice_counts[summary.dominant_voice] += 1
 
     average_accent = mean(accent_values) if accent_values else 0.0
+    mean_voice_diversity = fmean(voice_diversities) if voice_diversities else 0.0
+    mean_fragment_coverage = (
+        fmean(fragment_coverages) if fragment_coverages else 0.0
+    )
     summary = {
-        "total_loops": sum(tempo_counts.values()),
+        "total_loops": len(results),
         "total_lines": total_lines,
         "unique_voices": len(voice_counts),
         "unique_fragments": len(fragment_counts),
@@ -565,6 +613,9 @@ def summarise_loop_suite(loop_results: Iterable[LoopResult]) -> Dict[str, object
         "top_fragments": fragment_counts.most_common(3),
         "tempo_distribution": dict(tempo_counts),
         "average_accent_intensity": average_accent,
+        "mean_voice_diversity": mean_voice_diversity,
+        "mean_fragment_coverage": mean_fragment_coverage,
+        "dominant_voice_distribution": dominant_voice_counts.most_common(),
     }
     return summary
 
@@ -594,6 +645,16 @@ def format_suite_summary(summary: Mapping[str, object]) -> str:
     )
     lines.append(
         f"- top fragments: {_format_pairs(summary.get('top_fragments', []))}"
+    )
+    lines.append(
+        f"- mean voice diversity: {summary.get('mean_voice_diversity', 0.0):.2f}"
+    )
+    lines.append(
+        f"- mean fragment coverage: {summary.get('mean_fragment_coverage', 0.0):.2f}"
+    )
+    lines.append(
+        "- dominant voice distribution: "
+        + _format_pairs(summary.get('dominant_voice_distribution', []))
     )
     tempo_distribution = summary.get("tempo_distribution", {})
     if tempo_distribution:
@@ -758,9 +819,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json", "markdown", "table", "csv", "summary"],
+        choices=["text", "json", "markdown", "table", "csv", "summary", "insights"],
         default="text",
-        help="Choose between human-readable text, JSON, Markdown, table, CSV, or summary output",
+        help=(
+            "Choose between human-readable text, JSON, Markdown, table, CSV, summary, "
+            "or insights output"
+        ),
     )
     parser.add_argument(
         "--variations",
