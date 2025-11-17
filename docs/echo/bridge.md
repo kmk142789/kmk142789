@@ -2,8 +2,9 @@
 
 The Echo Bridge API plans deterministic relays while the sync service mirrors
 completed cycles into downstream ecosystems. Together, they keep GitHub,
-Telegram, Firebase, Slack, Discord, email lists, generic webhooks, Unstoppable
-Domains, Vercel deployments, and GitHub reporting in lockstep without
+Telegram, Firebase, Slack, Discord, email lists, generic webhooks, DNS
+inventories, Unstoppable Domains, Vercel deployments, and GitHub reporting in
+lockstep without
 duplicating integration logic across services.【F:modules/echo-bridge/bridge_api.py†L9-L210】【F:packages/core/src/echo/bridge/service.py†L94-L214】
 
 ## Planner connectors
@@ -35,6 +36,7 @@ and can be toggled entirely through environment configuration.【F:packages/core
 
 | Connector | What it emits |
 | --- | --- |
+| **Domain inventory.** Reads tracked Web2 domains from `domains.txt` (override with `ECHO_BRIDGE_DOMAINS_FILE`) and optional static hints (`ECHO_BRIDGE_DOMAINS`), then prepares DNS anchor payloads annotated with the active cycle, coherence, and manifest path. |
 | **Unstoppable Domains.** Aggregates domains from PulseNet registrations and optional defaults (`ECHO_BRIDGE_UNSTOPPABLE_DOMAINS`), then stages an `echo.cycle`, `echo.coherence`, and `echo.manifest` metadata update for every unique domain. |
 | **Vercel Deployments.** Collects requested projects plus `ECHO_BRIDGE_VERCEL_PROJECTS` defaults and prepares a redeploy payload tagged with the originating cycle and coherence score. |
 | **GitHub Sync Issue.** Summarizes the orchestrator decision (weights, graph nodes, and manifest path) in a single issue so humans can audit each cycle’s execution trail. |

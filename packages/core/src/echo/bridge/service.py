@@ -69,6 +69,15 @@ def _extract_manifest_path(decision: Mapping[str, object]) -> str | None:
     return None
 
 
+def _parse_csv_env(value: Optional[str]) -> list[str] | None:
+    """Return comma-separated values as a cleaned list."""
+
+    if not value:
+        return None
+    entries = [item.strip() for item in value.split(",") if item.strip()]
+    return entries or None
+
+
 @dataclass(slots=True)
 class SyncEvent:
     """Event produced by a connector during the sync process."""
@@ -88,6 +97,64 @@ class BridgeConnector(Protocol):
 
     def build_event(self, decision: Mapping[str, object]) -> SyncEvent | None:
         """Return a :class:`SyncEvent` for ``decision`` when applicable."""
+
+
+@dataclass(slots=True)
+class DomainInventoryConnector:
+    """Connector that emits DNS anchor payloads for tracked Web2 domains."""
+
+    static_domains: Sequence[str] | None = None
+    inventory_path: Path | None = None
+
+    name: str = "domains"
+    action: str = "publish_dns_records"
+
+    def build_event(self, decision: Mapping[str, object]) -> SyncEvent | None:  # noqa: D401
+        """Aggregate domains from static hints plus the inventory file."""
+
+        domains: MutableSequence[str] = []
+        domains.extend(self.static_domains or [])
+        domains.extend(self._inventory_domains())
+        unique_domains = _normalise_sequence(domains)
+        if not unique_domains:
+            return None
+
+        cycle = _extract_cycle(decision)
+        coherence = _extract_coherence(decision)
+        manifest_path = _extract_manifest_path(decision)
+
+        payload = {
+            "domains": unique_domains,
+            "cycle": cycle,
+            "coherence": coherence,
+            "manifest_path": manifest_path,
+        }
+        detail = f"Prepared DNS anchor payload for {len(unique_domains)} domain(s)."
+        return SyncEvent(
+            connector=self.name,
+            action=self.action,
+            status="planned",
+            detail=detail,
+            payload=payload,
+        )
+
+    def _inventory_domains(self) -> list[str]:
+        if not self.inventory_path:
+            return []
+        path = Path(self.inventory_path)
+        try:
+            content = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return []
+        except OSError:
+            return []
+        entries = []
+        for line in content.splitlines():
+            entry = line.strip()
+            if not entry or entry.startswith("#"):
+                continue
+            entries.append(entry)
+        return entries
 
 
 @dataclass(slots=True)
@@ -334,23 +401,24 @@ class BridgeSyncService:
         else:
             resolved_path = Path(resolved_state)
 
-        unstoppable_env = os.getenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS")
-        unstoppable = (
-            [item.strip() for item in unstoppable_env.split(",") if item.strip()]
-            if unstoppable_env
-            else None
-        )
+        domain_defaults = _parse_csv_env(os.getenv("ECHO_BRIDGE_DOMAINS"))
+        domain_file = os.getenv("ECHO_BRIDGE_DOMAINS_FILE")
+        if not domain_file:
+            default_inventory = Path.cwd() / "domains.txt"
+            domain_inventory = default_inventory if default_inventory.exists() else None
+        else:
+            domain_inventory = Path(domain_file)
 
-        vercel_env = os.getenv("ECHO_BRIDGE_VERCEL_PROJECTS")
-        vercel = (
-            [item.strip() for item in vercel_env.split(",") if item.strip()]
-            if vercel_env
-            else None
-        )
+        unstoppable = _parse_csv_env(os.getenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS"))
+        vercel = _parse_csv_env(os.getenv("ECHO_BRIDGE_VERCEL_PROJECTS"))
 
         repository = github_repository or os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY")
 
         connectors: list[BridgeConnector] = [
+            DomainInventoryConnector(
+                static_domains=domain_defaults,
+                inventory_path=domain_inventory,
+            ),
             UnstoppableDomainConnector(default_domains=unstoppable),
             VercelDeployConnector(default_projects=vercel),
             GitHubIssueConnector(repository=repository),
@@ -362,6 +430,7 @@ class BridgeSyncService:
 __all__ = [
     "BridgeConnector",
     "BridgeSyncService",
+    "DomainInventoryConnector",
     "GitHubIssueConnector",
     "SyncEvent",
     "UnstoppableDomainConnector",

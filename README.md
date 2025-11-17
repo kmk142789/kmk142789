@@ -182,6 +182,8 @@ The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every
 | `ECHO_BRIDGE_SLACK_SECRET` | `SLACK_WEBHOOK_URL` | Secret identifier automation resolves when dispatching Slack plans. |
 | `ECHO_BRIDGE_WEBHOOK_URL` | _unset_ | Activates the generic JSON webhook connector used by downstream automation. |
 | `ECHO_BRIDGE_WEBHOOK_SECRET` | `ECHO_BRIDGE_WEBHOOK_URL` | Secret identifier resolved when posting to the generic webhook. |
+| `ECHO_BRIDGE_DOMAINS` | _unset_ | Comma-separated list of Web2 domains appended to the DNS inventory connector. |
+| `ECHO_BRIDGE_DOMAINS_FILE` | `domains.txt` when present | Path to a newline-delimited domain inventory consumed by the DNS connector. |
 | `ECHO_BRIDGE_UNSTOPPABLE_DOMAINS` | _unset_ | Enables Unstoppable Domains propagation during bridge deploys. |
 | `ECHO_BRIDGE_VERCEL_PROJECTS` | _unset_ | Adds default Vercel projects to the redeploy connector payload. |
 | `ECHO_BRIDGE_DISCORD_WEBHOOK_URL` | _unset_ | Announces bridge relays to Discord when paired with `ECHO_BRIDGE_DISCORD_SECRET`. |

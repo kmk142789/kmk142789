@@ -25,6 +25,7 @@ EchoBridgeAPI = _bridge.EchoBridgeAPI
 
 from .service import (  # noqa: E402  # pylint: disable=wrong-import-position
     BridgeSyncService,
+    DomainInventoryConnector,
     GitHubIssueConnector,
     UnstoppableDomainConnector,
     VercelDeployConnector,
@@ -33,6 +34,7 @@ from .service import (  # noqa: E402  # pylint: disable=wrong-import-position
 __all__ = [
     "BridgePlan",
     "BridgeSyncService",
+    "DomainInventoryConnector",
     "EchoBridgeAPI",
     "GitHubIssueConnector",
     "UnstoppableDomainConnector",
