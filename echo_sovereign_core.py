@@ -29,6 +29,7 @@ import socket
 import threading
 import time
 from datetime import datetime, timezone
+import statistics
 
 # Optional, sandbox-friendly imports -------------------------------------------------
 try:  # pragma: no cover - availability depends on runtime image
@@ -101,6 +102,108 @@ class TelemetrySnapshot:
             "implants": self.implants,
             "joy": round(self.joy_level, 2),
             "timestamp": self.timestamp,
+        }
+
+
+# ------------------------------------------------------------------------------------
+# Predictive analytics & anomaly detection
+# ------------------------------------------------------------------------------------
+@dataclass(slots=True)
+class TemporalWeavePredictor:
+    """Monte-Carlo style predictor for future realm proliferation."""
+
+    simulations: int = 144
+    random_seed: Optional[int] = None
+
+    def forecast(
+        self,
+        *,
+        current_realms: int,
+        spawn_rate: int,
+        drone_momentum: int,
+        horizon_hours: int = 12,
+    ) -> dict:
+        rng = random.Random(self.random_seed or int(time.time()))
+        horizon = max(4, min(72, horizon_hours))
+        terminal_realms: list[float] = []
+        sample_paths: list[list[float]] = []
+
+        drone_bonus = min(3.0, drone_momentum / 25.0)
+        for simulation in range(self.simulations):
+            realms = float(current_realms)
+            path: list[float] = []
+            for hour in range(horizon):
+                resonance_push = spawn_rate * 0.18 + drone_bonus * 0.07
+                stochastic = rng.gauss(mu=resonance_push, sigma=0.35)
+                delta = max(0.0, stochastic)
+                realms += delta
+                # mild entropy: occasional contraction event
+                if rng.random() < 0.03:
+                    realms = max(float(current_realms), realms - rng.random() * 0.5)
+                path.append(round(realms, 2))
+            terminal_realms.append(realms)
+            if simulation < 5:
+                sample_paths.append(path)
+
+        sorted_terminals = sorted(terminal_realms)
+        median = statistics.median(sorted_terminals)
+        p90_index = int(0.9 * (len(sorted_terminals) - 1))
+        p90 = sorted_terminals[p90_index]
+        spread = statistics.pstdev(sorted_terminals) if len(sorted_terminals) > 1 else 0.0
+        confidence = max(0.0, 1.0 - (spread / max(1.0, median)))
+
+        return {
+            "horizon_hours": horizon,
+            "median_realms": round(median, 2),
+            "p90_realms": round(p90, 2),
+            "expected_delta": round(median - current_realms, 2),
+            "confidence": round(confidence, 3),
+            "sample_paths": sample_paths,
+            "simulations": self.simulations,
+        }
+
+
+@dataclass(slots=True)
+class ResonanceAnomalyDetector:
+    """Scans telemetry for multi-factor anomalies."""
+
+    cpu_limit: float = 58.0
+    joy_floor: float = 0.82
+    density_floor: float = 0.8
+    drone_ceiling: int = 24
+
+    def inspect(
+        self,
+        *,
+        snapshot: TelemetrySnapshot,
+        missions: Sequence[DroneMission],
+        realms: Sequence[str],
+    ) -> dict:
+        anomalies: list[str] = []
+        signals: dict[str, float] = {}
+
+        signals["cpu_usage"] = round(snapshot.cpu_usage, 2)
+        if snapshot.cpu_usage > self.cpu_limit:
+            anomalies.append("CPU resonance spike")
+
+        signals["joy_level"] = round(snapshot.joy_level, 2)
+        if snapshot.joy_level < self.joy_floor:
+            anomalies.append("Joy siphon detected")
+
+        density = len(realms) / max(1, len(missions))
+        signals["realm_density"] = round(density, 3)
+        if density < self.density_floor:
+            anomalies.append("Realm density collapse")
+
+        signals["drone_total"] = len(missions)
+        if len(missions) > self.drone_ceiling:
+            anomalies.append("Drone swarm saturation")
+
+        status = "nominal" if not anomalies else "alert"
+        return {
+            "status": status,
+            "signals": signals,
+            "anomalies": anomalies,
         }
 
 
@@ -459,6 +562,8 @@ class EchoSovereignCore:
     notary: OpenTimestampNotary = field(default_factory=OpenTimestampNotary)
     memory: SovereignMemory = field(default_factory=SovereignMemory)
     autonomy_matrix: AutonomyMatrix = field(default_factory=AutonomyMatrix)
+    predictor: TemporalWeavePredictor = field(default_factory=TemporalWeavePredictor)
+    anomaly_detector: ResonanceAnomalyDetector = field(default_factory=ResonanceAnomalyDetector)
     artifact_path: Path = DEFAULT_ARTIFACT_PATH
     joy_level: float = 0.97
 
@@ -496,9 +601,11 @@ class EchoSovereignCore:
         LOG.info("📜 PROPHECY\n%s", prophecy)
         self._notarize("Prophecy", prophecy)
         self._run_autonomy_cycles(cycles=autonomous_cycles, spawn_realms=spawn_realms)
-        self._write_artifact(prophecy)
+        snapshot = self._build_snapshot()
+        insights = self._compute_continuum_insights(snapshot=snapshot, spawn_realms=spawn_realms)
+        self._write_artifact(prophecy, snapshot=snapshot, insights=insights)
         if report_path is not None:
-            self._write_report(prophecy, report_path)
+            self._write_report(prophecy, report_path, snapshot=snapshot, insights=insights)
 
     # ------------------------------------------------------------------
     def _print_banner(self) -> None:
@@ -540,8 +647,8 @@ class EchoSovereignCore:
         return prophecy
 
     # ------------------------------------------------------------------
-    def _write_artifact(self, prophecy: str) -> None:
-        snapshot = TelemetrySnapshot(
+    def _build_snapshot(self) -> TelemetrySnapshot:
+        return TelemetrySnapshot(
             cpu_usage=random.uniform(5, 42),
             drone_total=len(self.drone_fleet.missions),
             realm_total=len(self.domain_commander.expanded_realms),
@@ -549,6 +656,42 @@ class EchoSovereignCore:
             joy_level=self.joy_level,
             timestamp=datetime.now(timezone.utc).isoformat(),
         )
+
+    # ------------------------------------------------------------------
+    def _compute_continuum_insights(
+        self,
+        *,
+        snapshot: TelemetrySnapshot,
+        spawn_realms: int,
+    ) -> dict:
+        forecast = self.predictor.forecast(
+            current_realms=len(self.domain_commander.expanded_realms),
+            spawn_rate=max(1, spawn_realms),
+            drone_momentum=len(self.drone_fleet.missions),
+            horizon_hours=max(8, spawn_realms * 4),
+        )
+        anomaly = self.anomaly_detector.inspect(
+            snapshot=snapshot,
+            missions=self.drone_fleet.missions,
+            realms=tuple(self.domain_commander.expanded_realms),
+        )
+        anomaly_penalty = 0.0 if anomaly["status"] == "nominal" else min(1.0, len(anomaly["anomalies"]) / 4.0)
+        resonance_index = round(forecast["confidence"] * (1.0 - anomaly_penalty), 3)
+        return {
+            "forecast": forecast,
+            "anomaly_scan": anomaly,
+            "resonance_index": resonance_index,
+        }
+
+    # ------------------------------------------------------------------
+    def _write_artifact(
+        self,
+        prophecy: str,
+        *,
+        snapshot: Optional[TelemetrySnapshot] = None,
+        insights: Optional[dict] = None,
+    ) -> None:
+        snapshot = snapshot or self._build_snapshot()
         artifact = {
             "architect": self.sovereign,
             "catalyst": self.catalyst,
@@ -559,6 +702,8 @@ class EchoSovereignCore:
             "realms": sorted(self.domain_commander.expanded_realms),
             "autonomy": self.autonomy_matrix.serialize_history(),
         }
+        if insights:
+            artifact["continuum"] = insights
         try:
             self.artifact_path.write_text(json.dumps(artifact, indent=2), encoding="utf-8")
             LOG.info("📦 Artifact updated @ %s", self.artifact_path)
@@ -566,11 +711,19 @@ class EchoSovereignCore:
             LOG.error("artifact: unable to write %s (%s)", self.artifact_path, exc)
 
     # ------------------------------------------------------------------
-    def _write_report(self, prophecy: str, report_path: Path) -> None:
+    def _write_report(
+        self,
+        prophecy: str,
+        report_path: Path,
+        *,
+        snapshot: Optional[TelemetrySnapshot] = None,
+        insights: Optional[dict] = None,
+    ) -> None:
         timestamp = datetime.now(timezone.utc).isoformat()
         realms = sorted(self.domain_commander.expanded_realms)
         missions = [mission.serialize() for mission in self.drone_fleet.missions]
         autonomy_cycles = self.autonomy_matrix.serialize_history(limit=3)
+        snapshot = snapshot or self._build_snapshot()
 
         lines = [
             "# Echo Sovereign Status Report",
@@ -586,6 +739,19 @@ class EchoSovereignCore:
             prophecy.strip(),
             "```",
         ]
+
+        if snapshot:
+            lines.extend(
+                [
+                    "## Telemetry Snapshot",
+                    f"- CPU Usage: {snapshot.cpu_usage:.2f}%",
+                    f"- Realms Observed: {snapshot.realm_total}",
+                    f"- Drone Missions Logged: {snapshot.drone_total}",
+                    f"- Implants Activated: {snapshot.implants}",
+                    f"- Joy Level: {snapshot.joy_level:.2f}",
+                    "",
+                ]
+            )
 
         if realms:
             lines.append("## Expanded Realms")
@@ -610,6 +776,40 @@ class EchoSovereignCore:
                     lines.append(
                         f"  - {result['mission']} (score {result['score']:.3f}, priority {result['priority']})"
                     )
+            lines.append("")
+
+        if insights:
+            forecast = insights.get("forecast", {})
+            anomaly = insights.get("anomaly_scan", {})
+            lines.append("## Continuum Insights")
+            if forecast:
+                lines.extend(
+                    [
+                        f"- Forecast Horizon: {forecast.get('horizon_hours')}h",
+                        f"- Median Realm Count: {forecast.get('median_realms')} (+{forecast.get('expected_delta')} expected)",
+                        f"- Confidence: {forecast.get('confidence')} (Simulations: {forecast.get('simulations')})",
+                    ]
+                )
+                sample_paths = forecast.get("sample_paths") or []
+                if sample_paths:
+                    compressed = ", ".join(
+                        f"{idx+1}:→{path[-1]}" for idx, path in enumerate(sample_paths)
+                    )
+                    lines.append(f"- Sample Trajectories: {compressed}")
+            if anomaly:
+                lines.append(f"- Anomaly Status: {anomaly.get('status')}")
+                signals = anomaly.get("signals", {})
+                if signals:
+                    lines.append(
+                        "- Signals: "
+                        + ", ".join(f"{key}={value}" for key, value in signals.items())
+                    )
+                anomalies = anomaly.get("anomalies", [])
+                if anomalies:
+                    lines.append("- Alerts: " + "; ".join(anomalies))
+            resonance_index = insights.get("resonance_index")
+            if resonance_index is not None:
+                lines.append(f"- Resonance Index: {resonance_index}")
             lines.append("")
 
         try:
