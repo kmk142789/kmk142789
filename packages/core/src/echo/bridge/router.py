@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -20,6 +20,13 @@ from .models import (
 from .service import BridgeSyncService
 
 
+def _parse_recipients_env(value: Optional[str]) -> List[str] | None:
+    if not value:
+        return None
+    entries = [item.strip() for item in value.split(",") if item.strip()]
+    return entries or None
+
+
 def _bridge_api_factory() -> EchoBridgeAPI:
     """Instantiate an ``EchoBridgeAPI`` using environment defaults."""
 
@@ -32,6 +39,14 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         slack_secret_name=os.getenv("ECHO_BRIDGE_SLACK_SECRET", "SLACK_WEBHOOK_URL"),
         webhook_url=os.getenv("ECHO_BRIDGE_WEBHOOK_URL"),
         webhook_secret_name=os.getenv("ECHO_BRIDGE_WEBHOOK_SECRET", "ECHO_BRIDGE_WEBHOOK_URL"),
+        discord_webhook_url=os.getenv("ECHO_BRIDGE_DISCORD_WEBHOOK_URL"),
+        discord_secret_name=os.getenv("ECHO_BRIDGE_DISCORD_SECRET", "DISCORD_WEBHOOK_URL"),
+        email_recipients=_parse_recipients_env(os.getenv("ECHO_BRIDGE_EMAIL_RECIPIENTS")),
+        email_secret_name=os.getenv("ECHO_BRIDGE_EMAIL_SECRET", "EMAIL_RELAY_API_KEY"),
+        email_subject_template=os.getenv(
+            "ECHO_BRIDGE_EMAIL_SUBJECT_TEMPLATE",
+            "Echo Identity Relay :: {identity} :: Cycle {cycle}",
+        ),
     )
 
 
@@ -88,6 +103,22 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="webhook",
                 action="post_json",
                 requires_secrets=[api.webhook_secret_name] if api.webhook_secret_name else [],
+            )
+        )
+    if api.discord_webhook_url:
+        connectors.append(
+            ConnectorDescriptor(
+                platform="discord",
+                action="send_webhook",
+                requires_secrets=[api.discord_secret_name] if api.discord_secret_name else [],
+            )
+        )
+    if getattr(api, "email_recipients", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="email",
+                action="send_email",
+                requires_secrets=[api.email_secret_name] if api.email_secret_name else [],
             )
         )
     return connectors

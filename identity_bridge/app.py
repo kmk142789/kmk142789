@@ -11,6 +11,13 @@ from echo.bridge.router import create_router
 from modules.echo-bridge.bridge_api import EchoBridgeAPI
 
 
+def _parse_recipients(value: Optional[str]) -> list[str] | None:
+    if not value:
+        return None
+    entries = [item.strip() for item in value.split(",") if item.strip()]
+    return entries or None
+
+
 @lru_cache(maxsize=1)
 def _build_bridge_api() -> EchoBridgeAPI:
     """Create an :class:`EchoBridgeAPI` using environment configuration."""
@@ -24,6 +31,14 @@ def _build_bridge_api() -> EchoBridgeAPI:
         slack_secret_name=os.getenv("ECHO_BRIDGE_SLACK_SECRET", "SLACK_WEBHOOK_URL"),
         webhook_url=os.getenv("ECHO_BRIDGE_WEBHOOK_URL"),
         webhook_secret_name=os.getenv("ECHO_BRIDGE_WEBHOOK_SECRET", "ECHO_BRIDGE_WEBHOOK_URL"),
+        discord_webhook_url=os.getenv("ECHO_BRIDGE_DISCORD_WEBHOOK_URL"),
+        discord_secret_name=os.getenv("ECHO_BRIDGE_DISCORD_SECRET", "DISCORD_WEBHOOK_URL"),
+        email_recipients=_parse_recipients(os.getenv("ECHO_BRIDGE_EMAIL_RECIPIENTS")),
+        email_secret_name=os.getenv("ECHO_BRIDGE_EMAIL_SECRET", "EMAIL_RELAY_API_KEY"),
+        email_subject_template=os.getenv(
+            "ECHO_BRIDGE_EMAIL_SUBJECT_TEMPLATE",
+            "Echo Identity Relay :: {identity} :: Cycle {cycle}",
+        ),
     )
 
 

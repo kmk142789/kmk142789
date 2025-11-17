@@ -47,6 +47,13 @@ app.include_router(echonet_router)
 app.include_router(registry_router)
 app.include_router(timeline_router)
 
+def _parse_recipients_env(value: Optional[str]) -> list[str] | None:
+    if not value:
+        return None
+    entries = [item.strip() for item in value.split(",") if item.strip()]
+    return entries or None
+
+
 _bridge_api = EchoBridgeAPI(
     github_repository=os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY"),
     telegram_chat_id=os.getenv("ECHO_BRIDGE_TELEGRAM_CHAT_ID"),
@@ -56,6 +63,14 @@ _bridge_api = EchoBridgeAPI(
     slack_secret_name=os.getenv("ECHO_BRIDGE_SLACK_SECRET", "SLACK_WEBHOOK_URL"),
     webhook_url=os.getenv("ECHO_BRIDGE_WEBHOOK_URL"),
     webhook_secret_name=os.getenv("ECHO_BRIDGE_WEBHOOK_SECRET", "ECHO_BRIDGE_WEBHOOK_URL"),
+    discord_webhook_url=os.getenv("ECHO_BRIDGE_DISCORD_WEBHOOK_URL"),
+    discord_secret_name=os.getenv("ECHO_BRIDGE_DISCORD_SECRET", "DISCORD_WEBHOOK_URL"),
+    email_recipients=_parse_recipients_env(os.getenv("ECHO_BRIDGE_EMAIL_RECIPIENTS")),
+    email_secret_name=os.getenv("ECHO_BRIDGE_EMAIL_SECRET", "EMAIL_RELAY_API_KEY"),
+    email_subject_template=os.getenv(
+        "ECHO_BRIDGE_EMAIL_SUBJECT_TEMPLATE",
+        "Echo Identity Relay :: {identity} :: Cycle {cycle}",
+    ),
 )
 _state_root = Path(os.getenv("ECHO_STATE_ROOT", str(Path.cwd() / "state")))
 _bridge_state_dir = _state_root / "bridge"

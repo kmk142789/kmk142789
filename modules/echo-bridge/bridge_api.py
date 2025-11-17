@@ -30,6 +30,11 @@ class EchoBridgeAPI:
         slack_secret_name: str = "SLACK_WEBHOOK_URL",
         webhook_url: Optional[str] = None,
         webhook_secret_name: Optional[str] = "ECHO_BRIDGE_WEBHOOK_URL",
+        discord_webhook_url: Optional[str] = None,
+        discord_secret_name: str = "DISCORD_WEBHOOK_URL",
+        email_recipients: Optional[Sequence[str]] = None,
+        email_secret_name: Optional[str] = "EMAIL_RELAY_API_KEY",
+        email_subject_template: str = "Echo Identity Relay :: {identity} :: Cycle {cycle}",
     ) -> None:
         self.github_repository = github_repository
         self.telegram_chat_id = telegram_chat_id
@@ -39,6 +44,11 @@ class EchoBridgeAPI:
         self.slack_secret_name = slack_secret_name
         self.webhook_url = webhook_url
         self.webhook_secret_name = webhook_secret_name
+        self.discord_webhook_url = discord_webhook_url
+        self.discord_secret_name = discord_secret_name
+        self.email_recipients = tuple(self._normalise_recipients(email_recipients or []))
+        self.email_secret_name = email_secret_name
+        self.email_subject_template = email_subject_template
 
     def plan_identity_relay(
         self,
@@ -124,6 +134,46 @@ class EchoBridgeAPI:
             )
             plans.append(
                 self._slack_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    text=plain_text,
+                )
+            )
+        if self.discord_webhook_url:
+            plain_text = plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+            )
+            plans.append(
+                self._discord_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    text=plain_text,
+                )
+            )
+        if self.email_recipients:
+            plain_text = plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+            )
+            plans.append(
+                self._email_plan(
                     identity=identity,
                     cycle=cycle,
                     signature=signature,
@@ -242,6 +292,81 @@ class EchoBridgeAPI:
             payload["channel"] = self.slack_channel
         requires = [self.slack_secret_name] if self.slack_secret_name else []
         return BridgePlan(platform="slack", action="send_webhook", payload=payload, requires_secret=requires)
+
+    def _discord_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        embeds: List[Dict[str, Any]] = []
+        if summary or traits or links:
+            embed: Dict[str, Any] = {
+                "title": f"Echo Bridge :: {identity}",
+                "description": summary or f"Cycle {cycle} relay",
+                "fields": [
+                    {"name": key, "value": str(value), "inline": True}
+                    for key, value in self._sorted_traits(traits)
+                ],
+                "url": links[0] if links else None,
+            }
+            if not embed["fields"]:
+                embed.pop("fields")
+            if embed.get("url") is None:
+                embed.pop("url")
+            embeds.append(embed)
+        payload: Dict[str, Any] = {
+            "webhook_env": self.discord_secret_name,
+            "content": text
+            or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary,
+                links=links,
+            ),
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        if embeds:
+            payload["embeds"] = embeds
+        requires = [self.discord_secret_name] if self.discord_secret_name else []
+        return BridgePlan(platform="discord", action="send_webhook", payload=payload, requires_secret=requires)
+
+    def _email_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        subject = self._render_email_subject(identity=identity, cycle=cycle)
+        body = text or self._render_plain(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+        )
+        payload: Dict[str, Any] = {
+            "recipients": list(self.email_recipients),
+            "subject": subject,
+            "body": body,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+            "links": links,
+        }
+        requires = [self.email_secret_name] if self.email_secret_name else []
+        return BridgePlan(platform="email", action="send_email", payload=payload, requires_secret=requires)
 
     def _webhook_plan(
         self,
@@ -400,3 +525,13 @@ class EchoBridgeAPI:
         for index, link in enumerate(links, start=1):
             attachments.append({"title": f"Link {index}", "text": link})
         return attachments
+
+    def _normalise_recipients(self, recipients: Sequence[str]) -> List[str]:
+        return self._normalise_links(recipients)
+
+    def _render_email_subject(self, *, identity: str, cycle: str) -> str:
+        template = self.email_subject_template or "Echo Identity Relay :: {identity} :: Cycle {cycle}"
+        try:
+            return template.format(identity=identity, cycle=cycle)
+        except (IndexError, KeyError):
+            return f"Echo Identity Relay :: {identity} :: Cycle {cycle}"
