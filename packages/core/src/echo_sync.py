@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 from dataclasses import asdict, dataclass
+from datetime import timedelta
 from pathlib import Path
 from typing import Iterable
 
@@ -34,6 +35,8 @@ class EchoSyncConfig:
     include_history: bool = False
     history_limit: int = 5
     note: str | None = None
+    max_payload_age: timedelta | None = None
+    local_context_limit: int | None = None
 
 
 @dataclass(frozen=True)
@@ -75,7 +78,13 @@ def run_echo_sync(config: EchoSyncConfig) -> EchoSyncResult:
     transport = DirectorySyncTransport(config.transport_dir)
     _record_probe(store, note=config.note)
 
-    coordinator = CloudSyncCoordinator(config.node_id, store, transport)
+    coordinator = CloudSyncCoordinator(
+        config.node_id,
+        store,
+        transport,
+        max_payload_age=config.max_payload_age,
+        local_context_limit=config.local_context_limit,
+    )
     report = coordinator.sync()
 
     history: list[dict[str, object]] = []
@@ -116,6 +125,16 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Number of execution contexts to include when --include-history is supplied (default: 5).",
     )
     parser.add_argument("--note", help="Optional note recorded alongside the generated execution context.")
+    parser.add_argument(
+        "--max-payload-age",
+        type=float,
+        help="Discard remote payloads older than the supplied number of seconds.",
+    )
+    parser.add_argument(
+        "--local-context-limit",
+        type=int,
+        help="Only advertise the most recent N local execution contexts during sync.",
+    )
     parser.add_argument("--json", action="store_true", help="Emit the result as JSON.")
     return parser
 
@@ -146,6 +165,12 @@ def main(argv: Iterable[str] | None = None) -> int:
             include_history=args.include_history,
             history_limit=args.history_limit,
             note=args.note,
+            max_payload_age=(
+                timedelta(seconds=args.max_payload_age)
+                if args.max_payload_age is not None
+                else None
+            ),
+            local_context_limit=args.local_context_limit,
         )
         result = run_echo_sync(config)
     except ValueError as exc:

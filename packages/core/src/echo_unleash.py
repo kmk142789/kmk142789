@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 from typing import Iterable
 
@@ -109,6 +110,16 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Include recent execution contexts in the sync payload.",
     )
     sync_group.add_argument("--sync-note", help="Optional note recorded with the generated sync execution context.")
+    sync_group.add_argument(
+        "--sync-max-payload-age",
+        type=float,
+        help="Discard remote sync payloads older than the supplied number of seconds.",
+    )
+    sync_group.add_argument(
+        "--sync-local-context-limit",
+        type=int,
+        help="Only advertise the N most recent local contexts during the sync phase.",
+    )
 
     cascade_group = parser.add_argument_group("cascade", "Dominion cascade options")
     cascade_group.add_argument("--run-cascade", action="store_true", help="Generate a Dominion cascade plan after syncing.")
@@ -213,6 +224,12 @@ def main(argv: Iterable[str] | None = None) -> int:
                 include_history=args.sync_include_history,
                 history_limit=args.sync_history_limit,
                 note=args.sync_note,
+                max_payload_age=(
+                    timedelta(seconds=args.sync_max_payload_age)
+                    if args.sync_max_payload_age is not None
+                    else None
+                ),
+                local_context_limit=args.sync_local_context_limit,
             )
         except ValueError as exc:
             parser.error(str(exc))
