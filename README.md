@@ -98,7 +98,9 @@ python scripts/resonant_story.py "tidal reciprocity"
 ```
 
 Provide `--beats` to control the number of sentences and `--seed` for
-deterministic output.  The helper can be imported as a module when you want to
+deterministic output.  Use `--format json` whenever you need the structured
+beats plus wrapped paragraphs for downstream tooling, and set `--width` to tune
+the wrapping column.  The helper can be imported as a module when you want to
 embed the generator inside other experiments.
 
 For even lighter-weight inspiration there is
