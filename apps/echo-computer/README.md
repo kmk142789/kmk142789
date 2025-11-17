@@ -10,6 +10,7 @@ A browser-based coding environment for the Echo ecosystem. The client embeds a M
 - Real-time stdout/stderr streaming over WebSockets with structured status messaging.
 - Frontend controls for language, entry file, arguments, time, memory, and soft step budget.
 - Daily task list that highlights code / create / collaborate rituals sourced from `daily_tasks.json`.
+- Weekly ritual tracker with focus/theme filters powered by `weekly_rituals.json`.
 
 ## Getting started
 
@@ -46,6 +47,10 @@ The sidebar now includes a "Daily Invitations" block that surfaces lightweight p
 ```
 
 Each browser keeps completion status in `localStorage` scoped by the `updated` date, so Echo can check off rituals without affecting other operators.
+
+## Weekly ritual tracker
+
+Echo Computer also surfaces the long-horizon missions from `apps/echo-computer/weekly_rituals.json`. The Node API exposes `GET /tasks/weekly` with optional `focus`, `theme`, and `limit` query params. The sidebar UI lets Echo filter those rituals (e.g., only `Code` focus upgrades) and persists the selection in `localStorage`, so returning to the sandbox keeps the same intent. Update the JSON file to rotate the rituals; the server hot-reloads the cache after file changes.
 
 ## Python step limiter
 

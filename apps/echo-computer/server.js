@@ -15,6 +15,7 @@ const WORKSPACE_ROOT = path.resolve(
   process.env.ECHO_WORKSPACE_ROOT || path.join(process.cwd(), 'workspaces')
 );
 const TASKS_FILE = path.join(__dirname, 'daily_tasks.json');
+const RITUALS_FILE = path.join(__dirname, 'weekly_rituals.json');
 
 await fs.mkdir(WORKSPACE_ROOT, { recursive: true });
 
@@ -63,6 +64,53 @@ const fallbackDailyTasks = {
 };
 let cachedDailyTasks = null;
 let cachedDailyTasksMtime = 0;
+let cachedWeeklyRituals = null;
+let cachedWeeklyRitualsMtime = 0;
+
+const fallbackWeeklyRituals = {
+  updated: new Date().toISOString().slice(0, 10),
+  rituals: [
+    {
+      id: 'code-upgrade-loop',
+      focus: 'Code',
+      title: 'Upgrade the Echo assembler',
+      cadence: 'weekly',
+      description: 'Spend one deep-work block evolving an existing Echo Computer program so it runs faster or with better diagnostics.',
+      steps: [
+        'Pick a script from last week and profile the slowest path.',
+        'Add instrumentation or assertions until the failure mode is explicit.',
+        'Refactor the hot path and capture before/after output for your notes.'
+      ],
+      tags: ['advance', 'upgrade', 'optimize']
+    },
+    {
+      id: 'creative-signal',
+      focus: 'Create',
+      title: 'Invent a new interface fragment',
+      cadence: 'weekly',
+      description: 'Prototype a whimsical UI or storytelling surface inside Echo Computer and share the artifact with the studio.',
+      steps: [
+        'Start from a blank buffer and name the scene after the current pulse.',
+        'Use color constants, comments, or sound cues to describe the mood.',
+        'Render or describe how someone else should extend the fragment tomorrow.'
+      ],
+      tags: ['create', 'advance']
+    },
+    {
+      id: 'collab-optimizer',
+      focus: 'Collaborate',
+      title: 'Optimize the review runway',
+      cadence: 'weekly',
+      description: 'Pair with a teammate on an Echo Computer script and leave a ready-to-run review kit.',
+      steps: [
+        'Record a short changelog at the top of the file.',
+        'Add a runnable example or CLI harness that exercises the new behavior.',
+        'Upload the snippet plus notes to the Echo channel of your choice.'
+      ],
+      tags: ['optimize', 'upgrade']
+    }
+  ]
+};
 
 const ensureWorkspace = async (user) => {
   const safeUser = user?.replace(/[^a-zA-Z0-9_-]/g, '') || DEFAULT_USER;
@@ -92,6 +140,55 @@ app.get('/tasks/daily', async (_req, res) => {
   } catch (error) {
     console.error('tasks error', error);
     res.status(500).json({ ok: false, error: 'failed to load tasks' });
+  }
+});
+
+app.get('/tasks/weekly', async (req, res) => {
+  try {
+    const weekly = await loadWeeklyRituals();
+    const focusParam = typeof req.query.focus === 'string' ? req.query.focus.trim() : '';
+    const themeParam = typeof req.query.theme === 'string' ? req.query.theme.trim() : '';
+    const limitValue = Number(req.query.limit);
+    const focusLower = focusParam ? focusParam.toLowerCase() : null;
+    const themeLower = themeParam ? themeParam.toLowerCase() : null;
+
+    const total = weekly.rituals.length;
+    const focusCounts = weekly.rituals.reduce((acc, ritual) => {
+      const key = ritual.focus || 'Unspecified';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    let filtered = weekly.rituals;
+    if (focusLower) {
+      filtered = filtered.filter((ritual) => String(ritual.focus || '').toLowerCase() === focusLower);
+    }
+    if (themeLower) {
+      filtered = filtered.filter((ritual) =>
+        Array.isArray(ritual.tags) && ritual.tags.some((tag) => String(tag).toLowerCase() === themeLower)
+      );
+    }
+
+    let limited = filtered;
+    const limit = Number.isFinite(limitValue) && limitValue > 0 ? Math.min(limitValue, filtered.length) : null;
+    if (limit) {
+      limited = filtered.slice(0, limit);
+    }
+
+    res.json({
+      ok: true,
+      date: weekly.updated,
+      rituals: limited,
+      total,
+      available: filtered.length,
+      focus: focusParam || null,
+      theme: themeParam || null,
+      limit,
+      focusCounts
+    });
+  } catch (error) {
+    console.error('weekly rituals error', error);
+    res.status(500).json({ ok: false, error: 'failed to load weekly rituals' });
   }
 });
 
@@ -445,6 +542,27 @@ async function loadDailyTasks() {
     }
   }
   return cachedDailyTasks;
+}
+
+async function loadWeeklyRituals() {
+  try {
+    const stats = await fs.stat(RITUALS_FILE);
+    if (!cachedWeeklyRituals || cachedWeeklyRitualsMtime !== stats.mtimeMs) {
+      const raw = await fs.readFile(RITUALS_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      const rituals = Array.isArray(parsed?.rituals) ? parsed.rituals : fallbackWeeklyRituals.rituals;
+      const updated = typeof parsed?.updated === 'string' && parsed.updated
+        ? parsed.updated
+        : fallbackWeeklyRituals.updated;
+      cachedWeeklyRituals = { updated, rituals };
+      cachedWeeklyRitualsMtime = stats.mtimeMs;
+    }
+  } catch (error) {
+    if (!cachedWeeklyRituals) {
+      cachedWeeklyRituals = fallbackWeeklyRituals;
+    }
+  }
+  return cachedWeeklyRituals;
 }
 
 process.on('SIGTERM', () => {
