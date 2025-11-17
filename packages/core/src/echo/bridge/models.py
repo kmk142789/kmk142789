@@ -28,6 +28,14 @@ class PlanRequest(BaseModel):
         default=None,
         description="Optional trait metadata propagated to downstream connectors.",
     )
+    summary: Optional[str] = Field(
+        default=None,
+        description="Optional human-readable synopsis appended to bridge payloads.",
+    )
+    links: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of reference links shared with each connector.",
+    )
 
 
 class PlanModel(BaseModel):

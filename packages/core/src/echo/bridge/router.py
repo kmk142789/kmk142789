@@ -129,6 +129,8 @@ def create_router(
             cycle=request.cycle,
             signature=request.signature,
             traits=request.traits,
+            summary=request.summary,
+            links=request.links,
         )
         if not plans:
             raise HTTPException(

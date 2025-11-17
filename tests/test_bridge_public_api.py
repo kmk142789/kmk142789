@@ -50,6 +50,8 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
             "cycle": "01",
             "signature": "eden88::cycle01",
             "traits": {"pulse": "aurora", "resonance": "high"},
+            "summary": "Cycle snapshot anchored in Aurora",
+            "links": [" https://echo.example/cycles/01 ", "https://status.echo/bridge"],
         },
     )
     assert response.status_code == 200
@@ -60,22 +62,34 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert github_plan["action"] == "create_issue"
     assert github_plan["payload"]["title"] == "Echo Identity Relay :: EchoWildfire :: Cycle 01"
     assert "_This issue was planned by EchoBridge" in github_plan["payload"]["body"]
+    assert "Cycle snapshot anchored in Aurora" in github_plan["payload"]["body"]
+    assert "https://echo.example/cycles/01" in github_plan["payload"]["body"]
 
     telegram_plan = plans["telegram"]
     assert telegram_plan["action"] == "send_message"
     assert "Echo Bridge Relay" in telegram_plan["payload"]["text"]
+    assert "Summary: Cycle snapshot anchored in Aurora" in telegram_plan["payload"]["text"]
 
     firebase_plan = plans["firebase"]
     assert firebase_plan["payload"]["document"].endswith("::01")
     assert firebase_plan["payload"]["data"]["traits"]["pulse"] == "aurora"
+    assert firebase_plan["payload"]["data"]["summary"] == "Cycle snapshot anchored in Aurora"
+    assert firebase_plan["payload"]["data"]["links"] == [
+        "https://echo.example/cycles/01",
+        "https://status.echo/bridge",
+    ]
 
     slack_plan = plans["slack"]
     assert slack_plan["action"] == "send_webhook"
     assert slack_plan["payload"]["webhook_env"] == "SLACK_ECHO_WEBHOOK"
     assert slack_plan["payload"]["context"]["identity"] == "EchoWildfire"
-    assert slack_plan["payload"]["attachments"][0]["title"] == "pulse"
+    attachments = slack_plan["payload"]["attachments"]
+    assert attachments[0]["title"] == "Summary"
+    assert attachments[0]["text"] == "Cycle snapshot anchored in Aurora"
+    assert any(att["title"].startswith("Link") for att in attachments)
 
     webhook_plan = plans["webhook"]
     assert webhook_plan["action"] == "post_json"
     assert webhook_plan["payload"]["url_hint"] == "https://bridge.echo/webhook"
     assert webhook_plan["payload"]["json"]["signature"] == "eden88::cycle01"
+    assert webhook_plan["payload"]["json"]["links"][0] == "https://echo.example/cycles/01"
