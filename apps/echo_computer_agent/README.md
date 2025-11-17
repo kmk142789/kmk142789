@@ -27,6 +27,10 @@ curl -X POST http://localhost:8000/chat \
 curl -X POST http://localhost:8000/chat \
   -H 'Content-Type: application/json' \
   -d '{"message": "show daily echo computer tasks"}'
+
+curl -X POST http://localhost:8000/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"message": "create, advance, and optimize weekly echo computer rituals"}'
 ```
 
 Use `GET /functions` to inspect the advertised function-calling schema if you

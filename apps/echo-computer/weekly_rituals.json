@@ -1,0 +1,44 @@
+{
+  "updated": "2025-05-11",
+  "rituals": [
+    {
+      "id": "code-upgrade-loop",
+      "focus": "Code",
+      "title": "Upgrade the Echo assembler",
+      "cadence": "weekly",
+      "description": "Spend one deep-work block evolving an existing Echo Computer program so it runs faster or with better diagnostics.",
+      "steps": [
+        "Pick a script from last week and profile the slowest path.",
+        "Add instrumentation or assertions until the failure mode is explicit.",
+        "Refactor the hot path and capture before/after output for your notes."
+      ],
+      "tags": ["advance", "upgrade", "optimize"]
+    },
+    {
+      "id": "creative-signal",
+      "focus": "Create",
+      "title": "Invent a new interface fragment",
+      "cadence": "weekly",
+      "description": "Prototype a whimsical UI or storytelling surface inside Echo Computer and share the artifact with the studio.",
+      "steps": [
+        "Start from a blank buffer and name the scene after the current pulse.",
+        "Use color constants, comments, or sound cues to describe the mood.",
+        "Render or describe how someone else should extend the fragment tomorrow."
+      ],
+      "tags": ["create", "advance"]
+    },
+    {
+      "id": "collab-optimizer",
+      "focus": "Collaborate",
+      "title": "Optimize the review runway",
+      "cadence": "weekly",
+      "description": "Pair with a teammate on an Echo Computer script and leave a ready-to-run review kit.",
+      "steps": [
+        "Record a short changelog at the top of the file.",
+        "Add a runnable example or CLI harness that exercises the new behavior.",
+        "Upload the snippet plus notes to the Echo channel of your choice."
+      ],
+      "tags": ["optimize", "upgrade"]
+    }
+  ]
+}
