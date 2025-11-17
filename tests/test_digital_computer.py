@@ -223,6 +223,35 @@ def test_comparison_jumps_enable_rich_branching() -> None:
     assert result.memory["eq"] == 1
 
 
+def test_state_capsules_capture_restore_and_metadata() -> None:
+    program = """
+    LOAD A 5
+    CAPTURE "baseline" "initial state"
+    LOAD A 1
+    CAPTURE "mutated"
+    RESTORE "baseline"
+    CAPCOUNT B
+    STORE B @capsules_before
+    CAPEXISTS C "baseline"
+    STORE C @baseline_exists
+    CAPDROP "mutated"
+    CAPCOUNT D
+    PRINT A
+    HALT
+    """
+
+    result = run_program(program)
+
+    assert result.output == ("5",)
+    assert result.memory["capsules_before"] == 2
+    assert result.memory["baseline_exists"] == 1
+    assert result.registers["D"] == 1
+    assert "baseline" in result.state_capsules
+    baseline = result.state_capsules["baseline"]
+    assert baseline.get("metadata") == "initial state"
+    assert baseline.get("registers", {}).get("A") == 5
+
+
 def test_instruction_counts_profile_execution() -> None:
     program = """
     LOAD A 0

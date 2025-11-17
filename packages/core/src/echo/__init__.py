@@ -313,7 +313,14 @@ from .strategic_vector import (
     export_strategic_vector,
     generate_strategic_vector,
 )
-from .sync import CloudSyncCoordinator, DirectorySyncTransport, SyncReport, SyncTransport
+from .sync import (
+    CloudSyncCoordinator,
+    DirectorySyncTransport,
+    NodeInsight,
+    SyncReport,
+    SyncTransport,
+    TopologyReport,
+)
 from .thoughtlog import ThoughtLogger, thought_trace
 from .wish_insights import summarize_wishes
 
