@@ -70,3 +70,27 @@ def test_agent_daily_invitation_focus_and_limit() -> None:
     tasks = payload["data"]["tasks"]
     assert len(tasks) == 1
     assert tasks[0]["focus"] == "Code"
+
+
+def test_agent_weekly_rituals_for_echos_computer() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command(
+        "Create, advance, upgrade, and optimize new features for echos computer"
+    )
+    payload = response.to_payload()
+    assert payload["function"] == "weekly_rituals"
+    rituals = payload["data"]["rituals"]
+    assert rituals
+    metadata = payload["metadata"]
+    assert metadata["theme"] == "Create"
+    assert metadata["updated"] == "2025-05-11"
+
+
+def test_agent_weekly_ritual_focus_and_limit() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command("weekly code echo computer ritual top 1")
+    payload = response.to_payload()
+    assert payload["function"] == "weekly_rituals"
+    rituals = payload["data"]["rituals"]
+    assert len(rituals) == 1
+    assert rituals[0]["focus"] == "Code"

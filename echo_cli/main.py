@@ -2529,7 +2529,6 @@ def complexity_evolve(
         None,
         "--start",
         help="Optional ISO 8601 timestamp used as the default cascade start.",
-        help="Optional ISO 8601 timestamp to align all iterations.",
     ),
     json_mode: bool = typer.Option(
         False,
@@ -2733,83 +2732,11 @@ def complexity_summit(
         readable=True,
         resolve_path=True,
         help="JSON file containing strategy 'options' and 'criteria'.",
-@complexity_app.command("escalate")
-def complexity_escalate(
-    ctx: typer.Context,
-    signal: List[str] = typer.Option(
-        [],
-        "--signal",
-        "-s",
-        help="Alignment signal formatted as 'Name:score' (0-1).",
-    ),
-    signals_file: Optional[Path] = typer.Option(
-        None,
-        "--signals-file",
-        exists=True,
-        readable=True,
-        resolve_path=True,
-        help="JSON file mapping signal names to scores.",
-    ),
-    capability: List[str] = typer.Option(
-        [],
-        "--capability",
-        "-c",
-        help="Capability formatted as 'Name:coverage:automation:runbooks:incidents'.",
-    ),
-    capability_file: Optional[Path] = typer.Option(
-        None,
-        "--capability-file",
-        exists=True,
-        readable=True,
-        resolve_path=True,
-        help="JSON file describing readiness capabilities.",
-    ),
-    event: List[str] = typer.Option(
-        [],
-        "--event",
-        "-e",
-        help="Resilience event formatted as 'Name|likelihood=...|impact=...'.",
-    ),
-    portfolio_file: Optional[Path] = typer.Option(
-        None,
-        "--portfolio-file",
-        exists=True,
-        readable=True,
-        resolve_path=True,
-        help="Optional JSON file describing portfolio initiatives.",
-    ),
-    initiative: List[str] = typer.Option(
-        [],
-        "--initiative",
-        "-i",
-        help="Inline initiative formatted as 'Name:impact:effort:confidence[:dep+dep]'.",
-    ),
-    target: float = typer.Option(0.75, "--target", help="Desired alignment average."),
-    readiness_horizon: int = typer.Option(
-        12,
-        "--readiness-horizon",
-        help="Incident horizon for the readiness stage (weeks).",
-    ),
-    resilience_horizon: float = typer.Option(
-        168.0,
-        "--resilience-horizon",
-        help="Forecast horizon for the resilience stage (hours).",
-    ),
-    velocity: float = typer.Option(
-        8.0,
-        "--velocity",
-        help="Velocity used for throughput projections (points per week).",
-    ),
-    throughput_horizon: int = typer.Option(
-        12,
-        "--throughput-horizon",
-        help="Horizon for throughput projections (weeks).",
     ),
     start: Optional[str] = typer.Option(
         None,
         "--start",
         help="Optional ISO 8601 timestamp anchoring the journey phases.",
-        help="Optional ISO 8601 timestamp anchoring advanced stages.",
     ),
     json_mode: bool = typer.Option(
         False,
@@ -2993,51 +2920,6 @@ def complexity_constellate(
 
     try:
         payload = orchestrate_complexity_constellation(program)
-    """Showcase escalating features that grow in complexity with each dataset."""
-
-    _ensure_ctx(ctx)
-    try:
-        signals = _load_signal_file(signals_file)
-        signals.update(_parse_signal_specs(signal))
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-    if not signals:
-        raise typer.BadParameter("provide --signal or --signals-file")
-
-    try:
-        capabilities = _load_capability_file(capability_file) + _parse_capability_specs(
-            capability
-        )
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-    try:
-        events = _parse_resilience_event_specs(event)
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-    try:
-        initiatives: list[dict[str, object]] = []
-        if portfolio_file:
-            initiatives.extend(_load_portfolio_file(portfolio_file))
-        initiatives.extend(_parse_initiative_specs(initiative))
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-
-    start_dt = _parse_iso_timestamp(start)
-    try:
-        payload = execute_feature_escalation(
-            signals,
-            capabilities=capabilities,
-            events=events,
-            initiatives=initiatives,
-            target=target,
-            readiness_horizon_weeks=readiness_horizon,
-            resilience_horizon_hours=resilience_horizon,
-            throughput_velocity=velocity,
-            throughput_horizon_weeks=throughput_horizon,
-            start=start_dt,
-        )
     except ValueError as exc:
         raise typer.BadParameter(str(exc)) from exc
 
@@ -3122,18 +3004,156 @@ def complexity_constellate(
         remaining = len(insights) - 10
         if remaining > 0:
             console.print(f"… (+{remaining} additional insight(s))")
-    coverage = payload.get("coverage", {})
-    coverage_summary = ", ".join(
-        f"{name}={'✓' if enabled else '–'}" for name, enabled in coverage.items()
-    )
+@complexity_app.command("feature-escalation")
+def complexity_feature_escalation(
+    ctx: typer.Context,
+    signal: List[str] = typer.Option(
+        [],
+        "--signal",
+        "-s",
+        help="Alignment signal formatted as 'Name:score' (0-1).",
+    ),
+    signals_file: Optional[Path] = typer.Option(
+        None,
+        "--signals-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file mapping signal names to scores.",
+    ),
+    capability: List[str] = typer.Option(
+        [],
+        "--capability",
+        "-c",
+        help="Capability formatted as 'Name:coverage:automation:runbooks:incidents'.",
+    ),
+    capability_file: Optional[Path] = typer.Option(
+        None,
+        "--capability-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file describing readiness capabilities.",
+    ),
+    event: List[str] = typer.Option(
+        [],
+        "--event",
+        "-e",
+        help="Resilience event formatted as 'Name|likelihood=...|impact=...'.",
+    ),
+    portfolio_file: Optional[Path] = typer.Option(
+        None,
+        "--portfolio-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="Optional JSON file describing portfolio initiatives.",
+    ),
+    initiative: List[str] = typer.Option(
+        [],
+        "--initiative",
+        "-i",
+        help="Inline initiative formatted as 'Name:impact:effort:confidence[:dep+dep]'.",
+    ),
+    target: float = typer.Option(0.75, "--target", help="Desired alignment average."),
+    readiness_horizon: int = typer.Option(
+        12,
+        "--readiness-horizon",
+        help="Incident horizon for the readiness stage (weeks).",
+    ),
+    resilience_horizon: float = typer.Option(
+        168.0,
+        "--resilience-horizon",
+        help="Forecast horizon for the resilience stage (hours).",
+    ),
+    velocity: float = typer.Option(
+        8.0,
+        "--velocity",
+        help="Velocity used for throughput projections (points per week).",
+    ),
+    throughput_horizon: int = typer.Option(
+        12,
+        "--throughput-horizon",
+        help="Horizon for throughput projections (weeks).",
+    ),
+    start: Optional[str] = typer.Option(
+        None,
+        "--start",
+        help="Optional ISO 8601 timestamp anchoring advanced stages.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Showcase escalating features that grow in complexity with each dataset."""
+
+    _ensure_ctx(ctx)
+    try:
+        signals = _load_signal_file(signals_file)
+        signals.update(_parse_signal_specs(signal))
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if not signals:
+        raise typer.BadParameter("provide --signal or --signals-file")
+
+    try:
+        capabilities = _load_capability_file(capability_file) + _parse_capability_specs(
+            capability
+        )
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    try:
+        events = _parse_resilience_event_specs(event)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    try:
+        initiatives: list[dict[str, object]] = []
+        if portfolio_file:
+            initiatives.extend(_load_portfolio_file(portfolio_file))
+        initiatives.extend(_parse_initiative_specs(initiative))
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    start_dt = _parse_iso_timestamp(start)
+    try:
+        payload = execute_feature_escalation(
+            signals,
+            capabilities=capabilities,
+            events=events,
+            initiatives=initiatives,
+            target=target,
+            readiness_horizon_weeks=readiness_horizon,
+            resilience_horizon_hours=resilience_horizon,
+            throughput_velocity=velocity,
+            throughput_horizon_weeks=throughput_horizon,
+            start=start_dt,
+        )
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
     summary_lines = [
-        f"Start reference  : {payload['start_reference']}",
+        f"Start reference  : {payload['start_reference'] or 'n/a'}",
         f"Stages executed  : {payload['stage_count']}",
         f"Complexity score : {payload['complexity_score']}",
-        f"Coverage         : {coverage_summary or 'alignment=✓'}",
     ]
+    coverage = payload.get("coverage", {})
+    if coverage:
+        coverage_summary = ", ".join(
+            f"{name}={'✓' if enabled else '–'}" for name, enabled in coverage.items()
+        )
+        summary_lines.append(f"Coverage         : {coverage_summary}")
     if payload.get("final_stage"):
-        summary_lines.append(f"Final stage     : {payload['final_stage']}")
+        summary_lines.append(f"Final stage      : {payload['final_stage']}")
     console.print("\n".join(summary_lines))
 
     stage_rows = [

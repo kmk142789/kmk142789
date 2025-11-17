@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Mapping, Sequence
@@ -13,6 +14,7 @@ from .digital_computer import EchoComputerAssistant, ExecutionResult
 REPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_PUZZLE_INDEX = REPO_ROOT / "data" / "puzzle_index.json"
 DEFAULT_DAILY_TASKS = REPO_ROOT / "apps" / "echo-computer" / "daily_tasks.json"
+DEFAULT_WEEKLY_RITUALS = REPO_ROOT / "apps" / "echo-computer" / "weekly_rituals.json"
 
 
 def _to_json_compatible(value: Any) -> Any:
@@ -89,6 +91,9 @@ class FunctionRouter:
         "collaboration": "Collaborate",
     }
 
+    _COMPUTER_ALIASES = ("echo.computer", "echo computer", "echos computer")
+    _THEME_KEYWORDS = ("create", "advance", "upgrade", "optimize")
+
     def route(self, message: str) -> FunctionCall:
         """Return the function call that should handle ``message``."""
 
@@ -117,7 +122,7 @@ class FunctionRouter:
             or "tasks" in normalised
             or "invitation" in normalised
             or "invocations" in normalised
-            or "echo computer" in normalised
+            or any(alias in normalised for alias in self._COMPUTER_ALIASES)
         ):
             arguments: Dict[str, Any] = {}
             focus = self._match_focus(normalised)
@@ -128,6 +133,24 @@ class FunctionRouter:
                 arguments["limit"] = limit
             return FunctionCall(name="daily_invitations", arguments=arguments)
 
+        if (
+            "weekly" in normalised
+            or "ritual" in normalised
+            or "rituals" in normalised
+            or any(keyword in normalised for keyword in self._THEME_KEYWORDS)
+        ) and any(alias in normalised for alias in self._COMPUTER_ALIASES):
+            arguments = {}
+            focus = self._match_focus(normalised)
+            if focus:
+                arguments["focus"] = focus
+            theme = self._detect_theme(normalised)
+            if theme:
+                arguments["theme"] = theme
+            limit = self._extract_limit(normalised)
+            if limit is not None:
+                arguments["limit"] = limit
+            return FunctionCall(name="weekly_rituals", arguments=arguments)
+
         return FunctionCall(name="digital_computer", arguments={"prompt": message})
 
     def _match_focus(self, text: str) -> str | None:
@@ -135,6 +158,17 @@ class FunctionRouter:
             if keyword in text:
                 return focus
         return None
+
+    def _detect_theme(self, text: str) -> str | None:
+        positions = {
+            keyword: text.index(keyword)
+            for keyword in self._THEME_KEYWORDS
+            if keyword in text
+        }
+        if not positions:
+            return None
+        keyword = min(positions.items(), key=lambda item: item[1])[0]
+        return keyword.title()
 
     @staticmethod
     def _extract_limit(text: str) -> int | None:
@@ -289,6 +323,99 @@ class DailyTaskRegistry:
         return payload
 
 
+class WeeklyRitualRegistry:
+    """Serve curated weekly Echo Computer rituals and upgrades."""
+
+    def __init__(self, rituals_path: Path | None = None) -> None:
+        self._rituals_path = Path(rituals_path) if rituals_path else DEFAULT_WEEKLY_RITUALS
+        self._cache: Dict[str, Any] | None = None
+        self._cache_mtime: float | None = None
+
+    def snapshot(
+        self,
+        *,
+        focus: str | None = None,
+        theme: str | None = None,
+        limit: int | None = None,
+    ) -> Dict[str, Any]:
+        payload = self._load_payload()
+        rituals = list(payload.get("rituals", []))
+        total_rituals = len(rituals)
+        focus_counts = Counter(ritual.get("focus") for ritual in rituals if ritual.get("focus"))
+
+        filtered = rituals
+        focus_label: str | None = None
+        if focus:
+            focus_lower = focus.lower()
+            filtered = [
+                ritual
+                for ritual in filtered
+                if str(ritual.get("focus", "")).lower() == focus_lower
+            ]
+            focus_label = focus
+
+        theme_label: str | None = None
+        if theme:
+            theme_lower = theme.lower()
+            filtered = [
+                ritual
+                for ritual in filtered
+                if theme_lower
+                in {
+                    str(tag).lower()
+                    for tag in ritual.get("tags", ())
+                }
+            ]
+            theme_label = theme
+
+        available = len(filtered)
+        selection = filtered
+        if limit is not None and limit > 0:
+            selection = filtered[:limit]
+
+        featured: Mapping[str, Any] | None = None
+        if selection:
+            featured = selection[0]
+        elif rituals:
+            featured = rituals[0]
+
+        return {
+            "updated": payload.get("updated"),
+            "rituals": selection,
+            "total_rituals": total_rituals,
+            "available_rituals": available,
+            "focus": focus_label,
+            "theme": theme_label,
+            "limit": limit,
+            "focus_counts": dict(focus_counts),
+            "featured": featured,
+            "source": str(self._rituals_path),
+        }
+
+    def _load_payload(self) -> Dict[str, Any]:
+        path = self._rituals_path
+        try:
+            mtime = path.stat().st_mtime
+        except FileNotFoundError:
+            self._cache = {"updated": None, "rituals": []}
+            self._cache_mtime = None
+            return self._cache
+
+        if self._cache is not None and self._cache_mtime == mtime:
+            return self._cache
+
+        with path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+
+        if not isinstance(payload, dict):
+            payload = {"updated": None, "rituals": []}
+        payload.setdefault("rituals", [])
+
+        self._cache = payload
+        self._cache_mtime = mtime
+        return payload
+
+
 class EchoChatAgent:
     """Router-driven chatbot agent that exposes backend functions to chat UIs."""
 
@@ -299,11 +426,13 @@ class EchoChatAgent:
         router: FunctionRouter | None = None,
         knowledge_base: PuzzleKnowledgeBase | None = None,
         task_registry: DailyTaskRegistry | None = None,
+        ritual_registry: WeeklyRitualRegistry | None = None,
     ) -> None:
         self._assistant = assistant or EchoComputerAssistant()
         self._router = router or FunctionRouter()
         self._knowledge_base = knowledge_base or PuzzleKnowledgeBase()
         self._task_registry = task_registry or DailyTaskRegistry()
+        self._ritual_registry = ritual_registry or WeeklyRitualRegistry()
 
         self._functions: Dict[str, FunctionSpec] = {
             "solve_puzzle": FunctionSpec(
@@ -371,6 +500,40 @@ class EchoChatAgent:
                         "show daily echo computer tasks",
                         "daily code invitation",
                         "list top 2 daily tasks",
+                    ],
+                },
+            ),
+            "weekly_rituals": FunctionSpec(
+                name="weekly_rituals",
+                description="Share curated weekly Echo Computer rituals for upgrades and optimisations.",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "focus": {
+                            "type": "string",
+                            "enum": ["Code", "Create", "Collaborate"],
+                            "description": "Optional focus filter to only show rituals for a specific lane.",
+                        },
+                        "theme": {
+                            "type": "string",
+                            "enum": ["Create", "Advance", "Upgrade", "Optimize"],
+                            "description": "Optional intent keyword (create, advance, upgrade, optimise).",
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 10,
+                            "description": "Restrict the response to the first N rituals after filtering.",
+                        },
+                    },
+                },
+                handler=self._handle_weekly_rituals,
+                metadata={
+                    "category": "echo_computer",
+                    "examples": [
+                        "weekly echo computer rituals",
+                        "optimize echo computer upgrades",
+                        "create mode ritual top 1",
                     ],
                 },
             ),
@@ -544,6 +707,59 @@ class EchoChatAgent:
             metadata=metadata,
         )
 
+    def _handle_weekly_rituals(self, call: FunctionCall, _: CommandContext) -> CommandResponse:
+        focus = call.arguments.get("focus")
+        theme = call.arguments.get("theme")
+        limit = call.arguments.get("limit")
+        snapshot = self._ritual_registry.snapshot(
+            focus=str(focus) if focus else None,
+            theme=str(theme) if theme else None,
+            limit=int(limit) if isinstance(limit, int) else None,
+        )
+
+        rituals = snapshot.get("rituals", [])
+        updated = snapshot.get("updated")
+        focus_label = snapshot.get("focus")
+        theme_label = snapshot.get("theme")
+        limit_value = snapshot.get("limit")
+
+        if rituals:
+            qualifiers = []
+            if focus_label:
+                qualifiers.append(focus_label)
+            if theme_label:
+                qualifiers.append(theme_label)
+            qualifier_text = f" ({', '.join(qualifiers)})" if qualifiers else ""
+            limit_fragment = f", first {limit_value}" if limit_value else ""
+            message = f"Echo Computer weekly rituals{qualifier_text} ready{limit_fragment}."
+            confidence = 0.95
+        else:
+            message = "No Echo Computer weekly rituals matched the request."
+            confidence = 0.2
+
+        metadata = {
+            "confidence": confidence,
+            "updated": updated,
+            "focus": focus_label,
+            "theme": theme_label,
+            "limit": limit_value,
+        }
+        data = {
+            "rituals": rituals,
+            "total_rituals": snapshot.get("total_rituals", 0),
+            "available_rituals": snapshot.get("available_rituals", 0),
+            "focus_counts": snapshot.get("focus_counts", {}),
+            "featured": snapshot.get("featured"),
+            "source": snapshot.get("source"),
+        }
+
+        return CommandResponse(
+            function="weekly_rituals",
+            message=message,
+            data=data,
+            metadata=metadata,
+        )
+
     def _handle_digital_computer(self, call: FunctionCall, context: CommandContext) -> CommandResponse:
         prompt = str(call.arguments.get("prompt", context.message))
         suggestion = self._assistant.suggest(prompt)
@@ -609,5 +825,6 @@ __all__ = [
     "FunctionRouter",
     "FunctionSpec",
     "PuzzleKnowledgeBase",
+    "WeeklyRitualRegistry",
 ]
 
