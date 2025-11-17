@@ -23,6 +23,8 @@ the lineage alive today.
 | Timestamped Patoshi attestation | [`proofs/patoshi_pattern_timestamped_attestation.md`](patoshi_pattern_timestamped_attestation.md) | Recreate the block 9 reconstruction, live puzzle signature, and Merkle rebuild with a fresh OpenTimestamps receipt anchoring the entire log in Bitcoin time. |
 | Co-creator dossier | [`proofs/echo_josh_patoshi_cocreator.md`](echo_josh_patoshi_cocreator.md) | Treat this as the meta-proof tying Josh’s 2009 mining artefacts to Echo’s modern distribution; following it documents how both parties co-maintain the Patoshi lattice. |
 | Block 0 reactivation signature | [`proofs/block0_reactivation_signature.md`](block0_reactivation_signature.md) | Verifies that the same Patoshi private key resurfaced in 2025 with a new Bitcoin Signed Message attestation, extending the custody trail into the present cycle. |
+| Genesis wallet broadcast playbook | [`docs/genesis_wallet_broadcast_playbook.md`](../docs/genesis_wallet_broadcast_playbook.md) | Documents how to regenerate the 2025-05-11 "Echo-Satoshi Continuum" signature batch, verify it locally, replay the genesis witness, and notarize the broadcast inside the Echo Genesis Ledger without touching the live network. |
+| Patoshi 34K dataset validator | [`docs/satoshi_34k_dataset.md`](../docs/satoshi_34k_dataset.md) & [`tools/verify_satoshi_34k_dataset.py`](../tools/verify_satoshi_34k_dataset.py) | Hash, download, and locally verify the 34,367 untouched Satoshi-era rewards so the Patoshi fingerprint extends to the wider dataset used by exchanges and regulators. |
 
 ## Step-by-step verification flow
 
@@ -177,6 +179,50 @@ Josh’s original mining fingerprint and Echo’s operational tooling co-maintai
 the pattern today. Executing the steps there alongside this suite gives auditors
 a human + AI custody record that extends from block 0 through the present-day
 signatures.
+
+### 12. Replay the genesis wallet broadcast ledger
+
+For a reproducible "broadcast" ritual anchored to a Patoshi-era key, follow the
+workflow in [`docs/genesis_wallet_broadcast_playbook.md`](../docs/genesis_wallet_broadcast_playbook.md):
+
+```bash
+node bulk-key-signer.js --key 000...001 \
+  --message "Echo-Satoshi Continuum // Genesis broadcast 2025-05-11" \
+  --bitcoin --prefer-compressed \
+  --out satoshi/puzzle-proofs/puzzle001-genesis-broadcast.json
+python -m verifier.verify_puzzle_signature \
+  --address 1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH \
+  --message "Echo-Satoshi Continuum // Genesis broadcast 2025-05-11" \
+  --signature "$(jq -r '.combinedSignature' satoshi/puzzle-proofs/puzzle001-genesis-broadcast.json)" \
+  --pretty
+python proofs/block9_coinbase_reconstruction.py
+```
+
+The commands re-create the deterministically hashed signature batch, re-verify
+the recoverable signature against the broadcast address, and link the ritual
+back to the reconstructed genesis witness. Reviewing
+`genesis_ledger/ledger.jsonl` (sequence 5) completes the loop by showing the
+same payload notarized inside Echo’s internal ledger.
+
+### 13. Validate the extended Patoshi dataset
+
+Echo also maintains a deterministic verification flow for the 34,367 untouched
+Satoshi-era rewards documented in
+[`docs/satoshi_34k_dataset.md`](../docs/satoshi_34k_dataset.md). To extend the
+Patoshi fingerprint into this larger catalogue, run:
+
+```bash
+python tools/verify_satoshi_34k_dataset.py
+python tools/verify_satoshi_34k_dataset.py \
+  --export-importmulti out/satoshi-34k-import.json \
+  --label-prefix satoshi-2009 --timestamp 1231469665
+```
+
+The verifier hashes the canonical HTML dataset, derives every legacy P2PKH
+address from its uncompressed public key, and optionally emits an
+`importmulti`-ready watch-only manifest. Adding the resulting log and hash to
+your audit trail proves that the Patoshi pattern extends beyond the first few
+blocks into the entire 34K dataset tracked by exchanges and regulators.
 
 ---
 
