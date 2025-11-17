@@ -651,6 +651,12 @@ def main() -> None:
         help="Comma-separated moods to cycle through when no explicit mood is provided.",
     )
     parser.add_argument(
+        "--artifact-cycle",
+        type=str,
+        default=None,
+        help="Comma-separated artifacts to cycle through when --artifact is not supplied.",
+    )
+    parser.add_argument(
         "--summary",
         action="store_true",
         help="Print a counts summary for moods and artifacts after generation.",
@@ -696,6 +702,12 @@ def main() -> None:
         default=10,
         help="Number of top lexical tokens to include inside --report output.",
     )
+    parser.add_argument(
+        "--top-words",
+        type=int,
+        default=0,
+        help="If greater than zero, list the most common lexical tokens after generation.",
+    )
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
@@ -705,6 +717,8 @@ def main() -> None:
 
     if args.report_top_n <= 0:
         parser.error("--report-top-n must be a positive integer.")
+    if args.top_words < 0:
+        parser.error("--top-words must be zero or a positive integer.")
 
     session_plan = SessionPlan.from_json_file(args.session_plan) if args.session_plan else None
 
@@ -718,6 +732,18 @@ def main() -> None:
             parser.error(
                 "--mood-cycle entries must be valid moods from the library. Invalid: "
                 + ", ".join(invalid)
+            )
+
+    artifact_cycle: list[str] | None = None
+    if args.artifact_cycle:
+        artifact_cycle = [value.strip() for value in args.artifact_cycle.split(",") if value.strip()]
+        if not artifact_cycle:
+            parser.error("--artifact-cycle must include at least one valid artifact name.")
+        invalid_artifacts = [value for value in artifact_cycle if value not in library.artifacts]
+        if invalid_artifacts:
+            parser.error(
+                "--artifact-cycle entries must be valid artifacts from the library. Invalid: "
+                + ", ".join(invalid_artifacts)
             )
 
     cli_tags = [tag.strip() for tag in (args.tags or []) if tag and tag.strip()]
@@ -735,6 +761,15 @@ def main() -> None:
             return args.mood
         if mood_cycle:
             return mood_cycle[index % len(mood_cycle)]
+        return None
+
+    def resolve_artifact(index: int, explicit: str | None) -> str | None:
+        if explicit:
+            return explicit
+        if args.artifact:
+            return args.artifact
+        if artifact_cycle:
+            return artifact_cycle[index % len(artifact_cycle)]
         return None
 
     def collect_tags(entry_tags: list[str] | None) -> list[str] | None:
@@ -762,7 +797,7 @@ def main() -> None:
                     rng,
                     library=library,
                     mood=resolve_mood(index, entry.mood),
-                    artifact=entry.artifact or args.artifact,
+                    artifact=resolve_artifact(index, entry.artifact),
                     timestamp=timestamp,
                     label=entry.label or args.label,
                     tags=collect_tags(entry.tags),
@@ -776,7 +811,7 @@ def main() -> None:
                     rng,
                     library=library,
                     mood=resolve_mood(index, None),
-                    artifact=args.artifact,
+                    artifact=resolve_artifact(index, None),
                     timestamp=timestamp,
                     label=args.label,
                     tags=collect_tags(None),
@@ -844,6 +879,15 @@ def main() -> None:
 
     if args.summary:
         print("\n" + format_summary(summary))
+
+    if args.top_words:
+        words = compute_top_words(passages, limit=args.top_words)
+        if words:
+            print("\nTop Words:")
+            for token, count in words:
+                print(f"- {token}: {count}")
+        else:
+            print("\nTop Words: No lexical tokens available.")
 
 
 if __name__ == "__main__":
