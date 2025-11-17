@@ -105,6 +105,8 @@ class ExecutionResult:
     quantum_registers: Mapping[str, Mapping[str, object]] = field(default_factory=dict)
     instruction_counts: Mapping[str, int] = field(default_factory=dict)
     random_state: Mapping[str, object] = field(default_factory=dict)
+    stack: Tuple[int | str, ...] = field(default_factory=tuple)
+    call_stack: Tuple[int, ...] = field(default_factory=tuple)
 
 
 class AssemblyError(ValueError):
@@ -357,6 +359,8 @@ class EchoComputer:
             quantum_registers=self._snapshot_quantum_registers(),
             instruction_counts=dict(self._instruction_counts),
             random_state=self._snapshot_random_state(),
+            stack=tuple(self._stack),
+            call_stack=tuple(self._call_stack),
         )
 
     # --- Execution helpers -------------------------------------------------
@@ -767,6 +771,25 @@ class EchoComputer:
             raise RuntimeError("stack underflow")
         reg = self._require_register(register)
         self._registers[reg] = self._stack.pop()
+
+    def _op_peek(self, register: str, offset: str | None = None) -> None:
+        if not self._stack:
+            raise RuntimeError("stack is empty")
+        reg = self._require_register(register)
+        depth = 0 if offset is None else self._resolve_int(offset)
+        if depth < 0:
+            raise RuntimeError("PEEK offset must be non-negative")
+        if depth >= len(self._stack):
+            raise RuntimeError("PEEK offset exceeds stack depth")
+        self._registers[reg] = self._stack[-1 - depth]
+
+    def _op_stacklen(self, register: str) -> None:
+        reg = self._require_register(register)
+        self._registers[reg] = len(self._stack)
+
+    def _op_calldepth(self, register: str) -> None:
+        reg = self._require_register(register)
+        self._registers[reg] = len(self._call_stack)
 
     def _op_call(self, target: str) -> None:
         if self._pc < 0 or self._pc > len(self._program):
