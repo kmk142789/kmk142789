@@ -21,6 +21,11 @@ def _make_app() -> FastAPI:
         slack_secret_name="SLACK_ECHO_WEBHOOK",
         webhook_url="https://bridge.echo/webhook",
         webhook_secret_name="ECHO_GENERIC_WEBHOOK",
+        discord_webhook_url="https://discord.com/api/webhooks/ABC",
+        discord_secret_name="DISCORD_ECHO_WEBHOOK",
+        email_recipients=["ops@echo.test", "alerts@echo.test"],
+        email_secret_name="SENDGRID_TOKEN",
+        email_subject_template="Echo Relay {identity}/{cycle}",
     )
     app = FastAPI()
     app.include_router(create_router(bridge_api))
@@ -36,7 +41,7 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
     payload = response.json()
 
     connectors = {connector["platform"] for connector in payload["connectors"]}
-    assert connectors == {"github", "telegram", "firebase", "slack", "webhook"}
+    assert connectors == {"github", "telegram", "firebase", "slack", "webhook", "discord", "email"}
 
 
 def test_plan_endpoint_returns_bridge_instructions() -> None:
@@ -93,3 +98,15 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert webhook_plan["payload"]["url_hint"] == "https://bridge.echo/webhook"
     assert webhook_plan["payload"]["json"]["signature"] == "eden88::cycle01"
     assert webhook_plan["payload"]["json"]["links"][0] == "https://echo.example/cycles/01"
+
+    discord_plan = plans["discord"]
+    assert discord_plan["action"] == "send_webhook"
+    assert discord_plan["payload"]["webhook_env"] == "DISCORD_ECHO_WEBHOOK"
+    assert discord_plan["payload"]["context"]["cycle"] == "01"
+    assert discord_plan["payload"].get("embeds")
+
+    email_plan = plans["email"]
+    assert email_plan["action"] == "send_email"
+    assert email_plan["payload"]["recipients"] == ["ops@echo.test", "alerts@echo.test"]
+    assert email_plan["payload"]["subject"] == "Echo Relay EchoWildfire/01"
+    assert "Echo Bridge Relay" in email_plan["payload"]["body"]

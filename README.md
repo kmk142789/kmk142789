@@ -176,6 +176,11 @@ The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every
 | `ECHO_BRIDGE_STATE_DIR` | _unset_ | When provided, stores bridge artifacts in a custom directory for multi-tenant deploys. |
 | `ECHO_BRIDGE_GITHUB_REPOSITORY` | _unset_ | Publishes bridge updates to a target GitHub repository. |
 | `ECHO_BRIDGE_UNSTOPPABLE_DOMAINS` | _unset_ | Enables Unstoppable Domains propagation during bridge deploys. |
+| `ECHO_BRIDGE_DISCORD_WEBHOOK_URL` | _unset_ | Announces bridge relays to Discord when paired with `ECHO_BRIDGE_DISCORD_SECRET`. |
+| `ECHO_BRIDGE_DISCORD_SECRET` | `DISCORD_WEBHOOK_URL` | Secret name consumed by Discord bridge plans so the webhook URL stays in your secrets store. |
+| `ECHO_BRIDGE_EMAIL_RECIPIENTS` | _unset_ | Comma-separated list of recipients that should receive email relay plans. |
+| `ECHO_BRIDGE_EMAIL_SECRET` | `EMAIL_RELAY_API_KEY` | Secret name that automation should resolve when sending email bridge plans. |
+| `ECHO_BRIDGE_EMAIL_SUBJECT_TEMPLATE` | `Echo Identity Relay :: {identity} :: Cycle {cycle}` | Custom subject template applied to email plans. |
 | `ECHO_PULSE_INGEST_CAPACITY` / `ECHO_PULSE_INGEST_REFILL` | `10` / `1.0` | Tune API rate limits for Pulseweaver ingestion. |
 | `ECHO_WATCHDOG_ENABLED` | `true` | Toggles automatic remediation in the watchdog service. |
 | `ECHO_THOUGHT_DIR` | `genesis_ledger/thought_log` | Redirects the thought log archive to external storage. |
