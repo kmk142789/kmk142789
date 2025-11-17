@@ -45,3 +45,32 @@ def test_manifest_contains_anchor_data() -> None:
     assert anchor_payload["glyph"] == "∇"
     assert anchor_payload["metadata"]["phase"] == "aurora"
     assert anchor_payload["imprint_count"] == 1
+    glyph_payload = data["data_glyphs"][0]
+    assert glyph_payload["glyph"] == "∇"
+    assert glyph_payload["imprint_count"] == 1
+    assert len(glyph_payload["fingerprint"]) == 64
+
+
+def test_forge_data_glyph_tracks_tags_and_metadata() -> None:
+    cloud = EchoGlyphCloud(anchor_prefix="data")
+    cloud.imprint("⊸", "Signal", tags=("signal", "pulse"), metadata={"orbit": "L2"})
+    cloud.imprint("⊸", "Signal echo", tags=("signal",))
+
+    data_glyph = cloud.forge_data_glyph("⊸")
+
+    assert data_glyph.glyph == "⊸"
+    assert data_glyph.imprint_count == 2
+    assert data_glyph.tags == ("signal", "pulse")
+    assert data_glyph.metadata["orbit"] == "L2"
+    assert len(data_glyph.fingerprint) == 64
+
+
+def test_data_glyph_ledger_filters_by_tags() -> None:
+    cloud = EchoGlyphCloud()
+    cloud.imprint("∇", "Aurora", tags=("signal",))
+    cloud.imprint("⊸", "Myth", tags=("story",))
+
+    ledger = cloud.data_glyph_ledger(tags=("signal",))
+
+    assert [entry["glyph"] for entry in ledger] == ["∇"]
+    assert ledger[0]["tags"] == ["signal"]
