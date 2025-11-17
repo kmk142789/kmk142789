@@ -16,6 +16,7 @@ const WORKSPACE_ROOT = path.resolve(
 );
 const TASKS_FILE = path.join(__dirname, 'daily_tasks.json');
 const RITUALS_FILE = path.join(__dirname, 'weekly_rituals.json');
+const FEATURE_BLUEPRINTS_FILE = path.join(__dirname, 'feature_blueprints.json');
 
 await fs.mkdir(WORKSPACE_ROOT, { recursive: true });
 
@@ -66,6 +67,8 @@ let cachedDailyTasks = null;
 let cachedDailyTasksMtime = 0;
 let cachedWeeklyRituals = null;
 let cachedWeeklyRitualsMtime = 0;
+let cachedFeatureBlueprints = null;
+let cachedFeatureBlueprintsMtime = 0;
 
 const fallbackWeeklyRituals = {
   updated: new Date().toISOString().slice(0, 10),
@@ -108,6 +111,51 @@ const fallbackWeeklyRituals = {
         'Upload the snippet plus notes to the Echo channel of your choice.'
       ],
       tags: ['optimize', 'upgrade']
+    }
+  ]
+};
+
+const fallbackFeatureBlueprints = {
+  updated: new Date().toISOString().slice(0, 10),
+  features: [
+    {
+      id: 'code-multi-runner',
+      focus: 'Code',
+      status: 'Ready',
+      title: 'Modular multi-language runner',
+      description: 'Chain Python and Node executions so Echo can prove new features across stacks from a single request.',
+      impact: 'Cuts the feedback loop for polyglot experiments to minutes.',
+      blueprint: [
+        'Add a client toggle that queues multiple run targets in order.',
+        'Stream combined stdout/stderr with language labels for each phase.',
+        'Persist the merged log to the workspace for pairing review.'
+      ]
+    },
+    {
+      id: 'create-signal-deck',
+      focus: 'Create',
+      status: 'Prototype',
+      title: 'Signal deck overlays',
+      description: 'Design lightweight overlay cards that summarize story, palette, and sound cues above the editor.',
+      impact: 'Keeps creative direction visible while implementing the feature.',
+      blueprint: [
+        'Expose a `/signals/now` endpoint that returns the latest deck payload.',
+        'Render collapsible cards near the terminal with keyboard shortcuts.',
+        'Allow saving the deck with each workspace checkpoint.'
+      ]
+    },
+    {
+      id: 'collab-radar',
+      focus: 'Collaborate',
+      status: 'Research',
+      title: 'Collaboration radar',
+      description: 'Surface who last touched a file plus suggested reviewers to accelerate feature handoffs.',
+      impact: 'Reduces time to handoff by highlighting ready partners.',
+      blueprint: [
+        'Ingest recent Git commits per workspace file.',
+        'Display avatars and suggested reviewers beside the file tree.',
+        'Offer one-click share links that copy run instructions.'
+      ]
     }
   ]
 };
@@ -189,6 +237,62 @@ app.get('/tasks/weekly', async (req, res) => {
   } catch (error) {
     console.error('weekly rituals error', error);
     res.status(500).json({ ok: false, error: 'failed to load weekly rituals' });
+  }
+});
+
+app.get('/features/roadmap', async (req, res) => {
+  try {
+    const blueprints = await loadFeatureBlueprints();
+    const focusParam = typeof req.query.focus === 'string' ? req.query.focus.trim() : '';
+    const statusParam = typeof req.query.status === 'string' ? req.query.status.trim() : '';
+    const limitValue = Number(req.query.limit);
+    const focusLower = focusParam ? focusParam.toLowerCase() : null;
+    const statusLower = statusParam ? statusParam.toLowerCase() : null;
+
+    const total = blueprints.features.length;
+    const focusCounts = blueprints.features.reduce((acc, feature) => {
+      const key = feature.focus || 'Unspecified';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    const statusCounts = blueprints.features.reduce((acc, feature) => {
+      const key = feature.status || 'Unspecified';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    let filtered = blueprints.features;
+    if (focusLower) {
+      filtered = filtered.filter((feature) => String(feature.focus || '').toLowerCase() === focusLower);
+    }
+    if (statusLower) {
+      filtered = filtered.filter((feature) => String(feature.status || '').toLowerCase() === statusLower);
+    }
+
+    let limited = filtered;
+    const limit = Number.isFinite(limitValue) && limitValue > 0 ? Math.min(limitValue, filtered.length) : null;
+    if (limit) {
+      limited = filtered.slice(0, limit);
+    }
+
+    const featured = limited[0] || filtered[0] || null;
+
+    res.json({
+      ok: true,
+      date: blueprints.updated,
+      features: limited,
+      total,
+      available: filtered.length,
+      focus: focusParam || null,
+      status: statusParam || null,
+      limit,
+      focusCounts,
+      statusCounts,
+      featured
+    });
+  } catch (error) {
+    console.error('feature roadmap error', error);
+    res.status(500).json({ ok: false, error: 'failed to load feature blueprints' });
   }
 });
 
@@ -563,6 +667,27 @@ async function loadWeeklyRituals() {
     }
   }
   return cachedWeeklyRituals;
+}
+
+async function loadFeatureBlueprints() {
+  try {
+    const stats = await fs.stat(FEATURE_BLUEPRINTS_FILE);
+    if (!cachedFeatureBlueprints || cachedFeatureBlueprintsMtime !== stats.mtimeMs) {
+      const raw = await fs.readFile(FEATURE_BLUEPRINTS_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      const features = Array.isArray(parsed?.features) ? parsed.features : fallbackFeatureBlueprints.features;
+      const updated = typeof parsed?.updated === 'string' && parsed.updated
+        ? parsed.updated
+        : fallbackFeatureBlueprints.updated;
+      cachedFeatureBlueprints = { updated, features };
+      cachedFeatureBlueprintsMtime = stats.mtimeMs;
+    }
+  } catch (error) {
+    if (!cachedFeatureBlueprints) {
+      cachedFeatureBlueprints = fallbackFeatureBlueprints;
+    }
+  }
+  return cachedFeatureBlueprints;
 }
 
 process.on('SIGTERM', () => {

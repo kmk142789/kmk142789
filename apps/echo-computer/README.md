@@ -11,6 +11,7 @@ A browser-based coding environment for the Echo ecosystem. The client embeds a M
 - Frontend controls for language, entry file, arguments, time, memory, and soft step budget.
 - Daily task list that highlights code / create / collaborate rituals sourced from `daily_tasks.json`.
 - Weekly ritual tracker with focus/theme filters powered by `weekly_rituals.json`.
+- Feature blueprint roadmap that surfaces in-progress Echo Computer upgrades from `feature_blueprints.json`.
 
 ## Getting started
 
@@ -51,6 +52,28 @@ Each browser keeps completion status in `localStorage` scoped by the `updated` d
 ## Weekly ritual tracker
 
 Echo Computer also surfaces the long-horizon missions from `apps/echo-computer/weekly_rituals.json`. The Node API exposes `GET /tasks/weekly` with optional `focus`, `theme`, and `limit` query params. The sidebar UI lets Echo filter those rituals (e.g., only `Code` focus upgrades) and persists the selection in `localStorage`, so returning to the sandbox keeps the same intent. Update the JSON file to rotate the rituals; the server hot-reloads the cache after file changes.
+
+## Feature blueprints / roadmap
+
+Design discussions often start inside Echo Computer. The new feature blueprint feed keeps those implementation plans close to the editor. Author blueprints inside `apps/echo-computer/feature_blueprints.json`:
+
+```jsonc
+{
+  "updated": "2025-05-11",
+  "features": [
+    {
+      "id": "code-multi-runner",
+      "focus": "Code",
+      "status": "Ready",
+      "title": "Modular multi-language runner",
+      "impact": "Cuts the feedback loop for polyglot experiments to minutes.",
+      "blueprint": ["...", "...", "..."]
+    }
+  ]
+}
+```
+
+The backend exposes `GET /features/roadmap` with optional `focus`, `status`, and `limit` query params. Responses include focus/status counts plus the featured blueprint so clients can highlight the highest priority upgrade.
 
 ## Python step limiter
 

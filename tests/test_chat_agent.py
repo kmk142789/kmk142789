@@ -6,7 +6,13 @@ def test_agent_function_descriptions() -> None:
     agent = EchoChatAgent()
     functions = agent.describe_functions()
     names = {entry["name"] for entry in functions}
-    assert {"solve_puzzle", "launch_application", "digital_computer", "daily_invitations"} <= names
+    assert {
+        "solve_puzzle",
+        "launch_application",
+        "digital_computer",
+        "daily_invitations",
+        "feature_blueprints",
+    } <= names
 
 
 def test_agent_solves_known_puzzle() -> None:
@@ -75,7 +81,7 @@ def test_agent_daily_invitation_focus_and_limit() -> None:
 def test_agent_weekly_rituals_for_echos_computer() -> None:
     agent = EchoChatAgent()
     response = agent.handle_command(
-        "Create, advance, upgrade, and optimize new features for echos computer"
+        "Create, advance, upgrade, and optimize rituals for echos computer"
     )
     payload = response.to_payload()
     assert payload["function"] == "weekly_rituals"
@@ -94,3 +100,27 @@ def test_agent_weekly_ritual_focus_and_limit() -> None:
     rituals = payload["data"]["rituals"]
     assert len(rituals) == 1
     assert rituals[0]["focus"] == "Code"
+
+
+def test_agent_feature_blueprints() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command("Design and implement new features to echos computer")
+    payload = response.to_payload()
+    assert payload["function"] == "feature_blueprints"
+    features = payload["data"]["features"]
+    assert features
+    metadata = payload["metadata"]
+    assert metadata["updated"] == "2025-05-11"
+    assert metadata["confidence"] > 0.9
+
+
+def test_agent_feature_blueprints_focus_status_limit() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command("show ready code echos computer feature roadmap top 1")
+    payload = response.to_payload()
+    assert payload["function"] == "feature_blueprints"
+    features = payload["data"]["features"]
+    assert len(features) == 1
+    assert features[0]["focus"] == "Code"
+    assert features[0]["status"] == "Ready"
+    assert payload["metadata"]["status"] == "Ready"
