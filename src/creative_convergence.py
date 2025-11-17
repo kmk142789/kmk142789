@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from statistics import fmean
 from textwrap import indent
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Sequence, Tuple
 
 from .creative_constellation import (
     ConstellationDiagnostics,
@@ -42,6 +42,17 @@ class ConvergenceBrief:
             raise ValueError("energy must be positive")
         self.motifs = [value for value in self.motifs if value]
         self.highlights = [value for value in self.highlights if value]
+
+
+@dataclass(frozen=True)
+class IntegrationMetrics:
+    """Structured view of the integration panel statistics."""
+
+    coverage: float
+    shared_lexicon: Tuple[str, ...]
+    mean_intensity: float
+    energy_class: str
+    stability_index: float
 
 
 def _build_constellation_panel(
@@ -107,7 +118,7 @@ def _build_integration_panel(
     brief: ConvergenceBrief,
     nodes: Sequence[ConstellationNode],
     diagnostics: ConstellationDiagnostics,
-) -> str:
+) -> tuple[str, IntegrationMetrics]:
     motif_tokens = set(_tokenise(brief.motifs or [brief.theme]))
     highlight_tokens = set(_tokenise(brief.highlights or [brief.theme]))
     overlap = sorted(motif_tokens & highlight_tokens)
@@ -116,30 +127,48 @@ def _build_integration_panel(
         coverage = round(len(overlap) / len(highlight_tokens), 3)
 
     average_intensity = fmean(node.intensity for node in nodes)
+    metrics = IntegrationMetrics(
+        coverage=coverage,
+        shared_lexicon=tuple(overlap),
+        mean_intensity=average_intensity,
+        energy_class=diagnostics.energy_class,
+        stability_index=diagnostics.stability_index,
+    )
+
     lines = ["Integration Panel:"]
+    shared = ", ".join(metrics.shared_lexicon) or "none"
     lines.append(
-        f"  • alignment coverage={coverage:.3f} | shared lexicon={', '.join(overlap) or 'none'}"
+        f"  • alignment coverage={metrics.coverage:.3f} | shared lexicon={shared}"
     )
     lines.append(
-        f"  • mean intensity={average_intensity:.3f} supports {diagnostics.energy_class} cadence"
+        f"  • mean intensity={metrics.mean_intensity:.3f} supports {metrics.energy_class} cadence"
     )
     lines.append(
         "  • narrative cue: "
         + (
-            f"constellation stability {diagnostics.stability_index:.3f} provides "
+            f"constellation stability {metrics.stability_index:.3f} provides "
             f"anchors for the '{brief.tone}' resonance track."
         )
     )
-    return "\n".join(lines)
+    return "\n".join(lines), metrics
 
 
 def compose_convergence_report(brief: ConvergenceBrief) -> str:
     """Return a formatted report combining constellation and resonance data."""
 
+    panels = compile_convergence_panels(brief)
+    return "\n\n".join(panels[:3])
+
+
+def compile_convergence_panels(
+    brief: ConvergenceBrief,
+) -> tuple[str, str, str, IntegrationMetrics]:
+    """Return the textual panels plus their integration metrics."""
+
     constellation_panel, nodes, diagnostics = _build_constellation_panel(brief)
     resonance_panel = _build_resonance_panel(brief)
-    integration_panel = _build_integration_panel(brief, nodes, diagnostics)
-    return "\n\n".join([constellation_panel, resonance_panel, integration_panel])
+    integration_panel, metrics = _build_integration_panel(brief, nodes, diagnostics)
+    return constellation_panel, resonance_panel, integration_panel, metrics
 
 
 def demo() -> str:
