@@ -1,6 +1,13 @@
+from collections import OrderedDict
+from pathlib import Path
+
 from echo.continuum_observatory import (
     ContinuumObservatory,
+    ContinuumSnapshot,
+    LaneStats,
     build_default_lane_map,
+    _render_heatmap,
+    _render_lane_table,
 )
 
 
@@ -43,3 +50,64 @@ def test_default_lane_map_isolated_copy():
     first["execution_stack"] = ("custom",)
     second = build_default_lane_map()
     assert second["execution_stack"] != ("custom",)
+
+
+def test_lane_and_heatmap_limits_truncate_output():
+    lanes = OrderedDict(
+        (
+            (
+                "alpha",
+                LaneStats(
+                    lane="alpha",
+                    directories=("a",),
+                    file_count=30,
+                    total_bytes=10,
+                    doc_count=5,
+                    code_count=25,
+                    newest_mtime=0.0,
+                ),
+            ),
+            (
+                "beta",
+                LaneStats(
+                    lane="beta",
+                    directories=("b",),
+                    file_count=20,
+                    total_bytes=5,
+                    doc_count=4,
+                    code_count=16,
+                    newest_mtime=0.0,
+                ),
+            ),
+            (
+                "gamma",
+                LaneStats(
+                    lane="gamma",
+                    directories=("c",),
+                    file_count=10,
+                    total_bytes=2,
+                    doc_count=3,
+                    code_count=7,
+                    newest_mtime=0.0,
+                ),
+            ),
+        )
+    )
+    snapshot = ContinuumSnapshot(
+        root=Path("/tmp/repo"),
+        total_files=60,
+        total_bytes=17,
+        latest_mtime=0.0,
+        lanes=lanes,
+        misc=LaneStats(lane="misc", directories=("<unmapped>",)),
+    )
+
+    table = _render_lane_table(snapshot, sort_field="files", descending=True, limit=2)
+    assert "alpha" in table and "beta" in table
+    assert "gamma" not in table
+    assert "showing top 2 lanes" in table
+
+    heatmap = _render_heatmap(snapshot, sort_field="files", descending=True, limit=1)
+    assert "alpha" in heatmap
+    assert "beta" not in heatmap
+    assert "showing top 1 lanes" in heatmap
