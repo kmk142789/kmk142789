@@ -131,10 +131,12 @@ from .progressive_features import (
     forecast_operational_resilience,
     evaluate_operational_readiness,
     forecast_portfolio_throughput,
+    generate_complexity_observatory,
     generate_numeric_intelligence,
     orchestrate_complexity_summit,
     orchestrate_complexity_constellation,
     orchestrate_complexity_hyperdrive,
+    orchestrate_complexity_metaweb,
     plan_capacity_allocation,
     progressive_complexity_suite,
     simulate_delivery_timeline,
@@ -3340,6 +3342,101 @@ def complexity_hyperdrive(
         for insight in insights[:12]:
             console.print(f"- {insight}")
         remaining = len(insights) - 12
+        if remaining > 0:
+            console.print(f"… (+{remaining} additional insight(s))")
+
+
+@complexity_app.command("metaweb")
+def complexity_metaweb(
+    ctx: typer.Context,
+    program_file: Path = typer.Option(
+        ...,
+        "--program-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file containing observatory, portfolio, and throughput inputs.",
+    ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Synthesize the observatory, portfolio, and throughput stack into a metaweb."""
+
+    _ensure_ctx(ctx)
+
+    try:
+        program = json.loads(program_file.read_text())
+    except json.JSONDecodeError as exc:
+        raise typer.BadParameter("program file must contain a JSON object") from exc
+    if not isinstance(program, Mapping):
+        raise typer.BadParameter("program file must contain a JSON object")
+
+    try:
+        payload = orchestrate_complexity_metaweb(program)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    _set_json_mode(ctx, json_mode)
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    console.print(f"Metaweb index     : {payload['meta_index']} ({payload['status']})")
+    component_line = ", ".join(
+        f"{name}={value:.2f}" for name, value in payload.get("components", {}).items()
+    )
+    if component_line:
+        console.print(f"Component blend   : {component_line}")
+
+    observatory = payload["observatory"]
+    console.print(
+        f"Observatory index : {observatory['observatory_index']} ({observatory['status']})"
+    )
+    coverage = observatory.get("coverage", {})
+    if coverage:
+        coverage_line = ", ".join(
+            f"{name}={'✓' if enabled else '–'}" for name, enabled in coverage.items()
+        )
+        console.print(f"Observatory cover : {coverage_line}")
+
+    portfolio = payload.get("portfolio")
+    if isinstance(portfolio, Mapping):
+        summary = portfolio.get("portfolio") if isinstance(portfolio.get("portfolio"), Mapping) else None
+        risk_class = summary.get("risk_classification") if summary else None
+        console.print(
+            f"Portfolio risk    : {str(risk_class or '-').title()} (index {summary.get('risk_index') if summary else '-'})"
+        )
+        if summary and summary.get("overall_days"):
+            console.print(
+                f"Portfolio window  : {summary.get('start')} → {summary.get('end')} ({summary.get('overall_days')} days)"
+            )
+
+    throughput = payload.get("throughput")
+    if isinstance(throughput, Mapping):
+        console.print(
+            f"Throughput conf   : {throughput.get('confidence_projection', '-')} (velocity {throughput.get('throughput_capacity', '-')})"
+        )
+        sprint_count = len(throughput.get("sprint_plan", []))
+        console.print(
+            f"Sprint horizon    : {sprint_count} / {throughput.get('horizon_weeks', '-')} weeks"
+        )
+
+    coverage_line = ", ".join(
+        f"{name}={'✓' if enabled else '–'}" for name, enabled in payload.get("coverage", {}).items()
+    )
+    if coverage_line:
+        console.print(f"Metaweb coverage  : {coverage_line}")
+
+    insights = payload.get("insights", [])
+    if insights:
+        console.print("Insights:")
+        for insight in insights[:10]:
+            console.print(f"- {insight}")
+        remaining = len(insights) - 10
         if remaining > 0:
             console.print(f"… (+{remaining} additional insight(s))")
 

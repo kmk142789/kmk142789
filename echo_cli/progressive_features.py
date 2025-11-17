@@ -38,6 +38,8 @@ __all__ = [
     "orchestrate_complexity_supercluster",
     "synthesize_complexity_continuum",
     "orchestrate_complexity_hyperdrive",
+    "generate_complexity_observatory",
+    "orchestrate_complexity_metaweb",
     "CascadeStage",
 ]
 
@@ -3031,6 +3033,238 @@ def orchestrate_complexity_hyperdrive(program: Mapping[str, object]) -> dict[str
         "continuum": continuum_payload,
         "insights": insights[:15],
         "summary": summary,
+    }
+
+
+def generate_complexity_observatory(spec: Mapping[str, object]) -> dict[str, object]:
+    """Fuse signals, resilience, and capacity telemetry into a control-room view."""
+
+    if not isinstance(spec, Mapping):
+        raise ValueError("observatory specification must be a mapping")
+
+    name = str(spec.get("name", "observatory")).strip() or "observatory"
+    anchor = _ensure_datetime(spec.get("start"), None)
+    timestamp = _format_iso(anchor or _normalise_datetime(None))
+    target = float(spec.get("alignment_target", 0.75))
+    resilience_horizon = float(spec.get("resilience_horizon_hours", 168.0))
+    cycle_length = float(spec.get("cycle_length_days", 14.0))
+
+    raw_signals = spec.get("signals")
+    if raw_signals is not None and not isinstance(raw_signals, Mapping):
+        raise ValueError("observatory 'signals' must be a mapping of alignment scores")
+    signals_data = raw_signals if raw_signals else None
+
+    raw_events = spec.get("events")
+    if raw_events is not None and (
+        isinstance(raw_events, (str, bytes)) or not isinstance(raw_events, Sequence)
+    ):
+        raise ValueError("observatory 'events' must be a sequence of resilience events")
+    events_data = raw_events if raw_events else None
+
+    raw_capacity = spec.get("team_capacity")
+    if raw_capacity is not None and not isinstance(raw_capacity, Mapping):
+        raise ValueError("observatory 'team_capacity' must be a mapping of hours")
+    team_capacity = raw_capacity if raw_capacity else None
+
+    raw_work = spec.get("work_items")
+    if raw_work is not None and (
+        isinstance(raw_work, (str, bytes)) or not isinstance(raw_work, Sequence)
+    ):
+        raise ValueError("observatory 'work_items' must be a sequence of task mappings")
+    work_items = raw_work if raw_work else None
+
+    coverage = {"signals": False, "resilience": False, "capacity": False}
+    alignment_payload: dict[str, object] | None = None
+    if signals_data:
+        alignment_payload = assess_alignment_signals(signals_data, target=target)
+        coverage["signals"] = True
+
+    resilience_payload: dict[str, object] | None = None
+    if events_data:
+        resilience_payload = forecast_operational_resilience(
+            events_data,
+            start=anchor,
+            horizon_hours=resilience_horizon,
+        )
+        coverage["resilience"] = True
+
+    capacity_payload: dict[str, object] | None = None
+    capacity_component: float | None = None
+    if team_capacity and work_items:
+        capacity_payload = plan_capacity_allocation(
+            team_capacity,
+            work_items,
+            cycle_length_days=cycle_length,
+        )
+        summary = capacity_payload.get("summary", {})
+        load_factor = summary.get("overall_load_factor") if isinstance(summary, Mapping) else None
+        if load_factor is None or load_factor <= 1:
+            capacity_component = 1.0
+        else:
+            capacity_component = max(0.0, min(1.0, 1 / float(load_factor)))
+        coverage["capacity"] = True
+
+    components: list[float] = []
+    if alignment_payload:
+        components.append(float(alignment_payload.get("average_score", 0.0)))
+    if resilience_payload:
+        components.append(float(resilience_payload.get("resilience_score", 0.0)))
+    if capacity_component is not None:
+        components.append(capacity_component)
+
+    if not components:
+        raise ValueError("observatory requires at least one populated telemetry source")
+
+    observatory_index = sum(components) / len(components)
+    status: str
+    if observatory_index >= 0.78:
+        status = "synchronised"
+    elif observatory_index >= 0.6:
+        status = "balancing"
+    else:
+        status = "stressed"
+
+    insights: list[str] = []
+    if alignment_payload and alignment_payload.get("classification") != "aligned":
+        gap = float(alignment_payload.get("gap", 0.0))
+        weakest = alignment_payload.get("focus", {}).get("weakest")
+        focus = weakest or alignment_payload.get("signals", [{}])[-1].get("name")
+        insights.append(
+            f"Alignment gap of {gap:.3f} requires focus on {focus}"
+        )
+    if resilience_payload:
+        risk = resilience_payload.get("risk", {})
+        if isinstance(risk, Mapping) and risk.get("classification") != "stable":
+            score = float(resilience_payload.get("resilience_score", 0.0))
+            insights.append(
+                f"Resilience stress classified as {risk.get('classification')} (score {score:.3f})"
+            )
+    if capacity_payload:
+        summary = capacity_payload.get("summary", {})
+        critical = summary.get("critical_teams") if isinstance(summary, Mapping) else None
+        if critical:
+            joined = ", ".join(str(team) for team in critical)
+            insights.append(f"Capacity overload detected on {joined}")
+        elif capacity_component is not None and capacity_component < 0.85:
+            insights.append("Capacity load trending above comfort band")
+
+    if alignment_payload and capacity_component is not None and capacity_component < 0.8:
+        insights.append("Alignment gains risk stalling without capacity relief")
+
+    return {
+        "name": name,
+        "timestamp": timestamp,
+        "coverage": coverage,
+        "alignment": alignment_payload,
+        "resilience": resilience_payload,
+        "capacity": capacity_payload,
+        "observatory_index": round(observatory_index, 3),
+        "status": status,
+        "insights": insights[:10],
+    }
+
+
+def orchestrate_complexity_metaweb(program: Mapping[str, object]) -> dict[str, object]:
+    """Create a multi-layer metaweb combining observatory, portfolio, and throughput data."""
+
+    if not isinstance(program, Mapping):
+        raise ValueError("metaweb program must be a mapping")
+
+    name = str(program.get("name", "metaweb")).strip() or "metaweb"
+    observatory_spec = program.get("observatory")
+    if not isinstance(observatory_spec, Mapping):
+        raise ValueError("metaweb program requires an 'observatory' mapping")
+
+    observatory_payload = generate_complexity_observatory(observatory_spec)
+
+    portfolio_payload: dict[str, object] | None = None
+    portfolio_component: float | None = None
+    if program.get("portfolio") is not None:
+        portfolio_spec = program["portfolio"]
+        if not isinstance(portfolio_spec, Mapping):
+            raise ValueError("portfolio section must be a mapping")
+        initiatives = portfolio_spec.get("initiatives")
+        if not isinstance(initiatives, Sequence) or not initiatives:
+            raise ValueError("portfolio initiatives must be a non-empty sequence")
+        start = _ensure_datetime(portfolio_spec.get("start"), None)
+        portfolio_payload = simulate_portfolio_outcomes(initiatives, start=start)
+        portfolio_summary = portfolio_payload.get("portfolio", {})
+        risk_index = float(portfolio_summary.get("risk_index", 0.0))
+        portfolio_component = max(0.0, min(1.0, (3 - risk_index) / 2))
+
+    throughput_payload: dict[str, object] | None = None
+    throughput_component: float | None = None
+    if program.get("throughput") is not None:
+        throughput_spec = program["throughput"]
+        if not isinstance(throughput_spec, Mapping):
+            raise ValueError("throughput section must be a mapping")
+        initiatives = throughput_spec.get("initiatives")
+        if not isinstance(initiatives, Sequence) or not initiatives:
+            raise ValueError("throughput initiatives must be a non-empty sequence")
+        try:
+            velocity = float(throughput_spec.get("velocity", 8.0))
+            horizon = int(throughput_spec.get("horizon_weeks", 12))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("throughput velocity and horizon must be numeric") from exc
+        throughput_payload = forecast_portfolio_throughput(
+            initiatives,
+            velocity=velocity,
+            horizon_weeks=horizon,
+        )
+        throughput_component = min(
+            1.0,
+            max(0.0, float(throughput_payload.get("confidence_projection", 0.0))),
+        )
+
+    components = [observatory_payload["observatory_index"]]
+    breakdown = {"observatory": observatory_payload["observatory_index"]}
+    if portfolio_component is not None:
+        components.append(portfolio_component)
+        breakdown["portfolio"] = round(portfolio_component, 3)
+    if throughput_component is not None:
+        components.append(throughput_component)
+        breakdown["throughput"] = round(throughput_component, 3)
+
+    meta_index = sum(components) / len(components)
+    if meta_index >= 0.8:
+        status = "cohesive"
+    elif meta_index >= 0.62:
+        status = "expanding"
+    else:
+        status = "turbulent"
+
+    insights = list(observatory_payload.get("insights", []))
+    if portfolio_payload:
+        summary = portfolio_payload.get("portfolio", {})
+        classification = summary.get("risk_classification")
+        if classification and classification != "balanced":
+            insights.append(
+                f"Portfolio risk is {classification} with index {summary.get('risk_index')}"
+            )
+    if throughput_payload and throughput_component is not None and throughput_component < 0.7:
+        insights.append(
+            "Throughput confidence is below target; reinforce dependencies or velocity"
+        )
+    if portfolio_component is not None and throughput_component is not None:
+        if portfolio_component > 0.8 and throughput_component < 0.6:
+            insights.append("Strong portfolio design needs matching execution throughput")
+
+    coverage = {
+        "observatory": True,
+        "portfolio": portfolio_payload is not None,
+        "throughput": throughput_payload is not None,
+    }
+
+    return {
+        "name": name,
+        "meta_index": round(meta_index, 3),
+        "status": status,
+        "observatory": observatory_payload,
+        "portfolio": portfolio_payload,
+        "throughput": throughput_payload,
+        "coverage": coverage,
+        "components": breakdown,
+        "insights": insights[:15],
     }
 
 
