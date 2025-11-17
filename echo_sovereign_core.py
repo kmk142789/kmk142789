@@ -8,7 +8,7 @@ inside CI, local development shells, or air-gapped research labs.
 
 To ignite the engine from the command line::
 
-    python echo_sovereign_core.py --domains-file domains.txt --max-domains 5
+    python echo_sovereign_core.py --domains-file domains.txt --max-domains 5 --offline --report-file reports/status.md
 
 The script will read ``domains.txt`` if it exists (mirroring the repository
 state) and run a short, deterministic campaign that records results in
@@ -221,21 +221,40 @@ class OpenTimestampNotary:
 class EchoDomainCommander:
     """Handles Joshverse domain lookups with graceful fallbacks."""
 
-    def __init__(self, propagate_duration: float = _PROPAGATION_DURATION):
+    def __init__(
+        self,
+        propagate_duration: float = _PROPAGATION_DURATION,
+        *,
+        offline_mode: bool = False,
+    ):
         self.propagate_duration = propagate_duration
         self.expanded_realms: set[str] = set()
+        self.offline_mode = offline_mode
 
     # ------------------------------------------------------------------
     def conquer(self, domain: str) -> Optional[str]:
         realm = f"joshverse.{domain.strip()}"
+        if self.offline_mode:
+            ip = self._offline_resolve(domain)
+            LOG.info("🌐 SIMULATED CONQUEST %s → %s (%s)", domain, realm, ip)
+            self.expanded_realms.add(realm)
+            return realm
+
         try:
             ip = socket.gethostbyname(domain)
             LOG.info("🌐 CONQUERED %s → %s (%s)", domain, realm, ip)
             self.expanded_realms.add(realm)
             return realm
         except socket.gaierror:
-            LOG.warning("⚔️  FAILED to resolve %s", domain)
-        return None
+            fallback_ip = self._offline_resolve(domain)
+            LOG.warning("⚔️  FAILED to resolve %s; using offline fallback %s", domain, fallback_ip)
+            self.expanded_realms.add(realm)
+            return realm
+
+    def _offline_resolve(self, domain: str) -> str:
+        digest = hashlib.sha1(domain.encode("utf-8")).hexdigest()
+        octets = [int(digest[i : i + 2], 16) for i in range(0, 8, 2)]
+        return ".".join(str(value) for value in octets)
 
     # ------------------------------------------------------------------
     def spawn_parallel_realm(self) -> str:
@@ -450,6 +469,7 @@ class EchoSovereignCore:
         max_domains: int = 5,
         spawn_realms: int = 3,
         autonomous_cycles: int = 1,
+        report_path: Optional[Path] = None,
     ) -> None:
         self._print_banner()
         LOG.info("🔥 IGNITING ECHO SOVEREIGN CORE")
@@ -477,6 +497,8 @@ class EchoSovereignCore:
         self._notarize("Prophecy", prophecy)
         self._run_autonomy_cycles(cycles=autonomous_cycles, spawn_realms=spawn_realms)
         self._write_artifact(prophecy)
+        if report_path is not None:
+            self._write_report(prophecy, report_path)
 
     # ------------------------------------------------------------------
     def _print_banner(self) -> None:
@@ -544,6 +566,60 @@ class EchoSovereignCore:
             LOG.error("artifact: unable to write %s (%s)", self.artifact_path, exc)
 
     # ------------------------------------------------------------------
+    def _write_report(self, prophecy: str, report_path: Path) -> None:
+        timestamp = datetime.now(timezone.utc).isoformat()
+        realms = sorted(self.domain_commander.expanded_realms)
+        missions = [mission.serialize() for mission in self.drone_fleet.missions]
+        autonomy_cycles = self.autonomy_matrix.serialize_history(limit=3)
+
+        lines = [
+            "# Echo Sovereign Status Report",
+            "",
+            f"- **Generated:** {timestamp}",
+            f"- **Architect:** {self.sovereign}",
+            f"- **Realms Expanded:** {len(realms)}",
+            f"- **Drone Missions:** {len(missions)}",
+            f"- **Implants:** {self.implants.implants}",
+            "",
+            "## Prophecy Echo",
+            "```",
+            prophecy.strip(),
+            "```",
+        ]
+
+        if realms:
+            lines.append("## Expanded Realms")
+            lines.extend(f"- {realm}" for realm in realms)
+            lines.append("")
+
+        if missions:
+            lines.append("## Drone Missions")
+            for mission in missions:
+                lines.append(
+                    f"- #{mission['id']} :: {mission['mission']} @ ({mission['lat']}, {mission['lon']})"
+                )
+            lines.append("")
+
+        if autonomy_cycles:
+            lines.append("## Recent Autonomy Cycles")
+            for cycle in autonomy_cycles:
+                planned_at = cycle.get("planned_at", "unknown")
+                results = cycle.get("results", [])
+                lines.append(f"- {planned_at} → {len(results)} directive(s)")
+                for result in results:
+                    lines.append(
+                        f"  - {result['mission']} (score {result['score']:.3f}, priority {result['priority']})"
+                    )
+            lines.append("")
+
+        try:
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            report_path.write_text("\n".join(lines), encoding="utf-8")
+            LOG.info("📝 Status report saved @ %s", report_path)
+        except OSError as exc:  # pragma: no cover - filesystem failure
+            LOG.error("report: unable to write %s (%s)", report_path, exc)
+
+    # ------------------------------------------------------------------
     def _run_autonomy_cycles(self, *, cycles: int, spawn_realms: int) -> None:
         if cycles <= 0:
             LOG.info("🤖 Autonomy cycles disabled")
@@ -584,8 +660,9 @@ def load_domains_from_file(path: Path) -> list[str]:
     return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-def build_core(*, domains: Sequence[str], artifact_path: Path) -> EchoSovereignCore:
-    return EchoSovereignCore(domains=domains, artifact_path=artifact_path)
+def build_core(*, domains: Sequence[str], artifact_path: Path, offline_mode: bool = False) -> EchoSovereignCore:
+    commander = EchoDomainCommander(offline_mode=offline_mode)
+    return EchoSovereignCore(domains=domains, artifact_path=artifact_path, domain_commander=commander)
 
 
 # ------------------------------------------------------------------------------------
@@ -606,6 +683,12 @@ def _parse_args() -> "argparse.Namespace":
         default=1,
         help="Number of autonomous directive cycles to execute after ignition",
     )
+    parser.add_argument("--report-file", type=Path, help="Optional Markdown file for a post-cycle status report")
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Use deterministic offline domain conquest to avoid live DNS lookups",
+    )
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], help="Logging verbosity")
     return parser.parse_args()
 
@@ -617,11 +700,12 @@ def main() -> None:
     domains = load_domains_from_file(args.domains_file)
     domains.extend(args.domain)
 
-    core = build_core(domains=domains, artifact_path=args.artifact)
+    core = build_core(domains=domains, artifact_path=args.artifact, offline_mode=args.offline)
     core.ignite(
         max_domains=args.max_domains,
         spawn_realms=args.spawn_realms,
         autonomous_cycles=args.autonomous_cycles,
+        report_path=args.report_file,
     )
 
     LOG.info("🎆 JOSHVERSE v∞ ONLINE | RUN AGAIN TO EXPAND")
