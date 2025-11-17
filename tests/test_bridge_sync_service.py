@@ -10,6 +10,7 @@ from echo.bridge import BridgeSyncService, EchoBridgeAPI
 from echo.bridge.router import create_router
 from echo.bridge.service import (
     BridgeConnector,
+    DomainInventoryConnector,
     SyncEvent,
     UnstoppableDomainConnector,
     VercelDeployConnector,
@@ -119,6 +120,29 @@ def test_unstoppable_connector_merges_registrations_and_defaults() -> None:
     assert "4 Unstoppable domain" in event.detail
 
 
+def test_domain_connector_merges_static_and_inventory_file(tmp_path: Path) -> None:
+    inventory = tmp_path / "domains.txt"
+    inventory.write_text("example.com\n# comment\nechosphere.net\n", encoding="utf-8")
+    connector = DomainInventoryConnector(
+        static_domains=["sovereigntrust.io"],
+        inventory_path=inventory,
+    )
+
+    event = connector.build_event(
+        _decision_payload(cycle="21", coherence=0.515, manifest_path="manifest/c21.json")
+    )
+
+    assert event is not None
+    assert event.connector == "domains"
+    assert event.payload["domains"] == [
+        "echosphere.net",
+        "example.com",
+        "sovereigntrust.io",
+    ]
+    assert event.payload["manifest_path"] == "manifest/c21.json"
+    assert "DNS anchor" in event.detail
+
+
 def test_vercel_connector_tracks_projects_and_cycle() -> None:
     connector = VercelDeployConnector(default_projects=["echo-dashboard"])
 
@@ -149,6 +173,10 @@ def test_bridge_sync_service_from_environment_configures_connectors(
 ) -> None:
     monkeypatch.setenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS", "echo.crypto,nexus.crypto")
     monkeypatch.setenv("ECHO_BRIDGE_VERCEL_PROJECTS", "echo-dashboard,pulse-console")
+    inventory = tmp_path / "domains.txt"
+    inventory.write_text("example.com", encoding="utf-8")
+    monkeypatch.setenv("ECHO_BRIDGE_DOMAINS_FILE", str(inventory))
+    monkeypatch.setenv("ECHO_BRIDGE_DOMAINS", "sovereigntrust.io,echovault.ai")
 
     service = BridgeSyncService.from_environment(
         state_dir=tmp_path,
@@ -156,8 +184,14 @@ def test_bridge_sync_service_from_environment_configures_connectors(
     )
 
     connectors = service._connectors  # noqa: SLF001 - inspection for test coverage
+    domains = [c for c in connectors if isinstance(c, DomainInventoryConnector)]
     unstoppable = [c for c in connectors if isinstance(c, UnstoppableDomainConnector)]
     vercel = [c for c in connectors if isinstance(c, VercelDeployConnector)]
+    assert domains and sorted(domains[0].static_domains or []) == [
+        "echovault.ai",
+        "sovereigntrust.io",
+    ]
+    assert domains[0].inventory_path == inventory
     assert unstoppable and unstoppable[0].default_domains == [
         "echo.crypto",
         "nexus.crypto",
