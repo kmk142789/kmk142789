@@ -51,6 +51,11 @@ _bridge_api = EchoBridgeAPI(
     github_repository=os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY"),
     telegram_chat_id=os.getenv("ECHO_BRIDGE_TELEGRAM_CHAT_ID"),
     firebase_collection=os.getenv("ECHO_BRIDGE_FIREBASE_COLLECTION"),
+    slack_webhook_url=os.getenv("ECHO_BRIDGE_SLACK_WEBHOOK_URL"),
+    slack_channel=os.getenv("ECHO_BRIDGE_SLACK_CHANNEL"),
+    slack_secret_name=os.getenv("ECHO_BRIDGE_SLACK_SECRET", "SLACK_WEBHOOK_URL"),
+    webhook_url=os.getenv("ECHO_BRIDGE_WEBHOOK_URL"),
+    webhook_secret_name=os.getenv("ECHO_BRIDGE_WEBHOOK_SECRET", "ECHO_BRIDGE_WEBHOOK_URL"),
 )
 _state_root = Path(os.getenv("ECHO_STATE_ROOT", str(Path.cwd() / "state")))
 _bridge_state_dir = _state_root / "bridge"
