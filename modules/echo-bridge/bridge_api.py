@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 
 @dataclass
@@ -47,17 +47,35 @@ class EchoBridgeAPI:
         cycle: str,
         signature: str,
         traits: Optional[Dict[str, Any]] = None,
+        summary: Optional[str] = None,
+        links: Optional[Sequence[str]] = None,
     ) -> List[BridgePlan]:
         """Build relay plans for GitHub, Telegram, and Firebase."""
 
         traits = self._normalise_traits(traits or {})
+        summary_text = self._normalise_summary(summary)
+        link_items = self._normalise_links(links)
         plans: List[BridgePlan] = []
         markdown_body = None
         plain_text = None
-        base_document = self._base_document(identity=identity, cycle=cycle, signature=signature, traits=traits)
+        base_document = self._base_document(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary_text,
+            links=link_items,
+        )
 
         if self.github_repository:
-            markdown_body = markdown_body or self._render_markdown(identity=identity, cycle=cycle, signature=signature, traits=traits)
+            markdown_body = markdown_body or self._render_markdown(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+            )
             plans.append(
                 self._github_plan(
                     identity=identity,
@@ -68,7 +86,14 @@ class EchoBridgeAPI:
                 )
             )
         if self.telegram_chat_id:
-            plain_text = plain_text or self._render_plain(identity=identity, cycle=cycle, signature=signature, traits=traits)
+            plain_text = plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+            )
             plans.append(
                 self._telegram_plan(
                     identity=identity,
@@ -89,13 +114,22 @@ class EchoBridgeAPI:
                 )
             )
         if self.slack_webhook_url:
-            plain_text = plain_text or self._render_plain(identity=identity, cycle=cycle, signature=signature, traits=traits)
+            plain_text = plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+            )
             plans.append(
                 self._slack_plan(
                     identity=identity,
                     cycle=cycle,
                     signature=signature,
                     traits=traits,
+                    summary=summary_text,
+                    links=link_items,
                     text=plain_text,
                 )
             )
@@ -158,7 +192,14 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         document: Optional[Dict[str, Any]] = None,
     ) -> BridgePlan:
-        record = document or self._base_document(identity=identity, cycle=cycle, signature=signature, traits=traits)
+        record = document or self._base_document(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=None,
+            links=[],
+        )
         payload = {
             "collection": self.firebase_collection,
             "document": f"echo::{identity}::{cycle}",
@@ -173,12 +214,26 @@ class EchoBridgeAPI:
         cycle: str,
         signature: str,
         traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
         text: Optional[str] = None,
     ) -> BridgePlan:
-        attachments = self._attachment_traits(traits)
+        attachments: List[Dict[str, Any]] = []
+        if summary:
+            attachments.append({"title": "Summary", "text": summary})
+        attachments.extend(self._attachment_traits(traits))
+        attachments.extend(self._attachment_links(links))
         payload: Dict[str, Any] = {
             "webhook_env": self.slack_secret_name,
-            "text": text or self._render_plain(identity=identity, cycle=cycle, signature=signature, traits=traits),
+            "text": text
+            or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary,
+                links=links,
+            ),
             "context": {"identity": identity, "cycle": cycle, "signature": signature},
         }
         if attachments:
@@ -196,7 +251,14 @@ class EchoBridgeAPI:
         signature: str,
         payload: Optional[Dict[str, Any]] = None,
     ) -> BridgePlan:
-        record = payload or self._base_document(identity=identity, cycle=cycle, signature=signature, traits={})
+        record = payload or self._base_document(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits={},
+            summary=None,
+            links=[],
+        )
         body = {
             "url_hint": self.webhook_url,
             "json": record,
@@ -208,13 +270,26 @@ class EchoBridgeAPI:
     # Rendering helpers
     # ------------------------------------------------------------------
     @staticmethod
-    def _base_document(*, identity: str, cycle: str, signature: str, traits: Dict[str, Any]) -> Dict[str, Any]:
-        return {
+    def _base_document(
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+    ) -> Dict[str, Any]:
+        document: Dict[str, Any] = {
             "identity": identity,
             "cycle": cycle,
             "signature": signature,
             "traits": traits,
         }
+        if summary:
+            document["summary"] = summary
+        if links:
+            document["links"] = links
+        return document
 
     def _normalise_traits(self, traits: Dict[str, Any]) -> Dict[str, Any]:
         normalised: Dict[str, Any] = {}
@@ -227,10 +302,41 @@ class EchoBridgeAPI:
             normalised[text] = value
         return normalised
 
+    @staticmethod
+    def _normalise_summary(summary: Optional[str]) -> Optional[str]:
+        if summary is None:
+            return None
+        text = str(summary).strip()
+        return text or None
+
+    def _normalise_links(self, links: Optional[Sequence[str]]) -> List[str]:
+        if not links:
+            return []
+        seen = set()
+        cleaned: List[str] = []
+        for link in links:
+            if link is None:
+                continue
+            text = str(link).strip()
+            if not text or text in seen:
+                continue
+            cleaned.append(text)
+            seen.add(text)
+        return cleaned
+
     def _sorted_traits(self, traits: Dict[str, Any]) -> List[Tuple[str, Any]]:
         return sorted(((key, traits[key]) for key in traits), key=lambda item: item[0].casefold())
 
-    def _render_markdown(self, *, identity: str, cycle: str, signature: str, traits: Dict[str, Any]) -> str:
+    def _render_markdown(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+    ) -> str:
         lines = [
             f"## Echo Bridge Relay",
             "",
@@ -242,11 +348,29 @@ class EchoBridgeAPI:
             lines.append("- **Traits:**")
             for key, value in self._sorted_traits(traits):
                 lines.append(f"  - `{key}` :: `{value}`")
+        if summary:
+            lines.append("")
+            lines.append("### Summary")
+            lines.append(summary)
+        if links:
+            lines.append("")
+            lines.append("### Links")
+            for link in links:
+                lines.append(f"- {link}")
         lines.append("")
         lines.append("_This issue was planned by EchoBridge for multi-platform coherence._")
         return "\n".join(lines)
 
-    def _render_plain(self, *, identity: str, cycle: str, signature: str, traits: Dict[str, Any]) -> str:
+    def _render_plain(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+    ) -> str:
         lines = [
             f"Echo Bridge Relay", f"Identity: {identity}", f"Cycle: {cycle}", f"Signature: {signature}",
         ]
@@ -254,6 +378,13 @@ class EchoBridgeAPI:
             lines.append("Traits:")
             for key, value in self._sorted_traits(traits):
                 lines.append(f" - {key}: {value}")
+        if summary:
+            lines.append("")
+            lines.append(f"Summary: {summary}")
+        if links:
+            lines.append("Links:")
+            for link in links:
+                lines.append(f" - {link}")
         lines.append("\n#EchoBridge :: Sovereign ping")
         return "\n".join(lines)
 
@@ -261,4 +392,11 @@ class EchoBridgeAPI:
         attachments: List[Dict[str, Any]] = []
         for key, value in self._sorted_traits(traits):
             attachments.append({"title": key, "text": str(value)})
+        return attachments
+
+    @staticmethod
+    def _attachment_links(links: List[str]) -> List[Dict[str, Any]]:
+        attachments: List[Dict[str, Any]] = []
+        for index, link in enumerate(links, start=1):
+            attachments.append({"title": f"Link {index}", "text": link})
         return attachments

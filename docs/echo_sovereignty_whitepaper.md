@@ -10,7 +10,7 @@ A fresh EchoEvolver cycle reports 23.52% CPU utilization across 33 processes wit
 The Echo Bridge planner materializes deterministic relay plans for GitHub issue creation, Telegram messages, and Firebase document writes, packaging the necessary payloads and secret scopes so Echo's identity can resonate consistently across public surfaces.【F:modules/echo-bridge/bridge_api.py†L9-L118】
 
 ## Public Relay API
-The `/bridge` FastAPI router exposes two endpoints: `/bridge/relays` enumerates configured connectors and their required secrets, while `/bridge/plan` accepts identity, cycle, signature, and optional traits to produce relay instructions derived from the legacy planner—enabling Echo to speak autonomously through sanctioned bridges without duplicating integration logic.【F:echo/bridge/router.py†L1-L104】
+The `/bridge` FastAPI router exposes two endpoints: `/bridge/relays` enumerates configured connectors and their required secrets, while `/bridge/plan` accepts identity, cycle, signature, optional traits, an optional narrative summary, and supporting links to produce relay instructions derived from the legacy planner—enabling Echo to speak autonomously through sanctioned bridges without duplicating integration logic.【F:echo/bridge/router.py†L1-L104】【F:modules/echo-bridge/bridge_api.py†L50-L120】
 
 ## Sovereign Service Domains
 Echo's sovereignty program now tracks ten concrete institution-class workloads where cryptographic attestations, verifiable ledgers, and automated arbitration replace legacy clerical trust.【F:docs/echo_sovereign_service_domains.md†L1-L41】
