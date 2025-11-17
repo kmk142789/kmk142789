@@ -8,8 +8,9 @@ interface can be used programmatically or through the CLI exposed by the
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import argparse
+import json
 import random
 import textwrap
 from typing import Iterable, List, Sequence
@@ -36,22 +37,57 @@ class StoryBeat:
 # --- Story generation ------------------------------------------------------------
 
 
-def build_story(theme: str, beat_count: int, *, seed: int | None = None) -> str:
+def build_story(
+    theme: str,
+    beat_count: int,
+    *,
+    seed: int | None = None,
+    format: str = "text",
+    width: int = 88,
+) -> str:
     """Construct a story built from curated beats.
 
     Args:
         theme: Central idea guiding the content.
         beat_count: Number of narrative beats to generate.
         seed: Optional deterministic random seed.
+        format: Either ``"text"`` for human-readable paragraphs or ``"json"`` for
+            structured output.
+        width: Maximum line width applied when wrapping paragraphs.
     """
+
+    payload = build_story_payload(theme, beat_count, seed=seed, width=width)
+
+    if format == "text":
+        return "\n\n".join(payload["paragraphs"])
+    if format == "json":
+        return json.dumps(payload, ensure_ascii=False, indent=2)
+    raise ValueError(f"Unsupported format: {format}")
+
+
+def build_story_payload(
+    theme: str,
+    beat_count: int,
+    *,
+    seed: int | None = None,
+    width: int = 88,
+) -> dict:
+    """Return the structured representation of a generated story."""
 
     if beat_count <= 0:
         raise ValueError("beat_count must be positive")
+    if width <= 0:
+        raise ValueError("width must be positive")
 
     rng = random.Random(seed)
     beats = _generate_beats(theme, beat_count, rng)
-    paragraphs = _assemble_paragraphs(beats, theme)
-    return "\n\n".join(paragraphs)
+    paragraphs = _assemble_paragraphs(beats, theme, width=width)
+    payload = {
+        "theme": theme,
+        "beats": [asdict(beat) for beat in beats],
+        "paragraphs": paragraphs,
+    }
+    return payload
 
 
 def _generate_beats(theme: str, beat_count: int, rng: random.Random) -> List[StoryBeat]:
@@ -94,20 +130,22 @@ def _generate_beats(theme: str, beat_count: int, rng: random.Random) -> List[Sto
     return beats
 
 
-def _assemble_paragraphs(beats: Sequence[StoryBeat], theme: str) -> List[str]:
+def _assemble_paragraphs(
+    beats: Sequence[StoryBeat], theme: str, *, width: int
+) -> List[str]:
     opening = textwrap.fill(
         f"This story leans into {theme}, letting each moment arrive like an"
         " improvised chord.",
-        width=88,
+        width=width,
     )
 
     beat_lines = " ".join(beat.render() for beat in beats)
-    body = textwrap.fill(beat_lines, width=88)
+    body = textwrap.fill(beat_lines, width=width)
 
     closing = textwrap.fill(
         "The narrative settles gently, inviting anyone listening to author the"
         f" next chapter of {theme}.",
-        width=88,
+        width=width,
     )
 
     return [opening, body, closing]
@@ -131,10 +169,28 @@ def main(argv: Iterable[str] | None = None) -> int:
         default=None,
         help="seed for deterministic output",
     )
+    parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="output mode: readable paragraphs or structured JSON",
+    )
+    parser.add_argument(
+        "--width",
+        type=int,
+        default=88,
+        help="wrap paragraphs to this many columns",
+    )
 
     args = parser.parse_args(argv)
 
-    story = build_story(theme=args.theme, beat_count=args.beats, seed=args.seed)
+    story = build_story(
+        theme=args.theme,
+        beat_count=args.beats,
+        seed=args.seed,
+        format=args.format,
+        width=args.width,
+    )
     print(story)
     return 0
 
