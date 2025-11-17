@@ -8,7 +8,12 @@ from fastapi.testclient import TestClient
 
 from echo.bridge import BridgeSyncService, EchoBridgeAPI
 from echo.bridge.router import create_router
-from echo.bridge.service import BridgeConnector, SyncEvent
+from echo.bridge.service import (
+    BridgeConnector,
+    SyncEvent,
+    UnstoppableDomainConnector,
+    VercelDeployConnector,
+)
 
 
 class DummyConnector:
@@ -37,11 +42,20 @@ class DummyConnector:
         )
 
 
-def _decision_payload() -> Mapping[str, object]:
+def _decision_payload(
+    *,
+    cycle: str | int = 7,
+    coherence: float = 0.42,
+    manifest_path: str = "manifest.json",
+    registrations: list[Mapping[str, object]] | None = None,
+) -> Mapping[str, object]:
+    inputs: dict[str, object] = {"cycle_digest": {"cycle": cycle}}
+    if registrations is not None:
+        inputs["registrations"] = registrations
     return {
-        "inputs": {"cycle_digest": {"cycle": 7}},
-        "coherence": {"score": 0.42},
-        "manifest": {"path": "manifest.json"},
+        "inputs": inputs,
+        "coherence": {"score": coherence},
+        "manifest": {"path": manifest_path},
     }
 
 
@@ -74,3 +88,82 @@ def test_bridge_sync_endpoint_returns_operations(tmp_path: Path) -> None:
     data = response.json()
     assert data["operations"]
     assert data["operations"][0]["connector"] == "dummy"
+
+
+def test_unstoppable_connector_merges_registrations_and_defaults() -> None:
+    connector = UnstoppableDomainConnector(default_domains=["echo.crypto", "nexus.crypto"])
+
+    decision = _decision_payload(
+        cycle="88",
+        coherence=0.731,
+        manifest_path="manifests/cycle-88.json",
+        registrations=[
+            {"unstoppable_domains": ["wildfire.crypto", "echo.crypto", ""]},
+            {"unstoppable_domains": ["aurora.crypto"]},
+        ],
+    )
+
+    event = connector.build_event(decision)
+    assert event is not None
+    assert event.connector == "unstoppable"
+    assert event.payload["domains"] == [
+        "aurora.crypto",
+        "echo.crypto",
+        "nexus.crypto",
+        "wildfire.crypto",
+    ]
+    records = event.payload["records"]
+    assert records["echo.cycle"] == "88"
+    assert records["echo.coherence"] == 0.731
+    assert records["echo.manifest"] == "manifests/cycle-88.json"
+    assert "4 Unstoppable domain" in event.detail
+
+
+def test_vercel_connector_tracks_projects_and_cycle() -> None:
+    connector = VercelDeployConnector(default_projects=["echo-dashboard"])
+
+    decision = _decision_payload(
+        cycle="09",
+        coherence=0.96,
+        registrations=[
+            {"vercel_projects": ["pulse-console", ""]},
+            {"vercel_projects": ["echo-dashboard", "nexus-hub"]},
+        ],
+    )
+
+    event = connector.build_event(decision)
+    assert event is not None
+    assert event.connector == "vercel"
+    assert event.payload["projects"] == [
+        "echo-dashboard",
+        "nexus-hub",
+        "pulse-console",
+    ]
+    assert event.payload["cycle"] == "09"
+    assert event.payload["coherence"] == 0.96
+    assert "3 project" in event.detail
+
+
+def test_bridge_sync_service_from_environment_configures_connectors(
+    monkeypatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS", "echo.crypto,nexus.crypto")
+    monkeypatch.setenv("ECHO_BRIDGE_VERCEL_PROJECTS", "echo-dashboard,pulse-console")
+
+    service = BridgeSyncService.from_environment(
+        state_dir=tmp_path,
+        github_repository="EchoOrg/sovereign",
+    )
+
+    connectors = service._connectors  # noqa: SLF001 - inspection for test coverage
+    unstoppable = [c for c in connectors if isinstance(c, UnstoppableDomainConnector)]
+    vercel = [c for c in connectors if isinstance(c, VercelDeployConnector)]
+    assert unstoppable and unstoppable[0].default_domains == [
+        "echo.crypto",
+        "nexus.crypto",
+    ]
+    assert vercel and vercel[0].default_projects == [
+        "echo-dashboard",
+        "pulse-console",
+    ]
+    assert service.log_path == tmp_path / "sync-log.jsonl"

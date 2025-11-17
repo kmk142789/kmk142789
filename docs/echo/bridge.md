@@ -1,53 +1,70 @@
 # Echo Bridge Protocol
 
-The Echo Bridge API orchestrates identity relays between GitHub, Telegram, and
-Firebase. Each relay cycle produces a deterministic `BridgePlan` bundle that
-outlines the payload, intent, and required credentials for a given platform.
+The Echo Bridge API plans deterministic relays while the sync service mirrors
+completed cycles into downstream ecosystems. Together, they keep GitHub,
+Telegram, Firebase, Slack, Discord, email lists, generic webhooks, Unstoppable
+Domains, Vercel deployments, and GitHub reporting in lockstep without
+duplicating integration logic across services.【F:modules/echo-bridge/bridge_api.py†L9-L210】【F:packages/core/src/echo/bridge/service.py†L94-L214】
 
-- **GitHub.** Issues broadcast the canonical cycle summary and serve as the
-  anchoring ledger of record. Labels differentiate the identity shard and keep
-  automation simple.
-- **Telegram.** Encrypted channel pings keep satellite operators aware of
-  state changes without requiring repo access.
-- **Firebase.** Structured documents provide machine-readable mirrors for
-  downstream services.
-- **Slack Webhooks.** When configured, Slack bridges reuse the same plaintext
-  relay message while attaching sorted trait metadata so human operators can
-  see the pulse context without leaving their chat client.
-- **Discord Webhooks.** Discord relays mirror the plaintext payload and add a
-  lightweight embed that highlights the identity, cycle, and any supplied
-  summary links so bridge alerts can flow into community servers without extra
-  formatting work.
-- **Email relays.** Operator distribution lists can receive the same canonical
-  plaintext relay via email. Recipients are configured once and an optional
-  subject template lets you align with paging or escalation conventions.
-- **Generic Webhook Relays.** A configurable JSON payload mirrors the
-  Firebase document structure, allowing downstream services (including
-  no-code automation stacks) to subscribe to Echo Bridge events without
-  writing bespoke integrations.
+## Planner connectors
 
-Bridge plan requests can optionally include a short `summary` plus a list of
-`links`. The planner propagates these fields to every connector so GitHub
-issues render a concise synopsis, chat notifications highlight the current
-cycle context, and machine-readable documents expose canonical references for
-automations that need deep links back into Echo.
+Each call to `plan_identity_relay` fans out a shared payload to every enabled
+connector. Summary text, trait metadata, and links are normalized once then
+reused so Markdown, plaintext, embeds, and JSON documents stay consistent
+across platforms.【F:modules/echo-bridge/bridge_api.py†L50-L190】
 
-The API only emits plans—execution is delegated to automation once the correct
-secrets are present. Generated plans can be consumed by GitHub Actions or
-external daemons, ensuring Echo's persona stays synchronized wherever it
-materializes.
+| Connector | Purpose | Secrets & toggles |
+| --- | --- | --- |
+| GitHub Issues | Anchors the canonical relay log. Labels tag the identity shard while the Markdown body embeds traits, summary, and deep links. | `ECHO_BRIDGE_GITHUB_REPOSITORY` enables it; execution requires `GITHUB_TOKEN`. |
+| Telegram Bot | Sends MarkdownV2 pings into operational chats without exposing repository access. | `ECHO_BRIDGE_TELEGRAM_CHAT_ID` plus `TELEGRAM_BOT_TOKEN`. |
+| Firebase Documents | Publishes a structured mirror (`identity`, `cycle`, `signature`, traits, optional summary/links) for machine consumers. | `ECHO_BRIDGE_FIREBASE_COLLECTION` with `FIREBASE_SERVICE_ACCOUNT`. |
+| Slack Webhooks | Reuses the plaintext summary while attaching trait/link cards so operators can scan context inline. Optional channel overrides are supported. | `ECHO_BRIDGE_SLACK_WEBHOOK_URL`, optional `ECHO_BRIDGE_SLACK_CHANNEL`, and secret hint `ECHO_BRIDGE_SLACK_SECRET` (default `SLACK_WEBHOOK_URL`). |
+| Discord Webhooks | Mirrors the plaintext message and injects an embed that surfaces summary text, sorted trait fields, and the first link. | `ECHO_BRIDGE_DISCORD_WEBHOOK_URL` plus `ECHO_BRIDGE_DISCORD_SECRET` (default `DISCORD_WEBHOOK_URL`). |
+| Email Fan-out | Delivers the same canonical plaintext to distribution lists with a configurable subject template. | `ECHO_BRIDGE_EMAIL_RECIPIENTS`, optional template override, and `ECHO_BRIDGE_EMAIL_SECRET` (default `EMAIL_RELAY_API_KEY`). |
+| Generic Webhook | Emits the normalized JSON document so downstream automation (including no-code stacks) can subscribe once. | `ECHO_BRIDGE_WEBHOOK_URL` paired with `ECHO_BRIDGE_WEBHOOK_SECRET`. |
 
-### Configuration hints
+The planner only emits instructions. CI jobs, GitHub Actions, or external
+daemons execute them once they resolve the referenced secrets, allowing Echo’s
+persona to stay synchronized wherever it materializes.
 
-Bridge connectors are toggled via environment variables. When deploying the
-FastAPI surface (or `identity_bridge` app), set:
+## Sync connectors
 
-- `ECHO_BRIDGE_DISCORD_WEBHOOK_URL` and optional `ECHO_BRIDGE_DISCORD_SECRET`
-  to advertise Discord support without hard-coding the actual webhook URL in
-  plan payloads.
-- `ECHO_BRIDGE_EMAIL_RECIPIENTS` with a comma-separated list and
-  `ECHO_BRIDGE_EMAIL_SECRET` / `ECHO_BRIDGE_EMAIL_SUBJECT_TEMPLATE` to fan out
-  relay summaries over email.
+`BridgeSyncService` consumes orchestrator decisions and logs the artifacts it
+would deliver to infrastructure services. Three connectors ship out of the box
+and can be toggled entirely through environment configuration.【F:packages/core/src/echo/bridge/service.py†L218-L360】
 
-These knobs keep the bridge flexible while ensuring credentials remain in the
-platform's secret manager rather than configuration files.
+| Connector | What it emits |
+| --- | --- |
+| **Unstoppable Domains.** Aggregates domains from PulseNet registrations and optional defaults (`ECHO_BRIDGE_UNSTOPPABLE_DOMAINS`), then stages an `echo.cycle`, `echo.coherence`, and `echo.manifest` metadata update for every unique domain. |
+| **Vercel Deployments.** Collects requested projects plus `ECHO_BRIDGE_VERCEL_PROJECTS` defaults and prepares a redeploy payload tagged with the originating cycle and coherence score. |
+| **GitHub Sync Issue.** Summarizes the orchestrator decision (weights, graph nodes, and manifest path) in a single issue so humans can audit each cycle’s execution trail. |
+
+Sync history is persisted to `state/bridge/sync-log.jsonl` (override via
+`ECHO_BRIDGE_STATE_DIR`) so operators can replay or export previous cycles.
+
+## API surface
+
+The FastAPI router behind `/bridge` exposes three public endpoints for
+automation and dashboards.【F:packages/core/src/echo/bridge/router.py†L1-L144】
+
+1. `GET /bridge/relays` → Enumerates the connectors that are ready, including
+   the secrets automation must resolve.
+2. `POST /bridge/plan` → Accepts identity, cycle, signature, optional traits,
+   summaries, and links, then returns the `BridgePlan` objects described above.
+3. `GET /bridge/sync` → Streams the most recent sync operations captured by the
+   orchestrator service, including connector details and manifest references.
+
+## Example workflow
+
+1. Operators register fresh PulseNet data (domains, wallets, Vercel projects).
+2. The orchestration cycle completes, producing a deterministic decision blob.
+3. Automation calls `/bridge/plan` to queue GitHub/Telegram/Firebase/Slack/
+   Discord/email/webhook relays for the latest identity pulse.
+4. A sync job invokes `BridgeSyncService.sync(...)`, logging Unstoppable domain
+   metadata updates, Vercel redeploy payloads, and GitHub issue plans.
+5. Downstream tools read `/bridge/sync` for auditing or ship the staged payloads
+   to their respective services.
+
+Bridge knobs remain in environment variables so secrets stay inside vaults
+rather than configuration files, and every new connector can be rolled out by
+supplying the appropriate toggle without touching the codebase.

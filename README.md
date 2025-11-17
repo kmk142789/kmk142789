@@ -175,7 +175,15 @@ The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every
 | `ECHO_ATTESTATION_KEY` | `proofs/watchdog_attest_key.json` | Path to the signing key consumed by attestation helpers. |
 | `ECHO_BRIDGE_STATE_DIR` | _unset_ | When provided, stores bridge artifacts in a custom directory for multi-tenant deploys. |
 | `ECHO_BRIDGE_GITHUB_REPOSITORY` | _unset_ | Publishes bridge updates to a target GitHub repository. |
+| `ECHO_BRIDGE_TELEGRAM_CHAT_ID` | _unset_ | Enables Telegram bridge plans targeting the provided channel or chat ID. |
+| `ECHO_BRIDGE_FIREBASE_COLLECTION` | _unset_ | Writes canonical relay documents to the named Firebase collection. |
+| `ECHO_BRIDGE_SLACK_WEBHOOK_URL` | _unset_ | Announces relays to Slack when paired with `ECHO_BRIDGE_SLACK_SECRET`. |
+| `ECHO_BRIDGE_SLACK_CHANNEL` | _unset_ | Optional Slack channel override appended to webhook payloads. |
+| `ECHO_BRIDGE_SLACK_SECRET` | `SLACK_WEBHOOK_URL` | Secret identifier automation resolves when dispatching Slack plans. |
+| `ECHO_BRIDGE_WEBHOOK_URL` | _unset_ | Activates the generic JSON webhook connector used by downstream automation. |
+| `ECHO_BRIDGE_WEBHOOK_SECRET` | `ECHO_BRIDGE_WEBHOOK_URL` | Secret identifier resolved when posting to the generic webhook. |
 | `ECHO_BRIDGE_UNSTOPPABLE_DOMAINS` | _unset_ | Enables Unstoppable Domains propagation during bridge deploys. |
+| `ECHO_BRIDGE_VERCEL_PROJECTS` | _unset_ | Adds default Vercel projects to the redeploy connector payload. |
 | `ECHO_BRIDGE_DISCORD_WEBHOOK_URL` | _unset_ | Announces bridge relays to Discord when paired with `ECHO_BRIDGE_DISCORD_SECRET`. |
 | `ECHO_BRIDGE_DISCORD_SECRET` | `DISCORD_WEBHOOK_URL` | Secret name consumed by Discord bridge plans so the webhook URL stays in your secrets store. |
 | `ECHO_BRIDGE_EMAIL_RECIPIENTS` | _unset_ | Comma-separated list of recipients that should receive email relay plans. |
