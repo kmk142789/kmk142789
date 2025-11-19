@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, Mapping, MutableMapping, Sequence
 
@@ -162,6 +163,53 @@ class EchoGlyphCloud:
             "data_glyphs": [self.forge_data_glyph(anchor.glyph).to_dict() for anchor in self.anchors],
         }
 
+    def query_imprints(
+        self,
+        *,
+        glyphs: Iterable[str] | str | None = None,
+        tags: Iterable[str] | None = None,
+        include_expired: bool = False,
+        current_time: float | None = None,
+        limit: int | None = None,
+    ) -> list[GlyphImprint]:
+        """Return imprints that match the supplied filters.
+
+        The method powers "cloud"-style discovery features by letting callers
+        restrict the glyphs that are inspected, require that specific tags are
+        attached, ignore expired records by default, and optionally limit the
+        number of matches returned.
+        """
+
+        if isinstance(glyphs, str):
+            glyph_filter = {glyphs}
+        elif glyphs is None:
+            glyph_filter = None
+        else:
+            glyph_filter = {glyph for glyph in glyphs if glyph}
+            if not glyph_filter:
+                return []
+
+        tag_filter = tuple(dict.fromkeys(tag for tag in (tags or ()) if tag))
+        tag_set = set(tag_filter)
+
+        if limit is not None and limit <= 0:
+            return []
+
+        now = current_time or time.time()
+        matches: list[GlyphImprint] = []
+        for anchor in self.anchors:
+            if glyph_filter is not None and anchor.glyph not in glyph_filter:
+                continue
+            for imprint in anchor.imprints:
+                if not include_expired and imprint.is_expired(current_time=now):
+                    continue
+                if tag_set and not tag_set.issubset(imprint.tags):
+                    continue
+                matches.append(imprint)
+                if limit is not None and len(matches) >= limit:
+                    return matches
+        return matches
+
     def describe_anchor(self, glyph: str) -> str:
         """Return a human-readable summary for a glyph anchor."""
 
@@ -270,6 +318,39 @@ class EchoGlyphCloud:
                 "tags": sorted(tag_set),
             }
         return topology
+
+    def stats(self, *, current_time: float | None = None) -> Dict[str, object]:
+        """Return aggregate metrics describing the glyph cloud state."""
+
+        now = current_time or time.time()
+        total_imprints = 0
+        expired_imprints = 0
+        tag_counter: Counter[str] = Counter()
+        anchors_without_imprints = 0
+        virtual_nodes: set[str] = set()
+
+        for anchor in self.anchors:
+            if not anchor.imprints:
+                anchors_without_imprints += 1
+                continue
+            for imprint in anchor.imprints:
+                total_imprints += 1
+                if imprint.is_expired(current_time=now):
+                    expired_imprints += 1
+                else:
+                    tag_counter.update(imprint.tags)
+                virtual_nodes.update(imprint.virtual_nodes)
+
+        active_imprints = total_imprints - expired_imprints
+        return {
+            "anchor_count": len(self._anchors),
+            "imprint_count": total_imprints,
+            "active_imprints": active_imprints,
+            "expired_imprints": expired_imprints,
+            "anchors_without_imprints": anchors_without_imprints,
+            "virtual_node_count": len(virtual_nodes),
+            "tag_frequencies": dict(sorted(tag_counter.items())),
+        }
 
     def _derive_virtual_nodes(self, glyph: str, count: int) -> tuple[str, ...]:
         digest = hashlib.sha256(f"{self.anchor_prefix}:{glyph}".encode("utf-8")).hexdigest()
