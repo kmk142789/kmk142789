@@ -32,6 +32,12 @@ class EchoBridgeAPI:
         webhook_secret_name: Optional[str] = "ECHO_BRIDGE_WEBHOOK_URL",
         discord_webhook_url: Optional[str] = None,
         discord_secret_name: str = "DISCORD_WEBHOOK_URL",
+        mastodon_instance_url: Optional[str] = None,
+        mastodon_visibility: str = "unlisted",
+        mastodon_secret_name: str = "MASTODON_ACCESS_TOKEN",
+        matrix_homeserver: Optional[str] = None,
+        matrix_room_id: Optional[str] = None,
+        matrix_secret_name: str = "MATRIX_ACCESS_TOKEN",
         email_recipients: Optional[Sequence[str]] = None,
         email_secret_name: Optional[str] = "EMAIL_RELAY_API_KEY",
         email_subject_template: str = "Echo Identity Relay :: {identity} :: Cycle {cycle}",
@@ -46,6 +52,12 @@ class EchoBridgeAPI:
         self.webhook_secret_name = webhook_secret_name
         self.discord_webhook_url = discord_webhook_url
         self.discord_secret_name = discord_secret_name
+        self.mastodon_instance_url = mastodon_instance_url
+        self.mastodon_visibility = (mastodon_visibility or "unlisted").strip() or "unlisted"
+        self.mastodon_secret_name = mastodon_secret_name
+        self.matrix_homeserver = matrix_homeserver
+        self.matrix_room_id = matrix_room_id
+        self.matrix_secret_name = matrix_secret_name
         self.email_recipients = tuple(self._normalise_recipients(email_recipients or []))
         self.email_secret_name = email_secret_name
         self.email_subject_template = email_subject_template
@@ -68,6 +80,7 @@ class EchoBridgeAPI:
         plans: List[BridgePlan] = []
         markdown_body = None
         plain_text = None
+        social_text = None
         base_document = self._base_document(
             identity=identity,
             cycle=cycle,
@@ -161,6 +174,46 @@ class EchoBridgeAPI:
                     summary=summary_text,
                     links=link_items,
                     text=plain_text,
+                )
+            )
+        if self.mastodon_instance_url:
+            social_text = social_text or self._render_social(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+            )
+            plans.append(
+                self._mastodon_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    text=social_text,
+                )
+            )
+        if self.matrix_homeserver and self.matrix_room_id:
+            social_text = social_text or self._render_social(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+            )
+            plans.append(
+                self._matrix_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    text=social_text,
                 )
             )
         if self.email_recipients:
@@ -338,6 +391,66 @@ class EchoBridgeAPI:
         requires = [self.discord_secret_name] if self.discord_secret_name else []
         return BridgePlan(platform="discord", action="send_webhook", payload=payload, requires_secret=requires)
 
+    def _mastodon_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        status = text or self._render_social(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+        )
+        payload: Dict[str, Any] = {
+            "instance": self.mastodon_instance_url,
+            "status": status,
+            "visibility": self.mastodon_visibility,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        if links:
+            payload["links"] = links[:2]
+        requires = [self.mastodon_secret_name] if self.mastodon_secret_name else []
+        return BridgePlan(platform="mastodon", action="post_status", payload=payload, requires_secret=requires)
+
+    def _matrix_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        message = text or self._render_social(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+        )
+        payload: Dict[str, Any] = {
+            "homeserver": self.matrix_homeserver,
+            "room_id": self.matrix_room_id,
+            "text": message,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        if links:
+            payload["links"] = links
+        requires = [self.matrix_secret_name] if self.matrix_secret_name else []
+        return BridgePlan(platform="matrix", action="send_room_message", payload=payload, requires_secret=requires)
+
     def _email_plan(
         self,
         *,
@@ -512,6 +625,28 @@ class EchoBridgeAPI:
                 lines.append(f" - {link}")
         lines.append("\n#EchoBridge :: Sovereign ping")
         return "\n".join(lines)
+
+    def _render_social(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+    ) -> str:
+        fragments: List[str] = [f"Echo Bridge :: {identity}", f"Cycle {cycle}", f"sig {signature}"]
+        if summary:
+            fragments.append(summary)
+        if traits:
+            trait_text = ", ".join(f"{key}={value}" for key, value in self._sorted_traits(traits))
+            if trait_text:
+                fragments.append(trait_text)
+        if links:
+            fragments.append(" ".join(links[:2]))
+        fragments.append("#EchoBridge")
+        return " | ".join(fragment for fragment in fragments if fragment)
 
     def _attachment_traits(self, traits: Dict[str, Any]) -> List[Dict[str, Any]]:
         attachments: List[Dict[str, Any]] = []

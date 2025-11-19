@@ -23,6 +23,12 @@ def _make_app() -> FastAPI:
         webhook_secret_name="ECHO_GENERIC_WEBHOOK",
         discord_webhook_url="https://discord.com/api/webhooks/ABC",
         discord_secret_name="DISCORD_ECHO_WEBHOOK",
+        mastodon_instance_url="https://echo.social",
+        mastodon_visibility="direct",
+        mastodon_secret_name="ECHO_MASTODON_TOKEN",
+        matrix_homeserver="https://matrix.echo",
+        matrix_room_id="!echo:matrix",
+        matrix_secret_name="ECHO_MATRIX_TOKEN",
         email_recipients=["ops@echo.test", "alerts@echo.test"],
         email_secret_name="SENDGRID_TOKEN",
         email_subject_template="Echo Relay {identity}/{cycle}",
@@ -41,7 +47,17 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
     payload = response.json()
 
     connectors = {connector["platform"] for connector in payload["connectors"]}
-    assert connectors == {"github", "telegram", "firebase", "slack", "webhook", "discord", "email"}
+    assert connectors == {
+        "github",
+        "telegram",
+        "firebase",
+        "slack",
+        "webhook",
+        "discord",
+        "email",
+        "mastodon",
+        "matrix",
+    }
 
 
 def test_plan_endpoint_returns_bridge_instructions() -> None:
@@ -110,3 +126,16 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert email_plan["payload"]["recipients"] == ["ops@echo.test", "alerts@echo.test"]
     assert email_plan["payload"]["subject"] == "Echo Relay EchoWildfire/01"
     assert "Echo Bridge Relay" in email_plan["payload"]["body"]
+
+    mastodon_plan = plans["mastodon"]
+    assert mastodon_plan["action"] == "post_status"
+    assert mastodon_plan["payload"]["instance"] == "https://echo.social"
+    assert mastodon_plan["payload"]["visibility"] == "direct"
+    assert "#EchoBridge" in mastodon_plan["payload"]["status"]
+    assert mastodon_plan["payload"]["context"]["identity"] == "EchoWildfire"
+
+    matrix_plan = plans["matrix"]
+    assert matrix_plan["action"] == "send_room_message"
+    assert matrix_plan["payload"]["homeserver"] == "https://matrix.echo"
+    assert matrix_plan["payload"]["room_id"] == "!echo:matrix"
+    assert "Cycle 01" in matrix_plan["payload"]["text"]
