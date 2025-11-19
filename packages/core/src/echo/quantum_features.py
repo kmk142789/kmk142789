@@ -91,6 +91,21 @@ def _probability_moment(probabilities: Sequence[float], order: int) -> float:
     return sum(probability ** order for probability in probabilities)
 
 
+def _probability_entropy(probabilities: Sequence[float]) -> float:
+    entropy = 0.0
+    for probability in probabilities:
+        if probability > 0.0:
+            entropy -= probability * math.log2(probability)
+    return entropy
+
+
+def _participation_ratio(probabilities: Sequence[float]) -> float:
+    density = sum(probability ** 2 for probability in probabilities)
+    if density <= 0.0:
+        return 0.0
+    return 1.0 / density
+
+
 def generate_quantum_features(state: Sequence[complex], levels: int = 3) -> List[QuantumFeature]:
     """Return a layered set of quantum features up to ``levels`` depth."""
 
@@ -121,6 +136,8 @@ def generate_quantum_features(state: Sequence[complex], levels: int = 3) -> List
         _append("interference_energy", 3, _interference_energy(amplitudes))
         _append("uniform_overlap", 3, _uniform_overlap(amplitudes))
         _append("complexity_index", 3, _complexity_index(probabilities, variation))
+        _append("probability_entropy", 3, _probability_entropy(probabilities))
+        _append("participation_ratio", 3, _participation_ratio(probabilities))
 
     for order in range(4, levels + 1):
         _append(f"probability_moment_{order}", order, _probability_moment(probabilities, order))
