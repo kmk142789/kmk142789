@@ -41,6 +41,12 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         webhook_secret_name=os.getenv("ECHO_BRIDGE_WEBHOOK_SECRET", "ECHO_BRIDGE_WEBHOOK_URL"),
         discord_webhook_url=os.getenv("ECHO_BRIDGE_DISCORD_WEBHOOK_URL"),
         discord_secret_name=os.getenv("ECHO_BRIDGE_DISCORD_SECRET", "DISCORD_WEBHOOK_URL"),
+        mastodon_instance_url=os.getenv("ECHO_BRIDGE_MASTODON_INSTANCE"),
+        mastodon_visibility=os.getenv("ECHO_BRIDGE_MASTODON_VISIBILITY", "unlisted"),
+        mastodon_secret_name=os.getenv("ECHO_BRIDGE_MASTODON_SECRET", "MASTODON_ACCESS_TOKEN"),
+        matrix_homeserver=os.getenv("ECHO_BRIDGE_MATRIX_HOMESERVER"),
+        matrix_room_id=os.getenv("ECHO_BRIDGE_MATRIX_ROOM_ID"),
+        matrix_secret_name=os.getenv("ECHO_BRIDGE_MATRIX_SECRET", "MATRIX_ACCESS_TOKEN"),
         email_recipients=_parse_recipients_env(os.getenv("ECHO_BRIDGE_EMAIL_RECIPIENTS")),
         email_secret_name=os.getenv("ECHO_BRIDGE_EMAIL_SECRET", "EMAIL_RELAY_API_KEY"),
         email_subject_template=os.getenv(
@@ -119,6 +125,22 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="email",
                 action="send_email",
                 requires_secrets=[api.email_secret_name] if api.email_secret_name else [],
+            )
+        )
+    if getattr(api, "mastodon_instance_url", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="mastodon",
+                action="post_status",
+                requires_secrets=[api.mastodon_secret_name] if api.mastodon_secret_name else [],
+            )
+        )
+    if getattr(api, "matrix_homeserver", None) and getattr(api, "matrix_room_id", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="matrix",
+                action="send_room_message",
+                requires_secrets=[api.matrix_secret_name] if api.matrix_secret_name else [],
             )
         )
     return connectors
