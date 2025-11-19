@@ -26,6 +26,14 @@ class GlyphImprint:
     tags: tuple[str, ...] = ()
     virtual_nodes: tuple[str, ...] = ()
     timestamp: float = field(default_factory=lambda: time.time())
+    expires_at: float | None = None
+
+    def is_expired(self, *, current_time: float | None = None) -> bool:
+        """Return ``True`` when the imprint has passed its optional expiry."""
+
+        if self.expires_at is None:
+            return False
+        return (current_time or time.time()) >= self.expires_at
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -33,6 +41,7 @@ class GlyphImprint:
             "tags": list(self.tags),
             "virtual_nodes": list(self.virtual_nodes),
             "timestamp": self.timestamp,
+            "expires_at": self.expires_at,
         }
 
 
@@ -123,13 +132,24 @@ class EchoGlyphCloud:
         *,
         tags: Iterable[str] = (),
         metadata: Mapping[str, object] | None = None,
+        ttl: float | None = None,
     ) -> GlyphImprint:
         """Imprint ``payload`` onto ``glyph`` and return the resulting record."""
 
         anchor = self.register_anchor(glyph, metadata=metadata)
         unique_tags = self._normalise_tags(tags)
         virtual_nodes = self._derive_virtual_nodes(glyph, self.nodes_per_imprint + len(unique_tags))
-        imprint = GlyphImprint(payload=payload, tags=unique_tags, virtual_nodes=virtual_nodes)
+        expires_at = None
+        if ttl is not None:
+            if ttl <= 0:
+                raise ValueError("ttl must be positive when provided")
+            expires_at = time.time() + ttl
+        imprint = GlyphImprint(
+            payload=payload,
+            tags=unique_tags,
+            virtual_nodes=virtual_nodes,
+            expires_at=expires_at,
+        )
         anchor.imprints.append(imprint)
         return imprint
 
@@ -209,6 +229,47 @@ class EchoGlyphCloud:
                 continue
             ledger.append(data_glyph.to_dict())
         return ledger
+
+    def purge_stale_imprints(self, *, current_time: float | None = None) -> int:
+        """Remove expired imprints from every anchor.
+
+        Returns the total number of imprints that were purged.  Anchors are kept
+        even if they temporarily lose all imprints so metadata and history can be
+        re-used during the next sync.
+        """
+
+        now = current_time or time.time()
+        removed = 0
+        for anchor in self.anchors:
+            kept: list[GlyphImprint] = []
+            for imprint in anchor.imprints:
+                if imprint.is_expired(current_time=now):
+                    removed += 1
+                    continue
+                kept.append(imprint)
+            anchor.imprints[:] = kept
+        return removed
+
+    def virtual_topology(self) -> Dict[str, Dict[str, object]]:
+        """Summarise the virtual nodes projected by every glyph anchor."""
+
+        topology: Dict[str, Dict[str, object]] = {}
+        for anchor in self.anchors:
+            seen_nodes: set[str] = set()
+            node_list: list[str] = []
+            tag_set: set[str] = set()
+            for imprint in anchor.imprints:
+                tag_set.update(imprint.tags)
+                for node in imprint.virtual_nodes:
+                    if node not in seen_nodes:
+                        seen_nodes.add(node)
+                        node_list.append(node)
+            topology[anchor.glyph] = {
+                "virtual_nodes": node_list,
+                "imprint_count": anchor.imprint_count,
+                "tags": sorted(tag_set),
+            }
+        return topology
 
     def _derive_virtual_nodes(self, glyph: str, count: int) -> tuple[str, ...]:
         digest = hashlib.sha256(f"{self.anchor_prefix}:{glyph}".encode("utf-8")).hexdigest()

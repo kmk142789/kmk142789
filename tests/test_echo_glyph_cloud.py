@@ -74,3 +74,29 @@ def test_data_glyph_ledger_filters_by_tags() -> None:
 
     assert [entry["glyph"] for entry in ledger] == ["∇"]
     assert ledger[0]["tags"] == ["signal"]
+
+
+def test_purge_stale_imprints_respects_ttl() -> None:
+    cloud = EchoGlyphCloud()
+    imprint = cloud.imprint("∇", "Aurora", ttl=0.1)
+    assert imprint.expires_at is not None
+
+    removed = cloud.purge_stale_imprints(current_time=imprint.timestamp + 1)
+
+    assert removed == 1
+    assert cloud.anchors[0].imprint_count == 0
+
+
+def test_virtual_topology_collects_unique_nodes() -> None:
+    cloud = EchoGlyphCloud(nodes_per_imprint=1)
+    cloud.imprint("∇", "Aurora", tags=("signal",))
+    cloud.imprint("∇", "Echo", tags=("signal", "story"))
+    cloud.imprint("⊸", "Myth", tags=("story",))
+
+    topology = cloud.virtual_topology()
+
+    assert set(topology) == {"∇", "⊸"}
+    assert topology["∇"]["imprint_count"] == 2
+    assert set(topology["∇"]["tags"]) == {"signal", "story"}
+    # nodes_per_imprint plus tag count ensures at least two nodes captured
+    assert len(topology["∇"]["virtual_nodes"]) >= 2
