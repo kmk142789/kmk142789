@@ -52,7 +52,11 @@ except ModuleNotFoundError:  # pragma: no cover - fallback printing
     Console = None  # type: ignore[assignment]
     Table = None  # type: ignore[assignment]
 
-from .progressive_features import generate_innovation_orbit, generate_innovation_radar
+from .progressive_features import (
+    generate_innovation_hotspots,
+    generate_innovation_orbit,
+    generate_innovation_radar,
+)
 
 app = typer.Typer(help="Innovation intelligence utilities", no_args_is_help=True)
 console = Console() if Console else None
@@ -365,6 +369,114 @@ def innovation_orbit(
 
     if payload["insight_threads"]:
         typer.echo("\n" + "\n".join(f"• {thread}" for thread in payload["insight_threads"]))
+
+
+@app.command("hotspots")
+def innovation_hotspots(
+    node: List[str] = typer.Option(
+        [],
+        "--node",
+        "-n",
+        help="Node formatted as 'Name:novelty:adoption:risk:investment[:horizon[:signal]]'.",
+    ),
+    profile_file: Optional[Path] = typer.Option(
+        None,
+        "--profile-file",
+        exists=True,
+        readable=True,
+        resolve_path=True,
+        help="JSON file describing innovation nodes.",
+    ),
+    limit: int = typer.Option(5, "--limit", "-l", min=1, max=12, help="Number of highlights to show."),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Emit the raw JSON payload instead of a formatted summary.",
+    ),
+) -> None:
+    """Highlight innovation hotspots and portfolio pressure points."""
+
+    try:
+        nodes = _load_nodes_file(profile_file) + _parse_node_specs(node)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if not nodes:
+        raise typer.BadParameter("provide --node or --profile-file")
+
+    payload = generate_innovation_hotspots(nodes, limit=limit)
+    if json_mode:
+        import json
+
+        typer.echo(json.dumps(payload))
+        return
+
+    summary = [
+        f"Nodes analyzed : {payload['node_count']}",
+        f"Avg novelty    : {payload['portfolio']['avg_novelty']:.2f}",
+        f"Avg adoption   : {payload['portfolio']['avg_adoption']:.2f}",
+        f"Avg risk       : {payload['portfolio']['avg_risk']:.2f}",
+        f"Novelty gap    : {payload['portfolio']['novelty_gap']:.3f}",
+    ]
+    typer.echo("\n".join(summary))
+
+    focus_mix = payload["portfolio"].get("focus_mix", {})
+    if focus_mix:
+        mix_rows = [
+            (focus.title(), f"{share:.1%}")
+            for focus, share in sorted(focus_mix.items(), key=lambda item: item[1], reverse=True)
+        ]
+        _emit_table(["Focus", "Share"], mix_rows, "Focus mix")
+
+    leader_rows = [
+        (
+            entry["name"],
+            entry["horizon"],
+            f"{entry['momentum']:.3f}",
+            f"{entry['novelty_gap']:.3f}",
+            entry["focus_area"].title(),
+        )
+        for entry in payload["momentum_leaders"]
+    ]
+    if leader_rows:
+        _emit_table(
+            ["Node", "Horizon", "Momentum", "Gap", "Focus"],
+            leader_rows,
+            "Momentum leaders",
+        )
+
+    pressure_rows = [
+        (
+            entry["name"],
+            entry["horizon"],
+            f"{entry['pressure']:.3f}",
+            f"{entry['readiness']:.3f}",
+            f"{entry['investment']:.2f}",
+        )
+        for entry in payload["pressure_points"]
+    ]
+    if pressure_rows:
+        _emit_table(
+            ["Node", "Horizon", "Pressure", "Readiness", "Investment"],
+            pressure_rows,
+            "Pressure watchlist",
+        )
+
+    activation_rows = [
+        (
+            entry["horizon"].title(),
+            f"{entry['gap']:.3f}",
+            f"T+{entry['activation_window_weeks']}w",
+            entry["priority"].title(),
+        )
+        for entry in payload["activation_wave"]
+    ]
+    if activation_rows:
+        _emit_table(
+            ["Horizon", "Gap", "Activation", "Priority"],
+            activation_rows,
+            "Activation wave",
+        )
 
 
 def main() -> None:  # pragma: no cover - CLI helper

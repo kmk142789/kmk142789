@@ -19,6 +19,7 @@ __all__ = [
     "simulate_portfolio_outcomes",
     "generate_innovation_radar",
     "generate_innovation_orbit",
+    "generate_innovation_hotspots",
     "progressive_complexity_suite",
     "complexity_evolution_series",
     "assess_alignment_signals",
@@ -988,6 +989,123 @@ def generate_innovation_orbit(
         "resonance_field": max_resonance,
         "orbit_waves": orbit_waves,
         "insight_threads": insight_threads,
+    }
+
+
+def generate_innovation_hotspots(
+    nodes: Sequence[InnovationNode] | Sequence[Mapping[str, object]],
+    *,
+    limit: int = 5,
+) -> dict[str, object]:
+    """Highlight innovation hotspots and portfolio pressure points."""
+
+    if not nodes:
+        raise ValueError("at least one innovation node is required")
+    if limit < 1:
+        raise ValueError("limit must be positive")
+
+    parsed_nodes = [
+        node if isinstance(node, InnovationNode) else InnovationNode.from_mapping(node)
+        for node in nodes
+    ]
+
+    hotspots: list[dict[str, object]] = []
+    horizon_focus: dict[str, dict[str, float]] = {}
+    focus_counter: Counter[str] = Counter()
+    total_novelty = total_adoption = total_risk = total_signal = total_investment = 0.0
+    for node in parsed_nodes:
+        novelty_gap = node.novelty - node.adoption
+        momentum = (
+            0.55 * node.novelty
+            + 0.25 * node.signal_strength
+            + 0.2 * max(node.adoption - node.risk, 0)
+        ) * (1 - 0.35 * node.risk)
+        pressure = node.risk * (0.7 + 0.3 * (1 - node.adoption))
+        readiness = 0.5 * (node.adoption + node.signal_strength)
+        if novelty_gap >= 0.15 and node.signal_strength >= 0.55:
+            focus_area = "accelerate"
+        elif pressure >= 0.55:
+            focus_area = "stabilize"
+        elif readiness >= 0.6:
+            focus_area = "scale"
+        else:
+            focus_area = "observe"
+
+        focus_counter[focus_area] += 1
+        horizon = node.horizon
+        entry = horizon_focus.setdefault(
+            horizon,
+            {"count": 0, "novelty": 0.0, "adoption": 0.0, "signal": 0.0},
+        )
+        entry["count"] += 1
+        entry["novelty"] += node.novelty
+        entry["adoption"] += node.adoption
+        entry["signal"] += node.signal_strength
+
+        hotspots.append(
+            {
+                "name": node.name,
+                "horizon": horizon,
+                "novelty_gap": round(novelty_gap, 3),
+                "momentum": round(momentum, 3),
+                "pressure": round(pressure, 3),
+                "readiness": round(readiness, 3),
+                "focus_area": focus_area,
+                "investment": round(node.investment, 2),
+            }
+        )
+
+        total_novelty += node.novelty
+        total_adoption += node.adoption
+        total_signal += node.signal_strength
+        total_risk += node.risk
+        total_investment += node.investment
+
+    for horizon, stats in horizon_focus.items():
+        count = stats["count"] or 1
+        stats["novelty"] = round(stats["novelty"] / count, 3)
+        stats["adoption"] = round(stats["adoption"] / count, 3)
+        stats["signal"] = round(stats["signal"] / count, 3)
+        stats["gap"] = round(stats["novelty"] - stats["adoption"], 3)
+
+    hotspots.sort(key=lambda entry: entry["momentum"], reverse=True)
+    momentum_leaders = hotspots[: min(limit, len(hotspots))]
+    pressure_points = sorted(
+        hotspots,
+        key=lambda entry: (entry["pressure"], entry["novelty_gap"]),
+        reverse=True,
+    )[: min(limit, len(hotspots))]
+
+    horizon_activation = [
+        {
+            "horizon": horizon,
+            "gap": stats["gap"],
+            "activation_window_weeks": 4 * idx + 4,
+            "priority": "immediate" if idx == 0 else ("near-term" if idx == 1 else "watch"),
+        }
+        for idx, (horizon, stats) in enumerate(
+            sorted(horizon_focus.items(), key=lambda item: item[1]["gap"], reverse=True)
+        )
+    ]
+
+    portfolio = {
+        "avg_novelty": round(total_novelty / len(parsed_nodes), 3),
+        "avg_adoption": round(total_adoption / len(parsed_nodes), 3),
+        "avg_signal": round(total_signal / len(parsed_nodes), 3),
+        "avg_risk": round(total_risk / len(parsed_nodes), 3),
+        "avg_investment": round(total_investment / len(parsed_nodes), 2),
+        "novelty_gap": round((total_novelty - total_adoption) / len(parsed_nodes), 3),
+        "focus_mix": {key: count / len(parsed_nodes) for key, count in focus_counter.items()},
+    }
+
+    return {
+        "node_count": len(parsed_nodes),
+        "portfolio": portfolio,
+        "hotspots": hotspots,
+        "momentum_leaders": momentum_leaders,
+        "pressure_points": pressure_points,
+        "horizon_focus": horizon_focus,
+        "activation_wave": horizon_activation,
     }
 
 
