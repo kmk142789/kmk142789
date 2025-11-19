@@ -100,3 +100,42 @@ def test_virtual_topology_collects_unique_nodes() -> None:
     assert set(topology["∇"]["tags"]) == {"signal", "story"}
     # nodes_per_imprint plus tag count ensures at least two nodes captured
     assert len(topology["∇"]["virtual_nodes"]) >= 2
+
+
+def test_query_imprints_filters_by_glyph_and_tags() -> None:
+    cloud = EchoGlyphCloud()
+    cloud.imprint("∇", "Aurora", tags=("signal", "pulse"))
+    cloud.imprint("∇", "Echo", tags=("signal", "story"))
+    cloud.imprint("⊸", "Myth", tags=("story",))
+
+    matches = cloud.query_imprints(glyphs="∇", tags=("signal",))
+
+    assert [imprint.payload for imprint in matches] == ["Aurora", "Echo"]
+    assert all("signal" in imprint.tags for imprint in matches)
+
+
+def test_query_imprints_handles_expired_and_limit() -> None:
+    cloud = EchoGlyphCloud()
+    expiring = cloud.imprint("∇", "Transient", ttl=0.1)
+    cloud.imprint("⊸", "Stable", tags=("story",))
+
+    active_only = cloud.query_imprints(current_time=expiring.timestamp + 1)
+    assert [imprint.payload for imprint in active_only] == ["Stable"]
+
+    limited = cloud.query_imprints(limit=1)
+    assert len(limited) == 1
+
+
+def test_stats_report_counts_and_tags() -> None:
+    cloud = EchoGlyphCloud(nodes_per_imprint=1)
+    cloud.imprint("∇", "Aurora", tags=("signal",))
+    expiring = cloud.imprint("⊸", "Myth", tags=("story",), ttl=0.1)
+
+    stats = cloud.stats(current_time=expiring.timestamp + 1)
+
+    assert stats["anchor_count"] == 2
+    assert stats["imprint_count"] == 2
+    assert stats["active_imprints"] == 1
+    assert stats["expired_imprints"] == 1
+    assert stats["tag_frequencies"] == {"signal": 1}
+    assert stats["virtual_node_count"] >= 2
