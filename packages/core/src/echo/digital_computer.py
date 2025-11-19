@@ -56,6 +56,7 @@ import copy
 
 from .thoughtlog import thought_trace
 from .quantum_flux_mapper import QuantumFluxMapper
+from .digital_time_travel import TimeTravelPlan, plan_digital_time_travel
 
 __all__ = [
     "Instruction",
@@ -282,6 +283,22 @@ class EchoComputer:
         self._rng_history.clear()
         if not preserve_state:
             self._state_capsules.clear()
+
+    def plan_time_travel(
+        self,
+        *,
+        start: datetime,
+        target: datetime,
+        hops: int = 3,
+        drift_ppm: float = 12.0,
+    ) -> TimeTravelPlan:
+        """Design a digital time travel plan anchored to the computer clock.
+
+        This convenience wrapper keeps the higher level API in
+        :class:`EchoComputer` aligned with the standalone planner.
+        """
+
+        return plan_digital_time_travel(start, target, hops=hops, drift_ppm=drift_ppm)
 
     def run(
         self,

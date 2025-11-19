@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import pytest
 
 from echo.digital_computer import (
@@ -571,4 +573,15 @@ def test_calldepth_reports_nested_call_stack() -> None:
     assert result.registers["C"] == 1
     assert result.registers["D"] == 2
     assert result.call_stack == ()
+
+
+def test_computer_exposes_time_travel_planner() -> None:
+    computer = EchoComputer()
+    start = datetime(2025, 1, 1, 0, 0, tzinfo=timezone.utc)
+    target = datetime(2025, 1, 1, 1, 0, tzinfo=timezone.utc)
+
+    plan = computer.plan_time_travel(start=start, target=target, hops=2)
+
+    assert plan.hop_count == 2
+    assert plan.timeline[0].duration_seconds == pytest.approx(1800.0)
 
