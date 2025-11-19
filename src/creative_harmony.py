@@ -2,17 +2,21 @@
 
 This module provides utilities to compose short pieces of text that blend
 scientific language with imaginative imagery.  It can be used from the command
-line or imported as a library.
+line or imported as a library, and now exposes structured metadata so the
+generated text can travel with its diagnostics.
 
 The second iteration of the module introduces a richer internal model that
 tracks structural decisions across calls.  A :class:`ResonanceContext` captures
 random state, highlight weights, and derived metadata that guide sentence
 rendering.  The context object can be serialised by applications that wish to
-reuse the same creative scaffolding for multiple prompts.
+reuse the same creative scaffolding for multiple prompts.  The accompanying
+``ResonanceReport`` pairs that metadata with the final narrative to enable JSON
+exports from the CLI and tighter integrations across orchestration layers.
 """
 
 from __future__ import annotations
 
+import json
 import random
 from collections import Counter
 from dataclasses import dataclass, field
@@ -46,6 +50,7 @@ class ResonanceContext:
     highlight_weights: Dict[str, float] = field(default_factory=dict)
     structural_history: List[str] = field(default_factory=list)
     transitions: List[str] = field(default_factory=list)
+    highlight_history: List[str] = field(default_factory=list)
     timestamp: str = field(
         default_factory=lambda: datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     )
@@ -76,6 +81,34 @@ class ResonanceContext:
         """Record connective tissue lines between primary sentences."""
 
         self.transitions.append(line)
+
+    def record_highlight(self, highlight: str | None) -> None:
+        """Store the highlight (or fallback theme) used for a sentence."""
+
+        focus = highlight or self.prompt.theme
+        self.highlight_history.append(focus)
+
+
+@dataclass(frozen=True)
+class ResonanceReport:
+    """Structured summary containing the rendered text and its metadata."""
+
+    text: str
+    structure: Sequence[str]
+    transitions: Sequence[str]
+    highlights_used: Sequence[str]
+    timestamp: str
+
+    def to_dict(self) -> Dict[str, object]:
+        """Return a serialisable representation of the report."""
+
+        return {
+            "text": self.text,
+            "structure": list(self.structure),
+            "transitions": list(self.transitions),
+            "highlights_used": list(self.highlights_used),
+            "timestamp": self.timestamp,
+        }
 
 
 def _normalise_highlights(highlights: Iterable[str]) -> Dict[str, float]:
@@ -249,21 +282,31 @@ def _contextual_footer(context: ResonanceContext) -> str:
     """Return a diagnostic footer describing highlight usage."""
 
     if not context.highlight_weights:
+        usage = Counter(context.highlight_history)
+        if usage:
+            usage_note = ", ".join(f"{key}×{count}" for key, count in usage.items())
+            return (
+                f"Context Map: motif orbit anchored entirely in {context.prompt.theme}."
+                f" | highlight usage={usage_note}"
+            )
         return f"Context Map: motif orbit anchored entirely in {context.prompt.theme}."
 
     ranked = list(context.highlight_weights.items())[:3]
     descriptors = [f"{key} ({weight:.2f})" for key, weight in ranked]
     structures = ", ".join(context.structural_history)
     transition_count = len(context.transitions)
+    usage = Counter(context.highlight_history)
+    usage_note = ", ".join(f"{key}×{count}" for key, count in usage.items()) or "n/a"
     return (
         "Context Map: highlights="
         + ", ".join(descriptors)
         + f" | structures={structures or 'n/a'} | transitions={transition_count}"
+        + f" | highlight usage={usage_note}"
     )
 
 
-def compose_resonance(prompt: ResonancePrompt) -> str:
-    """Generate a multi-sentence resonance narrative."""
+def compose_resonance_report(prompt: ResonancePrompt) -> ResonanceReport:
+    """Generate a resonance narrative plus structured metadata."""
 
     context = _build_context(prompt)
     structure = _choose_structure(context.random_state)
@@ -273,6 +316,7 @@ def compose_resonance(prompt: ResonancePrompt) -> str:
     previous_kind: str | None = None
     for kind in structure:
         highlight = context.choose_highlight()
+        context.record_highlight(highlight)
         sentence = _render_sentence(
             kind,
             prompt,
@@ -293,7 +337,20 @@ def compose_resonance(prompt: ResonancePrompt) -> str:
 
     header = f"Resonance for '{prompt.theme}' at {context.timestamp}:"
     footer = _contextual_footer(context)
-    return "\n".join([header, "", *body, "", footer])
+    text = "\n".join([header, "", *body, "", footer])
+    return ResonanceReport(
+        text=text,
+        structure=tuple(structure),
+        transitions=tuple(context.transitions),
+        highlights_used=tuple(context.highlight_history),
+        timestamp=context.timestamp,
+    )
+
+
+def compose_resonance(prompt: ResonancePrompt) -> str:
+    """Generate a multi-sentence resonance narrative."""
+
+    return compose_resonance_report(prompt).text
 
 
 def demo(theme: str, *highlights: str, tone: str = "reflective", seed: int | None = None) -> str:
@@ -324,6 +381,13 @@ if __name__ == "__main__":
         default=None,
         help="Optional seed for deterministic output",
     )
+    parser.add_argument(
+        "-f",
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format. JSON returns the structured resonance report.",
+    )
 
     args = parser.parse_args()
     prompt = ResonancePrompt(
@@ -332,4 +396,8 @@ if __name__ == "__main__":
         tone=args.tone,
         seed=args.seed,
     )
-    print(compose_resonance(prompt))
+    report = compose_resonance_report(prompt)
+    if args.format == "json":
+        print(json.dumps(report.to_dict(), indent=2))
+    else:
+        print(report.text)

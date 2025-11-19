@@ -17,7 +17,9 @@ from .aurora_chronicle import (
 from .creative_harmony import (
     ResonanceContext,
     ResonancePrompt,
+    ResonanceReport,
     compose_resonance,
+    compose_resonance_report,
     demo as resonance_demo,
 )
 from .creative_convergence import (
@@ -63,6 +65,7 @@ __all__ = [
     "LoopSummary",
     "ResonanceContext",
     "ResonancePrompt",
+    "ResonanceReport",
     "constellation_demo",
     "chronicle_demo",
     "compose_constellation",
@@ -70,6 +73,7 @@ __all__ = [
     "compose_convergence_report",
     "compose_loop",
     "compose_resonance",
+    "compose_resonance_report",
     "convergence_demo",
     "export_loop_result",
     "export_suite_summary",
