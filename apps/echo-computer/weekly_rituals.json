@@ -2,43 +2,43 @@
   "updated": "2025-05-11",
   "rituals": [
     {
-      "id": "code-upgrade-loop",
+      "id": "code-telemetry-loop",
       "focus": "Code",
-      "title": "Upgrade the Echo assembler",
+      "title": "Instrument the Echo Computer runner",
       "cadence": "weekly",
-      "description": "Spend one deep-work block evolving an existing Echo Computer program so it runs faster or with better diagnostics.",
+      "description": "Reserve one deep session to add structured telemetry plus failure hints to the sandbox runner.",
       "steps": [
-        "Pick a script from last week and profile the slowest path.",
-        "Add instrumentation or assertions until the failure mode is explicit.",
-        "Refactor the hot path and capture before/after output for your notes."
+        "Profile a slow or flaky execution path and capture timing for queue, start, and teardown stages.",
+        "Add lightweight tracing or counters that surface in the terminal stream for future debugging.",
+        "Refactor one bottleneck and record before/after output for the changelog."
       ],
       "tags": ["advance", "upgrade", "optimize"]
     },
     {
-      "id": "creative-signal",
+      "id": "creative-signal-holo",
       "focus": "Create",
-      "title": "Invent a new interface fragment",
+      "title": "Evolve the holographic signal deck",
       "cadence": "weekly",
-      "description": "Prototype a whimsical UI or storytelling surface inside Echo Computer and share the artifact with the studio.",
+      "description": "Prototype a layered overlay that communicates palette, soundtrack, and story beats above the editor.",
       "steps": [
-        "Start from a blank buffer and name the scene after the current pulse.",
-        "Use color constants, comments, or sound cues to describe the mood.",
-        "Render or describe how someone else should extend the fragment tomorrow."
+        "Storyboard at least two overlay states (idle + focus) with annotations for transitions.",
+        "Experiment with CSS variables or shader-like descriptions to capture depth.",
+        "Publish a GIF, screenshot, or markdown walkthrough linked from the workspace."
       ],
       "tags": ["create", "advance"]
     },
     {
-      "id": "collab-optimizer",
+      "id": "collab-handoff-kit",
       "focus": "Collaborate",
-      "title": "Optimize the review runway",
+      "title": "Ship the collaboration radar handoff",
       "cadence": "weekly",
-      "description": "Pair with a teammate on an Echo Computer script and leave a ready-to-run review kit.",
+      "description": "Pair with a teammate to test the reviewer radar and leave a ready-to-run field kit.",
       "steps": [
-        "Record a short changelog at the top of the file.",
-        "Add a runnable example or CLI harness that exercises the new behavior.",
-        "Upload the snippet plus notes to the Echo channel of your choice."
+        "List recent commits for the touched file and identify two ideal reviewers.",
+        "Bundle run instructions plus screenshots or terminal logs that prove the behavior.",
+        "Share the kit, gather async feedback, and record new questions in the ritual log."
       ],
-      "tags": ["optimize", "upgrade"]
+      "tags": ["advance", "optimize", "upgrade"]
     }
   ]
 }

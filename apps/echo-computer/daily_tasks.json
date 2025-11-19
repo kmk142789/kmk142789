@@ -2,36 +2,36 @@
   "updated": "2025-05-11",
   "tasks": [
     {
-      "id": "code-sprint",
+      "id": "code-flight-check",
       "focus": "Code",
-      "title": "Ship a micro-sprint prototype",
-      "description": "Spend a focused block inside Echo Computer to harden a runnable script or test harness.",
+      "title": "Stabilize the multi-runner flight path",
+      "description": "Use today's block to harden the modular runner so Python + Node executions feel seamless inside Echo Computer.",
       "steps": [
-        "Open an existing file or scaffold a new module from the sidebar.",
-        "Wire up at least one automated check (assert, print, or CLI demo).",
-        "Capture the output in the terminal and commit the learnings to your journal."
+        "Open the runner service file that last emitted flaky output and add a debug log for each queued language.",
+        "Write a focused test or script that chains two languages, then capture stdout/stderr ordering.",
+        "Document the final command plus a before/after diff in your workspace journal."
       ]
     },
     {
-      "id": "creative-loop",
+      "id": "creative-overlay",
       "focus": "Create",
-      "title": "Sketch a generative or storytelling fragment",
-      "description": "Use the sandbox editor as a sketchbook for artful code, prose, or shader ideas.",
+      "title": "Storyboard the signal deck overlay",
+      "description": "Sketch how story, palette, and audio cues will float above the terminal without distracting from code.",
       "steps": [
-        "Start a fresh file named after today's concept (e.g., `storybeat.py`).",
-        "Layer in color, sound, or metaphor via variables and comments.",
-        "Save the fragment to revisit it tomorrow."
+        "Add a new `overlays/` mock file describing copy, color, and easing for one card.",
+        "Pair visual language with a short line of narrative or sensory detail.",
+        "Save a screenshot or ASCII sketch so tomorrow's build can reference the intent."
       ]
     },
     {
-      "id": "collab-signal",
+      "id": "collab-field-kit",
       "focus": "Collaborate",
-      "title": "Package a shareable signal",
-      "description": "Turn today's progress into something another teammate can run.",
+      "title": "Publish a pairing field kit",
+      "description": "Package a shareable bundle that lets another Echo operator reproduce your latest upgrade.",
       "steps": [
-        "Document quickstart notes at the top of the file you touched.",
-        "Drop a TODO inviting review or pairing.",
-        "Send the file path plus run instructions through your preferred channel."
+        "Record run instructions at the top of the file or README you touched today.",
+        "Drop a TODO inviting review plus a question that would spark async discussion.",
+        "Send the kit link (path + command) in your preferred channel or the Echo Computer feed."
       ]
     }
   ]
