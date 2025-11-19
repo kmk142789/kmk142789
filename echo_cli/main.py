@@ -11,6 +11,8 @@ from types import SimpleNamespace
 from typing import Any, Callable, Iterable, List, Mapping, Optional, Sequence
 from statistics import mean, median
 
+SECONDS_PER_HOUR = 3600
+
 try:  # pragma: no cover - optional dependency
     import typer
 except ModuleNotFoundError:  # pragma: no cover - fallback defined below
@@ -322,6 +324,126 @@ def _format_mapping_preview(mapping: Mapping[str, Any], *, limit: int = 3) -> st
             value_text = f"{value_text[:37]}…"
         items.append(f"{key}={value_text}")
     return ", ".join(items)
+
+
+def _format_rate(value: float | None) -> str:
+    """Render per-hour rates using a consistent ``#/h`` suffix."""
+
+    if value is None:
+        return "-"
+    return f"{value:.2f}/h"
+
+
+def _format_unix_timestamp(value: float | int | None) -> str | None:
+    """Render Unix epoch timestamps as canonical ISO strings."""
+
+    if value is None:
+        return None
+    try:
+        timestamp = datetime.fromtimestamp(float(value), tz=timezone.utc)
+    except (OverflowError, OSError, ValueError):
+        return None
+    return _format_iso(timestamp)
+
+
+def _extract_pulse_channel(message: str) -> str:
+    """Extract the channel portion (e.g. ``github-action``) from a pulse message."""
+
+    if not message:
+        return "unknown"
+    _, _, remainder = message.partition(":")
+    channel, _, _ = remainder.partition(":")
+    channel = channel.strip()
+    return channel or "unknown"
+
+
+def _summarise_pulse_history(
+    records: Sequence[Mapping[str, Any]], window_hours: int
+) -> dict[str, Any]:
+    """Generate cadence, recency, and channel analytics for pulse history logs."""
+
+    processed: list[dict[str, Any]] = []
+    for record in records:
+        if not isinstance(record, Mapping):
+            continue
+        timestamp = record.get("timestamp")
+        try:
+            unix_timestamp = float(timestamp)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            continue
+        processed.append(
+            {
+                "timestamp": unix_timestamp,
+                "message": str(record.get("message", "")),
+                "hash": str(record.get("hash", "")),
+            }
+        )
+
+    processed.sort(key=lambda item: item["timestamp"])
+
+    total_events = len(processed)
+    if not processed:
+        return {
+            "total_events": 0,
+            "first_event": None,
+            "last_event": None,
+            "duration_hours": 0.0,
+            "cadence_per_hour": None,
+            "recent_window_hours": float(window_hours),
+            "recent_events": 0,
+            "recent_density_per_window": 0.0,
+            "recent_cadence_per_hour": None,
+            "recent_span_hours": 0.0,
+            "channel_counts": {},
+            "recent_channel_counts": {},
+            "latest_message": None,
+            "latest_hash": None,
+        }
+
+    first_ts = processed[0]["timestamp"]
+    last_ts = processed[-1]["timestamp"]
+    duration_hours = max((last_ts - first_ts) / SECONDS_PER_HOUR, 0.0)
+    cadence_per_hour = (
+        (total_events / duration_hours) if duration_hours > 0 else None
+    )
+
+    recent_cutoff = last_ts - (float(window_hours) * SECONDS_PER_HOUR)
+    recent_events = [entry for entry in processed if entry["timestamp"] >= recent_cutoff]
+    recent_span_hours = (
+        (recent_events[-1]["timestamp"] - recent_events[0]["timestamp"]) / SECONDS_PER_HOUR
+        if len(recent_events) >= 2
+        else 0.0
+    )
+    recent_cadence = (
+        (len(recent_events) / recent_span_hours) if recent_span_hours > 0 else None
+    )
+    recent_density = (
+        len(recent_events) / float(window_hours) if window_hours > 0 else 0.0
+    )
+
+    channel_counts = Counter(
+        _extract_pulse_channel(entry["message"]) for entry in processed
+    )
+    recent_channel_counts = Counter(
+        _extract_pulse_channel(entry["message"]) for entry in recent_events
+    )
+
+    return {
+        "total_events": total_events,
+        "first_event": _format_unix_timestamp(first_ts),
+        "last_event": _format_unix_timestamp(last_ts),
+        "duration_hours": duration_hours,
+        "cadence_per_hour": cadence_per_hour,
+        "recent_window_hours": float(window_hours),
+        "recent_events": len(recent_events),
+        "recent_density_per_window": recent_density,
+        "recent_cadence_per_hour": recent_cadence,
+        "recent_span_hours": recent_span_hours,
+        "channel_counts": dict(channel_counts.most_common()),
+        "recent_channel_counts": dict(recent_channel_counts.most_common()),
+        "latest_message": processed[-1]["message"],
+        "latest_hash": processed[-1]["hash"],
+    }
 
 
 def _aggregate_worker_events(
@@ -4425,6 +4547,134 @@ def command_health(
         task.succeed(payload=payload)
 
 
+@app.command("pulse-history")
+def pulse_history(
+    ctx: typer.Context,
+    path: Path = typer.Option(
+        Path("pulse_history.json"),
+        "--path",
+        "-p",
+        help="Path to the pulse_history.json log file.",
+    ),
+    window_hours: int = typer.Option(
+        24,
+        "--window-hours",
+        "-w",
+        help="Size of the recent activity window (in hours).",
+    ),
+    show_channels: int = typer.Option(
+        5,
+        "--channels",
+        "-n",
+        help="Number of channels to display in the console summary.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of rich text"
+    ),
+) -> None:
+    """Summarise the pulse history ledger with cadence and channel analytics."""
+
+    metadata = {
+        "path": str(path),
+        "window_hours": window_hours,
+        "channels": show_channels,
+        "json": json_mode,
+    }
+    with worker_hive.worker("pulse_history", metadata=metadata) as task:
+        if window_hours <= 0:
+            task.fail(error="invalid_window", window_hours=window_hours)
+            raise typer.BadParameter("--window-hours must be a positive integer")
+        if show_channels <= 0:
+            task.fail(error="invalid_channels", channels=show_channels)
+            raise typer.BadParameter("--channels must be a positive integer")
+
+        _set_json_mode(ctx, json_mode)
+
+        try:
+            payloads = json.loads(path.read_text())
+        except FileNotFoundError as exc:
+            task.fail(error="missing_file", path=str(path))
+            raise typer.BadParameter(f"Pulse history file not found: {path}") from exc
+        except json.JSONDecodeError as exc:
+            task.fail(error="invalid_json", path=str(path))
+            raise typer.BadParameter(
+                f"Pulse history file is not valid JSON: {path}"
+            ) from exc
+
+        if not isinstance(payloads, list):
+            task.fail(error="invalid_payload", path=str(path))
+            raise typer.BadParameter(
+                "Pulse history file must contain a JSON array of entries"
+            )
+
+        summary = _summarise_pulse_history(payloads, window_hours)
+        payload = {"path": str(path), **summary}
+
+        if ctx.obj.get("json", False):
+            _echo(ctx, payload)
+        else:
+            console.print(
+                f"Pulse history ledger at {path} → {payload['total_events']} total events."
+            )
+            if payload["total_events"] == 0:
+                console.print(
+                    "No entries detected yet. Generate pulses to populate the ledger."
+                )
+            else:
+                span_text = _format_hours(payload["duration_hours"])
+                console.print(
+                    f"Coverage {payload['first_event'] or '-'} → {payload['last_event'] or '-'} "
+                    f"({span_text})"
+                )
+                console.print(
+                    f"Average cadence {_format_rate(payload['cadence_per_hour'])}"
+                )
+                console.print(
+                    "Latest entry: "
+                    f"{payload['latest_message'] or '-'} at {payload['last_event'] or '-'}"
+                )
+
+                window_label = f"{int(payload['recent_window_hours'])}h"
+                console.print(
+                    f"Recent {window_label}: {payload['recent_events']} events | "
+                    f"Density {payload['recent_density_per_window']:.2f}/window | "
+                    f"Cadence {_format_rate(payload['recent_cadence_per_hour'])}"
+                )
+
+                def _render_channels(
+                    channel_counts: Mapping[str, int],
+                    *,
+                    title: str,
+                    total: int,
+                ) -> None:
+                    if not channel_counts or total <= 0:
+                        return
+                    rows: list[tuple[str, str, str]] = []
+                    for channel, count in list(channel_counts.items())[:show_channels]:
+                        percentage = (count / total) * 100 if total else 0
+                        rows.append((channel, str(count), f"{percentage:.1f}%"))
+                    table = _build_table(
+                        ["Channel", "Events", "Share"],
+                        rows,
+                        title=title,
+                    )
+                    console.print(table)
+
+                _render_channels(
+                    payload["channel_counts"],
+                    title="Top channels (all time)",
+                    total=payload["total_events"],
+                )
+                if payload["recent_events"]:
+                    _render_channels(
+                        payload["recent_channel_counts"],
+                        title="Top channels (recent window)",
+                        total=payload["recent_events"],
+                    )
+
+        task.succeed(payload=payload)
+
+
 @app.command()
 def insights(
     ctx: typer.Context,
@@ -5726,6 +5976,32 @@ def main() -> None:  # pragma: no cover - console entry point
     pacing_parser.add_argument("--command", "-c", action="append", dest="commands")
     pacing_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
 
+    pulse_parser = subparsers.add_parser(
+        "pulse-history", help="Summarise the pulse history ledger"
+    )
+    pulse_parser.add_argument(
+        "--path",
+        "-p",
+        type=Path,
+        default=Path("pulse_history.json"),
+        dest="path",
+    )
+    pulse_parser.add_argument(
+        "--window-hours",
+        "-w",
+        type=int,
+        default=24,
+        dest="window_hours",
+    )
+    pulse_parser.add_argument(
+        "--channels",
+        "-n",
+        type=int,
+        default=5,
+        dest="channels",
+    )
+    pulse_parser.add_argument("--json", "-j", action="store_true", dest="json_mode")
+
     insights_parser = subparsers.add_parser(
         "insights",
         help="Generate throughput, concurrency, and reliability insights",
@@ -5812,6 +6088,14 @@ def main() -> None:  # pragma: no cover - console entry point
             window=args.window,
             since=args.since,
             commands=args.commands or [],
+            json_mode=args.json_mode,
+        )
+    elif args.command == "pulse-history":
+        pulse_history(
+            ctx,
+            path=args.path,
+            window_hours=args.window_hours,
+            show_channels=args.channels,
             json_mode=args.json_mode,
         )
     elif args.command == "insights":
