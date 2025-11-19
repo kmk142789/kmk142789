@@ -55,6 +55,9 @@ automation and dashboards.【F:packages/core/src/echo/bridge/router.py†L1-L144
    summaries, and links, then returns the `BridgePlan` objects described above.
 3. `GET /bridge/sync` → Streams the most recent sync operations captured by the
    orchestrator service, including connector details and manifest references.
+   Supplying `?connector=github` (or any connector name) filters the results so
+   dashboards can request focused history without transferring unrelated
+   entries.【F:echo/bridge/router.py†L169-L187】【F:echo/bridge/service.py†L236-L297】
 
 ## Example workflow
 

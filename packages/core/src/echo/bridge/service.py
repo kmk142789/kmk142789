@@ -364,11 +364,46 @@ class BridgeSyncService:
 
         return operations
 
-    def history(self, limit: int | None = None) -> list[dict[str, object]]:
-        """Return persisted sync history, optionally constrained by ``limit``."""
+    def history(
+        self,
+        limit: int | None = None,
+        *,
+        connector: str | Iterable[str] | None = None,
+    ) -> list[dict[str, object]]:
+        """Return persisted sync history with optional filtering.
+
+        Parameters
+        ----------
+        limit:
+            Maximum number of entries to return.  When omitted, the entire log
+            is returned.  The slice is applied after any connector filtering so
+            callers can request "the last N events for connector X" without
+            loading unrelated rows.
+        connector:
+            Optional connector name (or names) to filter the log by,
+            case-insensitively.  ``None`` (the default) returns entries for all
+            connectors.
+        """
 
         if not self._log_path.exists():
             return []
+
+        connector_filter: set[str] | None = None
+        if connector is not None:
+            raw_values: Iterable[str]
+            if isinstance(connector, str):
+                raw_values = [connector]
+            else:
+                raw_values = connector
+            cleaned: set[str] = set()
+            for value in raw_values:
+                if value is None:
+                    continue
+                text = str(value).strip()
+                if not text:
+                    continue
+                cleaned.add(text.casefold())
+            connector_filter = cleaned or None
 
         entries: list[dict[str, object]] = []
         with self._log_path.open("r", encoding="utf-8") as handle:
@@ -380,8 +415,13 @@ class BridgeSyncService:
                     entry = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                if isinstance(entry, dict):
-                    entries.append(entry)
+                if not isinstance(entry, dict):
+                    continue
+                if connector_filter:
+                    name = str(entry.get("connector", "")).casefold()
+                    if name not in connector_filter:
+                        continue
+                entries.append(entry)
         if limit is not None and limit >= 0:
             entries = entries[-limit:]
         return entries

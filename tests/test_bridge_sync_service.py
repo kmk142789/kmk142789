@@ -43,6 +43,10 @@ class DummyConnector:
         )
 
 
+class AlternateConnector(DummyConnector):
+    name = "alternate"
+
+
 def _decision_payload(
     *,
     cycle: str | int = 7,
@@ -89,6 +93,41 @@ def test_bridge_sync_endpoint_returns_operations(tmp_path: Path) -> None:
     data = response.json()
     assert data["operations"]
     assert data["operations"][0]["connector"] == "dummy"
+
+
+def test_bridge_sync_service_filters_history_by_connector(tmp_path: Path) -> None:
+    connectors: list[BridgeConnector] = [DummyConnector(), AlternateConnector()]
+    service = BridgeSyncService(state_dir=tmp_path, connectors=connectors)
+    service.sync(_decision_payload())
+
+    dummy_only = service.history(connector="dummy")
+    assert dummy_only
+    assert all(entry["connector"] == "dummy" for entry in dummy_only)
+
+    none = service.history(connector="missing")
+    assert none == []
+
+
+def test_bridge_sync_endpoint_supports_connector_filter(tmp_path: Path) -> None:
+    connectors: list[BridgeConnector] = [DummyConnector(), AlternateConnector()]
+    service = BridgeSyncService(state_dir=tmp_path, connectors=connectors)
+    service.sync(_decision_payload())
+
+    app = FastAPI()
+    app.include_router(create_router(api=EchoBridgeAPI(), sync_service=service))
+    client = TestClient(app)
+
+    response = client.get("/bridge/sync", params={"connector": "alternate"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["operations"]
+    assert payload["operations"][0]["connector"] == "alternate"
+
+    response = client.get("/bridge/sync", params={"connector": "missing"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["operations"] == []
+    assert payload["cycle"] is None
 
 
 def test_unstoppable_connector_merges_registrations_and_defaults() -> None:
