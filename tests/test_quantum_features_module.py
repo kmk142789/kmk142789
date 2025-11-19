@@ -14,7 +14,7 @@ def test_generate_quantum_features_increases_with_levels() -> None:
     features_level_3 = generate_quantum_features([1 + 0j, 0.3 + 0.4j], levels=3)
 
     assert len(features_level_1) == 3
-    assert len(features_level_3) == 9
+    assert len(features_level_3) == 11
     assert all(feature.complexity == 1 for feature in features_level_1)
     assert features_level_3[0].name == "probability_mass"
     assert math.isclose(features_level_3[0].value, 1.0, rel_tol=1e-9)
@@ -42,3 +42,17 @@ def test_quantum_feature_dataclass_round_trip() -> None:
     assert feature.name == "test"
     assert feature.complexity == 2
     assert feature.value == 0.42
+
+
+def test_probability_entropy_and_participation_ratio_added() -> None:
+    state = [1 + 0j, 1j, 0.5 + 0.25j]
+    features = generate_quantum_features(state, levels=3)
+    mapping = {feature.name: feature for feature in features}
+
+    entropy = mapping["probability_entropy"]
+    ratio = mapping["participation_ratio"]
+
+    assert entropy.complexity == 3
+    assert ratio.complexity == 3
+    assert math.isclose(entropy.value, 1.4362198392928196, rel_tol=1e-9)
+    assert math.isclose(ratio.value, 2.5493482309124764, rel_tol=1e-9)
