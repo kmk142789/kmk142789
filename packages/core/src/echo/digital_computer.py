@@ -40,7 +40,11 @@ and ``ABS``/``NEG`` so that programs can clamp or normalise values in a
 single step.  Randomness primitives (``RSEED``/``RAND``) and built-in
 instruction profiling further expand the sandbox for more advanced
 experiments.  The high-level entry point, :func:`run_program`, parses,
-executes, and returns a structured :class:`ExecutionResult`.
+executes, and returns a structured :class:`ExecutionResult`.  The quantum
+tooling continues to evolve too: beyond ``QINIT``, ``QGATE``, ``QROT`` and
+``QMEASURE`` the computer can now inject noise via ``QNOISE`` and read the
+Bloch sphere coordinates into registers with ``QBLOCH`` so programs can
+react to the qubit's geometric posture.
 """
 
 from __future__ import annotations
@@ -198,6 +202,8 @@ def _tokenise(line: str) -> List[str]:
 
 class EchoComputer:
     """A compact virtual computer tailored for Echo's creative coding needs."""
+
+    BLOCH_COORDINATE_SCALE = 1000
 
     def __init__(
         self,
@@ -733,6 +739,34 @@ class EchoComputer:
         reg = self._require_register(register)
         outcome = mapper.measure()
         self._registers[reg] = int(outcome)
+
+    def _op_qnoise(self, identifier: str, channel: str, probability: str) -> None:
+        mapper = self._require_qubit(identifier)
+        try:
+            channel_value = self._resolve_value(channel)
+        except RuntimeError:
+            channel_value = channel
+        channel_name = str(channel_value).strip()
+        if not channel_name:
+            raise RuntimeError("QNOISE requires a channel name")
+        probability_value = self._resolve_float(probability)
+        mapper.apply_noise_channel(channel_name, probability_value, rng=self._rng)
+
+    def _op_qbloch(self, register_x: str, register_y: str, register_z: str, identifier: str) -> None:
+        mapper = self._require_qubit(identifier)
+        reg_x = self._require_register(register_x)
+        reg_y = self._require_register(register_y)
+        reg_z = self._require_register(register_z)
+        x, y, z = mapper.bloch_coordinates()
+        scaled = (
+            int(round(x * self.BLOCH_COORDINATE_SCALE)),
+            int(round(y * self.BLOCH_COORDINATE_SCALE)),
+            int(round(z * self.BLOCH_COORDINATE_SCALE)),
+        )
+        self._registers[reg_x], self._registers[reg_y], self._registers[reg_z] = scaled
+        mapper.history.append(
+            "Captured Bloch coordinates scaled by 1e3 into registers"
+        )
 
     def _apply_arithmetic(self, register: str, operand: str, func) -> None:
         reg = self._require_register(register)
