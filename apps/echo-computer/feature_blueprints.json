@@ -15,6 +15,19 @@
       ]
     },
     {
+      "id": "code-flight-recorder",
+      "focus": "Code",
+      "status": "Prototype",
+      "title": "Runner flight recorder",
+      "description": "Capture per-run telemetry (queue time, container start, teardown) and expose it beside the terminal.",
+      "impact": "Gives Echo immediate visibility into slow paths so upgrades can be targeted within the same session.",
+      "blueprint": [
+        "Instrument the Node server to emit structured timing events for each sandbox lifecycle stage.",
+        "Persist the most recent N runs in a lightweight log file within the workspace.",
+        "Add a frontend timeline panel that highlights spikes and links directly to run output."
+      ]
+    },
+    {
       "id": "create-signal-deck",
       "focus": "Create",
       "status": "Prototype",
@@ -28,6 +41,19 @@
       ]
     },
     {
+      "id": "create-atlas-panels",
+      "focus": "Create",
+      "status": "Research",
+      "title": "Atlas prompt panels",
+      "description": "Layer contextual prompt panels that map Echo Computer scenes to the broader Echo Atlas storyline.",
+      "impact": "Connects daily sandbox work to the studio-wide narrative arcs and keeps writers in sync with engineers.",
+      "blueprint": [
+        "Ingest pulse + atlas metadata to assemble per-project story beats.",
+        "Design a split-panel layout that can dock on either side of the editor.",
+        "Experiment with markdown + emoji syntax for quickly annotating mood and goals."
+      ]
+    },
+    {
       "id": "collab-radar",
       "focus": "Collaborate",
       "status": "Research",
@@ -38,6 +64,19 @@
         "Ingest recent Git commits per workspace file.",
         "Display avatars and suggested reviewers beside the file tree.",
         "Offer one-click share links that copy run instructions."
+      ]
+    },
+    {
+      "id": "collab-field-console",
+      "focus": "Collaborate",
+      "status": "Prototype",
+      "title": "Collaboration field console",
+      "description": "Bundle reviewer radar, run instructions, and async notes into a single console view inside Echo Computer.",
+      "impact": "Gives every operator a ready-to-share upgrade packet without leaving the sandbox.",
+      "blueprint": [
+        "Add a `/handoff/kits` endpoint that aggregates latest commits, test runs, and TODOs.",
+        "Render a collapsible console with copy-to-clipboard runbooks and reviewer suggestions.",
+        "Expose a webhook-friendly JSON payload for downstream notifications."
       ]
     }
   ]
