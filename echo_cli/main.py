@@ -147,6 +147,12 @@ from .progressive_features import (
     synthesize_complexity_continuum,
 )
 from .innovation import app as innovation_app
+from .pulse_analysis import (
+    DEFAULT_PULSE_HISTORY,
+    build_pulse_timeline,
+    load_pulse_history,
+    summarize_pulse_activity,
+)
 
 try:  # pragma: no cover - optional dependency
     from echo_puzzle_lab.charts import save_charts
@@ -163,6 +169,9 @@ complexity_app = typer.Typer(
     no_args_is_help=True,
 )
 app.add_typer(complexity_app, name="complexity")
+
+pulse_app = typer.Typer(help="Pulse history exploration", no_args_is_help=True)
+app.add_typer(pulse_app, name="pulse")
 
 app.add_typer(innovation_app, name="innovation")
 
@@ -236,6 +245,38 @@ def _format_duration(seconds: float | None) -> str:
     if hours:
         return f"{hours}:{minutes:02d}:{secs:02d}"
     return f"{minutes}:{secs:02d}"
+
+
+def _format_timestamp_for_table(timestamp: datetime | None) -> str:
+    value = _format_iso(timestamp)
+    return value or "-"
+
+
+def _pulse_summary_payload(summary: Mapping[str, object]) -> dict[str, object]:
+    first_seen = summary.get("first_seen")
+    latest_seen = summary.get("latest_seen")
+    category_counts = summary.get("category_counts")
+    if isinstance(category_counts, Counter):
+        categories = dict(category_counts)
+    elif isinstance(category_counts, Mapping):
+        categories = dict(category_counts)
+    else:
+        categories = {}
+    return {
+        "total_events": int(summary.get("total_events", 0)),
+        "first_seen": _format_iso(first_seen) if isinstance(first_seen, datetime) else None,
+        "latest_seen": _format_iso(latest_seen) if isinstance(latest_seen, datetime) else None,
+        "avg_interval_seconds": float(summary.get("avg_interval_seconds", 0.0) or 0.0),
+        "days_active": int(summary.get("days_active", 0)),
+        "category_counts": categories,
+    }
+
+
+def _timeline_payload(rows: Sequence[tuple[str, int]]) -> list[dict[str, object]]:
+    return [
+        {"label": str(label), "count": int(count)}
+        for label, count in rows
+    ]
 
 
 def _analyse_event_intervals(events: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
@@ -3707,6 +3748,143 @@ def normalise_timestamp(
         console.print(f"Normalised {payload['count']} timestamp(s):")
         for entry in results:
             console.print(f"  {entry['input']} → {entry['normalised']}")
+
+
+@pulse_app.command("stats")
+def pulse_stats(
+    ctx: typer.Context,
+    file: Path = typer.Option(
+        DEFAULT_PULSE_HISTORY,
+        "--file",
+        "-f",
+        exists=True,
+        readable=True,
+        help="Path to a pulse_history.json file to analyse.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of formatted text"
+    ),
+) -> None:
+    """Summarise the cadence captured inside ``pulse_history.json``."""
+
+    _ensure_ctx(ctx)
+    _set_json_mode(ctx, json_mode)
+    try:
+        events = load_pulse_history(file)
+    except FileNotFoundError as exc:  # pragma: no cover - validated by typer
+        raise typer.BadParameter(f"Pulse history not found: {file}") from exc
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    summary = summarize_pulse_activity(events)
+    payload = _pulse_summary_payload(summary)
+    payload["path"] = str(file)
+
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    console.print(
+        _build_table(
+            ["Metric", "Value"],
+            [
+                ("Total events", payload["total_events"]),
+                ("Days active", payload["days_active"]),
+                ("First seen", _format_timestamp_for_table(summary.get("first_seen"))),
+                ("Latest seen", _format_timestamp_for_table(summary.get("latest_seen"))),
+                (
+                    "Avg interval",
+                    f"{payload['avg_interval_seconds']:.1f}s"
+                    if payload["avg_interval_seconds"]
+                    else "n/a",
+                ),
+            ],
+            title=f"Pulse history overview ({file.name})",
+        )
+    )
+
+    categories = payload["category_counts"]
+    if categories:
+        rows = sorted(categories.items(), key=lambda item: item[1], reverse=True)
+        console.print(
+            _build_table(
+                ["Category", "Events"],
+                rows,
+                title="Event composition",
+            )
+        )
+    elif not events:
+        console.print("The selected pulse history does not contain any entries yet.")
+
+
+@pulse_app.command("timeline")
+def pulse_timeline(
+    ctx: typer.Context,
+    period: str = typer.Option(
+        "day",
+        "--period",
+        "-p",
+        help="Aggregation window (hour, day, or week).",
+    ),
+    limit: int = typer.Option(
+        14,
+        "--limit",
+        "-l",
+        help="Number of windows to display (use 0 to show all).",
+    ),
+    file: Path = typer.Option(
+        DEFAULT_PULSE_HISTORY,
+        "--file",
+        "-f",
+        exists=True,
+        readable=True,
+        help="Path to a pulse_history.json file to analyse.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of formatted text"
+    ),
+) -> None:
+    """Visualise pulse cadence grouped by a time window."""
+
+    _ensure_ctx(ctx)
+    _set_json_mode(ctx, json_mode)
+    if limit < 0:
+        raise typer.BadParameter("limit must be zero or a positive integer")
+    try:
+        events = load_pulse_history(file)
+    except FileNotFoundError as exc:  # pragma: no cover - validated by typer
+        raise typer.BadParameter(f"Pulse history not found: {file}") from exc
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    effective_limit = None if limit == 0 else limit
+    try:
+        rows = build_pulse_timeline(events, period=period, limit=effective_limit)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "period": period.lower(),
+        "rows": _timeline_payload(rows),
+        "path": str(file),
+        "limit": limit,
+    }
+
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    if not rows:
+        console.print("No pulse activity recorded for the selected history file yet.")
+        return
+
+    console.print(
+        _build_table(
+            ["Window", "Events"],
+            rows,
+            title=f"Pulse timeline per {period.lower()}",
+        )
+    )
 
 
 @app.command()
