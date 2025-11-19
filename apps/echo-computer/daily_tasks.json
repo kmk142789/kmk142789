@@ -1,37 +1,37 @@
 {
-  "updated": "2025-05-11",
+  "updated": "2025-05-18",
   "tasks": [
     {
-      "id": "code-flight-check",
+      "id": "code-runner-burst",
       "focus": "Code",
-      "title": "Stabilize the multi-runner flight path",
-      "description": "Use today's block to harden the modular runner so Python + Node executions feel seamless inside Echo Computer.",
+      "title": "Turbocharge the runner burst lane",
+      "description": "Trim the queue latency between chained Python and Node runs so Echo Computer feels instantaneous again.",
       "steps": [
-        "Open the runner service file that last emitted flaky output and add a debug log for each queued language.",
-        "Write a focused test or script that chains two languages, then capture stdout/stderr ordering.",
-        "Document the final command plus a before/after diff in your workspace journal."
+        "Trace a full multi-language request and log when each container starts, streams, and tears down.",
+        "Patch the scheduler so idle sandboxes pre-warm, then rerun a dual-language script to confirm the burst.",
+        "Capture the before/after timings plus the command you used inside your workspace journal."
       ]
     },
     {
-      "id": "creative-overlay",
+      "id": "creative-luminary-overlay",
       "focus": "Create",
-      "title": "Storyboard the signal deck overlay",
-      "description": "Sketch how story, palette, and audio cues will float above the terminal without distracting from code.",
+      "title": "Compose the aurora luminary overlay",
+      "description": "Design a gradient overlay card that communicates palette + soundtrack cues without covering the terminal.",
       "steps": [
-        "Add a new `overlays/` mock file describing copy, color, and easing for one card.",
-        "Pair visual language with a short line of narrative or sensory detail.",
-        "Save a screenshot or ASCII sketch so tomorrow's build can reference the intent."
+        "Draft a JSON stub under `overlays/luminary.json` with color, audio, and copy references.",
+        "Prototype the overlay in HTML/CSS or ASCII art directly inside the workspace to feel the motion.",
+        "Annotate how the overlay should react to run success/failure inside the mock file."
       ]
     },
     {
-      "id": "collab-field-kit",
+      "id": "collab-ground-station",
       "focus": "Collaborate",
-      "title": "Publish a pairing field kit",
-      "description": "Package a shareable bundle that lets another Echo operator reproduce your latest upgrade.",
+      "title": "Broadcast the ground-station handoff kit",
+      "description": "Bundle commands, logs, and reviewer radar notes so another Echo operator can resume the upgrade immediately.",
       "steps": [
-        "Record run instructions at the top of the file or README you touched today.",
-        "Drop a TODO inviting review plus a question that would spark async discussion.",
-        "Send the kit link (path + command) in your preferred channel or the Echo Computer feed."
+        "List the critical files touched today plus `npm`/`python` commands to replay the run.",
+        "Highlight at least two ideal reviewers with reasons (recent commits, subsystem familiarity, etc.).",
+        "Share the kit path + summary link inside the Echo Computer feed or your preferred ops channel."
       ]
     }
   ]

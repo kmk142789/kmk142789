@@ -65,7 +65,7 @@ def test_agent_surfaces_daily_invitations() -> None:
     tasks = payload["data"]["tasks"]
     assert isinstance(tasks, list)
     assert tasks  # file ships with invitations
-    assert payload["metadata"]["updated"] == "2025-05-11"
+    assert payload["metadata"]["updated"] == "2025-05-18"
 
 
 def test_agent_daily_invitation_focus_and_limit() -> None:
@@ -89,7 +89,7 @@ def test_agent_weekly_rituals_for_echos_computer() -> None:
     assert rituals
     metadata = payload["metadata"]
     assert metadata["theme"] == "Create"
-    assert metadata["updated"] == "2025-05-11"
+    assert metadata["updated"] == "2025-05-18"
 
 
 def test_agent_weekly_ritual_focus_and_limit() -> None:
@@ -110,7 +110,7 @@ def test_agent_feature_blueprints() -> None:
     features = payload["data"]["features"]
     assert features
     metadata = payload["metadata"]
-    assert metadata["updated"] == "2025-05-11"
+    assert metadata["updated"] == "2025-05-18"
     assert metadata["confidence"] > 0.9
 
 

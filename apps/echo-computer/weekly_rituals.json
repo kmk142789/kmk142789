@@ -1,44 +1,44 @@
 {
-  "updated": "2025-05-11",
+  "updated": "2025-05-18",
   "rituals": [
     {
-      "id": "code-telemetry-loop",
+      "id": "code-flight-recorder",
       "focus": "Code",
-      "title": "Instrument the Echo Computer runner",
+      "title": "Launch the sandbox flight recorder",
       "cadence": "weekly",
-      "description": "Reserve one deep session to add structured telemetry plus failure hints to the sandbox runner.",
+      "description": "Dedicate a deep session to harden the timing instrumentation that keeps the runner honest under load.",
       "steps": [
-        "Profile a slow or flaky execution path and capture timing for queue, start, and teardown stages.",
-        "Add lightweight tracing or counters that surface in the terminal stream for future debugging.",
-        "Refactor one bottleneck and record before/after output for the changelog."
+        "Trace at least three full executions (Python, Node, dual-run) and record queue/start/teardown timing.",
+        "Add structured telemetry to the Node stream so every run emits latency + resource hints automatically.",
+        "Export the latest capture into `workspaces/demo/logs/flight-recorder.json` for the changelog."
       ],
       "tags": ["advance", "upgrade", "optimize"]
     },
     {
-      "id": "creative-signal-holo",
+      "id": "creative-beacon-grid",
       "focus": "Create",
-      "title": "Evolve the holographic signal deck",
+      "title": "Weave the luminary beacon grid",
       "cadence": "weekly",
-      "description": "Prototype a layered overlay that communicates palette, soundtrack, and story beats above the editor.",
+      "description": "Iterate on the narrative overlay system that keeps palette, soundtrack, and intent visible in the editor.",
       "steps": [
-        "Storyboard at least two overlay states (idle + focus) with annotations for transitions.",
-        "Experiment with CSS variables or shader-like descriptions to capture depth.",
-        "Publish a GIF, screenshot, or markdown walkthrough linked from the workspace."
+        "Storyboard at least two overlay states (calm + launch) including typography, gradients, and motion.",
+        "Prototype the transitions in CSS variables or shader-like pseudo code inside the workspace.",
+        "Publish a GIF/screenshot or markdown walkthrough linked from the ritual log."
       ],
       "tags": ["create", "advance"]
     },
     {
-      "id": "collab-handoff-kit",
+      "id": "collab-ground-station",
       "focus": "Collaborate",
-      "title": "Ship the collaboration radar handoff",
+      "title": "Activate the reviewer ground-station",
       "cadence": "weekly",
-      "description": "Pair with a teammate to test the reviewer radar and leave a ready-to-run field kit.",
+      "description": "Pair with another operator to stress-test reviewer radar flows and leave a ready-to-run handoff kit.",
       "steps": [
-        "List recent commits for the touched file and identify two ideal reviewers.",
-        "Bundle run instructions plus screenshots or terminal logs that prove the behavior.",
-        "Share the kit, gather async feedback, and record new questions in the ritual log."
+        "Enumerate the last five commits for the feature files and label likely reviewers.",
+        "Bundle run instructions, telemetry screenshots, and TODO prompts into a single console note.",
+        "Schedule an async check-in and capture any new questions or blockers in the ritual archive."
       ],
-      "tags": ["advance", "optimize", "upgrade"]
+      "tags": ["advance", "upgrade", "optimize"]
     }
   ]
 }
