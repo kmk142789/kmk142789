@@ -124,3 +124,16 @@ def test_agent_feature_blueprints_focus_status_limit() -> None:
     assert features[0]["focus"] == "Code"
     assert features[0]["status"] == "Ready"
     assert payload["metadata"]["status"] == "Ready"
+
+
+def test_agent_quantam_features_generation() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command(
+        "Update and upgrade echos computer, implement quantam features"
+    )
+    payload = response.to_payload()
+    assert payload["function"] == "quantam_features"
+    cascade = payload["data"].get("cascade")
+    assert cascade is not None
+    summary = cascade.get("summary", {})
+    assert summary.get("total_layers", 0) >= 1
