@@ -14,6 +14,18 @@ from .autonomous_coordination_engine import (
     SchedulingSignal,
     UpgradeSignal,
 )
+from .astral_compression_engine import (
+    ACEVisualizationLayer,
+    ACELinkedAgent,
+    AstralCompressionEngine,
+    CompressionInstruction,
+    CompressionRecursionLoop,
+    GravityWellOptimizer,
+    PFieldCompiler,
+    ProbabilityField,
+    QuantumNodeV2Bridge,
+    compile_program,
+)
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .creative_compass import CreativePrompt, list_prompt_lines, render_prompt, spin_compass
 from .chromatic_lattice import (

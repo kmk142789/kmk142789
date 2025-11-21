@@ -1,6 +1,6 @@
 import pytest
 
-from src.astral_compression_engine import (
+from echo.astral_compression_engine import (
     ACEVisualizationLayer,
     ACELinkedAgent,
     AstralCompressionEngine,
