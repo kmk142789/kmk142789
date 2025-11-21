@@ -224,3 +224,246 @@ def compile_program(instructions: Iterable[Mapping[str, object]]) -> Sequence[Co
         }
         compiled.append(CompressionInstruction(opcode=opcode, parameters=params))
     return tuple(compiled)
+
+
+class PFieldCompiler:
+    """Compile natural-language goals into probability field instructions.
+
+    The compiler performs a light-weight interpretation of a goal string by
+    mapping common intent keywords to channel biases and selecting compression
+    intensities that favor clarity (higher compression) or exploration (lower
+    compression).  It keeps all generated instructions compatible with the
+    ``AstralCompressionEngine`` virtual machine.
+    """
+
+    _keyword_map = {
+        "signal": {"signal", "clarity", "highlight", "surface"},
+        "noise": {"noise", "suppress", "remove", "dampen"},
+        "path": {"path", "route", "sequence", "collapse"},
+        "stable": {"stabilize", "balance", "steady"},
+        "wildcard": {"explore", "expand", "branch", "diversify"},
+    }
+
+    def __init__(self, default_weight: float = 0.45) -> None:
+        self._default_weight = _clamp(default_weight, 0.1, 0.9)
+
+    def compile_goal(
+        self, goal: str, base_channels: Iterable[str] | None = None
+    ) -> Sequence[CompressionInstruction]:
+        tokens = goal.lower().split()
+        bias: Dict[str, float] = {}
+
+        for channel, keywords in self._keyword_map.items():
+            score = sum(1 for token in tokens if token in keywords)
+            if score:
+                bias[channel] = float(score)
+
+        if base_channels:
+            for channel in base_channels:
+                bias.setdefault(channel, 0.1)
+
+        if not bias:
+            bias = {"intent": 1.0}
+
+        weight = _clamp(self._default_weight + 0.05 * len(tokens), 0.2, 0.85)
+        intensity = self._intensity_from_goal(tokens)
+        coupling = 0.35 if "harmonize" in tokens or "align" in tokens else 0.25
+
+        instructions = [
+            CompressionInstruction("imprint", {"bias": bias, "weight": weight}),
+            CompressionInstruction("compress", {"intensity": intensity}),
+            CompressionInstruction("interfere", {"coupling": coupling}),
+            CompressionInstruction("renormalize", {}),
+        ]
+
+        if "stabilize" in tokens or "steady" in tokens:
+            instructions.insert(3, CompressionInstruction("attenuate", {"damping": 0.15}))
+
+        return tuple(instructions)
+
+    def _intensity_from_goal(self, tokens: Sequence[str]) -> float:
+        if any(token in {"aggressive", "force", "tight", "crisp"} for token in tokens):
+            return 2.5
+        if any(token in {"gentle", "soft", "explore", "diverge"} for token in tokens):
+            return 0.8
+        return 1.5
+
+
+class GravityWellOptimizer:
+    """Pull a stronger solution from nearby compression possibilities.
+
+    The optimizer perturbs compression and imprint parameters across several
+    sweeps to search for the lowest achievable entropy while keeping invariant
+    preservation intact.
+    """
+
+    def __init__(self, sweeps: int = 3, intensity_step: float = 0.4) -> None:
+        self._sweeps = max(1, sweeps)
+        self._intensity_step = max(0.05, intensity_step)
+
+    def optimize(
+        self,
+        engine: AstralCompressionEngine,
+        seed_field: ProbabilityField,
+        program: Sequence[CompressionInstruction],
+    ) -> tuple[Sequence[CompressionInstruction], AstralCompressionReport]:
+        best_program = tuple(program)
+        best_report = engine.execute(best_program, seed_field)
+
+        for sweep in range(self._sweeps):
+            tuned_program = self._tune_program(best_program, sweep)
+            tuned_report = engine.execute(tuned_program, seed_field)
+            if tuned_report.final_entropy < best_report.final_entropy:
+                best_program = tuned_program
+                best_report = tuned_report
+
+        return best_program, best_report
+
+    def _tune_program(
+        self, program: Sequence[CompressionInstruction], sweep: int
+    ) -> Sequence[CompressionInstruction]:
+        factor = 1.0 + self._intensity_step * (sweep + 1) * 0.25
+        tuned: list[CompressionInstruction] = []
+        has_compress = False
+
+        for instruction in program:
+            params = dict(instruction.parameters)
+            opcode = instruction.opcode.lower()
+
+            if opcode == "compress":
+                params["intensity"] = _clamp(float(params.get("intensity", 1.0)) * factor, 0.25, 4.0)
+                has_compress = True
+            elif opcode == "imprint":
+                params["weight"] = _clamp(float(params.get("weight", 0.5)) + 0.05 * (sweep + 1), 0.0, 1.0)
+
+            tuned.append(CompressionInstruction(instruction.opcode, params))
+
+        if not has_compress:
+            tuned.append(CompressionInstruction("compress", {"intensity": 1.0 + self._intensity_step * sweep}))
+
+        return tuple(tuned)
+
+
+class CompressionRecursionLoop:
+    """Attempt multiple collapses and keep the best compression result."""
+
+    def __init__(
+        self,
+        max_attempts: int = 3,
+        entropy_target: float = 0.15,
+        optimizer: GravityWellOptimizer | None = None,
+    ) -> None:
+        self._max_attempts = max(1, max_attempts)
+        self._entropy_target = max(entropy_target, 0.0)
+        self._optimizer = optimizer or GravityWellOptimizer()
+
+    def converge(
+        self,
+        engine: AstralCompressionEngine,
+        seed_field: ProbabilityField,
+        program: Sequence[CompressionInstruction],
+    ) -> AstralCompressionReport:
+        best_program = tuple(program)
+        best_report = engine.execute(best_program, seed_field)
+
+        if best_report.final_entropy <= self._entropy_target:
+            return best_report
+
+        attempt_program = best_program
+        for attempt in range(1, self._max_attempts):
+            tuned_program, tuned_report = self._optimizer.optimize(engine, seed_field, attempt_program)
+            if tuned_report.final_entropy < best_report.final_entropy:
+                best_program = tuned_program
+                best_report = tuned_report
+
+            if best_report.final_entropy <= self._entropy_target:
+                break
+
+            attempt_program = self._nudge_program(best_program)
+
+        return best_report
+
+    def _nudge_program(
+        self, program: Sequence[CompressionInstruction]
+    ) -> Sequence[CompressionInstruction]:
+        nudged: list[CompressionInstruction] = []
+        for instruction in program:
+            params = dict(instruction.parameters)
+            opcode = instruction.opcode.lower()
+            if opcode == "attenuate":
+                params["damping"] = _clamp(float(params.get("damping", 0.1)) * 0.8, 0.0, 1.0)
+            nudged.append(CompressionInstruction(instruction.opcode, params))
+        return tuple(nudged)
+
+
+@dataclass
+class QuantumNodeV2Bridge:
+    """Shape ACE output for downstream quantum-style processing."""
+
+    modulation_strength: float = 0.65
+
+    def shape_input(self, report: AstralCompressionReport) -> Mapping[str, object]:
+        normalized = report.field.normalized()
+        shaped = {
+            channel: round(amplitude * self.modulation_strength, 6)
+            for channel, amplitude in normalized.amplitudes.items()
+        }
+
+        return {
+            "channels": shaped,
+            "entropy": report.final_entropy,
+            "compression": report.compression_ratio,
+            "invariants": dict(report.invariants),
+            "routing_hint": f"qn2:{len(shaped)}ch:{report.compression_ratio:.3f}",
+        }
+
+
+@dataclass
+class ACELinkedAgent:
+    """Agent that executes ACE instructions in place of logic trees."""
+
+    name: str
+    engine: AstralCompressionEngine
+    compiler: PFieldCompiler
+    recursion_loop: CompressionRecursionLoop
+    bridge: QuantumNodeV2Bridge | None = None
+
+    def act(
+        self, goal: str, seed_field: ProbabilityField
+    ) -> Mapping[str, object]:
+        program = self.compiler.compile_goal(goal, base_channels=seed_field.amplitudes.keys())
+        report = self.recursion_loop.converge(self.engine, seed_field, program)
+        bridge_payload = self.bridge.shape_input(report) if self.bridge else None
+        return {"report": report, "bridge_payload": bridge_payload, "program": program}
+
+
+class ACEVisualizationLayer:
+    """Produce UI-friendly views of the ACE compression pathway."""
+
+    def render(self, report: AstralCompressionReport) -> Mapping[str, object]:
+        sorted_channels = sorted(
+            report.field.amplitudes.items(), key=lambda kv: kv[1], reverse=True
+        )
+        entropy_trace = [(trace.step, trace.entropy) for trace in report.trace]
+
+        return {
+            "p_field_shape": sorted_channels,
+            "collapse_pathway": [trace.opcode for trace in report.trace],
+            "entropy_trace": entropy_trace,
+            "invariants": report.invariants,
+        }
+
+    def render_text(self, report: AstralCompressionReport) -> str:
+        data = self.render(report)
+        lines = ["ACE Visualization", "----------------", "P-field shape:"]
+        lines.extend(
+            f"- {channel}: {amplitude:.6f}" for channel, amplitude in data["p_field_shape"]
+        )
+        lines.append("")
+        lines.append("Collapse pathway: " + " → ".join(data["collapse_pathway"]))
+        lines.append(
+            "Entropy trace: "
+            + ", ".join(f"{step}:{entropy:.4f}" for step, entropy in data["entropy_trace"])
+        )
+        lines.append("Invariants: " + ", ".join(f"{k}={v}" for k, v in data["invariants"].items()))
+        return "\n".join(lines)
