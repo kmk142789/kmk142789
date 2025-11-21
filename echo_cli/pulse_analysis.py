@@ -12,8 +12,10 @@ __all__ = [
     "PulseEvent",
     "DEFAULT_PULSE_HISTORY",
     "categorize_message",
+    "extract_pulse_channel",
     "load_pulse_history",
     "summarize_pulse_activity",
+    "summarize_channel_activity",
     "build_pulse_timeline",
 ]
 
@@ -65,6 +67,17 @@ def categorize_message(message: str) -> str:
     return "unknown"
 
 
+def extract_pulse_channel(message: str) -> str:
+    """Extract the channel identifier (e.g. ``github-action``) from a pulse message."""
+
+    if not message:
+        return "unknown"
+    _, _, remainder = message.partition(":")
+    channel, _, _ = remainder.partition(":")
+    channel = channel.strip()
+    return channel or "unknown"
+
+
 def load_pulse_history(path: str | Path | None = None) -> list[PulseEvent]:
     """Load and validate ``pulse_history.json`` returning ``PulseEvent`` entries."""
 
@@ -106,6 +119,37 @@ def summarize_pulse_activity(events: Sequence[PulseEvent]) -> Mapping[str, objec
         "days_active": days_active,
         "category_counts": category_counts,
     }
+
+
+def summarize_channel_activity(events: Sequence[PulseEvent]) -> Mapping[str, object]:
+    """Summarise activity grouped by pulse channel."""
+
+    channels: dict[str, list[PulseEvent]] = defaultdict(list)
+    for event in events:
+        channel = extract_pulse_channel(event.message)
+        channels[channel].append(event)
+
+    summaries: list[dict[str, object]] = []
+    for channel, channel_events in channels.items():
+        ordered = sorted(channel_events, key=lambda item: item.timestamp)
+        first_seen = ordered[0].timestamp
+        latest_seen = ordered[-1].timestamp
+        duration_seconds = (latest_seen - first_seen).total_seconds()
+        avg_interval = (
+            duration_seconds / (len(ordered) - 1) if len(ordered) > 1 else None
+        )
+        summaries.append(
+            {
+                "channel": channel,
+                "events": len(ordered),
+                "first_seen": first_seen,
+                "latest_seen": latest_seen,
+                "avg_interval_seconds": avg_interval,
+            }
+        )
+
+    summaries.sort(key=lambda item: (-item["events"], item["channel"]))
+    return {"total_channels": len(channels), "channels": summaries}
 
 
 def build_pulse_timeline(
