@@ -18,6 +18,9 @@ def test_compose_resonance_report_matches_text_output() -> None:
     assert report.text == compose_resonance(prompt)
     assert report.structure  # blueprint persisted
     assert len(report.highlights_used) == len(report.structure)
+    assert report.metrics["sentence_count"] == len(report.structure) + len(
+        report.transitions
+    )
 
 
 
@@ -33,7 +36,9 @@ def test_resonance_report_serialisation() -> None:
     payload = report.to_dict()
 
     assert payload["text"].startswith("Resonance for 'harmonic bloom'")
+    assert payload["theme"] == "harmonic bloom"
     assert payload["structure"] == list(report.structure)
     assert payload["transitions"] == list(report.transitions)
     assert payload["highlights_used"] == list(report.highlights_used)
     assert payload["timestamp"] == report.timestamp
+    assert payload["metrics"]["unique_highlights"] == len(set(report.highlights_used))

@@ -94,20 +94,24 @@ class ResonanceReport:
     """Structured summary containing the rendered text and its metadata."""
 
     text: str
+    theme: str
     structure: Sequence[str]
     transitions: Sequence[str]
     highlights_used: Sequence[str]
     timestamp: str
+    metrics: Dict[str, int]
 
     def to_dict(self) -> Dict[str, object]:
         """Return a serialisable representation of the report."""
 
         return {
             "text": self.text,
+            "theme": self.theme,
             "structure": list(self.structure),
             "transitions": list(self.transitions),
             "highlights_used": list(self.highlights_used),
             "timestamp": self.timestamp,
+            "metrics": dict(self.metrics),
         }
 
     def to_markdown(self) -> str:
@@ -121,6 +125,14 @@ class ResonanceReport:
         transition_block = "\n".join(
             f"- {transition}" for transition in self.transitions
         ) or "- none"
+        metrics_block = "\n".join(
+            [
+                f"- Sentences: {self.metrics.get('sentence_count', 0)}",
+                f"- Transitions: {self.metrics.get('transition_count', 0)}",
+                f"- Unique highlights: {self.metrics.get('unique_highlights', 0)}",
+                f"- Words: {self.metrics.get('word_count', 0)}",
+            ]
+        )
 
         return "\n".join(
             [
@@ -135,6 +147,29 @@ class ResonanceReport:
                 "",
                 "## Transitions",
                 transition_block,
+                "",
+                "## Metrics",
+                metrics_block,
+            ]
+        )
+
+    def to_summary(self) -> str:
+        """Return a concise, single-block summary including metrics."""
+
+        blueprint = " → ".join(self.structure) if self.structure else "n/a"
+        highlights = ", ".join(self.highlights_used) or "n/a"
+        return "\n".join(
+            [
+                f"Resonance snapshot for '{self.theme}' at {self.timestamp}",
+                f"Structure: {blueprint}",
+                f"Highlights used: {highlights}",
+                (
+                    "Metrics: "
+                    f"sentences={self.metrics.get('sentence_count', 0)}, "
+                    f"transitions={self.metrics.get('transition_count', 0)}, "
+                    f"unique_highlights={self.metrics.get('unique_highlights', 0)}, "
+                    f"words={self.metrics.get('word_count', 0)}"
+                ),
             ]
         )
 
@@ -366,12 +401,20 @@ def compose_resonance_report(prompt: ResonancePrompt) -> ResonanceReport:
     header = f"Resonance for '{prompt.theme}' at {context.timestamp}:"
     footer = _contextual_footer(context)
     text = "\n".join([header, "", *body, "", footer])
+    metrics = {
+        "sentence_count": len(body),
+        "transition_count": len(context.transitions),
+        "unique_highlights": len(set(context.highlight_history)),
+        "word_count": len(" ".join(body).split()),
+    }
     return ResonanceReport(
         text=text,
+        theme=prompt.theme,
         structure=tuple(structure),
         transitions=tuple(context.transitions),
         highlights_used=tuple(context.highlight_history),
         timestamp=context.timestamp,
+        metrics=metrics,
     )
 
 
@@ -412,7 +455,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f",
         "--format",
-        choices=["text", "json", "markdown"],
+        choices=["text", "json", "markdown", "summary"],
         default="text",
         help="Output format. JSON returns the structured resonance report.",
     )
@@ -429,5 +472,7 @@ if __name__ == "__main__":
         print(json.dumps(report.to_dict(), indent=2))
     elif args.format == "markdown":
         print(report.to_markdown())
+    elif args.format == "summary":
+        print(report.to_summary())
     else:
         print(report.text)
