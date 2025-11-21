@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Mapping, Sequence
 
 from .digital_computer import EchoComputerAssistant, ExecutionResult
+from .quantam_features import compute_quantam_feature, generate_quantam_feature_sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_PUZZLE_INDEX = REPO_ROOT / "data" / "puzzle_index.json"
@@ -93,6 +94,7 @@ class FunctionRouter:
     }
 
     _COMPUTER_ALIASES = ("echo.computer", "echo computer", "echos computer")
+    _QUANTAM_KEYWORDS = ("quantam", "quantum")
     _THEME_KEYWORDS = ("create", "advance", "upgrade", "optimize")
     _STATUS_KEYWORDS = {
         "research": "Research",
@@ -126,6 +128,16 @@ class FunctionRouter:
                     name="launch_application",
                     arguments={"application": "echo.computer"},
                 )
+
+        if (
+            any(alias in normalised for alias in self._COMPUTER_ALIASES)
+            and any(keyword in normalised for keyword in self._QUANTAM_KEYWORDS)
+        ):
+            arguments = {}
+            iterations = self._extract_limit(normalised)
+            if iterations is not None:
+                arguments["iterations"] = iterations
+            return FunctionCall(name="quantam_features", arguments=arguments)
 
         if "daily" in normalised and (
             "task" in normalised
@@ -724,6 +736,52 @@ class EchoChatAgent:
                     ],
                 },
             ),
+            "quantam_features": FunctionSpec(
+                name="quantam_features",
+                description=(
+                    "Generate layered quantam features to steer Echo Computer upgrades and diagnostics."
+                ),
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "glyphs": {
+                            "type": "string",
+                            "description": "Glyph stream used to derive the quantam signature.",
+                        },
+                        "cycle": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Cycle index to anchor the quantam computation.",
+                        },
+                        "joy": {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "maximum": 1.0,
+                            "description": "Joy modulation applied to the Bloch vector.",
+                        },
+                        "curiosity": {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "maximum": 1.0,
+                            "description": "Curiosity modulation applied to the Bloch vector.",
+                        },
+                        "iterations": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 12,
+                            "description": "Number of quantam feature layers to generate.",
+                        },
+                    },
+                },
+                handler=self._handle_quantam_features,
+                metadata={
+                    "category": "echo_computer",
+                    "examples": [
+                        "Update and upgrade echos computer, implement quantam features",
+                        "derive quantum feature cascade for echo computer",
+                    ],
+                },
+            ),
         }
 
     def describe_functions(self) -> Sequence[Mapping[str, Any]]:
@@ -973,6 +1031,56 @@ class EchoChatAgent:
 
         return CommandResponse(
             function="feature_blueprints",
+            message=message,
+            data=data,
+            metadata=metadata,
+        )
+
+    def _handle_quantam_features(self, call: FunctionCall, _: CommandContext) -> CommandResponse:
+        glyphs = str(call.arguments.get("glyphs") or "∇⊸≋∇")
+        cycle = int(call.arguments.get("cycle") or 0)
+        joy = float(call.arguments.get("joy") or 0.9)
+        curiosity = float(call.arguments.get("curiosity") or 0.92)
+        iterations_raw = call.arguments.get("iterations")
+        try:
+            iterations = int(iterations_raw) if iterations_raw is not None else 3
+        except (TypeError, ValueError):
+            iterations = 3
+
+        iterations = max(1, min(iterations, 12))
+
+        feature = compute_quantam_feature(
+            glyphs=glyphs, cycle=cycle, joy=joy, curiosity=curiosity
+        )
+        cascade = generate_quantam_feature_sequence(
+            glyphs=glyphs,
+            cycle=cycle,
+            joy=joy,
+            curiosity=curiosity,
+            iterations=iterations,
+        )
+
+        summary = cascade.get("summary", {})
+        message = (
+            f"Quantam feature cascade prepared for Echo Computer cycle {cycle} "
+            f"with {summary.get('total_layers', iterations)} layer(s)."
+        )
+
+        metadata = {
+            "confidence": 0.96,
+            "glyphs": glyphs,
+            "cycle": cycle,
+            "iterations": iterations,
+            "entanglement": summary.get("entanglement"),
+        }
+
+        data = {
+            "feature": feature,
+            "cascade": cascade,
+        }
+
+        return CommandResponse(
+            function="quantam_features",
             message=message,
             data=data,
             metadata=metadata,
