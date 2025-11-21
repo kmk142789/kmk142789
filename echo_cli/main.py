@@ -150,8 +150,10 @@ from .innovation import app as innovation_app
 from .pulse_analysis import (
     DEFAULT_PULSE_HISTORY,
     build_pulse_timeline,
+    extract_pulse_channel,
     load_pulse_history,
     summarize_pulse_activity,
+    summarize_channel_activity,
 )
 
 try:  # pragma: no cover - optional dependency
@@ -387,17 +389,6 @@ def _format_unix_timestamp(value: float | int | None) -> str | None:
     return _format_iso(timestamp)
 
 
-def _extract_pulse_channel(message: str) -> str:
-    """Extract the channel portion (e.g. ``github-action``) from a pulse message."""
-
-    if not message:
-        return "unknown"
-    _, _, remainder = message.partition(":")
-    channel, _, _ = remainder.partition(":")
-    channel = channel.strip()
-    return channel or "unknown"
-
-
 def _summarise_pulse_history(
     records: Sequence[Mapping[str, Any]], window_hours: int
 ) -> dict[str, Any]:
@@ -463,10 +454,10 @@ def _summarise_pulse_history(
     )
 
     channel_counts = Counter(
-        _extract_pulse_channel(entry["message"]) for entry in processed
+        extract_pulse_channel(entry["message"]) for entry in processed
     )
     recent_channel_counts = Counter(
-        _extract_pulse_channel(entry["message"]) for entry in recent_events
+        extract_pulse_channel(entry["message"]) for entry in recent_events
     )
 
     return {
@@ -3815,6 +3806,97 @@ def pulse_stats(
         )
     elif not events:
         console.print("The selected pulse history does not contain any entries yet.")
+
+
+@pulse_app.command("channels")
+def pulse_channels(
+    ctx: typer.Context,
+    limit: int = typer.Option(
+        10,
+        "--limit",
+        "-l",
+        help="Maximum number of channels to display (use 0 to show all).",
+    ),
+    file: Path = typer.Option(
+        DEFAULT_PULSE_HISTORY,
+        "--file",
+        "-f",
+        exists=True,
+        readable=True,
+        help="Path to a pulse_history.json file to analyse.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of formatted text"
+    ),
+) -> None:
+    """Summarise pulse activity grouped by channel."""
+
+    _ensure_ctx(ctx)
+    _set_json_mode(ctx, json_mode)
+    if limit < 0:
+        raise typer.BadParameter("limit must be zero or a positive integer")
+    try:
+        events = load_pulse_history(file)
+    except FileNotFoundError as exc:  # pragma: no cover - validated by typer
+        raise typer.BadParameter(f"Pulse history not found: {file}") from exc
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    summary = summarize_channel_activity(events)
+    payload = {
+        "path": str(file),
+        "total_channels": int(summary["total_channels"]),
+        "limit": limit,
+        "channels": [
+            {
+                "channel": entry["channel"],
+                "events": int(entry["events"]),
+                "first_seen": _format_iso(entry.get("first_seen")),
+                "latest_seen": _format_iso(entry.get("latest_seen")),
+                "avg_interval_seconds": (
+                    float(entry["avg_interval_seconds"])
+                    if entry.get("avg_interval_seconds") is not None
+                    else None
+                ),
+            }
+            for entry in summary["channels"]
+        ],
+    }
+
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    if not payload["channels"]:
+        console.print("No channel activity recorded for the selected history file yet.")
+        return
+
+    display_channels = (
+        payload["channels"] if limit == 0 else payload["channels"][:limit]
+    )
+    rows = [
+        (
+            entry["channel"],
+            entry["events"],
+            _format_timestamp_for_table(_parse_iso_timestamp(entry["first_seen"])),
+            _format_timestamp_for_table(_parse_iso_timestamp(entry["latest_seen"])),
+            _format_duration(entry["avg_interval_seconds"]),
+        )
+        for entry in display_channels
+    ]
+
+    console.print(
+        _build_table(
+            ["Channel", "Events", "First seen", "Latest seen", "Avg interval"],
+            rows,
+            title="Pulse activity by channel",
+        )
+    )
+
+    if limit and payload["total_channels"] > len(display_channels):
+        console.print(
+            f"Showing top {len(display_channels)} of {payload['total_channels']} channels."
+        )
 
 
 @pulse_app.command("timeline")
