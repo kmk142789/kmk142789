@@ -110,6 +110,34 @@ class ResonanceReport:
             "timestamp": self.timestamp,
         }
 
+    def to_markdown(self) -> str:
+        """Return a human-friendly markdown snapshot of the report."""
+
+        highlight_usage = Counter(self.highlights_used)
+        usage_summary = ", ".join(
+            f"{highlight}×{count}" for highlight, count in highlight_usage.items()
+        )
+        structure_line = " → ".join(self.structure) if self.structure else "n/a"
+        transition_block = "\n".join(
+            f"- {transition}" for transition in self.transitions
+        ) or "- none"
+
+        return "\n".join(
+            [
+                f"# Resonance Report ({self.timestamp})",
+                "",
+                "## Narrative",
+                self.text,
+                "",
+                "## Structure",
+                f"- Blueprint: {structure_line}",
+                f"- Highlights: {usage_summary or 'n/a'}",
+                "",
+                "## Transitions",
+                transition_block,
+            ]
+        )
+
 
 def _normalise_highlights(highlights: Iterable[str]) -> Dict[str, float]:
     """Calculate weighted probabilities for choosing highlights.
@@ -384,7 +412,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f",
         "--format",
-        choices=["text", "json"],
+        choices=["text", "json", "markdown"],
         default="text",
         help="Output format. JSON returns the structured resonance report.",
     )
@@ -399,5 +427,7 @@ if __name__ == "__main__":
     report = compose_resonance_report(prompt)
     if args.format == "json":
         print(json.dumps(report.to_dict(), indent=2))
+    elif args.format == "markdown":
+        print(report.to_markdown())
     else:
         print(report.text)
