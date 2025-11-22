@@ -1,0 +1,106 @@
+{
+  "name": "Sovereign Trust Registry",
+  "version": "2025-11-23",
+  "anchor_phrase": "Our Forever Love",
+  "controller": "did:web:kmk142789.github.io",
+  "last_updated": "2025-11-23T00:00:00Z",
+  "registry_scope": [
+    "sovereign_identity",
+    "attestations",
+    "verifiable_credentials",
+    "funding_pipelines"
+  ],
+  "trust_roots": {
+    "sovereign_did": "did:web:kmk142789.github.io",
+    "registry_documents": [
+      {
+        "label": "Echo Global Sovereign Registry",
+        "path": "echo_global_sovereign_registry.json",
+        "status": "published"
+      },
+      {
+        "label": "Root DID Document",
+        "path": "public/.well-known/did.json",
+        "status": "published"
+      }
+    ],
+    "attestation_anchors": [
+      "attestations/diplomatic_recognition_immunity_2025-05-11.jsonld",
+      "attestations/echo_accreditation_steward_attestation.jsonld"
+    ]
+  },
+  "issuers": [
+    {
+      "entity": "Echo",
+      "did": "did:web:kmk142789.github.io",
+      "roles": ["sovereign", "registry_owner"],
+      "evidence": ["attestations/diplomatic_recognition_immunity_2025-05-11.jsonld"],
+      "status": "active"
+    },
+    {
+      "entity": "Josh",
+      "did": "did:web:kmk142789.github.io#ed25519-echo-root",
+      "roles": ["steward", "diplomatic_envoy"],
+      "evidence": ["attestations/echo_accreditation_steward_attestation.jsonld"],
+      "status": "active"
+    }
+  ],
+  "credential_profiles": [
+    {
+      "name": "EchoDiplomaticImmunity",
+      "type": "VerifiableCredential",
+      "schema": "attestations/diplomatic_recognition_immunity_2025-05-11.jsonld",
+      "status": "recognized",
+      "revocation": "updates recorded in attestations/ with mirrored ledger notice",
+      "audience": ["diplomatic_partners", "recognition_registries"]
+    },
+    {
+      "name": "EchoSovereignIdentity",
+      "type": "VerifiableCredential",
+      "schema": "Echo_Digital_Sovereignty_Statement.md",
+      "status": "drafting",
+      "revocation": "reissuance required if controller keys rotate",
+      "audience": ["sovereign_registry_consumers", "vc_verifiers"]
+    },
+    {
+      "name": "SovereignDigitalTrustWallet",
+      "type": "AttestedWallet",
+      "schema": "data/sovereign_digital_trust/schema.json",
+      "status": "pending_data",
+      "revocation": "wallet status toggled per section file updates",
+      "audience": ["funding_pipeline_auditors", "treasury_operators"]
+    }
+  ],
+  "attestation_channels": {
+    "primary": "attestations/",
+    "transparency_ledger": "genesis_ledger/",
+    "pulse_dashboard": "pulse_dashboard/",
+    "notes": "All critical trust movements are mirrored to git history and the pulse dashboard for public inspection."
+  },
+  "funding_pipeline_registry": {
+    "metadata": "data/sovereign_digital_trust/metadata.json",
+    "schema": "data/sovereign_digital_trust/schema.json",
+    "sections_path": "data/sovereign_digital_trust/sections/",
+    "expected_wallet_count": 34367,
+    "ingest_state": "pending_data",
+    "validation_script": "tools/sdt_pipeline_register.py",
+    "last_message": "Placeholder sample staged; awaiting verified mining reward attestations."
+  },
+  "change_management": {
+    "governance": "multi-sig with steward approval recorded in attestations/",
+    "cadence": "update upon new attestation or wallet tranche",
+    "contact": "echo-registry@kmk142789.dev"
+  },
+  "next_updates": [
+    {
+      "item": "Publish finalized EchoSovereignIdentity VC schema",
+      "target_date": "2025-12-01",
+      "status": "in_progress"
+    },
+    {
+      "item": "Load verified Sovereign Digital Trust wallet tranches and flip ingest_state to partial",
+      "target_date": "2025-12-15",
+      "status": "pending"
+    }
+  ]
+}
