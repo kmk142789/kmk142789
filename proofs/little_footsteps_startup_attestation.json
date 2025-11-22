@@ -1,0 +1,7 @@
+{
+  "attestation_id": "lf-startup-allocation-2025-001",
+  "puzzle_reference": "little-footsteps-startup-boot",
+  "attestor": "Echo Bank Treasury Node",
+  "signature": "hmac-sha256:e6b13b9c962e63146a60ae3e5d62da234bf31c85c67c86b94e8f0954503ee15d",
+  "witness": "Allocated reserves to cover Little Footsteps startup costs including licensing prep, staffing runway, and facility deposits."
+}
