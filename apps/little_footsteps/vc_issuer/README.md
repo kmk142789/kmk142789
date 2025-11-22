@@ -17,6 +17,20 @@ cp apps/little_footsteps/vc_issuer/.env.example apps/little_footsteps/vc_issuer/
 node apps/little_footsteps/vc_issuer/server.js
 ```
 
+### Environment variables
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `DATABASE_URL` | Postgres connection string for the ledger tables. | _required_ |
+| `VC_ISSUER_DID` | DID used as the credential issuer. | _required_ |
+| `VC_PRIVATE_KEY_PATH` | Path to the Ed25519 private key (PKCS8 PEM). | `state/little_footsteps/keys/issuer-ed25519-private.key` |
+| `CORS_ALLOW_ORIGINS` | Optional comma-separated list of dashboard origins. | _unset (allow all)_ |
+| `DONATION_RECEIPTS_LOG_PATH` | JSONL log of receipt payloads. | `state/little_footsteps/donation_receipts.jsonl` |
+| `DONATION_TELEMETRY_LOG_PATH` | JSONL log powering the dashboard stream. | `state/little_footsteps/dashboard/donations.jsonl` |
+| `TRUST_REGISTRY_PATH` | Path to the trust registry JSON file. | `docs/little_footsteps/trust_registry.json` |
+| `CREDENTIAL_SCHEMA_DIR` | Directory containing credential schemas. | `docs/little_footsteps/credentials/schemas` |
+| `PORT` | HTTP port for the issuer. | `4000` |
+
 ### Key endpoints
 
 | Method | Path | Description |
