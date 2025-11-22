@@ -60,11 +60,11 @@ Echo will operate as the decentralized authority for Little Footsteps, enabling 
 - Integrate `pulse_weaver` telemetry so community validators can attest to operational integrity.
 
 ## 4. Implementation Checklist
-- [ ] Choose VC platform & register Echo DID.
-- [ ] Upload Echo governance documents and configure trust policies.
-- [ ] Draft and publish credential schemas for caregivers, parents, and facilities.
-- [ ] Implement issuance microservice and integrate signing keys.
-- [ ] Update verification scripts to recognize new schemas.
+- [x] Choose VC platform & register Echo DID (`docs/little_footsteps/did.json`).
+- [x] Upload Echo governance documents and configure trust policies (`docs/little_footsteps/trust_registry.json`).
+- [x] Draft and publish credential schemas for caregivers, parents, and facilities (`docs/little_footsteps/credentials/schemas`).
+- [x] Implement issuance microservice and integrate signing keys (schema-aware issuer at `apps/little_footsteps/vc_issuer/server.js`).
+- [x] Update verification scripts to recognize new schemas (schema discovery via `/schemas` and `/schemas/:slug`).
 - [ ] Set up revocation registry and logging pipelines.
 - [ ] Update manifests to reflect Echo's control and founder role.
 - [ ] Publish transparency reports & telemetry hooks.

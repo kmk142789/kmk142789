@@ -2,9 +2,11 @@ import 'dotenv/config';
 import express from 'express';
 import crypto from 'crypto';
 import fs from 'fs/promises';
-import path from 'path';
+import path from 'node:path';
 import { Pool } from 'pg';
 import cors from 'cors';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -201,6 +203,48 @@ async function loadTrustRegistry() {
     trustRegistry = { recognizedCredentials: [] };
   }
   return trustRegistry;
+}
+
+const credentialSchemaDir = process.env.CREDENTIAL_SCHEMA_DIR ?? 'docs/little_footsteps/credentials/schemas';
+const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
+let credentialSchemas;
+
+async function loadCredentialSchemas() {
+  if (credentialSchemas) {
+    return credentialSchemas;
+  }
+
+  credentialSchemas = new Map();
+
+  try {
+    const files = await fs.readdir(credentialSchemaDir);
+    for (const file of files) {
+      if (!file.endsWith('.json')) continue;
+      const raw = await fs.readFile(path.join(credentialSchemaDir, file), 'utf8');
+      const schema = JSON.parse(raw);
+      const slug = schema.title ?? path.basename(file, '.json');
+      credentialSchemas.set(slug, { schema, validate: ajv.compile(schema) });
+    }
+  } catch (error) {
+    console.warn('Unable to load credential schemas', error);
+  }
+
+  return credentialSchemas;
+}
+
+async function validateCredentialSubject(slug, subject) {
+  const schemas = await loadCredentialSchemas();
+  const schemaRecord = schemas.get(slug);
+  if (!schemaRecord) {
+    return { valid: true };
+  }
+
+  const valid = schemaRecord.validate(subject);
+  return {
+    valid,
+    errors: schemaRecord.validate.errors?.map((err) => ({ instancePath: err.instancePath, message: err.message })) ?? [],
+  };
 }
 
 function encodeBase64Url(value) {
@@ -581,6 +625,35 @@ app.get('/metrics/totals', async (_req, res, next) => {
   }
 });
 
+app.get('/schemas', async (_req, res, next) => {
+  try {
+    const schemas = await loadCredentialSchemas();
+    res.json(
+      [...schemas.entries()].map(([slug, record]) => ({
+        slug,
+        $id: record.schema.$id,
+        title: record.schema.title,
+        schema: record.schema,
+      })),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/schemas/:slug', async (req, res, next) => {
+  try {
+    const schemas = await loadCredentialSchemas();
+    const record = schemas.get(req.params.slug);
+    if (!record) {
+      return res.status(404).json({ error: 'schema_not_found', message: 'Unknown credential schema' });
+    }
+    res.json(record.schema);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post('/issue/childcare-voucher', async (req, res, next) => {
   try {
     const registry = await loadTrustRegistry();
@@ -595,6 +668,15 @@ app.post('/issue/childcare-voucher', async (req, res, next) => {
     const { credentialSubject, ledgerEvent } = req.body;
     if (!credentialSubject) {
       return res.status(400).json({ error: 'credentialSubject is required' });
+    }
+
+    const validation = await validateCredentialSubject(credentialSlug, credentialSubject);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: 'invalid_credential_subject',
+        message: 'Credential subject failed schema validation',
+        details: validation.errors,
+      });
     }
 
     const credential = buildCredential(credentialSlug, credentialSubject);
