@@ -37,6 +37,23 @@ def _gate_sequence(glyphs: str, cycle: int, length: int = 4) -> List[str]:
     return sequence
 
 
+def _quantum_lattice(glyphs: str, cycle: int) -> Dict[str, object]:
+    """Return a deterministic lattice layout to anchor world-first upgrades."""
+
+    digest = hashlib.blake2b(f"{glyphs}|{cycle}".encode("utf-8"), digest_size=16).digest()
+    lattice: List[Dict[str, object]] = []
+    for index, value in enumerate(digest):
+        # A golden-ratio spiral projected onto a 4x4 lattice grid.
+        x = round((index % 4 - 1.5) * 0.618, 3)
+        y = round((index // 4 - 1.5) * 0.618, 3)
+        amplitude = round(value / 255.0, 4)
+        lattice.append({"node": index + 1, "x": x, "y": y, "amplitude": amplitude})
+
+    coherence = round(sum(node["amplitude"] for node in lattice) / len(lattice), 4)
+    flux_gradient = round(max(node["amplitude"] for node in lattice) - min(node["amplitude"] for node in lattice), 4)
+    return {"nodes": lattice, "coherence": coherence, "flux_gradient": flux_gradient}
+
+
 def _serialize_state(state: Tuple[complex, complex]) -> List[Dict[str, float]]:
     serialised: List[Dict[str, float]] = []
     for amplitude in state:
@@ -99,12 +116,18 @@ def compute_quantam_feature(
     interference_profile = mapper.interference_landscape(samples=12)[::2]
     profile = _serialize_interference(interference_profile)
     fidelity = round(mapper.fidelity_with(_target_state(cycle)), 6)
+    phase_noise = round(abs(probability_zero - probability_one) * 0.5 + fidelity * 0.1, 6)
+    lattice = _quantum_lattice(glyph_stream, cycle)
     state_vector = _serialize_state(mapper.state)
 
     signature_source = (
         f"{sigil}|{axis}|{angle:.6f}|{probability_zero:.6f}|{probability_one:.6f}|{fidelity:.6f}"
     )
     signature = hashlib.sha1(signature_source.encode("utf-8")).hexdigest()[:16]
+
+    world_first_stamp = hashlib.sha3_256(
+        f"{glyph_stream}|{cycle}|{joy:.3f}|{curiosity:.3f}|{signature}".encode("utf-8")
+    ).hexdigest()[:32]
 
     feature = {
         "sigil": sigil,
@@ -118,6 +141,9 @@ def compute_quantam_feature(
         "interference_profile": profile,
         "fidelity": fidelity,
         "signature": signature,
+        "phase_noise": phase_noise,
+        "lattice": lattice,
+        "world_first_stamp": world_first_stamp,
     }
     return feature
 
@@ -201,11 +227,21 @@ def generate_quantam_feature_sequence(
         )
 
     exported_layers = [layer.export() for layer in layers]
+    lattice_coherence = round(
+        sum(layer["feature"]["lattice"]["coherence"] for layer in exported_layers)
+        / len(exported_layers),
+        4,
+    )
+    world_first_proof = hashlib.sha3_256(
+        "|".join(layer["feature"]["world_first_stamp"] for layer in exported_layers).encode("utf-8")
+    ).hexdigest()[:32]
     summary = {
         "total_layers": len(exported_layers),
         "max_complexity": exported_layers[-1]["complexity"],
         "entanglement": exported_layers[-1]["entanglement"],
         "glyphs": glyph_stream,
+        "lattice_coherence": lattice_coherence,
+        "world_first_proof": world_first_proof,
     }
     return {"layers": exported_layers, "summary": summary}
 
