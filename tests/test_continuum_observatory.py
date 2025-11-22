@@ -45,6 +45,22 @@ def test_observatory_groups_files_into_lanes(tmp_path):
     assert {"TODO", "FIXME"}.issubset(keywords)
 
 
+def test_scan_todos_respects_word_boundaries(tmp_path):
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "| `ECHO_BRIDGE_MASTODON_INSTANCE` | _unset_ | description |\n" "<!-- TODO add docs -->\n",
+        encoding="utf-8",
+    )
+
+    observatory = ContinuumObservatory(root=tmp_path)
+    matches = observatory.scan_todos(limit=5)
+
+    assert len(matches) == 1
+    assert matches[0].keyword == "TODO"
+    assert "MASTODON" not in matches[0].line.upper()
+    assert "add docs" in matches[0].line
+
+
 def test_default_lane_map_isolated_copy():
     first = build_default_lane_map()
     first["execution_stack"] = ("custom",)
