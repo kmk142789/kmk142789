@@ -38,6 +38,13 @@
       "serviceEndpoint": "https://kmk142789.github.io/echo_global_sovereign_registry.json"
     },
     {
+      "id": "did:web:kmk142789.github.io#trust-registry",
+      "type": [
+        "EchoTrustRegistry"
+      ],
+      "serviceEndpoint": "https://kmk142789.github.io/sovereign_trust_registry.json"
+    },
+    {
       "id": "did:web:kmk142789.github.io#pulse",
       "type": [
         "EchoContinuumPulse"
