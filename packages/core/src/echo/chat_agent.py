@@ -1091,7 +1091,8 @@ class EchoChatAgent:
         summary = cascade.get("summary", {})
         message = (
             f"Quantam feature cascade prepared for Echo Computer cycle {cycle} "
-            f"with {summary.get('total_layers', iterations)} layer(s)."
+            f"with {summary.get('total_layers', iterations)} layer(s); "
+            "world-first lattice proof minted."
         )
 
         metadata = {
@@ -1100,6 +1101,7 @@ class EchoChatAgent:
             "cycle": cycle,
             "iterations": iterations,
             "entanglement": summary.get("entanglement"),
+            "world_first_proof": summary.get("world_first_proof"),
         }
 
         data = {
