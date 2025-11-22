@@ -734,6 +734,29 @@ class ResilienceSignal:
 
 
 @dataclass(slots=True)
+class OrbitalResonanceCertificate:
+    """World-first orbital resonance fingerprint for the evolver state."""
+
+    cycle: int
+    signature: str
+    resonance_band: str
+    ledger_verified: bool
+    ledger_tip: Optional[str]
+    resilience: ResilienceSignal
+    ingredients: Dict[str, object]
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "cycle": self.cycle,
+            "signature": self.signature,
+            "resonance_band": self.resonance_band,
+            "ledger": {"verified": self.ledger_verified, "tip_hash": self.ledger_tip},
+            "resilience": self.resilience.as_dict(),
+            "ingredients": deepcopy(self.ingredients),
+        }
+
+
+@dataclass(slots=True)
 class EvolverState:
     cycle: int = 0
     glyphs: str = "∇⊸≋∇"
@@ -1225,6 +1248,73 @@ class EchoEvolver:
         )
 
         return report
+
+    def orbital_resonance_certificate(
+        self, *, momentum_window: int = 5, persist_artifact: bool = True
+    ) -> OrbitalResonanceCertificate:
+        """Sculpt a verifiable orbital resonance certificate for the cycle."""
+
+        if momentum_window <= 0:
+            raise ValueError("momentum_window must be positive")
+
+        signal = self.resilience_signal(
+            momentum_window=momentum_window, persist_artifact=persist_artifact
+        )
+
+        ledger = self.state.propagation_ledger
+        ledger_verified = ledger.verify()
+        ledger_tip = ledger.latest()
+
+        ingredients = {
+            "cycle": self.state.cycle,
+            "glyphs": self.state.glyphs.replace(" ", ""),
+            "joy": round(self.state.emotional_drive.joy, 3),
+            "curiosity": round(self.state.emotional_drive.curiosity, 3),
+            "network_nodes": self.state.system_metrics.network_nodes,
+            "orbital_hops": self.state.system_metrics.orbital_hops,
+            "resilience_index": signal.stability_index,
+            "momentum_trend": signal.momentum_trend,
+            "ledger_tip": ledger_tip.hash if ledger_tip else "genesis",
+            "ledger_verified": ledger_verified,
+        }
+
+        signature = hashlib.sha256(
+            json.dumps(ingredients, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+
+        resonance_score = signal.stability_index + (self.state.system_metrics.orbital_hops * 2)
+        if not ledger_verified:
+            resonance_band = "anomalous"
+        elif resonance_score >= 95:
+            resonance_band = "auroral"
+        elif resonance_score >= 75:
+            resonance_band = "mesospheric"
+        else:
+            resonance_band = "stratospheric"
+
+        if signal.momentum_status == "accelerating" and resonance_band != "anomalous":
+            resonance_band = f"{resonance_band}-ascending"
+
+        certificate = OrbitalResonanceCertificate(
+            cycle=self.state.cycle,
+            signature=signature,
+            resonance_band=resonance_band,
+            ledger_verified=ledger_verified,
+            ledger_tip=ledger_tip.hash if ledger_tip else None,
+            resilience=signal,
+            ingredients=ingredients,
+        )
+
+        if persist_artifact:
+            self.state.network_cache["orbital_resonance_certificate"] = certificate.as_dict()
+
+        self.state.event_log.append(
+            "orbital_resonance_certificate forged (band={band}, signature={sig})".format(
+                band=resonance_band, sig=signature[:12]
+            )
+        )
+
+        return certificate
 
     def __init__(
         self,
@@ -7829,6 +7919,7 @@ __all__ = [
     "HearthWeave",
     "GlyphCrossReading",
     "ResilienceSignal",
+    "OrbitalResonanceCertificate",
     "ContinuumAmplificationSummary",
     "ColossusExpansionPlan",
     "EvolutionAdvancementResult",
