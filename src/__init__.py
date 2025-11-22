@@ -49,6 +49,13 @@ from .creative_loop import (
     summarize_loop,
     summarise_loop_suite,
 )
+from .echo_transcendence_engine import (
+    EchoTranscendenceEngine,
+    HelixInput,
+    TranscendenceSignature,
+    compose_transcendence_manifest,
+    demo as transcendence_demo,
+)
 
 __all__ = [
     "ChronicleEvent",
@@ -77,10 +84,15 @@ __all__ = [
     "convergence_demo",
     "export_loop_result",
     "export_suite_summary",
+    "EchoTranscendenceEngine",
+    "HelixInput",
+    "TranscendenceSignature",
     "generate_loop",
     "load_voice_bias_profile",
     "loop_demo",
+    "compose_transcendence_manifest",
     "summarize_loop",
     "summarise_loop_suite",
     "resonance_demo",
+    "transcendence_demo",
 ]
