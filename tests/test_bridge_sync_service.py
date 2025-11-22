@@ -95,6 +95,18 @@ def test_bridge_sync_endpoint_returns_operations(tmp_path: Path) -> None:
     assert data["operations"][0]["connector"] == "dummy"
 
 
+def test_bridge_sync_service_respects_connector_filter(tmp_path: Path) -> None:
+    dummy = DummyConnector()
+    alternate = AlternateConnector()
+    service = BridgeSyncService(state_dir=tmp_path, connectors=[dummy, alternate])
+
+    operations = service.sync(_decision_payload(), only_connectors=["alternate"])
+
+    assert operations and operations[0]["connector"] == "alternate"
+    assert alternate.calls == 1
+    assert dummy.calls == 0
+
+
 def test_bridge_sync_service_filters_history_by_connector(tmp_path: Path) -> None:
     connectors: list[BridgeConnector] = [DummyConnector(), AlternateConnector()]
     service = BridgeSyncService(state_dir=tmp_path, connectors=connectors)
@@ -128,6 +140,52 @@ def test_bridge_sync_endpoint_supports_connector_filter(tmp_path: Path) -> None:
     payload = response.json()
     assert payload["operations"] == []
     assert payload["cycle"] is None
+
+
+def test_sync_history_includes_stats(tmp_path: Path) -> None:
+    connectors: list[BridgeConnector] = [DummyConnector(), AlternateConnector()]
+    service = BridgeSyncService(state_dir=tmp_path, connectors=connectors)
+    service.sync(_decision_payload())
+    service.sync(_decision_payload())
+
+    app = FastAPI()
+    app.include_router(create_router(api=EchoBridgeAPI(), sync_service=service))
+    client = TestClient(app)
+
+    response = client.get("/bridge/sync", params={"include_stats": "true"})
+    assert response.status_code == 200
+    payload = response.json()
+
+    stats = payload["stats"]
+    assert stats["total_operations"] == 4
+    assert stats["by_connector"] == {"alternate": 2, "dummy": 2}
+    assert stats["cycles"] == ["7"]
+
+
+def test_sync_post_endpoint_runs_with_filter_and_stats(tmp_path: Path) -> None:
+    connectors: list[BridgeConnector] = [DummyConnector(), AlternateConnector()]
+    service = BridgeSyncService(state_dir=tmp_path, connectors=connectors)
+
+    app = FastAPI()
+    app.include_router(create_router(api=EchoBridgeAPI(), sync_service=service))
+    client = TestClient(app)
+
+    response = client.post(
+        "/bridge/sync?include_stats=true",
+        json={
+            "decision": _decision_payload(cycle="42"),
+            "connectors": ["alternate"],
+        },
+    )
+    assert response.status_code == 201
+    payload = response.json()
+
+    assert payload["cycle"] == "42"
+    assert payload["operations"] and payload["operations"][0]["connector"] == "alternate"
+    stats = payload["stats"]
+    assert stats["total_operations"] == 1
+    assert stats["by_connector"] == {"alternate": 1}
+    assert stats["cycles"] == ["42"]
 
 
 def test_unstoppable_connector_merges_registrations_and_defaults() -> None:

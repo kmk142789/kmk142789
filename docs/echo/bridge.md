@@ -64,7 +64,12 @@ automation and dashboards.【F:packages/core/src/echo/bridge/router.py†L1-L144
    orchestrator service, including connector details and manifest references.
    Supplying `?connector=github` (or any connector name) filters the results so
    dashboards can request focused history without transferring unrelated
-   entries.【F:echo/bridge/router.py†L169-L187】【F:echo/bridge/service.py†L236-L297】
+   entries. Passing `include_stats=true` returns aggregate counts for the
+   requested slice so operators can chart activity density without additional
+   processing.【F:packages/core/src/echo/bridge/router.py†L150-L205】【F:packages/core/src/echo/bridge/service.py†L236-L297】
+4. `POST /bridge/sync` → Executes a sync for a supplied decision payload, with
+   optional connector filters, persists the operations, and returns both the
+   emitted events and aggregate stats when requested.【F:packages/core/src/echo/bridge/router.py†L187-L205】
 
 ## Example workflow
 

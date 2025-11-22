@@ -103,6 +103,34 @@ class SyncLogEntry(BaseModel):
     )
 
 
+class SyncStats(BaseModel):
+    """Aggregated metrics about the sync operations returned by the API."""
+
+    total_operations: int = Field(
+        ..., description="Total number of sync operations contained in the response."
+    )
+    by_connector: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Count of operations grouped by connector name.",
+    )
+    cycles: List[str] = Field(
+        default_factory=list,
+        description="Unique cycles represented in the returned operations, newest last.",
+    )
+
+
+class SyncRequest(BaseModel):
+    """Request payload for executing a sync from an orchestrator decision."""
+
+    decision: Dict[str, Any] = Field(
+        ..., description="Raw orchestrator decision document to derive sync payloads from."
+    )
+    connectors: Optional[List[str]] = Field(
+        default=None,
+        description="Optional connector names to limit the sync run to.",
+    )
+
+
 class SyncResponse(BaseModel):
     """API response bundling sync history entries."""
 
@@ -113,5 +141,9 @@ class SyncResponse(BaseModel):
     operations: List[SyncLogEntry] = Field(
         default_factory=list,
         description="Ordered list of sync operations, newest entries last.",
+    )
+    stats: Optional[SyncStats] = Field(
+        default=None,
+        description="Optional aggregate metrics about the included sync operations.",
     )
 
