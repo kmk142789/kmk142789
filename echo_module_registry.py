@@ -38,6 +38,7 @@ __all__ = [
     "RegistrySummary",
     "list_modules",
     "load_registry",
+    "remove_module",
     "register_module",
     "store_registry",
     "summarize_registry",
@@ -203,6 +204,37 @@ def register_module(
     return new_record
 
 
+def remove_module(
+    name: str, *, registry_path: Path | str = REGISTRY_FILE
+) -> ModuleRecord | None:
+    """Remove ``name`` from the registry.
+
+    The function returns the removed :class:`ModuleRecord` when a matching entry
+    is found or ``None`` when the registry does not contain ``name``.  The
+    idempotent behaviour matches the ergonomics of small automation scripts that
+    may prune entries multiple times without coordinating global state.
+    """
+
+    registry_path = Path(registry_path)
+    target_name = _validate_input(name, field="name")
+
+    records = load_registry(registry_path)
+    kept: list[ModuleRecord] = []
+    removed: ModuleRecord | None = None
+
+    for record in records:
+        if record.name == target_name:
+            removed = record
+            continue
+        kept.append(record)
+
+    if removed is None:
+        return None
+
+    store_registry(kept, registry_path)
+    return removed
+
+
 def summarize_registry(records: Sequence[ModuleRecord]) -> RegistrySummary:
     """Return aggregate details for ``records``.
 
@@ -253,7 +285,7 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
     import argparse
     import sys
 
-    SUBCOMMANDS = {"register", "list", "summary"}
+    SUBCOMMANDS = {"register", "list", "summary", "remove"}
 
     argv = sys.argv
     if len(argv) > 1 and not argv[1].startswith("-") and argv[1] not in SUBCOMMANDS:
@@ -283,6 +315,9 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
 
     subparsers.add_parser("summary", help="Show registry summary information")
 
+    remove_parser = subparsers.add_parser("remove", help="Remove a module entry")
+    remove_parser.add_argument("name", help="Module name")
+
     args = parser.parse_args()
 
     if args.command is None:
@@ -302,3 +337,6 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
     elif args.command == "summary":
         summary = summarize_registry(load_registry(args.registry))
         print(json.dumps(asdict(summary), indent=2))
+    elif args.command == "remove":
+        removed = remove_module(args.name, registry_path=args.registry)
+        print(json.dumps(asdict(removed) if removed else None, indent=2))

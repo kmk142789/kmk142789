@@ -11,6 +11,7 @@ from echo_module_registry import (
     RegistrySummary,
     list_modules,
     load_registry,
+    remove_module,
     register_module,
     store_registry,
     summarize_registry,
@@ -145,3 +146,31 @@ def test_summarize_registry_returns_expected_metrics() -> None:
     assert empty_summary.total_modules == 0
     assert empty_summary.categories == {}
     assert empty_summary.last_updated is None
+
+
+def test_remove_module_deletes_entry_and_returns_record(tmp_path: Path) -> None:
+    registry_path = tmp_path / "modules.json"
+
+    alpha = register_module(
+        "alpha", "desc", "governance", registry_path=registry_path
+    )
+    beta = register_module("beta", "desc", "observability", registry_path=registry_path)
+
+    removed = remove_module("alpha", registry_path=registry_path)
+
+    assert removed == alpha
+    remaining = load_registry(registry_path)
+    assert remaining == [beta]
+
+
+def test_remove_module_is_idempotent(tmp_path: Path) -> None:
+    registry_path = tmp_path / "modules.json"
+
+    register_module("alpha", "desc", "governance", registry_path=registry_path)
+
+    first = remove_module("alpha", registry_path=registry_path)
+    second = remove_module("alpha", registry_path=registry_path)
+
+    assert first is not None
+    assert second is None
+    assert load_registry(registry_path) == []
