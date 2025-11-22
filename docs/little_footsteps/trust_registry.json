@@ -1,11 +1,16 @@
 {
   "issuer": "did:web:kmk142789.github.io:little-footsteps-bank",
-  "lastUpdated": "2025-05-11T00:00:00Z",
+  "lastUpdated": "2025-05-11T12:00:00Z",
   "recognizedCredentials": [
     "LittleFootstepsChildcareVoucher",
     "LittleFootstepsParentID",
     "LittleFootstepsStaffLicense"
   ],
+  "schemas": {
+    "LittleFootstepsChildcareVoucher": "https://kmk142789.github.io/little-footsteps-bank/schemas/childcare_voucher.schema.json",
+    "LittleFootstepsParentID": "https://kmk142789.github.io/little-footsteps-bank/schemas/parent_id.schema.json",
+    "LittleFootstepsStaffLicense": "https://kmk142789.github.io/little-footsteps-bank/schemas/staff_license.schema.json"
+  },
   "descriptions": {
     "LittleFootstepsChildcareVoucher": "Digital childcare voucher that unlocks subsidized hours for families enrolled in Little Footsteps.",
     "LittleFootstepsParentID": "Identity credential attesting to a verified caregiver relationship and enrollment status.",
