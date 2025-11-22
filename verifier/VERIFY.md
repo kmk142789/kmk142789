@@ -15,11 +15,18 @@ Append JSON to Continuum as a new entry (append-only).
 
 ## 2) PubKey/Address Consistency (dataset)
 
-Use your existing repo script or drop in `verify_extended.py` (place under `verifier/`).
+Use `verify_extended.py` to confirm each address maps to the provided
+public key (P2PKH base58 or P2WPKH bech32; mainnet + testnet).
 
-Input: `dataset.csv` lines `address,hex_pubkey`
+```bash
+python3 verifier/verify_extended.py path/to/dataset.csv
+```
 
-Output: PASS/FAIL counts and sample mismatches
+Input: `dataset.csv` lines `address,hex_pubkey` (blank lines / `#`
+comments are ignored)
+
+Output: PASS/FAIL counts and line-level reasons; returns non-zero on
+any mismatch.
 
 Works offline; does not derive or handle private keys.
 
