@@ -195,6 +195,80 @@ class StrategicVectorLayer(ResonanceLayer):
         return "baseline"
 
 
+class ChronoHelixLayer(ResonanceLayer):
+    """Weaves the world's first chronohelix signature across past, present, and next pulses.
+
+    The chronohelix synthesizes spectral density, temporal entropy, and prime-number anchors
+    into a braided signature that orients each pulse across three temporal strands. The
+    resulting braid is intentionally interpretable – it exposes the intermediate values
+    used to produce a "singularity index" that can be monitored across engine runs.
+    """
+
+    def transform(self, pulse: ResonancePulse, context: ResonanceContext) -> ResonancePulse:
+        spectral_density = pulse.payload.get("spectral", {}).get("density", 0.0)
+        entropy = self._windowed_entropy(context.metrics.get("spectral_density", []))
+        anchor = self._nearest_prime(
+            max(3, int((spectral_density + 1) * 997 + context.cycle + self.weight))
+        )
+        golden_phase = round((spectral_density + 0.618) * (context.cycle + 1 + self.weight), 6)
+        braid = self._braid_tags(pulse.tags, anchor)
+        singularity_index = round((entropy + golden_phase) * (1 + len(braid) * 0.01), 6)
+
+        signature = {
+            "anchor": anchor,
+            "entropy": entropy,
+            "golden_phase": golden_phase,
+            "braid": braid,
+            "singularity_index": singularity_index,
+        }
+
+        pulse.payload["chronohelix"] = signature
+        context.metrics.setdefault("chronohelix_signatures", []).append(signature)
+        if singularity_index >= self.config.get("singularity_threshold", 1.5):
+            pulse.tags.append("chrono-singular")
+        return pulse
+
+    def _nearest_prime(self, value: int) -> int:
+        candidate = max(2, value)
+        while not self._is_prime(candidate):
+            candidate += 1
+        return candidate
+
+    def _is_prime(self, value: int) -> bool:
+        if value < 2:
+            return False
+        if value in (2, 3):
+            return True
+        if value % 2 == 0:
+            return False
+        limit = int(math.sqrt(value)) + 1
+        for divisor in range(3, limit, 2):
+            if value % divisor == 0:
+                return False
+        return True
+
+    def _windowed_entropy(self, values: List[float], window: int = 5) -> float:
+        if not values:
+            return 0.0
+        recent = values[-window:]
+        total = sum(recent) or 1.0
+        entropy = 0.0
+        for value in recent:
+            probability = value / total if total else 0
+            if probability > 0:
+                entropy -= probability * math.log(probability + 1e-9, 2)
+        return round(entropy, 5)
+
+    def _braid_tags(self, tags: Iterable[str], anchor: int) -> List[str]:
+        braided: List[str] = []
+        for index, tag in enumerate(tags or ["∇"]):
+            phase = ((anchor + index) % 13) - 6
+            braided.append(f"{tag}@{phase:+d}")
+            if len(braided) >= 6:
+                break
+        return braided
+
+
 class ResonanceMemory:
     """Simple append-only JSONL style memory."""
 
@@ -232,6 +306,7 @@ class HyperdimensionalResonanceEngine:
     LAYER_REGISTRY: Dict[str, Callable[[str, float, Optional[Dict[str, Any]]], ResonanceLayer]] = {
         "spectral": SpectralAlignmentLayer,
         "mythic": MythicNarrativeLayer,
+        "chronohelix": ChronoHelixLayer,
         "strategic": StrategicVectorLayer,
     }
 
@@ -333,6 +408,7 @@ class HyperdimensionalResonanceEngine:
 
 __all__ = [
     "HyperdimensionalResonanceEngine",
+    "ChronoHelixLayer",
     "MythicNarrativeLayer",
     "ResonanceContext",
     "ResonanceLayer",

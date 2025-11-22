@@ -21,6 +21,14 @@
       }
     },
     {
+      "name": "ChronoHelix Braid",
+      "type": "chronohelix",
+      "weight": 1.25,
+      "config": {
+        "singularity_threshold": 1.2
+      }
+    },
+    {
       "name": "Strategic Vector",
       "type": "strategic",
       "weight": 1.4
