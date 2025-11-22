@@ -101,6 +101,11 @@ def test_engine_unifies_telemetry_and_assigns_upgrades() -> None:
     assert coherence["core"].identities == ["atlas"]
     assert "upgrade-alpha" in coherence["core"].upgrade_focus
 
+    advisory = report.advisories[0]
+    assert advisory.layer == "edge"
+    assert advisory.severity == "warning"
+    assert "upgrade-beta" in advisory.message
+
 
 def test_recursive_state_accumulates_history() -> None:
     engine = _build_engine()
