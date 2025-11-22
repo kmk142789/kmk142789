@@ -6,9 +6,9 @@ import json
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, Literal, Mapping, MutableMapping, Sequence
+from typing import Any, Iterable, Literal, Mapping, MutableMapping, Sequence
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_serializer
 
 from echo.atlas.temporal_ledger import LedgerEntry, LedgerEntryInput, TemporalLedger
 
@@ -24,10 +24,16 @@ __all__ = [
 FabricStatus = Literal["stable", "attention", "critical"]
 
 
-class FabricRoundRecord(BaseModel):
-    """Snapshot of a consensus round tracked by the Fabric subsystem."""
+class IsoDatetimeModel(BaseModel):
+    """Base model that serialises datetime fields to ISO-8601 for JSON payloads."""
 
-    model_config = ConfigDict(json_encoders={datetime: lambda dt: dt.isoformat()})
+    @field_serializer("*", when_used="json")
+    def _serialise_datetime_fields(self, value: Any) -> Any:  # pragma: no cover - thin utility
+        return value.isoformat() if isinstance(value, datetime) else value
+
+
+class FabricRoundRecord(IsoDatetimeModel):
+    """Snapshot of a consensus round tracked by the Fabric subsystem."""
 
     round_id: str = Field(description="Unique identifier generated for the consensus round")
     topic: str = Field(description="Topic or reference that the round evaluated")
@@ -46,10 +52,8 @@ class FabricRoundRecord(BaseModel):
     )
 
 
-class LedgerEntrySummary(BaseModel):
+class LedgerEntrySummary(IsoDatetimeModel):
     """Slim representation of a ledger entry that recorded a Fabric event."""
-
-    model_config = ConfigDict(json_encoders={datetime: lambda dt: dt.isoformat()})
 
     id: str
     ts: datetime
@@ -60,19 +64,15 @@ class LedgerEntrySummary(BaseModel):
     hash: str
 
 
-class ConsensusRoundResult(BaseModel):
+class ConsensusRoundResult(IsoDatetimeModel):
     """Payload returned when a new consensus round is triggered."""
-
-    model_config = ConfigDict(json_encoders={datetime: lambda dt: dt.isoformat()})
 
     round: FabricRoundRecord
     ledger_entry: LedgerEntrySummary
 
 
-class QuorumHealthSnapshot(BaseModel):
+class QuorumHealthSnapshot(IsoDatetimeModel):
     """Rolling health indicator for recent Fabric consensus activity."""
-
-    model_config = ConfigDict(json_encoders={datetime: lambda dt: dt.isoformat()})
 
     window: int = Field(description="Number of recent rounds analysed when computing the snapshot")
     total_rounds: int = Field(description="Total number of rounds considered in the snapshot window")
@@ -95,10 +95,8 @@ class QuorumHealthSnapshot(BaseModel):
     )
 
 
-class FabricDiagnosticsReport(BaseModel):
+class FabricDiagnosticsReport(IsoDatetimeModel):
     """Aggregated diagnostics for the Fabric subsystem."""
-
-    model_config = ConfigDict(json_encoders={datetime: lambda dt: dt.isoformat()})
 
     generated_at: datetime = Field(description="Timestamp indicating when the diagnostics were generated")
     total_rounds: int = Field(description="Total number of rounds recorded on disk")
