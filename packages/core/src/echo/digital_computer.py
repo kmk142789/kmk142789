@@ -48,13 +48,18 @@ react to the qubit's geometric posture.  New orchestration helpers make it
 easier to keep runs self-describing: ``NOTE`` records timestamped
 diagnostics alongside trace output, while ``STEPS`` and ``BUDGET`` let
 programs introspect how far through a run they are and how many steps remain
-before the safety limit triggers.
+before the safety limit triggers.  Hardware-heavy ideas can be turned into
+portable experiments via the ``DTWIN`` opcode, which converts descriptive
+real-world references (bandwidth targets, energy savings, and labels) into
+JSON blueprints stored in memory so physical deployment plans can be
+prototyped entirely inside the digital computer.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import json
 import random
 import shlex
 import textwrap
@@ -228,6 +233,7 @@ class EchoComputer:
         self._stack: List[int | str] = []
         self._call_stack: List[int] = []
         self._state_capsules: Dict[str, Dict[str, object]] = {}
+        self._twin_counters: Dict[str, int] = {}
         self._pc = 0
         self._halted = False
         self._output: List[str] = []
@@ -286,6 +292,7 @@ class EchoComputer:
                 self._registers[key] = 0
             self._memory.clear()
             self._quantum_registers.clear()
+            self._twin_counters.clear()
         self._inputs.clear()
         self._stack.clear()
         self._call_stack.clear()
@@ -532,6 +539,18 @@ class EchoComputer:
         text = str(value).strip()
         return text or None
 
+    def _prepare_twin_descriptor(self, descriptor: object) -> Tuple[str, str]:
+        descriptor_text = str(descriptor).strip()
+        if not descriptor_text:
+            raise RuntimeError("DTWIN requires a hardware descriptor")
+        cleaned = "".join(char.lower() if char.isalnum() else "-" for char in descriptor_text)
+        slug = "-".join(part for part in cleaned.split("-") if part) or "twin"
+        return descriptor_text, slug
+
+    def _allocate_twin_id(self, slug: str) -> str:
+        self._twin_counters[slug] = self._twin_counters.get(slug, 0) + 1
+        return f"TWIN-{slug}-{self._twin_counters[slug]}"
+
     @staticmethod
     def _iso_timestamp() -> str:
         return datetime.now(timezone.utc).isoformat()
@@ -547,6 +566,7 @@ class EchoComputer:
             "call_stack": list(self._call_stack),
             "quantum": self._snapshot_quantum_registers(),
             "random": self._snapshot_random_state(),
+            "digital_twins": dict(self._twin_counters),
         }
 
     def _record_note(self, message: str) -> None:
@@ -583,6 +603,9 @@ class EchoComputer:
         random_snapshot = capsule.get("random")
         if isinstance(random_snapshot, Mapping):
             self._restore_random_state(random_snapshot)
+        twin_snapshot = capsule.get("digital_twins")
+        if isinstance(twin_snapshot, Mapping):
+            self._twin_counters = {str(k): int(v) for k, v in twin_snapshot.items()}
 
     def _restore_quantum_registers(self, snapshot: Mapping[str, Mapping[str, object]]) -> None:
         self._quantum_registers.clear()
@@ -708,6 +731,43 @@ class EchoComputer:
             self._memory[destination[1:]] = self._resolve_value(operand)
             return
         raise RuntimeError("SET destination must be a register or memory address")
+
+    def _op_dtwin(
+        self,
+        register: str,
+        descriptor: str,
+        throughput: str | None = None,
+        efficiency_savings: str | None = None,
+    ) -> None:
+        reg = self._require_register(register)
+        try:
+            descriptor_value = self._resolve_value(descriptor)
+        except RuntimeError:
+            descriptor_value = descriptor
+        descriptor_text, slug = self._prepare_twin_descriptor(descriptor_value)
+        throughput_value = (
+            self._resolve_float(throughput) if throughput is not None else None
+        )
+        efficiency_value = (
+            self._resolve_float(efficiency_savings)
+            if efficiency_savings is not None
+            else None
+        )
+        twin_id = self._allocate_twin_id(slug)
+        blueprint = {
+            "id": twin_id,
+            "descriptor": descriptor_text,
+            "slug": slug,
+            "throughput_mbps": round(throughput_value, 2)
+            if throughput_value is not None
+            else None,
+            "efficiency_savings_pct": round(efficiency_value, 2)
+            if efficiency_value is not None
+            else None,
+            "captured_at": self._iso_timestamp(),
+        }
+        self._memory[f"twin:{slug}"] = json.dumps(blueprint, separators=(",", ":"))
+        self._registers[reg] = twin_id
 
     def _op_rseed(self, seed: str) -> None:
         value = self._resolve_int(seed)
@@ -1161,6 +1221,7 @@ class EchoComputerAssistant:
             (("sum",), self._build_sum_to_n),
             (("add", "numbers"), self._build_sum_inputs),
             (("max",), self._build_max_pair),
+            (("twin", "hardware"), self._build_digital_twin),
             (("echo",), self._build_echo),
             (("clamp",), self._build_clamp),
         )
@@ -1316,6 +1377,33 @@ class EchoComputerAssistant:
                 "template": "sum_inputs",
                 "category": "math",
                 "keywords": ("add", "numbers"),
+                "estimated_steps": 6,
+                "version": 1,
+            },
+        )
+
+    @staticmethod
+    def _build_digital_twin(_: str) -> AssistantSuggestion:
+        program = textwrap.dedent(
+            """
+            NOTE "Digital twin synthesis in progress"
+            DTWIN A ?descriptor ?throughput ?efficiency
+            STORE A @twin_id
+            PRINT A
+            HALT
+            """
+        ).strip()
+        return AssistantSuggestion(
+            description=(
+                "Converts a hardware descriptor into a JSON-backed digital twin "
+                "blueprint stored in memory."
+            ),
+            program=program,
+            required_inputs=("descriptor", "throughput", "efficiency"),
+            metadata={
+                "template": "digital_twin",
+                "category": "twin",
+                "keywords": ("digital", "twin", "hardware"),
                 "estimated_steps": 6,
                 "version": 1,
             },

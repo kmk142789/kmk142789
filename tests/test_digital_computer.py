@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+import json
+
 import pytest
 
 from echo.digital_computer import (
@@ -57,6 +59,23 @@ def test_run_program_factorial() -> None:
     assert result.output == ("120",)
     assert result.registers["A"] == 120
     assert result.memory["result"] == 120
+
+
+def test_dtwin_builds_digital_blueprint() -> None:
+    program = """
+    DTWIN A "E8-Willow mesh" 19 28
+    STORE A @id
+    HALT
+    """
+
+    result = run_program(program)
+
+    assert result.registers["A"].startswith("TWIN-e8-willow-mesh-1")
+    assert result.memory["id"] == result.registers["A"]
+    blueprint = json.loads(result.memory["twin:e8-willow-mesh"])
+    assert blueprint["descriptor"] == "E8-Willow mesh"
+    assert blueprint["throughput_mbps"] == 19.0
+    assert blueprint["efficiency_savings_pct"] == 28.0
 
 
 def test_trace_and_assertion_failure() -> None:
@@ -359,6 +378,29 @@ def test_assistant_offers_clamp_template() -> None:
     )
 
     assert result.output == ("10",)
+
+
+def test_assistant_offers_digital_twin_template() -> None:
+    assistant = EchoComputerAssistant()
+
+    suggestion = assistant.suggest("build a hardware digital twin")
+
+    assert suggestion.metadata["template"] == "digital_twin"
+
+    result = assistant.execute(
+        suggestion,
+        inputs={
+            "descriptor": "Grace Blackwell stack",
+            "throughput": 1200,
+            "efficiency": 27.5,
+        },
+    )
+
+    assert result.output[0].startswith("TWIN-grace-blackwell-stack-1")
+    blueprint = json.loads(result.memory["twin:grace-blackwell-stack"])
+    assert blueprint["descriptor"] == "Grace Blackwell stack"
+    assert blueprint["throughput_mbps"] == 1200.0
+    assert blueprint["efficiency_savings_pct"] == pytest.approx(27.5)
 
 
 def test_run_permits_per_call_max_steps_override() -> None:
