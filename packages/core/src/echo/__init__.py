@@ -109,6 +109,7 @@ from .echo_nexus_hub import EchoNexusHub, ScheduleLoopDigest, WorkerStory
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .echo_visionary_kernel import BitwisePixelEngine, EchoVisionaryKernel, WorkerBot
 from .echo_evolutionary_macro_layer import EchoEvolutionaryMacroLayer, EvolutionaryMacroSnapshot
+from .unified_architecture_engine import LAYER_PRIORITIES, UnifiedArchitectureEngine
 from .sovereign_identity_kernel import (
     CapabilityIdentityKernel,
     IdentityKernelConfig,
@@ -428,6 +429,8 @@ __all__ = [
     "CapabilityIdentityKernel",
     "EchoEvolutionaryMacroLayer",
     "EchoVisionaryKernel",
+    "LAYER_PRIORITIES",
+    "UnifiedArchitectureEngine",
     "IdentityKernelConfig",
     "IdentityKernelSnapshot",
     "ImpossibleEvent",
