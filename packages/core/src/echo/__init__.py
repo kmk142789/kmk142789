@@ -328,6 +328,7 @@ from .strategic_vector import (
 from .sync import (
     CloudSyncCoordinator,
     DirectorySyncTransport,
+    InventoryReport,
     NodeInsight,
     SyncReport,
     SyncTransport,
@@ -517,6 +518,7 @@ __all__ = [
     "WishSummary",
     "CloudSyncCoordinator",
     "DirectorySyncTransport",
+    "InventoryReport",
     "SyncReport",
     "SyncTransport",
     "MetaEvolutionCharter",

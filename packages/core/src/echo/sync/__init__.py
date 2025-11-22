@@ -3,6 +3,7 @@
 from .cloud import (
     CloudSyncCoordinator,
     DirectorySyncTransport,
+    InventoryReport,
     NodeInsight,
     SyncReport,
     SyncTransport,
@@ -12,6 +13,7 @@ from .cloud import (
 __all__ = [
     "CloudSyncCoordinator",
     "DirectorySyncTransport",
+    "InventoryReport",
     "NodeInsight",
     "SyncReport",
     "SyncTransport",

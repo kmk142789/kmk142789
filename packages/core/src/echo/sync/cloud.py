@@ -60,6 +60,7 @@ class SyncReport:
     stale_payloads: int = 0
     invalid_payloads: int = 0
     topology: "TopologyReport | None" = None
+    inventory: "InventoryReport | None" = None
 
 
 @dataclass(frozen=True)
@@ -84,6 +85,18 @@ class TopologyReport:
     freshest_node: Optional[str]
     stalest_node: Optional[str]
     freshness_span_seconds: Optional[float]
+
+
+@dataclass(frozen=True)
+class InventoryReport:
+    """Expanded snapshot of the cloud state for this sync pass."""
+
+    node_contexts: Tuple[Tuple[str, int], ...]
+    total_contexts: int
+    local_contexts: int
+    remote_contexts: int
+    newest_context: Optional[str]
+    oldest_context: Optional[str]
 
 
 class CloudSyncCoordinator:
@@ -148,6 +161,7 @@ class CloudSyncCoordinator:
                 applied += 1
 
         topology = self._build_topology_report(merged_state)
+        inventory = self._build_inventory_report(merged_state)
 
         self.transport.push(self.node_id, self._encode_state())
         return SyncReport(
@@ -159,6 +173,7 @@ class CloudSyncCoordinator:
             stale_payloads=stale_payloads,
             invalid_payloads=invalid_payloads,
             topology=topology,
+            inventory=inventory,
         )
 
     # ------------------------------------------------------------------
@@ -323,6 +338,49 @@ class CloudSyncCoordinator:
             freshness_span_seconds=freshness_span,
         )
 
+    def _build_inventory_report(
+        self, state: Mapping[str, tuple[Clock, object]]
+    ) -> Optional[InventoryReport]:
+        stats: Dict[str, Dict[str, object]] = {}
+        newest: Optional[datetime] = None
+        oldest: Optional[datetime] = None
+
+        for _, (_, value) in state.items():
+            if not isinstance(value, Mapping):
+                continue
+            replica = value.get("replica")
+            if not isinstance(replica, Mapping):
+                continue
+            origin_raw = replica.get("origin")
+            origin = str(origin_raw) if origin_raw is not None else "unknown"
+            entry = stats.setdefault(origin, {"contexts": 0})
+            entry["contexts"] = int(entry["contexts"]) + 1
+
+            captured_at = replica.get("captured_at")
+            parsed = self._parse_timestamp(captured_at) if isinstance(captured_at, str) else None
+            if parsed:
+                if newest is None or parsed > newest:
+                    newest = parsed
+                if oldest is None or parsed < oldest:
+                    oldest = parsed
+
+        if not stats:
+            return None
+
+        node_contexts = tuple(sorted(((node, int(meta["contexts"])) for node, meta in stats.items()), key=lambda item: item[0]))
+        total_contexts = sum(count for _, count in node_contexts)
+        local_contexts = next((count for node, count in node_contexts if node == self.node_id), 0)
+        remote_contexts = total_contexts - local_contexts
+
+        return InventoryReport(
+            node_contexts=node_contexts,
+            total_contexts=total_contexts,
+            local_contexts=local_contexts,
+            remote_contexts=remote_contexts,
+            newest_context=newest.isoformat() if newest else None,
+            oldest_context=oldest.isoformat() if oldest else None,
+        )
+
     @staticmethod
     def _now() -> str:
         return datetime.now(timezone.utc).isoformat()
@@ -358,6 +416,7 @@ def _coerce_timedelta(value: timedelta | float | int | None) -> Optional[timedel
 __all__ = [
     "CloudSyncCoordinator",
     "DirectorySyncTransport",
+    "InventoryReport",
     "NodeInsight",
     "SyncReport",
     "SyncTransport",

@@ -130,3 +130,33 @@ def test_sync_report_exposes_topology_insights(tmp_path):
     alpha_insight = origins["alpha"]
     assert alpha_insight.contexts >= 1
     assert alpha_insight.avg_command_count >= 1
+
+
+def test_inventory_report_tracks_context_ownership(tmp_path):
+    transport_root = tmp_path / "transport"
+    store_a = JsonMemoryStore(storage_path=tmp_path / "a.json", log_path=tmp_path / "a.md")
+    store_b = JsonMemoryStore(storage_path=tmp_path / "b.json", log_path=tmp_path / "b.md")
+
+    with store_a.session(metadata={"device": "alpha"}) as session:
+        session.set_summary("alpha context")
+
+    with store_b.session(metadata={"device": "beta"}) as session:
+        session.set_summary("beta context")
+
+    coordinator_a = CloudSyncCoordinator("alpha", store_a, DirectorySyncTransport(transport_root))
+    coordinator_a.sync()
+
+    coordinator_b = CloudSyncCoordinator("beta", store_b, DirectorySyncTransport(transport_root))
+    report_b = coordinator_b.sync()
+
+    inventory = report_b.inventory
+    assert inventory is not None
+    assert inventory.total_contexts == 2
+    assert inventory.local_contexts == 1
+    assert inventory.remote_contexts == 1
+
+    node_counts = dict(inventory.node_contexts)
+    assert node_counts["alpha"] == 1
+    assert node_counts["beta"] == 1
+    assert inventory.newest_context is not None
+    assert inventory.oldest_context is not None
