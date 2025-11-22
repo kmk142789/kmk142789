@@ -64,11 +64,18 @@ from .chrono_holographic_imprint import (
     ImprintResult,
     demo as imprint_demo,
 )
+from .aevum_lattice_resonator import (
+    AevumLatticeResonator,
+    AevumLatticeSignature,
+    demo as aevum_lattice_demo,
+)
 
 __all__ = [
     "ChronicleEvent",
     "ChroniclePrompt",
     "ChronicleTimeline",
+    "AevumLatticeResonator",
+    "AevumLatticeSignature",
     "ConvergenceBrief",
     "ConstellationNode",
     "ConstellationSeed",
@@ -82,6 +89,7 @@ __all__ = [
     "ResonanceContext",
     "ResonancePrompt",
     "ResonanceReport",
+    "aevum_lattice_demo",
     "constellation_demo",
     "chronicle_demo",
     "imprint_demo",
