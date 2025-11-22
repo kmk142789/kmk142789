@@ -22,18 +22,18 @@ def _ensure_artifact_dir() -> None:
 
 def build_feature_plan() -> dict:
     return {
-        "codename": "Echo Bridge Constellation Autopilot",
-        "amendment_reference": "Amendment III",
-        "objective": "Autonomously orchestrate bridge relays across Discord, Telegram, ActivityPub, and Bluesky while keeping payload parity with ledger-anchored credentials.",
+        "codename": "Bridge Trust Graph Orchestrator",
+        "amendment_reference": "Amendment IV",
+        "objective": "Activate the Credential Registry DID+VC trust graph while extending bridge federation across Discord, Telegram, XMPP, Slack, and Threads with canonical payload parity.",
         "success_criteria": [
-            "Normalize identity payloads once per cycle and reuse across all bridge connectors.",
-            "Emit ledger-ready context (identity, cycle, signature, topics, priority) into every relay.",
-            "Write bridge dispatch summaries to the Sovereign Ledger feature registry with digests and anchors.",
+            "Publish DID Documents and verifiable credentials for bridge connectors and treasury routes into the Credential Registry.",
+            "Normalize canonical payloads (identity, cycle, signature, traits, topics, priority, ledger anchor, treasury context) and replay them across all mandated connectors.",
+            "Write bridge dispatch and credential verification summaries to the Sovereign Ledger feature registry with digests and anchors.",
         ],
         "metrics": {
-            "connectors": ["discord", "telegram", "activitypub", "bluesky", "webhook"],
-            "payload_fields": ["identity", "cycle", "signature", "traits", "topics", "priority"],
-            "ledger_anchor": "echo-sovereign-ledger:feature:bridge-constellation",
+            "connectors": ["discord", "telegram", "xmpp", "slack", "threads", "activitypub", "bluesky", "matrix", "email", "webhook"],
+            "payload_fields": ["identity", "cycle", "signature", "traits", "topics", "priority", "ledger_anchor", "treasury_context"],
+            "ledger_anchor": "echo-sovereign-ledger:feature:bridge-trust-graph",
         },
     }
 
