@@ -85,6 +85,7 @@ echo-proof-orchestrator = "echo.orchestrator.cli:main"
 next-level = "next_level:main"
 hypermesh-weaver = "echo.hypermesh_cli:main"
 echo-orbital-resonance = "orbital_resonance_engine:main"
+pulse-storyboard = "echo_pulse_storyboard:main"
 
 [tool.setuptools.package-dir]
 "" = "packages/core/src"
