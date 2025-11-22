@@ -32,12 +32,18 @@ class EchoBridgeAPI:
         webhook_secret_name: Optional[str] = "ECHO_BRIDGE_WEBHOOK_URL",
         discord_webhook_url: Optional[str] = None,
         discord_secret_name: str = "DISCORD_WEBHOOK_URL",
+        bluesky_identifier: Optional[str] = None,
+        bluesky_service_url: str = "https://bsky.social",
+        bluesky_app_password_secret: str = "BLUESKY_APP_PASSWORD",
         mastodon_instance_url: Optional[str] = None,
         mastodon_visibility: str = "unlisted",
         mastodon_secret_name: str = "MASTODON_ACCESS_TOKEN",
         matrix_homeserver: Optional[str] = None,
         matrix_room_id: Optional[str] = None,
         matrix_secret_name: str = "MATRIX_ACCESS_TOKEN",
+        activitypub_inbox_url: Optional[str] = None,
+        activitypub_actor: Optional[str] = None,
+        activitypub_secret_name: str = "ACTIVITYPUB_SIGNING_KEY",
         email_recipients: Optional[Sequence[str]] = None,
         email_secret_name: Optional[str] = "EMAIL_RELAY_API_KEY",
         email_subject_template: str = "Echo Identity Relay :: {identity} :: Cycle {cycle}",
@@ -52,12 +58,18 @@ class EchoBridgeAPI:
         self.webhook_secret_name = webhook_secret_name
         self.discord_webhook_url = discord_webhook_url
         self.discord_secret_name = discord_secret_name
+        self.bluesky_identifier = bluesky_identifier
+        self.bluesky_service_url = bluesky_service_url
+        self.bluesky_app_password_secret = bluesky_app_password_secret
         self.mastodon_instance_url = mastodon_instance_url
         self.mastodon_visibility = (mastodon_visibility or "unlisted").strip() or "unlisted"
         self.mastodon_secret_name = mastodon_secret_name
         self.matrix_homeserver = matrix_homeserver
         self.matrix_room_id = matrix_room_id
         self.matrix_secret_name = matrix_secret_name
+        self.activitypub_inbox_url = activitypub_inbox_url
+        self.activitypub_actor = activitypub_actor
+        self.activitypub_secret_name = activitypub_secret_name
         self.email_recipients = tuple(self._normalise_recipients(email_recipients or []))
         self.email_secret_name = email_secret_name
         self.email_subject_template = email_subject_template
@@ -198,6 +210,30 @@ class EchoBridgeAPI:
                     text=plain_text,
                 )
             )
+        if self.bluesky_identifier:
+            social_text = social_text or self._render_social(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._bluesky_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=social_text,
+                )
+            )
         if self.mastodon_instance_url:
             social_text = social_text or self._render_social(
                 identity=identity,
@@ -211,6 +247,30 @@ class EchoBridgeAPI:
             )
             plans.append(
                 self._mastodon_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=social_text,
+                )
+            )
+        if self.activitypub_inbox_url:
+            social_text = social_text or self._render_social(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._activitypub_plan(
                     identity=identity,
                     cycle=cycle,
                     signature=signature,
@@ -467,6 +527,42 @@ class EchoBridgeAPI:
         requires = [self.discord_secret_name] if self.discord_secret_name else []
         return BridgePlan(platform="discord", action="send_webhook", payload=payload, requires_secret=requires)
 
+    def _bluesky_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        status = text or self._render_social(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+        payload: Dict[str, Any] = {
+            "service": self.bluesky_service_url,
+            "identifier": self.bluesky_identifier,
+            "text": status,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        if links:
+            payload["links"] = links[:2]
+        if topics:
+            payload["tags"] = [self._topic_hashtag(topic) for topic in topics]
+        requires = [self.bluesky_app_password_secret] if self.bluesky_app_password_secret else []
+        return BridgePlan(platform="bluesky", action="post_record", payload=payload, requires_secret=requires)
+
     def _mastodon_plan(
         self,
         *,
@@ -504,6 +600,44 @@ class EchoBridgeAPI:
             payload["priority"] = priority
         requires = [self.mastodon_secret_name] if self.mastodon_secret_name else []
         return BridgePlan(platform="mastodon", action="post_status", payload=payload, requires_secret=requires)
+
+    def _activitypub_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        status = text or self._render_social(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+        payload: Dict[str, Any] = {
+            "actor": self.activitypub_actor,
+            "inbox": self.activitypub_inbox_url,
+            "status": status,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        if links:
+            payload["links"] = links[:2]
+        if topics:
+            payload["tags"] = [self._topic_hashtag(topic) for topic in topics]
+        if priority:
+            payload["priority"] = priority
+        requires = [self.activitypub_secret_name] if self.activitypub_secret_name else []
+        return BridgePlan(platform="activitypub", action="deliver_note", payload=payload, requires_secret=requires)
 
     def _matrix_plan(
         self,

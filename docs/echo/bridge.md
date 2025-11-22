@@ -2,10 +2,10 @@
 
 The Echo Bridge API plans deterministic relays while the sync service mirrors
 completed cycles into downstream ecosystems. Together, they keep GitHub,
-Telegram, Firebase, Slack, Discord, email lists, generic webhooks, DNS
-inventories, Unstoppable Domains, Vercel deployments, and GitHub reporting in
-lockstep without
-duplicating integration logic across services.【F:modules/echo-bridge/bridge_api.py†L9-L210】【F:packages/core/src/echo/bridge/service.py†L94-L214】
+Telegram, Firebase, Slack, Discord, Bluesky, ActivityPub/Mastodon, email lists,
+generic webhooks, DNS inventories, Unstoppable Domains, Vercel deployments, and
+GitHub reporting in lockstep without duplicating integration logic across
+services.【F:modules/echo-bridge/bridge_api.py†L9-L222】【F:packages/core/src/echo/bridge/service.py†L94-L214】
 
 ## Planner connectors
 
@@ -24,7 +24,9 @@ filtering.【F:modules/echo-bridge/bridge_api.py†L230-L343】【F:tests/test_b
 | Firebase Documents | Publishes a structured mirror (`identity`, `cycle`, `signature`, traits, optional summary/links) for machine consumers. | `ECHO_BRIDGE_FIREBASE_COLLECTION` with `FIREBASE_SERVICE_ACCOUNT`. |
 | Slack Webhooks | Reuses the plaintext summary while attaching trait/link cards so operators can scan context inline. Optional channel overrides are supported. | `ECHO_BRIDGE_SLACK_WEBHOOK_URL`, optional `ECHO_BRIDGE_SLACK_CHANNEL`, and secret hint `ECHO_BRIDGE_SLACK_SECRET` (default `SLACK_WEBHOOK_URL`). |
 | Discord Webhooks | Mirrors the plaintext message and injects an embed that surfaces summary text, sorted trait fields, and the first link. | `ECHO_BRIDGE_DISCORD_WEBHOOK_URL` plus `ECHO_BRIDGE_DISCORD_SECRET` (default `DISCORD_WEBHOOK_URL`). |
+| Bluesky Posts | Delivers the social relay text to a Bluesky account with optional link and tag metadata. | `ECHO_BRIDGE_BLUESKY_IDENTIFIER`, optional `ECHO_BRIDGE_BLUESKY_SERVICE`, and `ECHO_BRIDGE_BLUESKY_SECRET` (default `BLUESKY_APP_PASSWORD`). |
 | Mastodon Status | Publishes a social-friendly status with hashtags derived from topics and optional links. | `ECHO_BRIDGE_MASTODON_INSTANCE`, optional `ECHO_BRIDGE_MASTODON_VISIBILITY`, and `ECHO_BRIDGE_MASTODON_SECRET` (default `MASTODON_ACCESS_TOKEN`). |
+| ActivityPub Inbox | Sends a signed ActivityPub note to a configured inbox while retaining context tags. | `ECHO_BRIDGE_ACTIVITYPUB_INBOX`, optional `ECHO_BRIDGE_ACTIVITYPUB_ACTOR`, and `ECHO_BRIDGE_ACTIVITYPUB_SECRET` (default `ACTIVITYPUB_SIGNING_KEY`). |
 | Matrix Room | Sends the social relay text into a Matrix room while tagging topics and priority for downstream routing. | `ECHO_BRIDGE_MATRIX_HOMESERVER`, `ECHO_BRIDGE_MATRIX_ROOM_ID`, and `ECHO_BRIDGE_MATRIX_SECRET` (default `MATRIX_ACCESS_TOKEN`). |
 | Email Fan-out | Delivers the same canonical plaintext to distribution lists with a configurable subject template. | `ECHO_BRIDGE_EMAIL_RECIPIENTS`, optional template override, and `ECHO_BRIDGE_EMAIL_SECRET` (default `EMAIL_RELAY_API_KEY`). |
 | Generic Webhook | Emits the normalized JSON document so downstream automation (including no-code stacks) can subscribe once. | `ECHO_BRIDGE_WEBHOOK_URL` paired with `ECHO_BRIDGE_WEBHOOK_SECRET`. |
