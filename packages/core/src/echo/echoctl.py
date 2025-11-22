@@ -530,6 +530,11 @@ def run_next_step(argv: List[str]) -> int:
         action="store_true",
         help="Emit the recommendation payload as JSON.",
     )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional path to persist the recommendation payload.",
+    )
 
     options = parser.parse_args(argv)
     preview_count = max(0, options.preview)
@@ -561,7 +566,11 @@ def run_next_step(argv: List[str]) -> int:
     }
 
     if options.json:
-        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        rendered = json.dumps(payload, indent=2, ensure_ascii=False)
+        if options.output:
+            options.output.parent.mkdir(parents=True, exist_ok=True)
+            options.output.write_text(rendered + "\n", encoding="utf-8")
+        print(rendered)
         return 0
 
     preview_steps = remaining_steps[:preview_count]
@@ -582,7 +591,11 @@ def run_next_step(argv: List[str]) -> int:
             preview_line += f" (+{remainder} more)"
         lines.append(preview_line)
 
-    print("\n".join(lines))
+    rendered = "\n".join(lines)
+    if options.output:
+        options.output.parent.mkdir(parents=True, exist_ok=True)
+        options.output.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
     return 0
 
 
