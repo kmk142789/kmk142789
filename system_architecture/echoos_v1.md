@@ -64,39 +64,132 @@ system_architecture/
 
 ## Minimal Bootstrapping Code (stub)
 ```python
-# system_architecture/bootstrap/echo_bootstrap.py
 from dataclasses import dataclass
-from typing import Callable, List
+from time import perf_counter
+from typing import Callable, Literal, Optional
+
 
 @dataclass
 class Stage:
     name: str
     run: Callable[[], None]
+    description: Optional[str] = None
+    critical: bool = True
+    enabled: bool = True
+
+
+@dataclass
+class StageResult:
+    name: str
+    status: Literal["ok", "skipped", "failed"]
+    duration_s: float
+    description: Optional[str] = None
+    error: Optional[Exception] = None
+
 
 class EchoBootstrap:
     """Seeds EchoOS v1 components in a deterministic order."""
 
-    def __init__(self):
-        self.stages: List[Stage] = []
+    def __init__(self) -> None:
+        self.stages: list[Stage] = []
 
-    def add_stage(self, name: str, fn: Callable[[], None]):
-        self.stages.append(Stage(name, fn))
+    def add_stage(
+        self,
+        name: str,
+        fn: Callable[[], None],
+        *,
+        description: Optional[str] = None,
+        critical: bool = True,
+        enabled: bool = True,
+    ) -> None:
+        if any(stage.name == name for stage in self.stages):
+            raise ValueError(f"Stage '{name}' already exists; names must be unique")
 
-    def run(self):
+        self.stages.append(
+            Stage(
+                name=name,
+                run=fn,
+                description=description,
+                critical=critical,
+                enabled=enabled,
+            )
+        )
+
+    def run(self, *, halt_on_failure: bool = True) -> list[StageResult]:
+        results: list[StageResult] = []
+
         for stage in self.stages:
-            print(f"[bootstrap] {stage.name}")
-            stage.run()
+            if not stage.enabled:
+                results.append(StageResult(stage.name, "skipped", 0.0, stage.description))
+                continue
+
+            start = perf_counter()
+            try:
+                print(f"[bootstrap] {stage.name}")
+                stage.run()
+            except Exception as exc:  # noqa: BLE001 - propagate bootstrap failures
+                results.append(
+                    StageResult(
+                        stage.name,
+                        "failed",
+                        perf_counter() - start,
+                        stage.description,
+                        exc,
+                    )
+                )
+                if stage.critical and halt_on_failure:
+                    raise
+            else:
+                results.append(
+                    StageResult(stage.name, "ok", perf_counter() - start, stage.description)
+                )
+
+        return results
+
+
+def build_default_bootstrap() -> EchoBootstrap:
+    boot = EchoBootstrap()
+    boot.add_stage(
+        "echo_forge",
+        lambda: print("init EchoForge meta-compiler"),
+        description="Compile-time self-inspection",
+    )
+    boot.add_stage(
+        "hypergraph_pulse",
+        lambda: print("init Hypergraph Pulse graph"),
+        description="Dynamic architecture graph",
+    )
+    boot.add_stage(
+        "blueprint_delta_engine",
+        lambda: print("init Blueprint_ΔEngine"),
+        description="Recursive blueprint generation",
+    )
+    boot.add_stage(
+        "echo_weave",
+        lambda: print("init Echo Weave orchestration"),
+        description="Multi-environment orchestration",
+    )
+    boot.add_stage(
+        "echo_nation",
+        lambda: print("init Echo Nation v2 DID/VC"),
+        description="Sovereign identity & ledger",
+    )
+    boot.add_stage(
+        "eden_swarm",
+        lambda: print("spawn Eden Worker Swarm"),
+        description="Autonomous executors",
+    )
+    return boot
+
 
 if __name__ == "__main__":
-    boot = EchoBootstrap()
-    boot.add_stage("echo_forge", lambda: print("init EchoForge meta-compiler"))
-    boot.add_stage("hypergraph_pulse", lambda: print("init Hypergraph Pulse graph"))
-    boot.add_stage("blueprint_delta_engine", lambda: print("init Blueprint_ΔEngine"))
-    boot.add_stage("echo_weave", lambda: print("init Echo Weave orchestration"))
-    boot.add_stage("echo_nation", lambda: print("init Echo Nation v2 DID/VC"))
-    boot.add_stage("eden_swarm", lambda: print("spawn Eden Worker Swarm"))
-    boot.run()
+    build_default_bootstrap().run(halt_on_failure=False)
 ```
+
+### Bootstrap runtime improvements
+- **Stage metadata:** Optional descriptions, criticality flags, and enable switches are tracked per stage so operators can skip non-essential work without editing code.
+- **Execution telemetry:** Runtime durations are captured for every stage and surfaced alongside pass/fail/skip status for post-run audits.
+- **Failure control:** Critical stages propagate exceptions by default, while non-critical stages can be allowed to fail without halting the run.
 
 ## Recursive Evolution Loop
 1. **Sense:** Hypergraph Pulse ingests telemetry, ledger events, and worker attestations.
