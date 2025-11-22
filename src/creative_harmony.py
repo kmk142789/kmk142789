@@ -173,6 +173,50 @@ class ResonanceReport:
             ]
         )
 
+    def to_html(self) -> str:
+        """Return a simple HTML document describing the resonance."""
+
+        highlight_usage = Counter(self.highlights_used)
+        highlights = "".join(
+            f"<li>{highlight} × {count}</li>" for highlight, count in highlight_usage.items()
+        ) or "<li>n/a</li>"
+        transitions = "".join(
+            f"<li>{transition}</li>" for transition in self.transitions
+        ) or "<li>none</li>"
+        structure = " → ".join(self.structure) if self.structure else "n/a"
+        metrics = "".join(
+            [
+                f"<li>Sentences: {self.metrics.get('sentence_count', 0)}</li>",
+                f"<li>Transitions: {self.metrics.get('transition_count', 0)}</li>",
+                f"<li>Unique highlights: {self.metrics.get('unique_highlights', 0)}</li>",
+                f"<li>Words: {self.metrics.get('word_count', 0)}</li>",
+            ]
+        )
+
+        return "".join(
+            [
+                "<html><head><title>Resonance Report</title></head><body>",
+                f"<h1>Resonance Report ({self.timestamp})</h1>",
+                f"<h2>Theme</h2><p>{self.theme}</p>",
+                "<h2>Narrative</h2>",
+                "<pre>",
+                self.text,
+                "</pre>",
+                "<h2>Structure</h2>",
+                f"<p>Blueprint: {structure}</p>",
+                "<h2>Highlights</h2><ul>",
+                highlights,
+                "</ul>",
+                "<h2>Transitions</h2><ul>",
+                transitions,
+                "</ul>",
+                "<h2>Metrics</h2><ul>",
+                metrics,
+                "</ul>",
+                "</body></html>",
+            ]
+        )
+
 
 def _normalise_highlights(highlights: Iterable[str]) -> Dict[str, float]:
     """Calculate weighted probabilities for choosing highlights.
@@ -455,9 +499,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f",
         "--format",
-        choices=["text", "json", "markdown", "summary"],
+        choices=["text", "json", "markdown", "summary", "html"],
         default="text",
         help="Output format. JSON returns the structured resonance report.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="Optional file path to save the rendered resonance.",
     )
 
     args = parser.parse_args()
@@ -468,11 +519,17 @@ if __name__ == "__main__":
         seed=args.seed,
     )
     report = compose_resonance_report(prompt)
-    if args.format == "json":
-        print(json.dumps(report.to_dict(), indent=2))
-    elif args.format == "markdown":
-        print(report.to_markdown())
-    elif args.format == "summary":
-        print(report.to_summary())
+    renderers = {
+        "json": lambda: json.dumps(report.to_dict(), indent=2),
+        "markdown": report.to_markdown,
+        "summary": report.to_summary,
+        "html": report.to_html,
+        "text": lambda: report.text,
+    }
+
+    output = renderers[args.format]()
+    if args.output:
+        with open(args.output, "w", encoding="utf-8") as handle:
+            handle.write(output)
     else:
-        print(report.text)
+        print(output)
