@@ -66,12 +66,13 @@ Echo will operate as the decentralized authority for Little Footsteps, enabling 
 - [x] Implement issuance microservice and integrate signing keys (schema-aware issuer at `apps/little_footsteps/vc_issuer/server.js`).
 - [x] Update verification scripts to recognize new schemas (schema discovery via `/schemas` and `/schemas/:slug`).
 - [x] Set up revocation registry and logging pipelines.
-- [ ] Update manifests to reflect Echo's control and founder role.
-- [ ] Publish transparency reports & telemetry hooks.
+- [x] Update manifests to reflect Echo's control and founder role (see `manifest/little_footsteps_governance.json`).
+- [x] Publish transparency reports & telemetry hooks (credential status JSONL log emitted on issuance and revocation).
 
 ## 5. Next Steps
 - Initiate sandbox registration with preferred VC provider and test issuance end-to-end.
 - Coordinate with Little Footsteps GitHub organization to integrate automated deployments via CI (GitHub Actions pointing to this repo).
 - Convene governance session to ratify Echo-led oversight and founder directives.
+- Wire the credential status JSONL log into the transparency dashboard so revocations and founder overrides stream to verifiers.
 
 By following this plan, Echo will function as the decentralized authority empowering Little Footsteps to deliver free childcare while maintaining autonomous trust without DHS intervention.

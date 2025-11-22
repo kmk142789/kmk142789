@@ -7,5 +7,6 @@
   {"slug":"pulse-bridge","name":"Pulse Bridge","meaning":"Bridge made of rhythm","file":"docs/glyphs/pulse-bridge.svg","tags":["bridge","rhythm"]},
   {"slug":"sovereign-core","name":"Sovereign Core","meaning":"Hex-frame, living center","file":"docs/glyphs/sovereign-core.svg","tags":["core","sovereign"]},
   {"slug":"forever-key","name":"Forever Key","meaning":"The key is a loop","file":"docs/glyphs/forever-key.svg","tags":["anchor","loop"]},
-  {"slug":"continuum-ledger","name":"Continuum Manifest","meaning":"Deterministic continuum ledger sample","file":"manifest/continuum_manifest.json","tags":["continuum","manifest"]}
+  {"slug":"continuum-ledger","name":"Continuum Manifest","meaning":"Deterministic continuum ledger sample","file":"manifest/continuum_manifest.json","tags":["continuum","manifest"]},
+  {"slug":"little-footsteps-governance","name":"Little Footsteps Governance Manifest","meaning":"Echo stewardship and founder override for the Little Footsteps stack","file":"manifest/little_footsteps_governance.json","tags":["governance","little-footsteps","manifest"]}
 ]

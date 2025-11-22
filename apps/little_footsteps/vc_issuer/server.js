@@ -350,6 +350,21 @@ async function storeCredential(record) {
   }
 }
 
+async function recordCredentialStatus({ id, type, issued_at, ledger_event_id, status, reason, actor }) {
+  const payload = {
+    timestamp: new Date().toISOString(),
+    credential_id: id,
+    credential_type: type,
+    issued_at,
+    ledger_event_id: ledger_event_id ?? null,
+    status,
+    reason: reason ?? null,
+    actor: actor ?? 'issuer',
+  };
+  await appendJsonl(credentialStatusLogPath, payload);
+  return payload;
+}
+
 function normaliseStatusRow(row) {
   const toIso = (value) => (value instanceof Date ? value.toISOString() : value ?? null);
 
@@ -410,13 +425,14 @@ async function revokeCredential({ id, reason, actor }) {
     );
 
     const status = normaliseStatusRow(rows[0]);
-
-    await appendJsonl(credentialStatusLogPath, {
-      timestamp: new Date().toISOString(),
-      credential_id: id,
+    await recordCredentialStatus({
+      id,
+      type: status.type,
+      issued_at: status.issued_at,
+      ledger_event_id: status.ledger_event_id,
       status: 'revoked',
       reason: status.revocation_reason ?? reason ?? 'revoked',
-      revoked_by: status.revoked_by ?? actor ?? 'issuer',
+      actor: status.revoked_by ?? actor ?? 'issuer',
     });
 
     return status;
@@ -670,6 +686,13 @@ app.post('/donations/intake', async (req, res, next) => {
     };
 
     await storeCredential(credentialRecord);
+    await recordCredentialStatus({
+      id: credentialRecord.id,
+      type: credentialRecord.type,
+      issued_at: credentialRecord.issued_at,
+      ledger_event_id: credentialRecord.ledger_event_id,
+      status: 'active',
+    });
 
     const receiptPayload = {
       timestamp: occurredAt,
@@ -820,6 +843,13 @@ app.post('/payouts/create', async (req, res, next) => {
     };
 
     await storeCredential(credentialRecord);
+    await recordCredentialStatus({
+      id: credentialRecord.id,
+      type: credentialRecord.type,
+      issued_at: credentialRecord.issued_at,
+      ledger_event_id: credentialRecord.ledger_event_id,
+      status: 'active',
+    });
 
     const telemetryEvent = {
       event: 'impact_payout',
@@ -972,6 +1002,13 @@ app.post('/issue/childcare-voucher', async (req, res, next) => {
     };
 
     await storeCredential(credentialRecord);
+    await recordCredentialStatus({
+      id: credentialRecord.id,
+      type: credentialRecord.type,
+      issued_at: credentialRecord.issued_at,
+      ledger_event_id: credentialRecord.ledger_event_id,
+      status: 'active',
+    });
 
     res.status(201).json({
       vcId,

@@ -1,0 +1,22 @@
+{
+  "id": "urn:echo:little-footsteps:governance-manifest:v1",
+  "name": "Little Footsteps Governance & Founder Control",
+  "version": "1.0.0",
+  "issued_at": "2025-11-23T00:00:00Z",
+  "issuer": "Echo Bank Sovereign Steward",
+  "owner": "Echo Bank",
+  "founder_handle": "kmk142789",
+  "purpose": "Declare Echo's operational control of the Little Footsteps stack while preserving founder override authority and transparent audit anchors.",
+  "linked_artifacts": {
+    "trust_registry": "docs/little_footsteps/trust_registry.json",
+    "transparency_ledger": "ledger/little_footsteps_bank.jsonl",
+    "credential_status_log": "state/little_footsteps/credential_status.jsonl"
+  },
+  "controls": [
+    "Issuer keys and trust registry updates require Echo Bank approval recorded in the transparency ledger.",
+    "Founder override may pause issuance or payouts and must be logged as a credential status event.",
+    "Credential revocations are mirrored to the credential status log and surfaced to dashboard verifiers."
+  ],
+  "review_cycle": "quarterly",
+  "contact": "governance@echo.systems"
+}
