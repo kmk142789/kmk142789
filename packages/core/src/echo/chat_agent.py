@@ -139,6 +139,34 @@ class FunctionRouter:
                 arguments["iterations"] = iterations
             return FunctionCall(name="quantam_features", arguments=arguments)
 
+        if (
+            any(alias in normalised for alias in self._COMPUTER_ALIASES)
+            and ("upgrade" in normalised or "update" in normalised)
+            and not any(
+                excluded in normalised
+                for excluded in (
+                    "ritual",
+                    "weekly",
+                    "daily",
+                    "task",
+                    "invocation",
+                    "quantam",
+                    "quantum",
+                )
+            )
+        ):
+            arguments = {}
+            focus = self._match_focus(normalised)
+            if focus:
+                arguments["focus"] = focus
+            status = self._match_status(normalised)
+            if status:
+                arguments["status"] = status
+            limit = self._extract_limit(normalised)
+            if limit is not None:
+                arguments["limit"] = limit
+            return FunctionCall(name="feature_blueprints", arguments=arguments)
+
         if "daily" in normalised and (
             "task" in normalised
             or "tasks" in normalised

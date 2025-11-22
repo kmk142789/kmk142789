@@ -114,6 +114,17 @@ def test_agent_feature_blueprints() -> None:
     assert metadata["confidence"] > 0.9
 
 
+def test_agent_upgrade_request_defaults_to_blueprints() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command("Update and upgrade echos computer")
+    payload = response.to_payload()
+    assert payload["function"] == "feature_blueprints"
+    features = payload["data"]["features"]
+    assert features
+    metadata = payload["metadata"]
+    assert metadata["updated"] == "2025-05-18"
+
+
 def test_agent_feature_blueprints_focus_status_limit() -> None:
     agent = EchoChatAgent()
     response = agent.handle_command("show ready code echos computer feature roadmap top 1")
