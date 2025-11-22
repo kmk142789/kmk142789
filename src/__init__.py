@@ -49,6 +49,7 @@ from .creative_loop import (
     summarize_loop,
     summarise_loop_suite,
 )
+from .holo_semantic_echo_loom import HoloSemanticEchoLoom, Spark
 from .echo_transcendence_engine import (
     EchoTranscendenceEngine,
     HelixInput,
@@ -88,11 +89,13 @@ __all__ = [
     "HelixInput",
     "TranscendenceSignature",
     "generate_loop",
+    "HoloSemanticEchoLoom",
     "load_voice_bias_profile",
     "loop_demo",
     "compose_transcendence_manifest",
     "summarize_loop",
     "summarise_loop_suite",
     "resonance_demo",
+    "Spark",
     "transcendence_demo",
 ]
