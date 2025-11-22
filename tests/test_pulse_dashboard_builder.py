@@ -103,3 +103,29 @@ def test_pulse_classification(tmp_path: Path, message: str, expected: str) -> No
     builder = PulseDashboardBuilder(project_root=tmp_path)
     pulses = builder.build()["pulses"]
     assert pulses[0]["category"] == expected
+
+
+def test_signal_health_summary(tmp_path: Path) -> None:
+    pulse_history = json.loads(_load_fixture("pulse_history.json").read_text(encoding="utf-8"))
+    _write_json(tmp_path / "pulse_history.json", pulse_history)
+
+    attestations_dir = tmp_path / "attestations"
+    attestations_dir.mkdir()
+    att_payload = json.loads(_load_fixture("attestation_sample.json").read_text(encoding="utf-8"))
+    _write_json(attestations_dir / "att-001.json", att_payload)
+
+    amplify_log = tmp_path / "state" / "amplify_log.jsonl"
+    amplify_log.parent.mkdir(parents=True, exist_ok=True)
+    amplify_log.write_text(_load_fixture("amplify_log.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
+
+    builder = PulseDashboardBuilder(project_root=tmp_path)
+    health = builder.build()["signal_health"]
+
+    assert health["status"] == "vibrant"
+    assert health["health_score"] == pytest.approx(75.63, rel=1e-3)
+    metrics = health["metrics"]
+    assert metrics["average_pulse_gap_seconds"] == 150.0
+    assert metrics["pulse_span_seconds"] == 300.0
+    assert metrics["attestation_total"] == 1
+    assert metrics["amplify_trend"] == "rising"
+    assert len(health["insights"]) >= 3
