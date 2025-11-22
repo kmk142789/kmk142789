@@ -1,0 +1,22 @@
+nodes:
+  - id: capability/*
+    attrs: [owner, tests, policies, version, trust_score]
+  - id: agent/*
+    attrs: [did, role, trust_score, capabilities]
+  - id: dataset/*
+    attrs: [provenance, license, lineage]
+  - id: policy/*
+    attrs: [rule, scope, status]
+edges:
+  - type: flows
+    from: capability/*
+    to: capability/*
+    attrs: [latency, confidence, last_test]
+  - type: controls
+    from: policy/*
+    to: capability/*
+    attrs: [status, evidence]
+  - type: attests
+    from: agent/*
+    to: capability/*
+    attrs: [result, signature, run_id]
