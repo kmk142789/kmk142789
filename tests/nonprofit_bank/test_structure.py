@@ -119,3 +119,48 @@ def test_as_dict_serialises_key_sections(structure):
     assert "guaranteed_reinvestment" in payload["growth_model"]
     assert "impact_nfts" in payload["overkill_features"]
     assert "dashboard" in payload["core_design"]["transparency_layer"].lower()
+
+
+def test_transparency_report_includes_compliance_and_totals(structure, tmp_path):
+    structure.record_flow(
+        category="donation",
+        amount="100.00",
+        source="donor:ally",
+        destination="Little Footsteps ops",
+        label="recurring donor",
+    )
+    structure.record_flow(
+        category="yield",
+        amount="40.00",
+        source="treasury",
+        destination="Little Footsteps staffing",
+        label="monthly yield",
+    )
+    structure.record_flow(
+        category="payout",
+        amount="55.00",
+        source="treasury",
+        destination="Little Footsteps groceries",
+        label="food run",
+    )
+
+    structure.record_flow(
+        category="investment_return",
+        amount="25.00",
+        source="treasury",
+        destination="Community partner grant",
+        label="off-mission yield",
+    )
+
+    report = structure.transparency_report()
+
+    assert report["net_position"] == "110.00"
+    assert report["category_totals"]["donation"] == "100.00"
+    assert report["category_totals"]["yield"] == "40.00"
+    assert report["reinvestment"]["compliant"] is False
+    assert report["reinvestment"]["total_yield"] == "65.00"
+    assert report["reinvestment"]["violations"][0]["destination"] == "Community partner grant"
+
+    export_path = structure.export_transparency_report(tmp_path / "report.json")
+    payload = export_path.read_text(encoding="utf-8")
+    assert "Community partner grant" in payload
