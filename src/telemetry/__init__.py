@@ -17,6 +17,7 @@ from .report import (
     generate_vitality_report,
     main as generate_vitality_report_cli,
 )
+from .holographic_time_weaver import HologramFrame, TemporalHologramWeaver
 
 __all__ = [
     "ConsentState",
@@ -37,4 +38,6 @@ __all__ = [
     "VitalityReportError",
     "generate_vitality_report",
     "generate_vitality_report_cli",
+    "HologramFrame",
+    "TemporalHologramWeaver",
 ]
