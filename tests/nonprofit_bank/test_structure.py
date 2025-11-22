@@ -76,6 +76,31 @@ def test_reinvestment_summary_returns_breakdown(structure):
     ]
 
 
+def test_reinvestment_actions_recommend_redirects(structure):
+    structure.record_flow(
+        category="yield",
+        amount=150,
+        source="treasury",
+        destination="Little Footsteps staffing",
+        label="quarterly yield",
+    )
+    structure.record_flow(
+        category="investment_return",
+        amount=25,
+        source="treasury",
+        destination="Community partner grant",
+        label="partner yield",
+    )
+
+    actions = structure.reinvestment_actions()
+
+    assert actions["has_violations"] is True
+    assert actions["total_redirect"] == Decimal("25.00")
+    assert len(actions["actions"]) == 1
+    assert actions["actions"][0]["source"] == "Community partner grant"
+    assert actions["actions"][0]["redirect_to"].startswith("Little Footsteps")
+
+
 def test_create_impact_token_generates_trace(structure):
     token = structure.create_impact_token(
         donor="alice",
@@ -160,6 +185,8 @@ def test_transparency_report_includes_compliance_and_totals(structure, tmp_path)
     assert report["reinvestment"]["compliant"] is False
     assert report["reinvestment"]["total_yield"] == "65.00"
     assert report["reinvestment"]["violations"][0]["destination"] == "Community partner grant"
+    assert report["reinvestment"]["redirect"]["total_redirect"] == "25.00"
+    assert report["reinvestment"]["redirect"]["actions"][0]["source"] == "Community partner grant"
 
     export_path = structure.export_transparency_report(tmp_path / "report.json")
     payload = export_path.read_text(encoding="utf-8")
