@@ -26,6 +26,7 @@ import argparse
 import datetime as _dt
 import json
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Mapping, MutableMapping, Optional, Sequence, Tuple
@@ -136,6 +137,10 @@ CODE_EXTENSIONS = {
 }
 
 TODO_KEYWORDS = ("TODO", "FIXME", "HACK")
+TODO_PATTERN = re.compile(
+    r"\b(?P<keyword>TODO|FIXME|HACK)\b(?:[:\s-]+(?P<text>.*))?",
+    re.IGNORECASE,
+)
 TODO_SCAN_LIMIT_BYTES = 1_000_000  # avoid loading massive binaries
 
 
@@ -301,10 +306,18 @@ class ContinuumObservatory:
             try:
                 with path.open("r", encoding="utf-8", errors="ignore") as handle:
                     for line_no, line in enumerate(handle, start=1):
-                        keyword = next((k for k in TODO_KEYWORDS if k in line), None)
-                        if keyword:
+                        match = TODO_PATTERN.search(line)
+                        if match:
+                            keyword = match.group("keyword").upper()
+                            text = (match.group("text") or "").strip()
+                            content = text if text else line.strip()
                             matches.append(
-                                TodoMatch(path=path, line_no=line_no, keyword=keyword, line=line.strip())
+                                TodoMatch(
+                                    path=path,
+                                    line_no=line_no,
+                                    keyword=keyword,
+                                    line=content,
+                                )
                             )
                             if len(matches) >= limit:
                                 return matches
