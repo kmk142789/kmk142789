@@ -57,6 +57,13 @@ from .echo_transcendence_engine import (
     compose_transcendence_manifest,
     demo as transcendence_demo,
 )
+from .chrono_holographic_imprint import (
+    ChronoHolographicImprint,
+    HolographicPulse,
+    ImprintRequest,
+    ImprintResult,
+    demo as imprint_demo,
+)
 
 __all__ = [
     "ChronicleEvent",
@@ -66,6 +73,7 @@ __all__ = [
     "ConstellationNode",
     "ConstellationSeed",
     "ConstellationWeaver",
+    "ChronoHolographicImprint",
     "LoopDiagnostics",
     "LoopRhythm",
     "LoopSeed",
@@ -76,6 +84,10 @@ __all__ = [
     "ResonanceReport",
     "constellation_demo",
     "chronicle_demo",
+    "imprint_demo",
+    "HolographicPulse",
+    "ImprintRequest",
+    "ImprintResult",
     "compose_constellation",
     "compose_chronicle",
     "compose_convergence_report",
