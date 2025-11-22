@@ -222,11 +222,35 @@ class NonprofitBankStructure:
     def validate_reinvestment(self) -> bool:
         """Ensure all yield events loop back into Little Footsteps."""
 
-        return all(
-            entry.destination.lower().startswith("little footsteps")
+        return not self.reinvestment_violations()
+
+    def reinvestment_violations(self) -> tuple[TransparencyLogEntry, ...]:
+        """Return any yield events that failed the reinvestment mandate."""
+
+        return tuple(
+            entry
+            for entry in self._transparency_log
+            if entry.category in {"yield", "investment_return"}
+            and not entry.destination.lower().startswith("little footsteps")
+        )
+
+    def reinvestment_summary(self) -> Mapping[str, object]:
+        """Summarise yield flows and flag non-compliant destinations."""
+
+        yield_entries = tuple(
+            entry
             for entry in self._transparency_log
             if entry.category in {"yield", "investment_return"}
         )
+        violations = self.reinvestment_violations()
+        total_yield = sum((entry.amount for entry in yield_entries), Decimal("0"))
+
+        return {
+            "compliant": len(violations) == 0,
+            "entries": yield_entries,
+            "violations": violations,
+            "total_yield": total_yield.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+        }
 
     # ------------------------------------------------------------------
     # Impact tokenisation

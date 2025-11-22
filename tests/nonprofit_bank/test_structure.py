@@ -50,6 +50,32 @@ def test_validate_reinvestment_flags_non_compliant_entries(structure):
     assert structure.validate_reinvestment() is False
 
 
+def test_reinvestment_summary_returns_breakdown(structure):
+    structure.record_flow(
+        category="yield",
+        amount=150,
+        source="treasury",
+        destination="Little Footsteps staffing",
+        label="quarterly yield",
+    )
+    structure.record_flow(
+        category="investment_return",
+        amount=25,
+        source="treasury",
+        destination="Community partner grant",
+        label="partner yield",
+    )
+
+    summary = structure.reinvestment_summary()
+
+    assert summary["compliant"] is False
+    assert summary["total_yield"] == Decimal("175.00")
+    assert len(summary["entries"]) == 2
+    assert [entry.destination for entry in summary["violations"]] == [
+        "Community partner grant",
+    ]
+
+
 def test_create_impact_token_generates_trace(structure):
     token = structure.create_impact_token(
         donor="alice",
