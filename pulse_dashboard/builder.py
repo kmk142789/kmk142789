@@ -77,6 +77,7 @@ class PulseDashboardBuilder:
         payload["loop_health"] = LoopHealthCollector(self._paths.root).collect()
         payload["glyph_cycle"] = self._build_glyph_cycle(payload)
         payload["pulse_summary"] = self._summarize_pulses(payload["pulses"])
+        payload["signal_health"] = self._assess_signal_health(payload)
         payload["proof_of_computation"] = self._load_proof_of_computation()
         return payload
 
@@ -468,6 +469,139 @@ class PulseDashboardBuilder:
                 f" :: {trend}"
             )
         return f"Amplify presence cycle {cycle} :: {trend}"
+
+    # ------------------------------------------------------------------
+    # Signal health intelligence
+
+    def _assess_signal_health(self, payload: Mapping[str, object]) -> dict[str, object]:
+        pulses = payload.get("pulses", [])
+        attestations = payload.get("attestations", [])
+        pulse_summary = payload.get("pulse_summary", {})
+        amplify = payload.get("amplify", {})
+
+        cadence = self._pulse_cadence(pulses)
+        attestation_total = len(attestations) if isinstance(attestations, Iterable) else 0
+        try:
+            wave_energy = float(pulse_summary.get("average_wave", 0.0))
+        except (TypeError, ValueError, AttributeError):
+            wave_energy = 0.0
+
+        amplify_summary = amplify.get("summary", {}) if isinstance(amplify, Mapping) else {}
+        trend = str(amplify_summary.get("trend", "steady"))
+        momentum = self._coerce_float(amplify_summary.get("momentum", 0.0))
+        stability = self._coerce_float(amplify_summary.get("stability", 0.0))
+        volatility = self._coerce_float(amplify_summary.get("volatility", 0.0))
+
+        score = 20.0 if pulses else 0.0
+        score += self._score_cadence(cadence["average_gap_seconds"])
+        score += min(20.0, attestation_total * 2.5)
+        score += self._score_wave_energy(wave_energy)
+        score += self._score_amplify(momentum, stability, trend, volatility)
+
+        health_score = round(max(0.0, min(100.0, score)), 2)
+
+        status = self._describe_signal_health(health_score)
+        insights = [
+            (
+                f"Pulse cadence averaging {cadence['average_gap_seconds']:.0f}s across"
+                f" {cadence['samples']} signals (span {cadence['span_seconds']:.0f}s)."
+            ),
+            (
+                f"Amplify trend {trend} with momentum {momentum:.2f}"
+                f" and stability {stability:.3f}; volatility {volatility:.3f}."
+            ),
+            (
+                f"{attestation_total} attestations and wave energy {wave_energy:.2f}"
+                f" keep the signal {status}."
+            ),
+        ]
+
+        metrics = {
+            "average_pulse_gap_seconds": cadence["average_gap_seconds"],
+            "pulse_span_seconds": cadence["span_seconds"],
+            "attestation_total": attestation_total,
+            "wave_energy": round(wave_energy, 2),
+            "amplify_trend": trend,
+            "amplify_momentum": round(momentum, 3),
+            "amplify_stability": round(stability, 3),
+            "amplify_volatility": round(volatility, 3),
+        }
+
+        return {
+            "health_score": health_score,
+            "status": status,
+            "insights": insights,
+            "metrics": metrics,
+        }
+
+    def _pulse_cadence(self, pulses: Iterable[Mapping[str, object]]) -> dict[str, float]:
+        timestamps: list[datetime] = []
+        for entry in pulses:
+            ts_raw = entry.get("timestamp")
+            if isinstance(ts_raw, str):
+                try:
+                    timestamps.append(datetime.fromisoformat(ts_raw))
+                except ValueError:
+                    continue
+
+        if len(timestamps) < 2:
+            return {"average_gap_seconds": 0.0, "span_seconds": 0.0, "samples": len(timestamps)}
+
+        timestamps.sort(reverse=True)
+        gaps = [
+            (timestamps[index] - timestamps[index + 1]).total_seconds()
+            for index in range(len(timestamps) - 1)
+        ]
+        average_gap = sum(gaps) / len(gaps)
+        span_seconds = (timestamps[0] - timestamps[-1]).total_seconds()
+        return {
+            "average_gap_seconds": round(average_gap, 2),
+            "span_seconds": round(span_seconds, 2),
+            "samples": len(timestamps),
+        }
+
+    def _score_cadence(self, average_gap_seconds: float) -> float:
+        if average_gap_seconds <= 0:
+            return 25.0
+        hours = average_gap_seconds / 3600.0
+        scaled = 25.0 * (1.0 / (1.0 + hours))
+        return round(max(5.0, min(25.0, scaled)), 2)
+
+    def _score_wave_energy(self, average_wave: float) -> float:
+        scaled = (average_wave / 360.0) * 25.0
+        return round(max(0.0, min(25.0, scaled)), 2)
+
+    def _score_amplify(
+        self, momentum: float, stability: float, trend: str, volatility: float
+    ) -> float:
+        trend = trend.lower()
+        if trend == "rising":
+            base = 10.0
+        elif trend == "steady":
+            base = 7.0
+        else:
+            base = 5.0
+        base += max(momentum, 0.0) * 1.5
+        base += max(stability, 0.0) * 5.0
+        base -= max(volatility, 0.0) * 0.5
+        return round(max(0.0, min(30.0, base)), 2)
+
+    @staticmethod
+    def _describe_signal_health(health_score: float) -> str:
+        if health_score >= 75:
+            return "vibrant"
+        if health_score >= 55:
+            return "stable"
+        if health_score >= 35:
+            return "watch"
+        return "cooling"
+
+    @staticmethod
+    def _coerce_float(value: object) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
 
 
 __all__ = ["PulseDashboardBuilder"]
