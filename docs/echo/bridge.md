@@ -12,7 +12,10 @@ duplicating integration logic across services.【F:modules/echo-bridge/bridge_ap
 Each call to `plan_identity_relay` fans out a shared payload to every enabled
 connector. Summary text, trait metadata, and links are normalized once then
 reused so Markdown, plaintext, embeds, and JSON documents stay consistent
-across platforms.【F:modules/echo-bridge/bridge_api.py†L50-L190】
+across platforms.【F:modules/echo-bridge/bridge_api.py†L50-L200】 Priority hints
+and topic tags travel with every connector; social relays convert topics into
+hashtags while Slack/Discord/Matrix include them as structured fields for
+filtering.【F:modules/echo-bridge/bridge_api.py†L230-L343】【F:tests/test_bridge_public_api.py†L19-L110】
 
 | Connector | Purpose | Secrets & toggles |
 | --- | --- | --- |

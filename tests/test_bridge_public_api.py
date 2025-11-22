@@ -73,6 +73,8 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
             "traits": {"pulse": "aurora", "resonance": "high"},
             "summary": "Cycle snapshot anchored in Aurora",
             "links": [" https://echo.example/cycles/01 ", "https://status.echo/bridge"],
+            "topics": ["Pulse Orbit", "Echo Bridge", "echo bridge"],
+            "priority": "high",
         },
     )
     assert response.status_code == 200
@@ -90,6 +92,8 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert telegram_plan["action"] == "send_message"
     assert "Echo Bridge Relay" in telegram_plan["payload"]["text"]
     assert "Summary: Cycle snapshot anchored in Aurora" in telegram_plan["payload"]["text"]
+    assert "Priority: high" in telegram_plan["payload"]["text"]
+    assert "Topics:" in telegram_plan["payload"]["text"]
 
     firebase_plan = plans["firebase"]
     assert firebase_plan["payload"]["document"].endswith("::01")
@@ -99,15 +103,21 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
         "https://echo.example/cycles/01",
         "https://status.echo/bridge",
     ]
+    assert firebase_plan["payload"]["data"]["priority"] == "high"
+    assert firebase_plan["payload"]["data"]["topics"] == [
+        "Pulse Orbit",
+        "Echo Bridge",
+    ]
 
     slack_plan = plans["slack"]
     assert slack_plan["action"] == "send_webhook"
     assert slack_plan["payload"]["webhook_env"] == "SLACK_ECHO_WEBHOOK"
     assert slack_plan["payload"]["context"]["identity"] == "EchoWildfire"
-    attachments = slack_plan["payload"]["attachments"]
-    assert attachments[0]["title"] == "Summary"
-    assert attachments[0]["text"] == "Cycle snapshot anchored in Aurora"
-    assert any(att["title"].startswith("Link") for att in attachments)
+    attachments = {att["title"]: att["text"] for att in slack_plan["payload"].get("attachments", [])}
+    assert attachments["Summary"] == "Cycle snapshot anchored in Aurora"
+    assert attachments["Priority"] == "high"
+    assert attachments["Topics"] == "Pulse Orbit, Echo Bridge"
+    assert any(title.startswith("Link") for title in attachments)
 
     webhook_plan = plans["webhook"]
     assert webhook_plan["action"] == "post_json"
@@ -120,12 +130,17 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert discord_plan["payload"]["webhook_env"] == "DISCORD_ECHO_WEBHOOK"
     assert discord_plan["payload"]["context"]["cycle"] == "01"
     assert discord_plan["payload"].get("embeds")
+    embed_fields = {field["name"]: field["value"] for field in discord_plan["payload"]["embeds"][0]["fields"]}
+    assert embed_fields["Priority"] == "high"
+    assert embed_fields["Topics"] == "Pulse Orbit, Echo Bridge"
 
     email_plan = plans["email"]
     assert email_plan["action"] == "send_email"
     assert email_plan["payload"]["recipients"] == ["ops@echo.test", "alerts@echo.test"]
     assert email_plan["payload"]["subject"] == "Echo Relay EchoWildfire/01"
     assert "Echo Bridge Relay" in email_plan["payload"]["body"]
+    assert email_plan["payload"]["priority"] == "high"
+    assert email_plan["payload"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
 
     mastodon_plan = plans["mastodon"]
     assert mastodon_plan["action"] == "post_status"
@@ -133,9 +148,13 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert mastodon_plan["payload"]["visibility"] == "direct"
     assert "#EchoBridge" in mastodon_plan["payload"]["status"]
     assert mastodon_plan["payload"]["context"]["identity"] == "EchoWildfire"
+    assert mastodon_plan["payload"]["tags"] == ["Pulse Orbit", "Echo Bridge"]
+    assert mastodon_plan["payload"]["priority"] == "high"
 
     matrix_plan = plans["matrix"]
     assert matrix_plan["action"] == "send_room_message"
     assert matrix_plan["payload"]["homeserver"] == "https://matrix.echo"
     assert matrix_plan["payload"]["room_id"] == "!echo:matrix"
     assert "Cycle 01" in matrix_plan["payload"]["text"]
+    assert matrix_plan["payload"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
+    assert matrix_plan["payload"]["priority"] == "high"

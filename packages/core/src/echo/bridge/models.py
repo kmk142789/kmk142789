@@ -36,6 +36,16 @@ class PlanRequest(BaseModel):
         default=None,
         description="Optional list of reference links shared with each connector.",
     )
+    topics: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of topics or hashtags to propagate to social relays.",
+        examples=[["Pulse Orbit", "Echo Bridge"]],
+    )
+    priority: Optional[str] = Field(
+        default=None,
+        description="Optional priority hint applied to messages and webhook payloads.",
+        examples=["info", "high", "critical"],
+    )
 
 
 class PlanModel(BaseModel):
