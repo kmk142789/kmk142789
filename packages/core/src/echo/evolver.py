@@ -704,6 +704,36 @@ class CycleGuidanceFrame:
 
 
 @dataclass(slots=True)
+class ResilienceSignal:
+    """Lightweight stability probe for the active cycle."""
+
+    cycle: int
+    stability_index: float
+    load_factor: float
+    network_factor: float
+    momentum_status: str
+    momentum_trend: str
+    risk_flags: Tuple[str, ...]
+    confidence: str
+    summary: str
+    recommendations: Tuple[str, ...]
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "cycle": self.cycle,
+            "stability_index": self.stability_index,
+            "load_factor": self.load_factor,
+            "network_factor": self.network_factor,
+            "momentum_status": self.momentum_status,
+            "momentum_trend": self.momentum_trend,
+            "risk_flags": list(self.risk_flags),
+            "confidence": self.confidence,
+            "summary": self.summary,
+            "recommendations": list(self.recommendations),
+        }
+
+
+@dataclass(slots=True)
 class EvolverState:
     cycle: int = 0
     glyphs: str = "∇⊸≋∇"
@@ -1026,6 +1056,10 @@ class EchoEvolver:
             recent_events=recent_events,
         )
 
+        resilience = self.resilience_signal(
+            persist_artifact=persist_artifact, momentum_window=momentum_samples
+        )
+
         pending_preview = ", ".join(frame.pending_steps[:3])
         if len(frame.pending_steps) > 3:
             pending_preview += " …"
@@ -1035,7 +1069,8 @@ class EchoEvolver:
         summary = (
             "EchoEvolver cycle guidance — cycle {cycle}, {progress:.2f}% complete. "
             "Momentum: {status} ({trend}, confidence {confidence}). "
-            "Next step: {next_step}. Focus scope: {focus_scope}. Pending ({pending_count}): {pending}."
+            "Next step: {next_step}. Focus scope: {focus_scope}. "
+            "Resilience index: {resilience:.1f}/100. Pending ({pending_count}): {pending}."
         ).format(
             cycle=frame.cycle,
             progress=frame.progress_percent,
@@ -1044,6 +1079,7 @@ class EchoEvolver:
             confidence=frame.momentum_confidence,
             next_step=frame.next_step,
             focus_scope=frame.focus_scope,
+            resilience=resilience.stability_index,
             pending_count=len(frame.pending_steps),
             pending=pending_preview,
         )
@@ -1059,6 +1095,136 @@ class EchoEvolver:
         )
 
         return summary
+
+    def resilience_signal(
+        self, *, momentum_window: int = 5, persist_artifact: bool = True
+    ) -> ResilienceSignal:
+        """Return a compact resilience signal for the current cycle."""
+
+        if momentum_window <= 0:
+            raise ValueError("momentum_window must be positive")
+
+        metrics = self.state.system_metrics
+        load_factor = 0.0
+        if metrics.cpu_usage:
+            load_factor = max(0.0, min(1.0, metrics.cpu_usage / 100.0))
+
+        network_factor = 0.0
+        if metrics.network_nodes:
+            network_factor = max(0.0, min(1.0, metrics.network_nodes / 12.0))
+
+        momentum = self.momentum_resonance(limit=momentum_window)
+        momentum_status = str(momentum.get("status", "unavailable"))
+        momentum_trend = str(momentum.get("trend", "no signal"))
+        confidence = str(momentum.get("confidence", "low"))
+
+        stability_index = 72.0
+        stability_index -= load_factor * 25.0
+        stability_index += network_factor * 20.0
+        if momentum_status == "accelerating":
+            stability_index += 5.0
+        elif momentum_status == "regressing":
+            stability_index -= 5.0
+        stability_index = max(0.0, min(100.0, round(stability_index, 2)))
+
+        risk_flags: list[str] = []
+        if load_factor >= 0.8:
+            risk_flags.append("high load risk")
+        elif load_factor >= 0.6:
+            risk_flags.append("elevated load")
+
+        if network_factor < 0.25:
+            risk_flags.append("sparse network links")
+        elif network_factor < 0.5:
+            risk_flags.append("moderate network density")
+
+        if momentum_status == "regressing":
+            risk_flags.append("momentum regression")
+        elif momentum_status == "unavailable":
+            risk_flags.append("momentum unavailable")
+
+        recommendations: list[str] = []
+        if load_factor >= 0.6:
+            recommendations.append("schedule cool-down window")
+        if network_factor < 0.5:
+            recommendations.append("increase peer discovery scans")
+        if momentum_status in {"regressing", "steady"}:
+            recommendations.append("prime rapid iteration ritual")
+
+        summary = (
+            "Resilience index {index:.1f}/100 with {confidence} confidence — "
+            "load {load:.1f}%, nodes {nodes} (factor {network:.2f}), momentum {momentum}."
+        ).format(
+            index=stability_index,
+            confidence=confidence,
+            load=load_factor * 100,
+            nodes=metrics.network_nodes,
+            network=network_factor,
+            momentum=momentum_trend,
+        )
+
+        signal = ResilienceSignal(
+            cycle=self.state.cycle,
+            stability_index=stability_index,
+            load_factor=load_factor,
+            network_factor=network_factor,
+            momentum_status=momentum_status,
+            momentum_trend=momentum_trend,
+            risk_flags=tuple(risk_flags),
+            confidence=confidence,
+            summary=summary,
+            recommendations=tuple(recommendations),
+        )
+
+        self.state.network_cache["resilience_signal"] = signal.as_dict()
+        self.state.event_log.append(
+            "Resilience signal updated (index={index:.1f}, risks={risks})".format(
+                index=stability_index, risks=len(risk_flags)
+            )
+        )
+
+        if persist_artifact:
+            self.state.network_cache["last_resilience_report"] = signal.as_dict()
+
+        return signal
+
+    def resilience_report(
+        self, *, momentum_window: int = 5, persist_artifact: bool = True
+    ) -> str:
+        """Return a human-readable resilience report."""
+
+        signal = self.resilience_signal(
+            momentum_window=momentum_window, persist_artifact=persist_artifact
+        )
+
+        lines = [
+            f"Cycle {signal.cycle} resilience index: {signal.stability_index:.1f}/100 ({signal.confidence} confidence)",
+            f"- Load factor: {signal.load_factor * 100:.1f}%",
+            f"- Network factor: {signal.network_factor:.2f}",
+            f"- Momentum: {signal.momentum_trend} ({signal.momentum_status})",
+        ]
+
+        if signal.risk_flags:
+            lines.append("- Risks: " + ", ".join(signal.risk_flags))
+        else:
+            lines.append("- Risks: none detected")
+
+        if signal.recommendations:
+            lines.append("- Recommendations: " + ", ".join(signal.recommendations))
+        else:
+            lines.append("- Recommendations: hold course")
+
+        lines.append(f"- Summary: {signal.summary}")
+
+        report = "\n".join(lines)
+        self.state.network_cache["resilience_report"] = report
+        self.state.event_log.append(
+            "Resilience report drafted (confidence={confidence})".format(
+                confidence=signal.confidence
+            )
+        )
+
+        return report
 
     def __init__(
         self,
@@ -7662,6 +7828,7 @@ __all__ = [
     "SystemMetrics",
     "HearthWeave",
     "GlyphCrossReading",
+    "ResilienceSignal",
     "ContinuumAmplificationSummary",
     "ColossusExpansionPlan",
     "EvolutionAdvancementResult",
