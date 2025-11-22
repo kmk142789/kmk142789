@@ -31,6 +31,23 @@ jobs:
           mkdir -p out/mirror_drafts
           python -m mirror_sync
 
+      - name: Push drafts to IPFS (optional)
+        if: env.MIRROR_SYNC_IPFS_API != ''
+        env:
+          MIRROR_SYNC_IPFS_API: ${{ secrets.MIRROR_SYNC_IPFS_API }}
+          MIRROR_SYNC_IPFS_TOKEN: ${{ secrets.MIRROR_SYNC_IPFS_TOKEN }}
+          MIRROR_SYNC_BRIDGE_TARGETS: ${{ secrets.MIRROR_SYNC_BRIDGE_TARGETS }}
+        run: |
+          python -m mirror_sync --skip-browser --push-ipfs --bridge-targets "${MIRROR_SYNC_BRIDGE_TARGETS}"
+
+      - name: Upload bridge manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirror-bridge-manifest
+          path: out/mirror_drafts/bridge_manifest.json
+          if-no-files-found: warn
+
       - name: Upload draft HTML artifacts
         if: always()
         uses: actions/upload-artifact@v4
