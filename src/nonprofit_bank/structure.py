@@ -21,9 +21,12 @@ structured metadata.
 
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal, ROUND_HALF_UP
+import json
+from pathlib import Path
 from typing import Iterable, Mapping, MutableMapping, Sequence
 from uuid import uuid4
 
@@ -132,6 +135,13 @@ class TransparencyLogEntry:
             payload["memo"] = self.memo
         if self.metadata:
             payload["metadata"] = dict(self.metadata)
+        return payload
+
+    def serialisable(self) -> Mapping[str, object]:
+        """Return a JSON-safe payload for dashboards and exports."""
+
+        payload = self.as_dict()
+        payload["amount"] = str(payload["amount"])
         return payload
 
 
@@ -351,6 +361,57 @@ class NonprofitBankStructure:
         """Return generated quarterly reports."""
 
         return tuple(self._reports)
+
+    # ------------------------------------------------------------------
+    # Transparency digest + export
+    # ------------------------------------------------------------------
+    def _category_totals(self) -> Mapping[str, Decimal]:
+        totals: MutableMapping[str, Decimal] = defaultdict(lambda: Decimal("0"))
+        for entry in self._transparency_log:
+            totals[entry.category] += entry.amount
+        return {
+            category: total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            for category, total in totals.items()
+        }
+
+    def transparency_report(self) -> Mapping[str, object]:
+        """Summarise ledger activity with reinvestment compliance signals."""
+
+        category_totals = self._category_totals()
+        inflow_categories = {"donation", "grant", "yield", "investment_return"}
+        outflow_categories = {"expense", "payout", "disbursement"}
+
+        inflows = sum(
+            (amount for category, amount in category_totals.items() if category in inflow_categories),
+            Decimal("0"),
+        )
+        outflows = sum(
+            (amount for category, amount in category_totals.items() if category in outflow_categories),
+            Decimal("0"),
+        )
+        net_position = (inflows - outflows).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        reinvestment = self.reinvestment_summary()
+
+        return {
+            "entries": [entry.serialisable() for entry in self._transparency_log],
+            "category_totals": {k: str(v) for k, v in category_totals.items()},
+            "net_position": str(net_position),
+            "reinvestment": {
+                "compliant": reinvestment["compliant"],
+                "total_yield": str(reinvestment["total_yield"]),
+                "violations": [entry.serialisable() for entry in reinvestment["violations"]],
+            },
+        }
+
+    def export_transparency_report(self, destination: Path | str) -> Path:
+        """Write the transparency report to disk in JSON form."""
+
+        report = self.transparency_report()
+        path = Path(destination)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        return path
 
     # ------------------------------------------------------------------
     # Convenience metadata
