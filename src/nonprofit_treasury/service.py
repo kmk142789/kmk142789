@@ -451,3 +451,37 @@ class NonprofitTreasuryService:
         ).hexdigest()
 
         return TreasuryProof(proof_hash=proof_hash, **payload)
+
+    # ------------------------------------------------------------------
+    # Beneficiary pipeline bootstrap
+    # ------------------------------------------------------------------
+    def launch_first_beneficiary_flow(
+        self, *, beneficiary_label: str = "Little Footsteps", memo: str | None = None
+    ) -> dict[str, object]:
+        """Activate the treasury → beneficiary pipeline and return a manifest payload."""
+
+        proof = self.generate_proof(beneficiary_label=beneficiary_label)
+        manifest = {
+            "flow": "treasury→beneficiary",
+            "beneficiary_label": proof.beneficiary_label,
+            "beneficiary_wallet": proof.beneficiary_wallet,
+            "contract_address": proof.contract_address,
+            "stablecoin_address": proof.stablecoin_address,
+            "little_footsteps_linked": proof.little_footsteps_linked,
+            "treasury_balance": proof.onchain_balance,
+            "total_donations": proof.total_donations,
+            "total_disbursed": proof.total_disbursed,
+            "ledger_balance": proof.ledger_balance,
+            "balance_delta": proof.balance_delta,
+            "proof_hash": proof.proof_hash,
+            "produced_at": proof.produced_at,
+            "memo": memo or "Launch the first beneficiary flow",
+        }
+
+        logger.info(
+            "Beneficiary flow launched for %s with balance %s tokens (linked=%s)",
+            manifest["beneficiary_label"],
+            manifest["treasury_balance"],
+            manifest["little_footsteps_linked"],
+        )
+        return manifest

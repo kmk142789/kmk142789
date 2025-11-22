@@ -26,6 +26,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "balance",
             "totals",
             "proof",
+            "launch-beneficiary-flow",
         ],
         help="Action to perform",
     )
@@ -33,11 +34,31 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--amount", type=int, help="Token amount (base units) for disburse command")
     parser.add_argument("--reason", help="Reason memo for the disburse command")
     parser.add_argument(
+        "--beneficiary-label",
+        default="Little Footsteps",
+        help="Label used when binding the treasury proof to the beneficiary",
+    )
+    parser.add_argument(
+        "--memo",
+        help=(
+            "Optional memo to embed in the launch-beneficiary-flow manifest; default"
+            " notes the activation of the first pipeline."
+        ),
+    )
+    parser.add_argument(
         "--proof-dir",
         default="proofs",
         help=(
             "Directory where the proof command will store timestamped JSON snapshots. "
             "Set to '-' to skip writing to disk."
+        ),
+    )
+    parser.add_argument(
+        "--launch-output",
+        default="state/little_footsteps/beneficiary_flow.json",
+        help=(
+            "Destination for the launch-beneficiary-flow manifest. Set to '-' to skip writing"
+            " to disk."
         ),
     )
     return parser.parse_args(argv)
@@ -56,6 +77,14 @@ def write_proof_snapshot(payload: dict[str, object], produced_at: str, *, direct
     directory.mkdir(parents=True, exist_ok=True)
     filename = f"little-footsteps-proof-{_timestamp_slug(produced_at)}.json"
     destination = directory / filename
+    destination.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return destination
+
+
+def write_launch_manifest(payload: dict[str, object], *, destination: Path) -> Path:
+    """Persist the beneficiary launch manifest to disk and return the path."""
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return destination
 
@@ -104,6 +133,14 @@ def main(argv: list[str] | None = None) -> int:
         if args.proof_dir != "-":
             destination = write_proof_snapshot(payload, proof.produced_at, directory=Path(args.proof_dir))
             logging.info("Stored timestamped proof snapshot at %s", destination)
+    elif args.command == "launch-beneficiary-flow":
+        manifest = service.launch_first_beneficiary_flow(
+            beneficiary_label=args.beneficiary_label, memo=args.memo
+        )
+        print(json.dumps(manifest, indent=2))
+        if args.launch_output != "-":
+            destination = write_launch_manifest(manifest, destination=Path(args.launch_output))
+            logging.info("Stored beneficiary flow manifest at %s", destination)
     else:
         raise ValueError(f"Unsupported command: {args.command}")
     return 0
