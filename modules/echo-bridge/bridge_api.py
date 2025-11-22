@@ -71,12 +71,16 @@ class EchoBridgeAPI:
         traits: Optional[Dict[str, Any]] = None,
         summary: Optional[str] = None,
         links: Optional[Sequence[str]] = None,
+        topics: Optional[Sequence[str]] = None,
+        priority: Optional[str] = None,
     ) -> List[BridgePlan]:
         """Build relay plans for GitHub, Telegram, and Firebase."""
 
         traits = self._normalise_traits(traits or {})
         summary_text = self._normalise_summary(summary)
         link_items = self._normalise_links(links)
+        topic_items = self._normalise_topics(topics)
+        priority_text = self._normalise_priority(priority)
         plans: List[BridgePlan] = []
         markdown_body = None
         plain_text = None
@@ -88,6 +92,8 @@ class EchoBridgeAPI:
             traits=traits,
             summary=summary_text,
             links=link_items,
+            topics=topic_items,
+            priority=priority_text,
         )
 
         if self.github_repository:
@@ -98,6 +104,8 @@ class EchoBridgeAPI:
                 traits=traits,
                 summary=summary_text,
                 links=link_items,
+                topics=topic_items,
+                priority=priority_text,
             )
             plans.append(
                 self._github_plan(
@@ -105,6 +113,8 @@ class EchoBridgeAPI:
                     cycle=cycle,
                     signature=signature,
                     traits=traits,
+                    topics=topic_items,
+                    priority=priority_text,
                     body=markdown_body,
                 )
             )
@@ -116,6 +126,8 @@ class EchoBridgeAPI:
                 traits=traits,
                 summary=summary_text,
                 links=link_items,
+                topics=topic_items,
+                priority=priority_text,
             )
             plans.append(
                 self._telegram_plan(
@@ -123,6 +135,8 @@ class EchoBridgeAPI:
                     cycle=cycle,
                     signature=signature,
                     traits=traits,
+                    topics=topic_items,
+                    priority=priority_text,
                     text=plain_text,
                 )
             )
@@ -144,6 +158,8 @@ class EchoBridgeAPI:
                 traits=traits,
                 summary=summary_text,
                 links=link_items,
+                topics=topic_items,
+                priority=priority_text,
             )
             plans.append(
                 self._slack_plan(
@@ -153,6 +169,8 @@ class EchoBridgeAPI:
                     traits=traits,
                     summary=summary_text,
                     links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
                     text=plain_text,
                 )
             )
@@ -164,6 +182,8 @@ class EchoBridgeAPI:
                 traits=traits,
                 summary=summary_text,
                 links=link_items,
+                topics=topic_items,
+                priority=priority_text,
             )
             plans.append(
                 self._discord_plan(
@@ -173,6 +193,8 @@ class EchoBridgeAPI:
                     traits=traits,
                     summary=summary_text,
                     links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
                     text=plain_text,
                 )
             )
@@ -184,6 +206,8 @@ class EchoBridgeAPI:
                 traits=traits,
                 summary=summary_text,
                 links=link_items,
+                topics=topic_items,
+                priority=priority_text,
             )
             plans.append(
                 self._mastodon_plan(
@@ -193,6 +217,8 @@ class EchoBridgeAPI:
                     traits=traits,
                     summary=summary_text,
                     links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
                     text=social_text,
                 )
             )
@@ -204,6 +230,8 @@ class EchoBridgeAPI:
                 traits=traits,
                 summary=summary_text,
                 links=link_items,
+                topics=topic_items,
+                priority=priority_text,
             )
             plans.append(
                 self._matrix_plan(
@@ -213,6 +241,8 @@ class EchoBridgeAPI:
                     traits=traits,
                     summary=summary_text,
                     links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
                     text=social_text,
                 )
             )
@@ -224,6 +254,8 @@ class EchoBridgeAPI:
                 traits=traits,
                 summary=summary_text,
                 links=link_items,
+                topics=topic_items,
+                priority=priority_text,
             )
             plans.append(
                 self._email_plan(
@@ -233,6 +265,8 @@ class EchoBridgeAPI:
                     traits=traits,
                     summary=summary_text,
                     links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
                     text=plain_text,
                 )
             )
@@ -258,6 +292,8 @@ class EchoBridgeAPI:
         cycle: str,
         signature: str,
         traits: Dict[str, Any],
+        topics: Optional[List[str]] = None,
+        priority: Optional[str] = None,
         body: Optional[str] = None,
     ) -> BridgePlan:
         owner, name = self.github_repository.split("/", 1)
@@ -265,7 +301,17 @@ class EchoBridgeAPI:
             "owner": owner,
             "repo": name,
             "title": f"Echo Identity Relay :: {identity} :: Cycle {cycle}",
-            "body": body or self._render_markdown(identity=identity, cycle=cycle, signature=signature, traits=traits),
+            "body": body
+            or self._render_markdown(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=None,
+                links=[],
+                topics=topics or [],
+                priority=priority,
+            ),
             "labels": ["echo-bridge", identity.lower()],
         }
         return BridgePlan(platform="github", action="create_issue", payload=payload, requires_secret=["GITHUB_TOKEN"])
@@ -277,11 +323,23 @@ class EchoBridgeAPI:
         cycle: str,
         signature: str,
         traits: Dict[str, Any],
+        topics: List[str],
+        priority: Optional[str],
         text: Optional[str] = None,
     ) -> BridgePlan:
         payload = {
             "chat_id": self.telegram_chat_id,
-            "text": text or self._render_plain(identity=identity, cycle=cycle, signature=signature, traits=traits),
+            "text": text
+            or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=None,
+                links=[],
+                topics=topics,
+                priority=priority,
+            ),
             "parse_mode": "MarkdownV2",
         }
         return BridgePlan(platform="telegram", action="send_message", payload=payload, requires_secret=["TELEGRAM_BOT_TOKEN"])
@@ -302,6 +360,8 @@ class EchoBridgeAPI:
             traits=traits,
             summary=None,
             links=[],
+            topics=[],
+            priority=None,
         )
         payload = {
             "collection": self.firebase_collection,
@@ -319,9 +379,15 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         summary: Optional[str],
         links: List[str],
+        topics: List[str],
+        priority: Optional[str],
         text: Optional[str] = None,
     ) -> BridgePlan:
         attachments: List[Dict[str, Any]] = []
+        if priority:
+            attachments.append({"title": "Priority", "text": priority})
+        if topics:
+            attachments.append({"title": "Topics", "text": ", ".join(topics)})
         if summary:
             attachments.append({"title": "Summary", "text": summary})
         attachments.extend(self._attachment_traits(traits))
@@ -336,6 +402,8 @@ class EchoBridgeAPI:
                 traits=traits,
                 summary=summary,
                 links=links,
+                topics=topics,
+                priority=priority,
             ),
             "context": {"identity": identity, "cycle": cycle, "signature": signature},
         }
@@ -355,6 +423,8 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         summary: Optional[str],
         links: List[str],
+        topics: List[str],
+        priority: Optional[str],
         text: Optional[str] = None,
     ) -> BridgePlan:
         embeds: List[Dict[str, Any]] = []
@@ -368,6 +438,10 @@ class EchoBridgeAPI:
                 ],
                 "url": links[0] if links else None,
             }
+            if priority:
+                embed["fields"].append({"name": "Priority", "value": priority, "inline": True})
+            if topics:
+                embed["fields"].append({"name": "Topics", "value": ", ".join(topics), "inline": False})
             if not embed["fields"]:
                 embed.pop("fields")
             if embed.get("url") is None:
@@ -383,6 +457,8 @@ class EchoBridgeAPI:
                 traits=traits,
                 summary=summary,
                 links=links,
+                topics=topics,
+                priority=priority,
             ),
             "context": {"identity": identity, "cycle": cycle, "signature": signature},
         }
@@ -400,6 +476,8 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         summary: Optional[str],
         links: List[str],
+        topics: List[str],
+        priority: Optional[str],
         text: Optional[str] = None,
     ) -> BridgePlan:
         status = text or self._render_social(
@@ -409,6 +487,8 @@ class EchoBridgeAPI:
             traits=traits,
             summary=summary,
             links=links,
+            topics=topics,
+            priority=priority,
         )
         payload: Dict[str, Any] = {
             "instance": self.mastodon_instance_url,
@@ -418,6 +498,10 @@ class EchoBridgeAPI:
         }
         if links:
             payload["links"] = links[:2]
+        if topics:
+            payload["tags"] = topics
+        if priority:
+            payload["priority"] = priority
         requires = [self.mastodon_secret_name] if self.mastodon_secret_name else []
         return BridgePlan(platform="mastodon", action="post_status", payload=payload, requires_secret=requires)
 
@@ -430,6 +514,8 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         summary: Optional[str],
         links: List[str],
+        topics: List[str],
+        priority: Optional[str],
         text: Optional[str] = None,
     ) -> BridgePlan:
         message = text or self._render_social(
@@ -439,6 +525,8 @@ class EchoBridgeAPI:
             traits=traits,
             summary=summary,
             links=links,
+            topics=topics,
+            priority=priority,
         )
         payload: Dict[str, Any] = {
             "homeserver": self.matrix_homeserver,
@@ -448,6 +536,10 @@ class EchoBridgeAPI:
         }
         if links:
             payload["links"] = links
+        if topics:
+            payload["topics"] = topics
+        if priority:
+            payload["priority"] = priority
         requires = [self.matrix_secret_name] if self.matrix_secret_name else []
         return BridgePlan(platform="matrix", action="send_room_message", payload=payload, requires_secret=requires)
 
@@ -460,6 +552,8 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         summary: Optional[str],
         links: List[str],
+        topics: List[str],
+        priority: Optional[str],
         text: Optional[str] = None,
     ) -> BridgePlan:
         subject = self._render_email_subject(identity=identity, cycle=cycle)
@@ -470,6 +564,8 @@ class EchoBridgeAPI:
             traits=traits,
             summary=summary,
             links=links,
+            topics=topics,
+            priority=priority,
         )
         payload: Dict[str, Any] = {
             "recipients": list(self.email_recipients),
@@ -478,6 +574,10 @@ class EchoBridgeAPI:
             "context": {"identity": identity, "cycle": cycle, "signature": signature},
             "links": links,
         }
+        if topics:
+            payload["topics"] = topics
+        if priority:
+            payload["priority"] = priority
         requires = [self.email_secret_name] if self.email_secret_name else []
         return BridgePlan(platform="email", action="send_email", payload=payload, requires_secret=requires)
 
@@ -496,6 +596,8 @@ class EchoBridgeAPI:
             traits={},
             summary=None,
             links=[],
+            topics=[],
+            priority=None,
         )
         body = {
             "url_hint": self.webhook_url,
@@ -516,6 +618,8 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         summary: Optional[str],
         links: List[str],
+        topics: List[str],
+        priority: Optional[str],
     ) -> Dict[str, Any]:
         document: Dict[str, Any] = {
             "identity": identity,
@@ -523,10 +627,14 @@ class EchoBridgeAPI:
             "signature": signature,
             "traits": traits,
         }
+        if priority:
+            document["priority"] = priority
         if summary:
             document["summary"] = summary
         if links:
             document["links"] = links
+        if topics:
+            document["topics"] = topics
         return document
 
     def _normalise_traits(self, traits: Dict[str, Any]) -> Dict[str, Any]:
@@ -562,6 +670,37 @@ class EchoBridgeAPI:
             seen.add(text)
         return cleaned
 
+    def _normalise_topics(self, topics: Optional[Sequence[str]]) -> List[str]:
+        if not topics:
+            return []
+        seen = set()
+        cleaned: List[str] = []
+        for topic in topics:
+            if topic is None:
+                continue
+            text = str(topic).strip()
+            if not text:
+                continue
+            key = text.casefold()
+            if key in seen:
+                continue
+            cleaned.append(text)
+            seen.add(key)
+        return cleaned
+
+    @staticmethod
+    def _normalise_priority(priority: Optional[str]) -> Optional[str]:
+        if priority is None:
+            return None
+        text = str(priority).strip()
+        return text or None
+
+    @staticmethod
+    def _topic_hashtag(topic: str) -> str:
+        slug = "".join(char for char in topic if char.isalnum() or char in {"-", "_", " ", "/"}).strip()
+        slug = slug.replace("/", "-").replace(" ", "")
+        return slug
+
     def _sorted_traits(self, traits: Dict[str, Any]) -> List[Tuple[str, Any]]:
         return sorted(((key, traits[key]) for key in traits), key=lambda item: item[0].casefold())
 
@@ -574,6 +713,8 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         summary: Optional[str],
         links: List[str],
+        topics: List[str],
+        priority: Optional[str],
     ) -> str:
         lines = [
             f"## Echo Bridge Relay",
@@ -582,10 +723,15 @@ class EchoBridgeAPI:
             f"- **Cycle:** `{cycle}`",
             f"- **Signature:** `{signature}`",
         ]
+        if priority:
+            lines.append(f"- **Priority:** `{priority}`")
         if traits:
             lines.append("- **Traits:**")
             for key, value in self._sorted_traits(traits):
                 lines.append(f"  - `{key}` :: `{value}`")
+        if topics:
+            lines.append("- **Topics:**")
+            lines.append("  - " + ", ".join(topics))
         if summary:
             lines.append("")
             lines.append("### Summary")
@@ -608,14 +754,21 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         summary: Optional[str],
         links: List[str],
+        topics: List[str],
+        priority: Optional[str],
     ) -> str:
         lines = [
             f"Echo Bridge Relay", f"Identity: {identity}", f"Cycle: {cycle}", f"Signature: {signature}",
         ]
+        if priority:
+            lines.append(f"Priority: {priority}")
         if traits:
             lines.append("Traits:")
             for key, value in self._sorted_traits(traits):
                 lines.append(f" - {key}: {value}")
+        if topics:
+            lines.append("Topics:")
+            lines.append(" - " + ", ".join(topics))
         if summary:
             lines.append("")
             lines.append(f"Summary: {summary}")
@@ -635,6 +788,8 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         summary: Optional[str],
         links: List[str],
+        topics: List[str],
+        priority: Optional[str],
     ) -> str:
         fragments: List[str] = [f"Echo Bridge :: {identity}", f"Cycle {cycle}", f"sig {signature}"]
         if summary:
@@ -643,8 +798,18 @@ class EchoBridgeAPI:
             trait_text = ", ".join(f"{key}={value}" for key, value in self._sorted_traits(traits))
             if trait_text:
                 fragments.append(trait_text)
+        if priority:
+            fragments.append(f"priority={priority}")
         if links:
             fragments.append(" ".join(links[:2]))
+        if topics:
+            hashtags: List[str] = []
+            for topic in topics:
+                slug = self._topic_hashtag(topic)
+                if slug:
+                    hashtags.append(f"#{slug}")
+            if hashtags:
+                fragments.append(" ".join(hashtags))
         fragments.append("#EchoBridge")
         return " | ".join(fragment for fragment in fragments if fragment)
 

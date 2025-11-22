@@ -184,6 +184,8 @@ def create_router(
             traits=request.traits,
             summary=request.summary,
             links=request.links,
+            topics=request.topics,
+            priority=request.priority,
         )
         if not plans:
             raise HTTPException(
