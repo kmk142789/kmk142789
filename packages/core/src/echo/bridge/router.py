@@ -119,6 +119,16 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 requires_secrets=[api.discord_secret_name] if api.discord_secret_name else [],
             )
         )
+    if getattr(api, "bluesky_identifier", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="bluesky",
+                action="post_record",
+                requires_secrets=[api.bluesky_app_password_secret]
+                if getattr(api, "bluesky_app_password_secret", None)
+                else [],
+            )
+        )
     if getattr(api, "email_recipients", None):
         connectors.append(
             ConnectorDescriptor(
@@ -133,6 +143,16 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="mastodon",
                 action="post_status",
                 requires_secrets=[api.mastodon_secret_name] if api.mastodon_secret_name else [],
+            )
+        )
+    if getattr(api, "activitypub_inbox_url", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="activitypub",
+                action="deliver_note",
+                requires_secrets=[api.activitypub_secret_name]
+                if getattr(api, "activitypub_secret_name", None)
+                else [],
             )
         )
     if getattr(api, "matrix_homeserver", None) and getattr(api, "matrix_room_id", None):

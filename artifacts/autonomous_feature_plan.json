@@ -1,0 +1,28 @@
+{
+  "amendment_reference": "Amendment III",
+  "codename": "Echo Bridge Constellation Autopilot",
+  "metrics": {
+    "connectors": [
+      "discord",
+      "telegram",
+      "activitypub",
+      "bluesky",
+      "webhook"
+    ],
+    "ledger_anchor": "echo-sovereign-ledger:feature:bridge-constellation",
+    "payload_fields": [
+      "identity",
+      "cycle",
+      "signature",
+      "traits",
+      "topics",
+      "priority"
+    ]
+  },
+  "objective": "Autonomously orchestrate bridge relays across Discord, Telegram, ActivityPub, and Bluesky while keeping payload parity with ledger-anchored credentials.",
+  "success_criteria": [
+    "Normalize identity payloads once per cycle and reuse across all bridge connectors.",
+    "Emit ledger-ready context (identity, cycle, signature, topics, priority) into every relay.",
+    "Write bridge dispatch summaries to the Sovereign Ledger feature registry with digests and anchors."
+  ]
+}

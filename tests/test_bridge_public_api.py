@@ -23,12 +23,18 @@ def _make_app() -> FastAPI:
         webhook_secret_name="ECHO_GENERIC_WEBHOOK",
         discord_webhook_url="https://discord.com/api/webhooks/ABC",
         discord_secret_name="DISCORD_ECHO_WEBHOOK",
+        bluesky_identifier="echo.bridge",
+        bluesky_service_url="https://bsky.social",
+        bluesky_app_password_secret="ECHO_BLUESKY_SECRET",
         mastodon_instance_url="https://echo.social",
         mastodon_visibility="direct",
         mastodon_secret_name="ECHO_MASTODON_TOKEN",
         matrix_homeserver="https://matrix.echo",
         matrix_room_id="!echo:matrix",
         matrix_secret_name="ECHO_MATRIX_TOKEN",
+        activitypub_inbox_url="https://echo.social/inbox",
+        activitypub_actor="https://echo.social/@bridge",
+        activitypub_secret_name="ECHO_ACTIVITYPUB_SECRET",
         email_recipients=["ops@echo.test", "alerts@echo.test"],
         email_secret_name="SENDGRID_TOKEN",
         email_subject_template="Echo Relay {identity}/{cycle}",
@@ -54,9 +60,11 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
         "slack",
         "webhook",
         "discord",
+        "bluesky",
         "email",
         "mastodon",
         "matrix",
+        "activitypub",
     }
 
 
@@ -142,6 +150,12 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert email_plan["payload"]["priority"] == "high"
     assert email_plan["payload"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
 
+    bluesky_plan = plans["bluesky"]
+    assert bluesky_plan["action"] == "post_record"
+    assert bluesky_plan["payload"]["identifier"] == "echo.bridge"
+    assert "#EchoBridge" in bluesky_plan["payload"]["text"]
+    assert bluesky_plan["payload"].get("tags")
+
     mastodon_plan = plans["mastodon"]
     assert mastodon_plan["action"] == "post_status"
     assert mastodon_plan["payload"]["instance"] == "https://echo.social"
@@ -158,3 +172,9 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert "Cycle 01" in matrix_plan["payload"]["text"]
     assert matrix_plan["payload"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
     assert matrix_plan["payload"]["priority"] == "high"
+
+    activitypub_plan = plans["activitypub"]
+    assert activitypub_plan["action"] == "deliver_note"
+    assert activitypub_plan["payload"]["inbox"] == "https://echo.social/inbox"
+    assert activitypub_plan["payload"]["actor"] == "https://echo.social/@bridge"
+    assert activitypub_plan["payload"]["context"]["identity"] == "EchoWildfire"
