@@ -11,6 +11,13 @@ cp .env.local.example .env.local
 pnpm dev
 ```
 
+Environment variables:
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | Base URL for the issuer API (e.g., `http://localhost:4000`). | `http://localhost:4000` |
+| `NEXT_PUBLIC_TRUST_REGISTRY_URL` | Public trust registry URL used for credential links. | `https://kmk142789.github.io/little-footsteps-bank` |
+
 Configure the API endpoint exposed by the issuer:
 
 ```ini
