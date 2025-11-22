@@ -1,17 +1,23 @@
 {
   "issuer": "did:web:kmk142789.github.io:little-footsteps-bank",
-  "lastUpdated": "2025-05-11T12:00:00Z",
+  "lastUpdated": "2025-11-22T12:33:41Z",
   "recognizedCredentials": [
+    "DonationReceiptCredential",
+    "ImpactPayoutCredential",
     "LittleFootstepsChildcareVoucher",
     "LittleFootstepsParentID",
     "LittleFootstepsStaffLicense"
   ],
   "schemas": {
+    "DonationReceiptCredential": "https://kmk142789.github.io/little-footsteps-bank/schemas/donation_receipt.schema.json",
+    "ImpactPayoutCredential": "https://kmk142789.github.io/little-footsteps-bank/schemas/impact_payout.schema.json",
     "LittleFootstepsChildcareVoucher": "https://kmk142789.github.io/little-footsteps-bank/schemas/childcare_voucher.schema.json",
     "LittleFootstepsParentID": "https://kmk142789.github.io/little-footsteps-bank/schemas/parent_id.schema.json",
     "LittleFootstepsStaffLicense": "https://kmk142789.github.io/little-footsteps-bank/schemas/staff_license.schema.json"
   },
   "descriptions": {
+    "DonationReceiptCredential": "Receipt proving a donation entered the Little Footsteps ledger with references to the transparency event.",
+    "ImpactPayoutCredential": "Proof that funds were disbursed to a beneficiary or vendor for a specific Little Footsteps purpose.",
     "LittleFootstepsChildcareVoucher": "Digital childcare voucher that unlocks subsidized hours for families enrolled in Little Footsteps.",
     "LittleFootstepsParentID": "Identity credential attesting to a verified caregiver relationship and enrollment status.",
     "LittleFootstepsStaffLicense": "Professional license attesting to background checks and childcare certification for staff."

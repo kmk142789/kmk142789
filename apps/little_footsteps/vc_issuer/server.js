@@ -442,6 +442,15 @@ app.get('/healthz', (_req, res) => {
 
 app.post('/donations/intake', async (req, res, next) => {
   try {
+    const registry = await loadTrustRegistry();
+    const credentialSlug = 'DonationReceiptCredential';
+    if (!registry.recognizedCredentials?.includes(credentialSlug)) {
+      return res.status(409).json({
+        error: 'credential_not_recognized',
+        message: `${credentialSlug} is not present in trust registry`,
+      });
+    }
+
     const currency = String(req.body.currency ?? '').toUpperCase();
     if (!currency) {
       return res.status(400).json({ error: 'currency is required' });
@@ -516,11 +525,20 @@ app.post('/donations/intake', async (req, res, next) => {
     };
 
     const credential = buildCredential('DonationReceiptCredential', credentialSubject);
+    const validation = await validateCredentialSubject(credentialSlug, credentialSubject);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: 'invalid_credential_subject',
+        message: 'Credential subject failed schema validation',
+        details: validation.errors,
+      });
+    }
+
     const proofCreated = new Date().toISOString();
     const jws = await signCredential(credential);
     const credentialRecord = {
       id: crypto.randomUUID(),
-      type: 'DonationReceiptCredential',
+      type: credentialSlug,
       subject: credentialSubject,
       vc: {
         credential,
@@ -568,6 +586,138 @@ app.post('/donations/intake', async (req, res, next) => {
       credential,
       proof: credentialRecord.vc.proof,
       receipt: receiptPayload,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/payouts/create', async (req, res, next) => {
+  try {
+    const registry = await loadTrustRegistry();
+    const credentialSlug = 'ImpactPayoutCredential';
+    if (!registry.recognizedCredentials?.includes(credentialSlug)) {
+      return res.status(409).json({
+        error: 'credential_not_recognized',
+        message: `${credentialSlug} is not present in trust registry`,
+      });
+    }
+
+    const currency = String(req.body.currency ?? '').toUpperCase();
+    if (!currency) {
+      return res.status(400).json({ error: 'currency is required' });
+    }
+
+    let minorUnits;
+    try {
+      minorUnits = parseMinorUnits(req.body, currency);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    let occurredAt;
+    try {
+      const occurredAtDate = req.body.occurred_at ? new Date(req.body.occurred_at) : new Date();
+      if (Number.isNaN(occurredAtDate.getTime())) {
+        throw new Error('invalid');
+      }
+      occurredAt = occurredAtDate.toISOString();
+    } catch (error) {
+      return res.status(400).json({ error: 'occurred_at must be a valid ISO-8601 timestamp' });
+    }
+
+    if (!req.body.beneficiary) {
+      return res.status(400).json({ error: 'beneficiary is required' });
+    }
+
+    const vcId = `vc:impact:${crypto.randomUUID()}`;
+    const reference = req.body.reference ?? vcId;
+    const decimals = minorUnitDecimals(currency);
+    const majorAmount = formatMajorAmount(minorUnits, currency);
+    const tags = Array.isArray(req.body.tags) ? req.body.tags : [];
+
+    const ledgerEvent = await recordLedgerEvent({
+      direction: 'OUTFLOW',
+      amount_cents: minorUnits.toString(),
+      currency,
+      purpose: req.body.purpose ?? 'Little Footsteps impact payout',
+      source: req.body.source ?? 'impact:payout',
+      occurred_at: occurredAt,
+      beneficiary: req.body.beneficiary,
+      tags: ['impact', 'payout', ...tags],
+      vc_id: vcId,
+      metadata: {
+        ...(req.body.metadata ?? {}),
+        reference,
+        vendor: req.body.vendor ?? null,
+        minor_unit_decimals: decimals,
+        supporting_docs: req.body.supporting_docs ?? [],
+      },
+    });
+
+    const credentialSubject = {
+      payout: {
+        ledgerEventId: ledgerEvent.id,
+        amount: {
+          currency,
+          value: majorAmount,
+        },
+        minorAmount: minorUnits.toString(),
+        minorUnitDecimals: decimals,
+        beneficiary: req.body.beneficiary,
+        vendor: req.body.vendor ?? null,
+        purpose: req.body.purpose ?? 'Little Footsteps impact payout',
+        occurredAt,
+        reference,
+        supportingDocs: req.body.supporting_docs ?? [],
+        tags,
+      },
+    };
+
+    const validation = await validateCredentialSubject(credentialSlug, credentialSubject);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: 'invalid_credential_subject',
+        message: 'Credential subject failed schema validation',
+        details: validation.errors,
+      });
+    }
+
+    const credential = buildCredential(credentialSlug, credentialSubject);
+    const proofCreated = new Date().toISOString();
+    const jws = await signCredential(credential);
+    const credentialRecord = {
+      id: crypto.randomUUID(),
+      type: credentialSlug,
+      subject: credentialSubject,
+      vc: {
+        credential,
+        proof: { type: 'Ed25519Signature2020', created: proofCreated, jws },
+      },
+      issued_at: proofCreated,
+      ledger_event_id: ledgerEvent.id,
+    };
+
+    await storeCredential(credentialRecord);
+
+    const telemetryEvent = {
+      event: 'impact_payout',
+      occurred_at: occurredAt,
+      ledger_event_id: ledgerEvent.id,
+      vc_id: vcId,
+      currency,
+      amount_minor: minorUnits.toString(),
+      minor_unit_decimals: decimals,
+      beneficiary: req.body.beneficiary,
+      tags,
+    };
+    await appendJsonl(telemetryLogPath, telemetryEvent);
+
+    res.status(201).json({
+      vcId,
+      ledgerEvent,
+      credential,
+      proof: credentialRecord.vc.proof,
     });
   } catch (error) {
     next(error);
