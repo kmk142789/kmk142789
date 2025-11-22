@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+
 from echo.echoctl import run_next_step
 
 
@@ -78,3 +79,24 @@ def test_run_next_step_handles_missing_fields(monkeypatch, capsys) -> None:
     assert "Next step: advance_cycle()" in output
     assert "Cycle 3 progress: 0.0% (0 steps remaining)" in output
     assert "Pending:" not in output
+
+
+def test_run_next_step_writes_output(monkeypatch, tmp_path, capsys) -> None:
+    class DummyEvolver:
+        def __init__(self, rng=None):
+            self.rng = rng
+
+        def cycle_digest(self, *, persist_artifact: bool = True):
+            return _dummy_digest()
+
+    monkeypatch.setattr("echo.echoctl.EchoEvolver", lambda rng=None: DummyEvolver(rng=rng))
+
+    out_file = tmp_path / "next-step.txt"
+
+    exit_code = run_next_step(["--preview", "1", "--output", str(out_file)])
+
+    assert exit_code == 0
+    saved = out_file.read_text(encoding="utf-8")
+    assert "Next step: mutate_code()" in saved
+    assert "Pending: mutate_code (+2 more)" in saved
+    assert saved == capsys.readouterr().out
