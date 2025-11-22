@@ -85,6 +85,7 @@ class AstralCompressionReport:
     final_entropy: float
     compression_ratio: float
     trace: Sequence[CompressionTrace]
+    entropy_gradient: Sequence[float]
     invariants: Mapping[str, float]
 
 
@@ -110,8 +111,10 @@ class AstralCompressionEngine:
         """Run the provided program and return a detailed compression report."""
 
         field = seed_field.normalized(self._epsilon)
+        initial_support = field.support()
         initial_entropy = field.entropy(self._epsilon)
         trace: list[CompressionTrace] = []
+        entropy_history = [initial_entropy]
 
         for step, instruction in enumerate(program):
             field = self._apply_instruction(field, instruction)
@@ -124,8 +127,17 @@ class AstralCompressionEngine:
                     compression_score=self._compression_score(initial_entropy, entropy),
                 )
             )
+            entropy_history.append(entropy)
 
         final_entropy = field.entropy(self._epsilon)
+        entropy_gradient = tuple(
+            round(previous - current, 6)
+            for previous, current in zip(entropy_history, entropy_history[1:])
+        )
+        mass = round(sum(field.amplitudes.values()), 6)
+        support = field.support()
+        support_delta = support - initial_support
+        compression_velocity = entropy_gradient[-1] if entropy_gradient else 0.0
         report = AstralCompressionReport(
             field=field,
             initial_entropy=initial_entropy,
@@ -133,10 +145,14 @@ class AstralCompressionEngine:
             compression_ratio=self._compression_score(initial_entropy, final_entropy),
             trace=tuple(trace),
             invariants={
-                "probability_mass": round(sum(field.amplitudes.values()), 6),
-                "support": field.support(),
+                "probability_mass": mass,
+                "support": support,
                 "entropy_delta": round(initial_entropy - final_entropy, 6),
+                "mass_drift": round(abs(1.0 - mass), 6),
+                "support_delta": float(support_delta),
+                "compression_velocity": round(compression_velocity, 6),
             },
+            entropy_gradient=entropy_gradient,
         )
         return report
 
@@ -413,6 +429,7 @@ class QuantumNodeV2Bridge:
             "channels": shaped,
             "entropy": report.final_entropy,
             "compression": report.compression_ratio,
+            "entropy_gradient": list(report.entropy_gradient),
             "invariants": dict(report.invariants),
             "routing_hint": f"qn2:{len(shaped)}ch:{report.compression_ratio:.3f}",
         }
@@ -450,6 +467,7 @@ class ACEVisualizationLayer:
             "p_field_shape": sorted_channels,
             "collapse_pathway": [trace.opcode for trace in report.trace],
             "entropy_trace": entropy_trace,
+            "entropy_gradient": list(report.entropy_gradient),
             "invariants": report.invariants,
         }
 
@@ -464,6 +482,10 @@ class ACEVisualizationLayer:
         lines.append(
             "Entropy trace: "
             + ", ".join(f"{step}:{entropy:.4f}" for step, entropy in data["entropy_trace"])
+        )
+        lines.append(
+            "Entropy gradient: "
+            + ", ".join(f"Δ{idx}:{delta:.4f}" for idx, delta in enumerate(data["entropy_gradient"], start=1))
         )
         lines.append("Invariants: " + ", ".join(f"{k}={v}" for k, v in data["invariants"].items()))
         return "\n".join(lines)
