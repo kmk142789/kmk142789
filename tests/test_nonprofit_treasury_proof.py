@@ -67,7 +67,7 @@ class _FakeWeb3:
         self.eth = _FakeEth(contracts)
 
 
-def test_generate_proof_links_funds_to_little_footsteps(tmp_path: Path) -> None:
+def _build_service(tmp_path: Path) -> tuple[TreasuryConfig, NonprofitTreasuryService]:
     config = TreasuryConfig(
         rpc_url="http://localhost:8545",
         contract_address="0x00000000000000000000000000000000000000aA",
@@ -111,6 +111,11 @@ def test_generate_proof_links_funds_to_little_footsteps(tmp_path: Path) -> None:
             reason="operations",
         )
     )
+    return config, service
+
+
+def test_generate_proof_links_funds_to_little_footsteps(tmp_path: Path) -> None:
+    config, service = _build_service(tmp_path)
 
     proof = service.generate_proof()
 
@@ -138,5 +143,29 @@ def test_cli_writes_timestamped_proof_snapshot(tmp_path: Path) -> None:
     )
 
     assert destination.name == "little-footsteps-proof-20240501T123456789Z.json"
+    saved = json.loads(destination.read_text())
+    assert saved == payload
+
+
+def test_launch_first_beneficiary_flow_returns_manifest(tmp_path: Path) -> None:
+    config, service = _build_service(tmp_path)
+
+    manifest = service.launch_first_beneficiary_flow(memo="first launch")
+
+    assert manifest["flow"] == "treasury→beneficiary"
+    assert manifest["beneficiary_wallet"].lower() == config.beneficiary_wallet.lower()
+    assert manifest["little_footsteps_linked"] is True
+    assert manifest["memo"] == "first launch"
+    assert manifest["treasury_balance"] == 1_750_000
+    assert manifest["proof_hash"].startswith("sha256:")
+
+
+def test_write_launch_manifest_persists_payload(tmp_path: Path) -> None:
+    payload = {"flow": "treasury→beneficiary", "memo": "first launch"}
+    destination = treasury_cli.write_launch_manifest(
+        payload, destination=tmp_path / "beneficiary_flow.json"
+    )
+
+    assert destination.name == "beneficiary_flow.json"
     saved = json.loads(destination.read_text())
     assert saved == payload
