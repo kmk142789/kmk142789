@@ -24,6 +24,8 @@ def test_generate_passage_structure_and_serialization():
     rendered = passage.render()
     assert passage.prompt in rendered
     assert passage.closing in rendered
+    assert passage.prompt_source == passage.prompt or passage.prompt_source in rendered
+    assert passage.closing_source == passage.closing or passage.closing_source in rendered
 
     payload = passage.to_dict()
     assert payload["prompt"] == passage.prompt
@@ -48,4 +50,24 @@ def test_generate_multiple_passages_with_seed():
     assert second.render() == expected_second.render()
 
     assert first.render() != second.render()
+
+
+def test_motifs_are_applied_without_hiding_sources():
+    rng = random.Random(99)
+    frozen_time = datetime(2025, 1, 1, 0, 0, 0)
+    motifs = ["river light", "quiet ember"]
+
+    passage = generate_passage(
+        rng,
+        timestamp=frozen_time,
+        motifs=motifs,
+        motif_style="inline",
+    )
+
+    for motif in motifs:
+        assert motif in passage.prompt
+        assert motif in passage.closing
+
+    assert passage.prompt_source != passage.prompt
+    assert passage.prompt_source in passage.prompt
 
