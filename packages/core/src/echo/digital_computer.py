@@ -44,7 +44,11 @@ executes, and returns a structured :class:`ExecutionResult`.  The quantum
 tooling continues to evolve too: beyond ``QINIT``, ``QGATE``, ``QROT`` and
 ``QMEASURE`` the computer can now inject noise via ``QNOISE`` and read the
 Bloch sphere coordinates into registers with ``QBLOCH`` so programs can
-react to the qubit's geometric posture.
+react to the qubit's geometric posture.  New orchestration helpers make it
+easier to keep runs self-describing: ``NOTE`` records timestamped
+diagnostics alongside trace output, while ``STEPS`` and ``BUDGET`` let
+programs introspect how far through a run they are and how many steps remain
+before the safety limit triggers.
 """
 
 from __future__ import annotations
@@ -232,6 +236,9 @@ class EchoComputer:
         self._rng_seed: int | None = None
         self._rng_history: List[int] = []
         self._opcode_handlers = self._initialise_opcode_handlers()
+        self._notes: List[str] = []
+        self._active_step_limit = max_steps
+        self._steps_executed = 0
 
     @property
     def registers(self) -> Mapping[str, int | str]:
@@ -289,6 +296,9 @@ class EchoComputer:
         self._rng_history.clear()
         if not preserve_state:
             self._state_capsules.clear()
+        self._notes.clear()
+        self._active_step_limit = self._max_steps
+        self._steps_executed = 0
 
     def plan_time_travel(
         self,
@@ -351,6 +361,9 @@ class EchoComputer:
             "trace": trace,
         }
 
+        self._active_step_limit = step_limit
+        self._steps_executed = 0
+
         with thought_trace(task=task, meta=meta) as tl:
             steps = 0
             while not self._halted:
@@ -376,8 +389,11 @@ class EchoComputer:
                     )
 
                 self._pc += 1
+                self._steps_executed = steps + 1
                 self._execute(instruction)
                 steps += 1
+
+        combined_diagnostics = diagnostics + list(self._notes)
 
         return ExecutionResult(
             halted=self._halted,
@@ -385,7 +401,7 @@ class EchoComputer:
             output=tuple(self._output),
             registers=dict(self._registers),
             memory=dict(self._memory),
-            diagnostics=tuple(diagnostics),
+            diagnostics=tuple(combined_diagnostics),
             quantum_registers=self._snapshot_quantum_registers(),
             instruction_counts=dict(self._instruction_counts),
             random_state=self._snapshot_random_state(),
@@ -532,6 +548,12 @@ class EchoComputer:
             "quantum": self._snapshot_quantum_registers(),
             "random": self._snapshot_random_state(),
         }
+
+    def _record_note(self, message: str) -> None:
+        note = message.strip()
+        if not note:
+            raise RuntimeError("NOTE message must not be empty")
+        self._notes.append(f"[{self._iso_timestamp()}] {note}")
 
     def _apply_capsule(self, capsule: Mapping[str, object], *, include_control: bool = False) -> None:
         registers = capsule.get("registers")
@@ -955,6 +977,21 @@ class EchoComputer:
         rhs = self._resolve_value(right)
         if lhs != rhs:
             raise RuntimeError(f"assertion failed: {lhs!r} != {rhs!r}")
+
+    def _op_note(self, *operands: str) -> None:
+        if not operands:
+            raise RuntimeError("NOTE requires at least one operand")
+        resolved = [str(self._resolve_value(part)) for part in operands]
+        self._record_note(" ".join(resolved))
+
+    def _op_steps(self, register: str) -> None:
+        reg = self._require_register(register)
+        self._registers[reg] = self._steps_executed
+
+    def _op_budget(self, register: str) -> None:
+        reg = self._require_register(register)
+        remaining = max(0, self._active_step_limit - self._steps_executed)
+        self._registers[reg] = remaining
 
     def _op_push(self, operand: str) -> None:
         self._stack.append(self._resolve_value(operand))
