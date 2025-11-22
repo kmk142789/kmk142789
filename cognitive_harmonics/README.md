@@ -49,3 +49,16 @@ The optional `--trajectory-window` flag folds the specified number of recent
 cycles into the new `resonance_trajectory` analytics block. This block
 describes the joy trend, orbital flux, glyph density, and phase intervals used
 by downstream systems to predict the next evolution.
+
+## Hyperprism Braid Synthesizer
+
+`hyperprism_braid.py` introduces the first **Entropy-Braided Mythic Ledger**.
+It weaves three strands (harmonic memory, glyph density, and orbital flow)
+using a phyllotaxis/Lorenz hybrid to produce a deterministic *hyperprism
+fingerprint*.
+
+Generate a braid and optionally persist it:
+
+```bash
+python -m cognitive_harmonics.hyperprism_braid --cycles 12 --seed aurora --out artifacts/hyperprism.json
+```
