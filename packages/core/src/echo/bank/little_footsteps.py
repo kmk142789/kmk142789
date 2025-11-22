@@ -65,6 +65,31 @@ class RecordedTransaction:
             "resilience": self.resilience.to_payload() if self.resilience else None,
         }
 
+    def amount_cents(self) -> int:
+        """Return the amount in cents as an integer for downstream analytics."""
+
+        return int((Decimal(self.entry.amount) * Decimal(100)).quantize(Decimal("1")))
+
+    def to_trace(self, *, role: str) -> Dict[str, object]:
+        """Shape the transaction for follow-the-dollar traces and dashboards."""
+
+        attachments = dict(self.compliance_claim.attachments or {})
+        return {
+            "role": role,
+            "direction": self.entry.direction,
+            "account": self.entry.account,
+            "asset": self.entry.asset,
+            "amount": self.entry.amount,
+            "amount_cents": self.amount_cents(),
+            "ledger_seq": self.entry.seq,
+            "ledger_digest": self.entry.digest(),
+            "ledger_timestamp": self.entry.timestamp,
+            "reference": self.compliance_claim.reference,
+            "proof_path": str(self.proof_path),
+            "ots_receipt": str(self.ots_receipt) if self.ots_receipt else None,
+            "attachments": attachments,
+        }
+
 
 @dataclass(slots=True)
 class DisbursementReceipt:
@@ -77,6 +102,26 @@ class DisbursementReceipt:
         return {
             "donation": self.donation.to_summary(),
             "disbursement": self.disbursement.to_summary(),
+        }
+
+    def follow_the_dollar_trace(self) -> Dict[str, object]:
+        """Condense the inflow/outflow pair into a dashboard-ready trace."""
+
+        donation_reference = self.donation.compliance_claim.reference
+        donation_id = donation_reference.split(":", 1)[0]
+        linked = donation_id in self.disbursement.compliance_claim.reference
+
+        return {
+            "donation_id": donation_id,
+            "beneficiary": self.disbursement.compliance_claim.beneficiary,
+            "asset": self.donation.entry.asset,
+            "amount": self.donation.entry.amount,
+            "amount_cents": self.donation.amount_cents(),
+            "linked": linked,
+            "steps": [
+                self.donation.to_trace(role="donation"),
+                self.disbursement.to_trace(role="disbursement"),
+            ],
         }
 
 

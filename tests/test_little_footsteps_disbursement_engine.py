@@ -92,3 +92,10 @@ def test_donation_flows_are_recorded_with_compliance_and_continuity(ledger_paths
 
     report = continuity.continuity_report()
     assert len(report["checkpoints"]) == 2
+
+    trace = receipt.follow_the_dollar_trace()
+    assert trace["donation_id"] == "donation-001"
+    assert trace["beneficiary"].startswith("beneficiary:little-footsteps")
+    assert trace["linked"] is True
+    assert trace["amount_cents"] == 12500
+    assert {step["role"] for step in trace["steps"]} == {"donation", "disbursement"}
