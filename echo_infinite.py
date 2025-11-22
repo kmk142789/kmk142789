@@ -162,16 +162,21 @@ class EchoInfinite:
         *,
         sleep_seconds: float = 5.0,
         max_cycles: int | None = None,
+        summary_window: int = 25,
     ) -> None:
         self.base_dir = base_dir or Path(__file__).resolve().parent
         self.colossus_dir = self.base_dir / "colossus"
         self.log_path = self.base_dir / "docs" / "COLOSSUS_LOG.md"
         self.state_path = self.colossus_dir / "state.json"
+        self.summary_path = self.colossus_dir / "cycle_summary.json"
         self.harmonic_cycles_dir = self.base_dir / "harmonic_memory" / "cycles"
         self.sleep_seconds = sleep_seconds
         if max_cycles is not None and max_cycles <= 0:
             raise ValueError("max_cycles must be a positive integer")
         self.max_cycles = max_cycles
+        if summary_window <= 0:
+            raise ValueError("summary_window must be a positive integer")
+        self.summary_window = summary_window
         self._running = True
         self.last_snapshot_path: Path | None = None
 
@@ -197,6 +202,7 @@ class EchoInfinite:
                 "cycle_start": cycle,
                 "sleep_seconds": self.sleep_seconds,
                 "max_cycles": self.max_cycles,
+                "summary_window": self.summary_window,
             },
         )
 
@@ -222,6 +228,13 @@ class EchoInfinite:
             )
 
             self._append_log_entry(
+                cycle=cycle,
+                timestamp=timestamp,
+                glyph_signature=glyph_signature,
+                artifact_paths=artifacts,
+            )
+
+            self._update_cycle_summary(
                 cycle=cycle,
                 timestamp=timestamp,
                 glyph_signature=glyph_signature,
@@ -399,6 +412,44 @@ class EchoInfinite:
         )
         with self.log_path.open("a", encoding="utf-8") as fh:
             fh.write(log_entry)
+
+    def _update_cycle_summary(
+        self,
+        *,
+        cycle: int,
+        timestamp: str,
+        glyph_signature: str,
+        artifact_paths: ArtifactPaths,
+    ) -> None:
+        payload = {"cycles": []}
+        try:
+            if self.summary_path.exists():
+                payload = json.loads(self.summary_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            payload = {"cycles": []}
+
+        entries = payload.get("cycles", [])
+        entries.append(
+            {
+                "cycle": cycle,
+                "timestamp": timestamp,
+                "glyph_signature": glyph_signature,
+                "artifacts": artifact_paths.as_relative_strings(self.base_dir),
+            }
+        )
+        entries = entries[-self.summary_window :]
+
+        next_payload = {
+            "updated_at": rfc3339_timestamp(),
+            "base_dir": str(self.base_dir),
+            "window": self.summary_window,
+            "total_entries": len(entries),
+            "cycles": entries,
+        }
+        self.summary_path.write_text(
+            json.dumps(next_payload, indent=2) + "\n", encoding="utf-8"
+        )
+        self.last_snapshot_path = self.summary_path
 
     def _build_puzzle_markdown(
         self,
@@ -1180,6 +1231,12 @@ if __name__ == "__main__":
         default=None,
         help="Optional limit for the number of cycles to execute",
     )
+    parser.add_argument(
+        "--summary-window",
+        type=int,
+        default=25,
+        help="Number of recent cycles to retain in cycle_summary.json",
+    )
     args = parser.parse_args()
     base_dir = args.base_dir
     if base_dir is not None:
@@ -1188,5 +1245,6 @@ if __name__ == "__main__":
         base_dir=base_dir,
         sleep_seconds=args.sleep_seconds,
         max_cycles=args.max_cycles,
+        summary_window=args.summary_window,
     )
     orchestrator.run()
