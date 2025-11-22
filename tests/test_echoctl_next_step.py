@@ -53,3 +53,28 @@ def test_run_next_step_supports_json(monkeypatch, capsys) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert payload["next_step"].startswith("Next step:")
     assert payload["remaining_steps"] == _dummy_digest()["remaining_steps"]
+
+
+def test_run_next_step_handles_missing_fields(monkeypatch, capsys) -> None:
+    class DummyEvolver:
+        def __init__(self, rng=None):
+            self.rng = rng
+
+        def cycle_digest(self, *, persist_artifact: bool = True):
+            return {
+                "next_step": None,
+                "cycle": "3",
+                "progress": None,
+                "remaining_steps": None,
+                "timestamp_ns": "7",
+            }
+
+    monkeypatch.setattr("echo.echoctl.EchoEvolver", lambda rng=None: DummyEvolver(rng=rng))
+
+    exit_code = run_next_step([])
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "Next step: advance_cycle()" in output
+    assert "Cycle 3 progress: 0.0% (0 steps remaining)" in output
+    assert "Pending:" not in output

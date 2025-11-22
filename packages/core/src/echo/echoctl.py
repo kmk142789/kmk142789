@@ -538,12 +538,24 @@ def run_next_step(argv: List[str]) -> int:
     evolver = EchoEvolver(rng=rng)
 
     digest = evolver.cycle_digest(persist_artifact=options.persist_artifact)
-    remaining_steps = list(digest.get("remaining_steps", []))
+
+    raw_steps = digest.get("remaining_steps") or []
+    if not isinstance(raw_steps, (list, tuple)):
+        raw_steps = []
+    remaining_steps = list(raw_steps)
+
+    raw_progress = digest.get("progress", 0.0)
+    try:
+        progress = float(raw_progress)
+    except (TypeError, ValueError):
+        progress = 0.0
+
+    next_step = digest.get("next_step") or "Next step: advance_cycle() to begin a new orbit"
 
     payload = {
-        "next_step": digest.get("next_step", "Next step: advance_cycle() to begin a new orbit"),
+        "next_step": next_step,
         "cycle": int(digest.get("cycle", 0)),
-        "progress": float(digest.get("progress", 0.0)),
+        "progress": progress,
         "remaining_steps": remaining_steps,
         "timestamp_ns": int(digest.get("timestamp_ns", 0)),
     }
