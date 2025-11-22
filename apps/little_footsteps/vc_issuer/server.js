@@ -57,6 +57,9 @@ const receiptsLogPath =
 const telemetryLogPath =
   process.env.DONATION_TELEMETRY_LOG_PATH ?? 'state/little_footsteps/dashboard/donations.jsonl';
 
+const streamClients = new Set();
+const STREAM_HEARTBEAT_MS = 15000;
+
 async function ensureSchema() {
   const client = await pool.connect();
   try {
@@ -111,6 +114,64 @@ if (!issuerDid) {
 
 const privateKeyPath = process.env.VC_PRIVATE_KEY_PATH ?? 'state/little_footsteps/keys/issuer-ed25519-private.key';
 let signingKey;
+
+function normaliseLedgerEntry(entry) {
+  return {
+    ...entry,
+    amount_cents: Number.parseInt(entry.amount_cents, 10),
+  };
+}
+
+async function fetchDailyTotals() {
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query(
+      `SELECT
+          COALESCE(SUM(CASE WHEN direction = 'INFLOW' THEN amount_cents END), 0) AS inflows,
+          COALESCE(SUM(CASE WHEN direction = 'OUTFLOW' THEN amount_cents END), 0) AS outflows
+       FROM ledger_events
+       WHERE occurred_at::date = CURRENT_DATE`,
+    );
+
+    const inflows = BigInt(rows[0].inflows ?? 0);
+    const outflows = BigInt(rows[0].outflows ?? 0);
+
+    return {
+      inflows: Number(inflows),
+      outflows: Number(outflows),
+      net: Number(inflows - outflows),
+    };
+  } finally {
+    client.release();
+  }
+}
+
+function writeStream(res, payload) {
+  res.write(`event: ledger\n`);
+  res.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
+async function broadcastLedgerUpdate(entry) {
+  if (streamClients.size === 0) {
+    return;
+  }
+
+  try {
+    const totals = await fetchDailyTotals();
+    const payload = { entry: normaliseLedgerEntry(entry), totals };
+    for (const res of streamClients) {
+      writeStream(res, payload);
+    }
+  } catch (error) {
+    console.warn('Unable to broadcast ledger update', error);
+  }
+}
+
+setInterval(() => {
+  for (const res of streamClients) {
+    res.write(`event: heartbeat\ndata: {}\n\n`);
+  }
+}, STREAM_HEARTBEAT_MS);
 
 async function loadPrivateKey() {
   if (signingKey) {
@@ -197,7 +258,11 @@ async function recordLedgerEvent(event) {
         event.metadata ?? {},
       ],
     );
-    return { ...event, amount_cents: amountMinor.toString(), id, occurred_at: occurredAt };
+    const savedEvent = { ...event, amount_cents: amountMinor.toString(), id, occurred_at: occurredAt };
+    broadcastLedgerUpdate(savedEvent).catch((error) => {
+      console.warn('Unable to dispatch ledger stream event', error);
+    });
+    return savedEvent;
   } finally {
     client.release();
   }
@@ -509,25 +574,8 @@ app.get('/ledger/events', async (req, res, next) => {
 
 app.get('/metrics/totals', async (_req, res, next) => {
   try {
-    const client = await pool.connect();
-    try {
-      const { rows } = await client.query(
-        `SELECT
-            COALESCE(SUM(CASE WHEN direction = 'INFLOW' THEN amount_cents END), 0) AS inflows,
-            COALESCE(SUM(CASE WHEN direction = 'OUTFLOW' THEN amount_cents END), 0) AS outflows
-         FROM ledger_events
-         WHERE occurred_at::date = CURRENT_DATE`
-      );
-      const inflows = BigInt(rows[0].inflows ?? 0);
-      const outflows = BigInt(rows[0].outflows ?? 0);
-      res.json({
-        inflows: inflows.toString(),
-        outflows: outflows.toString(),
-        net: (inflows - outflows).toString(),
-      });
-    } finally {
-      client.release();
-    }
+    const totals = await fetchDailyTotals();
+    res.json(totals);
   } catch (error) {
     next(error);
   }
@@ -581,6 +629,21 @@ app.post('/issue/childcare-voucher', async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+app.get('/stream', (_req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    Connection: 'keep-alive',
+    'Cache-Control': 'no-cache',
+  });
+
+  streamClients.add(res);
+  res.write(`event: connected\ndata: {"status":"ok"}\n\n`);
+
+  res.on('close', () => {
+    streamClients.delete(res);
+  });
 });
 
 app.use((err, _req, res, _next) => {

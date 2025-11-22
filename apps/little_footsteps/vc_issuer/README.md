@@ -22,6 +22,7 @@ node apps/little_footsteps/vc_issuer/server.js
 | Method | Path | Description |
 | ------ | ---- | ----------- |
 | `GET` | `/healthz` | Service status and DID identifier |
+| `GET` | `/stream` | Server-sent events stream that pushes new ledger entries and refreshed totals to the dashboard |
 | `POST` | `/donations/intake` | Record a BTC/ETH/Stripe/PayPal donation, emit a VC, and log telemetry |
 | `POST` | `/ledger/events` | Append a donation, credit, or payout to the transparency ledger |
 | `GET` | `/ledger/events` | Retrieve the most recent ledger events |
