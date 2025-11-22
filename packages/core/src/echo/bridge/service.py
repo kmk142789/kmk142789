@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -328,16 +329,37 @@ class BridgeSyncService:
 
         return self._log_path
 
-    def sync(self, decision: Mapping[str, object]) -> list[dict[str, object]]:
-        """Derive sync operations for ``decision`` and append them to the log."""
+    def sync(
+        self,
+        decision: Mapping[str, object],
+        *,
+        only_connectors: Iterable[str] | None = None,
+    ) -> list[dict[str, object]]:
+        """Derive sync operations for ``decision`` and append them to the log.
+
+        Parameters
+        ----------
+        decision:
+            Orchestrator decision blob to translate into sync events.
+        only_connectors:
+            Optional iterable of connector names (case-insensitive) to limit the
+            sync run to. When ``None`` all configured connectors are used.
+        """
 
         cycle = _extract_cycle(decision)
         coherence = _extract_coherence(decision)
         manifest_path = _extract_manifest_path(decision)
 
+        connector_filter: set[str] | None = None
+        if only_connectors is not None:
+            cleaned = {str(item).casefold().strip() for item in only_connectors if str(item).strip()}
+            connector_filter = cleaned or None
+
         operations: list[dict[str, object]] = []
         timestamp = datetime.now(timezone.utc).isoformat()
         for connector in self._connectors:
+            if connector_filter and connector.name.casefold() not in connector_filter:
+                continue
             event = connector.build_event(decision)
             if not event:
                 continue
@@ -425,6 +447,29 @@ class BridgeSyncService:
         if limit is not None and limit >= 0:
             entries = entries[-limit:]
         return entries
+
+    @staticmethod
+    def summarize(entries: Sequence[Mapping[str, object]]) -> dict[str, object]:
+        """Return aggregate metrics for a sequence of sync entries."""
+
+        connector_counts: Counter[str] = Counter()
+        cycles: list[str] = []
+        for entry in entries:
+            connector_name = str(entry.get("connector", "")).strip()
+            if connector_name:
+                connector_counts[connector_name] += 1
+            cycle = entry.get("cycle")
+            if cycle is not None:
+                cycle_text = str(cycle)
+                if cycle_text not in cycles:
+                    cycles.append(cycle_text)
+
+        total = sum(connector_counts.values())
+        return {
+            "total_operations": total,
+            "by_connector": dict(sorted(connector_counts.items())),
+            "cycles": cycles,
+        }
 
     @classmethod
     def from_environment(
