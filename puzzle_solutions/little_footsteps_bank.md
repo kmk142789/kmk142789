@@ -1,0 +1,33 @@
+# Little Footsteps Bank Sovereign Ledger
+
+This document renders each ledger addition as a community puzzle
+so investigators can replay the proof-of-work reconstruction,
+verify attestations, and audit the skeleton key fingerprints.
+Every section includes the canonical digest plus an OpenTimestamps receipt when available.
+
+| Field | Description |
+|-------|-------------|
+| Digest | Canonical sha256 hash binding transaction + proofs |
+| Proof Bundle | JSON artifact stored under proofs/little_footsteps_bank |
+| Skeleton Key | Namespace + index + fingerprint for deterministic verification |
+| OTS | Base64 encoded OpenTimestamps receipt path (optional) |
+
+## Puzzle 00000 — Outflow 250000.00 USD
+
+**Account:** `treasury:little-footsteps:startup`  **Narrative:** Allocate Little Footsteps startup costs for licensing, staffing runway, and facility deposits.
+
+```json
+{"account":"treasury:little-footsteps:startup","amount":"250000.00","asset":"USD","bank":"Little Footsteps Bank","direction":"outflow","narrative":"Allocate Little Footsteps startup costs for licensing, staffing runway, and facility deposits.","proofs":{"proof_of_work":{"block_hash":"00000000000000000000examplelittlefootstepspowhash","block_height":880001,"difficulty_target":"0000000000000000000a2e3f0000000000000000000000000000000000000000","nonce":735221,"notes":"Reconstructed proof-of-work witness anchoring the startup allocation for Little Footsteps.","puzzle_id":"little-footsteps-startup-boot"},"puzzle_attestation":{"attestation_id":"lf-startup-allocation-2025-001","attestor":"Echo Bank Treasury Node","puzzle_reference":"little-footsteps-startup-boot","signature":"hmac-sha256:e6b13b9c962e63146a60ae3e5d62da234bf31c85c67c86b94e8f0954503ee15d","witness":"Allocated reserves to cover Little Footsteps startup costs including licensing prep, staffing runway, and facility deposits."},"skeleton_key":{"btc_wif_checksum":"b7d496f88a830864cb923d9a","btc_wif_prefix":"L2URoK\u2026","eth_address":"0x555ecc336f409bceb22d830202a75892735710e2","index":0,"namespace":"little-footsteps/startup","priv_fingerprint":"78c5ddb43e6cbad91fe637733eec1be8658eeecf7d931d650bdf4d363ad23f52"}},"seq":0,"timestamp":"2025-11-22T06:26:45Z"}
+```
+
+* Digest: `sha256:b980890f7d7ad4069f0b9693e01a486909848842772e8e8eaaec5782e3ad4b94`
+* Proof bundle: `proofs/little_footsteps_bank/entry_00000.json`
+* Skeleton key namespace/index: `little-footsteps/startup` / `0`
+* Skeleton key fingerprint: `78c5ddb43e6cbad91fe637733eec1be8658eeecf7d931d650bdf4d363ad23f52`
+* Puzzle attestation witness: `Allocated reserves to cover Little Footsteps startup costs including licensing prep, staffing runway, and facility deposits.`
+* Compliance classification: `general-funds`
+* Compliance credential: `proofs/compliance_credentials/entry_00000_credential.json`
+* Legal posture registry: `legal/legal_posture_registry.jsonl`
+
+---
+

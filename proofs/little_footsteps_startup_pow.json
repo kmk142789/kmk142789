@@ -1,0 +1,8 @@
+{
+  "puzzle_id": "little-footsteps-startup-boot",
+  "block_height": 880001,
+  "block_hash": "00000000000000000000examplelittlefootstepspowhash",
+  "difficulty_target": "0000000000000000000a2e3f0000000000000000000000000000000000000000",
+  "nonce": 735221,
+  "notes": "Reconstructed proof-of-work witness anchoring the startup allocation for Little Footsteps."
+}
