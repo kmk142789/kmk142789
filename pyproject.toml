@@ -86,6 +86,7 @@ next-level = "next_level:main"
 hypermesh-weaver = "echo.hypermesh_cli:main"
 echo-orbital-resonance = "orbital_resonance_engine:main"
 pulse-storyboard = "echo_pulse_storyboard:main"
+orbital-memory-fabric = "echo.orbital_memory_fabric:main"
 
 [tool.setuptools.package-dir]
 "" = "packages/core/src"
