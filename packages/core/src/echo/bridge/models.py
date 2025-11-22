@@ -46,6 +46,11 @@ class PlanRequest(BaseModel):
         description="Optional priority hint applied to messages and webhook payloads.",
         examples=["info", "high", "critical"],
     )
+    connectors: Optional[List[str]] = Field(
+        default=None,
+        description="Limit planning to the supplied connector names (case-insensitive).",
+        examples=[["slack", "webhook"]],
+    )
 
 
 class PlanModel(BaseModel):
