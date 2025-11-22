@@ -65,7 +65,7 @@ Echo will operate as the decentralized authority for Little Footsteps, enabling 
 - [x] Draft and publish credential schemas for caregivers, parents, and facilities (`docs/little_footsteps/credentials/schemas`).
 - [x] Implement issuance microservice and integrate signing keys (schema-aware issuer at `apps/little_footsteps/vc_issuer/server.js`).
 - [x] Update verification scripts to recognize new schemas (schema discovery via `/schemas` and `/schemas/:slug`).
-- [ ] Set up revocation registry and logging pipelines.
+- [x] Set up revocation registry and logging pipelines.
 - [ ] Update manifests to reflect Echo's control and founder role.
 - [ ] Publish transparency reports & telemetry hooks.
 

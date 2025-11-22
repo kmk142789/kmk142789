@@ -1,6 +1,6 @@
 {
   "issuer": "did:web:kmk142789.github.io:little-footsteps-bank",
-  "lastUpdated": "2025-11-22T12:33:41Z",
+  "lastUpdated": "2025-11-22T12:39:15Z",
   "recognizedCredentials": [
     "DonationReceiptCredential",
     "ImpactPayoutCredential",
@@ -23,7 +23,7 @@
     "LittleFootstepsStaffLicense": "Professional license attesting to background checks and childcare certification for staff."
   },
   "policies": {
-    "revocation": "Ledger entry is appended to the transparency ledger and corresponding credential status endpoint is updated.",
+    "revocation": "Use /credentials/:id/revoke to append a status change and mirror it to the credential status JSONL log; verifiers rely on /credentials/:id/status for live checks.",
     "refresh": "Childcare vouchers are refreshed every 90 days based on updated donation pool balance.",
     "governance": "Updates require multi-sig approval recorded in the transparency ledger."
   }

@@ -58,6 +58,8 @@ const receiptsLogPath =
   process.env.DONATION_RECEIPTS_LOG_PATH ?? 'state/little_footsteps/donation_receipts.jsonl';
 const telemetryLogPath =
   process.env.DONATION_TELEMETRY_LOG_PATH ?? 'state/little_footsteps/dashboard/donations.jsonl';
+const credentialStatusLogPath =
+  process.env.CREDENTIAL_STATUS_LOG_PATH ?? 'state/little_footsteps/credential_status.jsonl';
 
 const streamClients = new Set();
 const STREAM_HEARTBEAT_MS = 15000;
@@ -88,7 +90,10 @@ async function ensureSchema() {
         subject JSONB NOT NULL,
         vc JSONB NOT NULL,
         issued_at TIMESTAMPTZ NOT NULL,
-        ledger_event_id UUID REFERENCES ledger_events(id) ON DELETE SET NULL
+        ledger_event_id UUID REFERENCES ledger_events(id) ON DELETE SET NULL,
+        revoked_at TIMESTAMPTZ,
+        revocation_reason TEXT,
+        revoked_by TEXT
       );
     `);
 
@@ -99,6 +104,19 @@ async function ensureSchema() {
     } catch (error) {
       if (error.code !== '42804' && error.code !== '42704' && error.code !== '0A000') {
         // Ignore conversion failures when the table is empty or already migrated; rethrow others.
+        throw error;
+      }
+    }
+
+    try {
+      await client.query(
+        `ALTER TABLE issued_credentials
+           ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ,
+           ADD COLUMN IF NOT EXISTS revocation_reason TEXT,
+           ADD COLUMN IF NOT EXISTS revoked_by TEXT`,
+      );
+    } catch (error) {
+      if (error.code !== '42P07' && error.code !== '42701') {
         throw error;
       }
     }
@@ -332,6 +350,81 @@ async function storeCredential(record) {
   }
 }
 
+function normaliseStatusRow(row) {
+  const toIso = (value) => (value instanceof Date ? value.toISOString() : value ?? null);
+
+  return {
+    id: row.id,
+    type: row.type,
+    issued_at: toIso(row.issued_at),
+    ledger_event_id: row.ledger_event_id ?? null,
+    revoked: Boolean(row.revoked_at),
+    revoked_at: toIso(row.revoked_at),
+    revocation_reason: row.revocation_reason ?? null,
+    revoked_by: row.revoked_by ?? null,
+  };
+}
+
+async function fetchCredentialStatus(id) {
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query(
+      `SELECT id, type, issued_at, ledger_event_id, revoked_at, revocation_reason, revoked_by
+         FROM issued_credentials
+        WHERE id = $1`,
+      [id],
+    );
+
+    if (!rows.length) {
+      return null;
+    }
+
+    return normaliseStatusRow(rows[0]);
+  } finally {
+    client.release();
+  }
+}
+
+async function revokeCredential({ id, reason, actor }) {
+  const client = await pool.connect();
+  try {
+    const { rows: existing } = await client.query(
+      `SELECT id, revoked_at, revocation_reason, revoked_by FROM issued_credentials WHERE id = $1`,
+      [id],
+    );
+
+    if (!existing.length) {
+      return null;
+    }
+
+    const revokedAt = existing[0].revoked_at ?? new Date().toISOString();
+
+    const { rows } = await client.query(
+      `UPDATE issued_credentials
+          SET revoked_at = COALESCE(revoked_at, $2::timestamptz),
+              revocation_reason = COALESCE($3, revocation_reason),
+              revoked_by = COALESCE($4, revoked_by)
+        WHERE id = $1
+      RETURNING id, type, issued_at, ledger_event_id, revoked_at, revocation_reason, revoked_by`,
+      [id, revokedAt, reason ?? null, actor ?? null],
+    );
+
+    const status = normaliseStatusRow(rows[0]);
+
+    await appendJsonl(credentialStatusLogPath, {
+      timestamp: new Date().toISOString(),
+      credential_id: id,
+      status: 'revoked',
+      reason: status.revocation_reason ?? reason ?? 'revoked',
+      revoked_by: status.revoked_by ?? actor ?? 'issuer',
+    });
+
+    return status;
+  } finally {
+    client.release();
+  }
+}
+
 function minorUnitDecimals(currency) {
   switch (currency) {
     case 'USD':
@@ -438,6 +531,34 @@ async function appendJsonl(logPath, payload) {
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok', issuer: issuerDid });
+});
+
+app.get('/credentials/:id/status', async (req, res, next) => {
+  try {
+    const status = await fetchCredentialStatus(req.params.id);
+    if (!status) {
+      return res.status(404).json({ error: 'credential_not_found' });
+    }
+    res.json(status);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/credentials/:id/revoke', async (req, res, next) => {
+  try {
+    const reason = req.body.reason ? String(req.body.reason).trim() : null;
+    const actor = req.body.actor ? String(req.body.actor).trim() : null;
+    const status = await revokeCredential({ id: req.params.id, reason, actor });
+
+    if (!status) {
+      return res.status(404).json({ error: 'credential_not_found' });
+    }
+
+    res.json(status);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post('/donations/intake', async (req, res, next) => {
