@@ -180,6 +180,16 @@ class AdaptiveConvergenceReport:
     upgrade_queue: Sequence[SubsystemUpgradePlan]
     recursive_state: RecursiveState
     layer_coherence: Sequence[CoherenceEnvelope]
+    advisories: Sequence["AdvisoryNote"]
+
+
+@dataclass(frozen=True)
+class AdvisoryNote:
+    """Deterministic advisory generated from the convergence cycle."""
+
+    layer: str
+    severity: str
+    message: str
 
 
 # ---------------------------------------------------------------------------
@@ -203,6 +213,7 @@ class AdaptiveConvergenceEngine:
         if not self._subsystems:
             raise ValueError("at least one subsystem is required")
         self._identity_map = {identity.handle: identity for identity in self._identities}
+        self._subsystem_layers = {descriptor.name: descriptor.layer for descriptor in self._subsystems}
         self._recursive_window = max(2, recursion_window)
         self._telemetry_history: List[float] = []
         self.cycle = 0
@@ -218,6 +229,7 @@ class AdaptiveConvergenceEngine:
         upgrades = self._integrate_subsystem_upgrades(unified, resolutions)
         recursive_state = self._stabilize_recursive_evolution(unified)
         coherence = self._maintain_layer_coherence(resolutions, upgrades)
+        advisories = self._generate_advisories(unified, resolutions)
 
         return AdaptiveConvergenceReport(
             cycle=self.cycle,
@@ -226,6 +238,7 @@ class AdaptiveConvergenceEngine:
             upgrade_queue=upgrades,
             recursive_state=recursive_state,
             layer_coherence=coherence,
+            advisories=advisories,
         )
 
     # ------------------------------------------------------------------
@@ -363,6 +376,9 @@ class AdaptiveConvergenceEngine:
         )
         return chosen.handle
 
+    def _layer_for_channel(self, channel: str) -> str:
+        return self._subsystem_layers.get(channel, "unknown")
+
     # ------------------------------------------------------------------
     def _stabilize_recursive_evolution(self, unified: UnifiedTelemetry) -> RecursiveState:
         self._telemetry_history.append(unified.score)
@@ -421,3 +437,49 @@ class AdaptiveConvergenceEngine:
                 )
             )
         return envelopes
+
+    # ------------------------------------------------------------------
+    def _generate_advisories(
+        self,
+        unified: UnifiedTelemetry,
+        resolutions: Sequence[IdentityResolution],
+    ) -> List[AdvisoryNote]:
+        advisories: List[AdvisoryNote] = []
+
+        for channel in unified.anomalies:
+            value = unified.channels.get(channel, 0.0)
+            severity = "critical" if value < 0.2 else "warning"
+            layer = self._layer_for_channel(channel)
+            message = (
+                f"Channel {channel} degraded ({value:.2f}); prioritize stabilization in {layer} layer."
+            )
+            advisories.append(AdvisoryNote(layer=layer, severity=severity, message=message))
+
+        for resolution in resolutions:
+            if resolution.drift_ratio >= 0.35:
+                severity = "critical" if resolution.drift_ratio >= 0.5 else "warning"
+                message = (
+                    f"Identity {resolution.handle} drift at {resolution.drift_ratio:.2f}; verdict {resolution.verdict} requires attention."
+                )
+                advisories.append(
+                    AdvisoryNote(
+                        layer=resolution.autonomy_layer,
+                        severity=severity,
+                        message=message,
+                    )
+                )
+
+        if len(unified.sources) < 2:
+            advisories.append(
+                AdvisoryNote(
+                    layer="multi-source",
+                    severity="info",
+                    message=f"Telemetry coverage is thin; only {len(unified.sources)} source(s) observed.",
+                )
+            )
+
+        severity_order = {"critical": 0, "warning": 1, "info": 2}
+        advisories.sort(
+            key=lambda note: (severity_order.get(note.severity, 99), note.layer, note.message)
+        )
+        return advisories
