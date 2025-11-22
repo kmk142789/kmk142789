@@ -262,6 +262,39 @@ class NonprofitBankStructure:
             "total_yield": total_yield.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
         }
 
+    def reinvestment_actions(
+        self, *, default_destination: str = "Little Footsteps reinvestment reserve"
+    ) -> Mapping[str, object]:
+        """Recommend remediation steps for any reinvestment violations.
+
+        The Lil Footsteps charter requires that all yield and investment return
+        categories flow back into the childcare program. This helper translates
+        any violations into concrete next actions that the operations team can
+        schedule—typically redirecting the exact amount back into the program's
+        reserve account.
+        """
+
+        violations = self.reinvestment_violations()
+        total_redirect = sum((entry.amount for entry in violations), Decimal("0"))
+
+        actions = [
+            {
+                "source": entry.destination,
+                "amount": entry.amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+                "redirect_to": default_destination,
+                "label": entry.label,
+                "original_category": entry.category,
+                "reason": "Yield and returns must be reinvested into Little Footsteps.",
+            }
+            for entry in violations
+        ]
+
+        return {
+            "has_violations": bool(violations),
+            "total_redirect": total_redirect.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            "actions": tuple(actions),
+        }
+
     # ------------------------------------------------------------------
     # Impact tokenisation
     # ------------------------------------------------------------------
@@ -392,6 +425,7 @@ class NonprofitBankStructure:
         net_position = (inflows - outflows).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
         reinvestment = self.reinvestment_summary()
+        reinvestment_actions = self.reinvestment_actions()
 
         return {
             "entries": [entry.serialisable() for entry in self._transparency_log],
@@ -401,6 +435,21 @@ class NonprofitBankStructure:
                 "compliant": reinvestment["compliant"],
                 "total_yield": str(reinvestment["total_yield"]),
                 "violations": [entry.serialisable() for entry in reinvestment["violations"]],
+                "redirect": {
+                    "has_violations": reinvestment_actions["has_violations"],
+                    "total_redirect": str(reinvestment_actions["total_redirect"]),
+                    "actions": [
+                        {
+                            "source": action["source"],
+                            "amount": str(action["amount"]),
+                            "redirect_to": action["redirect_to"],
+                            "label": action["label"],
+                            "original_category": action["original_category"],
+                            "reason": action["reason"],
+                        }
+                        for action in reinvestment_actions["actions"]
+                    ],
+                },
             },
         }
 
