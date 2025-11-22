@@ -69,6 +69,14 @@ from .aevum_lattice_resonator import (
     AevumLatticeSignature,
     demo as aevum_lattice_demo,
 )
+from .hyperprism_synchronicity import (
+    HyperprismSynchronicityEngine,
+    HyperprismVector,
+    PulseObservation,
+    SynchronicityReport,
+    compose_hyperprism_manifest,
+    demo as hyperprism_demo,
+)
 
 __all__ = [
     "ChronicleEvent",
@@ -76,6 +84,10 @@ __all__ = [
     "ChronicleTimeline",
     "AevumLatticeResonator",
     "AevumLatticeSignature",
+    "HyperprismSynchronicityEngine",
+    "HyperprismVector",
+    "PulseObservation",
+    "SynchronicityReport",
     "ConvergenceBrief",
     "ConstellationNode",
     "ConstellationSeed",
@@ -99,6 +111,7 @@ __all__ = [
     "compose_constellation",
     "compose_chronicle",
     "compose_convergence_report",
+    "compose_hyperprism_manifest",
     "compose_loop",
     "compose_resonance",
     "compose_resonance_report",
@@ -112,6 +125,7 @@ __all__ = [
     "HoloSemanticEchoLoom",
     "load_voice_bias_profile",
     "loop_demo",
+    "hyperprism_demo",
     "compose_transcendence_manifest",
     "summarize_loop",
     "summarise_loop_suite",
