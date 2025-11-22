@@ -44,6 +44,10 @@ class EchoBridgeAPI:
         activitypub_inbox_url: Optional[str] = None,
         activitypub_actor: Optional[str] = None,
         activitypub_secret_name: str = "ACTIVITYPUB_SIGNING_KEY",
+        teams_webhook_url: Optional[str] = None,
+        teams_secret_name: str = "TEAMS_WEBHOOK_URL",
+        farcaster_identity: Optional[str] = None,
+        farcaster_secret_name: str = "FARCASTER_SIGNING_KEY",
         email_recipients: Optional[Sequence[str]] = None,
         email_secret_name: Optional[str] = "EMAIL_RELAY_API_KEY",
         email_subject_template: str = "Echo Identity Relay :: {identity} :: Cycle {cycle}",
@@ -70,6 +74,10 @@ class EchoBridgeAPI:
         self.activitypub_inbox_url = activitypub_inbox_url
         self.activitypub_actor = activitypub_actor
         self.activitypub_secret_name = activitypub_secret_name
+        self.teams_webhook_url = teams_webhook_url
+        self.teams_secret_name = teams_secret_name
+        self.farcaster_identity = farcaster_identity
+        self.farcaster_secret_name = farcaster_secret_name
         self.email_recipients = tuple(self._normalise_recipients(email_recipients or []))
         self.email_secret_name = email_secret_name
         self.email_subject_template = email_subject_template
@@ -282,6 +290,30 @@ class EchoBridgeAPI:
                     text=social_text,
                 )
             )
+        if self.teams_webhook_url:
+            plain_text = plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._teams_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=plain_text,
+                )
+            )
         if self.matrix_homeserver and self.matrix_room_id:
             social_text = social_text or self._render_social(
                 identity=identity,
@@ -295,6 +327,30 @@ class EchoBridgeAPI:
             )
             plans.append(
                 self._matrix_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=social_text,
+                )
+            )
+        if self.farcaster_identity:
+            social_text = social_text or self._render_social(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._farcaster_plan(
                     identity=identity,
                     cycle=cycle,
                     signature=signature,
@@ -676,6 +732,82 @@ class EchoBridgeAPI:
             payload["priority"] = priority
         requires = [self.matrix_secret_name] if self.matrix_secret_name else []
         return BridgePlan(platform="matrix", action="send_room_message", payload=payload, requires_secret=requires)
+
+    def _teams_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        payload: Dict[str, Any] = {
+            "webhook_env": self.teams_secret_name,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+            "text": text
+            or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary,
+                links=links,
+                topics=topics,
+                priority=priority,
+            ),
+        }
+        if summary:
+            payload["summary"] = summary
+        if links:
+            payload["links"] = links
+        if topics:
+            payload["topics"] = topics
+        if priority:
+            payload["priority"] = priority
+        requires = [self.teams_secret_name] if self.teams_secret_name else []
+        return BridgePlan(platform="teams", action="send_webhook", payload=payload, requires_secret=requires)
+
+    def _farcaster_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        payload: Dict[str, Any] = {
+            "identity": self.farcaster_identity,
+            "text": text
+            or self._render_social(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary,
+                links=links,
+                topics=topics,
+                priority=priority,
+            ),
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        if links:
+            payload["attachments"] = links[:2]
+        if topics:
+            payload["tags"] = topics
+        if priority:
+            payload["priority"] = priority
+        requires = [self.farcaster_secret_name] if self.farcaster_secret_name else []
+        return BridgePlan(platform="farcaster", action="post_cast", payload=payload, requires_secret=requires)
 
     def _email_plan(
         self,

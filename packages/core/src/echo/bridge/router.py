@@ -57,6 +57,12 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         activitypub_secret_name=os.getenv(
             "ECHO_BRIDGE_ACTIVITYPUB_SECRET", "ACTIVITYPUB_SIGNING_KEY"
         ),
+        teams_webhook_url=os.getenv("ECHO_BRIDGE_TEAMS_WEBHOOK_URL"),
+        teams_secret_name=os.getenv("ECHO_BRIDGE_TEAMS_SECRET", "TEAMS_WEBHOOK_URL"),
+        farcaster_identity=os.getenv("ECHO_BRIDGE_FARCASTER_IDENTITY"),
+        farcaster_secret_name=os.getenv(
+            "ECHO_BRIDGE_FARCASTER_SECRET", "FARCASTER_SIGNING_KEY"
+        ),
         email_recipients=_parse_recipients_env(os.getenv("ECHO_BRIDGE_EMAIL_RECIPIENTS")),
         email_secret_name=os.getenv("ECHO_BRIDGE_EMAIL_SECRET", "EMAIL_RELAY_API_KEY"),
         email_subject_template=os.getenv(
@@ -165,12 +171,30 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 else [],
             )
         )
+    if getattr(api, "teams_webhook_url", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="teams",
+                action="send_webhook",
+                requires_secrets=[api.teams_secret_name] if api.teams_secret_name else [],
+            )
+        )
     if getattr(api, "matrix_homeserver", None) and getattr(api, "matrix_room_id", None):
         connectors.append(
             ConnectorDescriptor(
                 platform="matrix",
                 action="send_room_message",
                 requires_secrets=[api.matrix_secret_name] if api.matrix_secret_name else [],
+            )
+        )
+    if getattr(api, "farcaster_identity", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="farcaster",
+                action="post_cast",
+                requires_secrets=[api.farcaster_secret_name]
+                if getattr(api, "farcaster_secret_name", None)
+                else [],
             )
         )
     return connectors
