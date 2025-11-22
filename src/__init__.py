@@ -77,6 +77,7 @@ from .hyperprism_synchronicity import (
     compose_hyperprism_manifest,
     demo as hyperprism_demo,
 )
+from .unified_architecture_engine import UnifiedArchitectureEngine
 
 __all__ = [
     "ChronicleEvent",
@@ -132,4 +133,5 @@ __all__ = [
     "resonance_demo",
     "Spark",
     "transcendence_demo",
+    "UnifiedArchitectureEngine",
 ]
