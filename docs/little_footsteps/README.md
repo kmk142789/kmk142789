@@ -3,7 +3,7 @@
 This directory collects the artifacts required to bootstrap the Little Footsteps childcare commons bank:
 
 - [`did.json`](./did.json) publishes the bank's `did:web` document (host on GitHub Pages at `/little-footsteps-bank/did.json`).
-- [`trust_registry.json`](./trust_registry.json) enumerates recognized credential types and governance policies.
+- [`trust_registry.json`](./trust_registry.json) enumerates recognized credential types and governance policies and links to the published JSON Schemas for donation receipts, impact payouts, and childcare credentials.
 - [`first_credential.md`](./first_credential.md) documents the inaugural childcare voucher issuance.
 - [`credentials/`](./credentials) stores example verifiable credential payloads for QA and demos.
 - [`credentials/schemas`](./credentials/schemas) publishes the JSON Schemas used by the issuer and verifiers.
