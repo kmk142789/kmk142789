@@ -188,6 +188,12 @@ The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every
 | `ECHO_BRIDGE_VERCEL_PROJECTS` | _unset_ | Adds default Vercel projects to the redeploy connector payload. |
 | `ECHO_BRIDGE_DISCORD_WEBHOOK_URL` | _unset_ | Announces bridge relays to Discord when paired with `ECHO_BRIDGE_DISCORD_SECRET`. |
 | `ECHO_BRIDGE_DISCORD_SECRET` | `DISCORD_WEBHOOK_URL` | Secret name consumed by Discord bridge plans so the webhook URL stays in your secrets store. |
+| `ECHO_BRIDGE_MASTODON_INSTANCE` | _unset_ | Posts bridge relays to a Mastodon instance using the configured visibility. |
+| `ECHO_BRIDGE_MASTODON_VISIBILITY` | `unlisted` | Visibility value applied to Mastodon statuses (e.g., `direct`, `public`). |
+| `ECHO_BRIDGE_MASTODON_SECRET` | `MASTODON_ACCESS_TOKEN` | Secret identifier automation should resolve before posting to Mastodon. |
+| `ECHO_BRIDGE_MATRIX_HOMESERVER` | _unset_ | Matrix homeserver URL used when sending bridge relays into a room. |
+| `ECHO_BRIDGE_MATRIX_ROOM_ID` | _unset_ | Target Matrix room ID for bridge relays. |
+| `ECHO_BRIDGE_MATRIX_SECRET` | `MATRIX_ACCESS_TOKEN` | Secret identifier automation should resolve before posting Matrix messages. |
 | `ECHO_BRIDGE_EMAIL_RECIPIENTS` | _unset_ | Comma-separated list of recipients that should receive email relay plans. |
 | `ECHO_BRIDGE_EMAIL_SECRET` | `EMAIL_RELAY_API_KEY` | Secret name that automation should resolve when sending email bridge plans. |
 | `ECHO_BRIDGE_EMAIL_SUBJECT_TEMPLATE` | `Echo Identity Relay :: {identity} :: Cycle {cycle}` | Custom subject template applied to email plans. |
