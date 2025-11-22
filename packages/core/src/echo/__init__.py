@@ -468,6 +468,7 @@ __all__ = [
     "SystemMetrics",
     "ScheduleLoopDigest",
     "HearthWeave",
+    "OrbitalResonanceCertificate",
     "GlyphCrossReading",
     "EchoAI",
     "EchoResonanceEngine",
