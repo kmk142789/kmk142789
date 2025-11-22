@@ -28,6 +28,7 @@ node apps/little_footsteps/vc_issuer/server.js
 | `CORS_ALLOW_ORIGINS` | Optional comma-separated list of dashboard origins. | _unset (allow all)_ |
 | `DONATION_RECEIPTS_LOG_PATH` | JSONL log of receipt payloads. | `state/little_footsteps/donation_receipts.jsonl` |
 | `DONATION_TELEMETRY_LOG_PATH` | JSONL log powering the dashboard stream. | `state/little_footsteps/dashboard/donations.jsonl` |
+| `CREDENTIAL_STATUS_LOG_PATH` | JSONL log of issuance/revocation status changes for auditors. | `state/little_footsteps/credential_status.jsonl` |
 | `TRUST_REGISTRY_PATH` | Path to the trust registry JSON file. | `docs/little_footsteps/trust_registry.json` |
 | `CREDENTIAL_SCHEMA_DIR` | Directory containing credential schemas. | `docs/little_footsteps/credentials/schemas` |
 | `PORT` | HTTP port for the issuer. | `4000` |
@@ -62,3 +63,5 @@ The donation intake endpoint automatically:
 - Issues a `DonationReceiptCredential` verifiable credential signed with the Ed25519 key configured for the issuer.
 
 Each request can provide either `amount` (decimal string, e.g. `"0.05"`) or `amount_minor` (base units such as satoshis or wei). Supply `method` with one of `btc`, `eth`, `stripe`, or `paypal`, alongside any transaction metadata you want persisted to the ledger.
+
+Credential issuance and revocation events are also written to `credential_status.jsonl` so dashboards and auditors can follow the active/revoked state of every Little Footsteps credential without querying Postgres directly.
