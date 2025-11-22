@@ -197,3 +197,33 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert farcaster_plan["payload"]["identity"] == "echo.bridge"
     assert "#EchoBridge" in farcaster_plan["payload"]["text"]
     assert farcaster_plan["payload"]["attachments"][0] == "https://echo.example/cycles/01"
+
+
+def test_plan_endpoint_filters_requested_connectors() -> None:
+    app = _make_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/bridge/plan",
+        json={
+            "identity": "EchoWildfire",
+            "cycle": "01",
+            "signature": "eden88::cycle01",
+            "traits": {"pulse": "aurora", "resonance": "high"},
+            "summary": "Cycle snapshot anchored in Aurora",
+            "links": [" https://echo.example/cycles/01 ", "https://status.echo/bridge"],
+            "topics": ["Pulse Orbit", "Echo Bridge", "echo bridge"],
+            "priority": "high",
+            "connectors": ["slack", "webhook"],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    platforms = {plan["platform"] for plan in payload["plans"]}
+    assert platforms == {"slack", "webhook"}
+    for plan in payload["plans"]:
+        if plan["platform"] == "slack":
+            assert plan["payload"]["webhook_env"] == "SLACK_ECHO_WEBHOOK"
+        if plan["platform"] == "webhook":
+            assert plan["payload"]["url_hint"] == "https://bridge.echo/webhook"

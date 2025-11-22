@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 
 @dataclass
@@ -14,6 +14,24 @@ class BridgePlan:
     action: str
     payload: Dict[str, Any]
     requires_secret: List[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class RelayContext:
+    """Reusable, normalised state used during plan generation."""
+
+    identity: str
+    cycle: str
+    signature: str
+    traits: Dict[str, Any]
+    summary: Optional[str]
+    links: List[str]
+    topics: List[str]
+    priority: Optional[str]
+    markdown_body: Optional[str] = None
+    plain_text: Optional[str] = None
+    social_text: Optional[str] = None
+    base_document: Optional[Dict[str, Any]] = None
 
 
 class EchoBridgeAPI:
@@ -93,19 +111,33 @@ class EchoBridgeAPI:
         links: Optional[Sequence[str]] = None,
         topics: Optional[Sequence[str]] = None,
         priority: Optional[str] = None,
+        connectors: Optional[Sequence[str]] = None,
     ) -> List[BridgePlan]:
-        """Build relay plans for GitHub, Telegram, and Firebase."""
+        """Build relay plans for configured connectors.
+
+        When ``connectors`` are provided, only matching platform plans will be
+        generated. Connector names are matched case-insensitively so callers
+        can forward user-controlled filters without additional normalisation.
+        """
 
         traits = self._normalise_traits(traits or {})
         summary_text = self._normalise_summary(summary)
         link_items = self._normalise_links(links)
         topic_items = self._normalise_topics(topics)
         priority_text = self._normalise_priority(priority)
+        allowed_platforms = self._normalise_connectors(connectors)
+        context = RelayContext(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary_text,
+            links=link_items,
+            topics=topic_items,
+            priority=priority_text,
+        )
         plans: List[BridgePlan] = []
-        markdown_body = None
-        plain_text = None
-        social_text = None
-        base_document = self._base_document(
+        context.base_document = self._base_document(
             identity=identity,
             cycle=cycle,
             signature=signature,
@@ -116,8 +148,8 @@ class EchoBridgeAPI:
             priority=priority_text,
         )
 
-        if self.github_repository:
-            markdown_body = markdown_body or self._render_markdown(
+        if self.github_repository and self._platform_enabled("github", allowed_platforms):
+            context.markdown_body = context.markdown_body or self._render_markdown(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -135,11 +167,11 @@ class EchoBridgeAPI:
                     traits=traits,
                     topics=topic_items,
                     priority=priority_text,
-                    body=markdown_body,
+                    body=context.markdown_body,
                 )
             )
-        if self.telegram_chat_id:
-            plain_text = plain_text or self._render_plain(
+        if self.telegram_chat_id and self._platform_enabled("telegram", allowed_platforms):
+            context.plain_text = context.plain_text or self._render_plain(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -157,21 +189,21 @@ class EchoBridgeAPI:
                     traits=traits,
                     topics=topic_items,
                     priority=priority_text,
-                    text=plain_text,
+                    text=context.plain_text,
                 )
             )
-        if self.firebase_collection:
+        if self.firebase_collection and self._platform_enabled("firebase", allowed_platforms):
             plans.append(
                 self._firebase_plan(
                     identity=identity,
                     cycle=cycle,
                     signature=signature,
                     traits=traits,
-                    document=base_document,
+                    document=context.base_document,
                 )
             )
-        if self.slack_webhook_url:
-            plain_text = plain_text or self._render_plain(
+        if self.slack_webhook_url and self._platform_enabled("slack", allowed_platforms):
+            context.plain_text = context.plain_text or self._render_plain(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -191,11 +223,11 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=plain_text,
+                    text=context.plain_text,
                 )
             )
-        if self.discord_webhook_url:
-            plain_text = plain_text or self._render_plain(
+        if self.discord_webhook_url and self._platform_enabled("discord", allowed_platforms):
+            context.plain_text = context.plain_text or self._render_plain(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -215,11 +247,11 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=plain_text,
+                    text=context.plain_text,
                 )
             )
-        if self.bluesky_identifier:
-            social_text = social_text or self._render_social(
+        if self.bluesky_identifier and self._platform_enabled("bluesky", allowed_platforms):
+            context.social_text = context.social_text or self._render_social(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -239,11 +271,11 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=social_text,
+                    text=context.social_text,
                 )
             )
-        if self.mastodon_instance_url:
-            social_text = social_text or self._render_social(
+        if self.mastodon_instance_url and self._platform_enabled("mastodon", allowed_platforms):
+            context.social_text = context.social_text or self._render_social(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -263,11 +295,11 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=social_text,
+                    text=context.social_text,
                 )
             )
-        if self.activitypub_inbox_url:
-            social_text = social_text or self._render_social(
+        if self.activitypub_inbox_url and self._platform_enabled("activitypub", allowed_platforms):
+            context.social_text = context.social_text or self._render_social(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -287,11 +319,11 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=social_text,
+                    text=context.social_text,
                 )
             )
-        if self.teams_webhook_url:
-            plain_text = plain_text or self._render_plain(
+        if self.teams_webhook_url and self._platform_enabled("teams", allowed_platforms):
+            context.plain_text = context.plain_text or self._render_plain(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -311,11 +343,15 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=plain_text,
+                    text=context.plain_text,
                 )
             )
-        if self.matrix_homeserver and self.matrix_room_id:
-            social_text = social_text or self._render_social(
+        if (
+            self.matrix_homeserver
+            and self.matrix_room_id
+            and self._platform_enabled("matrix", allowed_platforms)
+        ):
+            context.social_text = context.social_text or self._render_social(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -335,11 +371,11 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=social_text,
+                    text=context.social_text,
                 )
             )
-        if self.farcaster_identity:
-            social_text = social_text or self._render_social(
+        if self.farcaster_identity and self._platform_enabled("farcaster", allowed_platforms):
+            context.social_text = context.social_text or self._render_social(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -359,11 +395,11 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=social_text,
+                    text=context.social_text,
                 )
             )
-        if self.email_recipients:
-            plain_text = plain_text or self._render_plain(
+        if self.email_recipients and self._platform_enabled("email", allowed_platforms):
+            context.plain_text = context.plain_text or self._render_plain(
                 identity=identity,
                 cycle=cycle,
                 signature=signature,
@@ -383,16 +419,16 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=plain_text,
+                    text=context.plain_text,
                 )
             )
-        if self.webhook_url:
+        if self.webhook_url and self._platform_enabled("webhook", allowed_platforms):
             plans.append(
                 self._webhook_plan(
                     identity=identity,
                     cycle=cycle,
                     signature=signature,
-                    payload=base_document,
+                    payload=context.base_document,
                 )
             )
 
@@ -954,12 +990,24 @@ class EchoBridgeAPI:
             seen.add(key)
         return cleaned
 
+    def _normalise_connectors(self, connectors: Optional[Sequence[str]]) -> Optional[Set[str]]:
+        if not connectors:
+            return None
+        cleaned = {str(connector).strip().casefold() for connector in connectors if connector}
+        return cleaned or None
+
     @staticmethod
     def _normalise_priority(priority: Optional[str]) -> Optional[str]:
         if priority is None:
             return None
         text = str(priority).strip()
         return text or None
+
+    @staticmethod
+    def _platform_enabled(platform: str, allowed: Optional[Set[str]]) -> bool:
+        if allowed is None:
+            return True
+        return platform.casefold() in allowed
 
     @staticmethod
     def _topic_hashtag(topic: str) -> str:
