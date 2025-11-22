@@ -1,0 +1,7 @@
+lanes:
+  - name: "plan"
+    steps: ["lint", "typecheck", "graph-impact", "sandbox-test"]
+  - name: "apply"
+    steps: ["build", "migrate", "deploy-canary", "smoke", "verify-ledger-anchor"]
+  - name: "expand"
+    steps: ["spawn-worker", "assign-task", "collect-attestation", "update-graph"]
