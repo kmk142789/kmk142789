@@ -10,7 +10,10 @@ integration points.
 The kernel provides a cooperative event loop, a priority scheduler with
 starvation protection, a message bus, and a resource manager that tracks
 CPU and memory budgets on priority lanes.  Metrics are exported as JSON
-for consumption by the CLI or dashboard.
+for consumption by the CLI or dashboard.  The event loop now executes
+microtasks through the priority scheduler (with lane-aware fairness),
+records runtime data in diagnostics, and emits heartbeats so watchdogs
+can detect stalls quickly.
 
 ## Storage
 
