@@ -83,6 +83,8 @@ class FluxPassage:
     context: FluxContext
     prompt: str
     closing: str
+    prompt_source: str | None = None
+    closing_source: str | None = None
 
     def render(self) -> str:
         """Render the passage in multi-line textual form."""
@@ -248,6 +250,24 @@ def _normalize_tags(*tag_collections: Iterable[str] | None) -> tuple[str, ...]:
     return tuple(ordered_tags)
 
 
+def _apply_motifs(text: str, motifs: Sequence[str] | None, *, style: str) -> str:
+    """Blend motif phrases into *text* using the requested *style*."""
+
+    if not motifs:
+        return text
+
+    cleaned = [motif.strip() for motif in motifs if isinstance(motif, str) and motif.strip()]
+    if not cleaned:
+        return text
+
+    motif_block = " | ".join(cleaned)
+    if style == "prefix":
+        return f"{motif_block} — {text}"
+    if style == "inline":
+        return f"{text} [{motif_block}]"
+    return f"{text} — {motif_block}"
+
+
 def generate_passage(
     rng: random.Random,
     library: FluxLibrary = DEFAULT_LIBRARY,
@@ -257,10 +277,15 @@ def generate_passage(
     artifact: str | None = None,
     label: str | None = None,
     tags: Iterable[str] | None = None,
+    motifs: Sequence[str] | None = None,
+    motif_style: str = "suffix",
 ) -> FluxPassage:
     """Create a :class:`FluxPassage` instance using the provided RNG."""
 
     library.ensure_non_empty()
+
+    if motif_style not in {"suffix", "prefix", "inline"}:
+        raise ValueError("motif_style must be one of: suffix, prefix, inline")
 
     chosen_mood = mood or rng.choice(list(library.moods))
     if chosen_mood not in library.moods:
@@ -280,9 +305,17 @@ def generate_passage(
         tags=_normalize_tags(tags),
     )
 
-    prompt = rng.choice(list(library.prompts))
-    closing = rng.choice(list(library.closings))
-    return FluxPassage(context=ctx, prompt=prompt, closing=closing)
+    prompt_source = rng.choice(list(library.prompts))
+    closing_source = rng.choice(list(library.closings))
+    prompt = _apply_motifs(prompt_source, motifs, style=motif_style)
+    closing = _apply_motifs(closing_source, motifs, style=motif_style)
+    return FluxPassage(
+        context=ctx,
+        prompt=prompt,
+        closing=closing,
+        prompt_source=prompt_source,
+        closing_source=closing_source,
+    )
 
 
 def build_passage(seed: int | None = None, *, label: str | None = None) -> str:
@@ -408,7 +441,29 @@ def compute_passage_metrics(passage: FluxPassage) -> dict:
     }
 
 
-def analyze_passages(passages: Sequence[FluxPassage]) -> dict:
+def compute_library_coverage(passages: Sequence[FluxPassage], library: FluxLibrary) -> dict:
+    """Measure how well a session touched the available library entries."""
+
+    coverage_summary: dict[str, dict[str, object]] = {}
+
+    def _coverage(used: set[str], catalog: Sequence[str]) -> dict[str, object]:
+        total = len(set(catalog))
+        count = len(used)
+        percent = (count / total * 100) if total else 0.0
+        return {"count": count, "total": total, "percent": round(percent, 2), "items": sorted(used)}
+
+    coverage_summary["moods"] = _coverage({p.context.mood for p in passages}, library.moods)
+    coverage_summary["artifacts"] = _coverage({p.context.artifact for p in passages}, library.artifacts)
+
+    prompt_sources = {p.prompt_source or p.prompt for p in passages}
+    closing_sources = {p.closing_source or p.closing for p in passages}
+    coverage_summary["prompts"] = _coverage(prompt_sources, library.prompts)
+    coverage_summary["closings"] = _coverage(closing_sources, library.closings)
+
+    return coverage_summary
+
+
+def analyze_passages(passages: Sequence[FluxPassage], *, library: FluxLibrary | None = None) -> dict:
     """Compute lexical analytics for an iterable of passages."""
 
     per_passage = []
@@ -431,7 +486,9 @@ def analyze_passages(passages: Sequence[FluxPassage]) -> dict:
         "vocabulary_size": len(total_unique),
     }
 
-    return {"per_passage": per_passage, "aggregate": aggregate}
+    coverage = compute_library_coverage(passages, library) if library else None
+
+    return {"per_passage": per_passage, "aggregate": aggregate, "coverage": coverage}
 
 
 def format_metrics_table(analysis: dict) -> str:
@@ -475,6 +532,22 @@ def format_metrics_table(analysis: dict) -> str:
     )
 
     return "\n".join(table_lines)
+
+
+def format_coverage_section(coverage: dict) -> str:
+    """Render a human-readable snapshot of library coverage."""
+
+    lines = ["Library Coverage", "----------------"]
+    for key in ("moods", "artifacts", "prompts", "closings"):
+        if key not in coverage:
+            continue
+        stats = coverage[key]
+        lines.append(
+            "{title}: {count}/{total} ({percent:.2f}%)".format(
+                title=key.title(), count=stats.get("count", 0), total=stats.get("total", 0), percent=stats.get("percent", 0.0)
+            )
+        )
+    return "\n".join(lines)
 
 
 def export_passages(
@@ -530,6 +603,7 @@ def write_markdown_report(
     seed: int | None,
     mood_cycle: Sequence[str] | None,
     tags: Sequence[str] | None,
+    motifs: Sequence[str] | None,
 ) -> None:
     """Create a Markdown report capturing the generated session."""
 
@@ -547,6 +621,8 @@ def write_markdown_report(
         lines.append(f"- Mood cycle: {', '.join(mood_cycle)}")
     if tags:
         lines.append(f"- CLI tags: {', '.join(tags)}")
+    if motifs:
+        lines.append(f"- Motifs: {', '.join(motifs)}")
 
     lines.append("\n## Summary\n")
     lines.append(format_summary(summary))
@@ -562,6 +638,10 @@ def write_markdown_report(
         table = format_metrics_table(analytics)
         lines.append("\n## Lexical Metrics\n")
         lines.append("```\n" + table + "\n```")
+        coverage = analytics.get("coverage") if isinstance(analytics, dict) else None
+        if coverage:
+            lines.append("\n## Library Coverage\n")
+            lines.append(format_coverage_section(coverage))
 
     lines.append("\n## Passages\n")
     for index, passage in enumerate(passages, start=1):
@@ -631,6 +711,19 @@ def main() -> None:
         dest="tags",
         default=None,
         help="Attach one or more tags to every passage (repeat flag for multiple tags).",
+    )
+    parser.add_argument(
+        "--motif",
+        action="append",
+        dest="motifs",
+        default=None,
+        help="Weave repeating motif phrases into prompts and closings (repeat flag for multiple motifs).",
+    )
+    parser.add_argument(
+        "--motif-style",
+        choices=["suffix", "prefix", "inline"],
+        default="suffix",
+        help="Control how motifs are blended: appended, prepended, or inline brackets.",
     )
     parser.add_argument(
         "--library",
@@ -747,6 +840,7 @@ def main() -> None:
             )
 
     cli_tags = [tag.strip() for tag in (args.tags or []) if tag and tag.strip()]
+    motifs = [motif.strip() for motif in (args.motifs or []) if motif and motif.strip()]
 
     base_timestamp = datetime.utcnow()
     interval_delta = timedelta(minutes=args.interval) if args.interval else None
@@ -801,6 +895,8 @@ def main() -> None:
                     timestamp=timestamp,
                     label=entry.label or args.label,
                     tags=collect_tags(entry.tags),
+                    motifs=motifs,
+                    motif_style=args.motif_style,
                 )
             )
     else:
@@ -815,6 +911,8 @@ def main() -> None:
                     timestamp=timestamp,
                     label=args.label,
                     tags=collect_tags(None),
+                    motifs=motifs,
+                    motif_style=args.motif_style,
                 )
             )
 
@@ -822,7 +920,7 @@ def main() -> None:
     analytics: dict | None = None
     needs_analytics = args.analytics != "none" or args.export is not None or args.report is not None
     if needs_analytics:
-        analytics = analyze_passages(passages)
+        analytics = analyze_passages(passages, library=library)
 
     if args.format == "json":
         payload = [passage.to_dict() for passage in passages]
@@ -850,6 +948,8 @@ def main() -> None:
 
     if args.analytics == "table" and analytics is not None:
         print("\n" + format_metrics_table(analytics))
+        if analytics.get("coverage"):
+            print("\n" + format_coverage_section(analytics["coverage"]))
     elif args.analytics == "json" and analytics is not None:
         print("\n" + json.dumps(analytics, indent=2))
 
@@ -875,6 +975,7 @@ def main() -> None:
             seed=args.seed,
             mood_cycle=mood_cycle or [],
             tags=cli_tags,
+            motifs=motifs,
         )
 
     if args.summary:
