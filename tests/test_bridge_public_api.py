@@ -35,6 +35,10 @@ def _make_app() -> FastAPI:
         activitypub_inbox_url="https://echo.social/inbox",
         activitypub_actor="https://echo.social/@bridge",
         activitypub_secret_name="ECHO_ACTIVITYPUB_SECRET",
+        teams_webhook_url="https://teams.echo/hooks/123",
+        teams_secret_name="ECHO_TEAMS_WEBHOOK",
+        farcaster_identity="echo.bridge",
+        farcaster_secret_name="ECHO_FARCASTER_SIGNING_KEY",
         email_recipients=["ops@echo.test", "alerts@echo.test"],
         email_secret_name="SENDGRID_TOKEN",
         email_subject_template="Echo Relay {identity}/{cycle}",
@@ -65,6 +69,8 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
         "mastodon",
         "matrix",
         "activitypub",
+        "teams",
+        "farcaster",
     }
 
 
@@ -178,3 +184,16 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert activitypub_plan["payload"]["inbox"] == "https://echo.social/inbox"
     assert activitypub_plan["payload"]["actor"] == "https://echo.social/@bridge"
     assert activitypub_plan["payload"]["context"]["identity"] == "EchoWildfire"
+
+    teams_plan = plans["teams"]
+    assert teams_plan["action"] == "send_webhook"
+    assert teams_plan["payload"]["webhook_env"] == "ECHO_TEAMS_WEBHOOK"
+    assert teams_plan["payload"]["context"]["cycle"] == "01"
+    assert teams_plan["payload"]["priority"] == "high"
+    assert teams_plan["payload"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
+
+    farcaster_plan = plans["farcaster"]
+    assert farcaster_plan["action"] == "post_cast"
+    assert farcaster_plan["payload"]["identity"] == "echo.bridge"
+    assert "#EchoBridge" in farcaster_plan["payload"]["text"]
+    assert farcaster_plan["payload"]["attachments"][0] == "https://echo.example/cycles/01"
