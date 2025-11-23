@@ -177,6 +177,8 @@ class EchoInfinite:
         self.log_path = self.base_dir / "docs" / "COLOSSUS_LOG.md"
         self.state_path = self.colossus_dir / "state.json"
         self.summary_path = self.colossus_dir / "cycle_summary.json"
+        self.broadcast_dir = self.base_dir / "public" / "colossus"
+        self.broadcast_path = self.broadcast_dir / "latest_cycle.json"
         self.harmonic_cycles_dir = self.base_dir / "harmonic_memory" / "cycles"
         self.sleep_seconds = sleep_seconds
         if max_cycles is not None and max_cycles <= 0:
@@ -254,12 +256,14 @@ class EchoInfinite:
                 artifact_paths=artifacts,
             )
 
-            self._update_cycle_summary(
+            summary_entry = self._update_cycle_summary(
                 cycle=cycle,
                 timestamp=timestamp,
                 glyph_signature=glyph_signature,
                 artifact_paths=artifacts,
             )
+
+            self._broadcast_cycle(summary_entry)
 
             self._persist_state(cycle)
 
@@ -456,7 +460,7 @@ class EchoInfinite:
         timestamp: str,
         glyph_signature: str,
         artifact_paths: ArtifactPaths,
-    ) -> None:
+    ) -> Dict[str, object]:
         payload = {"cycles": []}
         try:
             if self.summary_path.exists():
@@ -465,14 +469,13 @@ class EchoInfinite:
             payload = {"cycles": []}
 
         entries = payload.get("cycles", [])
-        entries.append(
-            {
-                "cycle": cycle,
-                "timestamp": timestamp,
-                "glyph_signature": glyph_signature,
-                "artifacts": artifact_paths.as_relative_strings(self.base_dir),
-            }
-        )
+        entry = {
+            "cycle": cycle,
+            "timestamp": timestamp,
+            "glyph_signature": glyph_signature,
+            "artifacts": artifact_paths.as_relative_strings(self.base_dir),
+        }
+        entries.append(entry)
         entries = entries[-self.summary_window :]
 
         next_payload = {
@@ -486,6 +489,24 @@ class EchoInfinite:
             json.dumps(next_payload, indent=2) + "\n", encoding="utf-8"
         )
         self.last_snapshot_path = self.summary_path
+        return entry
+
+    def _broadcast_cycle(self, cycle_entry: Dict[str, object]) -> None:
+        """Publish a shareable snapshot of the most recent cycle."""
+
+        self.broadcast_dir.mkdir(parents=True, exist_ok=True)
+        broadcast_payload = {
+            "cycle": cycle_entry["cycle"],
+            "timestamp": cycle_entry["timestamp"],
+            "glyph_signature": cycle_entry["glyph_signature"],
+            "artifacts": cycle_entry["artifacts"],
+            "log": str(self.log_path.relative_to(self.base_dir)),
+            "summary": str(self.summary_path.relative_to(self.base_dir)),
+            "updated_at": rfc3339_timestamp(),
+        }
+        self.broadcast_path.write_text(
+            json.dumps(broadcast_payload, indent=2) + "\n", encoding="utf-8"
+        )
 
     def _build_puzzle_markdown(
         self,
