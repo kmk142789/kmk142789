@@ -15,6 +15,7 @@ systems to understand which narrative voices and fragments were emphasised.
 from __future__ import annotations
 
 import csv
+import html
 import io
 from collections import Counter
 from dataclasses import dataclass, field
@@ -422,7 +423,7 @@ def compose_loop(
     """Create a creative loop in the requested output format.
 
     Supported formats are ``"text"``, ``"json"``, ``"markdown"``, ``"table"``,
-    ``"csv"``, ``"summary"``, and ``"insights"``.
+    ``"csv"``, ``"summary"``, ``"insights"``, and ``"html"``.
     """
 
     timestamp = timestamp or datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
@@ -556,8 +557,81 @@ def compose_loop(
         ]
         return "\n".join(lines)
 
+    if format == "html":
+        summary = loop_result.summary or summarize_loop(loop_result)
+        diagnostics_text = html.escape(loop_result.diagnostics.render_report())
+        rhythm = loop_result.rhythm
+        lines = "\n".join(f"<li>{html.escape(line)}</li>" for line in loop_result.lines)
+        summary_items = "\n".join(
+            [
+                f"<li><strong>Voice diversity:</strong> {summary.voice_diversity:.2f}</li>",
+                f"<li><strong>Accent focus:</strong> {summary.accent_focus:.2f}</li>",
+                f"<li><strong>Dominant voice:</strong> {html.escape(summary.dominant_voice or '-')}</li>",
+                f"<li><strong>Fragments highlighted:</strong> {summary.fragment_coverage}</li>",
+                f"<li><strong>Rhythm accents:</strong> {','.join(str(value) for value in rhythm.accents)}</li>",
+                f"<li><strong>Rhythm dynamics:</strong> {','.join(html.escape(value) for value in rhythm.dynamic_tempi)}</li>",
+                f"<li><strong>Diagnostics:</strong> {diagnostics_text}</li>",
+            ]
+        )
+        timeline_rows = "\n".join(
+            (
+                "<tr>"
+                f"<td>{entry['index'] + 1}</td>"
+                f"<td>{html.escape(entry['voice'])}</td>"
+                f"<td>{html.escape(entry['fragment'] or '-')}</td>"
+                f"<td>{entry['accent']}</td>"
+                f"<td>{html.escape(entry['tempo_hint'])}</td>"
+                f"<td>{html.escape(entry['texture'])}</td>"
+                f"<td>{html.escape(entry['line'])}</td>"
+                "</tr>"
+            )
+            for entry in loop_result.timeline
+        )
+        return "\n".join(
+            [
+                "<!DOCTYPE html>",
+                "<html lang=\"en\">",
+                "<head>",
+                "  <meta charset=\"utf-8\" />",
+                f"  <title>Loop for {html.escape(seed.motif)}</title>",
+                "  <style>",
+                "    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.5; padding: 1.5rem; color: #0c1021; }",
+                "    h2 { margin-top: 0; }",
+                "    ul { padding-left: 1.25rem; }",
+                "    .meta { color: #555; margin-bottom: 0.5rem; }",
+                "    .summary { background: #f5f5fa; border: 1px solid #e0e0ee; padding: 0.75rem; border-radius: 8px; }",
+                "    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }",
+                "    th, td { border: 1px solid #d4d7df; padding: 0.5rem; text-align: left; }",
+                "    th { background: #f0f2f8; }",
+                "  </style>",
+                "</head>",
+                "<body>",
+                f"  <h2>Loop for '{html.escape(seed.motif)}'</h2>",
+                f"  <p class=\"meta\">Composed {html.escape(timestamp)} · Tempo: {html.escape(seed.tempo)} · Pulses: {seed.pulses}</p>",
+                "  <ul>",
+                f"    {lines}",
+                "  </ul>",
+                "  <div class=\"summary\">",
+                "    <strong>Summary</strong>",
+                "    <ul>",
+                f"      {summary_items}",
+                "    </ul>",
+                "  </div>",
+                "  <table>",
+                "    <thead>",
+                "      <tr><th>#</th><th>Voice</th><th>Fragment</th><th>Accent</th><th>Tempo</th><th>Texture</th><th>Line</th></tr>",
+                "    </thead>",
+                "    <tbody>",
+                f"      {timeline_rows}",
+                "    </tbody>",
+                "  </table>",
+                "</body>",
+                "</html>",
+            ]
+        )
+
     raise ValueError(
-        "Unsupported format; expected 'text', 'json', 'markdown', 'table', 'csv', 'summary', or 'insights'."
+        "Unsupported format; expected 'text', 'json', 'markdown', 'table', 'csv', 'summary', 'insights', or 'html'."
     )
 
 
@@ -570,6 +644,7 @@ def _extension_for_format(output_format: str) -> str:
         "csv": "csv",
         "summary": "txt",
         "insights": "txt",
+        "html": "html",
     }
     return mapping.get(output_format, "txt")
 
@@ -819,11 +894,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json", "markdown", "table", "csv", "summary", "insights"],
+        choices=["text", "json", "markdown", "table", "csv", "summary", "insights", "html"],
         default="text",
         help=(
             "Choose between human-readable text, JSON, Markdown, table, CSV, summary, "
-            "or insights output"
+            "insights, or HTML output"
         ),
     )
     parser.add_argument(
