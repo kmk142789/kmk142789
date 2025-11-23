@@ -20,6 +20,9 @@ Usage::
 Supply ``--extra-glyphs "★,✺"`` to append custom glyphs used when generating
 the per-cycle signatures.
 
+Use ``--start-cycle 42`` to begin a new expansion wave from a specific cycle
+number instead of resuming from ``colossus/state.json``.
+
 Press ``Ctrl+C`` (SIGINT) to halt the orchestration loop.
 """
 
@@ -167,6 +170,7 @@ class EchoInfinite:
         max_cycles: int | None = None,
         summary_window: int = 25,
         glyph_set: Sequence[str] | None = None,
+        start_cycle: int | None = None,
     ) -> None:
         self.base_dir = base_dir or Path(__file__).resolve().parent
         self.colossus_dir = self.base_dir / "colossus"
@@ -181,6 +185,9 @@ class EchoInfinite:
         if summary_window <= 0:
             raise ValueError("summary_window must be a positive integer")
         self.summary_window = summary_window
+        if start_cycle is not None and start_cycle < 0:
+            raise ValueError("start_cycle must be zero or a positive integer")
+        self.start_cycle_override = start_cycle
         self.glyph_set = self._resolve_glyph_set(glyph_set)
         self._running = True
         self.last_snapshot_path: Path | None = None
@@ -199,7 +206,11 @@ class EchoInfinite:
     def run(self) -> None:
         """Start the infinite orchestration loop."""
 
-        start_cycle = self._load_starting_cycle()
+        start_cycle = (
+            self.start_cycle_override
+            if self.start_cycle_override is not None
+            else self._load_starting_cycle()
+        )
         cycle = start_cycle
         self._log_message(
             "Starting EchoInfinite orchestrator",
@@ -209,6 +220,9 @@ class EchoInfinite:
                 "max_cycles": self.max_cycles,
                 "summary_window": self.summary_window,
                 "glyph_set_size": len(self.glyph_set),
+                "start_source": "override"
+                if self.start_cycle_override is not None
+                else "state",
             },
         )
 
@@ -1268,6 +1282,14 @@ if __name__ == "__main__":
             "cycle generation"
         ),
     )
+    parser.add_argument(
+        "--start-cycle",
+        type=int,
+        default=None,
+        help=(
+            "Override the starting cycle instead of resuming from colossus/state.json"
+        ),
+    )
     args = parser.parse_args()
     base_dir = args.base_dir
     if base_dir is not None:
@@ -1282,5 +1304,6 @@ if __name__ == "__main__":
         max_cycles=args.max_cycles,
         summary_window=args.summary_window,
         glyph_set=glyph_set,
+        start_cycle=args.start_cycle,
     )
     orchestrator.run()
