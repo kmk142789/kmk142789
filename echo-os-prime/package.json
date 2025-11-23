@@ -1,0 +1,17 @@
+{
+  "name": "echo-os-prime",
+  "version": "0.0.1",
+  "description": "Echo OS Prime – sovereign core engine and UI scaffold",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "ts-node": "^10.9.2"
+  }
+}
