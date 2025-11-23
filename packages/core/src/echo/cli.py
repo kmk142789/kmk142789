@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import random
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,6 +22,7 @@ from pulse_weaver.cli import register_subcommand as register_pulse_weaver
 
 from .amplify import AmplificationEngine, AmplifyState
 from .evolver import EchoEvolver, _MOMENTUM_SENSITIVITY
+from .echo_evolver_satellite import SatelliteEchoEvolver
 from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
 from .timeline import build_cycle_timeline, refresh_cycle_timeline
 from .tools.forecast import project_indices, sparkline
@@ -121,6 +123,17 @@ def _cmd_show(args: argparse.Namespace) -> int:
 
 def _cmd_verify(args: argparse.Namespace) -> int:
     return 0 if verify_manifest(args.path) else 1
+
+
+def _cmd_satellite(args: argparse.Namespace) -> int:
+    logging.basicConfig(level=getattr(logging, args.log_level), format="%(message)s")
+
+    evolver = SatelliteEchoEvolver(artifact_path=args.artifact, seed=args.seed)
+    if args.cycle is not None:
+        evolver.state.cycle = args.cycle
+
+    evolver.run(enable_network=args.network, emit_report=args.propagation_report)
+    return 0
 
 
 def _cmd_evolve(args: argparse.Namespace) -> int:
@@ -918,6 +931,30 @@ def main(argv: Iterable[str] | None = None) -> int:
     verify_parser = subparsers.add_parser("manifest-verify", help="Verify manifest digest")
     verify_parser.add_argument("--path", type=Path, help="Optional manifest path")
     verify_parser.set_defaults(func=_cmd_verify)
+
+    satellite_parser = subparsers.add_parser(
+        "satellite", help="Run a SatelliteEchoEvolver cycle"
+    )
+    satellite_parser.add_argument("--artifact", type=Path, help="Artifact output path")
+    satellite_parser.add_argument("--cycle", type=int, default=None, help="Starting cycle")
+    satellite_parser.add_argument("--seed", type=int, default=None, help="Deterministic seed")
+    satellite_parser.add_argument(
+        "--log-level",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Logging level",
+    )
+    satellite_parser.add_argument(
+        "--network",
+        action="store_true",
+        help="Include network propagation events (simulated safety mode)",
+    )
+    satellite_parser.add_argument(
+        "--propagation-report",
+        action="store_true",
+        help="Log the propagation report with per-channel details",
+    )
+    satellite_parser.set_defaults(func=_cmd_satellite)
 
     evolve_parser = subparsers.add_parser("evolve", help="Run EchoEvolver cycles")
     evolve_parser.add_argument(
