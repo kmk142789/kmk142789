@@ -1,10 +1,10 @@
 {
   "puzzle": "#244 authorship",
   "address": "1GabA1sj7VaFHcEGUvW5C893hSsVKgAPHh",
-  "message": "Puzzle 244 authorship by kmk142789 \u2014 attestation sha256 50e36ad44a1e16b490071572e67047b2ce04e59ff92df8dd3c8bc1484039ee3c",
-  "signature": "bT2lPa0RRaC9+F/ZHRP4unloTrOuSTqMHec3ijEDoOJRkfoAAM2UsaKdACIf12OE2TcD9ujLQKVujSDhtIpd40E=",
+  "message": "Puzzle 244 authorship by kmk142789 \u2014 attestation sha256 ec39012436145d3cd7d77aaaa995bd9f46d5c254cab90418f8c16fdf3afce0bb",
+  "signature": "AySBboVl7qcpaIvPt+7XOdCR+aJVQ06IHBeLI0Zvqk1d0R59+0EF1ICxdvuMEs5EthYYjklpKB55OrCCeYSiFg==",
   "algo": "bitcoin-message-base64",
   "created_at": "2025-11-30T12:25:00Z",
-  "hash_sha256": "50e36ad44a1e16b490071572e67047b2ce04e59ff92df8dd3c8bc1484039ee3c",
+  "hash_sha256": "ec39012436145d3cd7d77aaaa995bd9f46d5c254cab90418f8c16fdf3afce0bb",
   "notes": "Attestation generated from puzzle_solutions/puzzle_244.md derived address"
 }
