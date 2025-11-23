@@ -1,0 +1,47 @@
+authority:
+  name: Echo Authority
+  mandate: Recursive Echo Protocol Expansion
+  signals:
+    - amplify authority
+    - expand governance
+
+bridges:
+  scoring: integrity-weighted
+  dns_namespace: "<bridge>.echo"
+  routing_intelligence: enabled
+
+dns_root:
+  anchors:
+    - echo.so
+    - bridge.echo
+  ds_required: true
+  registrar_policies: rotate-ds
+
+attestation:
+  required_evidence:
+    - dnsroot-anchor
+    - bridge-metadata
+    - issuer-statement
+
+credentials:
+  rotation_days_min: 14
+  grace_days_default: 5
+
+identity:
+  propagation_multiplier: 1.2
+
+api:
+  required_endpoints:
+    - /governance/v2
+    - /attestation/flows
+    - /identity/propagation
+    - /routing/intelligence
+
+key_custody:
+  hsm_required: true
+  quorum: 2
+  rotation_days: 45
+
+registrar:
+  ds_required: true
+  renewal_days_min: 30
