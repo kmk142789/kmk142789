@@ -39,6 +39,7 @@ __all__ = [
     "list_modules",
     "load_registry",
     "remove_module",
+    "search_modules",
     "register_module",
     "store_registry",
     "summarize_registry",
@@ -163,6 +164,43 @@ def list_modules(
     return sorted(records, key=lambda record: (record.category.lower(), record.name.lower()))
 
 
+def search_modules(
+    term: str,
+    *,
+    fields: Sequence[str] | None = None,
+    registry_path: Path | str = REGISTRY_FILE,
+) -> List[ModuleRecord]:
+    """Return modules whose fields contain ``term`` (case-insensitive).
+
+    The helper defaults to searching across ``name``, ``description``, and
+    ``category`` fields.  Callers can restrict the search to a subset of fields
+    via ``fields`` when building focused discovery experiences.
+    """
+
+    safe_term = _validate_input(term, field="term").lower()
+    search_fields = [
+        field.strip().lower()
+        for field in (DEFAULT_SEARCH_FIELDS if fields is None else fields)
+        if field and field.strip()
+    ]
+    invalid_fields = [field for field in search_fields if field not in DEFAULT_SEARCH_FIELDS]
+    if invalid_fields:
+        raise ValueError(
+            "Unsupported search field(s): " + ", ".join(sorted(set(invalid_fields)))
+        )
+
+    def matches(record: ModuleRecord) -> bool:
+        field_map = {
+            "name": record.name,
+            "description": record.description,
+            "category": record.category,
+        }
+        return any(field_map[field].lower().find(safe_term) != -1 for field in search_fields)
+
+    records = load_registry(registry_path)
+    return sorted((record for record in records if matches(record)), key=lambda record: record.name.lower())
+
+
 def store_registry(records: Sequence[ModuleRecord], path: Path | str = REGISTRY_FILE) -> None:
     """Persist the provided records to disk using an atomic write."""
 
@@ -281,11 +319,14 @@ def _iter_records(sequence: Iterable[ModuleRecord]) -> Iterator[ModuleRecord]:
     yield from sequence
 
 
+DEFAULT_SEARCH_FIELDS = ("name", "description", "category")
+
+
 if __name__ == "__main__":  # pragma: no cover - convenience CLI
     import argparse
     import sys
 
-    SUBCOMMANDS = {"register", "list", "summary", "remove"}
+    SUBCOMMANDS = {"register", "list", "summary", "remove", "search"}
 
     argv = sys.argv
     if len(argv) > 1 and not argv[1].startswith("-") and argv[1] not in SUBCOMMANDS:
@@ -313,6 +354,15 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
         "--category", help="Limit results to a single category", default=None
     )
 
+    search_parser = subparsers.add_parser("search", help="Search modules by term")
+    search_parser.add_argument("term", help="Search term to match")
+    search_parser.add_argument(
+        "--fields",
+        nargs="+",
+        choices=DEFAULT_SEARCH_FIELDS,
+        help="Fields to search (default: all)",
+    )
+
     subparsers.add_parser("summary", help="Show registry summary information")
 
     remove_parser = subparsers.add_parser("remove", help="Remove a module entry")
@@ -321,7 +371,9 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
     args = parser.parse_args()
 
     if args.command is None:
-        parser.error("No command provided. Use 'register', 'list', or 'summary'.")
+        parser.error(
+            "No command provided. Use 'register', 'list', 'search', 'summary', or 'remove'."
+        )
 
     if args.command == "register":
         record = register_module(
@@ -333,6 +385,11 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
         print(json.dumps(asdict(record), indent=2))
     elif args.command == "list":
         records = list_modules(category=args.category, registry_path=args.registry)
+        print(json.dumps([asdict(record) for record in records], indent=2))
+    elif args.command == "search":
+        records = search_modules(
+            args.term, fields=args.fields, registry_path=args.registry
+        )
         print(json.dumps([asdict(record) for record in records], indent=2))
     elif args.command == "summary":
         summary = summarize_registry(load_registry(args.registry))
