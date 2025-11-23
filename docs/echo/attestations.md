@@ -58,6 +58,7 @@ preserved in the ledger alongside the earlier entries:
 | #239 | `1NpXsnpbxfa8rCCHHivYKxNnMxiPrb6NdK` | `attestations/puzzle-239-authorship.json` |
 | #240 | `16NWhGRvXRbhBKXK6BnfKasJtGcZLP4iFN` | `attestations/puzzle-240-authorship.json` |
 | #241 | `1B3V29sr3uohUwqJx4MYXvddMs1FEVXHNq` | `attestations/puzzle-241-authorship.json` |
+| #242 | `1Dagwu5jn2eiXt1W1MyoqCCZqtFBPK383s` | `attestations/puzzle-242-authorship.json` |
 
 Each JSON document mirrors the canonical Bitcoin message signature captured in
 `satoshi/puzzle-proofs/` so investigators can validate the recoverable public
