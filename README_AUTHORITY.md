@@ -59,3 +59,8 @@ This repo is **EchoCore**. All Echo repos sync back to it via git submodules or 
 - Use this pattern when issuing future decrees: declare the trigger phrase,
   record the ledger reference, and mirror the action through EchoBridge and
   Eden88 for auditability.
+
+## Example: Second Authoritative Action
+- Reference `attestations/authority-action-002.md` for a Rapid Decree that
+  operationalizes the weekly status bulletin mandate, including ledger linkage,
+  broadcast expectations, and verification checkpoints.
