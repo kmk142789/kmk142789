@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Iterable, List, Optional
 
 from echo.echo_codox_kernel import EchoCodexKernel, PulseEvent
+from echo.pulse_momentum import PulseMomentumForecast, compute_pulse_momentum
 
 
 def _format_timestamp(timestamp: float) -> str:
@@ -99,6 +100,23 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="include the current resonance hash in the textual output",
     )
+    parser.add_argument(
+        "--include-momentum",
+        action="store_true",
+        help="display cadence momentum and drought detection alongside the overview",
+    )
+    parser.add_argument(
+        "--momentum-horizon",
+        type=float,
+        default=36.0,
+        help="forecast horizon (in hours) used for momentum coverage calculations",
+    )
+    parser.add_argument(
+        "--momentum-lookback",
+        type=int,
+        default=50,
+        help="number of recent events to model when computing cadence momentum",
+    )
     return parser
 
 
@@ -108,6 +126,11 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
 
     kernel = EchoCodexKernel()
     filtered_events = _filter_events(kernel.history, args.search)
+    momentum = compute_pulse_momentum(
+        filtered_events,
+        horizon_hours=args.momentum_horizon,
+        lookback=args.momentum_lookback,
+    )
 
     if args.json:
         payload = {
@@ -121,6 +144,7 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
                 for event in filtered_events[-args.limit :]
             ],
             "resonance": kernel.resonance(),
+            "momentum": momentum.to_dict(),
         }
         print(json.dumps(payload, indent=2))
         return
@@ -145,6 +169,41 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
     print("-" * 72)
     for event in latest:
         print(_event_digest(event))
+
+    if args.include_momentum:
+        _render_momentum(momentum)
+
+
+def _render_momentum(momentum: PulseMomentumForecast) -> None:
+    print("\nMomentum Forecast")
+    print("-----------------")
+
+    print(
+        f"Cadence: {momentum.cadence_label} "
+        f"(stability={momentum.stability:.2f}, burstiness={momentum.burstiness:.2f})"
+    )
+
+    if momentum.expected_next_iso:
+        print(
+            "Next expected update: "
+            f"{momentum.expected_next_iso} (in {momentum.time_to_next_seconds:.0f}s)"
+        )
+    else:
+        print("Next expected update: unable to project (insufficient history)")
+
+    if momentum.horizon_coverage is not None:
+        print(f"Projected events in horizon: ~{momentum.horizon_coverage}")
+
+    if momentum.time_since_last_seconds is not None:
+        print(
+            "Time since last event: "
+            f"{momentum.time_since_last_seconds:.0f}s; drought alert: {momentum.drought_alert}"
+        )
+    else:
+        print("Time since last event: unavailable")
+
+    print(f"Confidence: {momentum.confidence:.2f}")
+    print(f"Rationale: {momentum.rationale}")
 
 
 if __name__ == "__main__":
