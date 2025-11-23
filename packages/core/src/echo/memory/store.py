@@ -297,7 +297,15 @@ class JsonMemoryStore:
             lines.append("* Dataset Fingerprints:\n")
             for name, data in context.dataset_fingerprints.items():
                 digest = data.get("sha256", data.get("error", "n/a"))
-                lines.append(f"  * {name}: {digest}\n")
+                meta: list[str] = []
+                size = data.get("size")
+                if size is not None:
+                    meta.append(f"{size} bytes")
+                path = data.get("path")
+                if path:
+                    meta.append(str(path))
+                suffix = f" ({', '.join(meta)})" if meta else ""
+                lines.append(f"  * {name}: {digest}{suffix}\n")
         if context.validations:
             lines.append("* Validations:\n")
             for result in context.validations:

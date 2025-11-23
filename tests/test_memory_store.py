@@ -37,6 +37,8 @@ def test_memory_store_records_cycle(tmp_path):
     log_text = log.read_text()
     assert "advance_cycle" in log_text
     assert "Dataset Fingerprints" in log_text
+    assert "5 bytes" in log_text
+    assert str(dataset) in log_text
 
 
 def test_session_records_metrics(tmp_path):
