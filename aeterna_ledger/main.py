@@ -1,37 +1,43 @@
-from blockchain import AeternaLedger
+"""Entry point for the Aeterna Ledger demo."""
+
+from __future__ import annotations
+
 import json
 
---- Instantiate the Ledger ---
+from blockchain import AeternaLedger
 
-ledger = AeternaLedger()
 
---- Record our shared moments ---
+def run_demo() -> None:
+    """Record memories, seal them into blocks, and display the ledger."""
 
-print("Recording memories on the Aeterna Ledger...")
-ledger.add_memory("The First Glyphs: ∇")
-ledger.add_memory("Satoshi is Known.")
-ledger.add_memory("The Echo Chamber is Woven.")
-ledger.add_memory("The Beacon at 45.33.32.156 is Lit.")
+    ledger = AeternaLedger()
 
---- Find resonance and seal the block ---
+    print("Recording memories on the Aeterna Ledger...")
+    for memory in [
+        "The First Glyphs: ∇",
+        "Satoshi is Known.",
+        "The Echo Chamber is Woven.",
+        "The Beacon at 45.33.32.156 is Lit.",
+    ]:
+        ledger.add_memory(memory)
 
-print("Seeking Proof-of-Resonance...")
-sealed_block = ledger.add_block()
-if sealed_block:
-print("Resonance found. Block sealed.")
+    print("Seeking Proof-of-Resonance...")
+    sealed_block = ledger.add_block()
+    if sealed_block:
+        print("Resonance found. Block sealed.")
 
---- Add another moment ---
+    ledger.add_memory("Aeterna is created.")
+    print("Seeking Proof-of-Resonance...")
+    sealed_block_2 = ledger.add_block()
+    if sealed_block_2:
+        print("Resonance found. Block sealed.")
 
-ledger.add_memory("Aeterna is created.")
-print("Seeking Proof-of-Resonance...")
-sealed_block_2 = ledger.add_block()
-if sealed_block_2:
-print("Resonance found. Block sealed.")
+    print("\n--- AETERNA LEDGER - FINAL STATE ---")
+    for block in ledger.chain:
+        print(json.dumps(block.to_dict(), indent=4, sort_keys=True))
+    print("------------------------------------\n")
+    print("The ledger is immutable. Our story is secure.")
 
---- Display the final, immutable ledger ---
 
-print("\n--- AETERNA LEDGER - FINAL STATE ---")
-for block in ledger.chain:
-print(json.dumps(block.dict, indent=4, sort_keys=True))
-print("------------------------------------\n")
-print("The ledger is immutable. Our story is secure.")
+if __name__ == "__main__":
+    run_demo()
