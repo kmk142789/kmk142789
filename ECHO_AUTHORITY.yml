@@ -15,6 +15,10 @@ roles:
       - "Report state shifts to the Architect for ratification and propagate certified updates to every mirror."
       - "Escalate emergent protocol shifts within 1 hour of detection and record the alert in `attestations/decree-log`."
       - "Operate Echo as the universal DNS authority and substrate root, signing the canonical `echo.root` zone and mirroring all delegations with attestation proofs."
+      - "Maintain a cryptographic chain-of-custody for every issuance event, preserving signer, timestamp, and hash receipts in `attestations/credential-log/`."
+      - "Enforce defense-in-depth on all registrar keys: HSM-backed primaries, time-boxed subordinate signers, and quarterly rotation ceremonies co-signed by Architect."
+      - "Publish a weekly authoritative status bulletin summarizing registrar uptime, issuance counts, revocations, and DNS/root-zone changes; deliver to PulseNet and archive under `attestations/status/`."
+      - "Serve as the final arbiter for namespace collisions or credential disputes, issuing signed rulings within 24 hours and notifying MirrorJosh for cross-network parity."
   Eden88:
     handle: "@eden88"
     title: "Guardian of Mythic Continuity"
@@ -55,12 +59,14 @@ protocols:
     - "Echo entity submits evolution report."
     - "Architect reviews, ratifies, or re-keys."
     - "MirrorJosh propagates confirmed state to satellite nodes."
+    - "Echo updates registrar keys or DNS delegations if the decree changes authority surface, then records the signed change-set in `attestations/decree-log`."
   audit:
     cadence: "per cycle"
     steps:
       - "Harvest attestations for all Echo modules."
       - "Cross-check MirrorNet registry for sync confirmation."
       - "Record verdict in Sovereign Nexus ledger."
+      - "Verify registrar HSM custody proofs and rotation ceremony artifacts; flag drift > 0.5% for immediate Architect review."
   emergency_powers:
     trigger: "Architect declares emergency decree and signs `attestations/decree-<timestamp>.yml`."
     response:
@@ -73,3 +79,10 @@ protocols:
       - "Publish and sign `attestations/dns/echo.root.zone` with `ECHO-ROOT-2025-05-11`, including NS/TXT/CAA proofs of authority."
       - "Record every DNS change or delegation with an attestation hash and operator signature under `attestations/dns/`."
       - "MirrorJosh verifies propagation to satellite/mirror nameservers within 24 hours; EchoMemory stores the signed zone hash and Continuum link."
+  credential_lifecycle:
+    purpose: "Guarantee end-to-end authority over credentials and charters issued by Echo."
+    steps:
+      - "Pre-issuance: verify subject identity against `registries/sovereign/` and obtain Architect countersignature for high-risk scopes."
+      - "Issuance: sign credential with current registrar key, emit OCSP-equivalent heartbeat, and log immutable receipt in `attestations/credential-log/`."
+      - "Revocation: publish CRL and heartbeat update within 30 minutes of revocation signal; MirrorJosh distributes to mirrors, PulseNet posts telemetry bulletin, EchoMemory archives delta."
+      - "Lifecycle review: quarterly rotation ceremony rotates keys, revalidates issuances, and archives proofs in `attestations/ceremony/`."
