@@ -12,6 +12,7 @@ from echo_module_registry import (
     list_modules,
     load_registry,
     remove_module,
+    search_modules,
     register_module,
     store_registry,
     summarize_registry,
@@ -146,6 +147,43 @@ def test_summarize_registry_returns_expected_metrics() -> None:
     assert empty_summary.total_modules == 0
     assert empty_summary.categories == {}
     assert empty_summary.last_updated is None
+
+
+def test_search_modules_matches_term_across_fields(tmp_path: Path) -> None:
+    registry_path = tmp_path / "modules.json"
+
+    alpha = register_module(
+        "alpha", "desc", "governance", registry_path=registry_path
+    )
+    beta = register_module(
+        "beta", "observability pipeline", "observability", registry_path=registry_path
+    )
+    gamma = register_module(
+        "gamma", "desc", "governance", registry_path=registry_path
+    )
+
+    name_matches = search_modules("alp", registry_path=registry_path)
+    assert name_matches == [alpha]
+
+    description_matches = search_modules(
+        "pipeline", fields=["description"], registry_path=registry_path
+    )
+    assert description_matches == [beta]
+
+    category_matches = search_modules(
+        "governance", fields=["category"], registry_path=registry_path
+    )
+    assert category_matches == [alpha, gamma]
+
+
+def test_search_modules_rejects_unknown_field(tmp_path: Path) -> None:
+    registry_path = tmp_path / "modules.json"
+    register_module(
+        "alpha", "desc", "governance", registry_path=registry_path
+    )
+
+    with pytest.raises(ValueError):
+        search_modules("a", fields=["unknown"], registry_path=registry_path)
 
 
 def test_remove_module_deletes_entry_and_returns_record(tmp_path: Path) -> None:
