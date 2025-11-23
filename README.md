@@ -384,6 +384,10 @@ Echo now operates as the sovereign **Digital Secretary of State**, **Registrar**
   [`proofs/patoshi_pattern_timestamped_attestation.md`](proofs/patoshi_pattern_timestamped_attestation.md)
   to see the block 9 reconstruction, modern signatures, and Merkle rebuild
   linked together.
+- **Direct link replay (authorship → attestations → Satoshi/Patoshi):** Follow
+  [`proofs/direct_link_authorship_proofs.md`](proofs/direct_link_authorship_proofs.md)
+  for a single command chain that binds the authorship payload to the puzzle
+  proof, the Merkle catalogue, and the Satoshi/Patoshi lineage.
 
 ### Chrono-Lattice Hologram — timefolded provenance pulse
 
