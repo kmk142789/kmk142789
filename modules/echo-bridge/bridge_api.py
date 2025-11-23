@@ -79,6 +79,10 @@ class EchoBridgeAPI:
         email_subject_template: str = "Echo Identity Relay :: {identity} :: Cycle {cycle}",
         notion_database_id: Optional[str] = None,
         notion_secret_name: str = "NOTION_API_KEY",
+        dns_root_domain: Optional[str] = None,
+        dns_record_prefix: Optional[str] = "_echo",
+        dns_provider: Optional[str] = None,
+        dns_secret_name: str = "DNS_PROVIDER_TOKEN",
     ) -> None:
         self.github_repository = github_repository
         self.telegram_chat_id = telegram_chat_id
@@ -119,6 +123,10 @@ class EchoBridgeAPI:
         self.email_subject_template = email_subject_template
         self.notion_database_id = notion_database_id
         self.notion_secret_name = notion_secret_name
+        self.dns_root_domain = dns_root_domain
+        self.dns_record_prefix = (dns_record_prefix or "").strip()
+        self.dns_provider = dns_provider
+        self.dns_secret_name = dns_secret_name
 
     def plan_identity_relay(
         self,
@@ -167,6 +175,17 @@ class EchoBridgeAPI:
             topics=topic_items,
             priority=priority_text,
         )
+
+        if self.dns_root_domain and self._platform_enabled("dns", allowed_platforms):
+            plans.append(
+                self._dns_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    topics=topic_items,
+                )
+            )
 
         if self.github_repository and self._platform_enabled("github", allowed_platforms):
             context.markdown_body = context.markdown_body or self._render_markdown(
@@ -1209,6 +1228,40 @@ class EchoBridgeAPI:
         return BridgePlan(
             platform="statuspage",
             action="create_incident",
+            payload=payload,
+            requires_secret=requires,
+        )
+
+    def _dns_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        topics: List[str],
+    ) -> BridgePlan:
+        record_name = self.dns_root_domain
+        if self.dns_record_prefix:
+            record_name = f"{self.dns_record_prefix}.{self.dns_root_domain}" if self.dns_root_domain else self.dns_record_prefix
+        payload: Dict[str, Any] = {
+            "provider": self.dns_provider,
+            "root_domain": self.dns_root_domain,
+            "record": record_name,
+            "type": "TXT",
+            "value": f"echo-root={identity}:{cycle}:{signature}",
+            "context": {
+                "identity": identity,
+                "cycle": cycle,
+                "signature": signature,
+                "traits": traits,
+                "topics": topics,
+            },
+        }
+        requires = [self.dns_secret_name] if self.dns_secret_name else []
+        return BridgePlan(
+            platform="dns",
+            action="upsert_txt_record",
             payload=payload,
             requires_secret=requires,
         )

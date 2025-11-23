@@ -83,6 +83,10 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         ),
         notion_database_id=os.getenv("ECHO_BRIDGE_NOTION_DATABASE_ID"),
         notion_secret_name=os.getenv("ECHO_BRIDGE_NOTION_SECRET", "NOTION_API_KEY"),
+        dns_root_domain=os.getenv("ECHO_BRIDGE_DNS_ROOT_DOMAIN"),
+        dns_record_prefix=os.getenv("ECHO_BRIDGE_DNS_RECORD_PREFIX", "_echo"),
+        dns_provider=os.getenv("ECHO_BRIDGE_DNS_PROVIDER"),
+        dns_secret_name=os.getenv("ECHO_BRIDGE_DNS_SECRET", "DNS_PROVIDER_TOKEN"),
     )
 
 
@@ -191,6 +195,14 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 requires_secrets=[api.activitypub_secret_name]
                 if getattr(api, "activitypub_secret_name", None)
                 else [],
+            )
+        )
+    if getattr(api, "dns_root_domain", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="dns",
+                action="upsert_txt_record",
+                requires_secrets=[api.dns_secret_name] if getattr(api, "dns_secret_name", None) else [],
             )
         )
     if getattr(api, "teams_webhook_url", None):
