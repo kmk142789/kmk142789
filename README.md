@@ -161,6 +161,9 @@ The Continuum Action updates `docs/NEXT_CYCLE_PLAN.md` on each merge and every
    `npm run dev`.
 4. **Verify proofs ahead of rollout.** Run `make proof-pack` to regenerate federated ledgers,
    indexes, and public reports so downstream consumers receive the latest attestations.
+5. **GPU inference rollouts.** To deploy NVIDIA NIM LLM services onto a GPU-enabled GKE cluster,
+   follow [`docs/DEPLOY_NVIDIA_NIM_ON_GKE.md`](docs/DEPLOY_NVIDIA_NIM_ON_GKE.md) for the
+   namespace, secrets, and Helm steps.
 
 ### Required environment variables
 
