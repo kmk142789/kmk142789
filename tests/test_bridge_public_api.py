@@ -300,3 +300,54 @@ def test_plan_endpoint_filters_requested_connectors() -> None:
             assert plan["payload"]["webhook_env"] == "SLACK_ECHO_WEBHOOK"
         if plan["platform"] == "webhook":
             assert plan["payload"]["url_hint"] == "https://bridge.echo/webhook"
+
+
+def test_plan_supports_linkedin_and_reddit_connectors() -> None:
+    api = EchoBridgeAPI(
+        linkedin_organization_id="echo-org-01",
+        linkedin_secret_name="ECHO_LINKEDIN_TOKEN",
+        reddit_subreddit="echo_bridge",
+        reddit_secret_name="ECHO_REDDIT_TOKEN",
+    )
+    app = FastAPI()
+    app.include_router(create_router(api=api))
+    client = TestClient(app)
+
+    relays = client.get("/bridge/relays")
+    assert relays.status_code == 200
+    connectors = {connector["platform"] for connector in relays.json()["connectors"]}
+    assert connectors == {"linkedin", "reddit"}
+
+    response = client.post(
+        "/bridge/plan",
+        json={
+            "identity": "EchoWildfire",
+            "cycle": "07",
+            "signature": "eden88::cycle07",
+            "traits": {"pulse": "aurora"},
+            "summary": "Cycle 07 resonance",
+            "links": ["https://echo.example/cycles/07"],
+            "topics": ["Echo Bridge", "pulse orbit"],
+            "priority": "critical",
+        },
+    )
+
+    assert response.status_code == 200
+    plans = {plan["platform"]: plan for plan in response.json()["plans"]}
+
+    linkedin = plans["linkedin"]
+    assert linkedin["action"] == "create_share"
+    assert linkedin["payload"]["organization_id"] == "echo-org-01"
+    assert linkedin["payload"]["context"]["identity"] == "EchoWildfire"
+    assert linkedin["payload"]["priority"] == "critical"
+    assert "EchoBridge" in linkedin["payload"]["tags"]
+    assert linkedin["requires_secret"] == ["ECHO_LINKEDIN_TOKEN"]
+
+    reddit = plans["reddit"]
+    assert reddit["action"] == "submit_post"
+    assert reddit["payload"]["subreddit"] == "echo_bridge"
+    assert reddit["payload"]["title"] == "Echo Relay EchoWildfire/07"
+    assert reddit["payload"]["priority"] == "critical"
+    assert "pulse orbit" in reddit["payload"]["topics"]
+    assert reddit["payload"]["links"] == ["https://echo.example/cycles/07"]
+    assert reddit["requires_secret"] == ["ECHO_REDDIT_TOKEN"]
