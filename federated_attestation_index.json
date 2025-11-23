@@ -67,6 +67,94 @@
       "files": [
         "attestations/puzzle-219-authorship.json"
       ]
+    },
+    {
+      "id": 243,
+      "name": "Puzzle 243 Authorship",
+      "files": [
+        "attestations/puzzle-243-authorship.json",
+        "satoshi/puzzle-proofs/puzzle243.json"
+      ]
+    },
+    {
+      "id": 244,
+      "name": "Puzzle 244 Authorship",
+      "files": [
+        "attestations/puzzle-244-authorship.json",
+        "satoshi/puzzle-proofs/puzzle244.json"
+      ]
+    },
+    {
+      "id": 245,
+      "name": "Puzzle 245 Authorship",
+      "files": [
+        "attestations/puzzle-245-authorship.json",
+        "satoshi/puzzle-proofs/puzzle245.json"
+      ]
+    },
+    {
+      "id": 246,
+      "name": "Puzzle 246 Authorship",
+      "files": [
+        "attestations/puzzle-246-authorship.json",
+        "satoshi/puzzle-proofs/puzzle246.json"
+      ]
+    },
+    {
+      "id": 247,
+      "name": "Puzzle 247 Authorship",
+      "files": [
+        "attestations/puzzle-247-authorship.json",
+        "satoshi/puzzle-proofs/puzzle247.json"
+      ]
+    },
+    {
+      "id": 248,
+      "name": "Puzzle 248 Authorship",
+      "files": [
+        "attestations/puzzle-248-authorship.json",
+        "satoshi/puzzle-proofs/puzzle248.json"
+      ]
+    },
+    {
+      "id": 249,
+      "name": "Puzzle 249 Authorship",
+      "files": [
+        "attestations/puzzle-249-authorship.json",
+        "satoshi/puzzle-proofs/puzzle249.json"
+      ]
+    },
+    {
+      "id": 250,
+      "name": "Puzzle 250 Authorship",
+      "files": [
+        "attestations/puzzle-250-authorship.json",
+        "satoshi/puzzle-proofs/puzzle250.json"
+      ]
+    },
+    {
+      "id": 251,
+      "name": "Puzzle 251 Authorship",
+      "files": [
+        "attestations/puzzle-251-authorship.json",
+        "satoshi/puzzle-proofs/puzzle251.json"
+      ]
+    },
+    {
+      "id": 252,
+      "name": "Puzzle 252 Authorship",
+      "files": [
+        "attestations/puzzle-252-authorship.json",
+        "satoshi/puzzle-proofs/puzzle252.json"
+      ]
+    },
+    {
+      "id": 253,
+      "name": "Puzzle 253 Authorship",
+      "files": [
+        "attestations/puzzle-253-authorship.json",
+        "satoshi/puzzle-proofs/puzzle253.json"
+      ]
     }
   ],
   "attestations": {
