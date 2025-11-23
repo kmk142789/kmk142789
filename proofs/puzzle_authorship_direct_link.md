@@ -1,0 +1,81 @@
+# Puzzle Authorship Direct Link Proof
+
+This walkthrough ties a published puzzle authorship attestation to the signed
+message living in `satoshi/puzzle-proofs/`, the canonical puzzle registry, and
+the Patoshi continuity suite. Every command runs offline against repository
+artefacts so auditors can replay the custody trail without extra dependencies.
+
+## 1. Align the attestation with the signed message
+
+Use the authorship JSON and the recorded puzzle proof to confirm the message and
+signature are identical across both sources and that the attestation digest
+matches the signed text:
+
+```bash
+# Compare the attestation payload with the puzzle proof entry
+jq -r '.message, .signature' attestations/puzzle-233-authorship.json
+jq -r '.message, .signature' satoshi/puzzle-proofs/puzzle233.json
+
+# Recompute the message digest noted in the attestation
+MESSAGE=$(jq -r '.message' attestations/puzzle-233-authorship.json)
+printf "%s" "$MESSAGE" | sha256sum
+jq -r '.hash_sha256' attestations/puzzle-233-authorship.json
+```
+
+Matching values prove that the attestation, the puzzle proof, and the digest all
+reference the same authorship statement.
+
+## 2. Verify the authorship signature against the puzzle registry
+
+Validate the recoverable signature against the canonical puzzle address recorded
+in the repository catalogue, demonstrating that the declared signer controls the
+puzzle key:
+
+```bash
+# Inspect the registry entry for puzzle #233
+jq '.[232]' satoshi/puzzle_solutions.json
+
+# Verify the signature recovers the same address
+python -m verifier.verify_puzzle_signature \
+  --address "$(jq -r '.[232].address' satoshi/puzzle_solutions.json)" \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle233.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle233.json)" \
+  --pretty
+```
+
+The verifier rebuilds the public key from the signature and confirms it matches
+the registry address, yielding a direct cryptographic proof of authorship.
+
+## 3. Re-anchor the attestation inside the Merkle catalogue
+
+Show that the authorship proof remains sealed inside the notarised Merkle tree
+that tracks every puzzle artefact:
+
+```bash
+python satoshi/proof_catalog.py --root satoshi/puzzle-proofs --glob puzzle233.json --pretty
+python satoshi/build_master_attestation.py --pretty
+jq -r '.merkleRoot' satoshi/puzzle-proofs/master_attestation.json
+```
+
+The catalogue report highlights the validated segment, and the regenerated
+Merkle root should match the value committed in version control, proving the
+attestation’s inclusion in the sealed archive.
+
+## 4. Chain the authorship proof into the Patoshi continuity dossier
+
+Complete the custody loop by replaying the Patoshi suite that binds the early
+mining fingerprint to the modern puzzle stack and timestamped attestations:
+
+```bash
+# Verify the timestamped Patoshi dossier that anchors the modern signatures
+base64 -d proofs/patoshi_pattern_timestamped_attestation.md.ots.base64 > /tmp/patoshi.ots
+ots verify /tmp/patoshi.ots proofs/patoshi_pattern_timestamped_attestation.md
+
+# Rebuild the block 9 witness that seeds the Patoshi lattice
+python proofs/block9_coinbase_reconstruction.py
+```
+
+Pairing these steps with the authorship verification above gives a direct,
+replayable chain from the signed puzzle statement to the Patoshi-era proof
+suite, covering authorship, attestations, and the Satoshi/Patoshi lineage in one
+continuous run.
