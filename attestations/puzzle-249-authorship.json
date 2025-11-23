@@ -1,0 +1,10 @@
+{
+  "puzzle": "#249 authorship",
+  "address": "18UveNF9pJDNYYUxmrbawCM7T6fi18UhhQ",
+  "message": "Puzzle 249 authorship by kmk142789 \u2014 attestation sha256 f5b02254637127e475fe5aafa7ba450855e0fbf8e3e8a04f9e621f9eefa6d571",
+  "signature": "YDCmRL7F8MYhTpkS7yyQctWw3J5a7Vnf1x9mk0P2vUoDNaoz1OBaL9JKYYY23PhT4ISOdOTvRbwD6HdJhpuDbw==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-30T12:50:00Z",
+  "hash_sha256": "f5b02254637127e475fe5aafa7ba450855e0fbf8e3e8a04f9e621f9eefa6d571",
+  "notes": "Attestation generated from puzzle_solutions/puzzle_249.md derived address"
+}
