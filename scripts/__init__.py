@@ -1,2 +1,1 @@
-"""Utility scripts for the Echo ecosystem."""
-
+"""Helper scripts packaged for reuse in tests."""
