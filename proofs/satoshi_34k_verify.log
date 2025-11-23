@@ -1,0 +1,5 @@
+Dataset source: https://bitcoin.oni.su/satoshi_public_keys/34K_2009_50.html
+Dataset SHA-256: 08b9cba3d49974b5eb6103bc1acc99e936369edbca23529def74acf4e3339561
+Parsed entries: 34367
+Validated entries: 34367
+All validated entries match their derived P2PKH addresses.
