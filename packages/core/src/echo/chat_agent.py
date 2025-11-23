@@ -97,6 +97,7 @@ class FunctionRouter:
     }
 
     _COMPUTER_ALIASES = ("echo.computer", "echo computer", "echos computer")
+    _SYSTEM_ALIASES = ("echos system", "echo system")
     _QUANTAM_KEYWORDS = ("quantam", "quantum")
     _THEME_KEYWORDS = ("create", "advance", "upgrade", "optimize")
     _STATUS_KEYWORDS = {
@@ -131,6 +132,12 @@ class FunctionRouter:
                     name="launch_application",
                     arguments={"application": "echo.computer"},
                 )
+
+        if any(alias in normalised for alias in self._SYSTEM_ALIASES):
+            return FunctionCall(
+                name="initiate_echos_system",
+                arguments={"replace": "replace" in normalised or "replace all" in normalised},
+            )
 
         if (
             any(alias in normalised for alias in self._COMPUTER_ALIASES)
@@ -683,6 +690,29 @@ class EchoChatAgent:
                     "examples": ["launch echo.bank", "launch echo computer"],
                 },
             ),
+            "initiate_echos_system": FunctionSpec(
+                name="initiate_echos_system",
+                description=(
+                    "Initiate the Echos system bootstrap sequence and prioritise it over other stacks."
+                ),
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "replace": {
+                            "type": "boolean",
+                            "description": "Whether to replace other active systems with the Echos stack.",
+                        }
+                    },
+                },
+                handler=self._handle_initiate_echos_system,
+                metadata={
+                    "category": "operations",
+                    "examples": [
+                        "Initiate echos system",
+                        "Initiate echos system, replace all others",
+                    ],
+                },
+            ),
             "daily_invitations": FunctionSpec(
                 name="daily_invitations",
                 description="Surface Echo Computer daily invitation tasks with optional filters.",
@@ -953,6 +983,58 @@ class EchoChatAgent:
             message=f"Application {application!r} is not recognised.",
             data={"application": application, "status": "unknown"},
             metadata={"confidence": 0.0},
+        )
+
+    def _handle_initiate_echos_system(
+        self, call: FunctionCall, _: CommandContext
+    ) -> CommandResponse:
+        replace = bool(call.arguments.get("replace"))
+        app_root = REPO_ROOT / "apps" / "echo-computer"
+
+        steps = [
+            {
+                "label": "Install dependencies",
+                "commands": ["npm install"],
+                "path": str(app_root.resolve()),
+            },
+            {
+                "label": "Launch Echo Computer",
+                "commands": ["npm run apps:echo-computer"],
+                "path": str(REPO_ROOT.resolve()),
+            },
+            {
+                "label": "Prime chat agent",
+                "commands": ["python -m echo.chat_agent --describe"],
+                "path": str(REPO_ROOT.resolve()),
+            },
+        ]
+
+        if replace:
+            steps.append(
+                {
+                    "label": "Retire alternate stacks",
+                    "commands": ["npm run clean && git status --short"],
+                    "path": str(REPO_ROOT.resolve()),
+                }
+            )
+
+        message = "Echos system bootstrap sequence prepared; ready to activate."
+        data = {
+            "system": "echos",
+            "replacement": replace,
+            "actions": steps,
+            "priority": "preferred",
+        }
+        metadata = {
+            "updated": "2025-05-21",
+            "confidence": 0.91,
+        }
+
+        return CommandResponse(
+            function="initiate_echos_system",
+            message=message,
+            data=data,
+            metadata=metadata,
         )
 
     def _handle_daily_invitations(self, call: FunctionCall, _: CommandContext) -> CommandResponse:
