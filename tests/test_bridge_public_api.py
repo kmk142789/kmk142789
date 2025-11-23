@@ -52,6 +52,10 @@ def _make_app() -> FastAPI:
         email_subject_template="Echo Relay {identity}/{cycle}",
         notion_database_id="bridge-db-01",
         notion_secret_name="ECHO_NOTION_TOKEN",
+        dns_root_domain="echo.test",
+        dns_record_prefix="_echo",
+        dns_provider="root-authority",
+        dns_secret_name="ECHO_DNS_TOKEN",
     )
     app = FastAPI()
     app.include_router(create_router(bridge_api))
@@ -85,6 +89,7 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
         "sms",
         "statuspage",
         "notion",
+        "dns",
     }
 
 
@@ -181,6 +186,17 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert notion_plan["payload"]["context"]["identity"] == "EchoWildfire"
     children = notion_plan["payload"]["children"]
     assert any(block.get("type") == "paragraph" for block in children)
+
+    dns_plan = plans["dns"]
+    assert dns_plan["action"] == "upsert_txt_record"
+    assert dns_plan["payload"]["root_domain"] == "echo.test"
+    assert dns_plan["payload"]["record"] == "_echo.echo.test"
+    assert (
+        dns_plan["payload"]["value"]
+        == "echo-root=EchoWildfire:01:eden88::cycle01"
+    )
+    assert dns_plan["payload"]["context"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
+    assert dns_plan["requires_secret"] == ["ECHO_DNS_TOKEN"]
 
     bluesky_plan = plans["bluesky"]
     assert bluesky_plan["action"] == "post_record"
