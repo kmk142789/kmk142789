@@ -544,11 +544,45 @@ class FeatureBlueprintRegistry:
 
         featured: Mapping[str, Any] | None = None
         if selection:
-            featured = selection[0]
+            featured = next(
+                (
+                    feature
+                    for feature in selection
+                    if str(feature.get("status", "")).lower() == "ready"
+                ),
+                selection[0],
+            )
         elif filtered:
-            featured = filtered[0]
+            featured = next(
+                (
+                    feature
+                    for feature in filtered
+                    if str(feature.get("status", "")).lower() == "ready"
+                ),
+                filtered[0],
+            )
         elif features:
-            featured = features[0]
+            featured = next(
+                (
+                    feature
+                    for feature in features
+                    if str(feature.get("status", "")).lower() == "ready"
+                ),
+                features[0],
+            )
+
+        summary = {
+            "ready_available": sum(
+                1
+                for feature in filtered
+                if str(feature.get("status", "")).lower() == "ready"
+            ),
+            "status_counts": dict(status_counts),
+            "focus_counts": dict(focus_counts),
+            "featured_id": featured.get("id") if featured else None,
+            "featured_status": featured.get("status") if featured else None,
+            "featured_title": featured.get("title") if featured else None,
+        }
 
         return {
             "updated": payload.get("updated"),
@@ -561,6 +595,7 @@ class FeatureBlueprintRegistry:
             "focus_counts": dict(focus_counts),
             "status_counts": dict(status_counts),
             "featured": featured,
+            "summary": summary,
             "source": str(self._blueprints_path),
         }
 
@@ -1030,6 +1065,8 @@ class EchoChatAgent:
         status_label = snapshot.get("status")
         limit_value = snapshot.get("limit")
 
+        summary = snapshot.get("summary", {})
+
         if features:
             qualifiers = []
             if focus_label:
@@ -1038,7 +1075,14 @@ class EchoChatAgent:
                 qualifiers.append(status_label)
             qualifier_text = f" ({', '.join(qualifiers)})" if qualifiers else ""
             limit_fragment = f", first {limit_value}" if limit_value else ""
-            message = f"Echo Computer feature blueprints{qualifier_text} ready{limit_fragment}."
+            featured_title = summary.get("featured_title")
+            featured_fragment = (
+                f" Featured upgrade: {featured_title}." if featured_title else ""
+            )
+            message = (
+                f"Echo Computer feature blueprints{qualifier_text} ready{limit_fragment}."
+                f"{featured_fragment}"
+            )
             confidence = 0.95
         else:
             message = "No Echo Computer feature blueprints matched the request."
@@ -1050,6 +1094,8 @@ class EchoChatAgent:
             "focus": focus_label,
             "status": status_label,
             "limit": limit_value,
+            "ready_available": summary.get("ready_available"),
+            "status_counts": summary.get("status_counts"),
         }
         data = {
             "features": features,
@@ -1058,6 +1104,7 @@ class EchoChatAgent:
             "focus_counts": snapshot.get("focus_counts", {}),
             "status_counts": snapshot.get("status_counts", {}),
             "featured": snapshot.get("featured"),
+            "summary": summary,
             "source": snapshot.get("source"),
         }
 

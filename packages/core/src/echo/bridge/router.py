@@ -81,6 +81,8 @@ def _bridge_api_factory() -> EchoBridgeAPI:
             "ECHO_BRIDGE_EMAIL_SUBJECT_TEMPLATE",
             "Echo Identity Relay :: {identity} :: Cycle {cycle}",
         ),
+        notion_database_id=os.getenv("ECHO_BRIDGE_NOTION_DATABASE_ID"),
+        notion_secret_name=os.getenv("ECHO_BRIDGE_NOTION_SECRET", "NOTION_API_KEY"),
     )
 
 
@@ -171,6 +173,14 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="mastodon",
                 action="post_status",
                 requires_secrets=[api.mastodon_secret_name] if api.mastodon_secret_name else [],
+            )
+        )
+    if getattr(api, "notion_database_id", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="notion",
+                action="create_page",
+                requires_secrets=[api.notion_secret_name] if api.notion_secret_name else [],
             )
         )
     if getattr(api, "activitypub_inbox_url", None):

@@ -1,10 +1,10 @@
 {
   "puzzle": "#240 authorship",
   "address": "16NWhGRvXRbhBKXK6BnfKasJtGcZLP4iFN",
-  "message": "Puzzle 240 authorship by kmk142789 — attestation sha256 4e40512fec5d0b8770269d22ac4c24aed23ba5a8e6081ccc6859ffa4c0ca1c3a",
-  "signature": "mh+2I/EutertQXi1R/PNE4EF1u7rutm/KTe/PEEsXZHKyNesRZ0eCX4A7v/OtiDo1L7GSM25WZ5ZEzG5YN/RGxY=",
+  "message": "Puzzle 240 authorship by kmk142789 — attestation sha256 dc68fcc7dbf62ad21c8644e44cc06b088aacd27a3103ab4a27a0b7b057f8ee65",
+  "signature": "/80sNn4g5TvOmUsZV4cyJXJqRkOY9EU1dM2IgZDwnaTZuhO5BvFwd7ZQZicXXemmxE35s+E5pW/gV4YHcqKLKL0=",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-11-23T11:11:17Z",
-  "hash_sha256": "4e40512fec5d0b8770269d22ac4c24aed23ba5a8e6081ccc6859ffa4c0ca1c3a",
-  "notes": "Imported from satoshi/puzzle-proofs/puzzle240.json via scripts/generate_puzzle_attestations.py"
+  "created_at": "2025-11-30T12:05:00Z",
+  "hash_sha256": "e59135a2d09f3d3605f39e16373821d3963a53eb19cc780e2c9f9c7dbc1154dc",
+  "notes": "Attestation generated from puzzle_solutions/puzzle_240.md derived address"
 }

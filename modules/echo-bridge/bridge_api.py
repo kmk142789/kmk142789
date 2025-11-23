@@ -77,6 +77,8 @@ class EchoBridgeAPI:
         email_recipients: Optional[Sequence[str]] = None,
         email_secret_name: Optional[str] = "EMAIL_RELAY_API_KEY",
         email_subject_template: str = "Echo Identity Relay :: {identity} :: Cycle {cycle}",
+        notion_database_id: Optional[str] = None,
+        notion_secret_name: str = "NOTION_API_KEY",
     ) -> None:
         self.github_repository = github_repository
         self.telegram_chat_id = telegram_chat_id
@@ -115,6 +117,8 @@ class EchoBridgeAPI:
         self.email_recipients = tuple(self._normalise_recipients(email_recipients or []))
         self.email_secret_name = email_secret_name
         self.email_subject_template = email_subject_template
+        self.notion_database_id = notion_database_id
+        self.notion_secret_name = notion_secret_name
 
     def plan_identity_relay(
         self,
@@ -510,6 +514,30 @@ class EchoBridgeAPI:
                     topics=topic_items,
                     priority=priority_text,
                     text=context.plain_text,
+                )
+            )
+        if self.notion_database_id and self._platform_enabled("notion", allowed_platforms):
+            context.markdown_body = context.markdown_body or self._render_markdown(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._notion_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    document=context.markdown_body,
                 )
             )
         if self.webhook_url and self._platform_enabled("webhook", allowed_platforms):
@@ -1012,6 +1040,84 @@ class EchoBridgeAPI:
             payload["priority"] = priority
         requires = [self.email_secret_name] if self.email_secret_name else []
         return BridgePlan(platform="email", action="send_email", payload=payload, requires_secret=requires)
+
+    def _notion_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        document: str,
+    ) -> BridgePlan:
+        title = f"Echo Bridge :: {identity} :: Cycle {cycle}"
+        properties: Dict[str, Any] = {
+            "Name": {"title": [{"text": {"content": title}}]},
+            "Identity": {"rich_text": [{"text": {"content": identity}}]},
+            "Cycle": {"rich_text": [{"text": {"content": cycle}}]},
+            "Signature": {"rich_text": [{"text": {"content": signature}}]},
+        }
+        if traits:
+            trait_text = ", ".join(f"{key}={value}" for key, value in self._sorted_traits(traits))
+            if trait_text:
+                properties["Traits"] = {"rich_text": [{"text": {"content": trait_text}}]}
+        if summary:
+            properties["Summary"] = {"rich_text": [{"text": {"content": summary}}]}
+        if topics:
+            properties["Topics"] = {"multi_select": [{"name": topic} for topic in topics]}
+        if priority:
+            properties["Priority"] = {"select": {"name": priority}}
+
+        children: List[Dict[str, Any]] = []
+        if summary:
+            children.append(
+                {
+                    "object": "block",
+                    "type": "paragraph",
+                    "paragraph": {"rich_text": [{"type": "text", "text": {"content": summary}}]},
+                }
+            )
+        if links:
+            for link in links:
+                children.append(
+                    {
+                        "object": "block",
+                        "type": "bulleted_list_item",
+                        "bulleted_list_item": {
+                            "rich_text": [
+                                {"type": "text", "text": {"content": link}},
+                            ]
+                        },
+                    }
+                )
+        if document:
+            children.append(
+                {
+                    "object": "block",
+                    "type": "paragraph",
+                    "paragraph": {"rich_text": [{"type": "text", "text": {"content": document}}]},
+                }
+            )
+
+        payload: Dict[str, Any] = {
+            "database_id": self.notion_database_id,
+            "properties": properties,
+            "children": children,
+            "context": {
+                "identity": identity,
+                "cycle": cycle,
+                "signature": signature,
+                "topics": topics,
+                "priority": priority,
+                "links": links,
+            },
+        }
+        requires = [self.notion_secret_name] if self.notion_secret_name else []
+        return BridgePlan(platform="notion", action="create_page", payload=payload, requires_secret=requires)
 
     def _webhook_plan(
         self,

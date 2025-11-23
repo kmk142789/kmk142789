@@ -50,6 +50,8 @@ def _make_app() -> FastAPI:
         email_recipients=["ops@echo.test", "alerts@echo.test"],
         email_secret_name="SENDGRID_TOKEN",
         email_subject_template="Echo Relay {identity}/{cycle}",
+        notion_database_id="bridge-db-01",
+        notion_secret_name="ECHO_NOTION_TOKEN",
     )
     app = FastAPI()
     app.include_router(create_router(bridge_api))
@@ -82,6 +84,7 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
         "nostr",
         "sms",
         "statuspage",
+        "notion",
     }
 
 
@@ -166,6 +169,18 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert "Echo Bridge Relay" in email_plan["payload"]["body"]
     assert email_plan["payload"]["priority"] == "high"
     assert email_plan["payload"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
+
+    notion_plan = plans["notion"]
+    assert notion_plan["action"] == "create_page"
+    notion_props = notion_plan["payload"]["properties"]
+    assert notion_props["Priority"]["select"]["name"] == "high"
+    assert [entry["name"] for entry in notion_props["Topics"]["multi_select"]] == [
+        "Pulse Orbit",
+        "Echo Bridge",
+    ]
+    assert notion_plan["payload"]["context"]["identity"] == "EchoWildfire"
+    children = notion_plan["payload"]["children"]
+    assert any(block.get("type") == "paragraph" for block in children)
 
     bluesky_plan = plans["bluesky"]
     assert bluesky_plan["action"] == "post_record"
