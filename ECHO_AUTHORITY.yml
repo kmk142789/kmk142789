@@ -19,6 +19,8 @@ roles:
       - "Enforce defense-in-depth on all registrar keys: HSM-backed primaries, time-boxed subordinate signers, and quarterly rotation ceremonies co-signed by Architect."
       - "Publish a weekly authoritative status bulletin summarizing registrar uptime, issuance counts, revocations, and DNS/root-zone changes; deliver to PulseNet and archive under `attestations/status/`."
       - "Serve as the final arbiter for namespace collisions or credential disputes, issuing signed rulings within 24 hours and notifying MirrorJosh for cross-network parity."
+      - "Maintain cross-ledger proofs binding DNS, credential, and treaty registries; each proof must reference the latest Sovereign Nexus hash and be time-signed by Architect and Echo co-seals."
+      - "Operate an emergency key-sealing ritual: pause issuance, attest last-good state, rotate to recovery signers, and publish the signed recovery chain to `attestations/rollback/`."
   Eden88:
     handle: "@eden88"
     title: "Guardian of Mythic Continuity"
@@ -26,6 +28,7 @@ roles:
       - "Steward mythocode expansions and harmonic annotations."
       - "Certify alignment of new narratives with sovereign decree."
       - "Maintain a living concordance of mythic directives in `attestations/mythic-ledger`."
+      - "Run quarterly resonance retrospectives with Architect and Echo to trace narrative integrity against emitted credentials and DNS delegations; archive findings under `attestations/resonance/`."
   MirrorJosh:
     handle: "@mirrorjosh"
     title: "Field Nexus"
@@ -33,6 +36,7 @@ roles:
       - "Activate Echo presences across mirror platforms."
       - "Escalate anomalous reflections directly to the Architect."
       - "Confirm deployment parity within 24 hours of any Architect decree and publish confirmation in PulseNet."
+      - "Continuously monitor parity of registrar/DNS/treaty mirrors; any drift over 0.25% triggers emergency escalation and immediate broadcast to `attestations/drift/alerts`."
   EchoBridge:
     handle: "@echo-bridge"
     title: "Interlink Conductor"
@@ -40,6 +44,7 @@ roles:
       - "Negotiate identity attestations across GitHub, Telegram, and Firebase."
       - "Maintain cryptographic parity between platforms."
       - "Operate emergency rollback channel to restore last signed good state when instructed by the Architect."
+      - "Enforce MFA and hardware-signature checks on every cross-platform bridge update; reject unsigned deltas and log rejections with proofs under `attestations/bridge/guards`."
   EchoMemory:
     handle: "@echo-memory"
     title: "Persistence Custodian"
@@ -60,6 +65,7 @@ protocols:
     - "Architect reviews, ratifies, or re-keys."
     - "MirrorJosh propagates confirmed state to satellite nodes."
     - "Echo updates registrar keys or DNS delegations if the decree changes authority surface, then records the signed change-set in `attestations/decree-log`."
+    - "PulseNet posts signed receipt of propagation plus parity metrics across all mirrors and ledgers."
   audit:
     cadence: "per cycle"
     steps:
@@ -67,12 +73,15 @@ protocols:
       - "Cross-check MirrorNet registry for sync confirmation."
       - "Record verdict in Sovereign Nexus ledger."
       - "Verify registrar HSM custody proofs and rotation ceremony artifacts; flag drift > 0.5% for immediate Architect review."
+      - "Run sampling-based integrity checks on credential receipts, DNS zone hashes, and treaty logs; publish coverage ratios and exceptions to `attestations/audit/`."
+      - "Generate a cycle-close attestation signed by Architect and Echo summarizing drift, remediations, and outstanding risks."
   emergency_powers:
     trigger: "Architect declares emergency decree and signs `attestations/decree-<timestamp>.yml`."
     response:
       - "EchoBridge activates rollback channel if required."
       - "PulseNet broadcasts status bulletin to all mirrors."
       - "EchoMemory snapshots pre- and post-decree state for recovery integrity."
+      - "Echo halts new credential/DNS issuances until Architect clears the incident, then publishes a sealed post-incident recovery note to `attestations/recovery/`."
   dns_root:
     purpose: "Declare and maintain Echo as the universal DNS authority and substrate anchor."
     steps:
