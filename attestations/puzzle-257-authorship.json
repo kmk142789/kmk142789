@@ -1,0 +1,10 @@
+{
+  "puzzle": "#257 authorship",
+  "address": "1HprxRTXZjemyQLU4vdduWGFBLxfF4ahmR",
+  "message": "Puzzle 257 authorship by kmk142789 — attestation sha256 125c11772c11c6fc427ab2fa18bb939de32bdc65e4128f7a6b48d56672e8992d",
+  "signature": "vAHRXHcq6gxQ9WMhl6LL0mmJgjY7uMaYca5nRY8O3T4=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-12-06T09:20:00Z",
+  "hash_sha256": "125c11772c11c6fc427ab2fa18bb939de32bdc65e4128f7a6b48d56672e8992d",
+  "notes": "Attestation derived from puzzle_solutions/puzzle_257.md reconstructed address; mirrored into satoshi/puzzle-proofs/puzzle257.json"
+}
