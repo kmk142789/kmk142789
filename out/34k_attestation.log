@@ -1,0 +1,6 @@
+Dataset source: out/34K_2009_50.html
+Dataset SHA-256: 1ef1d83e13f7ee2e5ed9b366a3428ea3f50dcecdfa064040b9366c9dae9e355f
+Parsed entries: 3911
+Validated entries: 3911
+All validated entries match their derived P2PKH addresses.
+Wrote Bitcoin Core importmulti template to out/satoshi-34k-import.json
