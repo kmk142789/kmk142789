@@ -24,6 +24,7 @@ from .evolver import EchoEvolver, _MOMENTUM_SENSITIVITY
 from .manifest_cli import refresh_manifest, show_manifest, verify_manifest
 from .timeline import build_cycle_timeline, refresh_cycle_timeline
 from .tools.forecast import project_indices, sparkline
+from .tools.resonance_index import compute_resonance_fingerprint
 from .novelty import NoveltyGenerator
 from .semantic_negotiation import (
     NegotiationIntent,
@@ -570,6 +571,41 @@ def _cmd_forecast(args: argparse.Namespace) -> int:
         series = indices + result.projections
         line = sparkline(series)
         print()
+        print(f"sparkline: {line}")
+    return 0
+
+
+def _cmd_resonance_fingerprint(args: argparse.Namespace) -> int:
+    window = max(2, args.window)
+    fingerprint = compute_resonance_fingerprint(
+        args.series, window=window, label=args.label
+    )
+    payload = fingerprint.to_dict()
+
+    if args.json:
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
+
+    windowed = args.series[-window:]
+    print(f"Glyph: {fingerprint.glyph} | Signature: {fingerprint.signature}")
+    print(
+        "Baseline: {baseline:.3f} | Velocity: {velocity:.3f} | Curvature: {curvature:.3f}".format(
+            baseline=fingerprint.baseline,
+            velocity=fingerprint.velocity,
+            curvature=fingerprint.curvature,
+        )
+    )
+    print(
+        "Inversions: {inversions} | Coherence: {coherence:.3f} | Rarity: {rarity:.3f}".format(
+            inversions=fingerprint.inversion_points,
+            coherence=fingerprint.coherence,
+            rarity=fingerprint.rarity,
+        )
+    )
+
+    line = sparkline(windowed, width=min(32, len(windowed)))
+    print(f"window[{len(windowed)}]: {', '.join(f'{value:.2f}' for value in windowed)}")
+    if line:
         print(f"sparkline: {line}")
     return 0
 
@@ -1329,6 +1365,29 @@ def main(argv: Iterable[str] | None = None) -> int:
     forecast_parser.add_argument("--cycles", type=int, default=12)
     forecast_parser.add_argument("--plot", action="store_true")
     forecast_parser.set_defaults(func=_cmd_forecast)
+
+    resonance_parser = subparsers.add_parser(
+        "resonance-fingerprint", help="Synthesize a resonance glyph from a numeric series"
+    )
+    resonance_parser.add_argument(
+        "series", type=float, nargs="+", help="Numeric samples representing a ritual window"
+    )
+    resonance_parser.add_argument(
+        "--window",
+        type=_positive_int,
+        default=5,
+        help="Window length used when computing the fingerprint (minimum 2)",
+    )
+    resonance_parser.add_argument(
+        "--label",
+        help="Optional label folded into the signature for reproducibility",
+    )
+    resonance_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the fingerprint payload as JSON instead of text",
+    )
+    resonance_parser.set_defaults(func=_cmd_resonance_fingerprint)
 
     timeline_parser = subparsers.add_parser(
         "timeline", help="Aggregate cycle, pulse, and puzzle relationships"
