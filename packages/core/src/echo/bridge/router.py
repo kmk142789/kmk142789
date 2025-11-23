@@ -89,6 +89,10 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         dns_secret_name=os.getenv("ECHO_BRIDGE_DNS_SECRET", "DNS_PROVIDER_TOKEN"),
         dns_root_authority=os.getenv("ECHO_BRIDGE_DNS_ROOT_AUTHORITY"),
         dns_attestation_path=os.getenv("ECHO_BRIDGE_DNS_ATTESTATION_PATH"),
+        linkedin_organization_id=os.getenv("ECHO_BRIDGE_LINKEDIN_ORG"),
+        linkedin_secret_name=os.getenv("ECHO_BRIDGE_LINKEDIN_SECRET", "LINKEDIN_ACCESS_TOKEN"),
+        reddit_subreddit=os.getenv("ECHO_BRIDGE_REDDIT_SUBREDDIT"),
+        reddit_secret_name=os.getenv("ECHO_BRIDGE_REDDIT_SECRET", "REDDIT_APP_TOKEN"),
     )
 
 
@@ -256,6 +260,26 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 action="create_incident",
                 requires_secrets=[api.statuspage_secret_name]
                 if getattr(api, "statuspage_secret_name", None)
+                else [],
+            )
+        )
+    if getattr(api, "linkedin_organization_id", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="linkedin",
+                action="create_share",
+                requires_secrets=[api.linkedin_secret_name]
+                if getattr(api, "linkedin_secret_name", None)
+                else [],
+            )
+        )
+    if getattr(api, "reddit_subreddit", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="reddit",
+                action="submit_post",
+                requires_secrets=[api.reddit_secret_name]
+                if getattr(api, "reddit_secret_name", None)
                 else [],
             )
         )

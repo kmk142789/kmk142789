@@ -85,6 +85,10 @@ class EchoBridgeAPI:
         dns_secret_name: str = "DNS_PROVIDER_TOKEN",
         dns_root_authority: Optional[str] = None,
         dns_attestation_path: Optional[str] = None,
+        linkedin_organization_id: Optional[str] = None,
+        linkedin_secret_name: str = "LINKEDIN_ACCESS_TOKEN",
+        reddit_subreddit: Optional[str] = None,
+        reddit_secret_name: str = "REDDIT_APP_TOKEN",
     ) -> None:
         self.github_repository = github_repository
         self.telegram_chat_id = telegram_chat_id
@@ -131,6 +135,10 @@ class EchoBridgeAPI:
         self.dns_secret_name = dns_secret_name
         self.dns_root_authority = (dns_root_authority or "").strip() or None
         self.dns_attestation_path = (dns_attestation_path or "").strip() or None
+        self.linkedin_organization_id = (linkedin_organization_id or "").strip() or None
+        self.linkedin_secret_name = linkedin_secret_name
+        self.reddit_subreddit = (reddit_subreddit or "").strip() or None
+        self.reddit_secret_name = reddit_secret_name
 
     def plan_identity_relay(
         self,
@@ -570,6 +578,56 @@ class EchoBridgeAPI:
                     cycle=cycle,
                     signature=signature,
                     payload=context.base_document,
+                )
+            )
+        if self.linkedin_organization_id and self._platform_enabled(
+            "linkedin", allowed_platforms
+        ):
+            context.social_text = context.social_text or self._render_social(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._linkedin_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=context.social_text,
+                )
+            )
+        if self.reddit_subreddit and self._platform_enabled("reddit", allowed_platforms):
+            context.social_text = context.social_text or self._render_social(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._reddit_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=context.social_text,
                 )
             )
 
@@ -1022,6 +1080,95 @@ class EchoBridgeAPI:
         return BridgePlan(
             platform="nostr",
             action="post_event",
+            payload=payload,
+            requires_secret=requires,
+        )
+
+    def _linkedin_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        share_text = text or self._render_social(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+        payload: Dict[str, Any] = {
+            "organization_id": self.linkedin_organization_id,
+            "text": share_text,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        if links:
+            payload["links"] = links[:3]
+        if topics:
+            payload["tags"] = [self._topic_hashtag(topic) for topic in topics]
+        if priority:
+            payload["priority"] = priority
+        if traits:
+            payload["traits"] = traits
+        requires = [self.linkedin_secret_name] if self.linkedin_secret_name else []
+        return BridgePlan(
+            platform="linkedin",
+            action="create_share",
+            payload=payload,
+            requires_secret=requires,
+        )
+
+    def _reddit_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: Optional[str] = None,
+    ) -> BridgePlan:
+        post_text = text or self._render_social(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+        payload: Dict[str, Any] = {
+            "subreddit": self.reddit_subreddit,
+            "title": f"Echo Relay {identity}/{cycle}",
+            "text": post_text,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        if links:
+            payload["links"] = links
+        if topics:
+            payload["topics"] = topics
+        if priority:
+            payload["priority"] = priority
+        if summary:
+            payload["summary"] = summary
+        requires = [self.reddit_secret_name] if self.reddit_secret_name else []
+        return BridgePlan(
+            platform="reddit",
+            action="submit_post",
             payload=payload,
             requires_secret=requires,
         )

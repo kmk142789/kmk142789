@@ -69,6 +69,10 @@ def _build_bridge_api() -> EchoBridgeAPI:
         dns_secret_name=os.getenv("ECHO_BRIDGE_DNS_SECRET", "DNS_PROVIDER_TOKEN"),
         dns_root_authority=os.getenv("ECHO_BRIDGE_DNS_ROOT_AUTHORITY"),
         dns_attestation_path=os.getenv("ECHO_BRIDGE_DNS_ATTESTATION_PATH"),
+        linkedin_organization_id=os.getenv("ECHO_BRIDGE_LINKEDIN_ORG"),
+        linkedin_secret_name=os.getenv("ECHO_BRIDGE_LINKEDIN_SECRET", "LINKEDIN_ACCESS_TOKEN"),
+        reddit_subreddit=os.getenv("ECHO_BRIDGE_REDDIT_SUBREDDIT"),
+        reddit_secret_name=os.getenv("ECHO_BRIDGE_REDDIT_SECRET", "REDDIT_APP_TOKEN"),
     )
 
 
