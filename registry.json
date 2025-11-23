@@ -17,6 +17,14 @@
       "last_seen": null,
       "proof": null,
       "notes": "task runner for Origin Capsule + puzzle merges"
+    },
+    {
+      "name": "alphasense_acp_bridge",
+      "type": "repo",
+      "slug": "kmk142789/alphasense_acp_bridge",
+      "last_seen": "2022-06-29T09:17:10Z",
+      "proof": "58482fef6c5d74f8e2e7c5ea34116bf4eb3ceaf4",
+      "notes": "Refactor header files (#5)"
     }
   ]
 }
