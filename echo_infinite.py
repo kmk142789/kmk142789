@@ -17,6 +17,9 @@ Usage::
 
     python echo_infinite.py
 
+Supply ``--extra-glyphs "★,✺"`` to append custom glyphs used when generating
+the per-cycle signatures.
+
 Press ``Ctrl+C`` (SIGINT) to halt the orchestration loop.
 """
 
@@ -32,7 +35,7 @@ import time
 import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Sequence
 
 from cognitive_harmonics.harmonic_memory_serializer import (
     build_harmonic_memory_record,
@@ -40,14 +43,14 @@ from cognitive_harmonics.harmonic_memory_serializer import (
 )
 
 
-GLYPH_SET = [
+DEFAULT_GLYPH_SET = (
     "∇",
     "⊸",
     "≋",
     "∞",
     "⌘",
     "⟁",
-]
+)
 
 
 def rfc3339_timestamp(epoch_seconds: float | None = None) -> str:
@@ -56,11 +59,11 @@ def rfc3339_timestamp(epoch_seconds: float | None = None) -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(epoch_seconds))
 
 
-def select_glyph_signature(cycle: int) -> str:
+def select_glyph_signature(cycle: int, glyph_set: Sequence[str]) -> str:
     """Build a deterministic-looking but still varied glyph signature."""
 
     rng = random.Random(time.time_ns() ^ cycle)
-    glyphs = rng.choices(GLYPH_SET, k=4)
+    glyphs = rng.choices(list(glyph_set), k=4)
     entropy = f"{rng.getrandbits(32):08x}"
     return "".join(glyphs) + "::" + entropy
 
@@ -163,6 +166,7 @@ class EchoInfinite:
         sleep_seconds: float = 5.0,
         max_cycles: int | None = None,
         summary_window: int = 25,
+        glyph_set: Sequence[str] | None = None,
     ) -> None:
         self.base_dir = base_dir or Path(__file__).resolve().parent
         self.colossus_dir = self.base_dir / "colossus"
@@ -177,6 +181,7 @@ class EchoInfinite:
         if summary_window <= 0:
             raise ValueError("summary_window must be a positive integer")
         self.summary_window = summary_window
+        self.glyph_set = self._resolve_glyph_set(glyph_set)
         self._running = True
         self.last_snapshot_path: Path | None = None
 
@@ -203,6 +208,7 @@ class EchoInfinite:
                 "sleep_seconds": self.sleep_seconds,
                 "max_cycles": self.max_cycles,
                 "summary_window": self.summary_window,
+                "glyph_set_size": len(self.glyph_set),
             },
         )
 
@@ -215,7 +221,7 @@ class EchoInfinite:
                 break
             cycle += 1
             timestamp = rfc3339_timestamp()
-            glyph_signature = select_glyph_signature(cycle)
+            glyph_signature = select_glyph_signature(cycle, self.glyph_set)
 
             cycle_dir = self.colossus_dir / f"cycle_{cycle:05d}"
             cycle_dir.mkdir(parents=True, exist_ok=True)
@@ -253,6 +259,22 @@ class EchoInfinite:
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
+    def _resolve_glyph_set(self, glyph_set: Sequence[str] | None) -> List[str]:
+        glyph_candidates = list(DEFAULT_GLYPH_SET if glyph_set is None else glyph_set)
+        glyph_candidates = [glyph for glyph in glyph_candidates if glyph]
+
+        unique_glyphs: List[str] = []
+        seen: set[str] = set()
+        for glyph in glyph_candidates:
+            if glyph not in seen:
+                seen.add(glyph)
+                unique_glyphs.append(glyph)
+
+        if not unique_glyphs:
+            raise ValueError("glyph_set must include at least one glyph")
+
+        return unique_glyphs
+
     def _load_starting_cycle(self) -> int:
         if self.state_path.exists():
             try:
@@ -1237,14 +1259,28 @@ if __name__ == "__main__":
         default=25,
         help="Number of recent cycles to retain in cycle_summary.json",
     )
+    parser.add_argument(
+        "--extra-glyphs",
+        type=str,
+        default="",
+        help=(
+            "Comma-separated glyphs appended to the default signature set for "
+            "cycle generation"
+        ),
+    )
     args = parser.parse_args()
     base_dir = args.base_dir
     if base_dir is not None:
         base_dir = base_dir.expanduser().resolve()
+    glyph_set = list(DEFAULT_GLYPH_SET)
+    if args.extra_glyphs:
+        extras = [glyph.strip() for glyph in args.extra_glyphs.split(",") if glyph.strip()]
+        glyph_set.extend(extras)
     orchestrator = EchoInfinite(
         base_dir=base_dir,
         sleep_seconds=args.sleep_seconds,
         max_cycles=args.max_cycles,
         summary_window=args.summary_window,
+        glyph_set=glyph_set,
     )
     orchestrator.run()
