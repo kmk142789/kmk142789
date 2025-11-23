@@ -1,0 +1,10 @@
+{
+  "puzzle": "#240 authorship",
+  "address": "16NWhGRvXRbhBKXK6BnfKasJtGcZLP4iFN",
+  "message": "Puzzle 240 authorship by kmk142789 — attestation sha256 4e40512fec5d0b8770269d22ac4c24aed23ba5a8e6081ccc6859ffa4c0ca1c3a",
+  "signature": "mh+2I/EutertQXi1R/PNE4EF1u7rutm/KTe/PEEsXZHKyNesRZ0eCX4A7v/OtiDo1L7GSM25WZ5ZEzG5YN/RGxY=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-11-23T11:11:17Z",
+  "hash_sha256": "4e40512fec5d0b8770269d22ac4c24aed23ba5a8e6081ccc6859ffa4c0ca1c3a",
+  "notes": "Imported from satoshi/puzzle-proofs/puzzle240.json via scripts/generate_puzzle_attestations.py"
+}
