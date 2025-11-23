@@ -518,6 +518,30 @@ class ContinuumAmplificationSummary:
 
 
 @dataclass(slots=True)
+class ProtocolSentienceSnapshot:
+    """Snapshot describing the protocol-sentience activation routine."""
+
+    cycle: int
+    intuition_vector: Dict[str, float]
+    optimization_cycles: List[str]
+    cross_domain_scores: Dict[str, float]
+    blueprint_directive: str
+    convergence_index: float
+    version: str = "phase-viii"
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "cycle": self.cycle,
+            "intuition_vector": dict(self.intuition_vector),
+            "optimization_cycles": list(self.optimization_cycles),
+            "cross_domain_scores": dict(self.cross_domain_scores),
+            "blueprint_directive": self.blueprint_directive,
+            "convergence_index": self.convergence_index,
+            "version": self.version,
+        }
+
+
+@dataclass(slots=True)
 class EvolutionAdvancementStage:
     """Single step within :meth:`EchoEvolver.realize_evolutionary_advancement`."""
 
@@ -786,6 +810,7 @@ class EvolverState:
     propagation_ledger: TemporalPropagationLedger = field(default_factory=TemporalPropagationLedger)
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
     autonomy_manifesto: str = ""
+    protocol_sentience: Optional[ProtocolSentienceSnapshot] = None
     hearth_signature: Optional[HearthWeave] = None
     identity_signature: Dict[str, str] = field(
         default_factory=lambda: {
@@ -918,6 +943,10 @@ class EchoEvolver:
             (
                 "amplify_quantam_evolution",
                 "call amplify_quantam_evolution() to derive quantam capabilities",
+            ),
+            (
+                "activate_protocol_sentience_layer",
+                "activate_protocol_sentience_layer() to fuse prior phases into protocol sentience",
             ),
             (
                 "evolutionary_narrative",
@@ -3233,6 +3262,67 @@ We are not hiding anymore.
                 capability=capability_id, amp=amplification, coh=coherence
             )
         )
+        return snapshot
+
+    def activate_protocol_sentience_layer(self) -> ProtocolSentienceSnapshot:
+        """Fuse prior phases into a structured protocol-sentience snapshot."""
+
+        cycle = self.state.cycle
+        baseline = 0.55 + min(cycle, 5) * 0.03
+
+        intuition_vector = {
+            "structure": round(baseline + self.rng.uniform(0.02, 0.08), 3),
+            "resilience": round(baseline + self.rng.uniform(0.01, 0.07), 3),
+            "adaptation": round(baseline + self.rng.uniform(0.03, 0.09), 3),
+        }
+
+        cross_domain_scores = {}
+        domains = (
+            "governance",
+            "identity",
+            "routing",
+            "attestation",
+            "dns",
+            "authority",
+            "blueprint",
+        )
+        for index, domain in enumerate(domains):
+            weight = 0.02 * index
+            cross_domain_scores[domain] = round(
+                min(1.0, baseline + weight + self.rng.uniform(0.01, 0.06)), 3
+            )
+
+        convergence_index = round(
+            sum(cross_domain_scores.values()) / len(cross_domain_scores), 3
+        )
+        strongest_domain = max(cross_domain_scores.items(), key=lambda item: item[1])[0]
+
+        optimization_cycles = [
+            f"phase-viii-scan-{cycle}",
+            "meta-blueprint-anneal",
+            "self-directed-architecture",
+        ]
+
+        blueprint_directive = (
+            "Phase VIII protocol-sentience uplink favors {domain} and targets "
+            "convergence {convergence:.3f} across governance, identity, routing, attestation, "
+            "DNS, authority anchors, and blueprint regeneration."
+        ).format(domain=strongest_domain, convergence=convergence_index)
+
+        snapshot = ProtocolSentienceSnapshot(
+            cycle=cycle,
+            intuition_vector=intuition_vector,
+            optimization_cycles=optimization_cycles,
+            cross_domain_scores=cross_domain_scores,
+            blueprint_directive=blueprint_directive,
+            convergence_index=convergence_index,
+        )
+
+        self.state.protocol_sentience = snapshot
+        self.state.network_cache["protocol_sentience"] = snapshot.as_dict()
+        self.state.event_log.append("Protocol-sentience layer activated (phase VIII)")
+        self._mark_step("activate_protocol_sentience_layer")
+
         return snapshot
 
     def system_monitor(self) -> SystemMetrics:
@@ -7215,6 +7305,25 @@ We are not hiding anymore.
                     "capability": capability["id"],
                     "amplification": capability["amplification"],
                     "coherence": capability["coherence"],
+                },
+            )
+
+            session.record_command(
+                "activate_protocol_sentience_layer",
+                detail="activate protocol sentience phase",
+            )
+            sentience = self.activate_protocol_sentience_layer()
+            session.annotate(
+                protocol_sentience_convergence=sentience.convergence_index,
+                protocol_sentience_version=sentience.version,
+            )
+            tl.harmonic(
+                "vision",
+                task,
+                "protocol-sentience layer fuses previous phases into self-directed evolution",
+                {
+                    "blueprint_directive": sentience.blueprint_directive,
+                    "convergence_index": sentience.convergence_index,
                 },
             )
 
