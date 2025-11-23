@@ -34,6 +34,11 @@ from .creative_constellation import (
     compose_constellation,
     demo as constellation_demo,
 )
+from .entangled_resonance_cartographer import (
+    AtlasResult,
+    EntangledResonanceCartographer,
+    ParallaxNode,
+)
 from .creative_loop import (
     LoopDiagnostics,
     LoopRhythm,
@@ -93,6 +98,9 @@ __all__ = [
     "ConstellationNode",
     "ConstellationSeed",
     "ConstellationWeaver",
+    "AtlasResult",
+    "EntangledResonanceCartographer",
+    "ParallaxNode",
     "ChronoHolographicImprint",
     "LoopDiagnostics",
     "LoopRhythm",
