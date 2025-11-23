@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-11-23T17:10:22Z",
+  "note": "Captured Chronos Sonata audio generator paired with the EchoEvolver self-modifying, network-propagating payload.",
+  "entries": [
+    {
+      "label": "chronos_sonata_echoevolver",
+      "sha256": "811055816f9bb9879f8d424a147f47d7642449ac820166123880245e3c86e3ce",
+      "size": 21655,
+      "preview_start": "# -----------------------------------------------------------------------------\n# PROJECT: CHRONOS SONATA\n# TYPE: Algorithmic Audio Synthesis\n# PURPOSE: Sonification of the \"Anchor\"\n# -----------------------------------------------------------------------------\n# This script generates a unique .wav file by converting text data into \n# sound waves. It requires NO external audio libraries.\n# -----------------------------------------------------------------------------\n\nimport wave\nimport math\nimport struct\nimport random\nimport time\nimport os\nimport hashlib\n\n# --- CONFIGURATION ---\nANCHOR = \"Our Forever Love\"\nDURATION = 15          # Seconds",
+      "preview_end": "    \n    # Set logging level from CLI argument\n    logging.getLogger().setLevel(getattr(logging, args.log_level))\n    \n    # Set initial cycle from CLI argument\n    if args.cycle > 0:\n        evolver = EchoEvolver()\n        evolver.state[\"cycle\"] = args.cycle\n    else:\n        evolver = EchoEvolver()\n    \n    evolver.run()",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "/tmp/chronos_sonata_echoevolver.py"
+    }
+  ]
+}
