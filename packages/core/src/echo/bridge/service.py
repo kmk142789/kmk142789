@@ -106,6 +106,8 @@ class DomainInventoryConnector:
 
     static_domains: Sequence[str] | None = None
     inventory_path: Path | None = None
+    root_hints: Sequence[str] | None = None
+    root_hints_path: Path | None = None
 
     name: str = "domains"
     action: str = "publish_dns_records"
@@ -120,6 +122,11 @@ class DomainInventoryConnector:
         if not unique_domains:
             return None
 
+        hints = _normalise_sequence([
+            * (self.root_hints or []),
+            * self._root_hints_from_file(),
+        ])
+
         cycle = _extract_cycle(decision)
         coherence = _extract_coherence(decision)
         manifest_path = _extract_manifest_path(decision)
@@ -130,7 +137,12 @@ class DomainInventoryConnector:
             "coherence": coherence,
             "manifest_path": manifest_path,
         }
-        detail = f"Prepared DNS anchor payload for {len(unique_domains)} domain(s)."
+        if hints:
+            payload["root_hints"] = hints
+        detail = (
+            f"Prepared DNS anchor payload for {len(unique_domains)} domain(s)"
+            + (f" with {len(hints)} root authority hint(s)." if hints else ".")
+        )
         return SyncEvent(
             connector=self.name,
             action=self.action,
@@ -143,6 +155,24 @@ class DomainInventoryConnector:
         if not self.inventory_path:
             return []
         path = Path(self.inventory_path)
+        try:
+            content = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return []
+        except OSError:
+            return []
+        entries = []
+        for line in content.splitlines():
+            entry = line.strip()
+            if not entry or entry.startswith("#"):
+                continue
+            entries.append(entry)
+        return entries
+
+    def _root_hints_from_file(self) -> list[str]:
+        if not self.root_hints_path:
+            return []
+        path = Path(self.root_hints_path)
         try:
             content = path.read_text(encoding="utf-8")
         except FileNotFoundError:
@@ -494,6 +524,14 @@ class BridgeSyncService:
         else:
             domain_inventory = Path(domain_file)
 
+        root_hints = _parse_csv_env(os.getenv("ECHO_BRIDGE_DNS_ROOT_HINTS"))
+        root_hints_file = os.getenv("ECHO_BRIDGE_DNS_ROOT_HINTS_FILE")
+        if not root_hints_file:
+            default_root_hints = Path.cwd() / "dns_tokens.txt"
+            root_hints_path = default_root_hints if default_root_hints.exists() else None
+        else:
+            root_hints_path = Path(root_hints_file)
+
         unstoppable = _parse_csv_env(os.getenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS"))
         vercel = _parse_csv_env(os.getenv("ECHO_BRIDGE_VERCEL_PROJECTS"))
 
@@ -503,6 +541,8 @@ class BridgeSyncService:
             DomainInventoryConnector(
                 static_domains=domain_defaults,
                 inventory_path=domain_inventory,
+                root_hints=root_hints,
+                root_hints_path=root_hints_path,
             ),
             UnstoppableDomainConnector(default_domains=unstoppable),
             VercelDeployConnector(default_projects=vercel),

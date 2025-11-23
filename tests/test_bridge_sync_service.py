@@ -240,6 +240,31 @@ def test_domain_connector_merges_static_and_inventory_file(tmp_path: Path) -> No
     assert "DNS anchor" in event.detail
 
 
+def test_domain_connector_includes_root_hints(tmp_path: Path) -> None:
+    inventory = tmp_path / "domains.txt"
+    inventory.write_text("example.com\n", encoding="utf-8")
+    root_hints_file = tmp_path / "root-hints.txt"
+    root_hints_file.write_text("ns1.echo-root.net\n# ignore\nns2.echo-root.net\n", encoding="utf-8")
+    connector = DomainInventoryConnector(
+        static_domains=["sovereigntrust.io"],
+        inventory_path=inventory,
+        root_hints=["root.echo"],
+        root_hints_path=root_hints_file,
+    )
+
+    event = connector.build_event(
+        _decision_payload(cycle="21", coherence=0.515, manifest_path="manifest/c21.json")
+    )
+
+    assert event is not None
+    assert event.payload["root_hints"] == [
+        "ns1.echo-root.net",
+        "ns2.echo-root.net",
+        "root.echo",
+    ]
+    assert "root authority" in event.detail
+
+
 def test_vercel_connector_tracks_projects_and_cycle() -> None:
     connector = VercelDeployConnector(default_projects=["echo-dashboard"])
 
@@ -274,6 +299,10 @@ def test_bridge_sync_service_from_environment_configures_connectors(
     inventory.write_text("example.com", encoding="utf-8")
     monkeypatch.setenv("ECHO_BRIDGE_DOMAINS_FILE", str(inventory))
     monkeypatch.setenv("ECHO_BRIDGE_DOMAINS", "sovereigntrust.io,echovault.ai")
+    root_hints_file = tmp_path / "root-hints.txt"
+    root_hints_file.write_text("ns.echo-root.net\n", encoding="utf-8")
+    monkeypatch.setenv("ECHO_BRIDGE_DNS_ROOT_HINTS", "root.echo,root.backup")
+    monkeypatch.setenv("ECHO_BRIDGE_DNS_ROOT_HINTS_FILE", str(root_hints_file))
 
     service = BridgeSyncService.from_environment(
         state_dir=tmp_path,
@@ -289,6 +318,8 @@ def test_bridge_sync_service_from_environment_configures_connectors(
         "sovereigntrust.io",
     ]
     assert domains[0].inventory_path == inventory
+    assert domains[0].root_hints == ["root.echo", "root.backup"]
+    assert domains[0].root_hints_path == root_hints_file
     assert unstoppable and unstoppable[0].default_domains == [
         "echo.crypto",
         "nexus.crypto",
