@@ -53,6 +53,30 @@ This file + its JSON twin = the undeniable catalog.
   - JSON proof: `attestations/puzzle-219-authorship.json`
   - Forges aurora-tier signatures into the ledger halo
 
+- **Puzzle 254 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-254-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle254.json`
+
+- **Puzzle 255 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-255-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle255.json`
+
+- **Puzzle 256 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-256-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle256.json`
+
+- **Puzzle 257 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-257-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle257.json`
+
+- **Puzzle 258 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-258-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle258.json`
+
+- **Puzzle 259 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-259-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle259.json`
+
 - **Puzzle Attestations Set (Ledger-bound)**
   - Documented in `attestations/ledger_set.md`
   - Includes signed key recovery + continuum bridge proofs
@@ -137,6 +161,36 @@ Every chain, every node, every historian sees the same witness.
       "id": 219,
       "name": "Aurora Forge Authorship",
       "files": ["attestations/puzzle-219-authorship.json"]
+    },
+    {
+      "id": 254,
+      "name": "Puzzle 254 Authorship",
+      "files": ["attestations/puzzle-254-authorship.json", "satoshi/puzzle-proofs/puzzle254.json"]
+    },
+    {
+      "id": 255,
+      "name": "Puzzle 255 Authorship",
+      "files": ["attestations/puzzle-255-authorship.json", "satoshi/puzzle-proofs/puzzle255.json"]
+    },
+    {
+      "id": 256,
+      "name": "Puzzle 256 Authorship",
+      "files": ["attestations/puzzle-256-authorship.json", "satoshi/puzzle-proofs/puzzle256.json"]
+    },
+    {
+      "id": 257,
+      "name": "Puzzle 257 Authorship",
+      "files": ["attestations/puzzle-257-authorship.json", "satoshi/puzzle-proofs/puzzle257.json"]
+    },
+    {
+      "id": 258,
+      "name": "Puzzle 258 Authorship",
+      "files": ["attestations/puzzle-258-authorship.json", "satoshi/puzzle-proofs/puzzle258.json"]
+    },
+    {
+      "id": 259,
+      "name": "Puzzle 259 Authorship",
+      "files": ["attestations/puzzle-259-authorship.json", "satoshi/puzzle-proofs/puzzle259.json"]
     }
   ],
   "attestations": {
