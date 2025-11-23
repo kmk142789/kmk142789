@@ -69,6 +69,11 @@ class EchoBridgeAPI:
         nostr_relays: Optional[Sequence[str]] = None,
         nostr_public_key: Optional[str] = None,
         nostr_secret_name: str = "NOSTR_PRIVATE_KEY",
+        sms_recipients: Optional[Sequence[str]] = None,
+        sms_secret_name: str = "TWILIO_AUTH_TOKEN",
+        sms_from_number: Optional[str] = None,
+        statuspage_page_id: Optional[str] = None,
+        statuspage_secret_name: str = "STATUSPAGE_API_TOKEN",
         email_recipients: Optional[Sequence[str]] = None,
         email_secret_name: Optional[str] = "EMAIL_RELAY_API_KEY",
         email_subject_template: str = "Echo Identity Relay :: {identity} :: Cycle {cycle}",
@@ -102,6 +107,11 @@ class EchoBridgeAPI:
         self.nostr_relays = tuple(self._normalise_links(nostr_relays)) if nostr_relays else ()
         self.nostr_public_key = nostr_public_key
         self.nostr_secret_name = nostr_secret_name
+        self.sms_recipients = tuple(self._normalise_recipients(sms_recipients or []))
+        self.sms_secret_name = sms_secret_name
+        self.sms_from_number = sms_from_number
+        self.statuspage_page_id = statuspage_page_id
+        self.statuspage_secret_name = statuspage_secret_name
         self.email_recipients = tuple(self._normalise_recipients(email_recipients or []))
         self.email_secret_name = email_secret_name
         self.email_subject_template = email_subject_template
@@ -428,6 +438,54 @@ class EchoBridgeAPI:
                     topics=topic_items,
                     priority=priority_text,
                     text=context.social_text,
+                )
+            )
+        if self.sms_recipients and self._platform_enabled("sms", allowed_platforms):
+            context.plain_text = context.plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._sms_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=context.plain_text,
+                )
+            )
+        if self.statuspage_page_id and self._platform_enabled("statuspage", allowed_platforms):
+            context.plain_text = context.plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._statuspage_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=context.plain_text,
                 )
             )
         if self.email_recipients and self._platform_enabled("email", allowed_platforms):
@@ -980,6 +1038,75 @@ class EchoBridgeAPI:
         requires = [self.webhook_secret_name] if self.webhook_secret_name else []
         return BridgePlan(platform="webhook", action="post_json", payload=body, requires_secret=requires)
 
+    def _sms_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: str,
+    ) -> BridgePlan:
+        payload: Dict[str, Any] = {
+            "recipients": list(self.sms_recipients),
+            "body": text,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        if self.sms_from_number:
+            payload["from_number"] = self.sms_from_number
+        if topics:
+            payload["topics"] = topics
+        if priority:
+            payload["priority"] = priority
+        if links:
+            payload["links"] = links[:2]
+        requires = [self.sms_secret_name] if self.sms_secret_name else []
+        return BridgePlan(platform="sms", action="send_sms", payload=payload, requires_secret=requires)
+
+    def _statuspage_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: str,
+    ) -> BridgePlan:
+        impact = self._statuspage_impact(priority)
+        incident: Dict[str, Any] = {
+            "name": f"Echo Relay {identity}/{cycle}",
+            "status": "investigating" if priority else "monitoring",
+            "impact_override": impact,
+            "body": text,
+            "metadata": {
+                "identity": identity,
+                "cycle": cycle,
+                "signature": signature,
+                "traits": traits,
+                "topics": topics,
+            },
+        }
+        if summary:
+            incident["summary"] = summary
+        if links:
+            incident["links"] = links
+        payload = {"page_id": self.statuspage_page_id, "incident": incident}
+        requires = [self.statuspage_secret_name] if self.statuspage_secret_name else []
+        return BridgePlan(
+            platform="statuspage",
+            action="create_incident",
+            payload=payload,
+            requires_secret=requires,
+        )
+
     # ------------------------------------------------------------------
     # Rendering helpers
     # ------------------------------------------------------------------
@@ -1198,6 +1325,19 @@ class EchoBridgeAPI:
                 fragments.append(" ".join(hashtags))
         fragments.append("#EchoBridge")
         return " | ".join(fragment for fragment in fragments if fragment)
+
+    @staticmethod
+    def _statuspage_impact(priority: Optional[str]) -> str:
+        if not priority:
+            return "none"
+        mapping = {
+            "critical": "critical",
+            "high": "major",
+            "medium": "minor",
+            "info": "none",
+            "low": "none",
+        }
+        return mapping.get(priority.casefold(), "none")
 
     def _attachment_traits(self, traits: Dict[str, Any]) -> List[Dict[str, Any]]:
         attachments: List[Dict[str, Any]] = []

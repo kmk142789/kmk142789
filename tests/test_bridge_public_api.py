@@ -42,6 +42,11 @@ def _make_app() -> FastAPI:
         nostr_relays=["wss://relay.echo", "wss://relay.backup"],
         nostr_public_key="npub1echo123",
         nostr_secret_name="ECHO_NOSTR_PRIVATE_KEY",
+        sms_recipients=["+15551234567", "+15559876543"],
+        sms_secret_name="ECHO_TWILIO_TOKEN",
+        sms_from_number="+15550001111",
+        statuspage_page_id="echo-status",
+        statuspage_secret_name="ECHO_STATUSPAGE_TOKEN",
         email_recipients=["ops@echo.test", "alerts@echo.test"],
         email_secret_name="SENDGRID_TOKEN",
         email_subject_template="Echo Relay {identity}/{cycle}",
@@ -75,6 +80,8 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
         "teams",
         "farcaster",
         "nostr",
+        "sms",
+        "statuspage",
     }
 
 
@@ -201,6 +208,23 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert farcaster_plan["payload"]["identity"] == "echo.bridge"
     assert "#EchoBridge" in farcaster_plan["payload"]["text"]
     assert farcaster_plan["payload"]["attachments"][0] == "https://echo.example/cycles/01"
+
+    sms_plan = plans["sms"]
+    assert sms_plan["action"] == "send_sms"
+    assert sms_plan["payload"]["recipients"] == ["+15551234567", "+15559876543"]
+    assert sms_plan["payload"]["from_number"] == "+15550001111"
+    assert "Echo Bridge Relay" in sms_plan["payload"]["body"]
+    assert sms_plan["payload"]["priority"] == "high"
+    assert sms_plan["requires_secret"] == ["ECHO_TWILIO_TOKEN"]
+
+    statuspage_plan = plans["statuspage"]
+    assert statuspage_plan["action"] == "create_incident"
+    assert statuspage_plan["payload"]["page_id"] == "echo-status"
+    incident = statuspage_plan["payload"]["incident"]
+    assert incident["impact_override"] == "major"
+    assert incident["status"] == "investigating"
+    assert incident["metadata"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
+    assert incident["summary"] == "Cycle snapshot anchored in Aurora"
 
     nostr_plan = plans["nostr"]
     assert nostr_plan["action"] == "post_event"

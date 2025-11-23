@@ -68,6 +68,13 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         nostr_relays=_parse_recipients_env(os.getenv("ECHO_BRIDGE_NOSTR_RELAYS")),
         nostr_public_key=os.getenv("ECHO_BRIDGE_NOSTR_PUBLIC_KEY"),
         nostr_secret_name=os.getenv("ECHO_BRIDGE_NOSTR_SECRET", "NOSTR_PRIVATE_KEY"),
+        sms_recipients=_parse_recipients_env(os.getenv("ECHO_BRIDGE_SMS_RECIPIENTS")),
+        sms_secret_name=os.getenv("ECHO_BRIDGE_SMS_SECRET", "TWILIO_AUTH_TOKEN"),
+        sms_from_number=os.getenv("ECHO_BRIDGE_SMS_FROM_NUMBER"),
+        statuspage_page_id=os.getenv("ECHO_BRIDGE_STATUSPAGE_PAGE_ID"),
+        statuspage_secret_name=os.getenv(
+            "ECHO_BRIDGE_STATUSPAGE_SECRET", "STATUSPAGE_API_TOKEN"
+        ),
         email_recipients=_parse_recipients_env(os.getenv("ECHO_BRIDGE_EMAIL_RECIPIENTS")),
         email_secret_name=os.getenv("ECHO_BRIDGE_EMAIL_SECRET", "EMAIL_RELAY_API_KEY"),
         email_subject_template=os.getenv(
@@ -208,6 +215,24 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="nostr",
                 action="post_event",
                 requires_secrets=[api.nostr_secret_name] if getattr(api, "nostr_secret_name", None) else [],
+            )
+        )
+    if getattr(api, "sms_recipients", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="sms",
+                action="send_sms",
+                requires_secrets=[api.sms_secret_name] if getattr(api, "sms_secret_name", None) else [],
+            )
+        )
+    if getattr(api, "statuspage_page_id", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="statuspage",
+                action="create_incident",
+                requires_secrets=[api.statuspage_secret_name]
+                if getattr(api, "statuspage_secret_name", None)
+                else [],
             )
         )
     return connectors
