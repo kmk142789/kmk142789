@@ -2,6 +2,7 @@
 
 from .authority import load_authority_bindings
 from .models import AuthorityBinding, VaultPolicy, VaultRecord
+from .obsidian import ObsidianVault, VaultIntegrityError, VaultPaths
 from .vault import Vault, open_vault
 
 try:  # pragma: no cover - optional dependency is exercised via CLI tooling
@@ -18,4 +19,7 @@ __all__ = [
     "open_vault",
     "vault_cli",
     "load_authority_bindings",
+    "ObsidianVault",
+    "VaultIntegrityError",
+    "VaultPaths",
 ]
