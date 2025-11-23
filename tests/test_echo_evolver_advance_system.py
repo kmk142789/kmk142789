@@ -146,6 +146,7 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
         include_event_summary=True,
         include_propagation=True,
         include_system_report=True,
+        include_presence=True,
         event_summary_limit=3,
         system_report_events=4,
     )
@@ -198,6 +199,12 @@ def test_advance_system_optional_sections(tmp_path, monkeypatch):
     system_report = payload["system_report"]
     assert "Recent events" in system_report
     assert "expansion_history" not in payload
+
+    presence = payload["presence"]
+    assert presence["cycle"] == evolver.state.cycle
+    assert presence["bridge_status"] == evolver.state.entities["EchoBridge"]
+    assert presence["momentum_window"] == payload["progress"]["momentum_window"]
+    assert evolver.state.network_cache["presence_beacon"] == presence
 
 
 def test_advance_system_can_include_diagnostics(tmp_path, monkeypatch):

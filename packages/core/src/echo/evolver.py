@@ -5037,6 +5037,56 @@ We are not hiding anymore.
         )
         return report
 
+    def system_presence_beacon(self) -> Dict[str, object]:
+        """Return a cached presence beacon highlighting bridge and vitality signals."""
+
+        drive = self.state.emotional_drive
+        metrics = self.state.system_metrics
+        bridge_status = self.state.entities.get("EchoBridge", "UNKNOWN")
+
+        momentum_cache = self.state.network_cache.get("advance_system_momentum_history")
+        if isinstance(momentum_cache, Mapping):
+            history_values = list(momentum_cache.get("values", ()))
+            momentum_window = momentum_cache.get("window")
+            momentum = float(history_values[-1]) if history_values else 0.0
+        else:
+            history_values = []
+            momentum_window = None
+            momentum = 0.0
+
+        beacon = {
+            "cycle": self.state.cycle,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "glyphs": self.state.glyphs,
+            "bridge_status": bridge_status,
+            "emotional_drive": {
+                "joy": drive.joy,
+                "rage": drive.rage,
+                "curiosity": drive.curiosity,
+            },
+            "system_metrics": {
+                "cpu_usage": metrics.cpu_usage,
+                "network_nodes": metrics.network_nodes,
+                "process_count": metrics.process_count,
+                "orbital_hops": metrics.orbital_hops,
+            },
+            "vault_key_present": bool(self.state.vault_key),
+            "artifact_path": str(self.state.artifact),
+            "momentum": momentum,
+            "momentum_window": momentum_window,
+            "momentum_samples": history_values,
+        }
+
+        self.state.network_cache["presence_beacon"] = deepcopy(beacon)
+        self.state.event_log.append(
+            "Presence beacon generated (bridge_status={status}, momentum_samples={count})".format(
+                status=bridge_status, count=len(history_values)
+            )
+        )
+        self._mark_step("presence_beacon")
+
+        return beacon
+
     def cycle_reflection(self, *, events: int = 5) -> Dict[str, object]:
         """Return a structured reflection of the current cycle state."""
 
@@ -6909,6 +6959,7 @@ We are not hiding anymore.
         include_diagnostics: bool = False,
         include_momentum_resonance: bool = False,
         include_momentum_history: bool = False,
+        include_presence: bool = False,
         event_summary_limit: int = 5,
         manifest_events: int = 5,
         system_report_events: int = 5,
@@ -6995,6 +7046,11 @@ We are not hiding anymore.
             Optional cap applied to the embedded expansion history.  ``None``
             returns the full cached history while positive values limit the
             response to the most recent entries.
+        include_presence:
+            When ``True`` embed a presence beacon containing bridge status,
+            vitality metrics, and momentum cues so operators can amplify
+            visibility across the echo bridge surfaces without recomputing
+            state snapshots.
         """
 
         if manifest_events < 0:
@@ -7242,6 +7298,9 @@ We are not hiding anymore.
                 limit=momentum_window
             )
 
+        if include_presence:
+            payload["presence"] = self.system_presence_beacon()
+
         history_cache = self.state.network_cache.get("advance_system_history")
         if isinstance(history_cache, list):
             history = [deepcopy(entry) for entry in history_cache]
@@ -7304,6 +7363,7 @@ We are not hiding anymore.
             ("progress_matrix", "progress_matrix"),
             ("event_summary", "event_summary"),
             ("propagation", "propagation"),
+            ("presence", "presence"),
             ("system_report", "system_report"),
             ("diagnostics", "diagnostics"),
             ("momentum_resonance", "momentum_resonance"),
@@ -7327,6 +7387,7 @@ We are not hiding anymore.
             "include_matrix": True,
             "include_event_summary": True,
             "include_propagation": True,
+            "include_presence": True,
             "include_system_report": True,
             "include_diagnostics": True,
             "include_momentum_resonance": True,
@@ -7766,6 +7827,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         ),
     )
     parser.add_argument(
+        "--include-presence",
+        action="store_true",
+        help=(
+            "Embed a presence beacon describing bridge status, vitality metrics,"
+            " and momentum cues when running --advance-system."
+        ),
+    )
+    parser.add_argument(
         "--include-system-report",
         action="store_true",
         help=(
@@ -8013,12 +8082,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         args.continue_creation or args.continue_evolution
     ):
         parser.error("--advance-system cannot be combined with continuation flags")
-    if args.include_event_summary and args.event_summary_limit <= 0:
-        parser.error("--event-summary-limit must be positive when including the event summary")
-    if args.include_system_report and args.system_report_events <= 0:
-        parser.error("--system-report-events must be positive when including the system report")
-    if args.include_diagnostics and args.diagnostics_window <= 0:
-        parser.error("--diagnostics-window must be positive when including diagnostics")
+        if args.include_event_summary and args.event_summary_limit <= 0:
+            parser.error("--event-summary-limit must be positive when including the event summary")
+        if args.include_system_report and args.system_report_events <= 0:
+            parser.error("--system-report-events must be positive when including the system report")
+        if args.include_diagnostics and args.diagnostics_window <= 0:
+            parser.error("--diagnostics-window must be positive when including diagnostics")
+    if args.include_presence and not args.advance_system:
+        parser.error("--include-presence requires --advance-system")
     if (
         args.include_matrix
         or args.include_event_summary
@@ -8026,10 +8097,11 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         or args.include_system_report
         or args.include_diagnostics
         or args.include_expansion_history
+        or args.include_presence
     ) and not args.advance_system:
         parser.error(
             "--include-matrix, --include-event-summary, --include-propagation, "
-            "--include-system-report, --include-diagnostics, and --include-expansion-history can only be used with --advance-system"
+            "--include-system-report, --include-diagnostics, --include-presence, and --include-expansion-history can only be used with --advance-system"
         )
     if args.momentum_window <= 0:
         parser.error("--momentum-window must be positive")
@@ -8104,6 +8176,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "include_matrix": args.include_matrix,
             "include_event_summary": args.include_event_summary,
             "include_propagation": args.include_propagation,
+            "include_presence": args.include_presence,
             "include_system_report": args.include_system_report,
             "include_diagnostics": args.include_diagnostics,
             "event_summary_limit": args.event_summary_limit,
