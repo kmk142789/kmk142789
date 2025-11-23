@@ -5,6 +5,12 @@ published puzzle authorship claims, their attestations, and the Satoshi/Patoshi
 proof chains already tracked in this repository. Every command runs locally
 against version-controlled artefacts.
 
+**Direct references**
+- Puzzle #1 authorship payload: [`attestations/puzzle-001-authorship.json`](../attestations/puzzle-001-authorship.json)
+- Aggregated Merkle catalogue: [`satoshi/puzzle-proofs/master_attestation.json`](../satoshi/puzzle-proofs/master_attestation.json)
+- Satoshi claim linkage walkthrough: [`proofs/satoshi_direct_linkage_proof.md`](satoshi_direct_linkage_proof.md)
+- Patoshi continuity + timestamp proof: [`proofs/patoshi_pattern_timestamped_attestation.md`](patoshi_pattern_timestamped_attestation.md)
+
 ## 1) Puzzle authorship to live key
 
 Use the puzzle authorship payload to bind the signed message to the canonical
