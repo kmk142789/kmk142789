@@ -66,6 +66,9 @@ class EchoBridgeAPI:
         teams_secret_name: str = "TEAMS_WEBHOOK_URL",
         farcaster_identity: Optional[str] = None,
         farcaster_secret_name: str = "FARCASTER_SIGNING_KEY",
+        nostr_relays: Optional[Sequence[str]] = None,
+        nostr_public_key: Optional[str] = None,
+        nostr_secret_name: str = "NOSTR_PRIVATE_KEY",
         email_recipients: Optional[Sequence[str]] = None,
         email_secret_name: Optional[str] = "EMAIL_RELAY_API_KEY",
         email_subject_template: str = "Echo Identity Relay :: {identity} :: Cycle {cycle}",
@@ -96,6 +99,9 @@ class EchoBridgeAPI:
         self.teams_secret_name = teams_secret_name
         self.farcaster_identity = farcaster_identity
         self.farcaster_secret_name = farcaster_secret_name
+        self.nostr_relays = tuple(self._normalise_links(nostr_relays)) if nostr_relays else ()
+        self.nostr_public_key = nostr_public_key
+        self.nostr_secret_name = nostr_secret_name
         self.email_recipients = tuple(self._normalise_recipients(email_recipients or []))
         self.email_secret_name = email_secret_name
         self.email_subject_template = email_subject_template
@@ -369,9 +375,35 @@ class EchoBridgeAPI:
                     traits=traits,
                     summary=summary_text,
                     links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+                text=context.social_text,
+            )
+        )
+        if (
+            self.nostr_relays
+            and self.nostr_public_key
+            and self._platform_enabled("nostr", allowed_platforms)
+        ):
+            context.social_text = context.social_text or self._render_social(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._nostr_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    summary=summary_text,
+                    links=link_items,
                     topics=topic_items,
                     priority=priority_text,
-                    text=context.social_text,
+                    content=context.social_text,
                 )
             )
         if self.farcaster_identity and self._platform_enabled("farcaster", allowed_platforms):
@@ -844,6 +876,46 @@ class EchoBridgeAPI:
             payload["priority"] = priority
         requires = [self.farcaster_secret_name] if self.farcaster_secret_name else []
         return BridgePlan(platform="farcaster", action="post_cast", payload=payload, requires_secret=requires)
+
+    def _nostr_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        summary: Optional[str],
+        links: Sequence[str],
+        topics: Sequence[str],
+        priority: Optional[str],
+        content: str,
+    ) -> BridgePlan:
+        tags: List[List[str]] = []
+        if summary:
+            tags.append(["subject", summary])
+        if priority:
+            tags.append(["priority", priority])
+        for link in links:
+            tags.append(["r", link])
+        for topic in topics:
+            slug = self._topic_hashtag(topic)
+            if slug:
+                tags.append(["t", slug])
+        payload = {
+            "relays": list(self.nostr_relays),
+            "pubkey": self.nostr_public_key,
+            "content": content,
+            "tags": tags,
+            "context": {
+                "identity": identity,
+                "cycle": cycle,
+            },
+        }
+        requires = [self.nostr_secret_name] if self.nostr_secret_name else []
+        return BridgePlan(
+            platform="nostr",
+            action="post_event",
+            payload=payload,
+            requires_secret=requires,
+        )
 
     def _email_plan(
         self,

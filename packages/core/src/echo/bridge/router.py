@@ -65,6 +65,9 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         farcaster_secret_name=os.getenv(
             "ECHO_BRIDGE_FARCASTER_SECRET", "FARCASTER_SIGNING_KEY"
         ),
+        nostr_relays=_parse_recipients_env(os.getenv("ECHO_BRIDGE_NOSTR_RELAYS")),
+        nostr_public_key=os.getenv("ECHO_BRIDGE_NOSTR_PUBLIC_KEY"),
+        nostr_secret_name=os.getenv("ECHO_BRIDGE_NOSTR_SECRET", "NOSTR_PRIVATE_KEY"),
         email_recipients=_parse_recipients_env(os.getenv("ECHO_BRIDGE_EMAIL_RECIPIENTS")),
         email_secret_name=os.getenv("ECHO_BRIDGE_EMAIL_SECRET", "EMAIL_RELAY_API_KEY"),
         email_subject_template=os.getenv(
@@ -197,6 +200,14 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 requires_secrets=[api.farcaster_secret_name]
                 if getattr(api, "farcaster_secret_name", None)
                 else [],
+            )
+        )
+    if getattr(api, "nostr_relays", None) and getattr(api, "nostr_public_key", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="nostr",
+                action="post_event",
+                requires_secrets=[api.nostr_secret_name] if getattr(api, "nostr_secret_name", None) else [],
             )
         )
     return connectors
