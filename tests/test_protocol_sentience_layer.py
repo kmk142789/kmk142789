@@ -37,3 +37,29 @@ def test_protocol_sentience_scoring_spans_requested_domains() -> None:
     assert snapshot.convergence_index == round(
         sum(snapshot.cross_domain_scores.values()) / len(expected_domains), 3
     )
+
+
+def test_protocol_sentience_introspection_tracks_continuity_and_fabric() -> None:
+    evolver = EchoEvolver(rng=random.Random(13), time_source=lambda: 2468)
+
+    for _ in range(3):
+        evolver.advance_cycle()
+        evolver.activate_protocol_sentience_layer()
+
+    introspection = evolver.recursive_protocol_sentience_introspection(window=3)
+
+    assert len(evolver.state.protocol_sentience_history) == 3
+    assert len(introspection.convergence_wave) == 3
+    assert set(introspection.intuition_deltas) == set(
+        evolver.state.protocol_sentience_history[-1].intuition_vector
+    )
+    assert "omni-fabric" in introspection.omni_fabric_binding
+
+    stitched_domains = introspection.cognition_fabric["stitched_domains"]
+    assert set(stitched_domains) == set(
+        evolver.state.protocol_sentience_history[-1].cross_domain_scores
+    )
+
+    cache = evolver.state.network_cache["omni_fabric"]
+    assert cache["binding"] == introspection.omni_fabric_binding
+    assert cache["continuity_index"] == introspection.continuity_index

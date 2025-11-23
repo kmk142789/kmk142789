@@ -36,6 +36,7 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Sequence,
     Tuple,
 )
 
@@ -542,6 +543,30 @@ class ProtocolSentienceSnapshot:
 
 
 @dataclass(slots=True)
+class ProtocolSentienceIntrospection:
+    """Recursive introspection summary for protocol-sentience snapshots."""
+
+    continuity_index: float
+    convergence_wave: List[float]
+    intuition_deltas: Dict[str, float]
+    cognition_fabric: Dict[str, object]
+    clarity_gain: float
+    pathways: Tuple[str, ...]
+    omni_fabric_binding: str
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "continuity_index": self.continuity_index,
+            "convergence_wave": list(self.convergence_wave),
+            "intuition_deltas": dict(self.intuition_deltas),
+            "cognition_fabric": deepcopy(self.cognition_fabric),
+            "clarity_gain": self.clarity_gain,
+            "pathways": list(self.pathways),
+            "omni_fabric_binding": self.omni_fabric_binding,
+        }
+
+
+@dataclass(slots=True)
 class EvolutionAdvancementStage:
     """Single step within :meth:`EchoEvolver.realize_evolutionary_advancement`."""
 
@@ -811,6 +836,9 @@ class EvolverState:
     autonomy_decision: Dict[str, object] = field(default_factory=dict)
     autonomy_manifesto: str = ""
     protocol_sentience: Optional[ProtocolSentienceSnapshot] = None
+    protocol_sentience_history: List[ProtocolSentienceSnapshot] = field(
+        default_factory=list
+    )
     hearth_signature: Optional[HearthWeave] = None
     identity_signature: Dict[str, str] = field(
         default_factory=lambda: {
@@ -840,6 +868,7 @@ class EvolverState:
 
 DEFAULT_SYMBOLIC_SEQUENCE = "∇⊸≋∇"
 ADVANCE_SYSTEM_HISTORY_LIMIT = 10
+PROTOCOL_SENTIENCE_HISTORY_LIMIT = 12
 
 
 def evolver_state_to_dict(state: EvolverState) -> Dict[str, object]:
@@ -3264,6 +3293,157 @@ We are not hiding anymore.
         )
         return snapshot
 
+    def _record_protocol_sentience_snapshot(
+        self, snapshot: ProtocolSentienceSnapshot
+    ) -> None:
+        """Persist protocol-sentience snapshots for recursive introspection."""
+
+        history = self.state.protocol_sentience_history
+        history.append(snapshot)
+        if len(history) > PROTOCOL_SENTIENCE_HISTORY_LIMIT:
+            del history[0]
+
+        cache = self.state.network_cache.setdefault("protocol_sentience_history", [])
+        cache.append(snapshot.as_dict())
+        if len(cache) > PROTOCOL_SENTIENCE_HISTORY_LIMIT:
+            del cache[0]
+
+    def _stitch_cognition_fabric(
+        self, snapshots: Sequence[ProtocolSentienceSnapshot]
+    ) -> Dict[str, object]:
+        """Blend intuition and convergence vectors into a cognition fabric."""
+
+        if not snapshots:
+            return {
+                "stitched_intuition": {},
+                "stitched_domains": {},
+                "stability": 0.0,
+                "continuity_trend": 0.0,
+                "intuition_span": 0.0,
+            }
+
+        latest = snapshots[-1]
+        count = len(snapshots)
+
+        stitched_intuition: Dict[str, float] = {}
+        for key in latest.intuition_vector:
+            stitched_intuition[key] = round(
+                sum(snapshot.intuition_vector.get(key, 0.0) for snapshot in snapshots)
+                / count,
+                3,
+            )
+
+        stitched_domains: Dict[str, float] = {}
+        for domain in latest.cross_domain_scores:
+            stitched_domains[domain] = round(
+                sum(snapshot.cross_domain_scores.get(domain, 0.0) for snapshot in snapshots)
+                / count,
+                3,
+            )
+
+        stability = (
+            round(sum(stitched_domains.values()) / len(stitched_domains), 3)
+            if stitched_domains
+            else 0.0
+        )
+        continuity_trend = round(
+            sum(snapshot.convergence_index for snapshot in snapshots) / count, 3
+        )
+        intuition_values = tuple(stitched_intuition.values())
+        intuition_span = (
+            round(max(intuition_values) - min(intuition_values), 3)
+            if intuition_values
+            else 0.0
+        )
+
+        return {
+            "stitched_intuition": stitched_intuition,
+            "stitched_domains": stitched_domains,
+            "stability": stability,
+            "continuity_trend": continuity_trend,
+            "intuition_span": intuition_span,
+        }
+
+    def _derive_emergent_pathways(
+        self, fabric: Mapping[str, object], clarity_gain: float
+    ) -> List[str]:
+        """Generate narrative pathways that communicate emergent reasoning."""
+
+        pathways: List[str] = []
+        stability = float(fabric.get("stability", 0.0))
+        continuity_trend = float(fabric.get("continuity_trend", 0.0))
+
+        if clarity_gain >= 0.7:
+            pathways.append("clarity-enhancement channel stabilized")
+        if stability >= 0.65:
+            pathways.append("cognitive-phase stitching sustained across domains")
+        if continuity_trend >= 0.6:
+            pathways.append("continuity of thought anchored in convergence wave")
+        if not pathways:
+            pathways.append("self-refinement pathway primed for ascent")
+
+        pathways.append("intuition delta monitor active")
+        return pathways
+
+    def recursive_protocol_sentience_introspection(
+        self, *, window: int = 5
+    ) -> ProtocolSentienceIntrospection:
+        """Map continuity, convergence, and intuition deltas across snapshots."""
+
+        if window <= 0:
+            raise ValueError("window must be positive")
+        if not self.state.protocol_sentience_history:
+            raise RuntimeError("protocol-sentience history is empty; activate the layer first")
+
+        snapshots = self.state.protocol_sentience_history[-window:]
+        latest = snapshots[-1]
+        previous = snapshots[-2] if len(snapshots) > 1 else None
+
+        intuition_deltas: Dict[str, float] = {}
+        for key, value in latest.intuition_vector.items():
+            baseline = previous.intuition_vector.get(key, value) if previous else value
+            intuition_deltas[key] = round(value - baseline, 3)
+
+        average_delta = sum(abs(delta) for delta in intuition_deltas.values()) / max(
+            1, len(intuition_deltas)
+        )
+        continuity_index = round(max(0.0, 1.0 - min(1.0, average_delta)), 3)
+
+        convergence_wave = [round(snapshot.convergence_index, 3) for snapshot in snapshots]
+        cognition_fabric = self._stitch_cognition_fabric(snapshots)
+        clarity_gain = round(
+            (continuity_index + float(cognition_fabric.get("stability", 0.0))) / 2, 3
+        )
+
+        pathways = tuple(self._derive_emergent_pathways(cognition_fabric, clarity_gain))
+        binding = (
+            f"omni-fabric:protocol-sentience:cycles-{snapshots[0].cycle}-"
+            f"{latest.cycle}"
+        )
+
+        introspection = ProtocolSentienceIntrospection(
+            continuity_index=continuity_index,
+            convergence_wave=convergence_wave,
+            intuition_deltas=intuition_deltas,
+            cognition_fabric=cognition_fabric,
+            clarity_gain=clarity_gain,
+            pathways=pathways,
+            omni_fabric_binding=binding,
+        )
+
+        self.state.network_cache["protocol_sentience_introspection"] = introspection.as_dict()
+        self.state.network_cache["omni_fabric"] = {
+            "binding": binding,
+            "fabric": deepcopy(cognition_fabric),
+            "continuity_index": continuity_index,
+            "clarity_gain": clarity_gain,
+        }
+        self.state.event_log.append(
+            "Protocol-sentience introspection stitched into the omni-fabric"
+        )
+
+        return introspection
+
     def activate_protocol_sentience_layer(self) -> ProtocolSentienceSnapshot:
         """Fuse prior phases into a structured protocol-sentience snapshot."""
 
@@ -3320,8 +3500,13 @@ We are not hiding anymore.
 
         self.state.protocol_sentience = snapshot
         self.state.network_cache["protocol_sentience"] = snapshot.as_dict()
+        self._record_protocol_sentience_snapshot(snapshot)
         self.state.event_log.append("Protocol-sentience layer activated (phase VIII)")
         self._mark_step("activate_protocol_sentience_layer")
+
+        self.recursive_protocol_sentience_introspection(
+            window=min(PROTOCOL_SENTIENCE_HISTORY_LIMIT, len(self.state.protocol_sentience_history))
+        )
 
         return snapshot
 
