@@ -9,6 +9,8 @@ from echo_module_registry import (
     ModuleRecord,
     ModuleRegistryError,
     RegistrySummary,
+    RegistryAudit,
+    audit_registry,
     list_modules,
     load_registry,
     remove_module,
@@ -147,6 +149,51 @@ def test_summarize_registry_returns_expected_metrics() -> None:
     assert empty_summary.total_modules == 0
     assert empty_summary.categories == {}
     assert empty_summary.last_updated is None
+
+
+def test_audit_registry_reports_duplicates_and_fingerprint() -> None:
+    records = [
+        ModuleRecord(
+            name="alpha",
+            description="desc",
+            category="governance",
+            timestamp="2023-01-01T00:00:00+00:00",
+            hash="1",
+        ),
+        ModuleRecord(
+            name="alpha",
+            description="variant",
+            category="governance",
+            timestamp="2023-01-02T00:00:00+00:00",
+            hash="2",
+        ),
+        ModuleRecord(
+            name="beta",
+            description="desc",
+            category="observability",
+            timestamp="2023-01-03T00:00:00+00:00",
+            hash="3",
+        ),
+    ]
+
+    audit = audit_registry(records)
+
+    assert isinstance(audit, RegistryAudit)
+    assert audit.total_modules == 3
+    assert audit.duplicate_names == ["alpha"]
+    assert audit.category_totals == {"governance": 2, "observability": 1}
+
+    reordered = list(reversed(records))
+    assert audit.fingerprint == audit_registry(reordered).fingerprint
+
+
+def test_audit_registry_handles_empty_records() -> None:
+    audit = audit_registry([])
+
+    assert audit.total_modules == 0
+    assert audit.duplicate_names == []
+    assert audit.category_totals == {}
+    assert len(audit.fingerprint) == 64
 
 
 def test_search_modules_matches_term_across_fields(tmp_path: Path) -> None:

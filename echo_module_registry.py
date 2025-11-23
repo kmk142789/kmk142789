@@ -15,6 +15,8 @@ Key features
   required fields are missing instead of creating malformed entries.
 * **Graceful recovery** – corrupted registries raise a dedicated
   :class:`ModuleRegistryError` with actionable context.
+* **Governance visibility** – audit helpers expose duplicate module names,
+  category distribution, and a stable fingerprint for external attestation.
 
 The module is intentionally dependency free so that it can be imported from the
 existing scripts in ``tools/`` and ``packages/`` without requiring extra
@@ -36,10 +38,12 @@ __all__ = [
     "ModuleRecord",
     "ModuleRegistryError",
     "RegistrySummary",
+    "RegistryAudit",
     "list_modules",
     "load_registry",
     "remove_module",
     "search_modules",
+    "audit_registry",
     "register_module",
     "store_registry",
     "summarize_registry",
@@ -93,6 +97,16 @@ class RegistrySummary:
     total_modules: int
     categories: dict[str, int]
     last_updated: str | None
+
+
+@dataclass(frozen=True)
+class RegistryAudit:
+    """Integrity and governance metadata for a registry snapshot."""
+
+    total_modules: int
+    duplicate_names: list[str]
+    category_totals: dict[str, int]
+    fingerprint: str
 
 
 def load_registry(path: Path | str = REGISTRY_FILE) -> List[ModuleRecord]:
@@ -303,6 +317,43 @@ def summarize_registry(records: Sequence[ModuleRecord]) -> RegistrySummary:
     )
 
 
+def audit_registry(records: Sequence[ModuleRecord]) -> RegistryAudit:
+    """Return governance metadata highlighting duplicates and a stable fingerprint."""
+
+    if not records:
+        empty_fingerprint = hashlib.sha256(b"[]").hexdigest()
+        return RegistryAudit(
+            total_modules=0,
+            duplicate_names=[],
+            category_totals={},
+            fingerprint=empty_fingerprint,
+        )
+
+    name_counts: dict[str, int] = {}
+    category_totals: dict[str, int] = {}
+
+    for record in records:
+        name_counts[record.name] = name_counts.get(record.name, 0) + 1
+        category_totals[record.category] = category_totals.get(record.category, 0) + 1
+
+    duplicate_names = sorted(name for name, count in name_counts.items() if count > 1)
+
+    ordered_payload = [
+        asdict(record)
+        for record in sorted(records, key=lambda record: (record.name.lower(), record.timestamp))
+    ]
+    fingerprint = hashlib.sha256(
+        json.dumps(ordered_payload, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+
+    return RegistryAudit(
+        total_modules=len(records),
+        duplicate_names=duplicate_names,
+        category_totals=dict(sorted(category_totals.items(), key=lambda item: item[0].lower())),
+        fingerprint=fingerprint,
+    )
+
+
 def _validate_input(value: str, *, field: str) -> str:
     if not isinstance(value, str):
         raise ValueError(f"Registry field '{field}' must be a string")
@@ -326,7 +377,7 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
     import argparse
     import sys
 
-    SUBCOMMANDS = {"register", "list", "summary", "remove", "search"}
+    SUBCOMMANDS = {"register", "list", "summary", "remove", "search", "audit"}
 
     argv = sys.argv
     if len(argv) > 1 and not argv[1].startswith("-") and argv[1] not in SUBCOMMANDS:
@@ -364,6 +415,9 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
     )
 
     subparsers.add_parser("summary", help="Show registry summary information")
+    subparsers.add_parser(
+        "audit", help="Show governance and integrity metadata for the registry"
+    )
 
     remove_parser = subparsers.add_parser("remove", help="Remove a module entry")
     remove_parser.add_argument("name", help="Module name")
@@ -394,6 +448,9 @@ if __name__ == "__main__":  # pragma: no cover - convenience CLI
     elif args.command == "summary":
         summary = summarize_registry(load_registry(args.registry))
         print(json.dumps(asdict(summary), indent=2))
+    elif args.command == "audit":
+        audit = audit_registry(load_registry(args.registry))
+        print(json.dumps(asdict(audit), indent=2))
     elif args.command == "remove":
         removed = remove_module(args.name, registry_path=args.registry)
         print(json.dumps(asdict(removed) if removed else None, indent=2))
