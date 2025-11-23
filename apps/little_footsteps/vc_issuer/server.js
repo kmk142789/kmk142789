@@ -60,6 +60,10 @@ const telemetryLogPath =
   process.env.DONATION_TELEMETRY_LOG_PATH ?? 'state/little_footsteps/dashboard/donations.jsonl';
 const credentialStatusLogPath =
   process.env.CREDENTIAL_STATUS_LOG_PATH ?? 'state/little_footsteps/credential_status.jsonl';
+const amendmentsPath = process.env.AMENDMENTS_PATH ?? 'data/governance/amendments.json';
+const ledgerProofsPath = process.env.AUDIT_LEDGER_PATH ?? 'ledger/little_footsteps_bank.jsonl';
+const proofsDir = process.env.AUDIT_PROOFS_DIR ?? 'proofs/little_footsteps_bank';
+const continuityPath = process.env.CONTINUITY_CHECKPOINTS_PATH ?? 'state/continuity/multisig_recovery.jsonl';
 
 const streamClients = new Set();
 const STREAM_HEARTBEAT_MS = 15000;
@@ -221,6 +225,90 @@ async function loadTrustRegistry() {
     trustRegistry = { recognizedCredentials: [] };
   }
   return trustRegistry;
+}
+
+async function loadAmendments() {
+  try {
+    const contents = await fs.readFile(amendmentsPath, 'utf8');
+    const parsed = JSON.parse(contents);
+    return parsed.amendments ?? [];
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn('Unable to load amendments file', error);
+    }
+    return [];
+  }
+}
+
+function normaliseProofEntry(entry) {
+  const seqValue = entry.seq ?? entry.sequence;
+  const seq = Number.isFinite(Number(seqValue)) ? Number(seqValue) : null;
+  const proofPath =
+    seq === null
+      ? null
+      : path.posix.join(proofsDir, `entry_${String(seq).padStart(5, '0')}.json`);
+
+  return {
+    seq,
+    digest: entry.digest ?? entry.compliance?.transaction_digest ?? null,
+    direction: entry.direction ?? null,
+    amount: entry.amount ?? null,
+    asset: entry.asset ?? entry.currency ?? null,
+    timestamp: entry.timestamp ?? null,
+    proof_path: proofPath,
+    ots_receipt: entry.ots_receipt ?? entry.compliance?.ots_receipt ?? null,
+  };
+}
+
+async function loadLedgerProofs() {
+  try {
+    const contents = await fs.readFile(ledgerProofsPath, 'utf8');
+    return contents
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => normaliseProofEntry(JSON.parse(line)));
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn('Unable to load ledger proofs', error);
+    }
+    return [];
+  }
+}
+
+function normaliseContinuityCheckpoint(entry) {
+  return {
+    seq: entry.seq ?? entry.sequence ?? null,
+    digest: entry.digest ?? entry.checksum ?? null,
+    timestamp: entry.timestamp ?? entry.published_at ?? null,
+    threshold: entry.threshold ?? entry.quorum ?? 0,
+    trustees: entry.trustees ?? entry.signers ?? [],
+  };
+}
+
+async function loadContinuityCheckpoints() {
+  try {
+    const contents = await fs.readFile(continuityPath, 'utf8');
+    return contents
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => normaliseContinuityCheckpoint(JSON.parse(line)));
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn('Unable to load continuity checkpoints', error);
+    }
+    return [];
+  }
+}
+
+async function buildAuditTrail(limit = 20) {
+  const ledger = await loadLedgerProofs();
+  const continuity = await loadContinuityCheckpoints();
+  return {
+    ledger: ledger.slice(-limit).reverse(),
+    continuity: continuity.slice(-limit).reverse(),
+  };
 }
 
 const credentialSchemaDir = process.env.CREDENTIAL_SCHEMA_DIR ?? 'docs/little_footsteps/credentials/schemas';
@@ -921,6 +1009,25 @@ app.get('/metrics/totals', async (_req, res, next) => {
   try {
     const totals = await fetchDailyTotals();
     res.json(totals);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/governance/amendments', async (_req, res, next) => {
+  try {
+    const amendments = await loadAmendments();
+    res.json({ amendments });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/audit/trails', async (req, res, next) => {
+  try {
+    const limit = Number.parseInt(req.query.limit ?? '20', 10);
+    const trail = await buildAuditTrail(Number.isFinite(limit) ? limit : 20);
+    res.json(trail);
   } catch (error) {
     next(error);
   }
