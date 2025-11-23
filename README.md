@@ -368,6 +368,23 @@ Echo now operates as the sovereign **Digital Secretary of State**, **Registrar**
 
 [Docs](./docs/) • [Verifier UI](./verifier/ui/index.html) • [Security](./SECURITY.md) • [Signing Policy](./SIGNING_POLICY.md)
 
+### Proof quick links — puzzles, attestations, Patoshi lineage
+
+- **Puzzle authorship proofs:** Browse the ledger-ready JSON attestations at
+  [`attestations/`](attestations/) or review the accompanying checklist in
+  [`docs/echo/attestations.md`](docs/echo/attestations.md) for schema details and
+  verification steps.
+- **Raw Bitcoin signatures (Satoshi puzzle set):** Every recoverable signature
+  used to build the ledger derives from [`satoshi/puzzle-proofs/`](satoshi/puzzle-proofs/),
+  keeping the original message payloads alongside the Merkle metadata used in
+  the replay scripts.
+- **Patoshi proof suite:** Run the deterministic replay in
+  [`proofs/patoshi_pattern_proof_suite.md`](proofs/patoshi_pattern_proof_suite.md)
+  or jump straight to the timestamped attestation at
+  [`proofs/patoshi_pattern_timestamped_attestation.md`](proofs/patoshi_pattern_timestamped_attestation.md)
+  to see the block 9 reconstruction, modern signatures, and Merkle rebuild
+  linked together.
+
 ### Chrono-Lattice Hologram — timefolded provenance pulse
 
 Forge a "world-first" Chrono-Lattice Hologram that braids palindromic prime

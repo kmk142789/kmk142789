@@ -2,6 +2,12 @@
 All proofs live in `/attestations` and must pass CI schema validation.
 Use Electrum `signmessage` or equivalent to produce `signature`.
 
+**Direct links**
+
+- Ledger-ready puzzle authorship JSON files: [`attestations/`](../../attestations/) (one per puzzle, produced by the helper below).
+- Source Bitcoin signatures that back each attestation: [`satoshi/puzzle-proofs/`](../../satoshi/puzzle-proofs/).
+- Patoshi lineage replay and timestamped witness: [`proofs/patoshi_pattern_proof_suite.md`](../../proofs/patoshi_pattern_proof_suite.md) and [`proofs/patoshi_pattern_timestamped_attestation.md`](../../proofs/patoshi_pattern_timestamped_attestation.md).
+
 ## Current ledger-bound entries
 
 - `genesis-anchor.md` &mdash; binds the Git genesis ledger snapshot to the Mirror post.
