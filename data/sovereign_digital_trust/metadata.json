@@ -13,8 +13,14 @@
   "ingest_status": {
     "state": "pending_data",
     "summary": "Awaiting delivery of the 34,367 verified mining reward wallet attestations before registering them as funding pipelines.",
-    "last_message": "Placeholder sample included to document the required format.",
+    "last_message": "Validator dry-run completed against the sample section file; awaiting verified wallet tranches to proceed.",
     "next_actions": [
+      {
+        "step": "Verify ingestion tooling with sample data",
+        "status": "complete",
+        "owner": "data_ops",
+        "notes": "Ran tools/sdt_pipeline_register.py without errors to confirm schema validation path is healthy."
+      },
       {
         "step": "Assemble verified wallet attestations",
         "status": "not_started",
@@ -29,9 +35,9 @@
       },
       {
         "step": "Run validator and flip ingest state",
-        "status": "not_started",
+        "status": "in_progress",
         "owner": "data_ops",
-        "notes": "Use tools/sdt_pipeline_register.py --require-complete; update ingest_status.state after validation."
+        "notes": "Validator sanity-checked on sample data; ready to run with verified tranches and then update ingest_status.state."
       },
       {
         "step": "Publish attestations and ledger notices",
