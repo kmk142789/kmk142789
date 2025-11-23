@@ -6,18 +6,9 @@ import sitecustomize  # noqa: F401 - ensure environment defaults are applied
 from pathlib import Path
 from typing import Mapping
 
-import importlib.util
-import sys
 import pytest
 
-_AUTONOMY_PATH = Path(__file__).resolve().parents[1] / "echo" / "autonomy.py"
-_SPEC = importlib.util.spec_from_file_location("echo_autonomy_local", _AUTONOMY_PATH)
-assert _SPEC and _SPEC.loader
-_MODULE = importlib.util.module_from_spec(_SPEC)
-sys.modules[_SPEC.name] = _MODULE
-_SPEC.loader.exec_module(_MODULE)
-AutonomyNode = _MODULE.AutonomyNode
-DecentralizedAutonomyEngine = _MODULE.DecentralizedAutonomyEngine
+from echo.autonomy import AutonomyNode, DecentralizedAutonomyEngine
 
 
 @pytest.fixture

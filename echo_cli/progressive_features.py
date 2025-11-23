@@ -139,6 +139,9 @@ class ResilienceEvent:
     @property
     def total_hours(self) -> float:
         return self.impact_hours + self.recovery_hours + self.detection_hours
+
+
+@dataclass(frozen=True)
 class WorkItem:
     """Represents a scoped piece of work used for capacity planning."""
 
