@@ -84,3 +84,25 @@ def test_feedback_adjustment_changes_health():
     # With improved resilience/capacity the orchestration domain should be less saturated.
     assert report.domain_health["orchestration"] < 0.9
     assert report.domain_health["orchestration"] == pytest.approx(0.8151340909)
+
+
+def test_autoregeneration_and_blueprint_correction():
+    os = build_os()
+    os.register_layer("kernel", "3.1.0-alpha", integrity=0.92, coherence=0.9)
+    os.register_layer("mesh", "3.1.0-alpha", integrity=0.9, coherence=0.95)
+
+    # Force a saturated orchestration domain so regeneration kicks in.
+    os.domains["orchestration"].capacity = 4.0
+    os.domains["orchestration"].resilience = 0.85
+
+    report = os.simulate_cycle()
+
+    assert report.regeneration_actions["orchestration"].startswith("saturated->capacity")
+    assert report.blueprint_corrections["kernel"].endswith(f"r{report.cycle_id}")
+    assert report.fabric_alignment > 0
+    assert "kernel" in report.layer_introspection
+    assert report.omni_fabric_link.endswith(f"alignment={report.fabric_alignment:.2f}")
+
+    # After regeneration the next cycle should show reduced saturation pressure.
+    followup = os.simulate_cycle()
+    assert followup.domain_health["orchestration"] < 1.0
