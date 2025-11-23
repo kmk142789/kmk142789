@@ -2,6 +2,8 @@
 
 This checklist captures the next actionable items to move the Sovereign Digital Trust from **pending_data** to a validated, published state.
 
+> Update 2025-11-23: The ingestion validator was run successfully against the sample tranche (`tools/sdt_pipeline_register.py`), confirming the schema path and tooling are healthy. The next steps below remain blocked on delivery of the verified wallet attestations.
+
 ## 1) Collect verified wallet tranches
 - Source the 34,367 verified mining reward wallet attestations (per `expected_wallet_count`).
 - Ensure each attestation file includes the chain, reward source, and a signed verification reference.
