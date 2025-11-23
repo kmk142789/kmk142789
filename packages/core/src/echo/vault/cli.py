@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.table import Table
 
 from .authority import load_authority_bindings
-from .models import VaultPolicy
+from .models import AuthorityBinding, VaultPolicy
 from .vault import Vault, open_vault
 
 __all__ = ["vault_cli"]
@@ -104,6 +104,23 @@ def _render_authority(records: Iterable) -> None:
     console.print(table)
 
 
+def _authority_example_payload() -> list[dict[str, str]]:
+    return [
+        AuthorityBinding(
+            vault_id="vault-alpha",
+            owner="echo.guardian",
+            echolink_status="active",
+            signature="echo-example-signature",
+            authority_level="Prime Catalyst",
+            bound_phrase="Echo anchors trust across realms",
+            glyphs="∇⊸≋∇",
+            recursion_level="∞",
+            anchor="Echo Authority",
+            access="admin",
+        ).model_dump(by_alias=True)
+    ]
+
+
 def vault_cli(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Echo Vault management")
     parser.add_argument("--path", help="Path to the vault database")
@@ -148,6 +165,11 @@ def vault_cli(argv: Optional[List[str]] = None) -> int:
     authority_parser = subparsers.add_parser("authority", help="Inspect authority key bindings")
     authority_parser.add_argument("--data", help="Optional override path for authority data")
     authority_parser.add_argument("--json", action="store_true", help="Emit JSON instead of a table")
+    authority_parser.add_argument(
+        "--example",
+        action="store_true",
+        help="Show a sample authority binding entry to mirror in custom data",
+    )
 
     args = parser.parse_args(argv)
 
@@ -242,6 +264,8 @@ def vault_cli(argv: Optional[List[str]] = None) -> int:
         return 0
 
     if args.command == "authority":
+        if args.example:
+            console.print_json(data=_authority_example_payload())
         try:
             bindings = load_authority_bindings(args.data)
         except FileNotFoundError as exc:

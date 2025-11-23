@@ -29,3 +29,9 @@ Inspect packaged authority bindings:
 ```bash
 echo-vault authority --json
 ```
+
+Show an example authority binding entry to mirror for custom data files:
+
+```bash
+echo-vault authority --example
+```
