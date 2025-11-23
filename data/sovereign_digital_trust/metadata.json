@@ -13,6 +13,32 @@
   "ingest_status": {
     "state": "pending_data",
     "summary": "Awaiting delivery of the 34,367 verified mining reward wallet attestations before registering them as funding pipelines.",
-    "last_message": "Placeholder sample included to document the required format."
+    "last_message": "Placeholder sample included to document the required format.",
+    "next_actions": [
+      {
+        "step": "Assemble verified wallet attestations",
+        "status": "not_started",
+        "owner": "steward",
+        "notes": "Load signed proofs for the 34,367 expected wallets into attestation storage."
+      },
+      {
+        "step": "Generate section_*.jsonl tranches",
+        "status": "not_started",
+        "owner": "data_ops",
+        "notes": "Chunk verified wallets into ≈1000-entry files using the schema and replace the sample file."
+      },
+      {
+        "step": "Run validator and flip ingest state",
+        "status": "not_started",
+        "owner": "data_ops",
+        "notes": "Use tools/sdt_pipeline_register.py --require-complete; update ingest_status.state after validation."
+      },
+      {
+        "step": "Publish attestations and ledger notices",
+        "status": "not_started",
+        "owner": "steward",
+        "notes": "Mirror tranche proofs to attestations/ and hash receipts to genesis_ledger/ with pulse dashboard update."
+      }
+    ]
   }
 }
