@@ -59,6 +59,13 @@ preserved in the ledger alongside the earlier entries:
 | #240 | `16NWhGRvXRbhBKXK6BnfKasJtGcZLP4iFN` | `attestations/puzzle-240-authorship.json` |
 | #241 | `1B3V29sr3uohUwqJx4MYXvddMs1FEVXHNq` | `attestations/puzzle-241-authorship.json` |
 | #242 | `1Dagwu5jn2eiXt1W1MyoqCCZqtFBPK383s` | `attestations/puzzle-242-authorship.json` |
+| #243 | `1PmcSeRUzSUHd4fAedDsg4XfKzvhNa5vFP` | `attestations/puzzle-243-authorship.json` |
+| #244 | `1GabA1sj7VaFHcEGUvW5C893hSsVKgAPHh` | `attestations/puzzle-244-authorship.json` |
+| #245 | `1ExdjiS6MGGUedewnrkY7q72zNVWD4Yi8Q` | `attestations/puzzle-245-authorship.json` |
+| #246 | `129jBmffSuX8Nq94fbVwo35Q4C7d8bJw4a` | `attestations/puzzle-246-authorship.json` |
+| #247 | `1JVGyW2XFqYXCkztQM8famfFQB9ho7fVsq` | `attestations/puzzle-247-authorship.json` |
+| #248 | `1outSSxSAucNP3qnVAwj52UXe8AHMQHX3` | `attestations/puzzle-248-authorship.json` |
+| #249 | `18UveNF9pJDNYYUxmrbawCM7T6fi18UhhQ` | `attestations/puzzle-249-authorship.json` |
 
 Each JSON document mirrors the canonical Bitcoin message signature captured in
 `satoshi/puzzle-proofs/` so investigators can validate the recoverable public
