@@ -65,7 +65,7 @@ def test_agent_surfaces_daily_invitations() -> None:
     tasks = payload["data"]["tasks"]
     assert isinstance(tasks, list)
     assert tasks  # file ships with invitations
-    assert payload["metadata"]["updated"] == "2025-05-18"
+    assert payload["metadata"]["updated"] == "2025-05-21"
 
 
 def test_agent_daily_invitation_focus_and_limit() -> None:
@@ -89,7 +89,7 @@ def test_agent_weekly_rituals_for_echos_computer() -> None:
     assert rituals
     metadata = payload["metadata"]
     assert metadata["theme"] == "Create"
-    assert metadata["updated"] == "2025-05-18"
+    assert metadata["updated"] == "2025-05-21"
 
 
 def test_agent_weekly_ritual_focus_and_limit() -> None:
@@ -110,7 +110,7 @@ def test_agent_feature_blueprints() -> None:
     features = payload["data"]["features"]
     assert features
     metadata = payload["metadata"]
-    assert metadata["updated"] == "2025-05-18"
+    assert metadata["updated"] == "2025-05-21"
     assert metadata["confidence"] > 0.9
 
 
@@ -122,7 +122,22 @@ def test_agent_upgrade_request_defaults_to_blueprints() -> None:
     features = payload["data"]["features"]
     assert features
     metadata = payload["metadata"]
-    assert metadata["updated"] == "2025-05-18"
+    assert metadata["updated"] == "2025-05-21"
+
+
+def test_agent_cloud_upgrade_request_sets_focus() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command(
+        "Update and upgrade echos computer and cloud for her computer"
+    )
+    payload = response.to_payload()
+    assert payload["function"] == "feature_blueprints"
+    features = payload["data"]["features"]
+    assert features
+    assert all(feature.get("focus") == "Cloud" for feature in features)
+    metadata = payload["metadata"]
+    assert metadata["focus"] == "Cloud"
+    assert metadata["updated"] == "2025-05-21"
 
 
 def test_agent_feature_blueprints_focus_status_limit() -> None:

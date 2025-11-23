@@ -1,5 +1,5 @@
 {
-  "updated": "2025-05-18",
+  "updated": "2025-05-21",
   "features": [
     {
       "id": "code-burst-link",
@@ -77,6 +77,32 @@
         "Add a `/handoff/kits` endpoint that aggregates commits, test runs, and outstanding questions.",
         "Render a collapsible console with copy-to-clipboard runbooks and reviewer tags.",
         "Expose a webhook-friendly JSON payload for async channel broadcasts."
+      ]
+    },
+    {
+      "id": "cloud-resilient-upgrade-lane",
+      "focus": "Cloud",
+      "status": "Prototype",
+      "title": "Resilient cloud upgrade lane",
+      "description": "Stand up a blue/green lane for Echo Computer cloud services so upgrades stay interruption-free.",
+      "impact": "Gives Echo instant rollback + smoke-test coverage while shipping new compute endpoints.",
+      "blueprint": [
+        "Provision paired staging + canary environments with health probes that mirror production requests.",
+        "Wire deployment scripts to shift traffic gradually using feature flags and per-endpoint weights.",
+        "Capture latency/error deltas per phase into `cloud/upgrade-lane-metrics.json` for post-run review."
+      ]
+    },
+    {
+      "id": "cloud-observability-radar",
+      "focus": "Cloud",
+      "status": "Research",
+      "title": "Cloud observability radar",
+      "description": "Curate a single radar dashboard that fuses runner logs, build artifacts, and uptime signals.",
+      "impact": "Keeps Echo aware of cloud drift and resource pressure before they impact local runs.",
+      "blueprint": [
+        "Stream structured logs from app + worker pods into a unified OpenTelemetry collector.",
+        "Design a compact radar view showing error budgets, saturation, and dependency health in one card.",
+        "Publish a `/cloud/radar` JSON feed so rituals and handoff kits can quote the latest snapshots."
       ]
     }
   ]
