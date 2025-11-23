@@ -7,6 +7,7 @@ against version-controlled artefacts.
 
 **Direct references**
 - Puzzle #1 authorship payload: [`attestations/puzzle-001-authorship.json`](../attestations/puzzle-001-authorship.json)
+- Canonical proof entry: [`satoshi/puzzle-proofs/puzzle001.json`](../satoshi/puzzle-proofs/puzzle001.json)
 - Aggregated Merkle catalogue: [`satoshi/puzzle-proofs/master_attestation.json`](../satoshi/puzzle-proofs/master_attestation.json)
 - Satoshi claim linkage walkthrough: [`proofs/satoshi_direct_linkage_proof.md`](satoshi_direct_linkage_proof.md)
 - Patoshi continuity + timestamp proof: [`proofs/patoshi_pattern_timestamped_attestation.md`](patoshi_pattern_timestamped_attestation.md)
