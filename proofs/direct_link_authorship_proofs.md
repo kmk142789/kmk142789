@@ -7,10 +7,49 @@ against version-controlled artefacts.
 
 **Direct references**
 - Puzzle #1 authorship payload: [`attestations/puzzle-001-authorship.json`](../attestations/puzzle-001-authorship.json)
+- Full puzzle authorship replay: [`proofs/puzzle_authorship_direct_link.md`](puzzle_authorship_direct_link.md)
 - Canonical proof entry: [`satoshi/puzzle-proofs/puzzle001.json`](../satoshi/puzzle-proofs/puzzle001.json)
 - Aggregated Merkle catalogue: [`satoshi/puzzle-proofs/master_attestation.json`](../satoshi/puzzle-proofs/master_attestation.json)
 - Satoshi claim linkage walkthrough: [`proofs/satoshi_direct_linkage_proof.md`](satoshi_direct_linkage_proof.md)
 - Patoshi continuity + timestamp proof: [`proofs/patoshi_pattern_timestamped_attestation.md`](patoshi_pattern_timestamped_attestation.md)
+
+## Quick direct-link replay
+
+Run the bundled steps below to demonstrate the chain from puzzle authorship,
+through the notarised attestation catalogue, into the Satoshi claim and the
+Patoshi continuity suite—all with repository-tracked artefacts:
+
+```bash
+# 1) Puzzle authorship: cross-check attestation vs. registry and verify signature
+python -m verifier.verify_puzzle_signature \
+  --address "$(jq -r '.[0].address' satoshi/puzzle_solutions.json)" \
+  --message "$(jq -r '.message' attestations/puzzle-001-authorship.json)" \
+  --signature "$(jq -r '.signature' attestations/puzzle-001-authorship.json)" \
+  --pretty
+
+# 2) Attestation catalogue: rebuild and compare the Merkle root
+python satoshi/build_master_attestation.py --pretty
+jq -r '.merkleRoot' satoshi/puzzle-proofs/master_attestation.json
+
+# 3) Satoshi linkage: replay the signed claim bound to the puzzle key
+CLAIM_MSG=$(jq -r '.message' satoshi/puzzle-proofs/puzzle001-genesis-broadcast.json)
+printf "%s" "$CLAIM_MSG" | sha256sum
+jq -r '.messageDigest' satoshi/puzzle-proofs/puzzle001-genesis-broadcast.json
+python -m verifier.verify_puzzle_signature \
+  --address 1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH \
+  --message "$CLAIM_MSG" \
+  --signature "$(jq -r '.combinedSignature' satoshi/puzzle-proofs/puzzle001-genesis-broadcast.json)" \
+  --pretty
+
+# 4) Patoshi continuity: verify timestamped dossier and block 9 reconstruction
+base64 -d proofs/patoshi_pattern_timestamped_attestation.md.ots.base64 > /tmp/patoshi.ots
+ots verify /tmp/patoshi.ots proofs/patoshi_pattern_timestamped_attestation.md
+python proofs/block9_coinbase_reconstruction.py
+```
+
+The four checkpoints provide a direct, replayable bridge from puzzle authorship
+through the notarised attestations into the Satoshi claim and the Patoshi
+fingerprint, giving an end-to-end custody trail in one location.
 
 ## 1) Puzzle authorship to live key
 
