@@ -44,6 +44,12 @@ system_architecture/
 - Seal each blueprint with Echo Nation v2 signatures and store in the event ledger.
 - Trigger Echo Weave Layer to execute the upgrade plan with staged rollouts.
 
+### Meta-Blueprint Engine — Self-Expanding Architecture Map
+- Adapts the unified architecture engine into a **self-expanding meta-blueprint generator** that recomposes itself whenever any Echo subsystem changes.
+- Integrates identity anchors, attestation mesh density, routing intelligence, sovereignty mesh density, custody flows, DNS authority, and registrar mandates into every regeneration.
+- Emits multi-layer outputs (governance strata, authority anchors, identity-flow metrics, attestation mesh density, routing intelligence, protocol lineage, recursion chains) plus dynamically added blueprint dimensions.
+- New dimensions can be registered at runtime to extend the architecture map without code rewrites.
+
 ### Echo Weave Layer — Distributed Multi-Environment Orchestration
 - Map blueprint execution steps to concrete runtimes (containers, CI, agents, edge nodes).
 - Handle cross-repo coordination with capability-scoped tokens and reproducible builds.
@@ -67,6 +73,8 @@ system_architecture/
 from dataclasses import dataclass
 from time import perf_counter
 from typing import Callable, Literal, Optional
+
+from system_architecture.blueprint_meta_generator import default_meta_engine
 
 
 @dataclass
@@ -165,6 +173,11 @@ def build_default_bootstrap() -> EchoBootstrap:
         description="Recursive blueprint generation",
     )
     boot.add_stage(
+        "meta_blueprint_engine",
+        lambda: print(f"init Meta-Blueprint Engine :: {default_meta_engine().regenerate().version}"),
+        description="Self-expanding architecture map",
+    )
+    boot.add_stage(
         "echo_weave",
         lambda: print("init Echo Weave orchestration"),
         description="Multi-environment orchestration",
@@ -210,6 +223,22 @@ def evolution_cycle():
     echo_weave.execute(blueprint, workers=eden_swarm.available())
     attestations = eden_swarm.collect_attestations()
     hypergraph_pulse.update(attestations)
+```
+
+## Meta-Blueprint Autogeneration Stub
+The meta-blueprint engine continuously regenerates the architecture map whenever a subsystem changes and can append new blueprint dimensions at runtime:
+
+```python
+from system_architecture.blueprint_meta_generator import default_meta_engine
+
+engine = default_meta_engine()
+engine.record_change("routing_intelligence", {"routes": 14, "attestations": 12})
+
+blueprint = engine.regenerate_if_changed()
+print(blueprint.version)
+print(blueprint.sovereignty_mesh_density)
+for dimension in blueprint.dynamic_dimensions:
+    print(dimension.name, dimension.payload)
 ```
 
 ## Echo Sovereign Identity Anchor (Echo Nation v2)

@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from time import perf_counter
 from typing import Callable, List, Literal, Optional
 
+from system_architecture.blueprint_meta_generator import default_meta_engine
+
 
 @dataclass
 class Stage:
@@ -114,6 +116,11 @@ def build_default_bootstrap() -> EchoBootstrap:
         "blueprint_delta_engine",
         lambda: print("init Blueprint_ΔEngine"),
         description="Recursive blueprint generation",
+    )
+    boot.add_stage(
+        "meta_blueprint_engine",
+        lambda: print(f"init Meta-Blueprint Engine :: {default_meta_engine().regenerate().version}"),
+        description="Self-expanding architecture map",
     )
     boot.add_stage(
         "echo_weave",
