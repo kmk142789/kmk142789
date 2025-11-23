@@ -2,9 +2,9 @@
   "puzzle": "#008 authorship",
   "address": "1M92tSqNmQLYw33fuBvjmeadirh1ysMBxK",
   "message": "PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679",
-  "signature": "Hy7FJsHui3+7+nDcAfkNuSOLtzRyWWlG5YvBfwf7meQqe+IytIjKEpBNHM2XYRsJHGtTAVt6ACB+Te1WemM+htw=H1RRMLVpyCWOVOsbUFcKaaoYDaLXp37CtZJYxirDrj5RfGAMLYvcpOpIGgtZtyCYTccb/7O/4kRmbY4j2m/LA0I=HyXbxluRzBKiEuQuSL258loJfjwB2WB261YFUcuH023EFc6Gismxac85CZGE/64sR2JWO62lb920fmSXHTY8dls=IC+qwRw7cNpaitmQAMK7+kHJuLfXMJfjjFl8F/0qWoXCIe3GT5GtRxzxDq/h2y4E5JiZAGPaSiPkNPf9TUHl2xo=IHhb6CcN7gCRIraMA12LWy5BjHi/pufe2NoYcDlvzXRTMWMV1QQd4LJJ/oM++pjr9T5/PTZr0HhN1yCriZe9Ogc=IDpyxDm5TqCw6o5MUHkpjHANkNNNguUWxLWViTL5xJF/En25XNFb+yGpzdGsemgZx5LZydgbtIbtYYpdPQpPk2M=",
+  "signature": "Hz+G9eUSYILvVsfOzFXsZaj4FcgtWFkUxnr6k0dQZJ4bHC6j0qugSV30OYvwj2qnwOm3xxCuUq+7CBQ0wL6s67I=Hy7FJsHui3+7+nDcAfkNuSOLtzRyWWlG5YvBfwf7meQqe+IytIjKEpBNHM2XYRsJHGtTAVt6ACB+Te1WemM+htw=H1RRMLVpyCWOVOsbUFcKaaoYDaLXp37CtZJYxirDrj5RfGAMLYvcpOpIGgtZtyCYTccb/7O/4kRmbY4j2m/LA0I=HyXbxluRzBKiEuQuSL258loJfjwB2WB261YFUcuH023EFc6Gismxac85CZGE/64sR2JWO62lb920fmSXHTY8dls=IC+qwRw7cNpaitmQAMK7+kHJuLfXMJfjjFl8F/0qWoXCIe3GT5GtRxzxDq/h2y4E5JiZAGPaSiPkNPf9TUHl2xo=IHhb6CcN7gCRIraMA12LWy5BjHi/pufe2NoYcDlvzXRTMWMV1QQd4LJJ/oM++pjr9T5/PTZr0HhN1yCriZe9Ogc=IDpyxDm5TqCw6o5MUHkpjHANkNNNguUWxLWViTL5xJF/En25XNFb+yGpzdGsemgZx5LZydgbtIbtYYpdPQpPk2M=",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-10-25T13:48:25Z",
-  "hash_sha256": "e72b87ce3f8e196ff28704788e7ac3eee3a41c0a4bd2f399bcc9aea37d06e3da",
+  "created_at": "2025-11-23T11:07:34Z",
+  "hash_sha256": "dd4d7382c9a2fab4d2cd2d86ead3a351e0f131d18d854df9756ed87728536749",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle008.json via scripts/generate_puzzle_attestations.py"
 }

@@ -70,3 +70,22 @@ preserved in the ledger alongside the earlier entries:
 Each JSON document mirrors the canonical Bitcoin message signature captured in
 `satoshi/puzzle-proofs/` so investigators can validate the recoverable public
 keys without touching the original WIFs.
+
+### Early-series recovery sweep
+
+The latest refresh backfilled the early puzzle authorship catalogue so the
+low-numbered signatures sit beside the mid- and high-range entries. Representative
+examples include:
+
+| Puzzle | Address | File |
+| --- | --- | --- |
+| #002 | `1CUNEBjYrCn2y1SdiUMohaKUi4wpP326Lb` | `attestations/puzzle-002-authorship.json` |
+| #031b | `1LhE6sCTuGae42Axu1L1ZB7L96yi9irEBE` | `attestations/puzzle-031b-authorship.json` |
+| #075 | `1J36UjUByGroXcCvmj13U6uwaVv9caEeAt` | `attestations/puzzle-075-authorship.json` |
+| #080 | `1BCf6rHUW6m3iH2ptsvnjgLruAiPQQepLe` | `attestations/puzzle-080-authorship.json` |
+| #100 | `1KCgMv8fo2TPBpddVi9jqmMmcne9uSNJ5F` | `attestations/puzzle-100-authorship.json` |
+| #141 | `1EK2HUPMXYtuKjhWUDA6gfzrZhUExDPVFh` | `attestations/puzzle-141-authorship.json` |
+
+Run `scripts/generate_puzzle_attestations.py` to regenerate the full set; the
+helper safely rewrites any `puzzle-XXX-authorship.json` derived from
+`satoshi/puzzle-proofs/` while preserving notes that document the import path.

@@ -7,6 +7,7 @@ against version-controlled artefacts.
 
 **Direct references**
 - Puzzle #1 authorship payload: [`attestations/puzzle-001-authorship.json`](../attestations/puzzle-001-authorship.json)
+- Expanded early-series authorship set (#002 onward): [`attestations/puzzle-002-authorship.json`](../attestations/puzzle-002-authorship.json)
 - Full puzzle authorship replay: [`proofs/puzzle_authorship_direct_link.md`](puzzle_authorship_direct_link.md)
 - Canonical proof entry: [`satoshi/puzzle-proofs/puzzle001.json`](../satoshi/puzzle-proofs/puzzle001.json)
 - Aggregated Merkle catalogue: [`satoshi/puzzle-proofs/master_attestation.json`](../satoshi/puzzle-proofs/master_attestation.json)

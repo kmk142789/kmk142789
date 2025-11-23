@@ -5,6 +5,11 @@ message living in `satoshi/puzzle-proofs/`, the canonical puzzle registry, and
 the Patoshi continuity suite. Every command runs offline against repository
 artefacts so auditors can replay the custody trail without extra dependencies.
 
+Authorship payloads for the early puzzle run (#002 onward, including the #031b
+variant) now live beside the mid- and high-numbered files. Swap the puzzle
+number in the commands below to replay any of the freshly generated
+`attestations/puzzle-XXX-authorship.json` entries against their source proofs.
+
 ## 1. Align the attestation with the signed message
 
 Use the authorship JSON and the recorded puzzle proof to confirm the message and
