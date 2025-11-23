@@ -242,6 +242,8 @@ the full JSON payload for notarisation alongside other artefacts.
 - `puzzle234.json` — Puzzle #234 authorship attestation for address `161YxXyK6zvTJc3qonhmtfrhMqJN9xo2WA`.
 - `puzzle235.json` — Puzzle #235 authorship attestation for address `15AvSd3KAdXjghseXeLWvHWuCPqWcKGoQm`.
 - `puzzle236.json` — Puzzle #236 authorship attestation for address `17KhT5hMQzknn5G9Jj6UKcssfTiw7gSoVG`.
+- `puzzle237.json` — Puzzle #237 authorship attestation for address `184AoG6YgLjm6xPwDN942TrftPnS3LiY28`.
+- `puzzle238.json` — Puzzle #238 authorship attestation for address `13zBDKZUZfMFwDau5o99635A8MMQHwNaSg`.
 - `puzzle213.json` — Puzzle #213 authorship attestation for address `1CNNth43uiVypxHmZLC8hWZsb7UiP7wSkY`.
 - `puzzle214.json` — Puzzle #214 authorship attestation for address `1TQRJf89J7LyqFua4WKFeD11RanGoyp3kX`.
 - `puzzle215.json` — Puzzle #215 authorship attestation for address `1umKUvhbkKCkUVaeFJS4cbS4wJtqqsUak9`.
