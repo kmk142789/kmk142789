@@ -120,6 +120,14 @@ def _parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
         help="Number of recent events to include when --diagnostics is enabled.",
     )
     parser.add_argument(
+        "--output",
+        type=Path,
+        help=(
+            "Optional file path to persist the rendered summary (JSON or text) "
+            "in addition to printing it to stdout."
+        ),
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Emit the summary as JSON instead of a formatted narrative.",
@@ -180,6 +188,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
 
     if args.cycles < 1:
         raise SystemExit("--cycles must be at least 1")
+    if args.diagnostics and args.event_limit <= 0:
+        raise SystemExit("--event-limit must be positive when --diagnostics is enabled")
 
     rng = _seeded_rng(args.seed)
     evolver = EchoEvolver(rng=rng, artifact_path=args.artifact)
@@ -209,9 +219,15 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         payload["diagnostics"] = diagnostics
 
     if args.json:
-        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        rendered = json.dumps(payload, indent=2, ensure_ascii=False)
     else:
-        print(_format_text_summary(final_state, diagnostics))
+        rendered = _format_text_summary(final_state, diagnostics)
+
+    print(rendered)
+
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(rendered, encoding="utf-8")
 
     return 0
 
