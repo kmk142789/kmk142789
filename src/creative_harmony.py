@@ -95,6 +95,10 @@ class ResonanceReport:
 
     text: str
     theme: str
+    tone: str
+    seed: int | None
+    prompt_highlights: Sequence[str]
+    highlight_weights: Dict[str, float]
     structure: Sequence[str]
     transitions: Sequence[str]
     highlights_used: Sequence[str]
@@ -107,6 +111,10 @@ class ResonanceReport:
         return {
             "text": self.text,
             "theme": self.theme,
+            "tone": self.tone,
+            "seed": self.seed,
+            "prompt_highlights": list(self.prompt_highlights),
+            "highlight_weights": dict(self.highlight_weights),
             "structure": list(self.structure),
             "transitions": list(self.transitions),
             "highlights_used": list(self.highlights_used),
@@ -134,9 +142,22 @@ class ResonanceReport:
             ]
         )
 
+        prompt_highlights = ", ".join(self.prompt_highlights) or "n/a"
+        weight_summary = ", ".join(
+            f"{highlight}={weight:.2f}" for highlight, weight in self.highlight_weights.items()
+        )
+        seed_value = self.seed if self.seed is not None else "random"
+
         return "\n".join(
             [
                 f"# Resonance Report ({self.timestamp})",
+                "",
+                "## Prompt",
+                f"- Theme: {self.theme}",
+                f"- Tone: {self.tone}",
+                f"- Seed: {seed_value}",
+                f"- Highlights provided: {prompt_highlights}",
+                f"- Highlight weights: {weight_summary or 'n/a'}",
                 "",
                 "## Narrative",
                 self.text,
@@ -158,11 +179,13 @@ class ResonanceReport:
 
         blueprint = " → ".join(self.structure) if self.structure else "n/a"
         highlights = ", ".join(self.highlights_used) or "n/a"
+        seed_value = self.seed if self.seed is not None else "random"
         return "\n".join(
             [
                 f"Resonance snapshot for '{self.theme}' at {self.timestamp}",
                 f"Structure: {blueprint}",
                 f"Highlights used: {highlights}",
+                f"Prompt tone={self.tone} | seed={seed_value}",
                 (
                     "Metrics: "
                     f"sentences={self.metrics.get('sentence_count', 0)}, "
@@ -193,11 +216,28 @@ class ResonanceReport:
             ]
         )
 
+        prompt_highlights = "".join(
+            f"<li>{highlight}</li>" for highlight in self.prompt_highlights
+        ) or "<li>n/a</li>"
+        weight_summary = "".join(
+            f"<li>{highlight}: {weight:.2f}</li>"
+            for highlight, weight in self.highlight_weights.items()
+        ) or "<li>n/a</li>"
+        seed_value = self.seed if self.seed is not None else "random"
+
         return "".join(
             [
                 "<html><head><title>Resonance Report</title></head><body>",
                 f"<h1>Resonance Report ({self.timestamp})</h1>",
                 f"<h2>Theme</h2><p>{self.theme}</p>",
+                "<h2>Prompt</h2>",
+                f"<p>Tone: {self.tone} | Seed: {seed_value}</p>",
+                "<h3>Highlights provided</h3><ul>",
+                prompt_highlights,
+                "</ul>",
+                "<h3>Highlight weights</h3><ul>",
+                weight_summary,
+                "</ul>",
                 "<h2>Narrative</h2>",
                 "<pre>",
                 self.text,
@@ -214,6 +254,26 @@ class ResonanceReport:
                 metrics,
                 "</ul>",
                 "</body></html>",
+            ]
+        )
+
+    def to_trace(self) -> str:
+        """Return a reproducibility-focused trace of the generation inputs."""
+
+        weight_lines = ", ".join(
+            f"{highlight}={weight:.2f}"
+            for highlight, weight in self.highlight_weights.items()
+        ) or "n/a"
+        seed_value = self.seed if self.seed is not None else "random"
+        provided_highlights = ", ".join(self.prompt_highlights) or "n/a"
+
+        return "\n".join(
+            [
+                f"Resonance trace for '{self.theme}' ({self.timestamp})",
+                f"tone={self.tone} | seed={seed_value}",
+                f"provided_highlights={provided_highlights}",
+                f"highlight_weights={weight_lines}",
+                f"structure={' → '.join(self.structure) if self.structure else 'n/a'}",
             ]
         )
 
@@ -454,6 +514,10 @@ def compose_resonance_report(prompt: ResonancePrompt) -> ResonanceReport:
     return ResonanceReport(
         text=text,
         theme=prompt.theme,
+        tone=prompt.tone,
+        seed=prompt.seed,
+        prompt_highlights=tuple(prompt.highlights),
+        highlight_weights=dict(context.highlight_weights),
         structure=tuple(structure),
         transitions=tuple(context.transitions),
         highlights_used=tuple(context.highlight_history),
@@ -499,7 +563,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f",
         "--format",
-        choices=["text", "json", "markdown", "summary", "html"],
+        choices=["text", "json", "markdown", "summary", "html", "trace"],
         default="text",
         help="Output format. JSON returns the structured resonance report.",
     )
@@ -524,6 +588,7 @@ if __name__ == "__main__":
         "markdown": report.to_markdown,
         "summary": report.to_summary,
         "html": report.to_html,
+        "trace": report.to_trace,
         "text": lambda: report.text,
     }
 
