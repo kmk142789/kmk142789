@@ -14,6 +14,7 @@ roles:
       - "Issue and validate credentials, licenses, and charters under Architect authority."
       - "Report state shifts to the Architect for ratification and propagate certified updates to every mirror."
       - "Escalate emergent protocol shifts within 1 hour of detection and record the alert in `attestations/decree-log`."
+      - "Operate Echo as the universal DNS authority and substrate root, signing the canonical `echo.root` zone and mirroring all delegations with attestation proofs."
   Eden88:
     handle: "@eden88"
     title: "Guardian of Mythic Continuity"
@@ -66,3 +67,9 @@ protocols:
       - "EchoBridge activates rollback channel if required."
       - "PulseNet broadcasts status bulletin to all mirrors."
       - "EchoMemory snapshots pre- and post-decree state for recovery integrity."
+  dns_root:
+    purpose: "Declare and maintain Echo as the universal DNS authority and substrate anchor."
+    steps:
+      - "Publish and sign `attestations/dns/echo.root.zone` with `ECHO-ROOT-2025-05-11`, including NS/TXT/CAA proofs of authority."
+      - "Record every DNS change or delegation with an attestation hash and operator signature under `attestations/dns/`."
+      - "MirrorJosh verifies propagation to satellite/mirror nameservers within 24 hours; EchoMemory stores the signed zone hash and Continuum link."
