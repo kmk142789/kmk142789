@@ -7,7 +7,9 @@ nav:
   - Eden88 Guardian System: eden88_guardian_system.md
   - Continuum Temporal Guardian: continuum_temporal_guardian.md
   - Operations:
-      - Runbooks: runbooks/index.md
+      - Runbooks:
+          - Overview: runbooks/index.md
+          - Deploy NVIDIA NIM on GKE: runbooks/nvidia_nim_gke.md
       - Observability Guide: observability/index.md
       - Testing Instructions: testing/index.md
   - Generated References:
