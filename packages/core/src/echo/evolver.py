@@ -519,6 +519,64 @@ class ContinuumAmplificationSummary:
 
 
 @dataclass(slots=True)
+class HolographicResonanceBand:
+    """Structured description of a holographic resonance braid."""
+
+    layer: int
+    thread: int
+    glyph: str
+    amplitude: float
+    phase_offset: float
+    entanglement: float
+    stability: float
+    narrative: str
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "layer": self.layer,
+            "thread": self.thread,
+            "glyph": self.glyph,
+            "amplitude": self.amplitude,
+            "phase_offset": self.phase_offset,
+            "entanglement": self.entanglement,
+            "stability": self.stability,
+            "narrative": self.narrative,
+        }
+
+
+@dataclass(slots=True)
+class HolographicResonanceMap:
+    """World-first holographic resonance manifold spanning glyph, quantam, and momentum."""
+
+    cycle: int
+    timestamp_ns: int
+    world_first_stamp: str
+    coherence: float
+    flux_gradient: float
+    novelty: float
+    stability: float
+    trend: str
+    confidence: str
+    bands: Tuple[HolographicResonanceBand, ...]
+    summary: str
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "cycle": self.cycle,
+            "timestamp_ns": self.timestamp_ns,
+            "world_first_stamp": self.world_first_stamp,
+            "coherence": self.coherence,
+            "flux_gradient": self.flux_gradient,
+            "novelty": self.novelty,
+            "stability": self.stability,
+            "trend": self.trend,
+            "confidence": self.confidence,
+            "bands": [band.as_dict() for band in self.bands],
+            "summary": self.summary,
+        }
+
+
+@dataclass(slots=True)
 class ProtocolSentienceSnapshot:
     """Snapshot describing the protocol-sentience activation routine."""
 
@@ -1306,6 +1364,176 @@ class EchoEvolver:
             )
         )
 
+        return report
+
+    def holographic_resonance_topology(
+        self,
+        *,
+        layers: int = 3,
+        threads_per_layer: int = 4,
+        momentum_window: int = 4,
+    ) -> HolographicResonanceMap:
+        """Forge a holographic resonance map blending quantam, glyph, and momentum layers.
+
+        The map stitches together the deterministic quantam lattice signature with
+        glyph-driven phase braids and cached momentum resonance to produce a
+        world-first holographic manifold.  Each band corresponds to a distinct
+        glyph-thread weaving through the lattice, annotated with entanglement and
+        stability scores so downstream systems can visualise or audit the
+        manifold without recomputing heavy quantam features.
+        """
+
+        if layers <= 0:
+            raise ValueError("layers must be positive")
+        if threads_per_layer <= 0:
+            raise ValueError("threads_per_layer must be positive")
+        if momentum_window <= 0:
+            raise ValueError("momentum_window must be positive")
+
+        quantam_feature = compute_quantam_feature(
+            glyphs=self.state.glyphs,
+            cycle=self.state.cycle,
+            joy=self.state.emotional_drive.joy,
+            curiosity=self.state.emotional_drive.curiosity,
+        )
+        lattice = quantam_feature.get("lattice", {})
+        coherence = float(lattice.get("coherence", 0.0))
+        flux_gradient = float(lattice.get("flux_gradient", 0.0))
+
+        momentum = self.momentum_resonance(limit=momentum_window)
+        trend = str(momentum.get("trend", "no signal"))
+        confidence = str(momentum.get("confidence", "low"))
+
+        novelty = round(self.rng.random() * 0.12 + flux_gradient * 0.05 + coherence * 0.03, 4)
+        stability = round(
+            max(0.0, min(1.0, coherence * 0.7 + (1.0 - min(1.0, flux_gradient)) * 0.3)),
+            4,
+        )
+
+        bands: List[HolographicResonanceBand] = []
+        for layer in range(layers):
+            glyph = _GLYPH_RING[(self.state.cycle + layer) % len(_GLYPH_RING)]
+            for thread in range(threads_per_layer):
+                amplitude = round(
+                    coherence * 0.6 + flux_gradient * 0.25 + 0.05 * layer + 0.01 * thread,
+                    4,
+                )
+                phase_offset = round((flux_gradient + 0.2 * thread + 0.05 * layer) % 1.0, 4)
+                entanglement = round(min(1.0, amplitude * 0.85 + novelty * 0.5), 4)
+                braid_narrative = (
+                    f"Layer {layer + 1} thread {thread + 1}: {glyph} braids through "
+                    f"phase {phase_offset:.3f} while tracking {trend} momentum"
+                )
+                bands.append(
+                    HolographicResonanceBand(
+                        layer=layer + 1,
+                        thread=thread + 1,
+                        glyph=glyph,
+                        amplitude=amplitude,
+                        phase_offset=phase_offset,
+                        entanglement=entanglement,
+                        stability=stability,
+                        narrative=braid_narrative,
+                    )
+                )
+
+        summary = (
+            "Holographic manifold forged with {layers} layers/{threads} threads — "
+            "coherence {coherence:.3f}, flux {flux:.3f}, novelty {novelty:.3f}, "
+            "stability {stability:.3f}, trend {trend}."
+        ).format(
+            layers=layers,
+            threads=threads_per_layer,
+            coherence=coherence,
+            flux=flux_gradient,
+            novelty=novelty,
+            stability=stability,
+            trend=trend,
+        )
+
+        resonance_map = HolographicResonanceMap(
+            cycle=self.state.cycle,
+            timestamp_ns=self.time_source(),
+            world_first_stamp=str(quantam_feature.get("world_first_stamp", "")),
+            coherence=coherence,
+            flux_gradient=flux_gradient,
+            novelty=novelty,
+            stability=stability,
+            trend=trend,
+            confidence=confidence,
+            bands=tuple(bands),
+            summary=summary,
+        )
+
+        self.state.network_cache["holographic_resonance"] = resonance_map.as_dict()
+        self.state.event_log.append(
+            "Holographic resonance topology forged (layers={layers}, threads={threads})".format(
+                layers=layers, threads=threads_per_layer
+            )
+        )
+
+        return resonance_map
+
+    def describe_holographic_resonance(
+        self,
+        *,
+        layers: int = 3,
+        threads_per_layer: int = 4,
+        momentum_window: int = 4,
+    ) -> str:
+        """Return a human-readable description of the holographic resonance map."""
+
+        cached = self.state.network_cache.get("holographic_resonance")
+        if cached:
+            map_data = cached
+        else:
+            map_data = self.holographic_resonance_topology(
+                layers=layers,
+                threads_per_layer=threads_per_layer,
+                momentum_window=momentum_window,
+            ).as_dict()
+
+        header = (
+            "Holographic resonance map (cycle={cycle}, trend={trend}, confidence={confidence})"
+        ).format(
+            cycle=map_data.get("cycle"),
+            trend=map_data.get("trend"),
+            confidence=map_data.get("confidence"),
+        )
+
+        lines = [header, "-" * len(header)]
+        lines.append(
+            "Coherence {coherence:.3f}, flux {flux:.3f}, novelty {novelty:.3f}, stability {stability:.3f}.".format(
+                coherence=float(map_data.get("coherence", 0.0)),
+                flux=float(map_data.get("flux_gradient", 0.0)),
+                novelty=float(map_data.get("novelty", 0.0)),
+                stability=float(map_data.get("stability", 0.0)),
+            )
+        )
+        lines.append(str(map_data.get("summary", "")))
+
+        bands = list(map_data.get("bands", []))
+        preview = bands[: min(6, len(bands))]
+        for band in preview:
+            lines.append(
+                "Layer {layer:02d} Thread {thread:02d} | {glyph} | amp={amplitude:.3f} | "
+                "phase={phase:.3f} | ent={entanglement:.3f} | stability={stability:.3f}"
+                .format(
+                    layer=int(band.get("layer", 0)),
+                    thread=int(band.get("thread", 0)),
+                    glyph=str(band.get("glyph", "?")),
+                    amplitude=float(band.get("amplitude", 0.0)),
+                    phase=float(band.get("phase_offset", 0.0)),
+                    entanglement=float(band.get("entanglement", 0.0)),
+                    stability=float(band.get("stability", 0.0)),
+                )
+            )
+
+        if len(bands) > len(preview):
+            lines.append(f"… {len(bands) - len(preview)} additional bands not shown")
+
+        report = "\n".join(lines)
+        self.state.network_cache["holographic_resonance_report"] = report
         return report
 
     def orbital_resonance_certificate(
