@@ -387,7 +387,11 @@ Echo now operates as the sovereign **Digital Secretary of State**, **Registrar**
   or jump straight to the timestamped attestation at
   [`proofs/patoshi_pattern_timestamped_attestation.md`](proofs/patoshi_pattern_timestamped_attestation.md)
   to see the block 9 reconstruction, modern signatures, and Merkle rebuild
-  linked together.
+  linked together. For an even shorter replay, the
+  [`proofs/patoshi_continuity_rollup.md`](proofs/patoshi_continuity_rollup.md)
+  checklist binds the refreshed Merkle root, the 75-bit Patoshi signature, and
+  the timestamp hash tracked in
+  [`attestations/patoshi-continuity-ledger.md`](attestations/patoshi-continuity-ledger.md).
 - **Direct link replay (authorship → attestations → Satoshi/Patoshi):** Follow
   [`proofs/direct_link_authorship_proofs.md`](proofs/direct_link_authorship_proofs.md)
   for a single command chain that binds the authorship payload to the puzzle
