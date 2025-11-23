@@ -220,6 +220,11 @@ async function loadTrustRegistry() {
   try {
     const contents = await fs.readFile(trustRegistryPath, 'utf8');
     trustRegistry = JSON.parse(contents);
+    if (trustRegistry.issuer && trustRegistry.issuer !== issuerDid) {
+      throw new Error(
+        `Trust registry issuer ${trustRegistry.issuer} does not match configured VC_ISSUER_DID ${issuerDid}`,
+      );
+    }
   } catch (error) {
     console.warn('Unable to load trust registry; defaulting to empty list', error);
     trustRegistry = { recognizedCredentials: [] };
@@ -635,6 +640,15 @@ async function appendJsonl(logPath, payload) {
 
 app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok', issuer: issuerDid });
+});
+
+app.get('/trust/registry', async (_req, res, next) => {
+  try {
+    const registry = await loadTrustRegistry();
+    res.json({ issuer: issuerDid, registry });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get('/credentials/:id/status', async (req, res, next) => {

@@ -18,6 +18,7 @@ This directory collects the artifacts required to bootstrap the Little Footsteps
 2. Publish the DID document to `https://<your-gh-username>.github.io/little-footsteps-bank/did.json`.
 3. Mirror `trust_registry.json` to the same GitHub Pages site for discoverability.
 4. Start Postgres and run the issuer (`node apps/little_footsteps/vc_issuer/server.js`).
-5. Deploy the Next.js dashboard from [`apps/little_footsteps/dashboard`](../../apps/little_footsteps/dashboard) to Vercel/Netlify for real-time observability.
+5. Confirm the issuer is aligned with the trust registry by calling `/trust/registry` and verifying the issuer DID matches the published registry issuer.
+6. Deploy the Next.js dashboard from [`apps/little_footsteps/dashboard`](../../apps/little_footsteps/dashboard) to Vercel/Netlify for real-time observability.
 
 Telemetry is emitted as structured JSON logs for ingestion into Prometheus, Grafana Loki, or any log aggregation pipeline.
