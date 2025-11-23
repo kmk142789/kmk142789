@@ -23,6 +23,9 @@ CATEGORY_RULES = {
     "creative": ("creative", "story", "aurora", "stellar", "poem"),
     "systems": ("engine", "core", "loop", "orchestrator", "synth"),
     "sovereign": ("sovereign", "guardian", "policy", "charter", "governance"),
+    "identity": ("identity", "passport", "credential", "wallet", "did"),
+    "attestation": ("attest", "attestation", "verify", "proof", "verifier", "zk"),
+    "routing": ("router", "mesh", "gateway", "relay", "nexus", "hub", "fabric"),
 }
 
 LAYER_PRIORITIES = {
@@ -32,6 +35,7 @@ LAYER_PRIORITIES = {
 }
 
 KEYSTONE_HINTS = ("core", "engine", "orchestrator", "continuum", "pulse", "bridge")
+AUTHORITY_KEYWORDS = {"governance", "guardian", "sovereign", "authority", "policy", "charter", "registry"}
 
 
 @dataclass(frozen=True)
@@ -98,6 +102,8 @@ class UnifiedArchitectureEngine:
         layer_map: dict[str, list[ModuleSpec]] = defaultdict(list)
         adjacency_counter: Counter[tuple[str, str]] = Counter()
         keystones: list[ModuleSpec] = []
+        authority_candidates: list[ModuleSpec] = []
+        flow_edges: Counter[tuple[str, str]] = Counter()
 
         for spec in modules:
             category_map[spec.primary_category].append(spec)
@@ -107,9 +113,27 @@ class UnifiedArchitectureEngine:
                     for second in spec.categories[i + 1:]:
                         edge = tuple(sorted((first, second)))
                         adjacency_counter[edge] += 1
+                        if {"identity", "attestation"} & {first, second}:
+                            flow_edges[edge] += 1
             keystones.append(spec)
+            if AUTHORITY_KEYWORDS.intersection(spec.tokens) or {
+                "sovereign",
+                "identity",
+                "attestation",
+            }.intersection(spec.categories):
+                authority_candidates.append(spec)
 
         keystone_selection = sorted(keystones, key=lambda spec: spec.keystone_score, reverse=True)[:12]
+        authority_selection = sorted(
+            authority_candidates,
+            key=lambda spec: (spec.keystone_score, len(spec.tokens)),
+            reverse=True,
+        )[:12]
+
+        sovereign_mesh_density = (
+            len([edge for edge in adjacency_counter if set(edge) & {"sovereign", "identity", "attestation"}])
+            / max(len(adjacency_counter), 1)
+        )
 
         blueprint = {
             "total_modules": len(modules),
@@ -144,6 +168,15 @@ class UnifiedArchitectureEngine:
                 }
                 for spec in keystone_selection
             ],
+            "authority_anchors": [
+                {
+                    "name": spec.name,
+                    "relative_path": spec.relative_path,
+                    "categories": spec.categories,
+                    "score": spec.keystone_score,
+                }
+                for spec in authority_selection
+            ],
             "adjacency": {
                 f"{first}<->{second}": count
                 for (first, second), count in sorted(
@@ -152,6 +185,15 @@ class UnifiedArchitectureEngine:
                     reverse=True,
                 )
             },
+            "identity_flows": {
+                f"{first}<->{second}": count
+                for (first, second), count in sorted(
+                    flow_edges.items(),
+                    key=lambda pair: pair[1],
+                    reverse=True,
+                )
+            },
+            "sovereign_mesh_density": round(sovereign_mesh_density, 3),
         }
         return blueprint
 
@@ -189,11 +231,38 @@ class UnifiedArchitectureEngine:
             )
         lines.append("")
 
+        authority_anchors = blueprint.get("authority_anchors", [])
+        if authority_anchors:
+            lines.append("## Authority & Identity Anchors")
+            lines.append(
+                "Modules binding governance, attestation, and identity across the fabric with "
+                "elevated keystone scores."
+            )
+            for anchor in authority_anchors:
+                cats = ", ".join(anchor["categories"]) or "frontier"
+                lines.append(
+                    f"- `{anchor['relative_path']}` · categories: {cats} · score {anchor['score']}"
+                )
+            lines.append("")
+
         adjacency = blueprint["adjacency"]
         if adjacency:
             lines.append("## Convergent Pathways")
             for edge, weight in adjacency.items():
                 lines.append(f"- {edge} × {weight}")
+            lines.append("")
+
+        identity_flows = blueprint.get("identity_flows")
+        mesh_density = blueprint.get("sovereign_mesh_density")
+        if identity_flows:
+            lines.append("## Identity & Attestation Flows")
+            lines.append(
+                "Cross-domain pathways where identity or attestation surfaces co-appear with other "
+                "categories, highlighting governance-aware routing."
+            )
+            for edge, weight in identity_flows.items():
+                lines.append(f"- {edge} × {weight}")
+            lines.append(f"- Sovereign mesh density: {mesh_density}")
             lines.append("")
 
         lines.append(
