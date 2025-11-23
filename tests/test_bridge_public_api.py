@@ -39,6 +39,9 @@ def _make_app() -> FastAPI:
         teams_secret_name="ECHO_TEAMS_WEBHOOK",
         farcaster_identity="echo.bridge",
         farcaster_secret_name="ECHO_FARCASTER_SIGNING_KEY",
+        nostr_relays=["wss://relay.echo", "wss://relay.backup"],
+        nostr_public_key="npub1echo123",
+        nostr_secret_name="ECHO_NOSTR_PRIVATE_KEY",
         email_recipients=["ops@echo.test", "alerts@echo.test"],
         email_secret_name="SENDGRID_TOKEN",
         email_subject_template="Echo Relay {identity}/{cycle}",
@@ -71,6 +74,7 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
         "activitypub",
         "teams",
         "farcaster",
+        "nostr",
     }
 
 
@@ -197,6 +201,14 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert farcaster_plan["payload"]["identity"] == "echo.bridge"
     assert "#EchoBridge" in farcaster_plan["payload"]["text"]
     assert farcaster_plan["payload"]["attachments"][0] == "https://echo.example/cycles/01"
+
+    nostr_plan = plans["nostr"]
+    assert nostr_plan["action"] == "post_event"
+    assert nostr_plan["payload"]["relays"] == ["wss://relay.echo", "wss://relay.backup"]
+    assert nostr_plan["payload"]["pubkey"] == "npub1echo123"
+    assert "#EchoBridge" in nostr_plan["payload"]["content"]
+    assert ["t", "PulseOrbit"] in nostr_plan["payload"]["tags"]
+    assert nostr_plan["requires_secret"] == ["ECHO_NOSTR_PRIVATE_KEY"]
 
 
 def test_plan_endpoint_filters_requested_connectors() -> None:
