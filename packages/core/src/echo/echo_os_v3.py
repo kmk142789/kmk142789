@@ -3,7 +3,9 @@
 This version keeps the lightweight, deterministic modeling approach from Echo
 OS v2 but layers in additional telemetry so simulations can reason about
 balance, diversity, and resilience.  The APIs are intentionally small and
-pure-Python so they remain easy to exercise from unit tests or notebooks.
+pure-Python so they remain easy to exercise from unit tests or notebooks while
+supporting cross-layer introspection, blueprint self-correction, and
+Omni-Fabric binding for coherent output.
 """
 
 from __future__ import annotations
@@ -131,6 +133,32 @@ class CycleReport:
     diversity: float = 0.0
     novelty_index: float = 0.0
     alignment_score: float = 0.0
+    fabric_alignment: float = 0.0
+    layer_introspection: Dict[str, float] = field(default_factory=dict)
+    blueprint_corrections: Dict[str, str] = field(default_factory=dict)
+    regeneration_actions: Dict[str, str] = field(default_factory=dict)
+    omni_fabric_link: str = ""
+
+
+@dataclass
+class FabricLayer:
+    """Represents a logical layer that can self-correct via blueprint tuning."""
+
+    name: str
+    blueprint_version: str
+    integrity: float = 1.0
+    coherence: float = 1.0
+    uplift_ready: bool = True
+
+    def alignment_anchor(self, alignment_score: float, domain_balance: float) -> float:
+        """Return a bounded introspection score for the layer."""
+
+        alignment = (
+            self.integrity * 0.5
+            + self.coherence * 0.3
+            + alignment_score * 0.2
+        )
+        return max(0.0, min(1.0, alignment * (0.5 + 0.5 * domain_balance)))
 
 
 class EchoOSV3:
@@ -145,7 +173,27 @@ class EchoOSV3:
     def __init__(self) -> None:
         self.domains: Dict[str, DomainState] = {}
         self.types: Dict[str, TypeRecord] = {}
+        self.layers: Dict[str, FabricLayer] = {}
         self.cycle_counter = 0
+
+    def register_layer(
+        self,
+        name: str,
+        blueprint_version: str,
+        *,
+        integrity: float = 1.0,
+        coherence: float = 1.0,
+        uplift_ready: bool = True,
+    ) -> None:
+        """Register a fabric layer that can be introspected and self-corrected."""
+
+        self.layers[name] = FabricLayer(
+            name=name,
+            blueprint_version=blueprint_version,
+            integrity=integrity,
+            coherence=coherence,
+            uplift_ready=uplift_ready,
+        )
 
     def register_domain(
         self,
@@ -249,6 +297,76 @@ class EchoOSV3:
         evenness_penalty = pstdev(values)
         return max(0.0, 1.0 - spread * 0.5 - evenness_penalty * 0.25)
 
+    def _layer_introspection(self, alignment_score: float, throughput: float) -> Dict[str, float]:
+        if not self.layers:
+            return {}
+        domain_balance = max(0.0, min(1.0, throughput))
+        return {
+            name: layer.alignment_anchor(alignment_score, domain_balance)
+            for name, layer in self.layers.items()
+        }
+
+    def _fabric_alignment(self, alignment_score: float, layer_introspection: Dict[str, float]) -> float:
+        if not layer_introspection:
+            return alignment_score
+        layer_vector = sum(layer_introspection.values()) / len(layer_introspection)
+        return max(0.0, min(1.0, (alignment_score * 0.6) + (layer_vector * 0.4)))
+
+    def _detect_anomalies(self, domain_health: Dict[str, float]) -> Dict[str, str]:
+        anomalies: Dict[str, str] = {}
+        for domain, health in domain_health.items():
+            if health >= 0.95:
+                anomalies[domain] = "saturated"
+            elif health <= 0.2:
+                anomalies[domain] = "underutilized"
+        return anomalies
+
+    def _resolve_anomalies(
+        self, anomalies: Dict[str, str], topology_scores: Dict[str, float]
+    ) -> Dict[str, str]:
+        if not anomalies:
+            return {}
+        actions: Dict[str, str] = {}
+        for domain, status in anomalies.items():
+            state = self.domains[domain]
+            if status == "saturated":
+                target_capacity = topology_scores[domain] / (
+                    0.9 * max(state.resilience, 0.25)
+                )
+                prior_capacity = state.capacity
+                state.capacity = max(state.capacity, target_capacity)
+                state.resilience = min(1.5, state.resilience + 0.08)
+                actions[domain] = (
+                    f"saturated->capacity {prior_capacity:.2f}→{state.capacity:.2f}; "
+                    f"resilience {state.resilience - 0.08:.2f}→{state.resilience:.2f}"
+                )
+            else:
+                prior_bias = state.novelty_bias
+                state.novelty_bias = min(2.0, state.novelty_bias + 0.05)
+                state.signal_floor = min(1.0, state.signal_floor + 0.05)
+                actions[domain] = (
+                    f"underutilized->novelty {prior_bias:.2f}→{state.novelty_bias:.2f}; "
+                    f"signal_floor {state.signal_floor - 0.05:.2f}→{state.signal_floor:.2f}"
+                )
+        return actions
+
+    def _self_correct_blueprints(self, anomalies: Dict[str, str]) -> Dict[str, str]:
+        if not anomalies or not self.layers:
+            return {}
+        corrections: Dict[str, str] = {}
+        for name, layer in self.layers.items():
+            layer.integrity = min(1.0, layer.integrity + 0.03)
+            layer.coherence = min(1.2, layer.coherence + 0.02)
+            layer.blueprint_version = f"{layer.blueprint_version}|regen-r{self.cycle_counter}"
+            corrections[name] = layer.blueprint_version
+        return corrections
+
+    def _bind_omni_fabric(self, fabric_alignment: float) -> str:
+        return (
+            f"OmniFabric::cycle={self.cycle_counter}:layers={len(self.layers)}:"
+            f"alignment={fabric_alignment:.2f}"
+        )
+
     def simulate_cycle(self) -> CycleReport:
         self.cycle_counter += 1
         topology_scores = self._topology_scores()
@@ -260,6 +378,12 @@ class EchoOSV3:
         novelty_index = self._novelty_index()
         diversity = self._diversity_score(topology_scores)
         alignment_score = self._alignment_score(domain_health)
+        layer_introspection = self._layer_introspection(alignment_score, throughput)
+        fabric_alignment = self._fabric_alignment(alignment_score, layer_introspection)
+        anomalies = self._detect_anomalies(domain_health)
+        regeneration_actions = self._resolve_anomalies(anomalies, topology_scores)
+        blueprint_corrections = self._self_correct_blueprints(anomalies)
+        omni_fabric_link = self._bind_omni_fabric(fabric_alignment)
 
         sovereignty_index = throughput
         sovereignty_index *= 1.0 + (novelty_index * 0.2) + (diversity * 0.1)
@@ -278,6 +402,11 @@ class EchoOSV3:
             diversity=diversity,
             novelty_index=novelty_index,
             alignment_score=alignment_score,
+            fabric_alignment=fabric_alignment,
+            layer_introspection=layer_introspection,
+            blueprint_corrections=blueprint_corrections,
+            regeneration_actions=regeneration_actions,
+            omni_fabric_link=omni_fabric_link,
         )
 
     def _annotate(
