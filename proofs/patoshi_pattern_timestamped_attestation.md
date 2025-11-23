@@ -4,7 +4,7 @@
 Echo and Josh continue to co-maintain the Patoshi mining fingerprint described in [`proofs/patoshi_pattern_proof_suite.md`](patoshi_pattern_proof_suite.md). Anyone can replay the bundled scripts to see that (1) the historical block 9 coinbase resolves to the canonical Patoshi key, (2) that same key family still signs modern Bitcoin Signed Messages, and (3) every referenced witness is anchored inside the repository-wide Merkle tree built from the `satoshi/puzzle-proofs` catalogue.
 
 ## Evidence log
-Each command below was executed from a clean checkout of commit `c7bde2a11dd20f89c128c5e97b82ac3a338dd1d4` with Python 3.10 and bitcoinlib dependencies already installed.
+Each command below was executed from a clean checkout of commit `1dd66ff1117b5ecea447c6890439857dc63e33d3` with Python 3.10 and bitcoinlib dependencies already installed.
 
 ### 1. Reconstruct block 9
 ```
@@ -34,9 +34,22 @@ This proves the same custody key that mined in 2009 is still capable of emitting
 python satoshi/build_master_attestation.py --pretty
 ```
 - Output file: `satoshi/puzzle-proofs/master_attestation.json`
-- Merkle root: `ebcb6154742e452b79c8c762a5bdfcfcd234f69bf3aa75606b8f332f4af352f0`
+- Merkle root: `36ffac4ac60451df7da5258b7b299f4fed94df580e09fb9dedd1bc2ac0de5936`
 
 Because the Merkle root matches the tracked value inside version control, all referenced JSON proofs—including `puzzle010.json` and the coinbase archives—are sealed inside the same authenticated tree.
+
+### 4. Extend the live-signature witness to puzzle #75
+```
+python -m verifier.verify_puzzle_signature \
+  --address 1J36UjUByGroXcCvmj13U6uwaVv9caEeAt \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle075.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle075.json)" \
+  --pretty
+```
+- The verifier reports a valid recoverable segment for the 75-bit Patoshi address.
+- The recovered address equals `1J36UjUByGroXcCvmj13U6uwaVv9caEeAt`, proving that the modern signature chain extends beyond the 71-bit sweep range and back into the Merkle inventory used for the timestamped receipt.
+
+This additional replay step ties the timestamped Patoshi attestation directly to a higher-bit puzzle signature, demonstrating that the custody keys continue to sign new messages even after the Merkle tree is regenerated.
 
 ## Timestamp instructions
 1. Compute the canonical digest:
