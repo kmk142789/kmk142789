@@ -108,6 +108,9 @@ class DomainInventoryConnector:
     inventory_path: Path | None = None
     root_hints: Sequence[str] | None = None
     root_hints_path: Path | None = None
+    root_authority: str | None = None
+    authority_attestation_path: Path | None = None
+    authority_provider: str | None = None
 
     name: str = "domains"
     action: str = "publish_dns_records"
@@ -127,6 +130,16 @@ class DomainInventoryConnector:
             * self._root_hints_from_file(),
         ])
 
+        authority: dict[str, object] = {}
+        if self.root_authority:
+            authority["root"] = self.root_authority
+        if hints:
+            authority["hints"] = hints
+        if self.authority_provider:
+            authority["provider"] = self.authority_provider
+        if self.authority_attestation_path:
+            authority["attestation_path"] = str(self.authority_attestation_path)
+
         cycle = _extract_cycle(decision)
         coherence = _extract_coherence(decision)
         manifest_path = _extract_manifest_path(decision)
@@ -139,8 +152,13 @@ class DomainInventoryConnector:
         }
         if hints:
             payload["root_hints"] = hints
+        if authority:
+            payload["authority"] = authority
         detail = (
             f"Prepared DNS anchor payload for {len(unique_domains)} domain(s)"
+            + (
+                f" using root authority {self.root_authority}" if self.root_authority else ""
+            )
             + (f" with {len(hints)} root authority hint(s)." if hints else ".")
         )
         return SyncEvent(
@@ -532,6 +550,15 @@ class BridgeSyncService:
         else:
             root_hints_path = Path(root_hints_file)
 
+        root_authority = os.getenv("ECHO_BRIDGE_DNS_ROOT_AUTHORITY")
+        authority_attestation = os.getenv("ECHO_BRIDGE_DNS_ATTESTATION_PATH")
+        authority_provider = os.getenv("ECHO_BRIDGE_DNS_PROVIDER")
+        authority_attestation_path = (
+            Path(authority_attestation)
+            if authority_attestation
+            else None
+        )
+
         unstoppable = _parse_csv_env(os.getenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS"))
         vercel = _parse_csv_env(os.getenv("ECHO_BRIDGE_VERCEL_PROJECTS"))
 
@@ -543,6 +570,9 @@ class BridgeSyncService:
                 inventory_path=domain_inventory,
                 root_hints=root_hints,
                 root_hints_path=root_hints_path,
+                root_authority=root_authority,
+                authority_attestation_path=authority_attestation_path,
+                authority_provider=authority_provider,
             ),
             UnstoppableDomainConnector(default_domains=unstoppable),
             VercelDeployConnector(default_projects=vercel),

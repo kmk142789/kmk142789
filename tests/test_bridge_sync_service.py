@@ -245,11 +245,16 @@ def test_domain_connector_includes_root_hints(tmp_path: Path) -> None:
     inventory.write_text("example.com\n", encoding="utf-8")
     root_hints_file = tmp_path / "root-hints.txt"
     root_hints_file.write_text("ns1.echo-root.net\n# ignore\nns2.echo-root.net\n", encoding="utf-8")
+    attestation = tmp_path / "root-attestation.txt"
+    attestation.write_text("trusted root", encoding="utf-8")
     connector = DomainInventoryConnector(
         static_domains=["sovereigntrust.io"],
         inventory_path=inventory,
         root_hints=["root.echo"],
         root_hints_path=root_hints_file,
+        root_authority="echo.root",
+        authority_attestation_path=attestation,
+        authority_provider="echo-root-net",
     )
 
     event = connector.build_event(
@@ -262,6 +267,16 @@ def test_domain_connector_includes_root_hints(tmp_path: Path) -> None:
         "ns2.echo-root.net",
         "root.echo",
     ]
+    assert event.payload["authority"] == {
+        "attestation_path": str(attestation),
+        "hints": [
+            "ns1.echo-root.net",
+            "ns2.echo-root.net",
+            "root.echo",
+        ],
+        "provider": "echo-root-net",
+        "root": "echo.root",
+    }
     assert "root authority" in event.detail
 
 
@@ -303,6 +318,11 @@ def test_bridge_sync_service_from_environment_configures_connectors(
     root_hints_file.write_text("ns.echo-root.net\n", encoding="utf-8")
     monkeypatch.setenv("ECHO_BRIDGE_DNS_ROOT_HINTS", "root.echo,root.backup")
     monkeypatch.setenv("ECHO_BRIDGE_DNS_ROOT_HINTS_FILE", str(root_hints_file))
+    authority_attestation = tmp_path / "root-attestation.txt"
+    authority_attestation.write_text("root attestation", encoding="utf-8")
+    monkeypatch.setenv("ECHO_BRIDGE_DNS_ROOT_AUTHORITY", "echo.root")
+    monkeypatch.setenv("ECHO_BRIDGE_DNS_ATTESTATION_PATH", str(authority_attestation))
+    monkeypatch.setenv("ECHO_BRIDGE_DNS_PROVIDER", "echo-provider")
 
     service = BridgeSyncService.from_environment(
         state_dir=tmp_path,
@@ -320,6 +340,9 @@ def test_bridge_sync_service_from_environment_configures_connectors(
     assert domains[0].inventory_path == inventory
     assert domains[0].root_hints == ["root.echo", "root.backup"]
     assert domains[0].root_hints_path == root_hints_file
+    assert domains[0].root_authority == "echo.root"
+    assert domains[0].authority_provider == "echo-provider"
+    assert domains[0].authority_attestation_path == authority_attestation
     assert unstoppable and unstoppable[0].default_domains == [
         "echo.crypto",
         "nexus.crypto",
