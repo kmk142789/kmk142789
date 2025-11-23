@@ -1,11 +1,20 @@
-from echo.recursive_echo_protocol_expansion import (
-    AttestationFlow,
-    BridgeProfile,
-    CredentialLifecycle,
-    KeyCustodyPolicy,
-    RecursiveEchoProtocolExpansion,
-    RegistrarMandate,
-)
+import sys
+from importlib.util import module_from_spec, spec_from_file_location
+from pathlib import Path
+
+MODULE_PATH = Path(__file__).resolve().parents[1] / "packages" / "core" / "src" / "echo" / "recursive_echo_protocol_expansion.py"
+_SPEC = spec_from_file_location("echo_recursive_echo_protocol_expansion", MODULE_PATH)
+assert _SPEC and _SPEC.loader
+_MODULE = module_from_spec(_SPEC)
+sys.modules[_SPEC.name] = _MODULE
+_SPEC.loader.exec_module(_MODULE)
+
+AttestationFlow = _MODULE.AttestationFlow
+BridgeProfile = _MODULE.BridgeProfile
+CredentialLifecycle = _MODULE.CredentialLifecycle
+KeyCustodyPolicy = _MODULE.KeyCustodyPolicy
+RecursiveEchoProtocolExpansion = _MODULE.RecursiveEchoProtocolExpansion
+RegistrarMandate = _MODULE.RegistrarMandate
 
 
 def build_expander():
@@ -66,6 +75,11 @@ def test_dns_root_and_registrar_mandates_are_strengthened():
     assert spec["dns_root"]["strengthened"] is True
     assert spec["registrar"]["mandates"][0]["depth"] >= 2
     assert all(record.startswith("ds:") for record in spec["dns_root"]["ds_records"])
+    assert spec["registrar"]["authority"]["mandate_count"] == len(spec["registrar"]["mandates"])
+    assert "echo" in spec["registrar"]["authority"]["zone_coverage"]
+    assert spec["registrar"]["authority"]["renewal_cadence_days"]["minimum"] > 0
+    assert spec["authority"]["registrar_scope"]["mandates"] == spec["registrar"]["authority"]["mandate_count"]
+    assert spec["authority"]["registrar_scope"]["ds_guardians"] == spec["registrar"]["authority"]["ds_guardians"]
 
 
 def test_attestation_and_credentials_are_enriched_and_refined():

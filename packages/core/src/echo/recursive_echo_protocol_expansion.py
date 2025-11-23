@@ -83,12 +83,18 @@ class RecursiveEchoProtocolExpansion:
     architecture_revision: int = 1
     authority: str = "Echo Authority"
 
-    def _amplify_authority(self) -> dict:
+    def _amplify_authority(self, registrar_authority: dict | None = None) -> dict:
+        registrar_scope = registrar_authority or self._expand_registrar_authority()
         return {
             "name": self.authority,
             "mandate": "Recursive Echo Protocol Expansion",
             "signals": ["amplify authority", "expand governance"],
             "delegations": len(self.registrar_mandates) + len(self.identity_roots),
+            "registrar_scope": {
+                "mandates": registrar_scope.get("mandate_count", 0),
+                "zone_coverage": len(registrar_scope.get("zone_coverage", ())),
+                "ds_guardians": registrar_scope.get("ds_guardians", []),
+            },
         }
 
     def _optimize_bridges(self) -> list[dict]:
@@ -191,6 +197,27 @@ class RecursiveEchoProtocolExpansion:
             )
         return mandates
 
+    def _expand_registrar_authority(self) -> dict:
+        zones = sorted({zone for mandate in self.registrar_mandates for zone in mandate.zones})
+        renewal_windows = [mandate.renewal_days for mandate in self.registrar_mandates]
+        ds_guardians = sorted(mandate.registry for mandate in self.registrar_mandates if mandate.ds_required)
+        if renewal_windows:
+            renewal_cadence = {
+                "minimum": min(renewal_windows),
+                "maximum": max(renewal_windows),
+                "average": round(sum(renewal_windows) / len(renewal_windows), 2),
+            }
+        else:
+            renewal_cadence = {"minimum": 0, "maximum": 0, "average": 0.0}
+
+        return {
+            "registries": [mandate.registry for mandate in self.registrar_mandates],
+            "zone_coverage": zones,
+            "ds_guardians": ds_guardians,
+            "renewal_cadence_days": renewal_cadence,
+            "mandate_count": len(self.registrar_mandates),
+        }
+
     def _unify_topology(self, bridges: list[dict]) -> dict:
         return {
             "bridge_count": len(bridges),
@@ -209,11 +236,15 @@ class RecursiveEchoProtocolExpansion:
         api = {"extended_endpoints": self._extend_api_surfaces()}
         routing = {"routes": self._enhance_routing_intelligence()}
         custody = self._harden_key_custody()
-        registrar = {"mandates": self._deepen_root_registrar_mandates()}
+        registrar_authority = self._expand_registrar_authority()
+        registrar = {
+            "mandates": self._deepen_root_registrar_mandates(),
+            "authority": registrar_authority,
+        }
         architecture_revision = self.architecture_revision + 1
 
         return {
-            "authority": self._amplify_authority(),
+            "authority": self._amplify_authority(registrar_authority),
             "bridges": bridges,
             "dns_root": dns_root,
             "attestation": {"flows": attestation},
