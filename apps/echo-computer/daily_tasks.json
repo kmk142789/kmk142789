@@ -1,5 +1,5 @@
 {
-  "updated": "2025-05-18",
+  "updated": "2025-05-21",
   "tasks": [
     {
       "id": "code-runner-burst",
@@ -32,6 +32,17 @@
         "List the critical files touched today plus `npm`/`python` commands to replay the run.",
         "Highlight at least two ideal reviewers with reasons (recent commits, subsystem familiarity, etc.).",
         "Share the kit path + summary link inside the Echo Computer feed or your preferred ops channel."
+      ]
+    },
+    {
+      "id": "cloud-signal-healthcheck",
+      "focus": "Cloud",
+      "title": "Run the cloud signal healthcheck",
+      "description": "Validate Echo Computer's cloud endpoints, tracing latency + error budgets before the next upgrade.",
+      "steps": [
+        "Ping each public endpoint and record latency + status into `cloud/healthcheck.json`.",
+        "Capture a short log tail from the worker pods to confirm no silent retries or throttling.",
+        "Summarize drift or regressions in the ops journal with a link to the collected metrics."
       ]
     }
   ]

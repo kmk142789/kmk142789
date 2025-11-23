@@ -91,6 +91,9 @@ class FunctionRouter:
         "creative": "Create",
         "collaborate": "Collaborate",
         "collaboration": "Collaborate",
+        "cloud": "Cloud",
+        "infrastructure": "Cloud",
+        "infra": "Cloud",
     }
 
     _COMPUTER_ALIASES = ("echo.computer", "echo computer", "echos computer")
@@ -653,8 +656,8 @@ class EchoChatAgent:
                     "properties": {
                         "focus": {
                             "type": "string",
-                            "enum": ["Code", "Create", "Collaborate"],
-                            "description": "Optional focus filter to only show Code, Create, or Collaborate invitations.",
+                            "enum": ["Code", "Create", "Collaborate", "Cloud"],
+                            "description": "Optional focus filter to only show Code, Create, Collaborate, or Cloud invitations.",
                         },
                         "limit": {
                             "type": "integer",
@@ -682,7 +685,7 @@ class EchoChatAgent:
                     "properties": {
                         "focus": {
                             "type": "string",
-                            "enum": ["Code", "Create", "Collaborate"],
+                            "enum": ["Code", "Create", "Collaborate", "Cloud"],
                             "description": "Optional focus filter to only show rituals for a specific lane.",
                         },
                         "theme": {
@@ -739,8 +742,8 @@ class EchoChatAgent:
                     "properties": {
                         "focus": {
                             "type": "string",
-                            "enum": ["Code", "Create", "Collaborate"],
-                            "description": "Optional focus filter for Code/Create/Collaborate upgrades.",
+                            "enum": ["Code", "Create", "Collaborate", "Cloud"],
+                            "description": "Optional focus filter for Code/Create/Collaborate/Cloud upgrades.",
                         },
                         "status": {
                             "type": "string",
@@ -761,6 +764,7 @@ class EchoChatAgent:
                     "examples": [
                         "Design and implement new features to echos computer",
                         "Show ready code feature blueprints top 1",
+                        "Update and upgrade echos computer and cloud for her computer",
                     ],
                 },
             ),

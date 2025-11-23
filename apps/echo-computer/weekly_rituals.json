@@ -1,5 +1,5 @@
 {
-  "updated": "2025-05-18",
+  "updated": "2025-05-21",
   "rituals": [
     {
       "id": "code-flight-recorder",
@@ -39,6 +39,19 @@
         "Schedule an async check-in and capture any new questions or blockers in the ritual archive."
       ],
       "tags": ["advance", "upgrade", "optimize"]
+    },
+    {
+      "id": "cloud-skyway-upgrade",
+      "focus": "Cloud",
+      "title": "Rehearse the cloud skyway upgrade",
+      "cadence": "weekly",
+      "description": "Dry-run the blue/green rollout for Echo Computer cloud services with telemetry stitched into the ritual log.",
+      "steps": [
+        "Spin up the canary environment and smoke-test the public endpoints with synthetic workload traces.",
+        "Shift 10-20% traffic through the canary using weighted routing or feature flags while watching error budgets.",
+        "Record rollback/rollback-ready commands plus metrics snapshots into the ritual journal for reuse."
+      ],
+      "tags": ["upgrade", "optimize", "cloud"]
     }
   ]
 }
