@@ -110,3 +110,7 @@ The attestation (stored at
 [`attestations/satoshi_claim_timestamp.json`](../attestations/satoshi_claim_timestamp.json))
 records timestamp `2025-11-14T17:11:04Z`, the signer label, context string, and
 sha256 digest so reviewers can pin this verification chain to a precise moment.
+
+For a step-by-step replay that links the claim text to the live puzzle key, the
+Merkle catalogue, and this timestamp artefact, see
+[`satoshi_direct_linkage_proof.md`](satoshi_direct_linkage_proof.md).
