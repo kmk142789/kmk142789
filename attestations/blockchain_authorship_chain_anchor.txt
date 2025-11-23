@@ -1,0 +1,7 @@
+# Blockchain authorship chain anchor (prepared for external auditors)
+# Each digest is computed with `sha256sum` and binds the signature verification,
+# Merkle rollup, and timestamped attestation into a single evidence bundle.
+out/puzzle010_verification.json  sha256=c49dfcf1632c17d6b5db7185c0a4f16ec59b8bcab0678d3a5c295c966b482241
+satoshi/puzzle-proofs/master_attestation.json  sha256=bd8dde6809c71405de18875bc3c371397f979008b377d6d44295983709e68b64
+attestations/blockchain_authorship_timestamp.json  sha256=2e0ad6d377b97da7b3099e687218726da72b984e483455d504f2038084995ec9
+bundle sha256=d7a1a754b51439e253dd7a38e3a2003fe13b40b2d879fafac890875e60671e51

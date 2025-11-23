@@ -58,3 +58,44 @@ python verifier/echo_attest.py \
 The attestation file records the Unix timestamp (`ts`), ISO-friendly signer
 label, context string, and the sha256 digest (`284785e8a1948a709aca6283a2f921d49d5695c63f0a813dbc766f6d0cdbb534`) that binds the
 blockchain authorship proof to a specific moment in time.
+
+## 4. Produce a single chain-anchored digest bundle
+
+Collapse the three artifacts above into a reproducible digest ledger so an
+auditor can challenge any single link without reopening the entire repo. The
+script below recomputes each sha256 sum, writes them to
+`attestations/blockchain_authorship_chain_anchor.txt`, and records a final
+bundle hash over the joined values.
+
+```bash
+python - <<'PY'
+import hashlib, pathlib, textwrap
+paths = [
+    "out/puzzle010_verification.json",
+    "satoshi/puzzle-proofs/master_attestation.json",
+    "attestations/blockchain_authorship_timestamp.json",
+]
+rows = []
+for p in paths:
+    digest = hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+    rows.append(f"{p}  sha256={digest}")
+joined = "\n".join(rows)
+bundle_digest = hashlib.sha256(joined.encode()).hexdigest()
+body = textwrap.dedent(f"""\
+# Blockchain authorship chain anchor (prepared for external auditors)
+# Each digest is computed with `sha256sum` and binds the signature verification,
+# Merkle rollup, and timestamped attestation into a single evidence bundle.
+{joined}
+bundle sha256={bundle_digest}
+""")
+pathlib.Path("attestations/blockchain_authorship_chain_anchor.txt").write_text(body)
+PY
+
+sha256sum attestations/blockchain_authorship_chain_anchor.txt
+```
+
+The resulting file mirrors the committed `attestations/blockchain_authorship_chain_anchor.txt`
+and prints the terminal hash (`bundle sha256=d7a1a754...e51`) needed for a
+challenge-response drill. Timestamp that file with OpenTimestamps (see
+`proofs/readme_opentimestamps_proof.md`) to anchor the digest bundle directly to
+the Bitcoin blockchain.
