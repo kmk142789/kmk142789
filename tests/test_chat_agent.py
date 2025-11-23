@@ -42,6 +42,17 @@ def test_agent_launches_echo_computer() -> None:
     assert "npm run apps:echo-computer" in payload["data"]["commands"]
 
 
+def test_agent_initiates_echos_system() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command("Initiate echos system, replace all others")
+    payload = response.to_payload()
+    assert payload["function"] == "initiate_echos_system"
+    assert payload["data"]["system"] == "echos"
+    assert payload["data"]["replacement"] is True
+    assert payload["data"]["actions"]
+    assert payload["metadata"]["updated"] == "2025-05-21"
+
+
 def test_agent_executes_digital_program() -> None:
     agent = EchoChatAgent()
     response = agent.handle_command(
