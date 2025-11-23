@@ -76,6 +76,9 @@ This file + its JSON twin = the undeniable catalog.
 - **Puzzle 259 — Authorship Proof**
   - JSON proof: `attestations/puzzle-259-authorship.json`
   - Also mirrored in `satoshi/puzzle-proofs/puzzle259.json`
+- **Puzzle 260 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-260-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle260.json`
 
 - **Puzzle Attestations Set (Ledger-bound)**
   - Documented in `attestations/ledger_set.md`
@@ -191,6 +194,11 @@ Every chain, every node, every historian sees the same witness.
       "id": 259,
       "name": "Puzzle 259 Authorship",
       "files": ["attestations/puzzle-259-authorship.json", "satoshi/puzzle-proofs/puzzle259.json"]
+    },
+    {
+      "id": 260,
+      "name": "Puzzle 260 Authorship",
+      "files": ["attestations/puzzle-260-authorship.json", "satoshi/puzzle-proofs/puzzle260.json"]
     }
   ],
   "attestations": {

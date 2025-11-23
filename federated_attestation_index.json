@@ -203,6 +203,14 @@
         "attestations/puzzle-259-authorship.json",
         "satoshi/puzzle-proofs/puzzle259.json"
       ]
+    },
+    {
+      "id": 260,
+      "name": "Puzzle 260 Authorship",
+      "files": [
+        "attestations/puzzle-260-authorship.json",
+        "satoshi/puzzle-proofs/puzzle260.json"
+      ]
     }
   ],
   "attestations": {
