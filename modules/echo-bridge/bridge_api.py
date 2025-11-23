@@ -83,6 +83,8 @@ class EchoBridgeAPI:
         dns_record_prefix: Optional[str] = "_echo",
         dns_provider: Optional[str] = None,
         dns_secret_name: str = "DNS_PROVIDER_TOKEN",
+        dns_root_authority: Optional[str] = None,
+        dns_attestation_path: Optional[str] = None,
     ) -> None:
         self.github_repository = github_repository
         self.telegram_chat_id = telegram_chat_id
@@ -127,6 +129,8 @@ class EchoBridgeAPI:
         self.dns_record_prefix = (dns_record_prefix or "").strip()
         self.dns_provider = dns_provider
         self.dns_secret_name = dns_secret_name
+        self.dns_root_authority = (dns_root_authority or "").strip() or None
+        self.dns_attestation_path = (dns_attestation_path or "").strip() or None
 
     def plan_identity_relay(
         self,
@@ -1244,12 +1248,23 @@ class EchoBridgeAPI:
         record_name = self.dns_root_domain
         if self.dns_record_prefix:
             record_name = f"{self.dns_record_prefix}.{self.dns_root_domain}" if self.dns_root_domain else self.dns_record_prefix
+        authority_block: Dict[str, Any] = {}
+        root_authority = self.dns_root_authority or self.dns_root_domain
+        if root_authority:
+            authority_block["root"] = root_authority
+        if self.dns_provider:
+            authority_block["provider"] = self.dns_provider
+        if self.dns_attestation_path:
+            authority_block["attestation"] = self.dns_attestation_path
+        if self.dns_record_prefix:
+            authority_block["record_prefix"] = self.dns_record_prefix
         payload: Dict[str, Any] = {
             "provider": self.dns_provider,
             "root_domain": self.dns_root_domain,
             "record": record_name,
             "type": "TXT",
             "value": f"echo-root={identity}:{cycle}:{signature}",
+            "authority": authority_block,
             "context": {
                 "identity": identity,
                 "cycle": cycle,

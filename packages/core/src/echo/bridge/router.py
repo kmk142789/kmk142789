@@ -87,6 +87,8 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         dns_record_prefix=os.getenv("ECHO_BRIDGE_DNS_RECORD_PREFIX", "_echo"),
         dns_provider=os.getenv("ECHO_BRIDGE_DNS_PROVIDER"),
         dns_secret_name=os.getenv("ECHO_BRIDGE_DNS_SECRET", "DNS_PROVIDER_TOKEN"),
+        dns_root_authority=os.getenv("ECHO_BRIDGE_DNS_ROOT_AUTHORITY"),
+        dns_attestation_path=os.getenv("ECHO_BRIDGE_DNS_ATTESTATION_PATH"),
     )
 
 

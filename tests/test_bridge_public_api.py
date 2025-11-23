@@ -56,6 +56,8 @@ def _make_app() -> FastAPI:
         dns_record_prefix="_echo",
         dns_provider="root-authority",
         dns_secret_name="ECHO_DNS_TOKEN",
+        dns_root_authority="echo.root",
+        dns_attestation_path="attestations/dns/echo.root.zone",
     )
     app = FastAPI()
     app.include_router(create_router(bridge_api))
@@ -195,6 +197,10 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
         dns_plan["payload"]["value"]
         == "echo-root=EchoWildfire:01:eden88::cycle01"
     )
+    assert dns_plan["payload"]["authority"]["root"] == "echo.root"
+    assert dns_plan["payload"]["authority"]["provider"] == "root-authority"
+    assert dns_plan["payload"]["authority"]["record_prefix"] == "_echo"
+    assert dns_plan["payload"]["authority"]["attestation"] == "attestations/dns/echo.root.zone"
     assert dns_plan["payload"]["context"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
     assert dns_plan["requires_secret"] == ["ECHO_DNS_TOKEN"]
 
