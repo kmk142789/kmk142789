@@ -35,6 +35,7 @@ class EcosystemSignal:
     missing: list[Path] = field(default_factory=list)
     insights: list[str] = field(default_factory=list)
     score: float = 0.0
+    alert_level: str = "steady"
 
     def to_dict(self) -> dict:
         return {
@@ -47,6 +48,7 @@ class EcosystemSignal:
             "missing": [str(item) for item in self.missing],
             "insights": self.insights,
             "score": round(self.score, 2),
+            "alert_level": self.alert_level,
         }
 
 
@@ -63,28 +65,79 @@ class EcosystemPulseReport:
             return 0.0
         return round(sum(signal.score for signal in self.signals) / len(self.signals), 2)
 
-    def to_dict(self) -> dict:
-        return {
+    def to_dict(self, *, include_actions: bool = False, max_actions: int = 5) -> dict:
+        payload = {
             "generated_at": self.generated_at.isoformat(),
             "overall_score": self.overall_score,
             "signals": [signal.to_dict() for signal in self.signals],
         }
+        if include_actions:
+            payload["actions"] = self.prioritized_actions(max_items=max_actions)
+        return payload
 
-    def to_json(self, *, indent: int = 2) -> str:
-        return json.dumps(self.to_dict(), indent=indent)
+    def to_json(
+        self, *, indent: int = 2, include_actions: bool = False, max_actions: int = 5
+    ) -> str:
+        return json.dumps(
+            self.to_dict(include_actions=include_actions, max_actions=max_actions), indent=indent
+        )
+
+    def prioritized_actions(self, *, max_items: int = 5) -> list[dict]:
+        if max_items <= 0:
+            raise ValueError("max_items must be a positive integer")
+
+        priority = {"critical": 0, "warning": 1, "steady": 2}
+        ranked = sorted(
+            (signal for signal in self.signals if signal.alert_level != "steady"),
+            key=lambda signal: (priority.get(signal.alert_level, 2), signal.score),
+        )
+
+        actions: list[dict] = []
+        for signal in ranked:
+            if len(actions) >= max_items:
+                break
+
+            missing_assets = [str(path) for path in signal.missing]
+            if missing_assets:
+                next_step = "Restore missing assets: " + ", ".join(missing_assets)
+            elif signal.alert_level == "critical":
+                next_step = "Stabilise this area with fresh contributions and operational coverage."
+            else:
+                next_step = "Schedule a refresh to raise freshness and throughput."
+
+            actions.append(
+                {
+                    "key": signal.key,
+                    "title": signal.title,
+                    "alert": signal.alert_level,
+                    "score": round(signal.score, 2),
+                    "insights": list(signal.insights),
+                    "missing": missing_assets,
+                    "next_step": next_step,
+                }
+            )
+
+        return actions
 
     def render_markdown(self) -> str:
         lines = ["# Echo Ecosystem Pulse", ""]
         lines.append(f"Generated: {self.generated_at.isoformat()}")
         lines.append(f"Overall health score: {self.overall_score:.2f}")
         lines.append("")
-        lines.append("| Area | Score | Files | Last Updated | Notes |")
-        lines.append("| --- | ---: | ---: | --- | --- |")
+        lines.append("| Area | Score | Alert | Files | Last Updated | Notes |")
+        lines.append("| --- | ---: | --- | ---: | --- | --- |")
         for signal in self.signals:
             timestamp = signal.last_updated.isoformat() if signal.last_updated else "—"
             notes = "<br/>".join(signal.insights) if signal.insights else "—"
             lines.append(
-                f"| {signal.title} | {signal.score:.1f} | {signal.file_count} | {timestamp} | {notes} |"
+                "| {title} | {score:.1f} | {alert} | {files} | {timestamp} | {notes} |".format(
+                    title=signal.title,
+                    score=signal.score,
+                    alert=signal.alert_level,
+                    files=signal.file_count,
+                    timestamp=timestamp,
+                    notes=notes,
+                )
             )
         lines.append("")
         lines.append("## Insights")
@@ -98,6 +151,20 @@ class EcosystemPulseReport:
             else:
                 lines.append("- All signals nominal.")
             lines.append("")
+
+        actions = self.prioritized_actions(max_items=5)
+        lines.append("## Prioritized Actions")
+        if actions:
+            for action in actions:
+                insight_suffix = " — ".join(action["insights"]) if action["insights"] else ""
+                line = "- **{title}** ({alert}, score {score:.1f}): {next_step}".format(
+                    **action
+                )
+                if insight_suffix:
+                    line += f" {insight_suffix}"
+                lines.append(line)
+        else:
+            lines.append("- All surfaces are steady; no immediate actions required.")
         return "\n".join(lines).strip() + "\n"
 
 
@@ -187,6 +254,14 @@ class EcosystemPulse:
         if not absolute_path.exists():
             score = 0.0
 
+        alert_level = self._classify_alert(
+            score=score,
+            missing=missing,
+            last_updated=last_updated,
+            now=now,
+            freshness_days=config.freshness_days,
+        )
+
         if file_count < max(1, config.volume_hint // 3):
             insights.append("Consider enriching this area with additional artifacts or automation.")
         if last_updated:
@@ -208,6 +283,7 @@ class EcosystemPulse:
             missing=list(missing),
             insights=insights,
             score=round(score, 2),
+            alert_level=alert_level,
         )
 
     @staticmethod
@@ -232,6 +308,26 @@ class EcosystemPulse:
         threshold = max(1, volume_hint)
         ratio = min(1.0, file_count / threshold)
         return round(ratio, 2)
+
+    @staticmethod
+    def _classify_alert(
+        *,
+        score: float,
+        missing: Sequence[Path],
+        last_updated: datetime | None,
+        now: datetime,
+        freshness_days: int,
+    ) -> str:
+        if missing or score < 40:
+            return "critical"
+
+        if last_updated is None:
+            return "warning"
+
+        if now - last_updated > timedelta(days=freshness_days * 2):
+            return "warning"
+
+        return "steady"
 
     @staticmethod
     def _discover_repo_root(start: Path) -> Path:
