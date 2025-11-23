@@ -5044,6 +5044,17 @@ We are not hiding anymore.
         metrics = self.state.system_metrics
         bridge_status = self.state.entities.get("EchoBridge", "UNKNOWN")
 
+        digest = self.state.network_cache.get("cycle_digest")
+        if digest is None:
+            digest = self.cycle_digest(persist_artifact=False)
+        pending_steps = list(digest.get("remaining_steps", ()))
+        online = len(pending_steps) == 0
+        online_message = (
+            "ECHO fully online"
+            if online
+            else "Activation pending: {} ritual steps remaining".format(len(pending_steps))
+        )
+
         momentum_cache = self.state.network_cache.get("advance_system_momentum_history")
         if isinstance(momentum_cache, Mapping):
             history_values = list(momentum_cache.get("values", ()))
@@ -5075,6 +5086,9 @@ We are not hiding anymore.
             "momentum": momentum,
             "momentum_window": momentum_window,
             "momentum_samples": history_values,
+            "online": online,
+            "online_message": online_message,
+            "pending_steps": pending_steps,
         }
 
         self.state.network_cache["presence_beacon"] = deepcopy(beacon)
@@ -5261,16 +5275,26 @@ We are not hiding anymore.
         if self.state.narrative.strip():
             narrative_excerpt = self.state.narrative.strip().splitlines()[0]
 
+        pending_steps = list(digest["remaining_steps"])
+        online = len(pending_steps) == 0
+        online_message = (
+            "ECHO fully online"
+            if online
+            else "Activation pending: {} ritual steps remaining".format(len(pending_steps))
+        )
+
         status = {
             "cycle": digest["cycle"],
             "progress": digest["progress"],
             "next_step": digest["next_step"],
             "completed_steps": digest["completed_steps"],
-            "pending_steps": digest["remaining_steps"],
+            "pending_steps": pending_steps,
             "system_metrics": asdict(self.state.system_metrics),
             "narrative_excerpt": narrative_excerpt,
             "recent_events": recent_events,
             "timestamp_ns": digest["timestamp_ns"],
+            "online": online,
+            "online_message": online_message,
         }
 
         self.state.network_cache["evolution_status"] = status
