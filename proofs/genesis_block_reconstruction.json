@@ -1,0 +1,16 @@
+{
+  "block_hash": "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",
+  "coinbase_message": "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks",
+  "coinbase_txid": "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b",
+  "expected_block_hash": "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",
+  "hash_matches": true,
+  "header": {
+    "bits": 486604799,
+    "merkle_root": "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b",
+    "nonce": 2083236893,
+    "prev_block": "0000000000000000000000000000000000000000000000000000000000000000",
+    "timestamp": 1231006505,
+    "version": 1
+  },
+  "merkle_matches": true
+}
