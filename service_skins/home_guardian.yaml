@@ -1,0 +1,10 @@
+id: home_guardian
+label: "Home Guardian Agent"
+description: "Consumer-friendly monitor for home devices, Wi-Fi, and safety routines."
+capabilities:
+  - run:monitor.home.*
+  - run:cleanup.*
+  - run:alert.*
+pricing:
+  model: "subscription"
+  amount: 60
