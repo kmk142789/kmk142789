@@ -353,9 +353,13 @@ class OrchestratorCore:
             return None
 
         cached_at = data.get("cached_at") if isinstance(data, Mapping) else None
-        details: MutableMapping[str, Any] = {}
+        details: MutableMapping[str, Any] = {"cache_path": str(self._offline_cache_path)}
         if isinstance(cached_at, str):
             details["cached_at"] = cached_at
+            parsed = self._parse_iso(cached_at)
+            if parsed:
+                age = datetime.now(timezone.utc) - parsed
+                details["cache_age_seconds"] = max(0.0, age.total_seconds())
         return dict(inputs), details
 
     def _enrich_attestations(

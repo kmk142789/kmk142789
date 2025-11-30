@@ -295,4 +295,7 @@ def test_orchestrator_offline_cache_persists_state(tmp_path: Path) -> None:
 
     assert offline["offline_mode"] is True
     assert offline["inputs"]["pulse_summary"] == online["inputs"]["pulse_summary"]
-    assert offline.get("offline_details", {}).get("cached_at")
+    details = offline.get("offline_details", {})
+    assert details.get("cached_at")
+    assert details.get("cache_path")
+    assert isinstance(details.get("cache_age_seconds"), (int, float))
