@@ -11,6 +11,11 @@
 - **Stewards:** @kmk142789420 and the `echo-bot` automation account retain final
   merge authority.  All substantive changes flow through reviewed pull requests
   with CODEOWNERS approval.
+- **AI Governance Lead:** Rotates among stewards to chair AI-intensive changes.
+  Responsibilities and guardrails live in
+  [`docs/ai_governance_lead.md`](docs/ai_governance_lead.md).  No AI-facing work
+  merges without the lead's sign-off on safety, provenance, and rollback
+  controls.
 - **Decision Model:** We use a lightweight RFC process.  Open an issue labelled
   `governance` describing the proposal, gather feedback, and close it by linking
   the implementing pull request once consensus is reached.
