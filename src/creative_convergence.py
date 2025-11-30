@@ -53,6 +53,8 @@ class IntegrationMetrics:
     mean_intensity: float
     energy_class: str
     stability_index: float
+    lexical_gaps: Tuple[str, ...]
+    alignment_score: float
 
 
 def _build_constellation_panel(
@@ -122,23 +124,31 @@ def _build_integration_panel(
     motif_tokens = set(_tokenise(brief.motifs or [brief.theme]))
     highlight_tokens = set(_tokenise(brief.highlights or [brief.theme]))
     overlap = sorted(motif_tokens & highlight_tokens)
+    lexical_gaps = sorted(highlight_tokens - motif_tokens)
     coverage = 0.0
     if highlight_tokens:
         coverage = round(len(overlap) / len(highlight_tokens), 3)
 
     average_intensity = fmean(node.intensity for node in nodes)
+    alignment_score = round((coverage + diagnostics.stability_index) / 2, 3)
     metrics = IntegrationMetrics(
         coverage=coverage,
         shared_lexicon=tuple(overlap),
         mean_intensity=average_intensity,
         energy_class=diagnostics.energy_class,
         stability_index=diagnostics.stability_index,
+        lexical_gaps=tuple(lexical_gaps),
+        alignment_score=alignment_score,
     )
 
     lines = ["Integration Panel:"]
     shared = ", ".join(metrics.shared_lexicon) or "none"
+    gaps = ", ".join(metrics.lexical_gaps) or "none"
     lines.append(
         f"  • alignment coverage={metrics.coverage:.3f} | shared lexicon={shared}"
+    )
+    lines.append(
+        f"  • gaps={gaps} | alignment score={metrics.alignment_score:.3f}"
     )
     lines.append(
         f"  • mean intensity={metrics.mean_intensity:.3f} supports {metrics.energy_class} cadence"
