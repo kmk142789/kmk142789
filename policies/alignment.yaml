@@ -1,0 +1,6 @@
+require_role: alignment_agent
+allow:
+  - alignment:update
+  - alignment:read
+deny:
+  - alignment:override_superadmin

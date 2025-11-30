@@ -5,8 +5,8 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-STATE = Path("echo_governance_core/state.json")
-BACKUP = Path("echo_governance_core/state.bak")
+STATE = Path("echo_governance_state.json")
+BACKUP = Path("echo_governance_state.bak")
 
 
 def snapshot() -> None:

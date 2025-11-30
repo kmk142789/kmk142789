@@ -1,0 +1,7 @@
+require_role: mesh_agent
+allow:
+  - mesh:discover
+  - mesh:sync
+  - mesh:handoff
+deny:
+  - mesh:wipe

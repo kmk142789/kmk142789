@@ -6,12 +6,14 @@ import json
 from pathlib import Path
 from typing import Any, Dict
 
-STATE_FILE = Path("echo_governance_core/state.json")
-
+STATE_FILE = Path("echo_governance_state.json")
 
 DEFAULT_STATE: Dict[str, Any] = {
-    "policies": {},
-    "roles": {},
+    "actors": {
+        "josh.superadmin": {
+            "roles": ["superadmin"],
+        }
+    },
     "audit": [],
 }
 
@@ -20,27 +22,27 @@ def _ensure_directory(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def load_state() -> Dict[str, Any]:
-    """Load the governance state from disk or return defaults.
+def _deep_copy(data: Dict[str, Any]) -> Dict[str, Any]:
+    return json.loads(json.dumps(data))
 
-    Returns a deep copy of the default structure when no state file exists to
-    guarantee callers always receive mutable containers.
-    """
+
+def load_state() -> Dict[str, Any]:
+    """Load the governance state from disk or return defaults."""
 
     if not STATE_FILE.exists():
-        return json.loads(json.dumps(DEFAULT_STATE))
+        save_state(DEFAULT_STATE)
+        return _deep_copy(DEFAULT_STATE)
 
     try:
         with STATE_FILE.open("r", encoding="utf-8") as file:
             data = json.load(file)
     except (json.JSONDecodeError, OSError):
-        # If the state file is unreadable, fall back to defaults to allow
-        # continued offline operation.
-        return json.loads(json.dumps(DEFAULT_STATE))
+        save_state(DEFAULT_STATE)
+        return _deep_copy(DEFAULT_STATE)
 
-    # Ensure required keys exist even if the file is missing them.
+    # Ensure required keys exist
     for key, default_value in DEFAULT_STATE.items():
-        data.setdefault(key, json.loads(json.dumps(default_value)))
+        data.setdefault(key, _deep_copy(default_value))
 
     return data
 
