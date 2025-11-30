@@ -59,6 +59,7 @@ def test_matrix_report_fuses_signals(tmp_path, monkeypatch):
     }
     assert report.composite_scores["automation_pressure"] > 0
     assert report.composite_scores["signal_health"] <= 1
+    assert "execution_ready" in report.composite_scores
     text_output = report.to_text()
     assert "Adaptive Intelligence Matrix" in text_output
     assert "Roadmap Density" in text_output
@@ -69,12 +70,15 @@ def test_cli_entrypoint_emits_json(tmp_path, monkeypatch):
     monkeypatch.setattr(aim.time, "time", lambda: 1_700_001_500.0)
 
     emit_path = tmp_path / "report.json"
+    markdown_path = tmp_path / "report.md"
     aim.main(
         [
             "--repo-root",
             str(tmp_path),
             "--emit-json",
             str(emit_path),
+            "--emit-markdown",
+            str(markdown_path),
             "--quiet",
         ]
     )
@@ -82,3 +86,6 @@ def test_cli_entrypoint_emits_json(tmp_path, monkeypatch):
     payload = json.loads(emit_path.read_text(encoding="utf-8"))
     assert "composite_scores" in payload
     assert payload["signals"]
+    markdown = markdown_path.read_text(encoding="utf-8")
+    assert "Adaptive Intelligence Matrix" in markdown
+    assert "execution_ready" in markdown

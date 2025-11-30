@@ -13,6 +13,7 @@ Then you can explore the CLI:
 ```bash
 python -m echo.cli --help
 python -m echo.echoctl cycle
+python packages/core/src/adaptive_intelligence_matrix.py --emit-markdown out/matrix.md
 ```
 
 Need the legacy manifest-only helper? Invoke `python -m echo.manifest_cli` or the
