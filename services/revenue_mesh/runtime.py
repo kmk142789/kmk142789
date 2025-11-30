@@ -165,6 +165,6 @@ def run_paid_task(client_key: str, job_type: str, unit_price_cents: int, task_fn
     # Run the underlying agent task
     units = task_fn(**kwargs)  # e.g. returns "minutes used" or "files scanned"
 
-    total = finish_job(job_id, units)
-    return {"job_id": job_id, "units": units, "total_cents": total}
+    total, receipt_path = finish_job(job_id, units)
+    return {"job_id": job_id, "units": units, "total_cents": total, "receipt_path": receipt_path}
 
