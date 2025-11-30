@@ -195,6 +195,65 @@ class StrategicVectorLayer(ResonanceLayer):
         return "baseline"
 
 
+class FeedbackStabilityLayer(ResonanceLayer):
+    """Adapts each pulse based on momentum drift across feedback cycles."""
+
+    def transform(self, pulse: ResonancePulse, context: ResonanceContext) -> ResonancePulse:
+        last_vectors = context.metrics.setdefault("last_vectors", {})
+        feedback_log = context.metrics.setdefault("feedback_drift", [])
+        feedback_payload = pulse.payload.setdefault("feedback", {})
+
+        # Persist a marker so the next cycle reflects that the pulse is under feedback control.
+        if "feedback-tracked" not in pulse.tags:
+            pulse.tags.append("feedback-tracked")
+
+        has_previous = pulse.id in last_vectors
+        previous_vector = last_vectors.get(pulse.id, {})
+        current_vector = pulse.payload.get("vector", {})
+        previous_momentum = float(previous_vector.get("momentum", 0.0))
+        current_momentum = float(current_vector.get("momentum", 0.0))
+        delta = round(current_momentum - previous_momentum, 6)
+
+        threshold = float(self.config.get("momentum_threshold", 0.05))
+        boost = int(self.config.get("boost", 1))
+        penalty = int(self.config.get("penalty", 1))
+        max_priority = int(self.config.get("max_priority", 10))
+
+        if not has_previous:
+            trend = "steady"
+        elif delta > threshold:
+            trend = "rising"
+            pulse.priority = min(max_priority, pulse.priority + boost)
+            pulse.tags.append("momentum-rise")
+        elif delta < -threshold:
+            trend = "falling"
+            pulse.priority = max(0, pulse.priority - penalty)
+            pulse.tags.append("momentum-dip")
+        else:
+            trend = "steady"
+
+        feedback_payload.update(
+            {
+                "momentum": current_momentum,
+                "delta": delta,
+                "trend": trend,
+                "cycle": context.cycle,
+            }
+        )
+        feedback_log.append(
+            {
+                "pulse_id": pulse.id,
+                "cycle": context.cycle,
+                "delta": delta,
+                "trend": trend,
+                "priority": pulse.priority,
+            }
+        )
+
+        last_vectors[pulse.id] = dict(current_vector)
+        return pulse
+
+
 class ChronoHelixLayer(ResonanceLayer):
     """Weaves the world's first chronohelix signature across past, present, and next pulses.
 
@@ -308,6 +367,7 @@ class HyperdimensionalResonanceEngine:
         "mythic": MythicNarrativeLayer,
         "chronohelix": ChronoHelixLayer,
         "strategic": StrategicVectorLayer,
+        "feedback": FeedbackStabilityLayer,
     }
 
     def __init__(
@@ -325,14 +385,17 @@ class HyperdimensionalResonanceEngine:
         start = time.perf_counter()
         context = ResonanceContext()
         results: List[ResonancePulse] = []
+        active_pulses = [pulse.clone() for pulse in pulses]
 
         for cycle in range(self.max_feedback_cycles):
             context.cycle = cycle
-            for pulse in pulses:
+            next_cycle_pulses: List[ResonancePulse] = []
+            for pulse in active_pulses:
                 current = pulse.clone()
                 for layer in self.layers:
                     current = layer(current, context)
                 results.append(current)
+                next_cycle_pulses.append(current.clone())
                 if self.memory:
                     self.memory.append(
                         {
@@ -343,6 +406,7 @@ class HyperdimensionalResonanceEngine:
                             "narratives": current.payload.get("narrative", []),
                         }
                     )
+            active_pulses = next_cycle_pulses
         duration = time.perf_counter() - start
         metrics = self._finalize_metrics(context)
         return ResonanceReport(cycle_count=self.max_feedback_cycles, pulses=results, metrics=metrics, duration=duration)
@@ -417,5 +481,6 @@ __all__ = [
     "ResonanceReport",
     "SpectralAlignmentLayer",
     "StrategicVectorLayer",
+    "FeedbackStabilityLayer",
 ]
 

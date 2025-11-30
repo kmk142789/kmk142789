@@ -32,6 +32,16 @@
       "name": "Strategic Vector",
       "type": "strategic",
       "weight": 1.4
+    },
+    {
+      "name": "Feedback Stability",
+      "type": "feedback",
+      "config": {
+        "momentum_threshold": 0.01,
+        "boost": 1,
+        "penalty": 1,
+        "max_priority": 10
+      }
     }
   ],
   "pulses": [
