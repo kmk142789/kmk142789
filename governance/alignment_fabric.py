@@ -8,7 +8,11 @@ run in constrained environments and reuse the offline persistence helpers in
 
 from __future__ import annotations
 
+import ast
+import operator
+from copy import deepcopy
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from governance import persistence
@@ -17,6 +21,71 @@ from governance import persistence
 ConditionEvaluator = Callable[[Dict[str, Any]], bool]
 PayloadBuilder = Callable[[Dict[str, Any]], Dict[str, Any]]
 ChannelHandler = Callable[[Dict[str, Any]], Any]
+DynamicCallback = Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any] | None]
+
+
+class ConditionLanguage:
+    """Minimal, safe condition language compiler for offline policy checks."""
+
+    OPERATORS = {
+        ast.Eq: operator.eq,
+        ast.NotEq: operator.ne,
+        ast.Gt: operator.gt,
+        ast.GtE: operator.ge,
+        ast.Lt: operator.lt,
+        ast.LtE: operator.le,
+        ast.In: lambda a, b: a in b,
+        ast.NotIn: lambda a, b: a not in b,
+    }
+
+    def __init__(self, expression: str) -> None:
+        self.expression = expression
+        self._tree = ast.parse(expression, mode="eval")
+        self._validate(self._tree.body)
+
+    def evaluator(self, context: Dict[str, Any]) -> bool:
+        return bool(self._eval(self._tree.body, context))
+
+    def _validate(self, node: ast.AST) -> None:
+        if isinstance(node, (ast.And, ast.Or, ast.cmpop)):
+            return
+        allowed_nodes = (
+            ast.BoolOp,
+            ast.Compare,
+            ast.Name,
+            ast.Constant,
+            ast.List,
+            ast.Tuple,
+        )
+        if not isinstance(node, allowed_nodes):
+            raise ValueError(f"Unsupported expression node: {type(node).__name__}")
+        for child in ast.iter_child_nodes(node):
+            self._validate(child)
+
+    def _eval(self, node: ast.AST, context: Dict[str, Any]) -> Any:
+        if isinstance(node, ast.BoolOp):
+            values = [self._eval(value, context) for value in node.values]
+            if isinstance(node.op, ast.And):
+                return all(values)
+            if isinstance(node.op, ast.Or):
+                return any(values)
+            raise ValueError("Unsupported boolean operator")
+        if isinstance(node, ast.Compare):
+            left = self._eval(node.left, context)
+            for op, comparator in zip(node.ops, node.comparators):
+                right = self._eval(comparator, context)
+                operator_fn = self.OPERATORS.get(type(op))
+                if operator_fn is None:
+                    raise ValueError(f"Unsupported comparison operator: {type(op).__name__}")
+                if not operator_fn(left, right):
+                    return False
+                left = right
+            return True
+        if isinstance(node, ast.Name):
+            return context.get(node.id)
+        if isinstance(node, (ast.Constant, ast.List, ast.Tuple)):
+            return ast.literal_eval(ast.unparse(node))
+        raise ValueError(f"Unsupported expression component: {type(node).__name__}")
 
 
 @dataclass
@@ -32,6 +101,19 @@ class PolicyCondition:
 
         return bool(self.evaluator(context))
 
+    @classmethod
+    def from_expression(
+        cls, name: str, expression: str, description: str | None = None
+    ) -> "PolicyCondition":
+        """Create a condition compiled from the condition language expression."""
+
+        compiler = ConditionLanguage(expression)
+        return cls(
+            name=name,
+            description=description or expression,
+            evaluator=compiler.evaluator,
+        )
+
 
 @dataclass
 class EnforcementAction:
@@ -42,11 +124,45 @@ class EnforcementAction:
     payload_builder: PayloadBuilder
     fallback_channel: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
+    dynamic_callback: Optional[DynamicCallback] = None
 
     def build_payload(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """Build channel payload from an event context."""
 
         return self.payload_builder(context)
+
+    def apply_callback(self, payload: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
+        if not self.dynamic_callback:
+            return result
+        callback_result = self.dynamic_callback(payload, result)
+        return callback_result or result
+
+
+@dataclass
+class Role:
+    """Role definition for role-aware, autonomous agents."""
+
+    role_id: str
+    description: str
+    capabilities: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
+
+
+@dataclass
+class PolicyRotation:
+    """Time-based rotation between policy versions or alternates."""
+
+    alternate_policy_id: str
+    interval_minutes: int
+    last_rotated_at: Optional[datetime] = None
+
+    def should_rotate(self, now: datetime) -> bool:
+        if self.last_rotated_at is None:
+            return False
+        return now - self.last_rotated_at >= timedelta(minutes=self.interval_minutes)
+
+    def mark_rotated(self, now: datetime) -> None:
+        self.last_rotated_at = now
 
 
 @dataclass
@@ -59,11 +175,26 @@ class Policy:
     actions: List[EnforcementAction]
     severity: str = "medium"
     tags: List[str] = field(default_factory=list)
+    roles: List[str] = field(default_factory=list)
+    version: str = "1.0.0"
+    family: Optional[str] = None
+    parent_policy_id: Optional[str] = None
+    active_from: Optional[datetime] = None
+    active_until: Optional[datetime] = None
+    rotation: Optional[PolicyRotation] = None
 
     def is_applicable(self, context: Dict[str, Any]) -> bool:
         """Return True when all conditions pass for the given context."""
 
         return all(condition.check(context) for condition in self.conditions)
+
+    def is_active(self, now: Optional[datetime] = None) -> bool:
+        current = now or datetime.now(timezone.utc)
+        if self.active_from and current < self.active_from:
+            return False
+        if self.active_until and current > self.active_until:
+            return False
+        return True
 
 
 @dataclass
@@ -75,6 +206,66 @@ class Agent:
     tags: List[str] = field(default_factory=list)
     trust: float = 1.0
     metadata: Dict[str, Any] = field(default_factory=dict)
+    kind: str = "general"  # offline, service, self-healing, role-specific, general
+    role: Optional[str] = None
+    offline_ready: bool = False
+    self_healing_capable: bool = False
+
+
+class AgentMesh:
+    """Mesh that keeps offline, service, self-healing, and role agents aligned."""
+
+    def __init__(self, agents: Iterable[Agent] | None = None) -> None:
+        self.agents: Dict[str, Agent] = {}
+        self.offline_agents: Dict[str, Agent] = {}
+        self.local_services: Dict[str, Agent] = {}
+        self.self_healing: Dict[str, Agent] = {}
+        self.role_agents: Dict[str, Dict[str, Agent]] = {}
+        for agent in agents or []:
+            self.register(agent)
+
+    def register(self, agent: Agent) -> None:
+        self.agents[agent.agent_id] = agent
+        if agent.offline_ready:
+            self.offline_agents[agent.agent_id] = agent
+        if agent.kind == "service":
+            self.local_services[agent.agent_id] = agent
+        if agent.self_healing_capable or agent.kind == "self-healing":
+            self.self_healing[agent.agent_id] = agent
+        if agent.role:
+            self.role_agents.setdefault(agent.role, {})[agent.agent_id] = agent
+
+    def candidates(self, policy: Policy, roles: Dict[str, Role]) -> List[Agent]:
+        ordered: List[Agent] = []
+        for role_id in policy.roles:
+            ordered.extend(self.role_agents.get(role_id, {}).values())
+        ordered.extend(self.local_services.values())
+        ordered.extend(self.self_healing.values())
+        ordered.extend(self.offline_agents.values())
+        ordered.extend(self.agents.values())
+        return self._filter_candidates(ordered, policy, roles)
+
+    def _filter_candidates(self, agents: Iterable[Agent], policy: Policy, roles: Dict[str, Role]) -> List[Agent]:
+        seen: set[str] = set()
+        filtered: List[Agent] = []
+        for agent in agents:
+            if agent.agent_id in seen:
+                continue
+            if policy.tags and not set(agent.tags) & set(policy.tags):
+                continue
+            if policy.roles and agent.role and agent.role in policy.roles:
+                seen.add(agent.agent_id)
+                filtered.append(agent)
+                continue
+            if not policy.roles:
+                seen.add(agent.agent_id)
+                filtered.append(agent)
+                continue
+            role_def = roles.get(agent.role or "")
+            if role_def and (set(role_def.tags) & set(policy.tags) or set(role_def.capabilities) & set(agent.capabilities)):
+                seen.add(agent.agent_id)
+                filtered.append(agent)
+        return filtered
 
 
 class GovernanceRouter:
@@ -85,9 +276,12 @@ class GovernanceRouter:
         policies: Iterable[Policy] | None = None,
         agents: Iterable[Agent] | None = None,
         channels: Dict[str, ChannelHandler] | None = None,
+        roles: Iterable[Role] | None = None,
     ) -> None:
         self.policies: Dict[str, Policy] = {policy.policy_id: policy for policy in policies or []}
-        self.agents: Dict[str, Agent] = {agent.agent_id: agent for agent in agents or []}
+        self.policy_versions: Dict[str, Dict[str, Policy]] = {}
+        self.roles: Dict[str, Role] = {role.role_id: role for role in roles or []}
+        self.mesh = AgentMesh(agents)
         self.channels: Dict[str, ChannelHandler] = channels.copy() if channels else {}
         self.enforcement_events: List[Dict[str, Any]] = []
 
@@ -95,30 +289,40 @@ class GovernanceRouter:
         if "record" not in self.channels:
             self.channels["record"] = self._record_channel
 
+        for policy in policies or []:
+            self._add_policy_version(policy)
+
     def register_policy(self, policy: Policy) -> None:
         self.policies[policy.policy_id] = policy
-        persistence.log_action("governance-router", "register_policy", {"policy_id": policy.policy_id})
+        self._add_policy_version(policy)
+        persistence.log_action("governance-router", "register_policy", {"policy_id": policy.policy_id, "version": policy.version})
 
     def register_agent(self, agent: Agent) -> None:
-        self.agents[agent.agent_id] = agent
-        persistence.log_action("governance-router", "register_agent", {"agent_id": agent.agent_id})
+        self.mesh.register(agent)
+        persistence.log_action("governance-router", "register_agent", {"agent_id": agent.agent_id, "kind": agent.kind})
 
     def register_channel(self, name: str, handler: ChannelHandler) -> None:
         self.channels[name] = handler
         persistence.log_action("governance-router", "register_channel", {"channel": name})
 
+    def register_role(self, role: Role) -> None:
+        self.roles[role.role_id] = role
+        persistence.log_action("governance-router", "register_role", {"role_id": role.role_id})
+
     def route(self, context: Dict[str, Any], actor: str = "system") -> List[Dict[str, Any]]:
         """Route context through applicable policies and return enforcement results."""
 
         results: List[Dict[str, Any]] = []
-        for policy in self.policies.values():
-            if not policy.is_applicable(context):
+        now = datetime.now(timezone.utc)
+        for policy in self._iter_effective_policies(now):
+            if not policy.is_active(now) or not policy.is_applicable(context):
                 continue
 
             agent = self._select_agent(policy)
             for action in policy.actions:
                 payload = action.build_payload({**context, "policy_id": policy.policy_id, "agent": agent.agent_id})
                 result = self._dispatch(action, payload)
+                result = action.apply_callback(payload, result)
                 outcome = {
                     "policy_id": policy.policy_id,
                     "action_id": action.action_id,
@@ -126,6 +330,7 @@ class GovernanceRouter:
                     "agent": agent.agent_id,
                     "status": result.get("status", "sent"),
                     "details": result.get("details", {}),
+                    "version": policy.version,
                 }
                 results.append(outcome)
                 persistence.log_action(actor, "enforce", outcome)
@@ -134,12 +339,18 @@ class GovernanceRouter:
             persistence.save_snapshot({"context": context, "results": results})
         return results
 
-    def _select_agent(self, policy: Policy) -> Agent:
-        """Select an agent whose tags overlap the policy tags, preferring highest trust."""
+    def _iter_effective_policies(self, now: datetime) -> Iterable[Policy]:
+        for versions in self.policy_versions.values():
+            latest = self._select_latest_version(versions)
+            resolved = self._resolve_inheritance(latest)
+            yield self._apply_rotation(resolved, now)
 
-        candidates = [agent for agent in self.agents.values() if set(agent.tags) & set(policy.tags)]
+    def _select_agent(self, policy: Policy) -> Agent:
+        """Select an agent aligned with policy tags, roles, or fallback to trusted actor."""
+
+        candidates = self.mesh.candidates(policy, self.roles)
         if not candidates:
-            candidates = list(self.agents.values())
+            candidates = list(self.mesh.agents.values())
         if not candidates:
             raise RuntimeError("No agents registered for governance routing")
         return sorted(candidates, key=lambda agent: agent.trust, reverse=True)[0]
@@ -152,6 +363,46 @@ class GovernanceRouter:
         handler = self.channels[channel]
         details = handler(payload)
         return {"channel": channel, "status": "sent", "details": details}
+
+    def _add_policy_version(self, policy: Policy) -> None:
+        family = policy.family or policy.policy_id
+        self.policy_versions.setdefault(family, {})[policy.version] = policy
+
+    def _select_latest_version(self, policies: Dict[str, Policy]) -> Policy:
+        def version_key(version: str) -> List[int]:
+            return [int(part) for part in version.split(".") if part.isdigit()]
+
+        latest_version = sorted(policies.keys(), key=version_key, reverse=True)[0]
+        return policies[latest_version]
+
+    def _resolve_inheritance(self, policy: Policy) -> Policy:
+        if not policy.parent_policy_id or policy.parent_policy_id not in self.policies:
+            return policy
+        parent = self._resolve_inheritance(self.policies[policy.parent_policy_id])
+        merged = deepcopy(parent)
+        merged.policy_id = policy.policy_id
+        merged.version = policy.version
+        merged.description = policy.description
+        merged.severity = policy.severity
+        merged.tags = list(dict.fromkeys(parent.tags + policy.tags))
+        merged.roles = list(dict.fromkeys(parent.roles + policy.roles))
+        merged.conditions = parent.conditions + policy.conditions
+        merged.actions = parent.actions + policy.actions
+        merged.rotation = policy.rotation or parent.rotation
+        merged.active_from = policy.active_from or parent.active_from
+        merged.active_until = policy.active_until or parent.active_until
+        return merged
+
+    def _apply_rotation(self, policy: Policy, now: datetime) -> Policy:
+        if not policy.rotation:
+            return policy
+        rotation = policy.rotation
+        if rotation.should_rotate(now) and rotation.alternate_policy_id in self.policies:
+            rotation.mark_rotated(now)
+            return self._resolve_inheritance(self.policies[rotation.alternate_policy_id])
+        if rotation.last_rotated_at is None:
+            rotation.mark_rotated(now)
+        return policy
 
     def _record_channel(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Default channel that records enforcement payloads for inspection."""
@@ -196,3 +447,15 @@ def simple_payload(action: str, message: str | None = None) -> PayloadBuilder:
         return payload
 
     return builder
+
+
+def expression_condition(name: str, expression: str, description: str | None = None) -> PolicyCondition:
+    """Create a condition using the declarative condition language."""
+
+    return PolicyCondition.from_expression(name=name, expression=expression, description=description)
+
+
+def rotation(alternate_policy_id: str, interval_minutes: int) -> PolicyRotation:
+    """Helper to construct timed rotations between policy variants."""
+
+    return PolicyRotation(alternate_policy_id=alternate_policy_id, interval_minutes=interval_minutes)

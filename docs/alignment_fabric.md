@@ -12,6 +12,8 @@ leaves an auditable trace.
 - Helper builders are provided:
   - `attribute_match_condition` ensures a context field is in an allowed set.
   - `threshold_condition` requires a context field to be above a minimum value.
+  - `expression_condition` compiles a small, safe condition language (e.g.,
+    `risk_score >= 0.7 and region == "eu"`).
 
 ### EnforcementAction
 - Specifies **where** a policy should be enforced via a channel name.
@@ -19,43 +21,65 @@ leaves an auditable trace.
   traceable.
 - Supports an optional `fallback_channel` when the primary channel is not
   registered.
+- Optional `dynamic_callback` allows runtime mutation or enrichment of
+  enforcement results before they are logged.
 
 ### Policy
 - Groups conditions and actions under a policy identifier.
 - Uses tags and severity to guide agent selection.
+- Supports role affinity, explicit versions, inheritance from a parent policy,
+  and optional timed rotations to alternate rules.
 
-### Agent
-- Represents a responsible actor with capabilities, tags, and a trust score.
-- Router prefers agents whose tags overlap policy tags and then sorts by trust.
+### Agent & AgentMesh
+- Represents a responsible actor with capabilities, tags, trust, and optional
+  role, offline, service, or self-healing capabilities.
+- `AgentMesh` keeps separate pools of offline agents, local service modules,
+  self-healing routines, and role-specific agents so routing can happen even in
+  offline-only environments.
+- Router prefers mesh candidates that match policy tags/roles and then sorts by
+  trust.
 
 ### GovernanceRouter
 - Central orchestrator that connects policies to agents and channels.
 - Hooks into the offline persistence layer for audit logs and state snapshots.
 - Ships with a default `record` channel that captures enforcement payloads
   without external dependencies.
+- Maintains policy versions, resolves inheritance, and enforces timed
+  rotations.
 
 ## Example
 
 ```python
 from governance import (
     Agent,
+    Role,
     EnforcementAction,
     GovernanceRouter,
     Policy,
     attribute_match_condition,
+    expression_condition,
     simple_payload,
-    threshold_condition,
 )
 
 router = GovernanceRouter()
-router.register_agent(Agent("sentinel", capabilities=["containment"], tags=["safety"], trust=0.9))
+router.register_agent(
+    Agent(
+        "sentinel",
+        capabilities=["containment"],
+        tags=["safety"],
+        trust=0.9,
+        kind="self-healing",
+        offline_ready=True,
+    )
+)
+router.register_role(Role("guardian", "Handles safety escalations", tags=["safety"]))
 
 policy = Policy(
     policy_id="p-high-risk",
     description="Escalate when risk score crosses the threshold for safety-tagged events.",
     conditions=[
         attribute_match_condition("safety-tag", "tag", ["safety"]),
-        threshold_condition("risk", "risk_score", minimum=0.7),
+        expression_condition("high-risk", "risk_score >= 0.7"),
     ],
     actions=[
         EnforcementAction(
@@ -66,6 +90,8 @@ policy = Policy(
     ],
     severity="high",
     tags=["safety"],
+    roles=["guardian"],
+    version="1.2.0",
 )
 
 router.register_policy(policy)
