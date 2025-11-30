@@ -24,6 +24,7 @@ from echo.semantic_negotiation import (
     NegotiationStage,
     SemanticNegotiationResolver,
 )
+from governance.persistence import load_policies, load_roles, log_action
 
 
 class ResonanceEngine(Protocol):
@@ -40,6 +41,19 @@ class ManifestoPrinciple:
     identifier: str
     title: str
     guidance: str
+
+
+def enforce_governance(actor: str, action: str) -> None:
+    policies = load_policies()
+    roles = load_roles()
+
+    # block actions requiring signoff
+    if action in policies.get("requires_signoff", []):
+        if actor != roles.get("AI_GOV_LEAD"):
+            log_action(actor, action, {"blocked": True})
+            raise PermissionError(f"Action '{action}' requires signoff")
+
+    log_action(actor, action, {"blocked": False})
 
 
 class OrchestratorCore:
