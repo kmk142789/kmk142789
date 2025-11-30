@@ -4,6 +4,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from services.revenue_mesh.receipts import generate_receipt
+
 DB_PATH = Path("services/revenue_mesh/revenue.db")
 
 
@@ -31,7 +33,7 @@ def register_client(name: str, contact: str, plan: str, client_key: str):
 def start_job(client_key: str, job_type: str, unit_price_cents: int, metadata: dict):
     with get_conn() as conn:
         client = conn.execute(
-            "SELECT id FROM clients WHERE client_key=?", (client_key,)
+            "SELECT id FROM clients WHERE client_key=?", (client_key,),
         ).fetchone()
         if not client:
             raise ValueError(f"Unknown client_key {client_key}")
@@ -50,7 +52,7 @@ def start_job(client_key: str, job_type: str, unit_price_cents: int, metadata: d
 def finish_job(job_id: int, units: int):
     with get_conn() as conn:
         job = conn.execute(
-            "SELECT unit_price_cents FROM jobs WHERE id=?", (job_id,)
+            "SELECT unit_price_cents, client_id FROM jobs WHERE id=?", (job_id,),
         ).fetchone()
         if not job:
             raise ValueError(f"Unknown job {job_id}")
@@ -67,14 +69,21 @@ def finish_job(job_id: int, units: int):
             """,
             (datetime.utcnow().isoformat(), units, total, job_id),
         )
+        updated_job = conn.execute(
+            "SELECT * FROM jobs WHERE id=?", (job_id,),
+        ).fetchone()
+        client = conn.execute(
+            "SELECT * FROM clients WHERE id=?", (job["client_id"],),
+        ).fetchone()
+        receipt_path = generate_receipt(updated_job, client)
         conn.commit()
-        return total
+        return total, receipt_path
 
 
 def record_payment(client_key: str, amount_cents: int, method: str, reference: str = ""):
     with get_conn() as conn:
         client = conn.execute(
-            "SELECT id FROM clients WHERE client_key=?", (client_key,)
+            "SELECT id FROM clients WHERE client_key=?", (client_key,),
         ).fetchone()
         if not client:
             raise ValueError(f"Unknown client_key {client_key}")
