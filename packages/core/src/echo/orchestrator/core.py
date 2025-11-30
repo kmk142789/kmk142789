@@ -6,6 +6,7 @@ import json
 import math
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta, timezone
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Optional, Protocol, Sequence
 
@@ -69,6 +70,7 @@ class OrchestratorCore:
         self._atlas_resolver = atlas_resolver
         self._manifest_limit = max(1, int(manifest_limit))
         self._negotiations = negotiation_resolver
+        self._offline_cache_path = self._state_dir / "offline_cache.json"
 
         self._principles: Sequence[ManifestoPrinciple] = (
             ManifestoPrinciple(
@@ -105,7 +107,22 @@ class OrchestratorCore:
     def orchestrate(self) -> Mapping[str, Any]:
         """Collect module outputs, derive adaptive weights, and persist a manifest."""
 
-        inputs = self._collect_inputs()
+        offline_mode = False
+        offline_details: MutableMapping[str, Any] | None = None
+        try:
+            inputs = self._collect_inputs()
+            self._persist_offline_cache(inputs)
+        except Exception as exc:  # pragma: no cover - defensive offline fallback
+            offline_mode = True
+            cached = self._load_offline_cache()
+            if not cached:
+                raise
+            inputs, offline_details = cached
+            if offline_details is None:
+                offline_details = {}
+            offline_details.setdefault("error", str(exc))
+            offline_details.setdefault("cache_path", str(self._offline_cache_path))
+            logging.warning("Orchestrator using offline cache after error: %s", exc)
         resonance_seed = self._build_resonance_seed(inputs)
         resonance_response = self._resonance.respond(resonance_seed)
         harmonic_score = float(getattr(resonance_response, "harmonic_score", 0.0) or 0.0)
@@ -127,6 +144,9 @@ class OrchestratorCore:
             },
             "inputs": inputs,
         }
+        decision["offline_mode"] = offline_mode
+        if offline_details:
+            decision["offline_details"] = offline_details
 
         momentum = self._evaluate_momentum(inputs, coherence, weights)
         decision["momentum"] = momentum
@@ -310,6 +330,33 @@ class OrchestratorCore:
         if self._negotiations:
             inputs["negotiations"] = self._negotiations.snapshot().model_dump(mode="json")
         return inputs
+
+    def _persist_offline_cache(self, inputs: Mapping[str, Any]) -> None:
+        payload = {"cached_at": self._now_iso(), "inputs": inputs}
+        try:
+            serialised = json.dumps(payload, ensure_ascii=False, indent=2, default=str)
+            self._offline_cache_path.write_text(serialised)
+        except Exception as exc:  # pragma: no cover - best-effort cache
+            logging.debug("Unable to persist offline cache: %s", exc)
+
+    def _load_offline_cache(self) -> tuple[MutableMapping[str, Any], MutableMapping[str, Any]] | None:
+        if not self._offline_cache_path.exists():
+            return None
+        try:
+            data = json.loads(self._offline_cache_path.read_text())
+        except Exception as exc:  # pragma: no cover - corrupted cache
+            logging.warning("Offline cache unreadable: %s", exc)
+            return None
+
+        inputs = data.get("inputs") if isinstance(data, Mapping) else None
+        if not isinstance(inputs, Mapping):
+            return None
+
+        cached_at = data.get("cached_at") if isinstance(data, Mapping) else None
+        details: MutableMapping[str, Any] = {}
+        if isinstance(cached_at, str):
+            details["cached_at"] = cached_at
+        return dict(inputs), details
 
     def _enrich_attestations(
         self, attestations: Sequence[Mapping[str, Any]]

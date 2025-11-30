@@ -19,22 +19,32 @@ class StubPulseNet:
         attestations: list[dict],
         wallets: list[dict] | None = None,
         registrations: list[dict] | None = None,
+        fail: bool = False,
     ) -> None:
         self._summary = summary
         self._attestations = attestations
         self._wallets = wallets or []
         self._registrations = registrations or []
+        self._fail = fail
 
     def pulse_summary(self) -> dict:
+        if self._fail:
+            raise RuntimeError("pulsenet offline")
         return self._summary
 
     def latest_attestations(self, *, limit: int = 10) -> list[dict]:
+        if self._fail:
+            raise RuntimeError("pulsenet offline")
         return self._attestations[:limit]
 
     def atlas_wallets(self) -> list[dict]:
+        if self._fail:
+            raise RuntimeError("pulsenet offline")
         return list(self._wallets)
 
     def registrations(self) -> list[dict]:
+        if self._fail:
+            raise RuntimeError("pulsenet offline")
         return list(self._registrations)
 
 
@@ -262,3 +272,27 @@ def test_orchestrator_records_bridge_sync(tmp_path: Path) -> None:
     assert bridge.calls, "Bridge service should be invoked"
     assert "bridge_sync" in decision
     assert decision["bridge_sync"]["operations"][0]["connector"] == "stub"
+
+
+def test_orchestrator_offline_cache_persists_state(tmp_path: Path) -> None:
+    pulsenet = StubPulseNet(_make_summary(), _make_attestations())
+    evolver = StubEvolver(_make_digest())
+    resonance = StubResonance(500.0)
+
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=evolver,  # type: ignore[arg-type]
+        resonance_engine=resonance,
+        atlas_resolver=None,
+    )
+
+    online = service.orchestrate()
+    assert online["offline_mode"] is False
+
+    pulsenet._fail = True  # type: ignore[attr-defined]
+    offline = service.orchestrate()
+
+    assert offline["offline_mode"] is True
+    assert offline["inputs"]["pulse_summary"] == online["inputs"]["pulse_summary"]
+    assert offline.get("offline_details", {}).get("cached_at")
