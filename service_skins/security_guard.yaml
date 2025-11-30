@@ -1,0 +1,9 @@
+id: security_guard
+label: "Security Guard Agent"
+description: "Scan logs, ports, and configs for security issues."
+capabilities:
+  - run:scan.security.*
+  - run:hardening.*
+pricing:
+  model: "subscription"
+  amount: 75

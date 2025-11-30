@@ -1,0 +1,10 @@
+id: diagnostics
+label: "Diagnostics Agent"
+description: "Run health checks and produce readiness reports for local systems."
+capabilities:
+  - run:healthcheck.*
+  - run:report.*
+  - run:monitor.*
+pricing:
+  model: "per_task"
+  amount: 30

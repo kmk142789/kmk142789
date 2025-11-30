@@ -1,0 +1,11 @@
+id: small_business
+label: "Small Business Ops Agent"
+description: "Bundle of tech support, security, and diagnostics for local SMB setups."
+capabilities:
+  - run:diagnostics.*
+  - run:scan.security.*
+  - run:hardening.*
+  - run:repair.*
+pricing:
+  model: "subscription"
+  amount: 150

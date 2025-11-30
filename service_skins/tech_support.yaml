@@ -1,0 +1,10 @@
+id: tech_support
+label: "Tech Support Agent"
+description: "Diagnose and repair local devices, OS, and network."
+capabilities:
+  - run:diagnostics.*
+  - run:repair.*
+  - run:cleanup.*
+pricing:
+  model: "per_task"
+  amount: 40

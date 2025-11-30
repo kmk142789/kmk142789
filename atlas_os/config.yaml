@@ -1,0 +1,12 @@
+mesh_enabled: true
+governance_enforced: true
+services:
+  - id: tech_support
+    type: runtime
+    enabled: true
+  - id: security_guard
+    type: runtime
+    enabled: true
+  - id: diagnostics
+    type: runtime
+    enabled: true
