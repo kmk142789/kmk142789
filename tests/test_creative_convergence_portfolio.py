@@ -57,3 +57,23 @@ def test_summarise_portfolio_matches_digest_render():
 def test_portfolio_digest_requires_briefs():
     with pytest.raises(ValueError):
         build_portfolio_digest([])
+
+
+def test_portfolio_digest_exposes_alignment_band_and_gap_hotspots():
+    briefs = [
+        _sample_brief("signal sanctuary", "aurora lattice", energy=1.1),
+        _sample_brief("tidal archive", "tidal anchor", energy=0.9),
+        _sample_brief("tidal archive", "anchor line", energy=0.8),
+    ]
+
+    digest = build_portfolio_digest(briefs)
+
+    assert digest.coverage_span == pytest.approx(1.0)
+
+    expected_band = (
+        "high" if digest.average_alignment >= 0.75 else "medium" if digest.average_alignment >= 0.5 else "low"
+    )
+    assert digest.alignment_band == expected_band
+
+    assert digest.gap_hotspots[0] == ("anchor", 2)
+    assert any(phrase == "tidal" for phrase, _ in digest.gap_hotspots)

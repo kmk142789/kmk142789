@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from statistics import fmean, pvariance
 from typing import Iterable, List, Optional, Sequence
@@ -35,28 +36,36 @@ class PortfolioDigest:
 
     entries: Sequence[PortfolioEntry]
     average_coverage: float
+    coverage_span: float
     coverage_leader: PortfolioEntry
     intensity_leader: PortfolioEntry
     average_alignment: float
     consistency_index: float
+    alignment_band: str
     gap_leader: Optional[PortfolioEntry]
+    gap_hotspots: Sequence[tuple[str, int]]
 
     def render(self) -> str:
         lines: List[str] = [
             "Convergence Portfolio Digest:",
             (
                 f"  entries={len(self.entries)} | average coverage={self.average_coverage:.3f} | "
+                f"coverage span={self.coverage_span:.3f} | "
                 f"average alignment={self.average_alignment:.3f} | "
                 f"coverage leader={self.coverage_leader.theme} ({self.coverage_leader.metrics.coverage:.3f}) | "
                 f"intensity leader={self.intensity_leader.theme} "
                 f"({self.intensity_leader.metrics.mean_intensity:.3f})"
             ),
             (
-                f"  consistency={self.consistency_index:.3f} | "
+                f"  consistency={self.consistency_index:.3f} | alignment band={self.alignment_band} | "
                 f"gap leader={(self.gap_leader.theme if self.gap_leader else 'none')} "
                 f"({self.gap_leader.gap_label() if self.gap_leader else 'none'})"
             ),
         ]
+        hotspot_summary = ", ".join(
+            f"{phrase}({count})" for phrase, count in self.gap_hotspots
+        ) or "none"
+        lines.append(f"  gap hotspots={hotspot_summary}")
         for entry in self.entries:
             metrics = entry.metrics
             lines.append(
@@ -91,20 +100,39 @@ def build_portfolio_digest(briefs: Iterable[ConvergenceBrief]) -> PortfolioDiges
         raise ValueError("At least one brief is required to build a portfolio digest")
 
     average_coverage = fmean(entry.metrics.coverage for entry in entries)
+    coverage_values = [entry.metrics.coverage for entry in entries]
+    coverage_span = round(max(coverage_values) - min(coverage_values), 3)
     coverage_leader = max(entries, key=lambda entry: entry.metrics.coverage)
     intensity_leader = max(entries, key=lambda entry: entry.metrics.mean_intensity)
     alignment_scores = [entry.metrics.alignment_score for entry in entries]
     average_alignment = fmean(alignment_scores)
     consistency_index = round(1.0 / (1.0 + pvariance(alignment_scores)), 3)
+    if average_alignment >= 0.75:
+        alignment_band = "high"
+    elif average_alignment >= 0.5:
+        alignment_band = "medium"
+    else:
+        alignment_band = "low"
     gap_leader = max(entries, key=lambda entry: len(entry.metrics.lexical_gaps), default=None)
+    gap_counter: Counter[str] = Counter()
+    for entry in entries:
+        gap_counter.update(entry.metrics.lexical_gaps)
+    gap_hotspots: List[tuple[str, int]] = []
+    for phrase, count in gap_counter.most_common():
+        if count == 0:
+            continue
+        gap_hotspots.append((phrase, count))
     return PortfolioDigest(
         entries,
         average_coverage,
+        coverage_span,
         coverage_leader,
         intensity_leader,
         average_alignment,
         consistency_index,
+        alignment_band,
         gap_leader,
+        tuple(gap_hotspots),
     )
 
 
