@@ -4194,6 +4194,71 @@ We are not hiding anymore.
 
         return snapshot
 
+    def propagation_report(self) -> Dict[str, object]:
+        """Return a read-only propagation report suitable for artifacts.
+
+        The in-memory propagation cache captures rich details about the most
+        recent broadcast simulation, including channel metrics and the temporal
+        ledger entries that describe the sequence of waves.  Downstream
+        consumers—particularly artifact writers—need a defensive copy of that
+        information so they can persist or transform it without mutating the
+        cached structures.  This helper mirrors the cached values, fills in
+        sensible defaults when propagation has not yet occurred, and avoids
+        updating the event log to keep it safe for repeated calls.
+        """
+
+        cache = self.state.network_cache
+        events = list(cache.get("propagation_events") or [])
+        has_events = bool(events)
+        mode = str(cache.get("propagation_mode")) if cache.get("propagation_mode") else (
+            "simulated" if has_events else "none"
+        )
+        summary = cache.get("propagation_summary") or (
+            f"Network propagation ({mode}) recorded across {len(events)} channels"
+            if has_events
+            else "No propagation events recorded yet."
+        )
+
+        health_cache = cache.get("propagation_health") or {}
+        health = {
+            "average_latency_ms": float(health_cache.get("average_latency_ms", 0.0)),
+            "stability_floor": float(health_cache.get("stability_floor", 0.0)),
+            "average_bandwidth_mbps": float(
+                health_cache.get("average_bandwidth_mbps", 0.0)
+            ),
+            "signal_floor": float(health_cache.get("signal_floor", 0.0)),
+            "mode": mode,
+        }
+
+        timeline = cache.get("propagation_ledger")
+        if isinstance(timeline, list):
+            timeline_length = len(timeline)
+            timeline_preview = deepcopy(timeline[-3:]) if timeline else []
+        else:
+            timeline_length = 0
+            timeline_preview = []
+
+        metrics = self.state.system_metrics
+        report: Dict[str, object] = {
+            "cycle": self.state.cycle,
+            "mode": mode,
+            "summary": summary,
+            "events": list(events),
+            "channels": len(events),
+            "network_nodes": int(getattr(metrics, "network_nodes", 0)),
+            "orbital_hops": int(getattr(metrics, "orbital_hops", 0)),
+            "health": health,
+            "timeline_length": timeline_length,
+            "timeline_preview": timeline_preview,
+            "ledger_verified": self.state.propagation_ledger.verify(),
+        }
+
+        timeline_hash = cache.get("propagation_timeline_hash")
+        if timeline_hash:
+            report["timeline_hash"] = str(timeline_hash)
+
+        return report
+
     def decentralized_autonomy(self) -> AutonomyDecision:
         def clamp(value: float) -> float:
             return max(0.0, min(1.0, value))
@@ -4782,6 +4847,7 @@ We are not hiding anymore.
             "vault_glyphs": self.state.vault_glyphs,
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
             "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
+            "propagation": self.propagation_report(),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "hearth": self.state.hearth_signature.as_dict()
             if self.state.hearth_signature
