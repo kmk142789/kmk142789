@@ -1,0 +1,9 @@
+rotation_rules:
+  - condition: "anomaly.score > 0.7"
+    action: "rotate_keys"
+  - condition: "vault.integrity < 0.85"
+    action: "restore_snapshot"
+  - condition: "actor.flags.blocked == true"
+    action: "force_deny"
+rotation_frequency: "daily"
+max_anomaly_window: 500
