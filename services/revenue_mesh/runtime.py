@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Sequence
 
 from revenue_mesh.hook_governance import authorize_billing
+from services.revenue_mesh.billing import finish_job, start_job
 
 
 @dataclass
@@ -156,4 +157,14 @@ class RevenueMeshRuntime:
     def _audit(self, event: str, details: Dict[str, str]) -> None:
         entry = AuditEntry(entry_id=str(uuid.uuid4()), event=event, details=details)
         self.audit_log.append(entry)
+
+
+def run_paid_task(client_key: str, job_type: str, unit_price_cents: int, task_fn, **kwargs):
+    job_id = start_job(client_key, job_type, unit_price_cents, metadata=kwargs)
+
+    # Run the underlying agent task
+    units = task_fn(**kwargs)  # e.g. returns "minutes used" or "files scanned"
+
+    total = finish_job(job_id, units)
+    return {"job_id": job_id, "units": units, "total_cents": total}
 

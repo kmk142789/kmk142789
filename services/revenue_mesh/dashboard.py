@@ -1,64 +1,56 @@
-from __future__ import annotations
-
-from typing import Dict, List
-
-from revenue_mesh.hook_governance import authorize_billing
-from .runtime import Receipt, RevenueMeshRuntime, Task
+from .billing import get_conn
 
 
-def _format_tasks(tasks: List[Task]) -> List[Dict[str, str]]:
-    formatted = []
-    for task in tasks:
-        formatted.append(
-            {
-                "task_id": task.task_id,
-                "client_id": task.client_id,
-                "task_type": task.task_type,
-                "status": task.status,
-                "packaging": ",".join(sorted(task.packaging.keys())) if task.packaging else "pending",
-            }
-        )
-    return formatted
+def format_currency(cents: int) -> str:
+    return f"${cents / 100:.2f}"
 
 
-def _format_receipts(receipts: List[Receipt]) -> List[Dict[str, str]]:
-    formatted = []
-    for receipt in receipts:
-        formatted.append(
-            {
-                "receipt_id": receipt.receipt_id,
-                "task_id": receipt.task_id,
-                "client_id": receipt.client_id,
-                "amount": f"{receipt.amount:.2f} {receipt.currency}",
-                "issued_at": receipt.issued_at.isoformat(),
-                "memo": receipt.memo,
-            }
-        )
-    return formatted
+def main():
+    with get_conn() as conn:
+        print("=== Echo Revenue Mesh — Snapshot ===\n")
+
+        total = conn.execute(
+            "SELECT COALESCE(SUM(total_price_cents), 0) AS s FROM jobs WHERE status='completed'"
+        ).fetchone()["s"]
+        print(f"Total billed work: {format_currency(total)}")
+
+        paid = conn.execute(
+            "SELECT COALESCE(SUM(amount_cents), 0) AS s FROM payments"
+        ).fetchone()["s"]
+        print(f"Total payments recorded: {format_currency(paid)}")
+
+        print("\nTop clients:")
+        rows = conn.execute(
+            """
+            SELECT c.name, c.plan,
+                   COALESCE(SUM(j.total_price_cents), 0) AS billed
+              FROM clients c
+         LEFT JOIN jobs j ON j.client_id=c.id
+          GROUP BY c.id
+          ORDER BY billed DESC
+          LIMIT 10
+            """
+        ).fetchall()
+
+        for r in rows:
+            print(f" - {r['name']} [{r['plan']}] → {format_currency(r['billed'])}")
+
+        print("\nRecent jobs:")
+        jobs = conn.execute(
+            """
+            SELECT j.id, c.name, j.job_type, j.status, j.total_price_cents
+              FROM jobs j
+              JOIN clients c ON c.id=j.client_id
+          ORDER BY j.id DESC
+             LIMIT 10
+            """
+        ).fetchall()
+
+        for j in jobs:
+            print(
+                f" #{j['id']:04d} {j['name']} / {j['job_type']} / {j['status']} / {format_currency(j['total_price_cents'])}"
+            )
 
 
-def build_dashboard_snapshot(runtime: RevenueMeshRuntime, actor: str = "system") -> Dict[str, object]:
-    """Offline-friendly dashboard payload showing income and job state."""
-
-    authorize_billing(actor)
-
-    total_income = sum(receipt.amount for receipt in runtime.receipts)
-    recent_audit = [
-        {
-            "event": entry.event,
-            "details": entry.details,
-            "created_at": entry.created_at.isoformat(),
-        }
-        for entry in runtime.audit_log[-20:]
-    ]
-
-    return {
-        "income": total_income,
-        "clients": list(runtime.clients.keys()),
-        "queued": _format_tasks(runtime.queue),
-        "completed": _format_tasks(runtime.completed_tasks),
-        "receipts": _format_receipts(runtime.receipts),
-        "audit_trail": recent_audit,
-        "plans": [{"name": plan.name, "price_per_task": plan.price_per_task, "currency": plan.currency} for plan in runtime.billing_plans.values()],
-    }
-
+if __name__ == "__main__":
+    main()
