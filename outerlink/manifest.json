@@ -1,0 +1,23 @@
+{
+  "name": "outerlink",
+  "version": "1.0.0",
+  "description": "Offline-first external cognitive mesh interface bridging Echo AI modules to device context.",
+  "modules": [
+    "runtime",
+    "router",
+    "broker",
+    "dsi",
+    "events",
+    "utils"
+  ],
+  "scripts": [
+    "outerlink_runtime.sh",
+    "outerlink_sync.sh",
+    "outerlink_event_post.sh"
+  ],
+  "safety": {
+    "sandbox": true,
+    "safe_mode_defaults": ["ls", "pwd", "cat"],
+    "offline_first": true
+  }
+}

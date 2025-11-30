@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+from .broker import ExecutionBroker
+from .dsi import DeviceSurfaceInterface
+from .events import EventBus
+from .router import TaskRouter
+from .utils import OfflineState, SafeModeConfig
+
+
+class OuterLinkRuntime:
+    """Offline-first coordinator that binds router, broker, and event system."""
+
+    def __init__(self, config: Optional[SafeModeConfig] = None, offline_state: Optional[OfflineState] = None) -> None:
+        self.config = config or SafeModeConfig()
+        self.offline_state = offline_state or OfflineState()
+        self.event_bus = EventBus()
+        self.dsi = DeviceSurfaceInterface(self.config)
+        self.broker = ExecutionBroker(self.config, self.dsi, self.event_bus, self.offline_state)
+        self.router = TaskRouter(self.event_bus, self.offline_state)
+        self._bootstrap_default_mappings()
+
+    def _bootstrap_default_mappings(self) -> None:
+        self.router.register_module("device_status", "dsi")
+        self.router.register_module("optimization_tick", "optimizer")
+        self.router.register_module("policy_eval", "governance")
+
+    def emit_state(self) -> Dict[str, Any]:
+        metrics = self.dsi.get_metrics()
+        payload = {
+            "online": self.offline_state.online,
+            "last_sync": self.offline_state.last_sync,
+            "metrics": metrics.__dict__,
+        }
+        self.event_bus.emit("device_status", payload)
+        return payload
+
+    def handle_task(self, task: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        decision = self.router.route(task, payload)
+        response = {"task": task, "target": decision.target, "payload": payload or {}, "fallback": decision.fallback_used}
+        self.event_bus.emit("task_executed", response)
+        return response
+
+    def flush_events(self) -> None:
+        if self.offline_state.online:
+            self.config.event_log.parent.mkdir(parents=True, exist_ok=True)
+            for event in self.event_bus.history:
+                with self.config.event_log.open("a", encoding="utf-8") as handle:
+                    handle.write(json.dumps(event.to_dict()) + "\n")
+            self.offline_state.pending_events.clear()
+        else:
+            self.offline_state.flush_to_cache(self.config.offline_cache_dir)
+
+    def safe_run_shell(self, command: str, args: Optional[list[str]] = None) -> Dict[str, Any]:
+        result = self.broker.run_shell(command, args)
+        return json.loads(result.to_json())
+
+    def safe_get_sensor(self, name: str) -> Dict[str, Any]:
+        return self.broker.get_sensor(name)
+
+    def safe_read_file(self, path: Path) -> str:
+        return self.broker.read_file(path)
+
+    def safe_write_config(self, path: Path, content: Dict[str, str]) -> None:
+        self.broker.write_config(path, content)
+
+
+__all__ = ["OuterLinkRuntime"]
+
+
+def main() -> None:
+    runtime = OuterLinkRuntime()
+    runtime.emit_state()
+    runtime.flush_events()
+
+
+if __name__ == "__main__":
+    main()
