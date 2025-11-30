@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Mapping
@@ -286,9 +287,11 @@ def test_orchestrator_offline_cache_persists_state(tmp_path: Path) -> None:
         resonance_engine=resonance,
         atlas_resolver=None,
     )
+    service._store.set_policy("policy-001-min-safety", version=3, signed_by="AI_GOV_LEAD")
 
     online = service.orchestrate()
     assert online["offline_mode"] is False
+    assert online["active_policy_version"] == "policy-001-min-safety@v3"
 
     pulsenet._fail = True  # type: ignore[attr-defined]
     offline = service.orchestrate()
@@ -299,3 +302,46 @@ def test_orchestrator_offline_cache_persists_state(tmp_path: Path) -> None:
     assert details.get("cached_at")
     assert details.get("cache_path")
     assert isinstance(details.get("cache_age_seconds"), (int, float))
+    assert details.get("offline_policy_version") == "policy-001-min-safety@v3"
+    assert details.get("offline_reason")
+    assert details.get("offline_source")
+    assert details.get("policy_snapshot")
+
+
+def test_orchestrator_logs_decisions_and_metrics(tmp_path: Path) -> None:
+    pulsenet = StubPulseNet(_make_summary(), _make_attestations())
+    evolver = StubEvolver(_make_digest())
+    resonance = StubResonance(700.0)
+
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=evolver,  # type: ignore[arg-type]
+        resonance_engine=resonance,
+        atlas_resolver=None,
+    )
+    service._store.set_policy("policy-002-governance", version=1, signed_by="AI_GOV_LEAD")
+
+    decision = service.orchestrate()
+    assert decision["active_policy_version"] == "policy-002-governance@v1"
+
+    conn = sqlite3.connect(tmp_path / "orchestrator_state.db")
+    cursor = conn.execute(
+        "SELECT decision, offline_mode, offline_policy_version FROM decisions ORDER BY id DESC LIMIT 1"
+    )
+    row = cursor.fetchone()
+    assert row is not None
+    persisted_decision, offline_mode, offline_policy_version = row
+    payload = json.loads(persisted_decision)
+    assert payload["active_policy_version"] == "policy-002-governance@v1"
+    assert offline_mode == 0
+    assert offline_policy_version == "policy-002-governance@v1"
+
+    metric_cursor = conn.execute("SELECT name, value, metadata FROM metrics ORDER BY id DESC LIMIT 1")
+    metric_row = metric_cursor.fetchone()
+    assert metric_row is not None
+    name, value, metadata = metric_row
+    assert name == "coherence_score"
+    assert isinstance(value, float)
+    assert "offline" in json.loads(metadata)
+    conn.close()

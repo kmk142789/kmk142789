@@ -16,6 +16,7 @@ if TYPE_CHECKING:  # pragma: no cover - imported for type checking only
 from echo.bank.resilience import ResilienceRecorder
 from echo.evolver import EchoEvolver
 from echo.pulsenet import AtlasAttestationResolver, PulseNetGatewayService
+from echo.orchestrator.persistence import LocalOrchestratorStore
 from echo.semantic_negotiation import (
     NegotiationIntent,
     NegotiationParticipant,
@@ -100,6 +101,7 @@ class OrchestratorCore:
         self._resilience_drill_log = self._state_dir / "resilience_drills.jsonl"
         self._resilience_interval = timedelta(hours=max(1.0, float(resilience_interval_hours)))
         self._resilience_cooldown = timedelta(hours=max(0.5, float(resilience_cooldown_hours)))
+        self._store = LocalOrchestratorStore(self._state_dir / "orchestrator_state.db")
 
     # ------------------------------------------------------------------
     # Public API
@@ -108,20 +110,38 @@ class OrchestratorCore:
         """Collect module outputs, derive adaptive weights, and persist a manifest."""
 
         offline_mode = False
+        offline_reason: str | None = None
         offline_details: MutableMapping[str, Any] | None = None
+        active_policy_version = self._store.get_active_policy_version()
+        request_id = self._store.log_request(
+            {"kind": "orchestration", "requested_at": self._now_iso()}
+        )
         try:
             inputs = self._collect_inputs()
             self._persist_offline_cache(inputs)
         except Exception as exc:  # pragma: no cover - defensive offline fallback
             offline_mode = True
+            offline_reason = str(exc)
             cached = self._load_offline_cache()
             if not cached:
                 raise
             inputs, offline_details = cached
             if offline_details is None:
                 offline_details = {}
-            offline_details.setdefault("error", str(exc))
-            offline_details.setdefault("cache_path", str(self._offline_cache_path))
+            offline_details.setdefault("offline_used", True)
+            offline_details.setdefault("offline_reason", offline_reason)
+            offline_details.setdefault("offline_policy_version", active_policy_version)
+            offline_details.setdefault("offline_source", str(self._offline_cache_path))
+            snapshot = offline_details.get("policy_snapshot")
+            if not offline_details.get("offline_policy_version") and isinstance(
+                snapshot, Sequence
+            ):
+                policy_hint = next((item for item in snapshot if isinstance(item, Mapping)), None)
+                if policy_hint:
+                    policy_id = policy_hint.get("policy_id")
+                    version = policy_hint.get("version")
+                    if isinstance(policy_id, str) and isinstance(version, (int, str)):
+                        offline_details["offline_policy_version"] = f"{policy_id}@v{version}"
             logging.warning("Orchestrator using offline cache after error: %s", exc)
         resonance_seed = self._build_resonance_seed(inputs)
         resonance_response = self._resonance.respond(resonance_seed)
@@ -147,6 +167,8 @@ class OrchestratorCore:
         decision["offline_mode"] = offline_mode
         if offline_details:
             decision["offline_details"] = offline_details
+        if active_policy_version:
+            decision["active_policy_version"] = active_policy_version
 
         momentum = self._evaluate_momentum(inputs, coherence, weights)
         decision["momentum"] = momentum
@@ -190,7 +212,23 @@ class OrchestratorCore:
                     "error": str(exc),
                 }
             decision["bridge_sync"] = bridge_payload
-
+        offline_policy_version = (
+            decision.get("offline_details", {}).get("offline_policy_version")
+            if offline_mode
+            else active_policy_version
+        )
+        self._store.log_decision(
+            request_id,
+            decision,
+            offline_mode=offline_mode,
+            offline_reason=offline_reason,
+            offline_policy_version=offline_policy_version,
+        )
+        self._store.record_metric(
+            "coherence_score",
+            harmonic_score,
+            metadata={"timestamp": decision["timestamp"], "offline": offline_mode},
+        )
         self._last_decision = decision
         return decision
 
@@ -332,7 +370,11 @@ class OrchestratorCore:
         return inputs
 
     def _persist_offline_cache(self, inputs: Mapping[str, Any]) -> None:
-        payload = {"cached_at": self._now_iso(), "inputs": inputs}
+        payload = {
+            "cached_at": self._now_iso(),
+            "inputs": inputs,
+            "offline_state": self._store.snapshot_state(),
+        }
         try:
             serialised = json.dumps(payload, ensure_ascii=False, indent=2, default=str)
             self._offline_cache_path.write_text(serialised)
@@ -360,6 +402,14 @@ class OrchestratorCore:
             if parsed:
                 age = datetime.now(timezone.utc) - parsed
                 details["cache_age_seconds"] = max(0.0, age.total_seconds())
+        offline_state = data.get("offline_state") if isinstance(data, Mapping) else None
+        if isinstance(offline_state, Mapping):
+            if offline_state.get("policies"):
+                details["policy_snapshot"] = offline_state.get("policies")
+            if offline_state.get("config"):
+                details["config_snapshot"] = offline_state.get("config")
+            if offline_state.get("metrics"):
+                details["metrics_snapshot"] = offline_state.get("metrics")
         return dict(inputs), details
 
     def _enrich_attestations(
