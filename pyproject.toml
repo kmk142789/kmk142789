@@ -98,6 +98,7 @@ include = [
   "echo*",
   "echo_eye_ai*",
   "dominion*",
+  "outerlink*",
 ]
 
 [tool.setuptools]
