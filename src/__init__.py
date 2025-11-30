@@ -27,6 +27,12 @@ from .creative_convergence import (
     compose_convergence_report,
     demo as convergence_demo,
 )
+from .governance_convergence_bridge import (
+    FusionInsight,
+    coordinate_multi_agent_convergence,
+    fuse_portfolio_with_governance,
+    stream_real_time_insights,
+)
 from .creative_constellation import (
     ConstellationNode,
     ConstellationSeed,
@@ -124,13 +130,16 @@ __all__ = [
     "compose_loop",
     "compose_resonance",
     "compose_resonance_report",
+    "coordinate_multi_agent_convergence",
     "convergence_demo",
     "export_loop_result",
     "export_suite_summary",
+    "fuse_portfolio_with_governance",
     "EchoTranscendenceEngine",
     "HelixInput",
     "TranscendenceSignature",
     "generate_loop",
+    "FusionInsight",
     "HoloSemanticEchoLoom",
     "load_voice_bias_profile",
     "loop_demo",
@@ -140,6 +149,7 @@ __all__ = [
     "summarise_loop_suite",
     "resonance_demo",
     "Spark",
+    "stream_real_time_insights",
     "transcendence_demo",
     "UnifiedArchitectureEngine",
 ]
