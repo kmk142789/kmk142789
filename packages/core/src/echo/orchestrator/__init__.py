@@ -21,6 +21,7 @@ from .proof_service import (
     SubmissionStatus,
     VerifiableCredential,
 )
+from .persistence import LocalOrchestratorStore
 from .sdk import ProofOrchestratorClient
 
 __all__ = [
@@ -42,4 +43,5 @@ __all__ = [
     "Secp256k1Wallet",
     "SubmissionStatus",
     "VerifiableCredential",
+    "LocalOrchestratorStore",
 ]
