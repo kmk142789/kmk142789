@@ -56,6 +56,24 @@ def test_run_next_step_supports_json(monkeypatch, capsys) -> None:
     assert payload["remaining_steps"] == _dummy_digest()["remaining_steps"]
 
 
+def test_run_next_step_supports_markdown(monkeypatch, capsys) -> None:
+    class DummyEvolver:
+        def __init__(self, rng=None):
+            self.rng = rng
+
+        def cycle_digest(self, *, persist_artifact: bool = True):
+            return _dummy_digest()
+
+    monkeypatch.setattr("echo.echoctl.EchoEvolver", lambda rng=None: DummyEvolver(rng=rng))
+
+    exit_code = run_next_step(["--preview", "2", "--markdown"])
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert output.startswith("### Next step\n- Next step: mutate_code()")
+    assert "- Pending: mutate_code, generate_symbolic_language (+1 more)" in output
+
+
 def test_run_next_step_handles_missing_fields(monkeypatch, capsys) -> None:
     class DummyEvolver:
         def __init__(self, rng=None):

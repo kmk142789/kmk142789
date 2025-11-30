@@ -531,6 +531,11 @@ def run_next_step(argv: List[str]) -> int:
         help="Emit the recommendation payload as JSON.",
     )
     parser.add_argument(
+        "--markdown",
+        action="store_true",
+        help="Render the recommendation as Markdown-friendly text.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         help="Optional path to persist the recommendation payload.",
@@ -576,6 +581,33 @@ def run_next_step(argv: List[str]) -> int:
     preview_steps = remaining_steps[:preview_count]
     remainder = len(remaining_steps) - len(preview_steps)
 
+    preview_line = None
+    if preview_steps:
+        preview_line = f"Pending: {', '.join(preview_steps)}"
+        if remainder > 0:
+            preview_line += f" (+{remainder} more)"
+
+    if options.markdown:
+        lines = [
+            "### Next step",
+            f"- {payload['next_step']}",
+            "- Cycle {cycle} progress: {progress:.1f}% ({remaining} steps remaining)".format(
+                cycle=payload["cycle"],
+                progress=payload["progress"] * 100,
+                remaining=len(remaining_steps),
+            ),
+        ]
+
+        if preview_line:
+            lines.append(f"- {preview_line}")
+
+        rendered = "\n".join(lines)
+        if options.output:
+            options.output.parent.mkdir(parents=True, exist_ok=True)
+            options.output.write_text(rendered + "\n", encoding="utf-8")
+        print(rendered)
+        return 0
+
     lines = [
         f"🧭 {payload['next_step']}",
         "Cycle {cycle} progress: {progress:.1f}% ({remaining} steps remaining)".format(
@@ -585,10 +617,7 @@ def run_next_step(argv: List[str]) -> int:
         ),
     ]
 
-    if preview_steps:
-        preview_line = f"Pending: {', '.join(preview_steps)}"
-        if remainder > 0:
-            preview_line += f" (+{remainder} more)"
+    if preview_line:
         lines.append(preview_line)
 
     rendered = "\n".join(lines)
