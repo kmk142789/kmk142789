@@ -1,0 +1,7 @@
+require_role: billing_agent
+allow:
+  - billing_access
+  - issue_receipt
+  - view_transactions
+deny:
+  - alter_pricing_without_signature

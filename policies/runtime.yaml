@@ -1,0 +1,6 @@
+require_role: agent_runtime
+allow:
+  - run:*
+  - spawn_agent
+deny:
+  - delete_governance_state

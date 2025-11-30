@@ -3,18 +3,17 @@ import json
 import pytest
 
 from echo_governance_core import (
-    Role,
-    add_policy,
-    add_policies,
+    DEFAULT_STATE,
+    ROLES,
     enforce,
     load_state,
     log_event,
+    mint_agent,
     restore,
     save_state,
     snapshot,
 )
 from echo_governance_core import governance_state
-from echo_governance_core import keyring
 from echo_governance_core import persistence
 
 
@@ -22,65 +21,51 @@ from echo_governance_core import persistence
 def clean_state(tmp_path, monkeypatch):
     # Ensure all state files live in an isolated temp directory.
     root = tmp_path / "echo_governance_core"
-    monkeypatch.setattr(governance_state, "STATE_FILE", root / "state.json")
-    monkeypatch.setattr(persistence, "STATE", root / "state.json")
-    monkeypatch.setattr(persistence, "BACKUP", root / "state.bak")
-    monkeypatch.setattr(keyring, "KEY_FILE", root / "keyring")
+    monkeypatch.setattr(governance_state, "STATE_FILE", root / "echo_governance_state.json")
+    monkeypatch.setattr(persistence, "STATE", root / "echo_governance_state.json")
+    monkeypatch.setattr(persistence, "BACKUP", root / "echo_governance_state.bak")
     yield
 
 
-def test_policy_enforcement_roundtrip():
-    add_policy(Role.ADMIN, "modify_agents")
+def test_load_state_bootstraps_default_state():
     state = load_state()
-    # Assign role and verify enforcement
-    state["roles"]["alice"] = Role.ADMIN
+    assert state == DEFAULT_STATE
+    assert governance_state.STATE_FILE.exists()
+
+
+def test_enforce_allows_superadmin_and_patterns():
+    state = load_state()
+    state.setdefault("actors", {})["agent.runtime.001"] = {"roles": ["agent_runtime"]}
     save_state(state)
-    assert enforce("alice", "modify_agents") is True
-    assert enforce("alice", "unknown") is False
+
+    assert enforce("josh.superadmin", "anything") is True
+    assert enforce("agent.runtime.001", "run:model") is True
+    assert enforce("agent.runtime.001", "spawn_agent") is True
+    assert enforce("agent.runtime.001", "delete_governance_state") is False
 
 
-def test_add_policies_deduplicates():
-    add_policy(Role.AGENT, "read")
-    add_policies(Role.AGENT, ["read", "write"])
+def test_mint_agent_persists_roles():
+    mint_agent("agent.mesh.002", ["mesh_agent"])
     state = load_state()
-    assert sorted(state["policies"][Role.AGENT]) == ["read", "write"]
+    assert state["actors"]["agent.mesh.002"] == {"roles": ["mesh_agent"]}
 
 
-def test_log_event_records_signature_and_details():
+def test_log_event_appends_to_audit_trail():
     entry = log_event("alice", "approve", {"task": 1})
     state = load_state()
     assert entry in state["audit"]
-    assert entry["signature"] == keyring.sign("alice" + "approve")
-    assert entry["details"] == {"task": 1}
+    assert state["audit"][-1]["meta"] == {"task": 1}
 
 
-def test_keyring_creates_deterministic_key():
-    key_first = keyring.get_key()
-    key_second = keyring.get_key()
-    assert key_first == key_second
-    assert keyring.KEY_FILE.exists()
-
-
-def test_snapshot_and_restore():
-    state_path = governance_state.STATE_FILE
-    # Prepare initial state
+def test_snapshot_and_restore_roundtrip():
     state = load_state()
-    state["roles"]["bob"] = Role.SERVICE
+    state.setdefault("actors", {})["bob"] = {"roles": ["alignment_agent"]}
     save_state(state)
 
     snapshot()
-    # Mutate state and ensure restore brings it back
-    state["roles"]["bob"] = Role.AGENT
+    state["actors"]["bob"] = {"roles": ["os_agent"]}
     save_state(state)
+
     restore()
-
-    restored = json.loads(state_path.read_text())
-    assert restored["roles"]["bob"] == Role.SERVICE
-
-
-def test_load_state_recovers_from_missing_file():
-    state_file = governance_state.STATE_FILE
-    if state_file.exists():
-        state_file.unlink()
-    state = load_state()
-    assert state == governance_state.DEFAULT_STATE
+    restored = json.loads(governance_state.STATE_FILE.read_text())
+    assert restored["actors"]["bob"] == {"roles": ["alignment_agent"]}

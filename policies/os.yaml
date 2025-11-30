@@ -1,0 +1,7 @@
+require_role: os_agent
+allow:
+  - os:load_model
+  - os:memory_write
+  - os:spawn
+deny:
+  - os:root_override
