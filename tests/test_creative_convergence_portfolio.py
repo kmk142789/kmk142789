@@ -26,6 +26,8 @@ def test_compile_convergence_panels_exposes_metrics():
     assert metrics.shared_lexicon == ("aurora", "lattice")
     assert metrics.mean_intensity > 0
     assert metrics.energy_class
+    assert metrics.lexical_gaps == ()
+    assert 0 <= metrics.alignment_score <= 1
 
 
 def test_portfolio_digest_tracks_leaders_and_renders_summary():
@@ -36,9 +38,13 @@ def test_portfolio_digest_tracks_leaders_and_renders_summary():
     digest = build_portfolio_digest(briefs)
     assert len(digest.entries) == 2
     assert digest.coverage_leader.theme == "signal sanctuary"
+    assert digest.average_alignment > 0
+    assert digest.consistency_index > 0
     text = digest.render()
     assert "Convergence Portfolio Digest" in text
     assert "coverage leader" in text
+    assert "average alignment" in text
+    assert "gap leader" in text
     assert "tidal archive" in text
 
 

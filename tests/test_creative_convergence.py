@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from src.creative_convergence import ConvergenceBrief, compose_convergence_report
+from src.creative_convergence import (
+    ConvergenceBrief,
+    compile_convergence_panels,
+    compose_convergence_report,
+)
 
 
 def test_convergence_report_contains_all_panels() -> None:
@@ -39,3 +43,21 @@ def test_convergence_report_is_deterministic_with_seeds() -> None:
     second = compose_convergence_report(brief)
 
     assert first == second
+
+
+def test_integration_panel_surfaces_alignment_gaps() -> None:
+    brief = ConvergenceBrief(
+        theme="tidal observatory",
+        motifs=["memory tide"],
+        highlights=["orbital memory"],
+        tone="reflective",
+        energy=1.0,
+        constellation_seed=3,
+        resonance_seed=3,
+    )
+
+    _, _, integration_panel, metrics = compile_convergence_panels(brief)
+
+    assert "gaps=orbital" in integration_panel
+    assert metrics.lexical_gaps == ("orbital",)
+    assert 0 <= metrics.alignment_score <= 1
