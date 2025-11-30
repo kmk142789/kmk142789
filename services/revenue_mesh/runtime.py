@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Sequence
 
+from revenue_mesh.hook_governance import authorize_billing
+
 
 @dataclass
 class BillingPlan:
@@ -60,11 +62,13 @@ class RevenueMeshRuntime:
         self.audit_log: List[AuditEntry] = []
         self.completed_tasks: List[Task] = []
 
-    def register_plan(self, plan: BillingPlan) -> None:
+    def register_plan(self, plan: BillingPlan, actor: str = "system") -> None:
+        authorize_billing(actor)
         self.billing_plans[plan.name] = plan
         self._audit("billing_plan_registered", {"plan": plan.name, "currency": plan.currency})
 
-    def onboard_client(self, client_id: str, plan_name: str) -> None:
+    def onboard_client(self, client_id: str, plan_name: str, actor: str = "system") -> None:
+        authorize_billing(actor)
         if plan_name not in self.billing_plans:
             raise ValueError(f"Unknown billing plan: {plan_name}")
         self.clients[client_id] = self.billing_plans[plan_name]
@@ -110,7 +114,8 @@ class RevenueMeshRuntime:
         self._audit("output_packaged", {"task_id": task_id, "bundle_keys": ",".join(sorted(bundle.keys()))})
         return bundle
 
-    def record_receipt(self, task_id: str, memo: str = "") -> Receipt:
+    def record_receipt(self, task_id: str, memo: str = "", actor: str = "system") -> Receipt:
+        authorize_billing(actor)
         task = self._get_task(task_id)
         if task is None:
             raise ValueError(f"Unknown task: {task_id}")

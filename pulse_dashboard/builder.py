@@ -12,6 +12,7 @@ from echo.proof_of_computation import load_proof_ledger
 
 from .impact_explorer import ImpactExplorerBuilder
 from .loop_health import LoopHealthCollector
+from .hook_governance import get_governance_snapshot
 
 
 @dataclass(slots=True)
@@ -79,6 +80,7 @@ class PulseDashboardBuilder:
         payload["pulse_summary"] = self._summarize_pulses(payload["pulses"])
         payload["signal_health"] = self._assess_signal_health(payload)
         payload["proof_of_computation"] = self._load_proof_of_computation()
+        payload["governance"] = get_governance_snapshot()
         return payload
 
     def write(self, data: Mapping[str, object] | None = None, *, path: Path | str | None = None) -> Path:
