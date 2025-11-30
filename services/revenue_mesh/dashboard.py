@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
+from revenue_mesh.hook_governance import authorize_billing
 from .runtime import Receipt, RevenueMeshRuntime, Task
 
 
@@ -36,8 +37,10 @@ def _format_receipts(receipts: List[Receipt]) -> List[Dict[str, str]]:
     return formatted
 
 
-def build_dashboard_snapshot(runtime: RevenueMeshRuntime) -> Dict[str, object]:
+def build_dashboard_snapshot(runtime: RevenueMeshRuntime, actor: str = "system") -> Dict[str, object]:
     """Offline-friendly dashboard payload showing income and job state."""
+
+    authorize_billing(actor)
 
     total_income = sum(receipt.amount for receipt in runtime.receipts)
     recent_audit = [
