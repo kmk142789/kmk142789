@@ -246,6 +246,32 @@ class AdaptiveIntelReport:
     def to_json(self, *, indent: int = 2) -> str:
         return json.dumps(self.to_dict(), indent=indent)
 
+    def to_markdown(self) -> str:
+        lines = [
+            "# Adaptive Intelligence Matrix",
+            "",
+            f"*Generated at:* {self.generated_at.isoformat()}",
+            "",
+            "## Composite Scores",
+            "| Score | Value |",
+            "| --- | --- |",
+        ]
+        for key, value in self.composite_scores.items():
+            lines.append(f"| {key} | {value:.3f} |")
+
+        lines.extend([
+            "",
+            "## Signals",
+            "| Label | Status | Key Metrics | Recommendations |",
+            "| --- | --- | --- | --- |",
+        ])
+        for signal in self.signals:
+            metric_summary = ", ".join(f"{k}: {v}" for k, v in signal.metrics.items()) or "-"
+            recommendations = "<br />".join(signal.recommendations) if signal.recommendations else "-"
+            lines.append(f"| {signal.label} | {signal.status} | {metric_summary} | {recommendations} |")
+
+        return "\n".join(lines)
+
 
 class AdaptiveIntelligenceMatrix:
     """High-order subsystem that fuses operational signals into adaptive guidance."""
@@ -322,13 +348,15 @@ class AdaptiveIntelligenceMatrix:
         score_map["automation_pressure"] = round(automation_pressure, 3)
         score_map["adaptability_index"] = round(adaptability_index, 3)
         score_map["signal_health"] = round(signal_health, 3)
+        execution_ready = (adaptability_index * 0.45) + ((1 - automation_pressure) * 0.35) + (signal_health * 0.2)
+        score_map["execution_ready"] = round(max(0.0, min(1.0, execution_ready)), 3)
         return score_map
 
     @staticmethod
     def _summarize(scores: Dict[str, float]) -> str:
         return (
             "Signal health {signal_health:.2f}, automation pressure {automation_pressure:.2f}, "
-            "adaptability index {adaptability_index:.2f}."
+            "adaptability index {adaptability_index:.2f}, execution ready {execution_ready:.2f}."
         ).format(**scores)
 
 
@@ -336,6 +364,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Adaptive Intelligence Matrix orchestrator")
     parser.add_argument("--repo-root", type=Path, default=None, help="Optional repository root override")
     parser.add_argument("--emit-json", type=Path, default=None, help="Write the matrix report to a JSON file")
+    parser.add_argument("--emit-markdown", type=Path, default=None, help="Write the matrix report to a Markdown file")
     parser.add_argument("--quiet", action="store_true", help="Skip printing the human-readable report")
     return parser
 
@@ -353,6 +382,8 @@ def main(argv: Optional[List[str]] = None) -> AdaptiveIntelReport:
         print(report.to_text())
     if args.emit_json:
         args.emit_json.write_text(report.to_json(), encoding="utf-8")
+    if args.emit_markdown:
+        args.emit_markdown.write_text(report.to_markdown(), encoding="utf-8")
     return report
 
 
