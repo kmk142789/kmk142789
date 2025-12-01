@@ -187,6 +187,7 @@ class ImpactExplorerBuilder:
             "assets": {key: self._serialise_amounts(value) for key, value in by_asset.items()},
             "sources": {key: self._serialise_amounts(value) for key, value in by_source.items()},
             "monthly_trends": self._serialise_monthly(monthly),
+            "activity": self._activity_summary(events, window, now),
             "insights": insights,
         }
 
@@ -299,6 +300,33 @@ class ImpactExplorerBuilder:
         if len(ordered) % 2 == 1:
             return ordered[mid]
         return (ordered[mid - 1] + ordered[mid]) / 2
+
+    def _activity_summary(
+        self,
+        events: list[dict[str, Any]],
+        window: dict[str, Number],
+        now: datetime,
+    ) -> dict[str, Any]:
+        latest_event = events[0] if events else None
+        latest_donation = next((event for event in events if event["type"] == "donation"), None)
+        latest_disbursement = next(
+            (event for event in events if event["type"] == "disbursement"), None
+        )
+
+        days_since_event: float | None = None
+        if latest_event is not None:
+            delta = now - latest_event["timestamp"]
+            days_since_event = round(delta.total_seconds() / 86_400, 2)
+
+        return {
+            "latest_event": self._summarise_event(latest_event),
+            "latest_donation": self._summarise_event(latest_donation),
+            "latest_disbursement": self._summarise_event(latest_disbursement),
+            "days_since_last_event": days_since_event,
+            "net_flow_30_days": self._serialise_decimal(
+                window["donations"] - window["disbursed"]
+            ),
+        }
 
     def _normalise_financial_event(self, raw: dict[str, Any]) -> dict[str, Any] | None:
         try:
