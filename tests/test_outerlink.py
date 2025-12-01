@@ -39,6 +39,31 @@ def test_broker_records_pending_when_offline(tmp_path):
     assert offline_state.pending_events, "Event should be buffered while offline"
 
 
+def test_offline_cache_restored_when_online(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        event_log=tmp_path / "events.log",
+        offline_cache_dir=tmp_path / "cache",
+    )
+    offline_state = OfflineState(online=False)
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.safe_run_shell("echo", ["hi"])
+    runtime.flush_events()
+
+    cached = list(config.offline_cache_dir.glob("event_*.json"))
+    assert cached, "Offline events should be cached to disk"
+
+    runtime.offline_state.online = True
+    runtime.flush_events()
+
+    log_lines = config.event_log.read_text().splitlines()
+    assert len(log_lines) == 1, "Cached events should be replayed once when online"
+    assert not list(config.offline_cache_dir.glob("event_*.json")), "Cache should be cleared after replay"
+    assert runtime.offline_state.last_sync is not None
+
+
 def test_dsi_sensor_stub(tmp_path):
     config = SafeModeConfig(allowed_roots=[tmp_path])
     dsi = DeviceSurfaceInterface(config)

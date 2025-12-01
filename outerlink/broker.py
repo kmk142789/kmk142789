@@ -4,7 +4,7 @@ import json
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .dsi import DeviceSurfaceInterface
 from .events import EventBus
@@ -61,7 +61,7 @@ class ExecutionBroker:
             stderr=completed.stderr,
             returncode=completed.returncode,
         )
-        self._emit("shell_executed", result)
+        self._emit("shell_executed", json.loads(result.to_json()))
         return result
 
     def read_file(self, path: Path) -> str:
@@ -80,7 +80,7 @@ class ExecutionBroker:
         self._emit("sensor_sampled", payload)
         return reading.value
 
-    def _emit(self, name: str, payload: Dict[str, str | int | float]) -> None:
+    def _emit(self, name: str, payload: Dict[str, Any]) -> None:
         event = self.event_bus.emit(name, payload)
         if self.offline_state.online:
             log_line = json.dumps(event.to_dict())
