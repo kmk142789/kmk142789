@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import json
 import random
 from typing import List, Sequence
 
@@ -26,6 +27,7 @@ class HorizonConfig:
     chaos_factor: float = 0.05
     recovery_rate: float = 0.03
     seed: int | None = None
+    output_format: str = "text"
 
     def validate(self) -> None:
         if self.timelines <= 0:
@@ -38,6 +40,8 @@ class HorizonConfig:
             raise ValueError("chaos_factor cannot be negative")
         if self.recovery_rate < 0:
             raise ValueError("recovery_rate cannot be negative")
+        if self.output_format not in {"text", "json"}:
+            raise ValueError("output_format must be 'text' or 'json'")
 
 
 @dataclasses.dataclass
@@ -54,6 +58,23 @@ class HorizonResult:
 
         total = self.survived + self.failed
         return 0.0 if total == 0 else self.survived / total
+
+    def to_dict(self, config: HorizonConfig) -> dict:
+        """Return a JSON-serializable view of the result and configuration."""
+
+        return {
+            "anchor": config.anchor,
+            "timelines": config.timelines,
+            "years_per_line": config.years_per_line,
+            "base_resilience": config.base_resilience,
+            "chaos_factor": config.chaos_factor,
+            "recovery_rate": config.recovery_rate,
+            "seed": config.seed,
+            "survived": self.survived,
+            "failed": self.failed,
+            "probability": self.probability,
+            "per_year_strength": list(self.per_year_strength),
+        }
 
 
 class HorizonEngine:
@@ -113,6 +134,11 @@ class HorizonEngine:
 
         return "\n".join(lines)
 
+    def render_json(self, result: HorizonResult) -> str:
+        """Return a machine-readable report."""
+
+        return json.dumps(result.to_dict(self.config), indent=2)
+
 
 def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
     parser = argparse.ArgumentParser(description="Monte Carlo anchor resilience simulator")
@@ -123,6 +149,13 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
     parser.add_argument("--chaos-factor", type=float, default=HorizonConfig.chaos_factor, help="Standard deviation of annual entropy shocks")
     parser.add_argument("--recovery-rate", type=float, default=HorizonConfig.recovery_rate, help="Amount healed each year when strength < 1")
     parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducible runs")
+    parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["text", "json"],
+        default=HorizonConfig.output_format,
+        help="Output format for the report",
+    )
     args = parser.parse_args(argv)
 
     return HorizonConfig(
@@ -133,6 +166,7 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         chaos_factor=args.chaos_factor,
         recovery_rate=args.recovery_rate,
         seed=args.seed,
+        output_format=args.output_format,
     )
 
 
@@ -140,7 +174,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     config = parse_args(argv)
     engine = HorizonEngine(config=config)
     result = engine.run()
-    print(engine.render_report(result))
+    if config.output_format == "json":
+        print(engine.render_json(result))
+    else:
+        print(engine.render_report(result))
     return 0
 
 
