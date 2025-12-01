@@ -39,10 +39,27 @@ class OfflineState:
 
     def flush_to_cache(self, cache_dir: Path) -> None:
         cache_dir.mkdir(parents=True, exist_ok=True)
-        for index, payload in enumerate(self.pending_events):
+        offset = len(list(cache_dir.glob("event_*.json")))
+        for index, payload in enumerate(self.pending_events, start=offset):
             cache_file = cache_dir / f"event_{index}.json"
             cache_file.write_text(json.dumps(payload, indent=2))
         self.pending_events.clear()
+
+    def restore_cache(self, cache_dir: Path) -> List[dict]:
+        restored: List[dict] = []
+        if not cache_dir.exists():
+            return restored
+
+        cache_files = sorted(cache_dir.glob("event_*.json"))
+        for cache_file in cache_files:
+            try:
+                restored.append(json.loads(cache_file.read_text()))
+            except json.JSONDecodeError:
+                continue
+            finally:
+                cache_file.unlink(missing_ok=True)
+
+        return restored
 
 
 def coerce_paths(paths: Iterable[str]) -> List[Path]:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -21,6 +22,7 @@ class OuterLinkRuntime:
         self.dsi = DeviceSurfaceInterface(self.config)
         self.broker = ExecutionBroker(self.config, self.dsi, self.event_bus, self.offline_state)
         self.router = TaskRouter(self.event_bus, self.offline_state)
+        self._last_flush_index = 0
         self._bootstrap_default_mappings()
 
     def _bootstrap_default_mappings(self) -> None:
@@ -46,13 +48,15 @@ class OuterLinkRuntime:
 
     def flush_events(self) -> None:
         if self.offline_state.online:
-            self.config.event_log.parent.mkdir(parents=True, exist_ok=True)
-            for event in self.event_bus.history:
-                with self.config.event_log.open("a", encoding="utf-8") as handle:
-                    handle.write(json.dumps(event.to_dict()) + "\n")
-            self.offline_state.pending_events.clear()
+            cached_events = self.offline_state.restore_cache(self.config.offline_cache_dir)
+            new_events = [event.to_dict() for event in self.event_bus.history[self._last_flush_index :]]
+
+            self._write_events(cached_events + new_events)
+            self._last_flush_index = len(self.event_bus.history)
+            self.offline_state.last_sync = datetime.now(timezone.utc).isoformat()
         else:
             self.offline_state.flush_to_cache(self.config.offline_cache_dir)
+            self._last_flush_index = len(self.event_bus.history)
 
     def safe_run_shell(self, command: str, args: Optional[list[str]] = None) -> Dict[str, Any]:
         result = self.broker.run_shell(command, args)
@@ -66,6 +70,15 @@ class OuterLinkRuntime:
 
     def safe_write_config(self, path: Path, content: Dict[str, str]) -> None:
         self.broker.write_config(path, content)
+
+    def _write_events(self, events: list[dict]) -> None:
+        if not events:
+            return
+
+        self.config.event_log.parent.mkdir(parents=True, exist_ok=True)
+        with self.config.event_log.open("a", encoding="utf-8") as handle:
+            for payload in events:
+                handle.write(json.dumps(payload) + "\n")
 
 
 __all__ = ["OuterLinkRuntime"]
