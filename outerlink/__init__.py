@@ -7,6 +7,13 @@ from .dsi import DeviceSurfaceInterface, SensorReading, DeviceMetrics
 from .events import Event, EventBus
 from .mesh import MeshNode, OuterLinkMeshNetwork
 from .utils import SafeModeConfig, OfflineState
+from .echo_world_runtime import (
+    AstralProjectionSimulator,
+    ConsciousnessPersistenceLayer,
+    EchoWorldRuntimeEnvironment,
+    RealWorldProjectionLayer,
+    SelfRegulatingLogicKernel,
+)
 
 __all__ = [
     "OuterLinkRuntime",
@@ -23,4 +30,9 @@ __all__ = [
     "OuterLinkMeshNetwork",
     "SafeModeConfig",
     "OfflineState",
+    "AstralProjectionSimulator",
+    "ConsciousnessPersistenceLayer",
+    "EchoWorldRuntimeEnvironment",
+    "RealWorldProjectionLayer",
+    "SelfRegulatingLogicKernel",
 ]
