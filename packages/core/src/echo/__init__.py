@@ -26,6 +26,14 @@ from .astral_compression_engine import (
     QuantumNodeV2Bridge,
     compile_program,
 )
+from .echo_ascension_engine import (
+    AscensionReport,
+    AstralCompressionSummary,
+    EchoAscensionEngine,
+    OuterlinkProjection,
+    ProjectionPulse,
+    RealityKernel,
+)
 from .autonomy import AutonomyDecision, AutonomyNode, DecentralizedAutonomyEngine
 from .creative_compass import CreativePrompt, list_prompt_lines, render_prompt, spin_compass
 from .chromatic_lattice import (
