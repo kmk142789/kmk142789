@@ -1,4 +1,8 @@
-"""Scan the repository for todo/fixme markers and refresh ``ROADMAP.md``."""
+"""Scan the repository for todo/fixme markers and refresh ``ROADMAP.md``.
+
+The CLI can optionally enforce a maximum number of outstanding TODO/FIXME tasks,
+returning a non-zero exit code to make CI pipelines aware of regressions.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +16,7 @@ import re
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Sequence, Set, Tuple
+import sys
 
 TASK_PATTERN = re.compile(
     r"^\s*(?:[<*!#/\-]+)?\s*(?P<tag>TODO|FIXME)(?=(?:[:\s-]|$))(?:[:\s-]+(?P<text>.*))?",
@@ -633,9 +638,27 @@ def main() -> int:
         metavar="N",
         help="Number of hotspot files to include (set to 0 to omit the table)",
     )
+    parser.add_argument(
+        "--max-tasks",
+        type=int,
+        default=None,
+        metavar="N",
+        help=(
+            "Exit with a non-zero status if more than N tasks are discovered (use 0 to"
+            " forbid TODOs entirely)"
+        ),
+    )
+    parser.add_argument(
+        "--fail-on-tasks",
+        action="store_true",
+        help="Shortcut for --max-tasks=0, useful for CI enforcement",
+    )
     args = parser.parse_args()
     max_bytes = args.max_bytes if args.max_bytes and args.max_bytes > 0 else None
-    update_roadmap(
+    max_tasks = 0 if args.fail_on_tasks else args.max_tasks
+    if max_tasks is not None and max_tasks < 0:
+        max_tasks = None
+    tasks = update_roadmap(
         args.base,
         args.roadmap,
         skip_dirs=args.skip,
@@ -646,6 +669,13 @@ def main() -> int:
         json_output_path=args.json_out,
         hotspot_limit=args.hotspots,
     )
+    if max_tasks is not None and len(tasks) > max_tasks:
+        print(
+            f"Discovered {len(tasks)} TODO/FIXME tasks which exceeds the allowed maximum of"
+            f" {max_tasks}.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

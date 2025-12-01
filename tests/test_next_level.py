@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 
+import sys
+
 from next_level import (
     Task,
     build_roadmap,
@@ -9,6 +11,7 @@ from next_level import (
     DEFAULT_HOTSPOT_LIMIT,
     discover_tasks,
     update_roadmap,
+    main,
 )
 
 
@@ -333,3 +336,34 @@ def test_update_roadmap_writes_json_summary(tmp_path):
     assert payload["tasks"]
     assert payload["tasks"][0]["tag"] == "TODO"
     assert payload["tasks"][0]["path"] == "module.py"
+
+
+def test_main_enforces_max_tasks(tmp_path, monkeypatch):
+    source = tmp_path / "module.py"
+    source.write_text("# TODO keep\n", encoding="utf-8")
+
+    roadmap = tmp_path / "ROADMAP.md"
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["next_level", "--roadmap", str(roadmap), "--max-tasks", "0"],
+    )
+
+    assert main() == 1
+    assert roadmap.exists()
+
+
+def test_main_allows_tasks_with_generous_limit(tmp_path, monkeypatch):
+    source = tmp_path / "module.py"
+    source.write_text("# TODO keep\n", encoding="utf-8")
+
+    roadmap = tmp_path / "ROADMAP.md"
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["next_level", "--roadmap", str(roadmap), "--max-tasks", "5"],
+    )
+
+    assert main() == 0
