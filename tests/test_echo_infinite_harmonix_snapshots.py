@@ -47,3 +47,34 @@ def test_echo_infinite_persists_harmonix_snapshot(tmp_path: Path) -> None:
 
     expected_snapshot_path = tmp_path / "harmonic_memory" / "cycles" / "cycle_00001.json"
     assert snapshot_path == expected_snapshot_path
+
+
+def test_echo_infinite_skips_fractal_nodes_when_disabled(tmp_path: Path) -> None:
+    orchestrator = EchoInfinite(
+        base_dir=tmp_path, sleep_seconds=0, write_fractal_nodes=False
+    )
+
+    cycle = 1
+    timestamp = rfc3339_timestamp()
+    glyph_signature = "∇⊸≋∇::test"
+    cycle_dir = orchestrator.colossus_dir / f"cycle_{cycle:05d}"
+    cycle_dir.mkdir(parents=True, exist_ok=True)
+
+    orchestrator._create_cycle_artifacts(
+        cycle=cycle,
+        timestamp=timestamp,
+        glyph_signature=glyph_signature,
+        cycle_dir=cycle_dir,
+    )
+
+    assert not (cycle_dir / "puzzle_fractal").exists()
+    assert not (cycle_dir / "dataset_fractal").exists()
+    assert not (cycle_dir / "narrative_fractal").exists()
+    assert not (cycle_dir / "lineage_fractal").exists()
+
+    assert (cycle_dir / f"puzzle_cycle_{cycle:05d}.md").exists()
+    assert (cycle_dir / f"dataset_cycle_{cycle:05d}.json").exists()
+    assert (cycle_dir / f"glyph_narrative_{cycle:05d}.md").exists()
+    assert (cycle_dir / f"lineage_map_{cycle:05d}.json").exists()
+    assert (cycle_dir / f"verify_cycle_{cycle:05d}.py").exists()
+    assert (cycle_dir / f"extraordinary_manifest_{cycle:05d}.json").exists()
