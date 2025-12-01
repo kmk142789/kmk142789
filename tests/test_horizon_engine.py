@@ -22,6 +22,8 @@ def test_engine_run_is_deterministic_with_seed():
     assert len(result.per_year_strength) == 12
     assert 0.0 <= result.probability <= 1.0
     assert pytest.approx(1.0) == result.probability
+    assert result.weakest_year >= 1
+    assert 0.0 <= result.volatility <= 1.0
 
 
 def test_json_output_format(capsys):
@@ -43,5 +45,27 @@ def test_json_output_format(capsys):
     assert payload["timelines"] == 50
     assert payload["years_per_line"] == 8
     assert payload["seed"] == 7
+    assert payload["chaos_distribution"] == "gaussian"
+    assert "volatility" in payload
+    assert "weakest_year" in payload
     assert len(payload["per_year_strength"]) == 8
     assert 0.0 <= payload["probability"] <= 1.0
+
+
+def test_uniform_distribution_entropy():
+    config = HorizonConfig(
+        anchor="Uniform",
+        timelines=60,
+        years_per_line=10,
+        base_resilience=0.9,
+        chaos_factor=0.08,
+        chaos_distribution="uniform",
+        recovery_rate=0.01,
+        seed=99,
+    )
+    engine = HorizonEngine(config=config)
+    result = engine.run()
+
+    assert result.failed < config.timelines
+    assert 0.0 <= result.volatility <= 1.0
+    assert 1 <= result.weakest_year <= config.years_per_line

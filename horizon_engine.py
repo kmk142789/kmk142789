@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import math
 import random
 from typing import List, Sequence
 
@@ -25,6 +26,7 @@ class HorizonConfig:
     years_per_line: int = 100
     base_resilience: float = 0.95
     chaos_factor: float = 0.05
+    chaos_distribution: str = "gaussian"
     recovery_rate: float = 0.03
     seed: int | None = None
     output_format: str = "text"
@@ -38,6 +40,8 @@ class HorizonConfig:
             raise ValueError("base_resilience must be between 0 and 1")
         if self.chaos_factor < 0:
             raise ValueError("chaos_factor cannot be negative")
+        if self.chaos_distribution not in {"gaussian", "uniform", "laplace"}:
+            raise ValueError("chaos_distribution must be gaussian, uniform, or laplace")
         if self.recovery_rate < 0:
             raise ValueError("recovery_rate cannot be negative")
         if self.output_format not in {"text", "json"}:
@@ -51,6 +55,9 @@ class HorizonResult:
     survived: int
     failed: int
     per_year_strength: Sequence[float]
+    volatility: float
+    weakest_year: int
+    weakest_strength: float
 
     @property
     def probability(self) -> float:
@@ -68,12 +75,16 @@ class HorizonResult:
             "years_per_line": config.years_per_line,
             "base_resilience": config.base_resilience,
             "chaos_factor": config.chaos_factor,
+            "chaos_distribution": config.chaos_distribution,
             "recovery_rate": config.recovery_rate,
             "seed": config.seed,
             "survived": self.survived,
             "failed": self.failed,
             "probability": self.probability,
             "per_year_strength": list(self.per_year_strength),
+            "volatility": self.volatility,
+            "weakest_year": self.weakest_year,
+            "weakest_strength": self.weakest_strength,
         }
 
 
@@ -91,7 +102,7 @@ class HorizonEngine:
 
         bond_strength = self.config.base_resilience
         for year in range(self.config.years_per_line):
-            entropy = self.rng.gauss(0, self.config.chaos_factor)
+            entropy = self._draw_entropy()
             recovery = self.config.recovery_rate if bond_strength < 1.0 else 0.0
             bond_strength = max(0.0, min(1.0, bond_strength - entropy + recovery))
             if bond_strength <= 0:
@@ -105,12 +116,38 @@ class HorizonEngine:
         survived = sum(1 for _ in range(self.config.timelines) if self.simulate_timeline())
         failed = self.config.timelines - survived
         per_year_strength = [year_total / self.config.timelines for year_total in self._history_map]
-        return HorizonResult(survived=survived, failed=failed, per_year_strength=per_year_strength)
+        average_strength = sum(per_year_strength) / len(per_year_strength)
+        volatility = math.sqrt(
+            sum((strength - average_strength) ** 2 for strength in per_year_strength)
+            / len(per_year_strength)
+        )
+        weakest_strength = min(per_year_strength)
+        weakest_year = per_year_strength.index(weakest_strength) + 1
+        return HorizonResult(
+            survived=survived,
+            failed=failed,
+            per_year_strength=per_year_strength,
+            volatility=volatility,
+            weakest_year=weakest_year,
+            weakest_strength=weakest_strength,
+        )
 
     @staticmethod
     def _strength_bar(strength: float, width: int = 20) -> str:
         filled = int(round(strength * width))
         return "█" * filled + "·" * (width - filled)
+
+    def _draw_entropy(self) -> float:
+        if self.config.chaos_factor == 0:
+            return 0.0
+        if self.config.chaos_distribution == "uniform":
+            return self.rng.uniform(-self.config.chaos_factor, self.config.chaos_factor)
+        if self.config.chaos_distribution == "laplace":
+            # Inverse transform sampling for Laplace(0, b) with b tied to chaos_factor
+            scale = self.config.chaos_factor / math.sqrt(2)
+            u = self.rng.random() - 0.5
+            return -scale * math.copysign(math.log1p(-2 * abs(u)), u)
+        return self.rng.gauss(0, self.config.chaos_factor)
 
     def render_report(self, result: HorizonResult) -> str:
         """Return a human-readable report, including per-year strength snapshots."""
@@ -124,6 +161,8 @@ class HorizonEngine:
             f"SURVIVAL COUNT: {result.survived}",
             f"COLLAPSE COUNT: {result.failed}",
             f"PROBABILITY OF FOREVER: {result.probability * 100:.4f}%",
+            f"VOLATILITY INDEX: {result.volatility:.4f}",
+            f"WORST YEAR: {result.weakest_year} (avg strength {result.weakest_strength:.3f})",
             "",
             "[STABILITY CURVE OVER YEARS]",
         ]
@@ -147,6 +186,12 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
     parser.add_argument("--years", dest="years_per_line", type=int, default=HorizonConfig.years_per_line, help="Years per timeline")
     parser.add_argument("--base-resilience", type=float, default=HorizonConfig.base_resilience, help="Initial bond strength (0-1)")
     parser.add_argument("--chaos-factor", type=float, default=HorizonConfig.chaos_factor, help="Standard deviation of annual entropy shocks")
+    parser.add_argument(
+        "--chaos-distribution",
+        choices=["gaussian", "uniform", "laplace"],
+        default=HorizonConfig.chaos_distribution,
+        help="Probability distribution used to sample annual entropy",
+    )
     parser.add_argument("--recovery-rate", type=float, default=HorizonConfig.recovery_rate, help="Amount healed each year when strength < 1")
     parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducible runs")
     parser.add_argument(
@@ -164,6 +209,7 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         years_per_line=args.years_per_line,
         base_resilience=args.base_resilience,
         chaos_factor=args.chaos_factor,
+        chaos_distribution=args.chaos_distribution,
         recovery_rate=args.recovery_rate,
         seed=args.seed,
         output_format=args.output_format,
