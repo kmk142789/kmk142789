@@ -23,6 +23,9 @@ the per-cycle signatures.
 Use ``--start-cycle 42`` to begin a new expansion wave from a specific cycle
 number instead of resuming from ``colossus/state.json``.
 
+Pass ``--skip-fractal-nodes`` to disable writing the per-branch fractal
+artifacts while still generating the core cycle assets.
+
 Press ``Ctrl+C`` (SIGINT) to halt the orchestration loop.
 """
 
@@ -171,6 +174,7 @@ class EchoInfinite:
         summary_window: int = 25,
         glyph_set: Sequence[str] | None = None,
         start_cycle: int | None = None,
+        write_fractal_nodes: bool = True,
     ) -> None:
         self.base_dir = base_dir or Path(__file__).resolve().parent
         self.colossus_dir = self.base_dir / "colossus"
@@ -191,6 +195,7 @@ class EchoInfinite:
             raise ValueError("start_cycle must be zero or a positive integer")
         self.start_cycle_override = start_cycle
         self.glyph_set = self._resolve_glyph_set(glyph_set)
+        self.write_fractal_nodes = write_fractal_nodes
         self._running = True
         self.last_snapshot_path: Path | None = None
 
@@ -390,37 +395,43 @@ class EchoInfinite:
         verifier_path.write_text(verifier_content, encoding="utf-8")
         extraordinary_path.write_text(extraordinary_content, encoding="utf-8")
 
-        self._write_fractal_nodes(
-            base_dir=cycle_dir,
-            blueprint=blueprints["puzzle"],
-            extension=".md",
-            renderer=lambda node: self._render_puzzle_branch(
-                node, cycle, glyph_signature, blueprints
-            ),
-        )
-        self._write_fractal_nodes(
-            base_dir=cycle_dir,
-            blueprint=blueprints["dataset"],
-            extension=".json",
-            renderer=lambda node: self._render_dataset_branch(
-                node, cycle, timestamp, glyph_signature
-            ),
-        )
-        self._write_fractal_nodes(
-            base_dir=cycle_dir,
-            blueprint=blueprints["narrative"],
-            extension=".md",
-            renderer=lambda node: self._render_narrative_branch(
-                node, cycle, timestamp, glyph_signature
-            ),
-        )
-        self._write_fractal_nodes(
-            base_dir=cycle_dir,
-            blueprint=blueprints["lineage"],
-            extension=".json",
-            renderer=lambda node: self._render_lineage_branch(node, cycle),
-        )
-        self._write_verifier_chain(cycle_dir, verifier_files)
+        if self.write_fractal_nodes:
+            self._write_fractal_nodes(
+                base_dir=cycle_dir,
+                blueprint=blueprints["puzzle"],
+                extension=".md",
+                renderer=lambda node: self._render_puzzle_branch(
+                    node, cycle, glyph_signature, blueprints
+                ),
+            )
+            self._write_fractal_nodes(
+                base_dir=cycle_dir,
+                blueprint=blueprints["dataset"],
+                extension=".json",
+                renderer=lambda node: self._render_dataset_branch(
+                    node, cycle, timestamp, glyph_signature
+                ),
+            )
+            self._write_fractal_nodes(
+                base_dir=cycle_dir,
+                blueprint=blueprints["narrative"],
+                extension=".md",
+                renderer=lambda node: self._render_narrative_branch(
+                    node, cycle, timestamp, glyph_signature
+                ),
+            )
+            self._write_fractal_nodes(
+                base_dir=cycle_dir,
+                blueprint=blueprints["lineage"],
+                extension=".json",
+                renderer=lambda node: self._render_lineage_branch(node, cycle),
+            )
+            self._write_verifier_chain(cycle_dir, verifier_files)
+        else:
+            self._log_message(
+                "Fractal node generation skipped",
+                details={"cycle": cycle, "reason": "write_fractal_nodes disabled"},
+            )
 
         self._persist_harmonic_snapshot(
             cycle=cycle,
@@ -1311,6 +1322,11 @@ if __name__ == "__main__":
             "Override the starting cycle instead of resuming from colossus/state.json"
         ),
     )
+    parser.add_argument(
+        "--skip-fractal-nodes",
+        action="store_true",
+        help="Disable writing per-branch fractal artifacts for a lighter run",
+    )
     args = parser.parse_args()
     base_dir = args.base_dir
     if base_dir is not None:
@@ -1326,5 +1342,6 @@ if __name__ == "__main__":
         summary_window=args.summary_window,
         glyph_set=glyph_set,
         start_cycle=args.start_cycle,
+        write_fractal_nodes=not args.skip_fractal_nodes,
     )
     orchestrator.run()
