@@ -9,6 +9,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Sequence
 
+from .dream_interface import (
+    AstralEvent,
+    AstralEventSequencer,
+    DreamDrivenRouter,
+    DreamMemoryTranslator,
+    DreamSeed,
+    MemoryTrace,
+    SharedDreamInterface,
+    SharedDreamResponse,
+)
+
 
 @dataclass(frozen=True)
 class DreamPlanStep:
@@ -173,8 +184,16 @@ class DreamCompiler:
 
 
 __all__ = [
+    "AstralEvent",
+    "AstralEventSequencer",
     "DreamCompiler",
     "DreamCompileResult",
+    "DreamDrivenRouter",
     "DreamFile",
+    "DreamMemoryTranslator",
     "DreamPlanStep",
+    "DreamSeed",
+    "MemoryTrace",
+    "SharedDreamInterface",
+    "SharedDreamResponse",
 ]
