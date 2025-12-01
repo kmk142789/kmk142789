@@ -110,6 +110,19 @@ from .cosmic_mnemonic_forge import (
     render_constellation,
 )
 from .dotnet_sdk import build_dotnet_sdk_download_url
+from .echo_dream_engine import (
+    BehaviorDirective,
+    Dream,
+    DreamInterpretation,
+    EchoDreamEngine,
+    PortalBridge,
+    PortalHarmonizer,
+    SymbolicMemory,
+    SymbolicMemoryStore,
+    WayfinderLayer,
+    WayfinderNode,
+    WayfinderTrace,
+)
 from .echo_nexus_hub import EchoNexusHub, ScheduleLoopDigest, WorkerStory
 from .echo_nexus_portal import EchoNexusPortal, PortalSnapshot, launch_portal
 from .echo_visionary_kernel import BitwisePixelEngine, EchoVisionaryKernel, WorkerBot
