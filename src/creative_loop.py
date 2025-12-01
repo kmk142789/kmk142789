@@ -125,6 +125,8 @@ class LoopSummary:
     accent_focus: float
     dominant_voice: str | None
     fragment_coverage: int
+    accent_switch_rate: float
+    tempo_texture_span: int
 
     def as_dict(self) -> Dict[str, object]:
         return {
@@ -132,6 +134,8 @@ class LoopSummary:
             "accent_focus": self.accent_focus,
             "dominant_voice": self.dominant_voice,
             "fragment_coverage": self.fragment_coverage,
+            "accent_switch_rate": self.accent_switch_rate,
+            "tempo_texture_span": self.tempo_texture_span,
         }
 
 
@@ -159,7 +163,9 @@ class LoopResult:
                 f"voice_diversity={self.summary.voice_diversity:.2f}; "
                 f"accent_focus={self.summary.accent_focus:.2f}; "
                 f"dominant={self.summary.dominant_voice or '-'}; "
-                f"fragments={self.summary.fragment_coverage}"
+                f"fragments={self.summary.fragment_coverage}; "
+                f"switch_rate={self.summary.accent_switch_rate:.2f}; "
+                f"textures={self.summary.tempo_texture_span}"
             )
             rendered.append(summary_line)
         rendered.append(rhythm_line)
@@ -190,7 +196,16 @@ def summarize_loop(loop_result: LoopResult) -> LoopSummary:
     voice_diversity = used_voice_count / total_voices if total_voices else 0.0
     accents = loop_result.diagnostics.accents
     accent_focus = sum(accents) / len(accents) if accents else 0.0
+    accent_switch_rate = 0.0
+    if len(accents) > 1:
+        switches = sum(1 for current, nxt in zip(accents, accents[1:]) if current != nxt)
+        accent_switch_rate = switches / (len(accents) - 1)
     fragments_used = len(loop_result.diagnostics.fragments)
+    textures = {
+        entry["texture"]
+        for entry in loop_result.timeline
+        if isinstance(entry, Mapping) and entry.get("texture")
+    } or set(loop_result.rhythm.dynamic_tempi)
     dominant_voice: str | None = None
     if loop_result.diagnostics.voices:
         dominant_voice = loop_result.diagnostics.voices.most_common(1)[0][0]
@@ -200,6 +215,8 @@ def summarize_loop(loop_result: LoopResult) -> LoopSummary:
         accent_focus=accent_focus,
         dominant_voice=dominant_voice,
         fragment_coverage=fragments_used,
+        accent_switch_rate=accent_switch_rate,
+        tempo_texture_span=len(textures),
     )
 def build_loop_payload(seed: LoopSeed, loop_result: LoopResult, timestamp: str) -> Dict[str, object]:
     """Build a structured payload describing the loop."""
@@ -459,7 +476,9 @@ def compose_loop(
                 f"diversity={loop_result.summary.voice_diversity:.2f}; "
                 f"accent_focus={loop_result.summary.accent_focus:.2f}; "
                 f"dominant={loop_result.summary.dominant_voice or '-'}; "
-                f"fragments={loop_result.summary.fragment_coverage}"
+                f"fragments={loop_result.summary.fragment_coverage}; "
+                f"switch_rate={loop_result.summary.accent_switch_rate:.2f}; "
+                f"textures={loop_result.summary.tempo_texture_span}"
             )
         return "\n".join(
             [
@@ -493,6 +512,8 @@ def compose_loop(
             f"- accent focus: {summary.accent_focus:.2f}",
             f"- fragment coverage: {summary.fragment_coverage}",
             f"- dominant voice: {summary.dominant_voice or 'none'}",
+            f"- accent switch rate: {summary.accent_switch_rate:.2f}",
+            f"- tempo texture span: {summary.tempo_texture_span}",
             f"- voices engaged: {voice_text}",
             f"- top fragments: {fragment_text}",
             f"- diagnostics: {diagnostics_line}",
@@ -551,6 +572,8 @@ def compose_loop(
             f"Dominant voice: {summary.dominant_voice or '-'}",
             f"Fragments highlighted: {summary.fragment_coverage}",
             f"Lines composed: {len(loop_result.lines)}",
+            f"Accent switch rate: {summary.accent_switch_rate:.2f}",
+            f"Tempo texture span: {summary.tempo_texture_span}",
             f"Rhythm accents: {','.join(str(value) for value in rhythm.accents)}",
             f"Rhythm dynamics: {','.join(rhythm.dynamic_tempi)}",
             f"Diagnostics: {diagnostics_line}",
@@ -568,6 +591,8 @@ def compose_loop(
                 f"<li><strong>Accent focus:</strong> {summary.accent_focus:.2f}</li>",
                 f"<li><strong>Dominant voice:</strong> {html.escape(summary.dominant_voice or '-')}</li>",
                 f"<li><strong>Fragments highlighted:</strong> {summary.fragment_coverage}</li>",
+                f"<li><strong>Accent switch rate:</strong> {summary.accent_switch_rate:.2f}</li>",
+                f"<li><strong>Tempo texture span:</strong> {summary.tempo_texture_span}</li>",
                 f"<li><strong>Rhythm accents:</strong> {','.join(str(value) for value in rhythm.accents)}</li>",
                 f"<li><strong>Rhythm dynamics:</strong> {','.join(html.escape(value) for value in rhythm.dynamic_tempi)}</li>",
                 f"<li><strong>Diagnostics:</strong> {diagnostics_text}</li>",
@@ -660,6 +685,8 @@ def summarise_loop_suite(loop_results: Iterable[LoopResult]) -> Dict[str, object
     dominant_voice_counts: Counter[str] = Counter()
     voice_diversities: List[float] = []
     fragment_coverages: List[int] = []
+    accent_switch_rates: List[float] = []
+    texture_spans: List[int] = []
     total_lines = 0
 
     for result in results:
@@ -671,6 +698,8 @@ def summarise_loop_suite(loop_results: Iterable[LoopResult]) -> Dict[str, object
         summary = result.summary or summarize_loop(result)
         voice_diversities.append(summary.voice_diversity)
         fragment_coverages.append(summary.fragment_coverage)
+        accent_switch_rates.append(summary.accent_switch_rate)
+        texture_spans.append(summary.tempo_texture_span)
         if summary.dominant_voice:
             dominant_voice_counts[summary.dominant_voice] += 1
 
@@ -679,6 +708,10 @@ def summarise_loop_suite(loop_results: Iterable[LoopResult]) -> Dict[str, object
     mean_fragment_coverage = (
         fmean(fragment_coverages) if fragment_coverages else 0.0
     )
+    mean_accent_switch_rate = (
+        fmean(accent_switch_rates) if accent_switch_rates else 0.0
+    )
+    mean_texture_span = fmean(texture_spans) if texture_spans else 0.0
     summary = {
         "total_loops": len(results),
         "total_lines": total_lines,
@@ -690,6 +723,8 @@ def summarise_loop_suite(loop_results: Iterable[LoopResult]) -> Dict[str, object
         "average_accent_intensity": average_accent,
         "mean_voice_diversity": mean_voice_diversity,
         "mean_fragment_coverage": mean_fragment_coverage,
+        "mean_accent_switch_rate": mean_accent_switch_rate,
+        "mean_texture_span": mean_texture_span,
         "dominant_voice_distribution": dominant_voice_counts.most_common(),
     }
     return summary
@@ -726,6 +761,12 @@ def format_suite_summary(summary: Mapping[str, object]) -> str:
     )
     lines.append(
         f"- mean fragment coverage: {summary.get('mean_fragment_coverage', 0.0):.2f}"
+    )
+    lines.append(
+        f"- mean accent switch rate: {summary.get('mean_accent_switch_rate', 0.0):.2f}"
+    )
+    lines.append(
+        f"- mean tempo texture span: {summary.get('mean_texture_span', 0.0):.2f}"
     )
     lines.append(
         "- dominant voice distribution: "
