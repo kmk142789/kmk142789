@@ -3,8 +3,9 @@
 import json
 import random
 from datetime import datetime
+from pathlib import Path
 
-from echo_creative_flux import FluxPassage, build_passage, generate_passage
+from echo_creative_flux import FluxContext, FluxPassage, _load_stopwords, build_passage, compute_top_words, generate_passage
 
 
 def test_build_passage_is_deterministic():
@@ -70,4 +71,30 @@ def test_motifs_are_applied_without_hiding_sources():
 
     assert passage.prompt_source != passage.prompt
     assert passage.prompt_source in passage.prompt
+
+
+def test_load_stopwords_combines_files(tmp_path: Path):
+    first = tmp_path / "first.txt"
+    second = tmp_path / "second.txt"
+    first.write_text("signal\n# comment\n", encoding="utf-8")
+    second.write_text("echo\nSIGnAL\n", encoding="utf-8")
+
+    loaded = _load_stopwords([first, second])
+
+    assert loaded == {"signal", "echo"}
+
+
+def test_compute_top_words_respects_stopwords():
+    context = FluxContext(mood="calm", artifact="loom", timestamp=datetime(2025, 1, 1, 0, 0, 0))
+    passage = FluxPassage(
+        context=context,
+        prompt="Echo echo sings",  # echo appears twice
+        closing="Echo drifts softly",  # echo appears once more
+    )
+
+    baseline = compute_top_words([passage], limit=2)
+    assert baseline[0] == ("echo", 3)
+
+    filtered = compute_top_words([passage], limit=2, stopwords={"echo"})
+    assert all(word != "echo" for word, _ in filtered)
 
