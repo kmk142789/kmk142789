@@ -86,6 +86,11 @@ from .continuum_resonance_field import (
     LaneResonance,
     PulseDrift,
 )
+from .continuation_memory_engine import (
+    ContinuationMemoryEngine,
+    ContinuationPacket,
+    FlowSignal,
+)
 from .challenge_labyrinth import (
     AdaptiveVectorCatalyst,
     ChallengeCatalyst,
@@ -139,6 +144,11 @@ from .ecosystem_pulse import (
     EcosystemSignal,
 )
 from .intelligence_layer import IntelligenceLayerSnapshot, synthesize_intelligence_layer
+from .intent_gradient_interpreter import (
+    ContextCandidate,
+    IntentGradient,
+    IntentGradientInterpreter,
+)
 from .hex_ingestion import (
     AnomalyAlert,
     HexPayloadReport,
