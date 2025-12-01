@@ -53,6 +53,21 @@ def test_local_device_runtime_runs_offline_tasks():
     assert runtime.pending and runtime.pending[0].requires_network
 
 
+def test_local_device_runtime_executes_network_tasks_when_available():
+    runtime = LocalDeviceRuntime()
+    runtime.register_capability("network", lambda payload: {"ok": True, **payload})
+
+    runtime.submit_task(OfflineTask("network", payload={"value": 3}, requires_network=True))
+
+    runtime.run()  # should leave the network task pending
+    assert runtime.pending and runtime.pending[0].requires_network
+
+    runtime.run(network_available=True)
+    assert not runtime.pending
+    assert runtime.completed[-1].executed is True
+    assert runtime.snapshot()["pending_requires_network"] == []
+
+
 def test_real_estate_qualification_module_scores_leads():
     bundles = {
         "prime": PolicyBundle(name="prime", version="1.0", policies={}, convergence_score=0.9),
