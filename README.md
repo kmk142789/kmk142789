@@ -10,6 +10,7 @@ publications and operational policies.
 ## Table of contents
 
 - [Orientation](#orientation)
+- [Next important steps](#next-important-steps)
 - [Getting started](#getting-started)
 - [Deployment readiness](#deployment-readiness)
 - [Key workflows](#key-workflows)
@@ -29,6 +30,13 @@ archives. Start with the high-level tour in
 [`docs/ECHO_CREATIVE_COMPASS.md`](docs/ECHO_CREATIVE_COMPASS.md), and open the
 new [`docs/REPO_NAVIGATOR.md`](docs/REPO_NAVIGATOR.md) for a reorganised map
 while navigating.
+
+## Next important steps
+
+See [`docs/NEXT_IMPORTANT_STEPS.md`](docs/NEXT_IMPORTANT_STEPS.md) for a
+curated shortlist of high-impact follow-ups: CLI stabilization, lightweight
+observability, release provenance hardening, and onboarding support. Use it to
+sequence the next sprint or to align quick wins across the monorepo.
 
 ### Directory taxonomy (capsule view)
 
