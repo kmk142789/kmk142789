@@ -5,6 +5,7 @@ from .router import TaskRouter, RoutingDecision
 from .broker import ExecutionBroker, SafeExecutionResult
 from .dsi import DeviceSurfaceInterface, SensorReading, DeviceMetrics
 from .events import Event, EventBus
+from .mesh import MeshNode, OuterLinkMeshNetwork
 from .utils import SafeModeConfig, OfflineState
 
 __all__ = [
@@ -18,6 +19,8 @@ __all__ = [
     "DeviceMetrics",
     "Event",
     "EventBus",
+    "MeshNode",
+    "OuterLinkMeshNetwork",
     "SafeModeConfig",
     "OfflineState",
 ]
