@@ -7,6 +7,11 @@ default – it continues creating expansion waves until it is interrupted by the
 operator.  The command line interface offers an optional ``--max-cycles`` flag
 that gracefully halts the run after a specified number of cycles.
 
+Every cycle also refreshes a compact ``heartbeat`` payload that captures the
+latest cycle number, timestamp, glyph signature, and references to the most
+recent artifacts.  You can disable heartbeat writing with
+``--disable-heartbeat`` or direct it to a custom path via ``--heartbeat-path``.
+
 The generated artifacts include a puzzle (Markdown), dataset (JSON), glyph
 narrative (Markdown), lineage map (JSON), and a lightweight verification script
 that references the other artifacts created during the cycle.  Each artifact is
@@ -175,6 +180,8 @@ class EchoInfinite:
         glyph_set: Sequence[str] | None = None,
         start_cycle: int | None = None,
         write_fractal_nodes: bool = True,
+        heartbeat_path: Path | None = None,
+        enable_heartbeat: bool = True,
     ) -> None:
         self.base_dir = base_dir or Path(__file__).resolve().parent
         self.colossus_dir = self.base_dir / "colossus"
@@ -184,6 +191,8 @@ class EchoInfinite:
         self.broadcast_dir = self.base_dir / "public" / "colossus"
         self.broadcast_path = self.broadcast_dir / "latest_cycle.json"
         self.harmonic_cycles_dir = self.base_dir / "harmonic_memory" / "cycles"
+        self.heartbeat_path = heartbeat_path or (self.colossus_dir / "heartbeat.json")
+        self.heartbeat_enabled = enable_heartbeat
         self.sleep_seconds = sleep_seconds
         if max_cycles is not None and max_cycles <= 0:
             raise ValueError("max_cycles must be a positive integer")
@@ -272,6 +281,14 @@ class EchoInfinite:
 
             self._persist_state(cycle)
 
+            if self.heartbeat_enabled:
+                self._write_heartbeat(
+                    cycle=cycle,
+                    timestamp=timestamp,
+                    glyph_signature=glyph_signature,
+                    artifact_paths=artifacts,
+                )
+
             if not self._running:
                 break
 
@@ -310,6 +327,33 @@ class EchoInfinite:
     def _persist_state(self, cycle: int) -> None:
         payload = {"cycle": cycle, "updated_at": rfc3339_timestamp()}
         self.state_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+    def _write_heartbeat(
+        self,
+        *,
+        cycle: int,
+        timestamp: str,
+        glyph_signature: str,
+        artifact_paths: ArtifactPaths,
+    ) -> None:
+        heartbeat = {
+            "cycle": cycle,
+            "timestamp": timestamp,
+            "glyph_signature": glyph_signature,
+            "artifacts": artifact_paths.as_relative_strings(self.base_dir),
+            "log": str(self._relative_to_base(self.log_path)),
+            "summary": str(self._relative_to_base(self.summary_path)),
+        }
+
+        self.heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
+        self.heartbeat_path.write_text(json.dumps(heartbeat, indent=2) + "\n", encoding="utf-8")
+        self._log_message(
+            "Heartbeat refreshed",
+            details={
+                "cycle": cycle,
+                "path": self._relative_to_base(self.heartbeat_path),
+            },
+        )
 
     def _create_cycle_artifacts(
         self,
@@ -1327,6 +1371,17 @@ if __name__ == "__main__":
         action="store_true",
         help="Disable writing per-branch fractal artifacts for a lighter run",
     )
+    parser.add_argument(
+        "--heartbeat-path",
+        type=Path,
+        default=None,
+        help="Optional file path for writing the latest heartbeat payload",
+    )
+    parser.add_argument(
+        "--disable-heartbeat",
+        action="store_true",
+        help="Skip writing the rolling heartbeat status file",
+    )
     args = parser.parse_args()
     base_dir = args.base_dir
     if base_dir is not None:
@@ -1343,5 +1398,7 @@ if __name__ == "__main__":
         glyph_set=glyph_set,
         start_cycle=args.start_cycle,
         write_fractal_nodes=not args.skip_fractal_nodes,
+        heartbeat_path=args.heartbeat_path,
+        enable_heartbeat=not args.disable_heartbeat,
     )
     orchestrator.run()
