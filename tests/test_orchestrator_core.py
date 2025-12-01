@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Mapping
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -333,6 +334,53 @@ def test_orchestrator_offline_cache_reports_staleness(tmp_path: Path) -> None:
     status = service.offline_status()
     assert status.get("cache_stale") is True
     assert status.get("cache_ttl_seconds")
+
+
+def test_orchestrator_rejects_stale_cache_when_disabled(tmp_path: Path) -> None:
+    pulsenet = StubPulseNet(_make_summary(), _make_attestations())
+    evolver = StubEvolver(_make_digest())
+    resonance = StubResonance(400.0)
+
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=evolver,  # type: ignore[arg-type]
+        resonance_engine=resonance,
+        atlas_resolver=None,
+        offline_cache_ttl_hours=0.001,
+        allow_stale_offline_cache=False,
+    )
+
+    service._persist_offline_cache({"pulse_summary": {"total_entries": 1}})
+    cache_file = tmp_path / "offline_cache.json"
+    payload = json.loads(cache_file.read_text())
+    payload["cached_at"] = "2020-01-01T00:00:00+00:00"
+    cache_file.write_text(json.dumps(payload))
+
+    pulsenet._fail = True  # type: ignore[attr-defined]
+    with pytest.raises(RuntimeError, match="stale offline cache refused"):
+        service.orchestrate()
+
+
+def test_orchestrator_can_purge_offline_cache(tmp_path: Path) -> None:
+    pulsenet = StubPulseNet(_make_summary(), _make_attestations())
+    evolver = StubEvolver(_make_digest())
+    resonance = StubResonance(400.0)
+
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=evolver,  # type: ignore[arg-type]
+        resonance_engine=resonance,
+        atlas_resolver=None,
+    )
+
+    service._persist_offline_cache({"pulse_summary": {"total_entries": 1}})
+    assert service.offline_status()["exists"] is True
+
+    assert service.purge_offline_cache() is True
+    assert service.offline_status()["exists"] is False
+    assert service.purge_offline_cache() is False
 
 
 def test_orchestrator_logs_decisions_and_metrics(tmp_path: Path) -> None:
