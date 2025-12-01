@@ -74,6 +74,7 @@ class OrchestratorCore:
         resilience_cooldown_hours: float = 6.0,
         negotiation_resolver: SemanticNegotiationResolver | None = None,
         offline_cache_ttl_hours: float | None = 48.0,
+        allow_stale_offline_cache: bool = True,
     ) -> None:
         self._state_dir = Path(state_dir)
         self._state_dir.mkdir(parents=True, exist_ok=True)
@@ -92,6 +93,7 @@ class OrchestratorCore:
             if offline_cache_ttl_hours is not None
             else None
         )
+        self._allow_stale_offline_cache = allow_stale_offline_cache
 
         self._principles: Sequence[ManifestoPrinciple] = (
             ManifestoPrinciple(
@@ -148,6 +150,11 @@ class OrchestratorCore:
             inputs, offline_details = cached
             if offline_details is None:
                 offline_details = {}
+            cache_stale = offline_details.get("cache_stale")
+            if cache_stale and not self._allow_stale_offline_cache:
+                raise RuntimeError(
+                    "stale offline cache refused; enable allow_stale_offline_cache to use it"
+                ) from exc
             offline_details.setdefault("offline_used", True)
             offline_details.setdefault("offline_reason", offline_reason)
             offline_details.setdefault("offline_policy_version", active_policy_version)
@@ -473,6 +480,19 @@ class OrchestratorCore:
             status["offline_state_keys"] = sorted(offline_state.keys())
 
         return status
+
+    def purge_offline_cache(self) -> bool:
+        """Remove the offline cache from disk to force a refresh on next run."""
+
+        if not self._offline_cache_path.exists():
+            return False
+
+        try:
+            self._offline_cache_path.unlink()
+            return True
+        except Exception as exc:  # pragma: no cover - defensive cleanup
+            logging.debug("Unable to purge offline cache: %s", exc)
+            return False
 
     def _enrich_attestations(
         self, attestations: Sequence[Mapping[str, Any]]
