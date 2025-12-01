@@ -44,6 +44,29 @@ DEFAULT_STOPWORDS = frozenset(
 )
 
 
+def _load_stopwords(paths: Sequence[Path] | None) -> set[str]:
+    """Return a set of additional stopwords loaded from *paths*.
+
+    Lines starting with ``#`` and blank lines are ignored to allow simple
+    comments inside stopword files.
+    """
+
+    loaded: set[str] = set()
+    if not paths:
+        return loaded
+
+    for path in paths:
+        try:
+            for raw_line in path.read_text(encoding="utf-8").splitlines():
+                cleaned = raw_line.strip().lower()
+                if not cleaned or cleaned.startswith("#"):
+                    continue
+                loaded.add(cleaned)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Stopwords file not found: {path}") from exc
+    return loaded
+
+
 @dataclass
 class FluxContext:
     """Holds context for a generated passage."""
@@ -796,6 +819,16 @@ def main() -> None:
         help="Number of top lexical tokens to include inside --report output.",
     )
     parser.add_argument(
+        "--stopwords-file",
+        action="append",
+        type=Path,
+        default=None,
+        help=(
+            "Path to a file containing extra stopwords (one per line); "
+            "may be repeated to combine multiple lists."
+        ),
+    )
+    parser.add_argument(
         "--top-words",
         type=int,
         default=0,
@@ -812,6 +845,8 @@ def main() -> None:
         parser.error("--report-top-n must be a positive integer.")
     if args.top_words < 0:
         parser.error("--top-words must be zero or a positive integer.")
+
+    extra_stopwords = _load_stopwords(args.stopwords_file)
 
     session_plan = SessionPlan.from_json_file(args.session_plan) if args.session_plan else None
 
@@ -965,7 +1000,7 @@ def main() -> None:
         )
 
     if args.report is not None:
-        top_words = compute_top_words(passages, limit=args.report_top_n)
+        top_words = compute_top_words(passages, limit=args.report_top_n, stopwords=extra_stopwords)
         write_markdown_report(
             args.report,
             passages=passages,
@@ -982,7 +1017,7 @@ def main() -> None:
         print("\n" + format_summary(summary))
 
     if args.top_words:
-        words = compute_top_words(passages, limit=args.top_words)
+        words = compute_top_words(passages, limit=args.top_words, stopwords=extra_stopwords)
         if words:
             print("\nTop Words:")
             for token, count in words:
