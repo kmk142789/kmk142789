@@ -199,6 +199,12 @@ except ModuleNotFoundError as exc:  # pragma: no cover - import-time guard
     else:  # Different import error – surface it to the caller
         raise
 from .impossible_realities import ImpossibleEvent, ImpossibleRealityEngine
+from .reality_thread_engine import (
+    ProjectionDecision,
+    RealityThread,
+    RoutingSignal,
+    SelfSelectingRealityThreadEngine,
+)
 from .innovation_wave import (
     InnovationSpark,
     InnovationWave,
@@ -586,6 +592,10 @@ __all__ = [
     "ScoreFragment",
     "OrbitalPoem",
     "generate_orbital_poem",
+    "ProjectionDecision",
+    "RealityThread",
+    "RoutingSignal",
+    "SelfSelectingRealityThreadEngine",
     "ObserverSubsystem",
     "ObserverSnapshot",
     "ObserverEvent",
