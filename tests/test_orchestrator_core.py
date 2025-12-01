@@ -308,6 +308,33 @@ def test_orchestrator_offline_cache_persists_state(tmp_path: Path) -> None:
     assert details.get("policy_snapshot")
 
 
+def test_orchestrator_offline_cache_reports_staleness(tmp_path: Path) -> None:
+    pulsenet = StubPulseNet(_make_summary(), _make_attestations())
+    evolver = StubEvolver(_make_digest())
+    resonance = StubResonance(400.0)
+
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=evolver,  # type: ignore[arg-type]
+        resonance_engine=resonance,
+        atlas_resolver=None,
+        offline_cache_ttl_hours=0.001,
+    )
+
+    service._persist_offline_cache({"pulse_summary": {"total_entries": 1}})
+    cache_file = tmp_path / "offline_cache.json"
+    payload = json.loads(cache_file.read_text())
+    payload["cached_at"] = "2020-01-01T00:00:00+00:00"
+    cache_file.write_text(json.dumps(payload))
+
+    _, details = service._load_offline_cache()
+    assert details.get("cache_stale") is True
+    status = service.offline_status()
+    assert status.get("cache_stale") is True
+    assert status.get("cache_ttl_seconds")
+
+
 def test_orchestrator_logs_decisions_and_metrics(tmp_path: Path) -> None:
     pulsenet = StubPulseNet(_make_summary(), _make_attestations())
     evolver = StubEvolver(_make_digest())

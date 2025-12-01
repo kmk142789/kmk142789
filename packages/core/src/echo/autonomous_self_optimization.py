@@ -175,12 +175,12 @@ class LocalDeviceRuntime:
     def submit_task(self, task: OfflineTask) -> None:
         self._task_queue.append(task)
 
-    def run(self) -> list[OfflineTask]:
-        """Execute queued tasks that do not require network access."""
+    def run(self, *, network_available: bool = False) -> list[OfflineTask]:
+        """Execute queued tasks, optionally including those needing the network."""
 
         remaining: list[OfflineTask] = []
         for task in self._task_queue:
-            if task.requires_network:
+            if task.requires_network and not network_available:
                 remaining.append(task)
                 continue
             handler = self._capabilities.get(task.name)
@@ -199,6 +199,23 @@ class LocalDeviceRuntime:
     @property
     def completed(self) -> Sequence[OfflineTask]:
         return tuple(self._completed)
+
+    def snapshot(self) -> Mapping[str, object]:
+        """Summarise offline execution state for dashboards and audits."""
+
+        pending_network = [task.name for task in self._task_queue if task.requires_network]
+        return {
+            "pending": [task.name for task in self._task_queue],
+            "pending_requires_network": pending_network,
+            "completed": [
+                {
+                    "name": task.name,
+                    "requires_network": task.requires_network,
+                    "executed": task.executed,
+                }
+                for task in self._completed
+            ],
+        }
 
 
 @dataclass

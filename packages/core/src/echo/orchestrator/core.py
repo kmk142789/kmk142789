@@ -73,6 +73,7 @@ class OrchestratorCore:
         resilience_interval_hours: float = 72.0,
         resilience_cooldown_hours: float = 6.0,
         negotiation_resolver: SemanticNegotiationResolver | None = None,
+        offline_cache_ttl_hours: float | None = 48.0,
     ) -> None:
         self._state_dir = Path(state_dir)
         self._state_dir.mkdir(parents=True, exist_ok=True)
@@ -86,6 +87,11 @@ class OrchestratorCore:
         self._manifest_limit = max(1, int(manifest_limit))
         self._negotiations = negotiation_resolver
         self._offline_cache_path = self._state_dir / "offline_cache.json"
+        self._offline_cache_ttl = (
+            timedelta(hours=max(0.0, float(offline_cache_ttl_hours)))
+            if offline_cache_ttl_hours is not None
+            else None
+        )
 
         self._principles: Sequence[ManifestoPrinciple] = (
             ManifestoPrinciple(
@@ -388,6 +394,9 @@ class OrchestratorCore:
             "cached_at": self._now_iso(),
             "inputs": inputs,
             "offline_state": self._store.snapshot_state(),
+            "cache_ttl_hours": self._offline_cache_ttl.total_seconds() / 3600
+            if self._offline_cache_ttl
+            else None,
         }
         try:
             serialised = json.dumps(payload, ensure_ascii=False, indent=2, default=str)
@@ -416,6 +425,10 @@ class OrchestratorCore:
             if parsed:
                 age = datetime.now(timezone.utc) - parsed
                 details["cache_age_seconds"] = max(0.0, age.total_seconds())
+                if self._offline_cache_ttl:
+                    ttl_seconds = self._offline_cache_ttl.total_seconds()
+                    details["cache_ttl_seconds"] = ttl_seconds
+                    details["cache_stale"] = age > self._offline_cache_ttl
         offline_state = data.get("offline_state") if isinstance(data, Mapping) else None
         if isinstance(offline_state, Mapping):
             if offline_state.get("policies"):
@@ -425,6 +438,41 @@ class OrchestratorCore:
             if offline_state.get("metrics"):
                 details["metrics_snapshot"] = offline_state.get("metrics")
         return dict(inputs), details
+
+    def offline_status(self) -> Mapping[str, Any]:
+        """Return metadata about the offline cache for diagnostics and UIs."""
+
+        status: MutableMapping[str, Any] = {
+            "path": str(self._offline_cache_path),
+            "exists": self._offline_cache_path.exists(),
+        }
+
+        if not status["exists"]:
+            return status
+
+        try:
+            data = json.loads(self._offline_cache_path.read_text())
+        except Exception as exc:  # pragma: no cover - defensive metadata read
+            status["error"] = str(exc)
+            return status
+
+        cached_at = data.get("cached_at") if isinstance(data, Mapping) else None
+        if isinstance(cached_at, str):
+            status["cached_at"] = cached_at
+            parsed = self._parse_iso(cached_at)
+            if parsed:
+                age = datetime.now(timezone.utc) - parsed
+                status["cache_age_seconds"] = max(0.0, age.total_seconds())
+                if self._offline_cache_ttl:
+                    status["cache_ttl_seconds"] = self._offline_cache_ttl.total_seconds()
+                    status["cache_stale"] = age > self._offline_cache_ttl
+        status["has_inputs"] = isinstance(data.get("inputs"), Mapping)
+
+        offline_state = data.get("offline_state") if isinstance(data, Mapping) else None
+        if isinstance(offline_state, Mapping):
+            status["offline_state_keys"] = sorted(offline_state.keys())
+
+        return status
 
     def _enrich_attestations(
         self, attestations: Sequence[Mapping[str, Any]]
