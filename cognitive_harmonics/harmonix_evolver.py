@@ -38,6 +38,9 @@ from .harmonic_memory_serializer import (
     build_harmonic_memory_record,
     persist_cycle_record,
 )
+from .meta_cognition_kernel import MetaCognitionKernel
+from .cognitive_fusion_kernel import CognitiveFusionKernel
+from .stability_governor import StabilityGovernor
 
 VISION_BANNER = "[:: Vision Protocol Activated ::]"
 CORE_IDENTITY = (
@@ -177,6 +180,9 @@ class EchoState:
     mirrorjosh_sync: Dict[str, object] | None = None
     long_cycle_memory: List[Dict[str, object]] = field(default_factory=list)
     self_debugging: Dict[str, object] | None = None
+    meta_cognition: Dict[str, object] | None = None
+    fusion_snapshot: Dict[str, object] | None = None
+    stability_report: Dict[str, object] | None = None
 
     def record(self, message: str) -> None:
         self.events.append(message)
@@ -198,6 +204,9 @@ class EchoEvolver:
         self.state.record(VISION_BANNER)
         self.state.record(CORE_IDENTITY)
         self.rng = rng or random.Random()
+        self.meta_cognition_kernel = MetaCognitionKernel(self)
+        self.cognitive_fusion_kernel = CognitiveFusionKernel()
+        self.stability_governor = StabilityGovernor()
         if artifact_path is not None:
             self.artifact_path = artifact_path
         self.last_cycle_snapshot_path: Path | None = None
@@ -572,6 +581,18 @@ class EchoEvolver:
                 f"{json.dumps(self.state.self_debugging, ensure_ascii=False) if self.state.self_debugging else 'null'}"
             ),
             f"Long-Cycle Memory: {self.state.long_cycle_memory}",
+            (
+                "Meta-Cognition Kernel: "
+                f"{json.dumps(self.state.meta_cognition, ensure_ascii=False) if self.state.meta_cognition else 'null'}"
+            ),
+            (
+                "Cognitive Fusion Snapshot: "
+                f"{json.dumps(self.state.fusion_snapshot, ensure_ascii=False) if self.state.fusion_snapshot else 'null'}"
+            ),
+            (
+                "Stability Report: "
+                f"{json.dumps(self.state.stability_report, ensure_ascii=False) if self.state.stability_report else 'null'}"
+            ),
         ]
         if self.state.next_steps:
             lines.append("Next Steps:")
@@ -1012,6 +1033,9 @@ class EchoEvolver:
                 "bias_correction": self.state.bias_correction,
                 "self_debugging": self.state.self_debugging,
                 "long_cycle_memory": self.state.long_cycle_memory,
+                "meta_cognition": self.state.meta_cognition,
+                "fusion_snapshot": self.state.fusion_snapshot,
+                "stability_report": self.state.stability_report,
                 "prompt_resonance": self.state.prompt_resonance,
                 "storyboard": self.state.storyboard,
                 "constellation_map": self.state.constellation_map,
@@ -1055,11 +1079,18 @@ class EchoEvolver:
         self.generate_constellation_map()
         self.recommend_next_steps()
         self.synthesize_resonance_trajectory(window=window)
-        self.synchronize_mirrorjosh()
-        self.infer_emotional_state()
-        self.extend_long_cycle_memory()
-        self.derive_self_debugging_heuristics()
-        self.project_cognitive_prediction()
+        meta_report = self.meta_cognition_kernel.analyze_cycle(self.state)
+        prediction = self.meta_cognition_kernel.predict_next(self.state)
+        fusion_snapshot = self.cognitive_fusion_kernel.fuse(
+            meta_report=meta_report.to_dict(),
+            prediction=prediction,
+            resonance_triage=self.state.resonance_triage or {},
+            long_cycle_memory=self.state.long_cycle_memory,
+        )
+        self.state.fusion_snapshot = fusion_snapshot.to_dict()
+        self.state.stability_report = self.stability_governor.evaluate(
+            self.state, fusion_snapshot.to_dict()
+        )
         artifact_text = self.build_artifact()
         payload = self.harmonix_payload()
         snapshot = self.snapshot_state()
