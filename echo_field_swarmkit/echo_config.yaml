@@ -1,0 +1,6 @@
+node_id: "demo-node"
+sync_path: "/tmp/swarm_sync"
+task_store_path: "~/.echo_field_swarmkit/tasks.json"
+state_store_path: "~/.echo_field_swarmkit/state.json"
+health_interval_seconds: 300
+sync_interval_seconds: 60
