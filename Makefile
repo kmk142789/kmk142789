@@ -28,6 +28,10 @@ site:
 
 all: test
 
+.PHONY: observability-snapshot
+observability-snapshot:
+	PYTHONPATH=. python scripts/observability_snapshot.py
+
 .PHONY: run up dash e2e
 
 run:

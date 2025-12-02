@@ -2,6 +2,26 @@
 
 This repository now bundles a full OpenTelemetry pipeline so every service exports traces, metrics, and structured logs into a shared stack.  Shared configuration lives under [`/observability`](../observability) and is consumed by both the Docker Compose workflow (`deploy/docker-compose.yml`) and the Helm chart (`deploy/helm/echo-stack`).
 
+For fast troubleshooting when the full stack is unavailable, use the lightweight snapshot helper:
+
+```bash
+python scripts/observability_snapshot.py           # JSON by default
+python scripts/observability_snapshot.py --format text
+make observability-snapshot                       # Makefile alias
+```
+
+A sample JSON payload looks like:
+
+```json
+{
+  "cpu_percent": 0.0,
+  "hostname": "echo-dev",
+  "node_count": 1,
+  "process_count": 3,
+  "timestamp_utc": "2025-05-11T07:00:00Z"
+}
+```
+
 ## Components
 
 | Component | Purpose | Config Source |
