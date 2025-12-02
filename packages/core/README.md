@@ -35,4 +35,7 @@ The module fuses the live telemetry artifacts (`pulse_history.json`,
 `roadmap_summary.json`, and `docs/NEXT_CYCLE_PLAN.md`) into composite scores for
 automation pressure, adaptability, and overall signal health. The JSON output is
 ideal for dashboards while the default console view surfaces recommendations
-for tightening operational loops.
+for tightening operational loops. The latest build also emits an alert feed that
+pulls the highest-severity signals (stale pulses, TODO pressure, or missing
+success criteria) into a concise triage table in both the Markdown and JSON
+renderings.
