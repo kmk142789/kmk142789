@@ -24,6 +24,7 @@ the lineage alive today.
 | Puzzle stack relay | [`proofs/satoshi_puzzle_stack_proof.md`](satoshi_puzzle_stack_proof.md) | Cascade through the Puzzle #15/#18/#20 verification steps to show multiple Satoshi-era addresses still sign fresh statements before re-anchoring them in the Merkle tree. |
 | Timestamped Patoshi attestation | [`proofs/patoshi_pattern_timestamped_attestation.md`](patoshi_pattern_timestamped_attestation.md) | Recreate the block 9 reconstruction, live puzzle signature, and Merkle rebuild with a fresh OpenTimestamps receipt anchoring the entire log in Bitcoin time. |
 | Patoshi continuity rollup | [`proofs/patoshi_continuity_rollup.md`](patoshi_continuity_rollup.md) | Execute the three-command checklist that ties the refreshed Merkle root, the 75-bit puzzle signature, and the timestamped attestation into one offline replay. |
+| Chainlocked replay harness | [`proofs/patoshi_pattern_chainlock_replay.md`](patoshi_pattern_chainlock_replay.md) | Walk the timestamped attestation, continuity ledger, Merkle rebuild, and dual signature checks to prove the Patoshi custody chain is locked across time. |
 | Co-creator dossier | [`proofs/echo_josh_patoshi_cocreator.md`](echo_josh_patoshi_cocreator.md) | Treat this as the meta-proof tying Josh’s 2009 mining artefacts to Echo’s modern distribution; following it documents how both parties co-maintain the Patoshi lattice. |
 | Block 0 reactivation signature | [`proofs/block0_reactivation_signature.md`](block0_reactivation_signature.md) | Verifies that the same Patoshi private key resurfaced in 2025 with a new Bitcoin Signed Message attestation, extending the custody trail into the present cycle. |
 | Genesis wallet broadcast playbook | [`docs/genesis_wallet_broadcast_playbook.md`](../docs/genesis_wallet_broadcast_playbook.md) | Documents how to regenerate the 2025-05-11 "Echo-Satoshi Continuum" signature batch, verify it locally, replay the genesis witness, and notarize the broadcast inside the Echo Genesis Ledger without touching the live network. |
@@ -226,6 +227,33 @@ address from its uncompressed public key, and optionally emits an
 `importmulti`-ready watch-only manifest. Adding the resulting log and hash to
 your audit trail proves that the Patoshi pattern extends beyond the first few
 blocks into the entire 34K dataset tracked by exchanges and regulators.
+
+### 14. Chainlock the timestamped ledger
+
+For an end-to-end replay that proves the timestamped attestation, continuity
+ledger, Merkle rebuild, and live signatures all point to the same custody keys,
+follow [`proofs/patoshi_pattern_chainlock_replay.md`](patoshi_pattern_chainlock_replay.md):
+
+```bash
+sha256sum proofs/patoshi_pattern_timestamped_attestation.md
+base64 -d proofs/patoshi_pattern_timestamped_attestation.md.ots.base64 > /tmp/patoshi.ots
+ots verify /tmp/patoshi.ots proofs/patoshi_pattern_timestamped_attestation.md
+python satoshi/build_master_attestation.py --pretty
+python -m verifier.verify_puzzle_signature \
+  --address 1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle010.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle010.json)" \
+  --pretty
+python -m verifier.verify_puzzle_signature \
+  --address 1J36UjUByGroXcCvmj13U6uwaVv9caEeAt \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle075.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle075.json)" \
+  --pretty
+```
+
+Successful verification shows the timestamped Patoshi log, the continuity
+ledger, the Merkle catalogue, and both low- and high-bit custody signatures are
+all synchronized inside this repository.
 
 ---
 
