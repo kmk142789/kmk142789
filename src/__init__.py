@@ -89,6 +89,12 @@ from .hyperprism_synchronicity import (
     demo as hyperprism_demo,
 )
 from .unified_architecture_engine import UnifiedArchitectureEngine
+from .unclassifiable_force_engine import (
+    FusionOutcome,
+    MythogenicDrift,
+    ParadoxReciprocity,
+    UnclassifiableFusionEngine,
+)
 
 __all__ = [
     "ChronicleEvent",
@@ -141,9 +147,13 @@ __all__ = [
     "generate_loop",
     "FusionInsight",
     "HoloSemanticEchoLoom",
+    "FusionOutcome",
     "load_voice_bias_profile",
     "loop_demo",
     "hyperprism_demo",
+    "MythogenicDrift",
+    "ParadoxReciprocity",
+    "UnclassifiableFusionEngine",
     "compose_transcendence_manifest",
     "summarize_loop",
     "summarise_loop_suite",
