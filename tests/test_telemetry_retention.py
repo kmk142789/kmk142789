@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
@@ -10,7 +11,9 @@ from src.telemetry.retention import (
     CONSENT_UNKNOWN_REASON,
     EXPIRED_REASON,
     RetentionPolicy,
+    enforce_retention_policy,
 )
+from src.telemetry.storage import InMemoryTelemetryStorage, JsonlTelemetryStorage
 
 
 REFERENCE_TIME = datetime(2024, 5, 1, tzinfo=timezone.utc)
@@ -102,3 +105,49 @@ def test_policy_requires_positive_duration() -> None:
         RetentionPolicy(max_event_age=timedelta(seconds=0))
     with pytest.raises(ValueError):
         RetentionPolicy(max_event_age=timedelta(days=-1))
+
+
+def test_removed_reason_counts() -> None:
+    events = [
+        _make_event(timedelta(days=45), consent=ConsentState.OPTED_IN),
+        _make_event(timedelta(days=1), consent=ConsentState.UNKNOWN),
+        _make_event(timedelta(days=1), consent=ConsentState.OPTED_OUT),
+    ]
+    policy = RetentionPolicy(max_event_age=timedelta(days=30))
+
+    decision = policy.evaluate(events, reference_time=REFERENCE_TIME)
+
+    assert decision.removed_reason_counts == {
+        EXPIRED_REASON: 1,
+        CONSENT_UNKNOWN_REASON: 1,
+        CONSENT_OPT_OUT_REASON: 1,
+    }
+
+
+def test_enforce_retention_policy_in_memory_storage() -> None:
+    storage = InMemoryTelemetryStorage()
+    retained_event = _make_event(timedelta(days=1), consent=ConsentState.OPTED_IN)
+    expired_event = _make_event(timedelta(days=60), consent=ConsentState.OPTED_IN)
+    storage.write(retained_event)
+    storage.write(expired_event)
+
+    policy = RetentionPolicy(max_event_age=timedelta(days=30))
+    decision = enforce_retention_policy(storage, policy, reference_time=REFERENCE_TIME)
+
+    assert decision.retained == (retained_event,)
+    assert storage.read() == [retained_event]
+
+
+def test_enforce_retention_policy_jsonl_storage(tmp_path: Path) -> None:
+    path = tmp_path / "telemetry.jsonl"
+    storage = JsonlTelemetryStorage(path)
+    kept = _make_event(timedelta(days=10), consent=ConsentState.OPTED_IN)
+    opted_out = _make_event(timedelta(days=5), consent=ConsentState.OPTED_OUT)
+    storage.write(kept)
+    storage.write(opted_out)
+
+    policy = RetentionPolicy(max_event_age=timedelta(days=30))
+    decision = enforce_retention_policy(storage, policy, reference_time=REFERENCE_TIME)
+
+    assert decision.retained == (kept,)
+    assert storage.read() == [kept]

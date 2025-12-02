@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Iterable
 
 from .schema import ConsentState, TelemetryEvent
+from .storage import TelemetryStorage
 
 __all__ = [
     "RemovedTelemetryEvent",
     "RetentionDecision",
     "RetentionPolicy",
+    "enforce_retention_policy",
     "EXPIRED_REASON",
     "CONSENT_OPT_OUT_REASON",
     "CONSENT_UNKNOWN_REASON",
@@ -47,6 +50,13 @@ class RetentionDecision:
     @property
     def removed_count(self) -> int:
         return len(self.removed)
+
+    @property
+    def removed_reason_counts(self) -> dict[str, int]:
+        """Return a breakdown of removal reasons."""
+
+        counts: Counter[str] = Counter(record.reason for record in self.removed)
+        return dict(counts)
 
     def removed_for_reason(self, reason: str) -> tuple[TelemetryEvent, ...]:
         """Return events removed for a specific reason."""
@@ -118,3 +128,19 @@ def _normalise_reference_time(reference_time: datetime | None) -> datetime:
     else:
         reference_time = reference_time.astimezone(timezone.utc)
     return reference_time
+
+
+def enforce_retention_policy(
+    storage: TelemetryStorage,
+    policy: RetentionPolicy,
+    *,
+    reference_time: datetime | None = None,
+) -> RetentionDecision:
+    """Apply a retention policy to a storage backend and persist the result."""
+
+    events = list(storage.read())
+    decision = policy.evaluate(events, reference_time=reference_time)
+    if decision.removed:
+        storage.replace(decision.retained)
+        storage.flush()
+    return decision
