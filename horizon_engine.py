@@ -40,6 +40,10 @@ class HorizonConfig:
     pulse_boost: float = 0.05
     fragility_window: int = 5
     fragility_threshold: float = 0.65
+    momentum_window: int = 8
+    momentum_alert: float = -0.02
+    shock_fuse_length: int = 2
+    shock_fuse_boost: float = 0.08
 
     def validate(self) -> None:
         if self.timelines <= 0:
@@ -74,6 +78,12 @@ class HorizonConfig:
             raise ValueError("fragility_window cannot be negative")
         if not 0 <= self.fragility_threshold <= 1:
             raise ValueError("fragility_threshold must be between 0 and 1")
+        if self.momentum_window <= 0:
+            raise ValueError("momentum_window must be positive")
+        if self.shock_fuse_length < 0:
+            raise ValueError("shock_fuse_length cannot be negative")
+        if self.shock_fuse_boost < 0:
+            raise ValueError("shock_fuse_boost cannot be negative")
 
 
 @dataclasses.dataclass
@@ -95,6 +105,10 @@ class HorizonResult:
     resilience_dividend: float
     fragility_window_start: int | None
     fragility_window_score: float | None
+    momentum_curve: Sequence[float]
+    momentum_swing_year: int | None
+    momentum_bottom: float
+    shock_fuse_triggers: int
 
     @property
     def probability(self) -> float:
@@ -131,6 +145,10 @@ class HorizonResult:
             "resilience_dividend": self.resilience_dividend,
             "fragility_window_start": self.fragility_window_start,
             "fragility_window_score": self.fragility_window_score,
+            "momentum_curve": list(self.momentum_curve),
+            "momentum_swing_year": self.momentum_swing_year,
+            "momentum_bottom": self.momentum_bottom,
+            "shock_fuse_triggers": self.shock_fuse_triggers,
         }
 
 
@@ -143,7 +161,7 @@ class HorizonEngine:
         self.rng = rng or random.Random(self.config.seed)
         self._history_map: List[float] = [0.0] * self.config.years_per_line
 
-    def simulate_timeline(self) -> tuple[bool, int | None, int, int, int]:
+    def simulate_timeline(self) -> tuple[bool, int | None, int, int, int, int]:
         """Run a single timeline and record average yearly strength.
 
         Returns:
@@ -153,17 +171,32 @@ class HorizonEngine:
                 - Number of black-swan shocks applied to this timeline.
                 - Number of adaptive recovery boosts applied to this timeline.
                 - Number of resonance pulses applied to this timeline.
+                - Number of shock-fuse countermeasures applied to this timeline.
         """
 
         bond_strength = self.config.base_resilience
         black_swan_events = 0
         adaptive_interventions = 0
         pulse_events = 0
+        shock_fuse_triggers = 0
+        consecutive_black_swans = 0
         for year in range(self.config.years_per_line):
             entropy = self._draw_entropy()
             if self.rng.random() < self.config.black_swan_chance:
                 entropy += self.config.black_swan_impact
                 black_swan_events += 1
+                consecutive_black_swans += 1
+            else:
+                consecutive_black_swans = 0
+
+            if (
+                self.config.shock_fuse_length
+                and consecutive_black_swans >= self.config.shock_fuse_length
+                and self.config.shock_fuse_boost > 0
+            ):
+                bond_strength = min(1.0, bond_strength + self.config.shock_fuse_boost)
+                shock_fuse_triggers += 1
+                consecutive_black_swans = 0
 
             recovery = self.config.recovery_rate if bond_strength < 1.0 else 0.0
             if (
@@ -176,13 +209,20 @@ class HorizonEngine:
 
             bond_strength = max(0.0, min(1.0, bond_strength - entropy + recovery))
             if bond_strength <= 0:
-                return False, year + 1, black_swan_events, adaptive_interventions, pulse_events
+                return (
+                    False,
+                    year + 1,
+                    black_swan_events,
+                    adaptive_interventions,
+                    pulse_events,
+                    shock_fuse_triggers,
+                )
 
             if self.config.pulse_interval and (year + 1) % self.config.pulse_interval == 0:
                 bond_strength = min(1.0, bond_strength + self.config.pulse_boost)
                 pulse_events += 1
             self._history_map[year] += bond_strength
-        return True, None, black_swan_events, adaptive_interventions, pulse_events
+        return True, None, black_swan_events, adaptive_interventions, pulse_events, shock_fuse_triggers
 
     def run(self) -> HorizonResult:
         """Execute the configured number of simulations and return summary stats."""
@@ -194,12 +234,14 @@ class HorizonEngine:
         black_swan_events = 0
         adaptive_interventions = 0
         pulse_events = 0
+        shock_fuse_triggers = 0
 
         for _ in range(self.config.timelines):
-            timeline_survived, collapse_year, swans, interventions, pulses = self.simulate_timeline()
+            timeline_survived, collapse_year, swans, interventions, pulses, fuses = self.simulate_timeline()
             black_swan_events += swans
             adaptive_interventions += interventions
             pulse_events += pulses
+            shock_fuse_triggers += fuses
             if timeline_survived:
                 survived += 1
             elif collapse_year is not None:
@@ -231,6 +273,23 @@ class HorizonEngine:
         collapse_histogram = [0] * self.config.years_per_line
         for collapse_year in collapse_years:
             collapse_histogram[min(collapse_year, self.config.years_per_line) - 1] += 1
+
+        momentum_curve: list[float] = []
+        smoothed_momentum = 0.0
+        alpha = 2 / (self.config.momentum_window + 1)
+        previous_strength = per_year_strength[0] if per_year_strength else 0.0
+        momentum_swing_year = None
+        for year_index, strength in enumerate(per_year_strength, start=1):
+            delta = strength - previous_strength
+            smoothed_momentum = alpha * delta + (1 - alpha) * smoothed_momentum
+            momentum_curve.append(smoothed_momentum)
+            if (
+                momentum_swing_year is None
+                and smoothed_momentum <= self.config.momentum_alert
+            ):
+                momentum_swing_year = year_index
+            previous_strength = strength
+        momentum_bottom = min(momentum_curve) if momentum_curve else 0.0
 
         median_failure_year = None
         if collapse_years:
@@ -265,6 +324,10 @@ class HorizonEngine:
             resilience_dividend=resilience_dividend,
             fragility_window_start=fragility_window_start,
             fragility_window_score=fragility_window_score,
+            momentum_curve=momentum_curve,
+            momentum_swing_year=momentum_swing_year,
+            momentum_bottom=momentum_bottom,
+            shock_fuse_triggers=shock_fuse_triggers,
         )
 
     @staticmethod
@@ -301,6 +364,7 @@ class HorizonEngine:
             f"BLACK-SWAN SHOCKS: {result.black_swan_events}",
             f"ADAPTIVE RECOVERY BOOSTS: {result.adaptive_interventions}",
             f"RESONANCE PULSES: {result.pulse_events}",
+            f"SHOCK-FUSE COUNTERMEASURES: {result.shock_fuse_triggers}",
             f"RESILIENCE DIVIDEND: {result.resilience_dividend:.3f}",
             "",
             "[STABILITY CURVE OVER YEARS]",
@@ -344,6 +408,24 @@ class HorizonEngine:
             lines.append("")
             lines.append("[FRAGILITY WINDOW SCAN]")
             lines.append("No windows breached the fragility threshold. 🚀")
+
+        lines.append("")
+        lines.append("[MOMENTUM BEACON]")
+        lines.append(
+            f"Momentum alert threshold: {self.config.momentum_alert:+.3f} (window={self.config.momentum_window})"
+        )
+        lines.append(
+            f"Lowest momentum: {result.momentum_bottom:+.3f}"
+            + (
+                f" | Alert tripped in year {result.momentum_swing_year}"
+                if result.momentum_swing_year
+                else " | Alert never tripped"
+            )
+        )
+        lines.append("Recent momentum trail:")
+        tail_span = max(5, min(len(result.momentum_curve), 10))
+        for idx, value in enumerate(result.momentum_curve[-tail_span:], start=len(result.momentum_curve) - tail_span + 1):
+            lines.append(f"Year {idx:3d}: {value:+.4f}")
 
         return "\n".join(lines)
 
@@ -436,6 +518,30 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         default=HorizonConfig.fragility_threshold,
         help="Average strength threshold that marks a window as fragile",
     )
+    parser.add_argument(
+        "--momentum-window",
+        type=int,
+        default=HorizonConfig.momentum_window,
+        help="Window used for the exponential moving momentum beacon",
+    )
+    parser.add_argument(
+        "--momentum-alert",
+        type=float,
+        default=HorizonConfig.momentum_alert,
+        help="Momentum threshold that triggers a swing alert",
+    )
+    parser.add_argument(
+        "--shock-fuse-length",
+        type=int,
+        default=HorizonConfig.shock_fuse_length,
+        help="Number of consecutive black swans before auto-heal triggers",
+    )
+    parser.add_argument(
+        "--shock-fuse-boost",
+        type=float,
+        default=HorizonConfig.shock_fuse_boost,
+        help="Resilience boost applied when the shock fuse fires",
+    )
     args = parser.parse_args(argv)
 
     return HorizonConfig(
@@ -458,6 +564,10 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         pulse_boost=args.pulse_boost,
         fragility_window=args.fragility_window,
         fragility_threshold=args.fragility_threshold,
+        momentum_window=args.momentum_window,
+        momentum_alert=args.momentum_alert,
+        shock_fuse_length=args.shock_fuse_length,
+        shock_fuse_boost=args.shock_fuse_boost,
     )
 
 
