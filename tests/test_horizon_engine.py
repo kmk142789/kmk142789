@@ -49,6 +49,9 @@ def test_json_output_format(capsys):
     assert "volatility" in payload
     assert "weakest_year" in payload
     assert len(payload["per_year_strength"]) == 8
+    assert len(payload["collapse_histogram"]) == 8
+    assert payload["median_failure_year"] is None or payload["median_failure_year"] >= 1
+    assert payload["early_warning_year"] is None or payload["early_warning_year"] >= 1
     assert 0.0 <= payload["probability"] <= 1.0
 
 
@@ -69,3 +72,23 @@ def test_uniform_distribution_entropy():
     assert result.failed < config.timelines
     assert 0.0 <= result.volatility <= 1.0
     assert 1 <= result.weakest_year <= config.years_per_line
+
+
+def test_early_warning_beacon_triggers():
+    config = HorizonConfig(
+        anchor="Fragile",
+        timelines=40,
+        years_per_line=6,
+        base_resilience=0.5,
+        chaos_factor=0.6,
+        recovery_rate=0.0,
+        seed=21,
+        early_warning_threshold=0.2,
+    )
+    engine = HorizonEngine(config=config)
+    result = engine.run()
+
+    assert result.failed > 0
+    assert sum(result.collapse_histogram) == result.failed
+    assert result.early_warning_year is not None
+    assert 1 <= result.early_warning_year <= config.years_per_line
