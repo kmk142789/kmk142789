@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from statistics import mean, median
+from statistics import mean, median, pstdev
 from typing import Iterable, List, Optional
 
 from .echo_codox_kernel import PulseEvent
@@ -31,6 +31,10 @@ class PulseLedgerMetrics:
     status: str
     warning_threshold_seconds: float
     critical_threshold_seconds: float
+    cadence_score: Optional[float]
+    cadence_rating: str
+    expected_next_timestamp: Optional[float]
+    overdue_seconds: Optional[float]
 
     @property
     def first_timestamp_iso(self) -> Optional[str]:
@@ -39,6 +43,10 @@ class PulseLedgerMetrics:
     @property
     def last_timestamp_iso(self) -> Optional[str]:
         return _format_timestamp(self.last_timestamp)
+
+    @property
+    def expected_next_timestamp_iso(self) -> Optional[str]:
+        return _format_timestamp(self.expected_next_timestamp)
 
     def to_dict(self) -> dict:
         return {
@@ -55,6 +63,11 @@ class PulseLedgerMetrics:
             "status": self.status,
             "warning_threshold_seconds": self.warning_threshold_seconds,
             "critical_threshold_seconds": self.critical_threshold_seconds,
+            "cadence_score": self.cadence_score,
+            "cadence_rating": self.cadence_rating,
+            "expected_next_timestamp": self.expected_next_timestamp,
+            "expected_next_timestamp_iso": self.expected_next_timestamp_iso,
+            "overdue_seconds": self.overdue_seconds,
         }
 
 
@@ -79,6 +92,12 @@ def compute_pulse_metrics(
         last event is greater than or equal to ``warning_hours`` the ledger is
         flagged as ``warning``.  Crossing ``critical_hours`` results in the
         ``critical`` status.
+
+    The returned :class:`PulseLedgerMetrics` also includes derived cadence
+    scores. ``cadence_score`` captures the variability of the pulse intervals on
+    a 0–100 scale, while ``cadence_rating`` provides a coarse label
+    (``steady``, ``variable``, or ``erratic``). When there are too few events to
+    infer cadence these fields fall back to ``None`` and ``"unknown"``.
     """
 
     event_list: List[PulseEvent] = list(events)
@@ -98,6 +117,10 @@ def compute_pulse_metrics(
             status="empty",
             warning_threshold_seconds=warning_threshold_seconds,
             critical_threshold_seconds=critical_threshold_seconds,
+            cadence_score=None,
+            cadence_rating="unknown",
+            expected_next_timestamp=None,
+            overdue_seconds=None,
         )
 
     first_ts = event_list[0].timestamp
@@ -117,8 +140,27 @@ def compute_pulse_metrics(
     if span_seconds > 0:
         daily_rate = (len(event_list) / span_seconds) * 86400.0
 
+    cadence_score = None
+    cadence_rating = "unknown"
+    if avg_interval and avg_interval > 0:
+        variability = pstdev(intervals) if intervals else 0.0
+        cadence_score = max(0.0, (1 - min(variability / avg_interval, 2.0) / 2.0) * 100)
+        cadence_score = round(cadence_score, 2)
+        if cadence_score >= 75:
+            cadence_rating = "steady"
+        elif cadence_score >= 40:
+            cadence_rating = "variable"
+        else:
+            cadence_rating = "erratic"
+
     current_time = now if now is not None else datetime.now(tz=timezone.utc).timestamp()
     time_since_last = max(0.0, current_time - last_ts)
+
+    expected_next_timestamp = None
+    overdue_seconds = None
+    if median_interval is not None:
+        expected_next_timestamp = last_ts + median_interval
+        overdue_seconds = max(0.0, current_time - expected_next_timestamp)
 
     status = "fresh"
     if time_since_last >= critical_threshold_seconds > 0:
@@ -138,6 +180,10 @@ def compute_pulse_metrics(
         status=status,
         warning_threshold_seconds=warning_threshold_seconds,
         critical_threshold_seconds=critical_threshold_seconds,
+        cadence_score=cadence_score,
+        cadence_rating=cadence_rating,
+        expected_next_timestamp=expected_next_timestamp,
+        overdue_seconds=overdue_seconds,
     )
 
 
