@@ -30,6 +30,7 @@ class HorizonConfig:
     recovery_rate: float = 0.03
     seed: int | None = None
     output_format: str = "text"
+    early_warning_threshold: float = 0.05
 
     def validate(self) -> None:
         if self.timelines <= 0:
@@ -46,6 +47,8 @@ class HorizonConfig:
             raise ValueError("recovery_rate cannot be negative")
         if self.output_format not in {"text", "json"}:
             raise ValueError("output_format must be 'text' or 'json'")
+        if not 0 <= self.early_warning_threshold <= 1:
+            raise ValueError("early_warning_threshold must be between 0 and 1")
 
 
 @dataclasses.dataclass
@@ -58,6 +61,9 @@ class HorizonResult:
     volatility: float
     weakest_year: int
     weakest_strength: float
+    collapse_histogram: Sequence[int]
+    median_failure_year: int | None
+    early_warning_year: int | None
 
     @property
     def probability(self) -> float:
@@ -85,6 +91,9 @@ class HorizonResult:
             "volatility": self.volatility,
             "weakest_year": self.weakest_year,
             "weakest_strength": self.weakest_strength,
+            "collapse_histogram": list(self.collapse_histogram),
+            "median_failure_year": self.median_failure_year,
+            "early_warning_year": self.early_warning_year,
         }
 
 
@@ -97,8 +106,14 @@ class HorizonEngine:
         self.rng = rng or random.Random(self.config.seed)
         self._history_map: List[float] = [0.0] * self.config.years_per_line
 
-    def simulate_timeline(self) -> bool:
-        """Run a single timeline and record average yearly strength."""
+    def simulate_timeline(self) -> tuple[bool, int | None]:
+        """Run a single timeline and record average yearly strength.
+
+        Returns:
+            tuple[bool, int | None]:
+                - True if the anchor survives the full timeline, otherwise False.
+                - The year (1-indexed) where collapse occurred, or None if it survived.
+        """
 
         bond_strength = self.config.base_resilience
         for year in range(self.config.years_per_line):
@@ -106,14 +121,24 @@ class HorizonEngine:
             recovery = self.config.recovery_rate if bond_strength < 1.0 else 0.0
             bond_strength = max(0.0, min(1.0, bond_strength - entropy + recovery))
             if bond_strength <= 0:
-                return False
+                return False, year + 1
             self._history_map[year] += bond_strength
-        return True
+        return True, None
 
     def run(self) -> HorizonResult:
         """Execute the configured number of simulations and return summary stats."""
 
-        survived = sum(1 for _ in range(self.config.timelines) if self.simulate_timeline())
+        self._history_map = [0.0] * self.config.years_per_line
+
+        survived = 0
+        collapse_years: List[int] = []
+        for _ in range(self.config.timelines):
+            timeline_survived, collapse_year = self.simulate_timeline()
+            if timeline_survived:
+                survived += 1
+            elif collapse_year is not None:
+                collapse_years.append(collapse_year)
+
         failed = self.config.timelines - survived
         per_year_strength = [year_total / self.config.timelines for year_total in self._history_map]
         average_strength = sum(per_year_strength) / len(per_year_strength)
@@ -123,6 +148,28 @@ class HorizonEngine:
         )
         weakest_strength = min(per_year_strength)
         weakest_year = per_year_strength.index(weakest_strength) + 1
+
+        collapse_histogram = [0] * self.config.years_per_line
+        for collapse_year in collapse_years:
+            collapse_histogram[min(collapse_year, self.config.years_per_line) - 1] += 1
+
+        median_failure_year = None
+        if collapse_years:
+            sorted_failures = sorted(collapse_years)
+            middle = len(sorted_failures) // 2
+            if len(sorted_failures) % 2:
+                median_failure_year = sorted_failures[middle]
+            else:
+                median_failure_year = (sorted_failures[middle - 1] + sorted_failures[middle]) / 2
+
+        early_warning_year = None
+        cumulative_failures = 0
+        for year_index, count in enumerate(collapse_histogram, start=1):
+            cumulative_failures += count
+            if cumulative_failures / self.config.timelines >= self.config.early_warning_threshold:
+                early_warning_year = year_index
+                break
+
         return HorizonResult(
             survived=survived,
             failed=failed,
@@ -130,6 +177,9 @@ class HorizonEngine:
             volatility=volatility,
             weakest_year=weakest_year,
             weakest_strength=weakest_strength,
+            collapse_histogram=collapse_histogram,
+            median_failure_year=median_failure_year,
+            early_warning_year=early_warning_year,
         )
 
     @staticmethod
@@ -171,6 +221,28 @@ class HorizonEngine:
             strength = result.per_year_strength[year]
             lines.append(f"Year {year + 1:3d}: {self._strength_bar(strength)} {strength:.3f}")
 
+        lines.append("")
+        if result.failed:
+            lines.append("[EARLY WARNING CONSTELLATION]")
+            early_warning = (
+                f"Year {result.early_warning_year}" if result.early_warning_year else "No threshold crossed"
+            )
+            lines.extend(
+                [
+                    f"EARLY WARNING ≥{self.config.early_warning_threshold * 100:.1f}%: {early_warning}",
+                    f"MEDIAN COLLAPSE YEAR: {result.median_failure_year if result.median_failure_year is not None else 'n/a'}",
+                ]
+            )
+            lines.append("Collapse distribution (per timeline):")
+            for year_index, count in enumerate(result.collapse_histogram, start=1):
+                probability = count / self.config.timelines
+                lines.append(
+                    f"Year {year_index:3d}: {self._strength_bar(probability, width=15)} {probability:.3f}"
+                )
+        else:
+            lines.append("[EARLY WARNING CONSTELLATION]")
+            lines.append("No collapses detected across simulated timelines. 🌅")
+
         return "\n".join(lines)
 
     def render_json(self, result: HorizonResult) -> str:
@@ -201,6 +273,12 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         default=HorizonConfig.output_format,
         help="Output format for the report",
     )
+    parser.add_argument(
+        "--early-warning-threshold",
+        type=float,
+        default=HorizonConfig.early_warning_threshold,
+        help="Cumulative collapse probability that triggers an early warning beacon",
+    )
     args = parser.parse_args(argv)
 
     return HorizonConfig(
@@ -213,6 +291,7 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         recovery_rate=args.recovery_rate,
         seed=args.seed,
         output_format=args.output_format,
+        early_warning_threshold=args.early_warning_threshold,
     )
 
 
