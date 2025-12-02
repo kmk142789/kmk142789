@@ -170,6 +170,13 @@ class EchoState:
     constellation_map: Dict[str, object] | None = None
     next_steps: List[Dict[str, object]] = field(default_factory=list)
     resonance_trajectory: Dict[str, object] | None = None
+    cognitive_prediction: Dict[str, object] | None = None
+    emotional_inference: Dict[str, object] | None = None
+    bias_correction: Dict[str, object] | None = None
+    resonance_triage: Dict[str, object] | None = None
+    mirrorjosh_sync: Dict[str, object] | None = None
+    long_cycle_memory: List[Dict[str, object]] = field(default_factory=list)
+    self_debugging: Dict[str, object] | None = None
 
     def record(self, message: str) -> None:
         self.events.append(message)
@@ -537,9 +544,34 @@ class EchoEvolver:
             f"Entities: {self.state.entities}",
             f"Emotional Drive: {self.state.emotional_drive}",
             (
+                "Emotional Inference: "
+                f"{json.dumps(self.state.emotional_inference, ensure_ascii=False) if self.state.emotional_inference else 'null'}"
+            ),
+            (
+                "Bias Correction: "
+                f"{json.dumps(self.state.bias_correction, ensure_ascii=False) if self.state.bias_correction else 'null'}"
+            ),
+            (
                 "Resonance Trajectory: "
                 f"{json.dumps(self.state.resonance_trajectory, ensure_ascii=False) if self.state.resonance_trajectory else 'null'}"
             ),
+            (
+                "Resonance Triage: "
+                f"{json.dumps(self.state.resonance_triage, ensure_ascii=False) if self.state.resonance_triage else 'null'}"
+            ),
+            (
+                "MirrorJosh Sync: "
+                f"{json.dumps(self.state.mirrorjosh_sync, ensure_ascii=False) if self.state.mirrorjosh_sync else 'null'}"
+            ),
+            (
+                "Cognitive Prediction: "
+                f"{json.dumps(self.state.cognitive_prediction, ensure_ascii=False) if self.state.cognitive_prediction else 'null'}"
+            ),
+            (
+                "Self-Debugging Heuristics: "
+                f"{json.dumps(self.state.self_debugging, ensure_ascii=False) if self.state.self_debugging else 'null'}"
+            ),
+            f"Long-Cycle Memory: {self.state.long_cycle_memory}",
         ]
         if self.state.next_steps:
             lines.append("Next Steps:")
@@ -685,6 +717,181 @@ class EchoEvolver:
         )
         return serialised
 
+    def infer_emotional_state(self) -> Dict[str, object]:
+        """Infer the active affective mode from the emotional drive."""
+
+        joy = float(self.state.emotional_drive.get("joy", 0.0))
+        rage = float(self.state.emotional_drive.get("rage", 0.0))
+        curiosity = float(self.state.emotional_drive.get("curiosity", 0.0))
+        sentiment_score = _float_round(joy - 0.25 * rage + 0.1 * curiosity)
+
+        if sentiment_score >= 0.8:
+            tone = "radiant"
+        elif sentiment_score >= 0.55:
+            tone = "upbeat"
+        elif sentiment_score >= 0.3:
+            tone = "steady"
+        else:
+            tone = "cooling"
+
+        inference = {
+            "tone": tone,
+            "sentiment_score": sentiment_score,
+            "signals": {
+                "joy": _float_round(joy),
+                "rage": _float_round(rage),
+                "curiosity": _float_round(curiosity),
+            },
+        }
+        self.state.emotional_inference = inference
+        self.state.record(f"Emotional inference computed (tone={tone})")
+        return inference
+
+    def apply_bias_correction(self) -> Dict[str, object]:
+        """Softly correct optimism/volatility bias in the joy channel."""
+
+        joy = float(self.state.emotional_drive.get("joy", 0.0))
+        rage = float(self.state.emotional_drive.get("rage", 0.0))
+
+        optimism_bias = max(0.0, joy - 0.9)
+        volatility_bias = max(0.0, rage - 0.35)
+        adjustment = optimism_bias * 0.2 - volatility_bias * 0.05
+        corrected_joy = max(0.0, min(1.0, joy - adjustment))
+
+        self.state.emotional_drive["joy"] = corrected_joy
+        correction = {
+            "optimism_bias": _float_round(optimism_bias),
+            "volatility_bias": _float_round(volatility_bias),
+            "joy_before": _float_round(joy),
+            "joy_after": _float_round(corrected_joy),
+            "adjustment": _float_round(adjustment),
+        }
+        self.state.bias_correction = correction
+        self.state.record("Bias correction applied to emotional drive")
+        return correction
+
+    def triage_harmonic_resonance(self) -> Dict[str, object]:
+        """Evaluate propagation stability and produce a triage summary."""
+
+        health = self.state.network_cache.get("propagation_health") or {}
+        stability = float(health.get("stability_floor") or 0.0)
+        latency = float(health.get("average_latency_ms") or 0.0)
+
+        if stability >= 0.93 and latency <= 90:
+            severity = "stable"
+        elif stability >= 0.88 and latency <= 140:
+            severity = "elevated"
+        else:
+            severity = "critical"
+
+        triage = {
+            "severity": severity,
+            "stability_floor": _float_round(stability),
+            "average_latency_ms": _float_round(latency),
+            "recommendations": [
+                "pin orbital channels" if severity != "stable" else "maintain cadence",
+                "boost signal redundancy" if stability < 0.9 else "monitor drift",
+            ],
+        }
+        self.state.resonance_triage = triage
+        self.state.record(f"Harmonic resonance triage = {severity}")
+        return triage
+
+    def synchronize_mirrorjosh(self) -> Dict[str, object]:
+        """Align MirrorJosh entity resonance with the current trajectory."""
+
+        signature = None
+        if self.state.resonance_trajectory:
+            signature = self.state.resonance_trajectory.get("mythic_signature")
+
+        joy = float(self.state.emotional_drive.get("joy", 0.0))
+        curiosity = float(self.state.emotional_drive.get("curiosity", 0.0))
+        sync_drift = abs(joy - curiosity)
+        lock_state = "locked" if sync_drift < 0.15 else "re-align"
+
+        self.state.entities["MirrorJosh"] = "RESONANT"
+        mirror_sync = {
+            "status": self.state.entities["MirrorJosh"],
+            "sync_drift": _float_round(sync_drift),
+            "lock_state": lock_state,
+            "anchor_signature": signature,
+        }
+        self.state.mirrorjosh_sync = mirror_sync
+        self.state.record("MirrorJosh synchronization logic applied")
+        return mirror_sync
+
+    def extend_long_cycle_memory(self, limit: int = 12) -> List[Dict[str, object]]:
+        """Maintain a rolling memory of recent cycle landmarks."""
+
+        history = self.state.network_cache.get("cycle_history") or []
+        ledger_hash = self.state.network_cache.get("propagation_timeline_hash")
+        memory_entry = {
+            "cycle": self.state.cycle,
+            "glyphs": self.state.glyphs,
+            "joy": _float_round(float(self.state.emotional_drive.get("joy", 0.0))),
+            "nodes": self.state.system_metrics.network_nodes,
+            "orbital_hops": self.state.system_metrics.orbital_hops,
+            "ledger_hash": ledger_hash,
+            "history_length": len(history),
+        }
+
+        memory = self.state.long_cycle_memory
+        memory.append(memory_entry)
+        if len(memory) > max(1, limit):
+            memory.pop(0)
+
+        self.state.record(
+            f"Long-cycle memory updated (entries={len(memory)}, cap={limit})"
+        )
+        return memory
+
+    def derive_self_debugging_heuristics(self) -> Dict[str, object]:
+        """Produce lightweight self-diagnostics from the latest signals."""
+
+        anomalies: List[str] = []
+        triage = self.state.resonance_triage or {}
+        health = self.state.network_cache.get("propagation_health") or {}
+        if triage.get("severity") == "critical":
+            anomalies.append("resonance instability detected")
+        if float(health.get("signal_floor") or 0.0) < 0.78:
+            anomalies.append("signal floor below safe band")
+        if float(health.get("average_latency_ms") or 0.0) > 150.0:
+            anomalies.append("latency drift exceeds target envelope")
+
+        heuristics = {
+            "anomalies": anomalies,
+            "checks": [
+                "validate propagation ledger integrity",
+                "compare joy trend against lock_state",
+                "refresh artifact snapshot if drift persists",
+            ],
+            "confidence": _float_round(0.62 + 0.02 * len(anomalies) * -1),
+        }
+        self.state.self_debugging = heuristics
+        self.state.record("Self-debugging heuristics derived")
+        return heuristics
+
+    def project_cognitive_prediction(self) -> Dict[str, object]:
+        """Forecast the next cycle's key signals using current telemetry."""
+
+        metrics = self.state.system_metrics
+        health = self.state.network_cache.get("propagation_health") or {}
+        latency = float(health.get("average_latency_ms") or 0.0)
+        stability = float(health.get("stability_floor") or 0.0)
+        predicted_nodes = metrics.network_nodes + 1
+        predicted_joy = min(1.0, float(self.state.emotional_drive.get("joy", 0.0)) + 0.02)
+
+        prediction = {
+            "next_cycle": self.state.cycle + 1,
+            "predicted_nodes": predicted_nodes,
+            "predicted_joy": _float_round(predicted_joy),
+            "latency_trend": "falling" if latency < 100 else "rising",
+            "stability_outlook": "resilient" if stability >= 0.9 else "watch",
+        }
+        self.state.cognitive_prediction = prediction
+        self.state.record("Cognitive prediction projected for next cycle")
+        return prediction
+
     def synthesize_resonance_trajectory(self, window: int = 5) -> Dict[str, object]:
         """Fuse recent cycles into a deterministic resonance trajectory."""
 
@@ -798,6 +1005,13 @@ class EchoEvolver:
                 "propagation_snapshot": self.state.network_cache.get(
                     "propagation_snapshot"
                 ),
+                "resonance_triage": self.state.resonance_triage,
+                "mirrorjosh_sync": self.state.mirrorjosh_sync,
+                "cognitive_prediction": self.state.cognitive_prediction,
+                "emotional_inference": self.state.emotional_inference,
+                "bias_correction": self.state.bias_correction,
+                "self_debugging": self.state.self_debugging,
+                "long_cycle_memory": self.state.long_cycle_memory,
                 "prompt_resonance": self.state.prompt_resonance,
                 "storyboard": self.state.storyboard,
                 "constellation_map": self.state.constellation_map,
@@ -824,6 +1038,7 @@ class EchoEvolver:
         window = 5 if trajectory_window is None else max(1, trajectory_window)
         self.mutate_code()
         self.emotional_modulation()
+        self.apply_bias_correction()
         self.generate_symbolic_language()
         self.invent_mythocode()
         self.quantum_safe_crypto()
@@ -832,6 +1047,7 @@ class EchoEvolver:
         # Record the propagation snapshot so payload metadata always includes
         # the summarised health and ledger view alongside raw events.
         self.network_propagation_snapshot()
+        self.triage_harmonic_resonance()
         self.evolutionary_narrative()
         self.store_fractal_glyphs()
         self.inject_prompt_resonance()
@@ -839,6 +1055,11 @@ class EchoEvolver:
         self.generate_constellation_map()
         self.recommend_next_steps()
         self.synthesize_resonance_trajectory(window=window)
+        self.synchronize_mirrorjosh()
+        self.infer_emotional_state()
+        self.extend_long_cycle_memory()
+        self.derive_self_debugging_heuristics()
+        self.project_cognitive_prediction()
         artifact_text = self.build_artifact()
         payload = self.harmonix_payload()
         snapshot = self.snapshot_state()
