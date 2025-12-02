@@ -45,6 +45,28 @@ class SignalInsight:
     recommendations: List[str] = field(default_factory=list)
 
 
+@dataclass(order=True)
+class SignalAlert:
+    """Summarized alert distilled from a signal."""
+
+    severity: float
+    key: str = field(compare=False)
+    label: str = field(compare=False)
+    status: str = field(compare=False)
+    summary: str = field(compare=False)
+    recommendations: List[str] = field(default_factory=list, compare=False)
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "key": self.key,
+            "label": self.label,
+            "status": self.status,
+            "severity": self.severity,
+            "summary": self.summary,
+            "recommendations": self.recommendations,
+        }
+
+
 class SignalProbe:
     key: str
     label: str
@@ -188,6 +210,7 @@ class NextCyclePlanProbe(SignalProbe):
             recs.append("Add at least one proposed action so the matrix can evaluate adaptability.")
         if actions and len(success_criteria) < len(actions):
             recs.append("Define success criteria for each proposed action to tighten adaptability loops.")
+            status = "needs-alignment"
 
         metrics: Dict[str, object] = {
             "recent_deltas": recent_deltas,
@@ -203,6 +226,7 @@ class AdaptiveIntelReport:
     summary: str
     composite_scores: Dict[str, float]
     signals: List[SignalInsight]
+    alerts: List[SignalAlert]
     context: Dict[str, object]
 
     def to_text(self) -> str:
@@ -214,6 +238,14 @@ class AdaptiveIntelReport:
         for key, value in self.composite_scores.items():
             lines.append(f"  - {key}: {value:.3f}")
         lines.append("")
+        if self.alerts:
+            lines.append("Alerts:")
+            for alert in self.alerts:
+                lines.append(f"  [{alert.status.upper()} | {alert.severity:.2f}] {alert.label}: {alert.summary}")
+                if alert.recommendations:
+                    for rec in alert.recommendations:
+                        lines.append(f"    * {rec}")
+            lines.append("")
         for signal in self.signals:
             lines.append(f"[{signal.status.upper()}] {signal.label}")
             for metric_key, metric_value in signal.metrics.items():
@@ -240,6 +272,7 @@ class AdaptiveIntelReport:
                 }
                 for signal in self.signals
             ],
+            "alerts": [alert.to_dict() for alert in self.alerts],
             "context": self.context,
         }
 
@@ -258,6 +291,18 @@ class AdaptiveIntelReport:
         ]
         for key, value in self.composite_scores.items():
             lines.append(f"| {key} | {value:.3f} |")
+
+        lines.extend([
+            "",
+            "## Alerts",
+            "| Label | Status | Severity | Summary | Recommendations |",
+            "| --- | --- | --- | --- | --- |",
+        ])
+        for alert in self.alerts or []:
+            recommendations = "<br />".join(alert.recommendations) if alert.recommendations else "-"
+            lines.append(
+                f"| {alert.label} | {alert.status} | {alert.severity:.2f} | {alert.summary} | {recommendations} |"
+            )
 
         lines.extend([
             "",
@@ -296,6 +341,7 @@ class AdaptiveIntelligenceMatrix:
     def generate_report(self) -> AdaptiveIntelReport:
         signals = [probe.collect() for probe in self.probes]
         composite_scores = self._derive_composite_scores(signals)
+        alerts = self._compose_alerts(signals)
         summary = self._summarize(composite_scores)
         context = {
             "pulse_history_path": str(self.config.pulse_history_path),
@@ -307,6 +353,7 @@ class AdaptiveIntelligenceMatrix:
             summary=summary,
             composite_scores=composite_scores,
             signals=signals,
+            alerts=alerts,
             context=context,
         )
 
@@ -351,6 +398,53 @@ class AdaptiveIntelligenceMatrix:
         execution_ready = (adaptability_index * 0.45) + ((1 - automation_pressure) * 0.35) + (signal_health * 0.2)
         score_map["execution_ready"] = round(max(0.0, min(1.0, execution_ready)), 3)
         return score_map
+
+    def _compose_alerts(self, signals: List[SignalInsight]) -> List[SignalAlert]:
+        severity_by_status = {
+            "degraded": 0.95,
+            "missing": 0.9,
+            "pressurized": 0.85,
+            "lagging": 0.7,
+            "needs-alignment": 0.65,
+            "no-data": 0.45,
+            "nominal": 0.0,
+        }
+
+        alerts: List[SignalAlert] = []
+        for signal in signals:
+            severity = severity_by_status.get(signal.status, 0.5)
+            if severity <= 0:
+                continue
+
+            summary_parts = [f"status {signal.status}"]
+            if signal.key == "pulse_history":
+                gap = signal.metrics.get("seconds_since_last")
+                if isinstance(gap, (int, float)):
+                    summary_parts.append(f"{gap:.0f}s since last pulse")
+            elif signal.key == "roadmap_summary":
+                total = signal.metrics.get("todo_total")
+                if isinstance(total, int):
+                    summary_parts.append(f"{total} outstanding TODO/FIXME markers")
+            elif signal.key == "next_cycle_plan":
+                actions = signal.metrics.get("actions", [])
+                if actions:
+                    coverage = signal.metrics.get("success_criteria", [])
+                    summary_parts.append(f"{len(actions)} actions; {len(coverage)} with success criteria")
+
+            summary = "; ".join(summary_parts)
+            alerts.append(
+                SignalAlert(
+                    severity=severity,
+                    key=signal.key,
+                    label=signal.label,
+                    status=signal.status,
+                    summary=summary,
+                    recommendations=signal.recommendations,
+                )
+            )
+
+        alerts.sort(reverse=True)
+        return alerts
 
     @staticmethod
     def _summarize(scores: Dict[str, float]) -> str:

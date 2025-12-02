@@ -60,9 +60,31 @@ def test_matrix_report_fuses_signals(tmp_path, monkeypatch):
     assert report.composite_scores["automation_pressure"] > 0
     assert report.composite_scores["signal_health"] <= 1
     assert "execution_ready" in report.composite_scores
+    assert report.alerts
     text_output = report.to_text()
     assert "Adaptive Intelligence Matrix" in text_output
+    assert "Alerts:" in text_output
     assert "Roadmap Density" in text_output
+
+
+def test_matrix_alerts_summarize_priorities(tmp_path, monkeypatch):
+    pulse_path, roadmap_path, plan_path = _prepare_environment(tmp_path)
+    monkeypatch.setattr(aim.time, "time", lambda: 1_700_002_000.0)
+
+    config = aim.MatrixConfig(
+        repo_root=tmp_path,
+        pulse_history_path=pulse_path,
+        roadmap_summary_path=roadmap_path,
+        next_cycle_plan_path=plan_path,
+        pulse_latency_threshold=300,
+        automation_todo_threshold=4,
+    )
+    matrix = aim.AdaptiveIntelligenceMatrix(config)
+    report = matrix.generate_report()
+
+    assert report.alerts[0].key == "pulse_history"
+    assert "since last pulse" in report.alerts[0].summary
+    assert any(rec for alert in report.alerts for rec in alert.recommendations)
 
 
 def test_cli_entrypoint_emits_json(tmp_path, monkeypatch):
@@ -86,6 +108,8 @@ def test_cli_entrypoint_emits_json(tmp_path, monkeypatch):
     payload = json.loads(emit_path.read_text(encoding="utf-8"))
     assert "composite_scores" in payload
     assert payload["signals"]
+    assert payload["alerts"]
     markdown = markdown_path.read_text(encoding="utf-8")
     assert "Adaptive Intelligence Matrix" in markdown
     assert "execution_ready" in markdown
+    assert "## Alerts" in markdown
