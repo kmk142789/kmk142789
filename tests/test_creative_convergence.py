@@ -81,3 +81,24 @@ def test_integration_metrics_track_novelty_and_fusion_signal() -> None:
     assert metrics.novelty_ratio == pytest.approx(0.5)
     assert 0.0 <= metrics.fusion_index <= 1.0
     assert "fusion index" in compose_convergence_report(brief)
+
+
+def test_integration_metrics_surface_density_coherence_and_watermark() -> None:
+    brief = ConvergenceBrief(
+        theme="orbital chorus",
+        motifs=["orbital chorus", "signal"],
+        highlights=["orbital", "chorus"],
+        tone="radiant",
+        energy=1.0,
+        constellation_seed=12,
+        resonance_seed=12,
+    )
+
+    _, _, panel, metrics = compile_convergence_panels(brief)
+    _, _, _, metrics_again = compile_convergence_panels(brief)
+
+    assert 0.0 <= metrics.lexicon_density <= 1.0
+    assert 0.0 <= metrics.coherence <= 1.0
+    assert metrics.resonance_watermark
+    assert metrics.resonance_watermark == metrics_again.resonance_watermark
+    assert "watermark" in panel

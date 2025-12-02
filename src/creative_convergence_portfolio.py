@@ -46,6 +46,9 @@ class PortfolioDigest:
     fusion_leader: PortfolioEntry
     gap_leader: Optional[PortfolioEntry]
     gap_hotspots: Sequence[tuple[str, int]]
+    average_coherence: float
+    coherence_leader: PortfolioEntry
+    watermark_catalogue: Sequence[str]
 
     def render(self) -> str:
         lines: List[str] = [
@@ -63,6 +66,11 @@ class PortfolioDigest:
                 f"fusion pulse={self.average_fusion:.3f} (leader={self.fusion_leader.theme}) | "
                 f"gap leader={(self.gap_leader.theme if self.gap_leader else 'none')} "
                 f"({self.gap_leader.gap_label() if self.gap_leader else 'none'})"
+            ),
+            (
+                f"  coherence field={self.average_coherence:.3f} | coherence leader={self.coherence_leader.theme} "
+                f"({self.coherence_leader.metrics.coherence:.3f}) | resonance watermarks="
+                f"{', '.join(self.watermark_catalogue) if self.watermark_catalogue else 'none'}"
             ),
         ]
         hotspot_summary = ", ".join(
@@ -119,9 +127,13 @@ def build_portfolio_digest(briefs: Iterable[ConvergenceBrief]) -> PortfolioDiges
     gap_leader = max(entries, key=lambda entry: len(entry.metrics.lexical_gaps), default=None)
     average_fusion = fmean(entry.metrics.fusion_index for entry in entries)
     fusion_leader = max(entries, key=lambda entry: entry.metrics.fusion_index)
+    coherence_values = [entry.metrics.coherence for entry in entries]
+    average_coherence = fmean(coherence_values)
+    coherence_leader = max(entries, key=lambda entry: entry.metrics.coherence)
     gap_counter: Counter[str] = Counter()
     for entry in entries:
         gap_counter.update(entry.metrics.lexical_gaps)
+    watermark_catalogue = tuple(entry.metrics.resonance_watermark for entry in entries)
     gap_hotspots: List[tuple[str, int]] = []
     for phrase, count in gap_counter.most_common():
         if count == 0:
@@ -140,6 +152,9 @@ def build_portfolio_digest(briefs: Iterable[ConvergenceBrief]) -> PortfolioDiges
         fusion_leader,
         gap_leader,
         tuple(gap_hotspots),
+        average_coherence,
+        coherence_leader,
+        watermark_catalogue,
     )
 
 

@@ -12,6 +12,7 @@ additional dependencies.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import hashlib
 from statistics import fmean
 from textwrap import indent
 from typing import Iterable, List, Sequence, Tuple
@@ -57,6 +58,9 @@ class IntegrationMetrics:
     alignment_score: float
     novelty_ratio: float
     fusion_index: float
+    lexicon_density: float
+    coherence: float
+    resonance_watermark: str
 
 
 def _build_constellation_panel(
@@ -131,6 +135,11 @@ def _build_integration_panel(
     if highlight_tokens:
         coverage = round(len(overlap) / len(highlight_tokens), 3)
     novelty_ratio = round(len(lexical_gaps) / len(highlight_tokens or {""}), 3)
+    lexicon_pool = motif_tokens | highlight_tokens
+    lexicon_density = round(
+        len(motif_tokens & highlight_tokens) / len(lexicon_pool) if lexicon_pool else 0.0,
+        3,
+    )
 
     average_intensity = fmean(node.intensity for node in nodes)
     alignment_score = round((coverage + diagnostics.stability_index) / 2, 3)
@@ -143,6 +152,29 @@ def _build_integration_panel(
         ),
         3,
     )
+    coherence = round(
+        min(
+            1.0,
+            0.5 * alignment_score
+            + 0.25 * (1 - novelty_ratio)
+            + 0.25 * min(1.0, diagnostics.stability_index),
+        ),
+        3,
+    )
+    resonance_watermark = hashlib.sha1(
+        "|".join(
+            [
+                brief.theme.lower(),
+                brief.tone.lower(),
+                f"{coverage:.3f}",
+                f"{fusion_index:.3f}",
+                f"{lexicon_density:.3f}",
+                diagnostics.energy_class,
+                ",".join(overlap) or "-",
+                ",".join(lexical_gaps) or "-",
+            ]
+        ).encode()
+    ).hexdigest()[:12]
     metrics = IntegrationMetrics(
         coverage=coverage,
         shared_lexicon=tuple(overlap),
@@ -153,6 +185,9 @@ def _build_integration_panel(
         alignment_score=alignment_score,
         novelty_ratio=novelty_ratio,
         fusion_index=fusion_index,
+        lexicon_density=lexicon_density,
+        coherence=coherence,
+        resonance_watermark=resonance_watermark,
     )
 
     lines = ["Integration Panel:"]
@@ -179,6 +214,13 @@ def _build_integration_panel(
         + (
             f"constellation stability {metrics.stability_index:.3f} provides "
             f"anchors for the '{brief.tone}' resonance track."
+        )
+    )
+    lines.append(
+        "  • lexicon density & coherence: "
+        + (
+            f"density={metrics.lexicon_density:.3f} | coherence={metrics.coherence:.3f} | "
+            f"watermark={metrics.resonance_watermark}"
         )
     )
     return "\n".join(lines), metrics
