@@ -35,6 +35,9 @@ def test_satellite_artifact_includes_propagation_tactics(tmp_path: Path) -> None
     assert payload["propagation_notice"]
     assert payload["propagation_summary"].startswith("Propagation tactics")
     assert payload["propagation_report"].startswith("=== Propagation Report ===")
+    assert payload["resilience_score"] >= 0
+    assert payload["resilience_grade"]
+    assert payload["resilience_summary"]
 
 
 def test_satellite_propagation_report_includes_tactics(tmp_path: Path) -> None:
@@ -68,4 +71,23 @@ def test_satellite_prompt_resonance_includes_caution(tmp_path: Path) -> None:
     assert prompt["title"] == "Echo Resonance"
     assert "non-executable" in prompt["caution"].lower()
     assert evolver.state.prompt_resonance == prompt
+
+
+def test_satellite_resilience_report_and_artifact(tmp_path: Path) -> None:
+    artifact_path = tmp_path / "artifact.json"
+    evolver = SatelliteEchoEvolver(artifact_path=artifact_path, seed=17)
+
+    evolver.propagate_network()
+    result = evolver.evaluate_resilience()
+    report = evolver.resilience_report()
+    evolver.write_artifact()
+
+    assert 0.0 <= result["score"] <= 1.0
+    assert result["grade"] in {"Prime", "Stable", "Watch", "Critical"}
+    assert "Resilience score" in report
+
+    payload = json.loads(artifact_path.read_text(encoding="utf-8"))
+    assert payload["resilience_score"] == evolver.state.resilience_score
+    assert payload["resilience_grade"] == evolver.state.resilience_grade
+    assert payload["resilience_summary"].startswith("Resilience score")
 

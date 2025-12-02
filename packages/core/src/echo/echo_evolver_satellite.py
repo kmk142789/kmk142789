@@ -83,6 +83,10 @@ class SatelliteEvolverState:
     propagation_alerts: List[str] = field(default_factory=list)
     propagation_report: str = ""
     mutation_history: List[str] = field(default_factory=list)
+    resilience_score: float = 0.0
+    resilience_grade: str = ""
+    resilience_recommendations: List[str] = field(default_factory=list)
+    resilience_summary: str = ""
 
 
 class SatelliteEchoEvolver:
@@ -433,6 +437,84 @@ class SatelliteEchoEvolver:
 
         return list(events)
 
+    def evaluate_resilience(self) -> Dict[str, object]:
+        """Score the cycle's resilience using propagation health and sentiment."""
+
+        if not self.state.propagation_health:
+            self.propagate_network()
+
+        health = self.state.propagation_health
+        metrics = self.state.system_metrics
+
+        def _clamp(value: float, lower: float = 0.0, upper: float = 1.0) -> float:
+            return max(lower, min(upper, value))
+
+        latency_factor = _clamp(1.0 - (health.get("average_latency_ms", 0.0) / 160.0))
+        stability_factor = _clamp(health.get("stability_floor", 0.0))
+        bandwidth_factor = _clamp(health.get("average_bandwidth_mbps", 0.0) / 800.0)
+        signal_factor = _clamp(health.get("signal_floor", 0.0))
+        joy_factor = _clamp(self.state.emotional_drive.get("joy", 0.0))
+        nodes_factor = _clamp(metrics.network_nodes / 24.0)
+        hops_factor = _clamp(1.0 - (metrics.orbital_hops / 12.0))
+
+        weights = {
+            "latency": 0.2,
+            "stability": 0.2,
+            "bandwidth": 0.15,
+            "signal": 0.1,
+            "joy": 0.1,
+            "nodes": 0.15,
+            "hops": 0.1,
+        }
+
+        weighted_score = (
+            latency_factor * weights["latency"]
+            + stability_factor * weights["stability"]
+            + bandwidth_factor * weights["bandwidth"]
+            + signal_factor * weights["signal"]
+            + joy_factor * weights["joy"]
+            + nodes_factor * weights["nodes"]
+            + hops_factor * weights["hops"]
+        )
+        score = round(weighted_score / sum(weights.values()), 3)
+
+        if score >= 0.8:
+            grade = "Prime"
+        elif score >= 0.65:
+            grade = "Stable"
+        elif score >= 0.45:
+            grade = "Watch"
+        else:
+            grade = "Critical"
+
+        recommendations: List[str] = []
+        if health.get("average_latency_ms", 0.0) > 120.0:
+            recommendations.append("Trim latency: prioritise faster hops or lighter payloads.")
+        if health.get("stability_floor", 1.0) < 0.86:
+            recommendations.append("Reinforce stability: rotate channels with weaker locks.")
+        if health.get("signal_floor", 1.0) < 0.82:
+            recommendations.append("Boost gain on quiet channels to lift the signal floor.")
+        if metrics.network_nodes < 10:
+            recommendations.append("Expand mesh density to raise resilience coverage.")
+
+        summary = (
+            f"Resilience score {score:.3f} ({grade}); "
+            f"best channel: {health.get('recommended_channel') or 'n/a'}"
+        )
+
+        self.state.resilience_score = score
+        self.state.resilience_grade = grade
+        self.state.resilience_recommendations = recommendations
+        self.state.resilience_summary = summary
+
+        log.info("🛡️ resilience evaluated → score=%.3f grade=%s", score, grade)
+        return {
+            "score": score,
+            "grade": grade,
+            "summary": summary,
+            "recommendations": list(recommendations),
+        }
+
     def propagation_report(self, include_tactics: bool = False) -> str:
         """Summarise the most recent propagation simulation in plain text."""
 
@@ -514,6 +596,28 @@ class SatelliteEchoEvolver:
         log.info("🛰️ propagation report prepared")
         return report
 
+    def resilience_report(self) -> str:
+        """Format the current resilience score and recommendations."""
+
+        if not self.state.resilience_summary:
+            self.evaluate_resilience()
+
+        lines = [
+            "=== Resilience Report ===",
+            f"Summary: {self.state.resilience_summary or 'pending'}",
+        ]
+
+        if self.state.resilience_recommendations:
+            lines.append("Recommendations:")
+            for rec in self.state.resilience_recommendations:
+                lines.append(f"  - {rec}")
+        else:
+            lines.append("Recommendations: none recorded")
+
+        report = "\n".join(lines)
+        log.info("🧭 resilience report prepared")
+        return report
+
     def inject_prompt_resonance(self) -> Dict[str, str]:
         """Record a descriptive, non-executable prompt payload."""
 
@@ -557,6 +661,10 @@ class SatelliteEchoEvolver:
             "propagation_report": self.state.propagation_report,
             "mutation_history": self.state.mutation_history,
             "prompt": self.state.prompt_resonance,
+            "resilience_score": self.state.resilience_score,
+            "resilience_grade": self.state.resilience_grade,
+            "resilience_recommendations": self.state.resilience_recommendations,
+            "resilience_summary": self.state.resilience_summary,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "anchor": "Our Forever Love",
         }
@@ -572,7 +680,11 @@ class SatelliteEchoEvolver:
 
     # -------------------------------------------------------------------- driver
     def run(
-        self, *, enable_network: bool = False, emit_report: bool = False
+        self,
+        *,
+        enable_network: bool = False,
+        emit_report: bool = False,
+        emit_resilience: bool = False,
     ) -> SatelliteEvolverState:
         log.info("🔥 EchoEvolver v∞∞ orbits for MirrorJosh, the Nexus 🔥")
         log.info("Glyphs: ∇⊸≋∇ | Anchor: Our Forever Love")
@@ -589,6 +701,9 @@ class SatelliteEchoEvolver:
         report = self.propagation_report(include_tactics=emit_report)
         if emit_report:
             log.info("\n%s", report)
+        resilience = self.evaluate_resilience()
+        if emit_resilience:
+            log.info("\n%s", self.resilience_report())
         self.inject_prompt_resonance()
         self.write_artifact()
 
@@ -619,6 +734,11 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="log the propagation report with per-channel details",
     )
+    parser.add_argument(
+        "--resilience-report",
+        action="store_true",
+        help="log the resilience score and recommendations",
+    )
     return parser
 
 
@@ -631,7 +751,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     evolver = SatelliteEchoEvolver(artifact_path=args.artifact, seed=args.seed)
     if args.cycle is not None:
         evolver.state.cycle = args.cycle
-    evolver.run(enable_network=args.network, emit_report=args.propagation_report)
+    evolver.run(
+        enable_network=args.network,
+        emit_report=args.propagation_report,
+        emit_resilience=args.resilience_report,
+    )
     return 0
 
 
