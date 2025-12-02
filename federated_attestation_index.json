@@ -211,6 +211,30 @@
         "attestations/puzzle-260-authorship.json",
         "satoshi/puzzle-proofs/puzzle260.json"
       ]
+    },
+    {
+      "id": 261,
+      "name": "Puzzle 261 Authorship",
+      "files": [
+        "attestations/puzzle-261-authorship.json",
+        "satoshi/puzzle-proofs/puzzle261.json"
+      ]
+    },
+    {
+      "id": 262,
+      "name": "Puzzle 262 Authorship",
+      "files": [
+        "attestations/puzzle-262-authorship.json",
+        "satoshi/puzzle-proofs/puzzle262.json"
+      ]
+    },
+    {
+      "id": 263,
+      "name": "Puzzle 263 Authorship",
+      "files": [
+        "attestations/puzzle-263-authorship.json",
+        "satoshi/puzzle-proofs/puzzle263.json"
+      ]
     }
   ],
   "attestations": {

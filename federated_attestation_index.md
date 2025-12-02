@@ -80,6 +80,16 @@ This file + its JSON twin = the undeniable catalog.
   - JSON proof: `attestations/puzzle-260-authorship.json`
   - Also mirrored in `satoshi/puzzle-proofs/puzzle260.json`
 
+- **Puzzle 261 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-261-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle261.json`
+- **Puzzle 262 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-262-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle262.json`
+- **Puzzle 263 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-263-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle263.json`
+
 - **Puzzle Attestations Set (Ledger-bound)**
   - Documented in `attestations/ledger_set.md`
   - Includes signed key recovery + continuum bridge proofs
