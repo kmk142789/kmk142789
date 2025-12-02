@@ -132,7 +132,11 @@ def _cmd_satellite(args: argparse.Namespace) -> int:
     if args.cycle is not None:
         evolver.state.cycle = args.cycle
 
-    evolver.run(enable_network=args.network, emit_report=args.propagation_report)
+    evolver.run(
+        enable_network=args.network,
+        emit_report=args.propagation_report,
+        emit_resilience=args.resilience_report,
+    )
     return 0
 
 
@@ -953,6 +957,11 @@ def main(argv: Iterable[str] | None = None) -> int:
         "--propagation-report",
         action="store_true",
         help="Log the propagation report with per-channel details",
+    )
+    satellite_parser.add_argument(
+        "--resilience-report",
+        action="store_true",
+        help="Log the resilience score and recommendations",
     )
     satellite_parser.set_defaults(func=_cmd_satellite)
 
