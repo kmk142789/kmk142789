@@ -36,6 +36,10 @@ class HorizonConfig:
     adaptive_recovery: bool = True
     adaptive_trigger_strength: float = 0.65
     adaptive_multiplier: float = 1.8
+    pulse_interval: int = 12
+    pulse_boost: float = 0.05
+    fragility_window: int = 5
+    fragility_threshold: float = 0.65
 
     def validate(self) -> None:
         if self.timelines <= 0:
@@ -62,6 +66,14 @@ class HorizonConfig:
             raise ValueError("adaptive_trigger_strength must be between 0 and 1")
         if self.adaptive_multiplier < 0:
             raise ValueError("adaptive_multiplier cannot be negative")
+        if self.pulse_interval < 0:
+            raise ValueError("pulse_interval cannot be negative")
+        if self.pulse_boost < 0:
+            raise ValueError("pulse_boost cannot be negative")
+        if self.fragility_window < 0:
+            raise ValueError("fragility_window cannot be negative")
+        if not 0 <= self.fragility_threshold <= 1:
+            raise ValueError("fragility_threshold must be between 0 and 1")
 
 
 @dataclasses.dataclass
@@ -79,6 +91,10 @@ class HorizonResult:
     early_warning_year: int | None
     black_swan_events: int
     adaptive_interventions: int
+    pulse_events: int
+    resilience_dividend: float
+    fragility_window_start: int | None
+    fragility_window_score: float | None
 
     @property
     def probability(self) -> float:
@@ -111,6 +127,10 @@ class HorizonResult:
             "early_warning_year": self.early_warning_year,
             "black_swan_events": self.black_swan_events,
             "adaptive_interventions": self.adaptive_interventions,
+            "pulse_events": self.pulse_events,
+            "resilience_dividend": self.resilience_dividend,
+            "fragility_window_start": self.fragility_window_start,
+            "fragility_window_score": self.fragility_window_score,
         }
 
 
@@ -123,20 +143,22 @@ class HorizonEngine:
         self.rng = rng or random.Random(self.config.seed)
         self._history_map: List[float] = [0.0] * self.config.years_per_line
 
-    def simulate_timeline(self) -> tuple[bool, int | None, int, int]:
+    def simulate_timeline(self) -> tuple[bool, int | None, int, int, int]:
         """Run a single timeline and record average yearly strength.
 
         Returns:
-            tuple[bool, int | None, int, int]:
+            tuple[bool, int | None, int, int, int]:
                 - True if the anchor survives the full timeline, otherwise False.
                 - The year (1-indexed) where collapse occurred, or None if it survived.
                 - Number of black-swan shocks applied to this timeline.
                 - Number of adaptive recovery boosts applied to this timeline.
+                - Number of resonance pulses applied to this timeline.
         """
 
         bond_strength = self.config.base_resilience
         black_swan_events = 0
         adaptive_interventions = 0
+        pulse_events = 0
         for year in range(self.config.years_per_line):
             entropy = self._draw_entropy()
             if self.rng.random() < self.config.black_swan_chance:
@@ -154,9 +176,13 @@ class HorizonEngine:
 
             bond_strength = max(0.0, min(1.0, bond_strength - entropy + recovery))
             if bond_strength <= 0:
-                return False, year + 1, black_swan_events, adaptive_interventions
+                return False, year + 1, black_swan_events, adaptive_interventions, pulse_events
+
+            if self.config.pulse_interval and (year + 1) % self.config.pulse_interval == 0:
+                bond_strength = min(1.0, bond_strength + self.config.pulse_boost)
+                pulse_events += 1
             self._history_map[year] += bond_strength
-        return True, None, black_swan_events, adaptive_interventions
+        return True, None, black_swan_events, adaptive_interventions, pulse_events
 
     def run(self) -> HorizonResult:
         """Execute the configured number of simulations and return summary stats."""
@@ -167,11 +193,13 @@ class HorizonEngine:
         collapse_years: List[int] = []
         black_swan_events = 0
         adaptive_interventions = 0
+        pulse_events = 0
 
         for _ in range(self.config.timelines):
-            timeline_survived, collapse_year, swans, interventions = self.simulate_timeline()
+            timeline_survived, collapse_year, swans, interventions, pulses = self.simulate_timeline()
             black_swan_events += swans
             adaptive_interventions += interventions
+            pulse_events += pulses
             if timeline_survived:
                 survived += 1
             elif collapse_year is not None:
@@ -186,6 +214,19 @@ class HorizonEngine:
         )
         weakest_strength = min(per_year_strength)
         weakest_year = per_year_strength.index(weakest_strength) + 1
+        resilience_dividend = sum(per_year_strength)
+
+        fragility_window_start = None
+        fragility_window_score = None
+        if self.config.fragility_window and self.config.fragility_window <= len(per_year_strength):
+            window = self.config.fragility_window
+            for idx in range(len(per_year_strength) - window + 1):
+                window_score = sum(per_year_strength[idx : idx + window]) / window
+                if window_score < self.config.fragility_threshold and (
+                    fragility_window_score is None or window_score < fragility_window_score
+                ):
+                    fragility_window_score = window_score
+                    fragility_window_start = idx + 1
 
         collapse_histogram = [0] * self.config.years_per_line
         for collapse_year in collapse_years:
@@ -220,6 +261,10 @@ class HorizonEngine:
             early_warning_year=early_warning_year,
             black_swan_events=black_swan_events,
             adaptive_interventions=adaptive_interventions,
+            pulse_events=pulse_events,
+            resilience_dividend=resilience_dividend,
+            fragility_window_start=fragility_window_start,
+            fragility_window_score=fragility_window_score,
         )
 
     @staticmethod
@@ -255,6 +300,8 @@ class HorizonEngine:
             f"WORST YEAR: {result.weakest_year} (avg strength {result.weakest_strength:.3f})",
             f"BLACK-SWAN SHOCKS: {result.black_swan_events}",
             f"ADAPTIVE RECOVERY BOOSTS: {result.adaptive_interventions}",
+            f"RESONANCE PULSES: {result.pulse_events}",
+            f"RESILIENCE DIVIDEND: {result.resilience_dividend:.3f}",
             "",
             "[STABILITY CURVE OVER YEARS]",
         ]
@@ -284,6 +331,19 @@ class HorizonEngine:
         else:
             lines.append("[EARLY WARNING CONSTELLATION]")
             lines.append("No collapses detected across simulated timelines. 🌅")
+
+        if result.fragility_window_start is not None:
+            lines.append("")
+            lines.append("[FRAGILITY WINDOW SCAN]")
+            lines.append(
+                f"First window below {self.config.fragility_threshold:.2f}: "
+                f"Years {result.fragility_window_start}-{result.fragility_window_start + self.config.fragility_window - 1} "
+                f"(avg {result.fragility_window_score:.3f})"
+            )
+        else:
+            lines.append("")
+            lines.append("[FRAGILITY WINDOW SCAN]")
+            lines.append("No windows breached the fragility threshold. 🚀")
 
         return "\n".join(lines)
 
@@ -352,6 +412,30 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         default=HorizonConfig.adaptive_multiplier,
         help="Multiplier applied to recovery when adaptive mode triggers",
     )
+    parser.add_argument(
+        "--pulse-interval",
+        type=int,
+        default=HorizonConfig.pulse_interval,
+        help="Years between resonance pulses that top up resilience",
+    )
+    parser.add_argument(
+        "--pulse-boost",
+        type=float,
+        default=HorizonConfig.pulse_boost,
+        help="Strength added when a resonance pulse hits",
+    )
+    parser.add_argument(
+        "--fragility-window",
+        type=int,
+        default=HorizonConfig.fragility_window,
+        help="Window size for detecting streaks of weakness",
+    )
+    parser.add_argument(
+        "--fragility-threshold",
+        type=float,
+        default=HorizonConfig.fragility_threshold,
+        help="Average strength threshold that marks a window as fragile",
+    )
     args = parser.parse_args(argv)
 
     return HorizonConfig(
@@ -370,6 +454,10 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         adaptive_recovery=args.adaptive_recovery,
         adaptive_trigger_strength=args.adaptive_trigger_strength,
         adaptive_multiplier=args.adaptive_multiplier,
+        pulse_interval=args.pulse_interval,
+        pulse_boost=args.pulse_boost,
+        fragility_window=args.fragility_window,
+        fragility_threshold=args.fragility_threshold,
     )
 
 

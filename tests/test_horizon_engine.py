@@ -25,6 +25,7 @@ def test_engine_run_is_deterministic_with_seed():
     assert pytest.approx(1.0) == result.probability
     assert result.weakest_year >= 1
     assert 0.0 <= result.volatility <= 1.0
+    assert result.pulse_events == config.timelines
 
 
 def test_json_output_format(capsys):
@@ -56,6 +57,8 @@ def test_json_output_format(capsys):
     assert 0.0 <= payload["probability"] <= 1.0
     assert payload["black_swan_events"] >= 0
     assert payload["adaptive_interventions"] >= 0
+    assert payload["pulse_events"] >= 0
+    assert payload["resilience_dividend"] > 0
 
 
 def test_uniform_distribution_entropy():
@@ -139,3 +142,49 @@ def test_adaptive_recovery_tracks_interventions():
 
     assert result.survived == config.timelines
     assert result.adaptive_interventions == config.timelines * 2
+
+
+def test_resonance_pulses_support_fragile_timelines():
+    fragile_config = HorizonConfig(
+        anchor="Fragile Without Pulses",
+        timelines=30,
+        years_per_line=8,
+        base_resilience=0.45,
+        chaos_factor=0.12,
+        recovery_rate=0.0,
+        seed=2024,
+        pulse_interval=0,
+    )
+    pulsed_config = dataclasses.replace(
+        fragile_config,
+        anchor="Fragile With Pulses",
+        pulse_interval=2,
+        pulse_boost=0.1,
+    )
+
+    no_pulse_result = HorizonEngine(config=fragile_config).run()
+    pulsed_result = HorizonEngine(config=pulsed_config).run()
+
+    assert pulsed_result.pulse_events > 0
+    assert pulsed_result.survived >= no_pulse_result.survived
+    assert pulsed_result.resilience_dividend >= no_pulse_result.resilience_dividend
+
+
+def test_fragility_window_detection_flags_low_average():
+    config = HorizonConfig(
+        anchor="Low Window",
+        timelines=20,
+        years_per_line=6,
+        base_resilience=0.6,
+        chaos_factor=0.0,
+        recovery_rate=0.0,
+        fragility_window=3,
+        fragility_threshold=0.7,
+        pulse_interval=0,
+    )
+
+    result = HorizonEngine(config=config).run()
+
+    assert result.survived == config.timelines
+    assert result.fragility_window_start == 1
+    assert result.fragility_window_score is not None
