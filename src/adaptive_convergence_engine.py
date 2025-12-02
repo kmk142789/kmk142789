@@ -173,6 +173,32 @@ class CoherenceEnvelope:
 
 
 @dataclass
+class StabilityHorizon:
+    """Long-horizon projection for autonomous stability."""
+
+    horizon: int
+    projected_stability: float
+    drift_risk: float
+    recovery_actions: Sequence[str]
+
+
+@dataclass
+class CoreAllocation:
+    core_id: int
+    subsystems: Sequence[str]
+    estimated_load: float
+
+
+@dataclass
+class CoreCoordinationPlan:
+    core_count: int
+    allocations: Sequence[CoreAllocation]
+    balance_index: float
+    contention_risk: float
+    notes: Sequence[str]
+
+
+@dataclass
 class AdaptiveConvergenceReport:
     cycle: int
     unified_telemetry: UnifiedTelemetry
@@ -180,6 +206,8 @@ class AdaptiveConvergenceReport:
     upgrade_queue: Sequence[SubsystemUpgradePlan]
     recursive_state: RecursiveState
     layer_coherence: Sequence[CoherenceEnvelope]
+    stability_horizon: StabilityHorizon
+    core_plan: CoreCoordinationPlan
     advisories: Sequence["AdvisoryNote"]
 
 
@@ -216,6 +244,7 @@ class AdaptiveConvergenceEngine:
         self._subsystem_layers = {descriptor.name: descriptor.layer for descriptor in self._subsystems}
         self._recursive_window = max(2, recursion_window)
         self._telemetry_history: List[float] = []
+        self._layer_health_history: Dict[str, List[float]] = {}
         self.cycle = 0
 
     # ------------------------------------------------------------------
@@ -229,6 +258,8 @@ class AdaptiveConvergenceEngine:
         upgrades = self._integrate_subsystem_upgrades(unified, resolutions)
         recursive_state = self._stabilize_recursive_evolution(unified)
         coherence = self._maintain_layer_coherence(resolutions, upgrades)
+        stability_horizon = self._forecast_long_term_stability(unified, recursive_state, coherence)
+        core_plan = self._coordinate_multi_core(unified, upgrades, coherence)
         advisories = self._generate_advisories(unified, resolutions)
 
         return AdaptiveConvergenceReport(
@@ -238,6 +269,8 @@ class AdaptiveConvergenceEngine:
             upgrade_queue=upgrades,
             recursive_state=recursive_state,
             layer_coherence=coherence,
+            stability_horizon=stability_horizon,
+            core_plan=core_plan,
             advisories=advisories,
         )
 
@@ -273,6 +306,7 @@ class AdaptiveConvergenceEngine:
             layer: round(fmean(values), 4) if values else 0.0
             for layer, values in sorted(layer_values.items())
         }
+        self._record_layer_health(layer_health)
         sources = sorted({frame.source for frame in frames})
         return UnifiedTelemetry(
             score=score,
@@ -281,6 +315,16 @@ class AdaptiveConvergenceEngine:
             anomalies=anomalies,
             sources=sources,
         )
+
+    def _record_layer_health(self, layer_health: Mapping[str, float]) -> None:
+        """Persist bounded history for per-layer stability forecasts."""
+
+        window = self._recursive_window * 3
+        for layer, value in layer_health.items():
+            history = self._layer_health_history.setdefault(layer, [])
+            history.append(value)
+            if len(history) > window:
+                history.pop(0)
 
     # ------------------------------------------------------------------
     def _resolve_identity_drift(self, unified: UnifiedTelemetry) -> List[IdentityResolution]:
@@ -435,8 +479,124 @@ class AdaptiveConvergenceEngine:
                     upgrade_focus=upgrade_focus,
                     stability=stability,
                 )
-            )
+        )
         return envelopes
+
+    # ------------------------------------------------------------------
+    def _forecast_long_term_stability(
+        self,
+        unified: UnifiedTelemetry,
+        recursive_state: RecursiveState,
+        coherence: Sequence[CoherenceEnvelope],
+    ) -> StabilityHorizon:
+        horizon = max(6, self._recursive_window * 2 + len(self._telemetry_history))
+        if len(self._telemetry_history) < 2:
+            trend = 0.0
+        else:
+            trend = (self._telemetry_history[-1] - self._telemetry_history[0]) / len(
+                self._telemetry_history
+            )
+        projected = round(max(0.0, min(1.0, recursive_state.stability_index + 0.5 * trend)), 4)
+
+        layer_floor = min(
+            (
+                fmean(history[-3:])
+                for history in self._layer_health_history.values()
+                if history
+            ),
+            default=projected,
+        )
+        anomaly_floor = min(
+            (unified.channels.get(channel, 1.0) for channel in unified.anomalies),
+            default=1.0,
+        )
+        drift_risk = round(max(0.0, 1.0 - min(projected, layer_floor, anomaly_floor)), 4)
+
+        recovery_actions: list[str] = []
+        if unified.anomalies:
+            degraded_layers = sorted({self._layer_for_channel(channel) for channel in unified.anomalies})
+            recovery_actions.append(
+                f"Stabilize degraded channels within layers: {', '.join(degraded_layers)}"
+            )
+        unstable_layers = [envelope.layer for envelope in coherence if envelope.stability < 0.65]
+        if unstable_layers:
+            unique_layers = ", ".join(sorted(set(unstable_layers)))
+            recovery_actions.append(f"Route recovery crews to {unique_layers} coherence envelopes")
+        if recursive_state.status != "stable":
+            recovery_actions.append("Extend recursion window and damp oscillations across telemetry history")
+        if not recovery_actions:
+            recovery_actions.append("Maintain cadence; projection remains within stable envelope")
+
+        return StabilityHorizon(
+            horizon=horizon,
+            projected_stability=projected,
+            drift_risk=drift_risk,
+            recovery_actions=tuple(recovery_actions),
+        )
+
+    # ------------------------------------------------------------------
+    def _coordinate_multi_core(
+        self,
+        unified: UnifiedTelemetry,
+        upgrades: Sequence[SubsystemUpgradePlan],
+        coherence: Sequence[CoherenceEnvelope],
+    ) -> CoreCoordinationPlan:
+        active_upgrades = list(upgrades)
+        core_count = max(2, min(8, len(active_upgrades) or len(coherence) or 2))
+        loads = [0.0 for _ in range(core_count)]
+        assignments: list[list[str]] = [[] for _ in range(core_count)]
+
+        if active_upgrades:
+            ordered = sorted(
+                active_upgrades,
+                key=lambda plan: (plan.priority, -plan.readiness, plan.subsystem),
+            )
+            for plan in ordered:
+                load = max(0.2, 1.0 - plan.readiness) + 0.05 * plan.priority
+                target = loads.index(min(loads))
+                loads[target] += load
+                assignments[target].append(plan.subsystem)
+        else:
+            loads = [0.5 for _ in range(core_count)]
+
+        max_load = max(loads) if loads else 0.0
+        min_load = min(loads) if loads else 0.0
+        spread = max_load - min_load
+        total = sum(loads) or 1.0
+        balance_index = round(max(0.0, 1.0 - spread / total), 4)
+
+        instability = len([env for env in coherence if env.stability < 0.6])
+        contention = 0.2 * len(unified.anomalies) + 0.3 * instability
+        contention += 0.1 * max(0, len(active_upgrades) - core_count)
+        contention_risk = round(min(1.0, contention / (core_count + 1)), 4)
+
+        allocations = [
+            CoreAllocation(
+                core_id=index + 1,
+                subsystems=tuple(assignment),
+                estimated_load=round(load, 3),
+            )
+            for index, (assignment, load) in enumerate(zip(assignments, loads))
+        ]
+
+        notes = [
+            f"Allocating {len(active_upgrades)} upgrade streams across {core_count} cores.",
+            f"Balance index {balance_index:.2f} targets even load across orchestration cores.",
+        ]
+        if unified.anomalies:
+            notes.append(
+                "Routing degraded telemetry channels away from contention-intensive cores where possible."
+            )
+        if instability:
+            notes.append("Coherence envelopes flagged as unstable are isolated to reduce cross-core drift.")
+
+        return CoreCoordinationPlan(
+            core_count=core_count,
+            allocations=allocations,
+            balance_index=balance_index,
+            contention_risk=contention_risk,
+            notes=tuple(notes),
+        )
 
     # ------------------------------------------------------------------
     def _generate_advisories(
