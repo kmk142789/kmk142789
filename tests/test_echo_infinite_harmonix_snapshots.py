@@ -78,3 +78,31 @@ def test_echo_infinite_skips_fractal_nodes_when_disabled(tmp_path: Path) -> None
     assert (cycle_dir / f"lineage_map_{cycle:05d}.json").exists()
     assert (cycle_dir / f"verify_cycle_{cycle:05d}.py").exists()
     assert (cycle_dir / f"extraordinary_manifest_{cycle:05d}.json").exists()
+    assert (cycle_dir / f"resilience_report_{cycle:05d}.json").exists()
+
+
+def test_echo_infinite_builds_resilience_report(tmp_path: Path) -> None:
+    orchestrator = EchoInfinite(base_dir=tmp_path, sleep_seconds=0)
+
+    cycle = 3
+    timestamp = rfc3339_timestamp()
+    glyph_signature = "∞⌘⟁★::pulse"
+    cycle_dir = orchestrator.colossus_dir / f"cycle_{cycle:05d}"
+    cycle_dir.mkdir(parents=True, exist_ok=True)
+
+    artifacts = orchestrator._create_cycle_artifacts(
+        cycle=cycle,
+        timestamp=timestamp,
+        glyph_signature=glyph_signature,
+        cycle_dir=cycle_dir,
+    )
+
+    report_path = artifacts.resilience_report
+    assert report_path.exists()
+
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    assert payload["cycle"] == cycle
+    assert payload["glyph_signature"] == glyph_signature
+    assert 0.0 <= payload["metrics"]["risk_score"] <= 1.0
+    assert payload["recommendations"]
+    assert payload["signals"]["merkle_root"]

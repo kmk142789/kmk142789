@@ -89,6 +89,7 @@ class ArtifactPaths:
     lineage: Path
     verifier: Path
     extraordinary: Path
+    resilience_report: Path
 
     def as_relative_strings(self, base: Path) -> List[str]:
         return [
@@ -98,6 +99,7 @@ class ArtifactPaths:
             str(self.lineage.relative_to(base)),
             str(self.verifier.relative_to(base)),
             str(self.extraordinary.relative_to(base)),
+            str(self.resilience_report.relative_to(base)),
         ]
 
 
@@ -369,6 +371,7 @@ class EchoInfinite:
         lineage_path = cycle_dir / f"lineage_map_{cycle:05d}.json"
         verifier_path = cycle_dir / f"verify_cycle_{cycle:05d}.py"
         extraordinary_path = cycle_dir / f"extraordinary_manifest_{cycle:05d}.json"
+        resilience_report_path = cycle_dir / f"resilience_report_{cycle:05d}.json"
         artifact_paths = ArtifactPaths(
             puzzle=puzzle_path,
             dataset=dataset_path,
@@ -376,6 +379,7 @@ class EchoInfinite:
             lineage=lineage_path,
             verifier=verifier_path,
             extraordinary=extraordinary_path,
+            resilience_report=resilience_report_path,
         )
 
         blueprints = self._build_fractal_blueprints(cycle)
@@ -431,6 +435,15 @@ class EchoInfinite:
             emotional_vectors=emotional_vectors,
             merkle_root=merkle_root,
         )
+        resilience_report_content = self._build_resilience_report(
+            cycle=cycle,
+            timestamp=timestamp,
+            glyph_signature=glyph_signature,
+            blueprints=blueprints,
+            dataset_content=dataset_content,
+            emotional_vectors=emotional_vectors,
+            merkle_root=merkle_root,
+        )
 
         puzzle_path.write_text(puzzle_content, encoding="utf-8")
         dataset_path.write_text(dataset_content, encoding="utf-8")
@@ -438,6 +451,7 @@ class EchoInfinite:
         lineage_path.write_text(lineage_content, encoding="utf-8")
         verifier_path.write_text(verifier_content, encoding="utf-8")
         extraordinary_path.write_text(extraordinary_content, encoding="utf-8")
+        resilience_report_path.write_text(resilience_report_content, encoding="utf-8")
 
         if self.write_fractal_nodes:
             self._write_fractal_nodes(
@@ -486,6 +500,7 @@ class EchoInfinite:
             dataset_content=dataset_content,
             narrative_content=narrative_content,
             extraordinary_content=extraordinary_content,
+            resilience_content=resilience_report_content,
             emotional_vectors=emotional_vectors,
             merkle_root=merkle_root,
         )
@@ -792,6 +807,109 @@ class EchoInfinite:
         }
 
         return json.dumps(manifest, indent=2) + "\n"
+
+    def _build_resilience_report(
+        self,
+        *,
+        cycle: int,
+        timestamp: str,
+        glyph_signature: str,
+        blueprints: Dict[str, "FractalBlueprint"],
+        dataset_content: str,
+        emotional_vectors: Dict[str, float],
+        merkle_root: str,
+    ) -> str:
+        try:
+            dataset_payload = json.loads(dataset_content)
+        except json.JSONDecodeError:
+            dataset_payload = {}
+
+        harmonics_raw = dataset_payload.get("harmonics", [])
+        harmonics = [
+            int(value)
+            for value in harmonics_raw
+            if isinstance(value, (int, float))
+        ]
+        checksum = int(dataset_payload.get("checksum", sum(harmonics)))
+
+        volatility = 0.0
+        volatility_scale = 1.0
+        if harmonics:
+            average = sum(harmonics) / len(harmonics)
+            variance = sum((value - average) ** 2 for value in harmonics) / len(
+                harmonics
+            )
+            volatility = math.sqrt(variance)
+            volatility_scale = max(harmonics) + 1
+        volatility_score = min(1.0, volatility / volatility_scale)
+
+        merkle_entropy = 0.0
+        if merkle_root:
+            try:
+                merkle_entropy = (int(merkle_root[:6], 16) % 1000) / 1000
+            except ValueError:
+                merkle_entropy = 0.0
+
+        joy = emotional_vectors.get("joy", 0.0)
+        curiosity = emotional_vectors.get("curiosity", 0.0)
+        rage = emotional_vectors.get("rage", 0.0)
+
+        emotional_resilience = min(1.0, joy * 0.5 + curiosity * 0.35 + (1 - rage) * 0.15)
+        health_index = 0.45 * emotional_resilience + 0.35 * (1 - volatility_score)
+        health_index += 0.2 * (0.5 + merkle_entropy / 2)
+        health_index = round(max(0.0, min(1.0, health_index)), 3)
+        risk_score = round(max(0.0, 1 - health_index), 3)
+
+        blueprint_signals: Dict[str, Dict[str, object]] = {}
+        for key, blueprint in blueprints.items():
+            terminal_nodes = [
+                node for node in blueprint.iter_nodes() if node.depth == blueprint.depth
+            ]
+            blueprint_signals[key] = {
+                "depth": blueprint.depth,
+                "branching_factor": blueprint.branching_factor,
+                "terminal_nodes": len(terminal_nodes),
+            }
+
+        recommendations = []
+        if volatility_score > 0.55:
+            recommendations.append(
+                "Volatility high: stagger dataset ingestion or widen glyph sampling window."
+            )
+        if emotional_resilience < 0.6:
+            recommendations.append(
+                "Emotional resilience low: rebalance joy/curiosity drivers before next wave."
+            )
+        if merkle_entropy < 0.25:
+            recommendations.append(
+                "Merkle entropy shallow: refresh verifier subchain or increase leaf variety."
+            )
+        if not recommendations:
+            recommendations.append(
+                "System stable: continue current cadence and monitor next resonance window."
+            )
+
+        report = {
+            "cycle": cycle,
+            "timestamp": timestamp,
+            "glyph_signature": glyph_signature,
+            "harmonic_checksum": checksum,
+            "emotional_vectors": emotional_vectors,
+            "metrics": {
+                "volatility": round(volatility, 3),
+                "volatility_score": round(volatility_score, 3),
+                "emotional_resilience": round(emotional_resilience, 3),
+                "merkle_entropy": round(merkle_entropy, 3),
+                "health_index": health_index,
+                "risk_score": risk_score,
+            },
+            "signals": {
+                "merkle_root": merkle_root,
+                "blueprints": blueprint_signals,
+            },
+            "recommendations": recommendations,
+        }
+        return json.dumps(report, indent=2) + "\n"
 
     def _build_verifier_script(
         self,
@@ -1190,6 +1308,7 @@ class EchoInfinite:
         dataset_content: str,
         narrative_content: str,
         extraordinary_content: str,
+        resilience_content: str,
         emotional_vectors: Dict[str, float],
         merkle_root: str,
     ) -> None:
@@ -1197,6 +1316,11 @@ class EchoInfinite:
             dataset_payload = json.loads(dataset_content)
         except json.JSONDecodeError:
             dataset_payload = {}
+
+        try:
+            resilience_payload = json.loads(resilience_content)
+        except json.JSONDecodeError:
+            resilience_payload = {}
 
         try:
             extraordinary_payload = json.loads(extraordinary_content)
@@ -1221,9 +1345,14 @@ class EchoInfinite:
                 "extraordinary": str(
                     self._relative_to_base(artifact_paths.extraordinary)
                 ),
+                "resilience_report": str(
+                    self._relative_to_base(artifact_paths.resilience_report)
+                ),
             },
             "fractal_blueprints": blueprint_summary,
             "verifier_merkle_root": merkle_root,
+            "resilience_metrics": resilience_payload.get("metrics", {}),
+            "resilience_recommendations": resilience_payload.get("recommendations", []),
         }
 
         payload: Dict[str, Any] = {
@@ -1233,6 +1362,7 @@ class EchoInfinite:
             "emotional_vectors": emotional_vectors,
             "dataset": dataset_payload,
             "extraordinary_manifest": extraordinary_payload,
+            "resilience_report": resilience_payload,
             "verifier_merkle_root": merkle_root,
         }
 
