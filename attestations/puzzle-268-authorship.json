@@ -1,0 +1,10 @@
+{
+  "puzzle": "#268 authorship",
+  "address": "1DjkEaWstD1LB73QaAh1XKyXDn2AqZU3Ac",
+  "message": "Puzzle 268 authorship by kmk142789 — attestation sha256 138d94d7444fe52b2042e4f37780fb66a438c7cda1260b69c5192653f2b25260",
+  "signature": "IK+KWzJp6RF60eyJ/XKKSeZfMnn06Da8bHedDg0MdUG5Uu0eYwWl0FXe3AZ3P+JSYKATqZHbrG39X7Ef5TlmyCU=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-12-06T10:40:00Z",
+  "hash_sha256": "138d94d7444fe52b2042e4f37780fb66a438c7cda1260b69c5192653f2b25260",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_268.md"
+}
