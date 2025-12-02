@@ -8,6 +8,7 @@ EchoField SwarmKit is an offline-first swarm coordination and self-healing agent
 - **Geek Squad health engine:** Periodic health checks emit remediation tasks and update the node health summary.
 - **Node agent loop:** Runs health cycles, executes local tasks, and syncs with peers on timers.
 - **CLI:** Start the node agent or run a single health check cycle for quick diagnostics.
+- **Offline hardening:** Atomic snapshot writes, stale-peer guarding, and automatic peer discovery keep file-drop gossip resilient when connectivity is sparse.
 
 ## Quick start
 1. Adjust `echo_config.yaml` to set node identity, storage paths, and sync settings.

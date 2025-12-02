@@ -54,6 +54,8 @@ class HealthEngine:
         return mem.percent < 90
 
     def _emit_cleanup_disk_task(self):
+        if self._task_pending("cleanup_disk"):
+            return
         self._save_task(
             Task.new(
                 type_="cleanup_disk",
@@ -63,6 +65,8 @@ class HealthEngine:
         )
 
     def _emit_cpu_relief_task(self):
+        if self._task_pending("cpu_relief"):
+            return
         self._save_task(
             Task.new(
                 type_="cpu_relief",
@@ -72,6 +76,8 @@ class HealthEngine:
         )
 
     def _emit_memory_cleanup_task(self):
+        if self._task_pending("memory_cleanup"):
+            return
         self._save_task(
             Task.new(
                 type_="memory_cleanup",
@@ -82,3 +88,6 @@ class HealthEngine:
 
     def _save_task(self, task: Task):
         self.task_store.save(task)
+
+    def _task_pending(self, task_type: str) -> bool:
+        return any(t.type == task_type for t in self.task_store.get_pending_for_node(self.node_id))

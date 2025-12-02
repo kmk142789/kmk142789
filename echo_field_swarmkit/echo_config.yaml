@@ -4,3 +4,4 @@ task_store_path: "~/.echo_field_swarmkit/tasks.json"
 state_store_path: "~/.echo_field_swarmkit/state.json"
 health_interval_seconds: 300
 sync_interval_seconds: 60
+max_sync_age_seconds: 900
