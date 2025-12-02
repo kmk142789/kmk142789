@@ -6,6 +6,7 @@ from itertools import count
 import pytest
 
 from echo.meta_causal import (
+    InferenceResult,
     MetaCausalAwarenessEngine,
     audit_integrity,
     load_snapshot,
@@ -43,6 +44,8 @@ def test_meta_causal_engine_initialisation_registers_default_pipelines():
     assert snapshot.anchor == "Test Anchor"
     assert snapshot.metrics["observation_count"] == 0
     assert snapshot.metrics["link_count"] == 0
+    assert snapshot.metrics["tags"] == {}
+    assert snapshot.metrics["most_recent_observation"] is None
 
 
 def test_meta_causal_engine_causal_graph_evolution():
@@ -85,6 +88,11 @@ def test_meta_causal_engine_causal_graph_evolution():
     assert degrees[obs_a.id]["outgoing"] == 1
     assert degrees[obs_c.id]["incoming"] == 1
 
+    tags = snapshot.metrics["tags"]
+    assert tags["joy"]["count"] == 2
+    assert pytest.approx(tags["joy"]["mean_confidence"], rel=1e-6) == (0.92 + 0.88) / 2
+    assert snapshot.metrics["most_recent_observation"] == obs_c.created_at.isoformat()
+
     sources = snapshot.metrics["sources"]
     assert sources["EchoWildfire"]["count"] == 2
     assert pytest.approx(sources["EchoWildfire"]["mean_confidence"], rel=1e-6) == (0.92 + 0.88) / 2
@@ -122,4 +130,39 @@ def test_meta_causal_engine_inference_failure_is_captured():
     history = engine.inference_history()
     assert history[-1].pipeline == "failure"
     assert not history[-1].success
+
+
+def test_meta_causal_engine_introspection_tracks_activity():
+    engine = MetaCausalAwarenessEngine(
+        time_source=_time_source_factory(),
+        id_factory=_id_factory_factory(),
+        register_default_pipelines=False,
+    )
+
+    def passive_pipeline(observation, engine):
+        return InferenceResult(
+            pipeline="passive",
+            observation_id=observation.id,
+            verdict="ok",
+            confidence=1.0,
+            created_at=engine.current_time(),
+        )
+
+    engine.register_pipeline("passive", passive_pipeline)
+
+    observation = engine.record_observation(
+        "EchoBridge",
+        "Meta awareness refreshed",
+        confidence=0.66,
+        tags=["meta", "cognition"],
+    )
+
+    engine.run_inference(observation.id)
+
+    report = engine.introspection()
+    assert report["observation_count"] == 1
+    assert report["link_count"] == 0
+    assert report["most_recent_observation"] == observation.created_at.isoformat()
+    assert report["tags"]["meta"]["count"] == 1
+    assert report["last_inference"]["pipeline"] == "passive"
 
