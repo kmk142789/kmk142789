@@ -66,6 +66,30 @@ class EdenArtifact:
         }
         return json.dumps(payload, ensure_ascii=False, indent=2)
 
+    def to_markdown(self) -> str:
+        """Render the artifact as Markdown with lightweight metadata."""
+
+        focus_block = "\n".join(
+            f"- {item}" for item in self.focus
+        ) if self.focus else "- (none)"
+        narrative_block = "\n".join(f"- {line}" for line in self.lines)
+        return "\n".join(
+            [
+                f"# {self.title}",
+                "",
+                f"*Tone:* {self.tone}",
+                f"*Theme:* {self.theme}",
+                f"*Created:* {self.created_at}",
+                f"*Seed:* {self.seed if self.seed is not None else 'random'}",
+                "",
+                "## Focus",
+                focus_block,
+                "",
+                "## Lines",
+                narrative_block,
+            ]
+        )
+
 
 def _choose_palette(random_state: random.Random) -> str:
     palettes = [
@@ -149,7 +173,7 @@ class EdenEngine:
         )
 
 
-def _parse_args() -> tuple[EdenPrompt, int, bool]:
+def _parse_args() -> tuple[EdenPrompt, int, bool, bool]:
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -184,17 +208,24 @@ def _parse_args() -> tuple[EdenPrompt, int, bool]:
         action="store_true",
         help="return structured JSON instead of formatted text",
     )
+    parser.add_argument(
+        "--markdown",
+        action="store_true",
+        help="render the artifact as Markdown",
+    )
 
     args = parser.parse_args()
     prompt = EdenPrompt(theme=args.theme, focus=args.focus, tone=args.tone, seed=args.seed)
-    return prompt, args.lines, args.json
+    return prompt, args.lines, args.json, args.markdown
 
 
 if __name__ == "__main__":
-    prompt, line_count, as_json = _parse_args()
+    prompt, line_count, as_json, as_markdown = _parse_args()
     engine = EdenEngine(prompt, line_count=line_count)
     artifact = engine.craft()
     if as_json:
         print(artifact.to_json())
+    elif as_markdown:
+        print(artifact.to_markdown())
     else:
         print(artifact.to_text())
