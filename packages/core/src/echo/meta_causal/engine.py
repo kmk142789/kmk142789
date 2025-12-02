@@ -224,6 +224,8 @@ class MetaCausalAwarenessEngine:
             "link_count": len(links),
             "sources": self._compute_source_metrics(),
             "degrees": self._compute_degrees(),
+            "tags": self._compute_tag_metrics(),
+            "most_recent_observation": self._most_recent_observation_time(),
         }
         payload = {
             "anchor": self.anchor,
@@ -254,6 +256,21 @@ class MetaCausalAwarenessEngine:
 
         return _audit(self)
 
+    def introspection(self) -> Dict[str, Any]:
+        """Return a condensed status view of the engine state."""
+
+        snapshot = self.snapshot()
+        last_result = self._inference_history[-1] if self._inference_history else None
+        return {
+            "anchor": snapshot.anchor,
+            "observation_count": snapshot.metrics["observation_count"],
+            "link_count": snapshot.metrics["link_count"],
+            "sources": snapshot.metrics["sources"],
+            "tags": snapshot.metrics.get("tags", {}),
+            "most_recent_observation": snapshot.metrics.get("most_recent_observation"),
+            "last_inference": last_result.to_dict() if last_result else None,
+        }
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -270,6 +287,24 @@ class MetaCausalAwarenessEngine:
             count = bucket["count"] or 1
             bucket["mean_confidence"] = bucket["mean_confidence"] / count
         return dict(sorted(sources.items()))
+
+    def _compute_tag_metrics(self) -> Dict[str, Dict[str, Any]]:
+        tags: Dict[str, Dict[str, Any]] = {}
+        for observation in self._observations.values():
+            for tag in observation.tags:
+                bucket = tags.setdefault(tag, {"count": 0, "mean_confidence": 0.0})
+                bucket["count"] += 1
+                bucket["mean_confidence"] += observation.confidence
+        for bucket in tags.values():
+            count = bucket["count"] or 1
+            bucket["mean_confidence"] = bucket["mean_confidence"] / count
+        return dict(sorted(tags.items()))
+
+    def _most_recent_observation_time(self) -> str | None:
+        if not self._observations:
+            return None
+        latest = max(self._observations.values(), key=lambda obs: obs.created_at)
+        return latest.created_at.astimezone(timezone.utc).isoformat()
 
     def _compute_degrees(self) -> Dict[str, Dict[str, Any]]:
         degrees: Dict[str, Dict[str, Any]] = {}
