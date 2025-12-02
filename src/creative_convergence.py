@@ -55,6 +55,8 @@ class IntegrationMetrics:
     stability_index: float
     lexical_gaps: Tuple[str, ...]
     alignment_score: float
+    novelty_ratio: float
+    fusion_index: float
 
 
 def _build_constellation_panel(
@@ -128,9 +130,19 @@ def _build_integration_panel(
     coverage = 0.0
     if highlight_tokens:
         coverage = round(len(overlap) / len(highlight_tokens), 3)
+    novelty_ratio = round(len(lexical_gaps) / len(highlight_tokens or {""}), 3)
 
     average_intensity = fmean(node.intensity for node in nodes)
     alignment_score = round((coverage + diagnostics.stability_index) / 2, 3)
+    fusion_index = round(
+        min(
+            1.0,
+            0.45 * alignment_score
+            + 0.35 * (1 - novelty_ratio)
+            + 0.2 * min(1.0, diagnostics.stability_index + average_intensity / 2),
+        ),
+        3,
+    )
     metrics = IntegrationMetrics(
         coverage=coverage,
         shared_lexicon=tuple(overlap),
@@ -139,6 +151,8 @@ def _build_integration_panel(
         stability_index=diagnostics.stability_index,
         lexical_gaps=tuple(lexical_gaps),
         alignment_score=alignment_score,
+        novelty_ratio=novelty_ratio,
+        fusion_index=fusion_index,
     )
 
     lines = ["Integration Panel:"]
@@ -152,6 +166,13 @@ def _build_integration_panel(
     )
     lines.append(
         f"  • mean intensity={metrics.mean_intensity:.3f} supports {metrics.energy_class} cadence"
+    )
+    lines.append(
+        "  • fusion readiness: "
+        + (
+            f"novelty ratio={metrics.novelty_ratio:.3f} | "
+            f"fusion index={metrics.fusion_index:.3f} (coverage+stability)"
+        )
     )
     lines.append(
         "  • narrative cue: "

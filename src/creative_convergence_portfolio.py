@@ -42,6 +42,8 @@ class PortfolioDigest:
     average_alignment: float
     consistency_index: float
     alignment_band: str
+    average_fusion: float
+    fusion_leader: PortfolioEntry
     gap_leader: Optional[PortfolioEntry]
     gap_hotspots: Sequence[tuple[str, int]]
 
@@ -58,6 +60,7 @@ class PortfolioDigest:
             ),
             (
                 f"  consistency={self.consistency_index:.3f} | alignment band={self.alignment_band} | "
+                f"fusion pulse={self.average_fusion:.3f} (leader={self.fusion_leader.theme}) | "
                 f"gap leader={(self.gap_leader.theme if self.gap_leader else 'none')} "
                 f"({self.gap_leader.gap_label() if self.gap_leader else 'none'})"
             ),
@@ -114,6 +117,8 @@ def build_portfolio_digest(briefs: Iterable[ConvergenceBrief]) -> PortfolioDiges
     else:
         alignment_band = "low"
     gap_leader = max(entries, key=lambda entry: len(entry.metrics.lexical_gaps), default=None)
+    average_fusion = fmean(entry.metrics.fusion_index for entry in entries)
+    fusion_leader = max(entries, key=lambda entry: entry.metrics.fusion_index)
     gap_counter: Counter[str] = Counter()
     for entry in entries:
         gap_counter.update(entry.metrics.lexical_gaps)
@@ -131,6 +136,8 @@ def build_portfolio_digest(briefs: Iterable[ConvergenceBrief]) -> PortfolioDiges
         average_alignment,
         consistency_index,
         alignment_band,
+        average_fusion,
+        fusion_leader,
         gap_leader,
         tuple(gap_hotspots),
     )
