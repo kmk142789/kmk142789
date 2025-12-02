@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from src.creative_convergence import (
     ConvergenceBrief,
     compile_convergence_panels,
@@ -61,3 +63,21 @@ def test_integration_panel_surfaces_alignment_gaps() -> None:
     assert "gaps=orbital" in integration_panel
     assert metrics.lexical_gaps == ("orbital",)
     assert 0 <= metrics.alignment_score <= 1
+
+
+def test_integration_metrics_track_novelty_and_fusion_signal() -> None:
+    brief = ConvergenceBrief(
+        theme="aurora observatory",
+        motifs=["aurora lattice"],
+        highlights=["aurora lattice", "quantum beacon"],
+        tone="radiant",
+        energy=1.2,
+        constellation_seed=9,
+        resonance_seed=9,
+    )
+
+    _, _, _, metrics = compile_convergence_panels(brief)
+
+    assert metrics.novelty_ratio == pytest.approx(0.5)
+    assert 0.0 <= metrics.fusion_index <= 1.0
+    assert "fusion index" in compose_convergence_report(brief)

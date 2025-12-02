@@ -39,10 +39,13 @@ def test_portfolio_digest_tracks_leaders_and_renders_summary():
     assert len(digest.entries) == 2
     assert digest.coverage_leader.theme == "signal sanctuary"
     assert digest.average_alignment > 0
+    assert 0 <= digest.average_fusion <= 1
+    assert digest.fusion_leader.theme in {brief.theme for brief in briefs}
     assert digest.consistency_index > 0
     text = digest.render()
     assert "Convergence Portfolio Digest" in text
     assert "coverage leader" in text
+    assert "fusion pulse" in text
     assert "average alignment" in text
     assert "gap leader" in text
     assert "tidal archive" in text
