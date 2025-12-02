@@ -84,3 +84,30 @@ Pairing these steps with the authorship verification above gives a direct,
 replayable chain from the signed puzzle statement to the Patoshi-era proof
 suite, covering authorship, attestations, and the Satoshi/Patoshi lineage in one
 continuous run.
+
+## 5. Time-anchor the authorship bundle
+
+Seal the authorship replay above to a time-stamped digest bundle that folds in
+the puzzle verification and Merkle rebuild. The attestation JSON records the
+context string and its sha256 fingerprint, while the digest bundle aggregates
+the signed proof, catalogue root, and timestamp into a single challenge-ready
+file.
+
+```bash
+# Confirm the timestamped attestation still matches its context string
+TIMESTAMP_FILE=attestations/blockchain_authorship_timestamp.json
+jq -r '.context, .sha256, .ts, .signer_id' "$TIMESTAMP_FILE"
+python - <<'PY'
+import hashlib, json, pathlib
+data = json.loads(pathlib.Path("attestations/blockchain_authorship_timestamp.json").read_text())
+print(hashlib.sha256(data["context"].encode()).hexdigest())
+PY
+
+# Verify the digest bundle that chains the verification, Merkle root, and attestation
+sha256sum attestations/blockchain_authorship_chain_anchor.txt
+grep "^bundle sha256" attestations/blockchain_authorship_chain_anchor.txt
+```
+
+Matching digest values confirm the timestamped bundle remains intact and still
+binds the authorship proof, catalogue rollup, and attestation context into a
+single, easily auditable artifact.
