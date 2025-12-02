@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Iterable, Mapping, MutableMapping, Optional, Sequence
@@ -27,6 +28,14 @@ class TelemetryCollector:
     storage: TelemetryStorage
     enabled: bool = True
     metadata: MutableMapping[str, str] = field(default_factory=dict)
+    default_allowed_fields: Optional[set[str]] = None
+    max_payload_bytes: Optional[int] = None
+
+    def __post_init__(self) -> None:
+        if self.default_allowed_fields is not None:
+            self.default_allowed_fields = set(self.default_allowed_fields)
+        if self.max_payload_bytes is not None and self.max_payload_bytes <= 0:
+            raise ValueError("max_payload_bytes must be a positive integer when provided")
 
     def record(
         self,
@@ -45,13 +54,15 @@ class TelemetryCollector:
 
         context = self.annotate_session(context)
         payload_mapping = dict(payload or {})
+        self._validate_payload_size(payload_mapping)
+        event_allowed_fields = self._resolve_allowed_fields(allowed_fields)
         event = TelemetryEvent(
             event_type=event_type,
             context=context,
             payload=payload_mapping,
         )
-        if allowed_fields is not None:
-            event = event.redact(set(allowed_fields))
+        if event_allowed_fields is not None:
+            event = event.redact(event_allowed_fields)
         self.storage.write(event)
         return event
 
@@ -74,13 +85,11 @@ class TelemetryCollector:
         """
 
         recorded: list[TelemetryEvent] = []
-        default_allowed = set(allowed_fields) if allowed_fields is not None else None
+        default_allowed = self._resolve_allowed_fields(allowed_fields)
         for pending in events:
-            event_allowed = (
-                set(pending.allowed_fields)
-                if pending.allowed_fields is not None
-                else default_allowed
-            )
+            event_allowed = self._resolve_allowed_fields(pending.allowed_fields)
+            if event_allowed is None:
+                event_allowed = default_allowed
             event = self.record(
                 event_type=pending.event_type,
                 context=pending.context,
@@ -130,6 +139,24 @@ class TelemetryCollector:
 
     def enable(self) -> None:
         self.enabled = True
+
+    def _resolve_allowed_fields(
+        self, allowed_fields: Optional[Iterable[str]]
+    ) -> Optional[set[str]]:
+        if allowed_fields is not None:
+            return set(allowed_fields)
+        if self.default_allowed_fields is not None:
+            return set(self.default_allowed_fields)
+        return None
+
+    def _validate_payload_size(self, payload: Mapping[str, object]) -> None:
+        if self.max_payload_bytes is None:
+            return
+        serialized = json.dumps(payload, default=str).encode("utf-8")
+        if len(serialized) > self.max_payload_bytes:
+            raise ValueError(
+                f"payload exceeds configured max size of {self.max_payload_bytes} bytes"
+            )
 
 
 __all__ = ["PendingTelemetryEvent", "TelemetryCollector"]
