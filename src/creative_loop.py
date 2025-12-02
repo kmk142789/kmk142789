@@ -17,6 +17,7 @@ from __future__ import annotations
 import csv
 import html
 import io
+import hashlib
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -143,6 +144,24 @@ class LoopSummary:
 
 
 @dataclass
+class LoopFingerprint:
+    """Describe a loop's uniqueness through a reproducible signature."""
+
+    signature: str
+    accent_sparkline: str
+    tempo_profile: str
+    rarity_score: float
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "signature": self.signature,
+            "accent_sparkline": self.accent_sparkline,
+            "tempo_profile": self.tempo_profile,
+            "rarity_score": self.rarity_score,
+        }
+
+
+@dataclass
 class LoopResult:
     """Bundle the generated lines with diagnostics and rhythm metadata."""
 
@@ -151,6 +170,7 @@ class LoopResult:
     rhythm: LoopRhythm
     timeline: List[Dict[str, object]] = field(default_factory=list)
     summary: LoopSummary | None = None
+    fingerprint: "LoopFingerprint" | None = None
 
     def render(self) -> List[str]:
         diagnostic_line = f"[diagnostics] {self.diagnostics.render_report()}"
@@ -171,6 +191,15 @@ class LoopResult:
                 f"textures={self.summary.tempo_texture_span}"
             )
             rendered.append(summary_line)
+        if self.fingerprint:
+            fingerprint_line = (
+                "[fingerprint] "
+                f"signature={self.fingerprint.signature}; "
+                f"rarity={self.fingerprint.rarity_score:.3f}; "
+                f"accents={self.fingerprint.accent_sparkline}; "
+                f"tempo_profile={self.fingerprint.tempo_profile}"
+            )
+            rendered.append(fingerprint_line)
         rendered.append(rhythm_line)
         return rendered
 
@@ -188,6 +217,7 @@ class LoopResult:
             },
             "timeline": list(self.timeline),
             "summary": self.summary.as_dict() if self.summary else None,
+            "fingerprint": self.fingerprint.as_dict() if self.fingerprint else None,
         }
 
 
@@ -220,6 +250,48 @@ def summarize_loop(loop_result: LoopResult) -> LoopSummary:
         fragment_coverage=fragments_used,
         accent_switch_rate=accent_switch_rate,
         tempo_texture_span=len(textures),
+    )
+
+
+def _render_accent_sparkline(accents: Iterable[int]) -> str:
+    """Render accents into a compact sparkline for quick scanning."""
+
+    symbols = {1: "▮", 0: "·"}
+    sparkline = "".join(symbols.get(value, "·") for value in accents)
+    return sparkline or "·"
+
+
+def compute_fingerprint(seed: LoopSeed, loop_result: LoopResult) -> LoopFingerprint:
+    """Generate a reproducible uniqueness signature for a loop."""
+
+    summary = loop_result.summary or summarize_loop(loop_result)
+    accent_sparkline = _render_accent_sparkline(loop_result.diagnostics.accents)
+    tempo_profile = "|".join(loop_result.rhythm.dynamic_tempi)
+    coverage_denominator = max(len(seed.fragments), 1)
+    coverage_ratio = min(1.0, summary.fragment_coverage / coverage_denominator)
+    rarity_score = (
+        summary.voice_diversity + summary.accent_switch_rate + coverage_ratio
+    ) / 3.0
+
+    materials = "::".join(
+        [
+            seed.motif,
+            seed.tempo,
+            str(seed.pulses),
+            accent_sparkline,
+            tempo_profile,
+            ",".join(loop_result.lines),
+            ",".join(sorted(loop_result.diagnostics.voices)),
+            ",".join(sorted(loop_result.diagnostics.fragments)),
+        ]
+    )
+    signature = hashlib.sha256(materials.encode("utf-8")).hexdigest()[:24]
+
+    return LoopFingerprint(
+        signature=signature,
+        accent_sparkline=accent_sparkline,
+        tempo_profile=tempo_profile,
+        rarity_score=rarity_score,
     )
 def build_loop_payload(seed: LoopSeed, loop_result: LoopResult, timestamp: str) -> Dict[str, object]:
     """Build a structured payload describing the loop."""
@@ -431,6 +503,7 @@ def generate_loop(seed: LoopSeed) -> LoopResult:
         timeline=timeline,
     )
     loop_result.summary = summarize_loop(loop_result)
+    loop_result.fingerprint = compute_fingerprint(seed, loop_result)
     return loop_result
 
 
@@ -502,6 +575,15 @@ def compose_loop(
             f"accents={','.join(str(value) for value in rhythm.accents)}; "
             f"dynamic={','.join(rhythm.dynamic_tempi)}"
         )
+        fingerprint_line = "> Fingerprint: unavailable"
+        if loop_result.fingerprint:
+            fingerprint_line = (
+                "> Fingerprint: "
+                f"{loop_result.fingerprint.signature} "
+                f"(rarity {loop_result.fingerprint.rarity_score:.3f}; "
+                f"accents {loop_result.fingerprint.accent_sparkline}; "
+                f"tempo {loop_result.fingerprint.tempo_profile})"
+            )
         summary_line = None
         if loop_result.summary:
             summary_line = (
@@ -522,6 +604,7 @@ def compose_loop(
                 "",
                 diagnostics_line,
                 summary_line or "> Summary: unavailable",
+                fingerprint_line,
                 rhythm_line,
             ]
         )
@@ -550,9 +633,17 @@ def compose_loop(
             f"- voices engaged: {voice_text}",
             f"- top fragments: {fragment_text}",
             f"- diagnostics: {diagnostics_line}",
-            "",
-            "Moments:",
         ]
+        if loop_result.fingerprint:
+            lines.append(
+                (
+                    "- fingerprint: "
+                    f"{loop_result.fingerprint.signature} "
+                    f"(rarity {loop_result.fingerprint.rarity_score:.3f}; "
+                    f"accents {loop_result.fingerprint.accent_sparkline})"
+                )
+            )
+        lines.extend(["", "Moments:"])
         for entry in loop_result.timeline:
             lines.append(
                 (
@@ -611,6 +702,15 @@ def compose_loop(
             f"Rhythm dynamics: {','.join(rhythm.dynamic_tempi)}",
             f"Diagnostics: {diagnostics_line}",
         ]
+        if loop_result.fingerprint:
+            lines.append(
+                (
+                    "Fingerprint: "
+                    f"{loop_result.fingerprint.signature} "
+                    f"(rarity {loop_result.fingerprint.rarity_score:.3f}; "
+                    f"accents {loop_result.fingerprint.accent_sparkline})"
+                )
+            )
         return "\n".join(lines)
 
     if format == "html":
@@ -618,6 +718,13 @@ def compose_loop(
         diagnostics_text = html.escape(loop_result.diagnostics.render_report())
         rhythm = loop_result.rhythm
         lines = "\n".join(f"<li>{html.escape(line)}</li>" for line in loop_result.lines)
+        fingerprint_text = "unavailable"
+        if loop_result.fingerprint:
+            fingerprint_text = (
+                f"{html.escape(loop_result.fingerprint.signature)} "
+                f"(rarity {loop_result.fingerprint.rarity_score:.3f}; "
+                f"accents {html.escape(loop_result.fingerprint.accent_sparkline)})"
+            )
         summary_items = "\n".join(
             [
                 f"<li><strong>Voice diversity:</strong> {summary.voice_diversity:.2f}</li>",
@@ -629,6 +736,7 @@ def compose_loop(
                 f"<li><strong>Rhythm accents:</strong> {','.join(str(value) for value in rhythm.accents)}</li>",
                 f"<li><strong>Rhythm dynamics:</strong> {','.join(html.escape(value) for value in rhythm.dynamic_tempi)}</li>",
                 f"<li><strong>Diagnostics:</strong> {diagnostics_text}</li>",
+                f"<li><strong>Fingerprint:</strong> {fingerprint_text}</li>",
             ]
         )
         timeline_rows = "\n".join(
