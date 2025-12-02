@@ -26,6 +26,12 @@ class TelemetryStorage(ABC):
     def read(self) -> Iterable[TelemetryEvent]:
         raise NotImplementedError
 
+    @abstractmethod
+    def replace(self, events: Iterable[TelemetryEvent]) -> None:
+        """Replace the stored events with the provided iterable."""
+
+        raise NotImplementedError
+
 
 class InMemoryTelemetryStorage(TelemetryStorage):
     """An in-memory storage backend useful for tests."""
@@ -41,6 +47,9 @@ class InMemoryTelemetryStorage(TelemetryStorage):
 
     def read(self) -> Iterable[TelemetryEvent]:
         return list(self._events)
+
+    def replace(self, events: Iterable[TelemetryEvent]) -> None:
+        self._events = list(events)
 
 
 class JsonlTelemetryStorage(TelemetryStorage):
@@ -71,6 +80,15 @@ class JsonlTelemetryStorage(TelemetryStorage):
                     payload = json.loads(line)
                     events.append(TelemetryEvent.model_validate(payload))
         return events
+
+    def replace(self, events: Iterable[TelemetryEvent]) -> None:
+        with self._lock:
+            temp_path = self.path.with_suffix(self.path.suffix + ".tmp")
+            with temp_path.open("w", encoding="utf-8") as stream:
+                for event in events:
+                    data = event.model_dump(by_alias=True)
+                    stream.write(json.dumps(data, default=str) + "\n")
+            temp_path.replace(self.path)
 
 
 __all__ = ["TelemetryStorage", "InMemoryTelemetryStorage", "JsonlTelemetryStorage"]
