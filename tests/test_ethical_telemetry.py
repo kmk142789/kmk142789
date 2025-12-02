@@ -119,6 +119,38 @@ def test_collector_record_batch_handles_mixed_events() -> None:
     assert recorded[0].context.pseudonymous_id == ctx_in.pseudonymous_id
 
 
+def test_collector_applies_default_allowed_fields() -> None:
+    storage = InMemoryTelemetryStorage()
+    collector = TelemetryCollector(
+        storage=storage, default_allowed_fields={"action", "label"}
+    )
+    ctx = TelemetryContext.pseudonymize(
+        raw_identifier="user-default", salt="salt", consent_state=ConsentState.OPTED_IN
+    )
+
+    event = collector.record(
+        event_type="visit", context=ctx, payload={"action": "view", "debug": True}
+    )
+
+    assert event is not None
+    assert event.payload == {"action": "view"}
+
+
+def test_collector_rejects_oversized_payload() -> None:
+    storage = InMemoryTelemetryStorage()
+    collector = TelemetryCollector(storage=storage, max_payload_bytes=32)
+    ctx = TelemetryContext.pseudonymize(
+        raw_identifier="user-large", salt="salt", consent_state=ConsentState.OPTED_IN
+    )
+
+    with pytest.raises(ValueError):
+        collector.record(
+            event_type="visit",
+            context=ctx,
+            payload={"action": "view", "details": "x" * 40},
+        )
+
+
 def test_compliance_evaluator_metrics() -> None:
     storage = InMemoryTelemetryStorage()
     collector = TelemetryCollector(storage=storage)

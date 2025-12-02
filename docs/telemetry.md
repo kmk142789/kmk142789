@@ -17,6 +17,15 @@ Use `src.telemetry.TelemetryCollector` with a storage backend
 Only contexts with `ConsentState.OPTED_IN` are persisted, preventing
 accidental capture of opt-out sessions.
 
+### Privacy guardrails
+
+- Configure `default_allowed_fields` on the collector to automatically
+  redact payloads to a known-safe whitelist when callers forget to provide
+  their own allowed fields.
+- Bound payload size with `max_payload_bytes` to stop oversized or
+  unstructured telemetry from being written; events that exceed the limit
+  raise a `ValueError` so they can be corrected at the source.
+
 ## Self-Assessment
 
 `src.self_assessment.ReportEmitter` consumes telemetry events to produce
