@@ -47,11 +47,14 @@ class LoopSeed:
     pulses: int = 3
     seed: int | None = None
     voice_bias: Dict[str, float] = field(default_factory=dict)
+    max_fragment_reuse: int | None = None
 
     def __post_init__(self) -> None:
         self.fragments = list(self.fragments)
         if self.pulses < 1:
             raise ValueError("pulses must be positive")
+        if self.max_fragment_reuse is not None and self.max_fragment_reuse < 1:
+            raise ValueError("max_fragment_reuse must be positive when provided")
         if self.voice_bias:
             cleaned_bias: Dict[str, float] = {}
             for voice, weight in self.voice_bias.items():
@@ -225,6 +228,7 @@ def build_loop_payload(seed: LoopSeed, loop_result: LoopResult, timestamp: str) 
         "motif": seed.motif,
         "tempo": seed.tempo,
         "pulses": seed.pulses,
+        "max_fragment_reuse": seed.max_fragment_reuse,
         "timestamp": timestamp,
         "loop": loop_result.to_dict(),
     }
@@ -314,6 +318,27 @@ def _build_rhythm(seed: LoopSeed, random_state: random.Random) -> LoopRhythm:
     return LoopRhythm(tempo=seed.tempo, pulses=seed.pulses, accents=accents, dynamic_tempi=dynamic_tempi)
 
 
+def _select_fragment(
+    seed: LoopSeed,
+    random_state: random.Random,
+    fragment_usage: Counter[str],
+) -> str | None:
+    """Pick a fragment while respecting optional reuse limits."""
+
+    if not seed.fragments:
+        return None
+
+    if seed.max_fragment_reuse is None:
+        return random_state.choice(seed.fragments)
+
+    available = [
+        fragment for fragment in seed.fragments if fragment_usage[fragment] < seed.max_fragment_reuse
+    ]
+    if not available:
+        return None
+    return random_state.choice(available)
+
+
 def _render_line(
     seed: LoopSeed,
     random_state: random.Random,
@@ -321,10 +346,13 @@ def _render_line(
     index: int,
     *,
     previous_voice: str | None,
+    fragment_choice: str | None = None,
 ) -> Tuple[str, str, str | None, int, str, str]:
     """Build a single statement within the loop."""
 
-    fragment = random_state.choice(seed.fragments) if seed.fragments else None
+    fragment = fragment_choice
+    if fragment is None and seed.max_fragment_reuse is None and seed.fragments:
+        fragment = random_state.choice(seed.fragments)
     voice = _choose_voice(
         random_state,
         previous=previous_voice,
@@ -365,17 +393,22 @@ def generate_loop(seed: LoopSeed) -> LoopResult:
     random_state = random.Random(seed.seed)
     rhythm = _build_rhythm(seed, random_state)
     diagnostics = LoopDiagnostics()
+    fragment_usage: Counter[str] = Counter()
 
     lines: List[str] = []
     timeline: List[Dict[str, object]] = []
     previous_voice: str | None = None
     for index in range(seed.pulses):
+        fragment_choice = _select_fragment(seed, random_state, fragment_usage)
+        if fragment_choice:
+            fragment_usage[fragment_choice] += 1
         line, voice, fragment, accent, tempo_hint, texture = _render_line(
             seed,
             random_state,
             rhythm,
             index,
             previous_voice=previous_voice,
+            fragment_choice=fragment_choice,
         )
         diagnostics.register(voice, fragment, accent)
         lines.append(line)
@@ -861,6 +894,7 @@ def export_loop_result(
             "motif": seed.motif,
             "tempo": seed.tempo,
             "pulses": seed.pulses,
+            "max_fragment_reuse": seed.max_fragment_reuse,
             "loop": loop_result.to_dict(),
         }
         export_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -881,6 +915,7 @@ def demo(
     pulses: int = 3,
     seed: int | None = None,
     format: str = "text",
+    max_fragment_reuse: int | None = None,
 ) -> str:
     """Convenience wrapper for quickly generating a loop."""
 
@@ -890,6 +925,7 @@ def demo(
         tempo=tempo,
         pulses=pulses,
         seed=seed,
+        max_fragment_reuse=max_fragment_reuse,
     )
     return compose_loop(loop_seed, format=format)
 
@@ -925,6 +961,12 @@ if __name__ == "__main__":
         type=int,
         default=3,
         help="Number of statements to generate",
+    )
+    parser.add_argument(
+        "--max-fragment-reuse",
+        type=int,
+        dest="max_fragment_reuse",
+        help="Optional cap on how many times an individual fragment may appear",
     )
     parser.add_argument(
         "-s",
@@ -1024,6 +1066,7 @@ if __name__ == "__main__":
         pulses=args.pulses,
         seed=args.seed,
         voice_bias=voice_bias,
+        max_fragment_reuse=args.max_fragment_reuse,
     )
     loop_result = generate_loop(seed)
     print(compose_loop(seed, format=args.format, loop_result=loop_result))
@@ -1049,6 +1092,8 @@ if __name__ == "__main__":
             tempo=args.tempo,
             pulses=args.pulses,
             seed=variant_seed_value,
+            voice_bias=voice_bias,
+            max_fragment_reuse=args.max_fragment_reuse,
         )
         loop_result = generate_loop(seed)
         timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
