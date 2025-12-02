@@ -33,8 +33,10 @@ class FileSyncAdapter:
 
     def publish(self, state: dict) -> None:
         path = os.path.join(self.sync_path, f"{self.node_id}.json")
-        with open(path, "w", encoding="utf-8") as f:
+        tmp_path = f"{path}.tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2)
+        os.replace(tmp_path, path)
 
     def fetch(self, peer_id: str) -> Optional[dict]:
         path = os.path.join(self.sync_path, f"{peer_id}.json")
@@ -47,6 +49,14 @@ class FileSyncAdapter:
             logger.warning("Peer state file for %s is corrupt; skipping", peer_id)
             return None
 
+    def discover_peers(self) -> Iterable[str]:
+        for filename in os.listdir(self.sync_path):
+            if not filename.endswith(".json"):
+                continue
+            peer_id = filename[:-5]
+            if peer_id != self.node_id:
+                yield peer_id
+
 
 @dataclass
 class EchoNodeConfig:
@@ -56,6 +66,7 @@ class EchoNodeConfig:
     sync_path: str
     health_interval: int = 300
     sync_interval: int = 60
+    max_sync_age: int = 900
     peers: Optional[Iterable[str]] = None
 
 
@@ -69,6 +80,7 @@ class EchoNode:
         self.sync_adapter = FileSyncAdapter(self.node_id, config.sync_path)
         self.health_interval = config.health_interval
         self.sync_interval = config.sync_interval
+        self.max_sync_age = config.max_sync_age
 
         for peer in config.peers or []:
             self.state.record_peer(peer)
@@ -95,12 +107,24 @@ class EchoNode:
     def _sync_with_peers(self):
         local_state = self.swarm.export_state()
         self.sync_adapter.publish(local_state)
-        for peer in self.state.get_peers():
+        discovered_peers = set(self.sync_adapter.discover_peers())
+        for peer in set(self.state.get_peers()) | discovered_peers:
             remote = self.sync_adapter.fetch(peer)
-            if remote:
-                self.swarm.import_state(remote)
-                logger.info("Merged state from peer %s", peer)
-                self.state.record_peer(peer)
+            if not remote:
+                continue
+            last_seen = remote.get("node_state", {}).get("last_seen", 0)
+            age = time.time() - last_seen
+            if age > self.max_sync_age:
+                logger.info(
+                    "Skipping peer %s due to stale snapshot (age=%.0fs > %ss)",
+                    peer,
+                    age,
+                    self.max_sync_age,
+                )
+                continue
+            self.swarm.import_state(remote)
+            logger.info("Merged state from peer %s", peer)
+            self.state.record_peer(peer)
 
     def _execute_local_tasks(self):
         for task in self.tasks.get_pending_for_node(self.node_id):

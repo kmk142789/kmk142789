@@ -30,6 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="EchoField SwarmKit node agent")
     parser.add_argument("--node-id", required=False, help="Unique identifier for this node")
     parser.add_argument("--sync-path", help="Directory for file-drop sync adapter")
+    parser.add_argument("--max-sync-age", type=int, help="Seconds before a peer snapshot is considered stale")
     parser.add_argument("--task-store", help="Path for persisted task ledger")
     parser.add_argument("--state-store", help="Path for node state storage")
     parser.add_argument("--health-interval", type=int, help="Seconds between health checks")
@@ -48,6 +49,7 @@ def merge_settings(args: argparse.Namespace, config: Dict[str, Any]) -> EchoNode
     sync_path = args.sync_path or config.get("sync_path") or "/tmp/swarm_sync"
     health_interval = args.health_interval or config.get("health_interval_seconds", 300)
     sync_interval = args.sync_interval or config.get("sync_interval_seconds", 60)
+    max_sync_age = args.max_sync_age or config.get("max_sync_age_seconds", 900)
     peers = args.peers or config.get("peers") or []
 
     return EchoNodeConfig(
@@ -57,6 +59,7 @@ def merge_settings(args: argparse.Namespace, config: Dict[str, Any]) -> EchoNode
         sync_path=sync_path,
         health_interval=health_interval,
         sync_interval=sync_interval,
+        max_sync_age=max_sync_age,
         peers=peers,
     )
 
