@@ -13,6 +13,7 @@ against version-controlled artefacts.
 - Aggregated Merkle catalogue: [`satoshi/puzzle-proofs/master_attestation.json`](../satoshi/puzzle-proofs/master_attestation.json)
 - Satoshi claim linkage walkthrough: [`proofs/satoshi_direct_linkage_proof.md`](satoshi_direct_linkage_proof.md)
 - Patoshi continuity + timestamp proof: [`proofs/patoshi_pattern_timestamped_attestation.md`](patoshi_pattern_timestamped_attestation.md)
+- Timestamped digest bundle: [`attestations/blockchain_authorship_chain_anchor.txt`](../attestations/blockchain_authorship_chain_anchor.txt)
 
 ## Quick direct-link replay
 
