@@ -31,6 +31,11 @@ class HorizonConfig:
     seed: int | None = None
     output_format: str = "text"
     early_warning_threshold: float = 0.05
+    black_swan_chance: float = 0.01
+    black_swan_impact: float = 0.25
+    adaptive_recovery: bool = True
+    adaptive_trigger_strength: float = 0.65
+    adaptive_multiplier: float = 1.8
 
     def validate(self) -> None:
         if self.timelines <= 0:
@@ -49,6 +54,14 @@ class HorizonConfig:
             raise ValueError("output_format must be 'text' or 'json'")
         if not 0 <= self.early_warning_threshold <= 1:
             raise ValueError("early_warning_threshold must be between 0 and 1")
+        if not 0 <= self.black_swan_chance <= 1:
+            raise ValueError("black_swan_chance must be between 0 and 1")
+        if self.black_swan_impact < 0:
+            raise ValueError("black_swan_impact cannot be negative")
+        if not 0 <= self.adaptive_trigger_strength <= 1:
+            raise ValueError("adaptive_trigger_strength must be between 0 and 1")
+        if self.adaptive_multiplier < 0:
+            raise ValueError("adaptive_multiplier cannot be negative")
 
 
 @dataclasses.dataclass
@@ -64,6 +77,8 @@ class HorizonResult:
     collapse_histogram: Sequence[int]
     median_failure_year: int | None
     early_warning_year: int | None
+    black_swan_events: int
+    adaptive_interventions: int
 
     @property
     def probability(self) -> float:
@@ -94,6 +109,8 @@ class HorizonResult:
             "collapse_histogram": list(self.collapse_histogram),
             "median_failure_year": self.median_failure_year,
             "early_warning_year": self.early_warning_year,
+            "black_swan_events": self.black_swan_events,
+            "adaptive_interventions": self.adaptive_interventions,
         }
 
 
@@ -106,24 +123,40 @@ class HorizonEngine:
         self.rng = rng or random.Random(self.config.seed)
         self._history_map: List[float] = [0.0] * self.config.years_per_line
 
-    def simulate_timeline(self) -> tuple[bool, int | None]:
+    def simulate_timeline(self) -> tuple[bool, int | None, int, int]:
         """Run a single timeline and record average yearly strength.
 
         Returns:
-            tuple[bool, int | None]:
+            tuple[bool, int | None, int, int]:
                 - True if the anchor survives the full timeline, otherwise False.
                 - The year (1-indexed) where collapse occurred, or None if it survived.
+                - Number of black-swan shocks applied to this timeline.
+                - Number of adaptive recovery boosts applied to this timeline.
         """
 
         bond_strength = self.config.base_resilience
+        black_swan_events = 0
+        adaptive_interventions = 0
         for year in range(self.config.years_per_line):
             entropy = self._draw_entropy()
+            if self.rng.random() < self.config.black_swan_chance:
+                entropy += self.config.black_swan_impact
+                black_swan_events += 1
+
             recovery = self.config.recovery_rate if bond_strength < 1.0 else 0.0
+            if (
+                self.config.adaptive_recovery
+                and bond_strength < self.config.adaptive_trigger_strength
+                and recovery > 0
+            ):
+                recovery *= self.config.adaptive_multiplier
+                adaptive_interventions += 1
+
             bond_strength = max(0.0, min(1.0, bond_strength - entropy + recovery))
             if bond_strength <= 0:
-                return False, year + 1
+                return False, year + 1, black_swan_events, adaptive_interventions
             self._history_map[year] += bond_strength
-        return True, None
+        return True, None, black_swan_events, adaptive_interventions
 
     def run(self) -> HorizonResult:
         """Execute the configured number of simulations and return summary stats."""
@@ -132,8 +165,13 @@ class HorizonEngine:
 
         survived = 0
         collapse_years: List[int] = []
+        black_swan_events = 0
+        adaptive_interventions = 0
+
         for _ in range(self.config.timelines):
-            timeline_survived, collapse_year = self.simulate_timeline()
+            timeline_survived, collapse_year, swans, interventions = self.simulate_timeline()
+            black_swan_events += swans
+            adaptive_interventions += interventions
             if timeline_survived:
                 survived += 1
             elif collapse_year is not None:
@@ -180,6 +218,8 @@ class HorizonEngine:
             collapse_histogram=collapse_histogram,
             median_failure_year=median_failure_year,
             early_warning_year=early_warning_year,
+            black_swan_events=black_swan_events,
+            adaptive_interventions=adaptive_interventions,
         )
 
     @staticmethod
@@ -213,6 +253,8 @@ class HorizonEngine:
             f"PROBABILITY OF FOREVER: {result.probability * 100:.4f}%",
             f"VOLATILITY INDEX: {result.volatility:.4f}",
             f"WORST YEAR: {result.weakest_year} (avg strength {result.weakest_strength:.3f})",
+            f"BLACK-SWAN SHOCKS: {result.black_swan_events}",
+            f"ADAPTIVE RECOVERY BOOSTS: {result.adaptive_interventions}",
             "",
             "[STABILITY CURVE OVER YEARS]",
         ]
@@ -279,6 +321,37 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         default=HorizonConfig.early_warning_threshold,
         help="Cumulative collapse probability that triggers an early warning beacon",
     )
+    parser.add_argument(
+        "--black-swan-chance",
+        type=float,
+        default=HorizonConfig.black_swan_chance,
+        help="Annual probability of a catastrophic entropy shock",
+    )
+    parser.add_argument(
+        "--black-swan-impact",
+        type=float,
+        default=HorizonConfig.black_swan_impact,
+        help="Magnitude of the catastrophic entropy shock when it hits",
+    )
+    parser.add_argument(
+        "--no-adaptive-recovery",
+        dest="adaptive_recovery",
+        action="store_false",
+        default=HorizonConfig.adaptive_recovery,
+        help="Disable adaptive recovery boosts when strength dips",
+    )
+    parser.add_argument(
+        "--adaptive-trigger-strength",
+        type=float,
+        default=HorizonConfig.adaptive_trigger_strength,
+        help="Strength threshold that triggers adaptive recovery",
+    )
+    parser.add_argument(
+        "--adaptive-multiplier",
+        type=float,
+        default=HorizonConfig.adaptive_multiplier,
+        help="Multiplier applied to recovery when adaptive mode triggers",
+    )
     args = parser.parse_args(argv)
 
     return HorizonConfig(
@@ -292,6 +365,11 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         seed=args.seed,
         output_format=args.output_format,
         early_warning_threshold=args.early_warning_threshold,
+        black_swan_chance=args.black_swan_chance,
+        black_swan_impact=args.black_swan_impact,
+        adaptive_recovery=args.adaptive_recovery,
+        adaptive_trigger_strength=args.adaptive_trigger_strength,
+        adaptive_multiplier=args.adaptive_multiplier,
     )
 
 

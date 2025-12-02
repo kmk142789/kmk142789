@@ -1,3 +1,4 @@
+import dataclasses
 import json
 
 import pytest
@@ -53,6 +54,8 @@ def test_json_output_format(capsys):
     assert payload["median_failure_year"] is None or payload["median_failure_year"] >= 1
     assert payload["early_warning_year"] is None or payload["early_warning_year"] >= 1
     assert 0.0 <= payload["probability"] <= 1.0
+    assert payload["black_swan_events"] >= 0
+    assert payload["adaptive_interventions"] >= 0
 
 
 def test_uniform_distribution_entropy():
@@ -92,3 +95,47 @@ def test_early_warning_beacon_triggers():
     assert sum(result.collapse_histogram) == result.failed
     assert result.early_warning_year is not None
     assert 1 <= result.early_warning_year <= config.years_per_line
+
+
+def test_black_swan_shocks_reduce_survival_probability():
+    baseline_config = HorizonConfig(
+        anchor="Baseline",
+        timelines=50,
+        years_per_line=6,
+        base_resilience=0.9,
+        chaos_factor=0.0,
+        recovery_rate=0.05,
+        seed=123,
+        black_swan_chance=0.0,
+        black_swan_impact=0.0,
+    )
+    swan_config = dataclasses.replace(
+        baseline_config,
+        black_swan_chance=1.0,
+        black_swan_impact=0.8,
+    )
+
+    baseline_result = HorizonEngine(config=baseline_config).run()
+    swan_result = HorizonEngine(config=swan_config).run()
+
+    assert swan_result.failed >= baseline_result.failed
+    assert swan_result.black_swan_events > 0
+
+
+def test_adaptive_recovery_tracks_interventions():
+    config = HorizonConfig(
+        anchor="Adaptive",
+        timelines=10,
+        years_per_line=5,
+        base_resilience=0.4,
+        chaos_factor=0.0,
+        recovery_rate=0.1,
+        adaptive_recovery=True,
+        adaptive_trigger_strength=0.8,
+        adaptive_multiplier=3.0,
+        black_swan_chance=0.0,
+    )
+    result = HorizonEngine(config=config).run()
+
+    assert result.survived == config.timelines
+    assert result.adaptive_interventions == config.timelines * 2
