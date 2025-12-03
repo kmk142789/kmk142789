@@ -44,6 +44,28 @@
         "Capture a short log tail from the worker pods to confirm no silent retries or throttling.",
         "Summarize drift or regressions in the ops journal with a link to the collected metrics."
       ]
+    },
+    {
+      "id": "code-cache-probe",
+      "focus": "Code",
+      "title": "Probe the Echo cache accelerator",
+      "description": "Benchmark a cached vs. cold run for the same project and document how to trigger invalidation.",
+      "steps": [
+        "Run a representative build twice and capture the timing + cache hit/miss signals.",
+        "Toggle a dependency version to confirm the cache invalidates and restores cleanly.",
+        "Record the commands and deltas inside `workspaces/demo/logs/cache-probe.json`."
+      ]
+    },
+    {
+      "id": "collab-ops-journal",
+      "focus": "Collaborate",
+      "title": "Co-author today's ops journal",
+      "description": "Pair with another operator to summarize risks, next steps, and key telemetry snippets from this session.",
+      "steps": [
+        "Capture two telemetry snippets (logs or metrics) with short captions and timestamps.",
+        "Draft a mini handoff note with blockers, ready commands, and the reviewer you want feedback from first.",
+        "Publish the journal entry to the shared feed or `/handoff/journal` endpoint for archival."
+      ]
     }
   ]
 }

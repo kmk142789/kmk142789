@@ -52,6 +52,32 @@
         "Record rollback/rollback-ready commands plus metrics snapshots into the ritual journal for reuse."
       ],
       "tags": ["upgrade", "optimize", "cloud"]
+    },
+    {
+      "id": "code-cache-corridor",
+      "focus": "Code",
+      "title": "Stabilise the Echo cache corridor",
+      "cadence": "weekly",
+      "description": "Validate cache hit rates across three workspaces and decide which keys should be pinned or rotated.",
+      "steps": [
+        "Run a triad of workloads (Node, Python, mixed) and capture cache metrics for each.",
+        "Simulate a cache bust by changing dependencies, then measure recovery and rebuild times.",
+        "Publish guidance on default TTLs and manual overrides to the ritual archive."
+      ],
+      "tags": ["upgrade", "optimize", "code"]
+    },
+    {
+      "id": "collab-ops-journal",
+      "focus": "Collaborate",
+      "title": "Publish the ops journal bundle",
+      "cadence": "weekly",
+      "description": "Ship a polished weekly ops journal that stitches together telemetry, reviewer notes, and next steps.",
+      "steps": [
+        "Aggregate the week's telemetry snippets and tag each with affected services.",
+        "Invite a reviewer to co-author the risk/decision log and capture their responses inline.",
+        "Export the bundle to `/handoff/journal` with hashes so downstream consumers can verify integrity."
+      ],
+      "tags": ["advance", "optimize", "collaborate"]
     }
   ]
 }

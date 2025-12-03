@@ -174,3 +174,21 @@ def test_agent_quantam_features_generation() -> None:
     assert cascade is not None
     summary = cascade.get("summary", {})
     assert summary.get("total_layers", 0) >= 1
+
+
+def test_agent_evolution_briefing_blends_sources() -> None:
+    agent = EchoChatAgent()
+    response = agent.handle_command(
+        "Upgrade and evolve echos computer with new features"
+    )
+    payload = response.to_payload()
+    assert payload["function"] == "evolution_briefing"
+    data = payload["data"]
+    assert data["feature_blueprints"]
+    assert data["weekly_rituals"]
+    assert data["daily_invitations"]
+    cascade = data.get("quantam_cascade", {})
+    summary = cascade.get("summary", {})
+    assert summary.get("total_layers", 0) >= 1
+    metadata = payload["metadata"]
+    assert metadata["updated"]["daily"] == "2025-05-21"
