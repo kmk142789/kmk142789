@@ -14,6 +14,7 @@ from .autonomous_coordination_engine import (
     SchedulingSignal,
     UpgradeSignal,
 )
+from .autonomous_task_list import AutonomousTask, AutonomousTaskList
 from .astral_compression_engine import (
     ACEVisualizationLayer,
     ACELinkedAgent,
