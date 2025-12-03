@@ -481,6 +481,46 @@ class OrchestratorCore:
 
         return status
 
+    def offline_readiness(self) -> Mapping[str, Any]:
+        """Summarise offline readiness and highlight missing artefacts."""
+
+        status = self.offline_status()
+        manifests = sorted(self._manifest_dir.glob("orchestration_*.json"))
+        latest_manifest = manifests[-1] if manifests else None
+        actions: list[str] = []
+
+        manifest_age_seconds: float | None = None
+        if latest_manifest:
+            try:
+                mtime = datetime.fromtimestamp(
+                    latest_manifest.stat().st_mtime, tz=timezone.utc
+                )
+                manifest_age_seconds = max(
+                    0.0, (datetime.now(timezone.utc) - mtime).total_seconds()
+                )
+            except Exception:
+                manifest_age_seconds = None
+
+        if not status.get("exists"):
+            actions.append("Seed offline cache by running orchestrate() at least once.")
+        if status.get("cache_stale"):
+            actions.append("Refresh offline cache before offline use (cache is stale).")
+        if not manifests:
+            actions.append("Generate at least one manifest for offline replay.")
+        if self._last_decision is None:
+            actions.append("Capture a decision snapshot by running orchestrate().")
+
+        readiness: MutableMapping[str, Any] = {
+            "ready": not actions,
+            "cache_status": status,
+            "manifest_count": len(manifests),
+            "latest_manifest": str(latest_manifest) if latest_manifest else None,
+            "latest_manifest_age_seconds": manifest_age_seconds,
+            "pending_actions": actions,
+        }
+
+        return readiness
+
     def purge_offline_cache(self) -> bool:
         """Remove the offline cache from disk to force a refresh on next run."""
 
@@ -534,6 +574,7 @@ class OrchestratorCore:
             else self._store.snapshot_state(),
             "latest_manifest": latest_manifest,
             "last_decision": self._last_decision,
+            "readiness": self.offline_readiness(),
         }
 
         target.write_text(json.dumps(bundle, ensure_ascii=False, indent=2, default=str))

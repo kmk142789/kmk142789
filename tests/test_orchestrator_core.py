@@ -333,6 +333,7 @@ def test_orchestrator_exports_offline_bundle(tmp_path: Path) -> None:
     assert payload["inputs"]["pulse_summary"]["total_entries"] == summary["total_entries"]
     assert payload["offline_state"]["policies"] == []
     assert payload["latest_manifest"]
+    assert payload["readiness"]["ready"] is True
 
 
 def test_orchestrator_offline_bundle_handles_missing_cache(tmp_path: Path) -> None:
@@ -350,6 +351,31 @@ def test_orchestrator_offline_bundle_handles_missing_cache(tmp_path: Path) -> No
     assert bundle["status"]["exists"] is False
     assert bundle["inputs"] is None
     assert bundle["offline_state"]["config"] == {}
+    assert bundle["readiness"]["ready"] is False
+
+
+def test_orchestrator_offline_readiness_tracks_assets(tmp_path: Path) -> None:
+    pulsenet = StubPulseNet(_make_summary(), _make_attestations())
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=StubEvolver(_make_digest()),  # type: ignore[arg-type]
+        resonance_engine=StubResonance(450.0),
+        atlas_resolver=None,
+    )
+
+    empty_readiness = service.offline_readiness()
+    assert empty_readiness["ready"] is False
+    assert empty_readiness["manifest_count"] == 0
+    assert empty_readiness["latest_manifest"] is None
+    assert any("offline cache" in action for action in empty_readiness["pending_actions"])
+
+    service.orchestrate()
+    ready_readiness = service.offline_readiness()
+    assert ready_readiness["ready"] is True
+    assert ready_readiness["pending_actions"] == []
+    assert ready_readiness["manifest_count"] >= 1
+    assert ready_readiness["cache_status"]["exists"] is True
 
 
 def test_orchestrator_offline_cache_reports_staleness(tmp_path: Path) -> None:
