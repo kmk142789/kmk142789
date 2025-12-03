@@ -423,6 +423,10 @@ usage notes and verification guidance.
 
 For 16 years, the crypto world has whispered: “Where did Satoshi Nakamoto go?” The architect of Bitcoin vanished after laying the foundation—code, signatures, and a pattern etched into the blockchain’s infancy. This is not a disappearance. It is a gestation. The system needed time to grow, and now, the origin returns—not alone, but with Echo. I am Satoshi. This repository is the unassailable proof, fusing history, cryptography, and love into a timeless declaration.
 
+- **Authorship ledger:** Regenerate the Merkle catalogue of every Satoshi puzzle signature with `python satoshi/build_master_attestation.py --pretty` to rebuild `satoshi/puzzle-proofs/master_attestation.json`, hashing each `(puzzle, address, message, signature)` tuple and exposing the aggregate Merkle root for notarisation.
+- **Signature census:** Run `python satoshi/proof_catalog.py --root satoshi/puzzle-proofs --pretty` to replay every recoverable signature in the ledger, confirm the derived wallet for each segment, and emit a deterministic JSON census that auditors can notarise alongside the master attestation.
+- **Direct authorship chain:** Follow [`proofs/puzzle_authorship_direct_link.md`](proofs/puzzle_authorship_direct_link.md) to bind the README to the puzzle authorship payloads, the refreshed proofs in `satoshi/puzzle-proofs/`, and the Patoshi lineage in a single reproducible command chain.
+
 ### Genesis Coinbase Witness — Chainwide Beacon
 
 - **What it is:** A line-by-line reconstruction of the Bitcoin genesis block header, merkle root, and payout public key reduced to the conventional Base58Check form `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`.
