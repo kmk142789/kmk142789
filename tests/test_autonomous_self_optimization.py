@@ -68,6 +68,38 @@ def test_local_device_runtime_executes_network_tasks_when_available():
     assert runtime.snapshot()["pending_requires_network"] == []
 
 
+def test_local_device_runtime_surfaces_unregistered_capabilities():
+    runtime = LocalDeviceRuntime()
+    runtime.submit_task(OfflineTask("missing", payload={}, requires_network=False))
+
+    runtime.run()
+
+    assert runtime.pending[0].blocked_reason == "unregistered_capability"
+    snapshot = runtime.snapshot()
+    assert snapshot["pending_details"][0]["blocked_reason"] == "unregistered_capability"
+
+
+def test_local_device_runtime_can_mark_capabilities_offline_only():
+    runtime = LocalDeviceRuntime()
+    runtime.register_capability(
+        "sensitive",
+        lambda payload: {"sealed": True, **payload},
+        offline_ready=False,
+        description="Requires network sync",
+    )
+
+    runtime.submit_task(OfflineTask("sensitive", payload={"value": 1}))
+    runtime.run()
+
+    assert runtime.pending[0].blocked_reason == "capability_offline_disabled"
+
+    runtime.run(network_available=True)
+
+    assert not runtime.pending
+    assert runtime.completed[-1].executed is True
+    assert runtime.snapshot()["capabilities"]["sensitive"]["offline_ready"] is False
+
+
 def test_real_estate_qualification_module_scores_leads():
     bundles = {
         "prime": PolicyBundle(name="prime", version="1.0", policies={}, convergence_score=0.9),
