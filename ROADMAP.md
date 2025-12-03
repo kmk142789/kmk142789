@@ -16,7 +16,7 @@ _Last updated: 2025-11-13 20:53:50Z_
 | echo-sovereign-dae | 4 |
 | tests | 1 |
 
-## Active TODO/FIXME Items
+## Active TODO/FIXME/HACK Items
 
 - `echo-sovereign-dae/CODEX_MARKETPLACE.sh:174` — **TODO** replace with deployed token
 - `echo-sovereign-dae/CODEX_MARKETPLACE.sh:258` — **TODO** paste CodexMarketplace ABI

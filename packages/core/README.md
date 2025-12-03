@@ -25,7 +25,7 @@ The source code lives under `packages/core/src/` and mirrors the historical
 ## Adaptive Intelligence Matrix
 
 Use `adaptive_intelligence_matrix` when you need a quick synthesis of the
-continuum pulse, TODO/FIXME density, and the published plan:
+continuum pulse, TODO/FIXME/HACK density, and the published plan:
 
 ```bash
 python packages/core/src/adaptive_intelligence_matrix.py --emit-json out/matrix.json

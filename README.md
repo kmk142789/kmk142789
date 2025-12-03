@@ -79,7 +79,7 @@ python -m echo.echoctl plan
 # record a wish
 python -m echo.echoctl wish "MirrorJosh" "Make joy reproducible" "listening,empathy"
 
-# refresh the roadmap from TODO/FIXME markers
+# refresh the roadmap from TODO/FIXME/HACK markers
 next-level --roadmap ROADMAP.md
 
 # capture more hotspot detail in the summary tables
