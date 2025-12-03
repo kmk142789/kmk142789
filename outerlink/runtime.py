@@ -35,6 +35,14 @@ class OuterLinkRuntime:
         offline_snapshot = self.offline_state.status(
             self.config.offline_cache_dir, self.config.offline_cache_ttl_seconds
         )
+        self.offline_state.record_health_check(
+            "cache_health",
+            passed=not bool(offline_snapshot["cache_stale"]),
+            details="offline cache within ttl" if not offline_snapshot["cache_stale"] else "offline cache stale",
+        )
+        offline_snapshot = self.offline_state.status(
+            self.config.offline_cache_dir, self.config.offline_cache_ttl_seconds
+        )
         payload = {
             "online": offline_snapshot["online"],
             "last_sync": offline_snapshot["last_sync"],
@@ -49,6 +57,14 @@ class OuterLinkRuntime:
         response = {"task": task, "target": decision.target, "payload": payload or {}, "fallback": decision.fallback_used}
         self.event_bus.emit("task_executed", response)
         return response
+
+    def export_offline_state(self, destination: Optional[Path] = None) -> Path:
+        package_path = destination or (self.config.offline_cache_dir / "offline_package.json")
+        return self.offline_state.export_offline_package(
+            self.config.offline_cache_dir,
+            package_path,
+            cache_ttl_seconds=self.config.offline_cache_ttl_seconds,
+        )
 
     def flush_events(self) -> None:
         self.offline_state.prune_stale_cache(

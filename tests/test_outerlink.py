@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from outerlink import OuterLinkRuntime, SafeModeConfig, OfflineState, ExecutionBroker, DeviceSurfaceInterface, EventBus
@@ -108,3 +110,40 @@ def test_pending_events_drained_when_connection_recovers(tmp_path):
     log_lines = config.event_log.read_text().splitlines()
     assert len(log_lines) == 1
     assert not runtime.offline_state.pending_events
+
+
+def test_emit_state_carries_resilience_details(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        event_log=tmp_path / "events.log",
+        offline_cache_dir=tmp_path / "cache",
+    )
+    runtime = OuterLinkRuntime(config=config)
+
+    state = runtime.emit_state()
+
+    assert state["offline"].get("resilience_score") is not None
+    assert runtime.offline_state.health_checks[-1]["name"] == "cache_health"
+
+
+def test_offline_package_exports_integrity(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        event_log=tmp_path / "events.log",
+        offline_cache_dir=tmp_path / "cache",
+    )
+    offline_state = OfflineState(online=False)
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.safe_run_shell("echo", ["bundle"])
+    runtime.flush_events()
+    offline_state.record_health_check("radio_link", False, "antenna disabled")
+
+    package_path = runtime.export_offline_state(tmp_path / "offline_package.json")
+    package = json.loads(package_path.read_text())
+
+    assert package["status"]["cached_events"] == 1
+    assert package["health_checks"][-1]["name"] == "radio_link"
+    assert package["integrity_hash"]
