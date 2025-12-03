@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -37,6 +38,15 @@ class OfflineState:
     pending_events: List[dict] = field(default_factory=list)
     offline_reason: Optional[str] = None
     last_cache_flush: Optional[str] = None
+    offline_capabilities: Dict[str, bool] = field(
+        default_factory=lambda: {
+            "event_cache_replay": True,
+            "offline_router": True,
+            "deterministic_sensors": True,
+        }
+    )
+    resilience_notes: List[str] = field(default_factory=list)
+    health_checks: List[dict] = field(default_factory=list)
 
     def record_pending(self, payload: dict) -> None:
         self.pending_events.append(payload)
@@ -48,6 +58,29 @@ class OfflineState:
     def mark_offline(self, reason: Optional[str] = None) -> None:
         self.online = False
         self.offline_reason = reason
+        if reason:
+            self.add_resilience_note(f"Offline because: {reason}")
+
+    def add_resilience_note(self, note: str) -> None:
+        timestamp = datetime.now(timezone.utc).isoformat()
+        self.resilience_notes.append(f"{timestamp}: {note}")
+
+    def record_health_check(self, name: str, passed: bool, details: Optional[str] = None) -> dict:
+        entry = {
+            "name": name,
+            "passed": passed,
+            "details": details,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        self.health_checks.append(entry)
+        if not passed and not self.offline_reason:
+            self.offline_reason = details or name
+        return entry
+
+    def set_capability(self, name: str, enabled: bool, note: Optional[str] = None) -> None:
+        self.offline_capabilities[name] = enabled
+        if note:
+            self.add_resilience_note(note)
 
     def flush_to_cache(self, cache_dir: Path) -> None:
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -123,7 +156,7 @@ class OfflineState:
 
     def status(
         self, cache_dir: Optional[Path] = None, cache_ttl_seconds: Optional[int] = None
-    ) -> Dict[str, Optional[int | str | bool]]:
+    ) -> Dict[str, Optional[int | str | bool | Dict[str, bool] | List[dict] | List[str]]]:
         manifest: Dict[str, Optional[int | str | bool]] = {}
         if cache_dir:
             manifest = self._load_manifest(cache_dir)
@@ -142,6 +175,14 @@ class OfflineState:
             except ValueError:
                 cache_stale = False
 
+        resilience_score = 1.0
+        if cache_stale:
+            resilience_score -= 0.25
+        resilience_score -= min(len(self.pending_events) * 0.05, 0.25)
+        if self.offline_reason:
+            resilience_score -= 0.1
+        resilience_score = round(max(0.0, min(1.0, resilience_score)), 2)
+
         return {
             "online": self.online,
             "last_sync": self.last_sync,
@@ -150,7 +191,31 @@ class OfflineState:
             "offline_reason": self.offline_reason,
             "last_cache_flush": last_cache_flush,
             "cache_stale": cache_stale,
+            "capabilities": dict(self.offline_capabilities),
+            "resilience_score": resilience_score,
+            "resilience_notes": self.resilience_notes[-5:],
+            "health_checks": self.health_checks[-5:],
         }
+
+    def export_offline_package(
+        self,
+        cache_dir: Path,
+        destination: Path,
+        cache_ttl_seconds: Optional[int] = None,
+    ) -> Path:
+        status_snapshot = self.status(cache_dir, cache_ttl_seconds)
+        package = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "status": status_snapshot,
+            "capabilities": dict(self.offline_capabilities),
+            "health_checks": self.health_checks[-10:],
+            "resilience_notes": self.resilience_notes[-10:],
+        }
+        integrity_payload = json.dumps(package, sort_keys=True).encode()
+        package["integrity_hash"] = hashlib.sha256(integrity_payload).hexdigest()
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(package, indent=2))
+        return destination
 
     def _manifest_path(self, cache_dir: Path) -> Path:
         return cache_dir / "manifest.json"
