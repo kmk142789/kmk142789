@@ -44,6 +44,12 @@
         "status": "not_started",
         "owner": "steward",
         "notes": "Mirror tranche proofs to attestations/ and hash receipts to genesis_ledger/ with pulse dashboard update."
+      },
+      {
+        "step": "Mirror Little Footsteps sovereign alignment",
+        "status": "not_started",
+        "owner": "steward",
+        "notes": "Publish the Satoshi Vault proof, confirm the issuer DID chains to ECHO-ROOT-2025-05-11, and mirror both to the trust registries."
       }
     ]
   }

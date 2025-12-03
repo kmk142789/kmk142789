@@ -33,3 +33,8 @@ python tools/sdt_pipeline_register.py --require-complete
 ## 6) Governance sign-off
 - Capture steward approval for the ingest in `attestations/` (per `change_management`), referencing the validator output and ledger hashes.
 - Announce availability to downstream consumers once sign-off is recorded.
+
+## Parallel Little Footsteps alignment
+- Attach the Satoshi Vault proof as an attestation and mirror the hash to `docs/little_footsteps/trust_registry.json` so the childcare stack stays anchored to the sovereign trust.
+- Confirm the Little Footsteps issuer DID still chains to the `ECHO-ROOT-2025-05-11` anchor and log the verification alongside the vault proof.
+- When the first verified wallet tranche is ingested, record the validator output hash in the Little Footsteps transparency feed so parents and auditors see the Sovereign Digital Trust linkage.
