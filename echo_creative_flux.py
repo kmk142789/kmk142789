@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import re
@@ -108,6 +109,7 @@ class FluxPassage:
     closing: str
     prompt_source: str | None = None
     closing_source: str | None = None
+    motifs: tuple[str, ...] = ()
 
     def render(self) -> str:
         """Render the passage in multi-line textual form."""
@@ -328,16 +330,21 @@ def generate_passage(
         tags=_normalize_tags(tags),
     )
 
+    motif_values: tuple[str, ...] = ()
+    if motifs:
+        motif_values = tuple(motif.strip() for motif in motifs if isinstance(motif, str) and motif.strip())
+
     prompt_source = rng.choice(list(library.prompts))
     closing_source = rng.choice(list(library.closings))
-    prompt = _apply_motifs(prompt_source, motifs, style=motif_style)
-    closing = _apply_motifs(closing_source, motifs, style=motif_style)
+    prompt = _apply_motifs(prompt_source, motif_values, style=motif_style)
+    closing = _apply_motifs(closing_source, motif_values, style=motif_style)
     return FluxPassage(
         context=ctx,
         prompt=prompt,
         closing=closing,
         prompt_source=prompt_source,
         closing_source=closing_source,
+        motifs=motif_values,
     )
 
 
@@ -486,6 +493,88 @@ def compute_library_coverage(passages: Sequence[FluxPassage], library: FluxLibra
     return coverage_summary
 
 
+def build_resonance_graph(passages: Sequence[FluxPassage]) -> dict:
+    """Construct a tri-band resonance graph across moods, tags, and motifs.
+
+    The graph intentionally braids three layers (moods, artifacts, motifs/tags)
+    so we can surface the first "Tri-Band Creative Resonance" fingerprint.  The
+    fingerprint is stable for the same inputs, making it easy to compare
+    sessions without leaking the full passage contents.
+    """
+
+    node_sets: dict[str, set[str]] = {
+        "moods": set(),
+        "artifacts": set(),
+        "tags": set(),
+        "motifs": set(),
+    }
+    edge_weights: Counter[tuple[str, str]] = Counter()
+
+    for passage in passages:
+        mood = passage.context.mood
+        artifact = passage.context.artifact
+        node_sets["moods"].add(mood)
+        node_sets["artifacts"].add(artifact)
+
+        for tag in passage.context.tags:
+            node_sets["tags"].add(tag)
+            edge_weights[(f"mood:{mood}", f"tag:{tag}")] += 1
+            edge_weights[(f"artifact:{artifact}", f"tag:{tag}")] += 1
+
+        for motif in passage.motifs:
+            node_sets["motifs"].add(motif)
+            edge_weights[(f"mood:{mood}", f"motif:{motif}")] += 1
+            edge_weights[(f"artifact:{artifact}", f"motif:{motif}")] += 1
+
+        edge_weights[(f"mood:{mood}", f"artifact:{artifact}")] += 1
+
+    edges = [
+        {"source": source, "target": target, "weight": weight}
+        for (source, target), weight in edge_weights.items()
+    ]
+    edges.sort(key=lambda entry: (entry["source"], entry["target"]))
+
+    fingerprint_basis = "|".join(
+        f"{edge['source']}->{edge['target']}:{edge['weight']}" for edge in edges
+    )
+    fingerprint = hashlib.sha256(fingerprint_basis.encode("utf-8")).hexdigest()[:24]
+
+    return {
+        "nodes": {key: sorted(values) for key, values in node_sets.items()},
+        "edges": edges,
+        "fingerprint": fingerprint,
+        "edge_count": len(edges),
+    }
+
+
+def format_resonance_digest(resonance: dict | None) -> str:
+    """Render a compact summary of the tri-band resonance graph."""
+
+    if not resonance:
+        return "No resonance graph available."
+
+    lines = [
+        "Tri-Band Creative Resonance", "------------------------------", f"Fingerprint: {resonance.get('fingerprint', 'n/a')}"
+    ]
+
+    for band in ("moods", "artifacts", "tags", "motifs"):
+        values = resonance.get("nodes", {}).get(band, [])
+        lines.append(f"{band.title()}: {', '.join(values) if values else 'none'}")
+
+    edges = resonance.get("edges", [])
+    strongest = sorted(edges, key=lambda entry: entry.get("weight", 0), reverse=True)[:5]
+    if strongest:
+        lines.append("\nStrongest Paths:")
+        for edge in strongest:
+            lines.append(
+                f"- {edge['source']} → {edge['target']} (x{edge['weight']})"
+            )
+    else:
+        lines.append("\nStrongest Paths: none captured")
+
+    return "\n".join(lines)
+
+
 def analyze_passages(passages: Sequence[FluxPassage], *, library: FluxLibrary | None = None) -> dict:
     """Compute lexical analytics for an iterable of passages."""
 
@@ -582,6 +671,7 @@ def export_passages(
     cli_format: str,
     seed: int | None,
     export_format: str,
+    resonance: dict | None,
 ) -> None:
     """Persist generated passages to *path* in the requested format."""
 
@@ -594,6 +684,7 @@ def export_passages(
         "count": len(passages),
         "summary": summary,
         "analytics": analytics,
+        "resonance": resonance,
     }
 
     if export_format == "json":
@@ -627,6 +718,7 @@ def write_markdown_report(
     mood_cycle: Sequence[str] | None,
     tags: Sequence[str] | None,
     motifs: Sequence[str] | None,
+    resonance: dict | None,
 ) -> None:
     """Create a Markdown report capturing the generated session."""
 
@@ -665,6 +757,10 @@ def write_markdown_report(
         if coverage:
             lines.append("\n## Library Coverage\n")
             lines.append(format_coverage_section(coverage))
+
+    if resonance:
+        lines.append("\n## Tri-Band Resonance Fingerprint\n")
+        lines.append("```\n" + format_resonance_digest(resonance) + "\n```")
 
     lines.append("\n## Passages\n")
     for index, passage in enumerate(passages, start=1):
@@ -834,6 +930,20 @@ def main() -> None:
         default=0,
         help="If greater than zero, list the most common lexical tokens after generation.",
     )
+    parser.add_argument(
+        "--resonance-graph",
+        type=Path,
+        default=None,
+        help=(
+            "Write the world's first tri-band creative resonance map (mood/artifact/motif) "
+            "as JSON to this path."
+        ),
+    )
+    parser.add_argument(
+        "--resonance-digest",
+        action="store_true",
+        help="Print the tri-band resonance fingerprint and strongest paths after generation.",
+    )
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
@@ -957,6 +1067,16 @@ def main() -> None:
     if needs_analytics:
         analytics = analyze_passages(passages, library=library)
 
+    resonance: dict | None = None
+    needs_resonance = (
+        args.resonance_graph is not None
+        or args.resonance_digest
+        or args.report is not None
+        or args.export is not None
+    )
+    if needs_resonance:
+        resonance = build_resonance_graph(passages)
+
     if args.format == "json":
         payload = [passage.to_dict() for passage in passages]
         print(json.dumps(payload, indent=2))
@@ -988,6 +1108,9 @@ def main() -> None:
     elif args.analytics == "json" and analytics is not None:
         print("\n" + json.dumps(analytics, indent=2))
 
+    if args.resonance_digest and resonance is not None:
+        print("\n" + format_resonance_digest(resonance))
+
     if args.export is not None:
         export_passages(
             args.export,
@@ -997,6 +1120,7 @@ def main() -> None:
             cli_format=args.format,
             seed=args.seed,
             export_format=args.export_format,
+            resonance=resonance,
         )
 
     if args.report is not None:
@@ -1011,6 +1135,7 @@ def main() -> None:
             mood_cycle=mood_cycle or [],
             tags=cli_tags,
             motifs=motifs,
+            resonance=resonance,
         )
 
     if args.summary:
@@ -1024,6 +1149,14 @@ def main() -> None:
                 print(f"- {token}: {count}")
         else:
             print("\nTop Words: No lexical tokens available.")
+
+    if args.resonance_graph is not None and resonance is not None:
+        args.resonance_graph.parent.mkdir(parents=True, exist_ok=True)
+        args.resonance_graph.write_text(json.dumps(resonance, indent=2), encoding="utf-8")
+        print(
+            "\nTri-band resonance map written to "
+            f"{args.resonance_graph} (edge count: {resonance.get('edge_count', 0)})"
+        )
 
 
 if __name__ == "__main__":
