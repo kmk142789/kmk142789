@@ -63,6 +63,15 @@ class IntegrationMetrics:
     resonance_watermark: str
 
 
+@dataclass(frozen=True)
+class IntegrationInsights:
+    """Narrative-friendly recommendations derived from integration metrics."""
+
+    strengths: Tuple[str, ...]
+    risks: Tuple[str, ...]
+    recommended_actions: Tuple[str, ...]
+
+
 def _build_constellation_panel(
     brief: ConvergenceBrief,
 ) -> tuple[str, Sequence[ConstellationNode], ConstellationDiagnostics]:
@@ -226,6 +235,57 @@ def _build_integration_panel(
     return "\n".join(lines), metrics
 
 
+def _derive_integration_insights(
+    metrics: IntegrationMetrics, brief: ConvergenceBrief
+) -> IntegrationInsights:
+    """Translate metrics into strengths, risks, and next-step prompts."""
+
+    strengths: List[str] = []
+    risks: List[str] = []
+    actions: List[str] = []
+
+    if metrics.coverage >= 0.7:
+        strengths.append("Highlights closely reflect the motif lexicon.")
+    elif metrics.coverage < 0.4:
+        risks.append("Low highlight coverage may fragment the storyline.")
+        actions.append("Add motifs that mirror the critical highlights to lift coverage.")
+
+    if metrics.fusion_index >= 0.7:
+        strengths.append("Fusion index signals readiness for integrated delivery.")
+    elif metrics.fusion_index < 0.4:
+        risks.append("Fusion index is subdued; balance novelty with stability.")
+        actions.append(
+            "Tighten motif transitions or reduce novelty in the resonance script to raise fusion."
+        )
+
+    if metrics.novelty_ratio >= 0.5:
+        risks.append("High novelty ratio could dilute coherence if unaddressed.")
+        if metrics.lexical_gaps:
+            gap_preview = ", ".join(metrics.lexical_gaps[:3])
+            actions.append(f"Bridge lexical gaps with connective language around: {gap_preview}.")
+    else:
+        strengths.append("Shared lexicon is strong enough to support quick drafting.")
+
+    if metrics.coherence >= 0.65:
+        strengths.append("Coherence score indicates the narrative will read smoothly.")
+    else:
+        actions.append(
+            f"Refine the '{brief.tone}' tone with clearer anchors to stabilize coherence."
+        )
+
+    unique_strengths = tuple(dict.fromkeys(strengths))
+    unique_risks = tuple(dict.fromkeys(risks))
+    unique_actions = tuple(dict.fromkeys(actions)) or (
+        "Maintain cadence; current balance is healthy.",
+    )
+
+    return IntegrationInsights(
+        strengths=unique_strengths,
+        risks=unique_risks,
+        recommended_actions=unique_actions,
+    )
+
+
 def compose_convergence_report(brief: ConvergenceBrief) -> str:
     """Return a formatted report combining constellation and resonance data."""
 
@@ -242,6 +302,34 @@ def compile_convergence_panels(
     resonance_panel = _build_resonance_panel(brief)
     integration_panel, metrics = _build_integration_panel(brief, nodes, diagnostics)
     return constellation_panel, resonance_panel, integration_panel, metrics
+
+
+def summarize_convergence(brief: ConvergenceBrief) -> dict[str, object]:
+    """Summarize the convergence run with insights and a concise headline."""
+
+    constellation_panel, resonance_panel, integration_panel, metrics = compile_convergence_panels(
+        brief
+    )
+    insights = _derive_integration_insights(metrics, brief)
+    headline_parts = [
+        f"coverage={metrics.coverage:.3f}",
+        f"fusion={metrics.fusion_index:.3f}",
+        f"coherence={metrics.coherence:.3f}",
+    ]
+    if insights.risks:
+        headline_parts.append("risks-present")
+
+    return {
+        "theme": brief.theme,
+        "headline": " | ".join(headline_parts),
+        "panels": {
+            "constellation": constellation_panel,
+            "resonance": resonance_panel,
+            "integration": integration_panel,
+        },
+        "metrics": metrics,
+        "insights": insights,
+    }
 
 
 def demo() -> str:
