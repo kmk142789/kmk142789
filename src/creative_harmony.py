@@ -231,6 +231,32 @@ class ResonanceReport:
             ]
         )
 
+    def to_metrics(self) -> str:
+        """Return a compact metrics digest suitable for dashboards or logs."""
+
+        coverage = self.metrics.get("provided_highlight_ratio", 0.0) * 100
+        seed_value = self.seed if self.seed is not None else "random"
+        highlight_count = self.metrics.get("unique_highlights", 0)
+        lines = [
+            f"Metrics for '{self.theme}' ({self.tone}, seed={seed_value})",
+            "- Sentences: {sentence_count}",
+            "- Transitions: {transition_count}",
+            "- Unique highlights: {unique_highlights}",
+            "- Words: {word_count}",
+            "- Highlight coverage: {coverage:.0f}%",
+        ]
+
+        return "\n".join(
+            line.format(
+                sentence_count=self.metrics.get("sentence_count", 0),
+                transition_count=self.metrics.get("transition_count", 0),
+                unique_highlights=highlight_count,
+                word_count=self.metrics.get("word_count", 0),
+                coverage=coverage,
+            )
+            for line in lines
+        )
+
     def to_html(self) -> str:
         """Return a simple HTML document describing the resonance."""
 
@@ -609,7 +635,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f",
         "--format",
-        choices=["text", "json", "markdown", "summary", "html", "trace", "analysis"],
+        choices=[
+            "text",
+            "json",
+            "markdown",
+            "summary",
+            "html",
+            "trace",
+            "analysis",
+            "metrics",
+        ],
         default="text",
         help="Output format. JSON returns the structured resonance report.",
     )
@@ -636,6 +671,7 @@ if __name__ == "__main__":
         "html": report.to_html,
         "trace": report.to_trace,
         "analysis": report.to_analysis,
+        "metrics": report.to_metrics,
         "text": lambda: report.text,
     }
 
