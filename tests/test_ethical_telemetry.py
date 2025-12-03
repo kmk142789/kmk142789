@@ -187,6 +187,24 @@ def test_report_emitter_generates_report(tmp_path: Path) -> None:
     assert not final_report.notices
 
 
+def test_jsonl_storage_skips_blank_lines(tmp_path: Path) -> None:
+    path = tmp_path / "events.jsonl"
+    storage = JsonlTelemetryStorage(path)
+    ctx = TelemetryContext.pseudonymize(
+        raw_identifier="user-blank",
+        salt="salt",
+        consent_state=ConsentState.OPTED_IN,
+    )
+    event = TelemetryEvent(event_type="visit", context=ctx, payload={"action": "view"})
+    storage.write(event)
+
+    path.write_text(path.read_text(encoding="utf-8") + "\n\n  \n", encoding="utf-8")
+
+    events = list(storage.read())
+    assert len(events) == 1
+    assert events[0].event_type == "visit"
+
+
 def test_secure_transport_validation() -> None:
     ensure_secure_transport("https://example.com/telemetry")
     with pytest.raises(ValueError):
