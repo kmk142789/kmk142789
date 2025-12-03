@@ -457,6 +457,8 @@ def compute_passage_metrics(passage: FluxPassage) -> dict:
     closing_tokens = _tokenize(passage.closing)
     all_tokens = prompt_tokens + closing_tokens
     unique_tokens = sorted(set(all_tokens))
+    prompt_characters = len(passage.prompt)
+    closing_characters = len(passage.closing)
 
     return {
         "mood": passage.context.mood,
@@ -468,6 +470,9 @@ def compute_passage_metrics(passage: FluxPassage) -> dict:
         "closing_words": len(closing_tokens),
         "word_count": len(all_tokens),
         "unique_words": len(unique_tokens),
+        "prompt_characters": prompt_characters,
+        "closing_characters": closing_characters,
+        "character_count": prompt_characters + closing_characters,
     }
 
 
@@ -580,12 +585,14 @@ def analyze_passages(passages: Sequence[FluxPassage], *, library: FluxLibrary | 
 
     per_passage = []
     total_words = 0
+    total_characters = 0
     total_unique: set[str] = set()
     for index, passage in enumerate(passages, start=1):
         metrics = compute_passage_metrics(passage)
         metrics["index"] = index
         per_passage.append(metrics)
         total_words += metrics["word_count"]
+        total_characters += metrics["character_count"]
         prompt_tokens = _tokenize(passage.prompt)
         closing_tokens = _tokenize(passage.closing)
         total_unique.update(prompt_tokens)
@@ -595,6 +602,8 @@ def analyze_passages(passages: Sequence[FluxPassage], *, library: FluxLibrary | 
         "total_passages": len(passages),
         "total_words": total_words,
         "average_words": (total_words / len(passages)) if passages else 0,
+        "total_characters": total_characters,
+        "average_characters": (total_characters / len(passages)) if passages else 0,
         "vocabulary_size": len(total_unique),
     }
 
@@ -609,7 +618,17 @@ def format_metrics_table(analysis: dict) -> str:
     if not analysis.get("per_passage"):
         return "No passages generated."
 
-    headers = ["#", "Mood", "Artifact", "Words", "Unique", "Prompt", "Closing", "Label"]
+    headers = [
+        "#",
+        "Mood",
+        "Artifact",
+        "Words",
+        "Unique",
+        "Chars",
+        "Prompt",
+        "Closing",
+        "Label",
+    ]
     rows = []
     for metrics in analysis["per_passage"]:
         rows.append(
@@ -619,6 +638,7 @@ def format_metrics_table(analysis: dict) -> str:
                 metrics["artifact"],
                 str(metrics["word_count"]),
                 str(metrics["unique_words"]),
+                str(metrics["character_count"]),
                 str(metrics["prompt_words"]),
                 str(metrics["closing_words"]),
                 metrics.get("label") or "-",
@@ -635,10 +655,16 @@ def format_metrics_table(analysis: dict) -> str:
 
     aggregate = analysis.get("aggregate", {})
     table_lines.append(
-        "\nTotals: {words} words across {count} passages | Avg: {avg:.2f} | Vocabulary: {vocab}".format(
+        (
+            "\nTotals: {words} words, {characters} characters across {count} passages"
+            " | Avg words: {avg_words:.2f} | Avg chars: {avg_characters:.2f}"
+            " | Vocabulary: {vocab}"
+        ).format(
             words=aggregate.get("total_words", 0),
+            characters=aggregate.get("total_characters", 0),
             count=aggregate.get("total_passages", 0),
-            avg=aggregate.get("average_words", 0),
+            avg_words=aggregate.get("average_words", 0),
+            avg_characters=aggregate.get("average_characters", 0),
             vocab=aggregate.get("vocabulary_size", 0),
         )
     )
