@@ -51,6 +51,7 @@ class HorizonConfig:
     momentum_alert: float = -0.02
     shock_fuse_length: int = 2
     shock_fuse_boost: float = 0.08
+    resilience_floor: float = 0.0
     output_path: Path | None = None
 
     def validate(self) -> None:
@@ -96,6 +97,10 @@ class HorizonConfig:
             raise ValueError("shock_fuse_length cannot be negative")
         if self.shock_fuse_boost < 0:
             raise ValueError("shock_fuse_boost cannot be negative")
+        if not 0 <= self.resilience_floor <= 1:
+            raise ValueError("resilience_floor must be between 0 and 1")
+        if self.resilience_floor > self.base_resilience:
+            raise ValueError("resilience_floor cannot exceed base_resilience")
         if self.output_path is not None and str(self.output_path).strip() == "":
             raise ValueError("output_path cannot be an empty string")
 
@@ -123,6 +128,7 @@ class HorizonResult:
     momentum_swing_year: int | None
     momentum_bottom: float
     shock_fuse_triggers: int
+    floor_support_events: int
     survival_curve: Sequence[float]
 
     @property
@@ -159,12 +165,14 @@ class HorizonResult:
             "adaptive_interventions": self.adaptive_interventions,
             "pulse_events": self.pulse_events,
             "resilience_dividend": self.resilience_dividend,
+            "resilience_floor": config.resilience_floor,
             "fragility_window_start": self.fragility_window_start,
             "fragility_window_score": self.fragility_window_score,
             "momentum_curve": list(self.momentum_curve),
             "momentum_swing_year": self.momentum_swing_year,
             "momentum_bottom": self.momentum_bottom,
             "shock_fuse_triggers": self.shock_fuse_triggers,
+            "floor_support_events": self.floor_support_events,
             "survival_curve": list(self.survival_curve),
             "output_path": str(config.output_path) if config.output_path else None,
         }
@@ -179,17 +187,18 @@ class HorizonEngine:
         self.rng = rng or random.Random(self.config.seed)
         self._history_map: List[float] = [0.0] * self.config.years_per_line
 
-    def simulate_timeline(self) -> tuple[bool, int | None, int, int, int, int]:
+    def simulate_timeline(self) -> tuple[bool, int | None, int, int, int, int, int]:
         """Run a single timeline and record average yearly strength.
 
         Returns:
-            tuple[bool, int | None, int, int, int]:
+            tuple[bool, int | None, int, int, int, int, int]:
                 - True if the anchor survives the full timeline, otherwise False.
                 - The year (1-indexed) where collapse occurred, or None if it survived.
                 - Number of black-swan shocks applied to this timeline.
                 - Number of adaptive recovery boosts applied to this timeline.
                 - Number of resonance pulses applied to this timeline.
                 - Number of shock-fuse countermeasures applied to this timeline.
+                - Number of times the resilience floor prevented further collapse.
         """
 
         bond_strength = self.config.base_resilience
@@ -198,6 +207,7 @@ class HorizonEngine:
         pulse_events = 0
         shock_fuse_triggers = 0
         consecutive_black_swans = 0
+        floor_support_events = 0
         for year in range(self.config.years_per_line):
             entropy = self._draw_entropy()
             if self.rng.random() < self.config.black_swan_chance:
@@ -225,7 +235,11 @@ class HorizonEngine:
                 recovery *= self.config.adaptive_multiplier
                 adaptive_interventions += 1
 
-            bond_strength = max(0.0, min(1.0, bond_strength - entropy + recovery))
+            updated_strength = max(0.0, min(1.0, bond_strength - entropy + recovery))
+            if updated_strength < self.config.resilience_floor:
+                updated_strength = self.config.resilience_floor
+                floor_support_events += 1
+            bond_strength = updated_strength
             if bond_strength <= 0:
                 return (
                     False,
@@ -234,13 +248,22 @@ class HorizonEngine:
                     adaptive_interventions,
                     pulse_events,
                     shock_fuse_triggers,
+                    floor_support_events,
                 )
 
             if self.config.pulse_interval and (year + 1) % self.config.pulse_interval == 0:
                 bond_strength = min(1.0, bond_strength + self.config.pulse_boost)
                 pulse_events += 1
             self._history_map[year] += bond_strength
-        return True, None, black_swan_events, adaptive_interventions, pulse_events, shock_fuse_triggers
+        return (
+            True,
+            None,
+            black_swan_events,
+            adaptive_interventions,
+            pulse_events,
+            shock_fuse_triggers,
+            floor_support_events,
+        )
 
     def run(self) -> HorizonResult:
         """Execute the configured number of simulations and return summary stats."""
@@ -253,13 +276,23 @@ class HorizonEngine:
         adaptive_interventions = 0
         pulse_events = 0
         shock_fuse_triggers = 0
+        floor_support_events = 0
 
         for _ in range(self.config.timelines):
-            timeline_survived, collapse_year, swans, interventions, pulses, fuses = self.simulate_timeline()
+            (
+                timeline_survived,
+                collapse_year,
+                swans,
+                interventions,
+                pulses,
+                fuses,
+                floor_hits,
+            ) = self.simulate_timeline()
             black_swan_events += swans
             adaptive_interventions += interventions
             pulse_events += pulses
             shock_fuse_triggers += fuses
+            floor_support_events += floor_hits
             if timeline_survived:
                 survived += 1
             elif collapse_year is not None:
@@ -348,6 +381,7 @@ class HorizonEngine:
             momentum_swing_year=momentum_swing_year,
             momentum_bottom=momentum_bottom,
             shock_fuse_triggers=shock_fuse_triggers,
+            floor_support_events=floor_support_events,
             survival_curve=survival_curve,
         )
 
@@ -391,7 +425,9 @@ class HorizonEngine:
             f"ADAPTIVE RECOVERY BOOSTS: {result.adaptive_interventions}",
             f"RESONANCE PULSES: {result.pulse_events}",
             f"SHOCK-FUSE COUNTERMEASURES: {result.shock_fuse_triggers}",
+            f"FLOOR SUPPORT ACTIVATIONS: {result.floor_support_events}",
             f"RESILIENCE DIVIDEND: {result.resilience_dividend:.3f}",
+            f"RESILIENCE FLOOR: {self.config.resilience_floor:.3f}",
             "",
             "[STABILITY CURVE OVER YEARS]",
         ]
@@ -587,6 +623,12 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         help="Resilience boost applied when the shock fuse fires",
     )
     parser.add_argument(
+        "--resilience-floor",
+        type=float,
+        default=HorizonConfig.resilience_floor,
+        help="Minimum strength floor applied before collapse",
+    )
+    parser.add_argument(
         "--output-path",
         type=Path,
         default=None,
@@ -619,6 +661,7 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         momentum_alert=args.momentum_alert,
         shock_fuse_length=args.shock_fuse_length,
         shock_fuse_boost=args.shock_fuse_boost,
+        resilience_floor=args.resilience_floor,
         output_path=args.output_path,
     )
 
