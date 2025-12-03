@@ -30,6 +30,16 @@ def test_discover_tasks_and_update_roadmap(tmp_path):
     assert "FIXME" in contents
 
 
+def test_discover_tasks_includes_hack(tmp_path):
+    source = tmp_path / "module.py"
+    source.write_text("""# HACK temporary bypass\nvalue = 42\n""", encoding="utf-8")
+
+    tasks = discover_tasks(tmp_path)
+    assert len(tasks) == 1
+    assert tasks[0].tag == "HACK"
+    assert tasks[0].text == "temporary bypass"
+
+
 def test_build_roadmap_handles_empty(tmp_path):
     content = build_roadmap([], tmp_path)
     assert "No TODO" in content

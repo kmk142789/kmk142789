@@ -1,7 +1,7 @@
-"""Scan the repository for todo/fixme markers and refresh ``ROADMAP.md``.
+"""Scan the repository for TODO/FIXME/HACK markers and refresh ``ROADMAP.md``.
 
-The CLI can optionally enforce a maximum number of outstanding TODO/FIXME tasks,
-returning a non-zero exit code to make CI pipelines aware of regressions.
+The CLI can optionally enforce a maximum number of outstanding TODO/FIXME/HACK
+tasks, returning a non-zero exit code to make CI pipelines aware of regressions.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from typing import Callable, Iterable, List, Optional, Sequence, Set, Tuple
 import sys
 
 TASK_PATTERN = re.compile(
-    r"^\s*(?:[<*!#/\-]+)?\s*(?P<tag>TODO|FIXME)(?=(?:[:\s-]|$))(?:[:\s-]+(?P<text>.*))?",
+    r"^\s*(?:[<*!#/\-]+)?\s*(?P<tag>TODO|FIXME|HACK)(?=(?:[:\s-]|$))(?:[:\s-]+(?P<text>.*))?",
     re.IGNORECASE,
 )
 BlockCommentPattern = Tuple[re.Pattern[str], Callable[[re.Match[str]], str], str]
@@ -131,7 +131,7 @@ def _normalise_skip_entries(
 
 @dataclass(slots=True)
 class Task:
-    """Representation of a discovered TODO/FIXME entry."""
+    """Representation of a discovered TODO/FIXME/HACK entry."""
 
     path: Path
     line: int
@@ -207,7 +207,7 @@ def discover_tasks(
     allowed_extensions: Optional[Sequence[str]] = None,
     ignore_patterns: Optional[Sequence[str]] = None,
 ) -> List[Task]:
-    """Return all TODO/FIXME entries under ``base_path``.
+    """Return all TODO/FIXME/HACK entries under ``base_path``.
 
     When ``max_file_size`` is provided, files larger than the threshold (in bytes)
     are skipped to avoid expensive scans of large artifacts.  ``allowed_extensions``
@@ -371,7 +371,7 @@ def _extract_comment(line: str) -> Optional[str]:
 
 
 def _discover_block_comment_tasks(text: str) -> Iterable[Tuple[int, str, str]]:
-    """Yield ``(line_no, tag, text)`` for TODO/FIXME entries within block comments."""
+    """Yield ``(line_no, tag, text)`` for TODO/FIXME/HACK entries within block comments."""
 
     for pattern, extractor, leading in BLOCK_COMMENT_PATTERNS:
         for match in pattern.finditer(text):
@@ -424,9 +424,9 @@ def build_roadmap(
     if entries:
         lines.extend(_build_summary(entries, base_path, hotspot_limit=hotspot_limit))
     if not entries:
-        lines.append("No TODO or FIXME markers were discovered.\n")
+        lines.append("No TODO, FIXME, or HACK markers were discovered.\n")
     else:
-        lines.append("## Active TODO/FIXME Items\n\n")
+        lines.append("## Active TODO/FIXME/HACK Items\n\n")
         for task in entries:
             lines.append(f"{task.as_markdown(base_path)}\n")
     return "".join(lines)
@@ -671,7 +671,7 @@ def main() -> int:
     )
     if max_tasks is not None and len(tasks) > max_tasks:
         print(
-            f"Discovered {len(tasks)} TODO/FIXME tasks which exceeds the allowed maximum of"
+            f"Discovered {len(tasks)} TODO/FIXME/HACK tasks which exceeds the allowed maximum of"
             f" {max_tasks}.",
             file=sys.stderr,
         )
