@@ -100,6 +100,7 @@ class FunctionRouter:
     _SYSTEM_ALIASES = ("echos system", "echo system")
     _QUANTAM_KEYWORDS = ("quantam", "quantum")
     _THEME_KEYWORDS = ("create", "advance", "upgrade", "optimize")
+    _OFFLINE_KEYWORDS = ("offline", "airgapped", "air-gapped", "disconnected")
     _STATUS_KEYWORDS = {
         "research": "Research",
         "prototype": "Prototype",
@@ -137,6 +138,15 @@ class FunctionRouter:
             return FunctionCall(
                 name="initiate_echos_system",
                 arguments={"replace": "replace" in normalised or "replace all" in normalised},
+            )
+
+        if (
+            any(alias in normalised for alias in self._COMPUTER_ALIASES)
+            and any(keyword in normalised for keyword in self._OFFLINE_KEYWORDS)
+        ):
+            return FunctionCall(
+                name="feature_blueprints",
+                arguments={"status": "Ready", "focus": "Cloud"},
             )
 
         if (
