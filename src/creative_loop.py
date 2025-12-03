@@ -171,6 +171,7 @@ class LoopResult:
     timeline: List[Dict[str, object]] = field(default_factory=list)
     summary: LoopSummary | None = None
     fingerprint: "LoopFingerprint" | None = None
+    quality: "LoopQualityReport" | None = None
 
     def render(self) -> List[str]:
         diagnostic_line = f"[diagnostics] {self.diagnostics.render_report()}"
@@ -200,6 +201,17 @@ class LoopResult:
                 f"tempo_profile={self.fingerprint.tempo_profile}"
             )
             rendered.append(fingerprint_line)
+        if self.quality:
+            quality_line = (
+                "[quality] "
+                f"voice_rotation={self.quality.voice_rotation:.2f}; "
+                f"fragment_coverage={self.quality.fragment_coverage_ratio:.2f}; "
+                f"fragment_reuse={self.quality.fragment_reuse_ratio:.2f}; "
+                f"accent_balance={self.quality.accent_balance:.2f}; "
+                f"longest_streak={self.quality.longest_voice_streak}; "
+                f"textures={self.quality.texture_variety}"
+            )
+            rendered.append(quality_line)
         rendered.append(rhythm_line)
         return rendered
 
@@ -218,6 +230,7 @@ class LoopResult:
             "timeline": list(self.timeline),
             "summary": self.summary.as_dict() if self.summary else None,
             "fingerprint": self.fingerprint.as_dict() if self.fingerprint else None,
+            "quality": self.quality.as_dict() if self.quality else None,
         }
 
 
@@ -293,6 +306,100 @@ def compute_fingerprint(seed: LoopSeed, loop_result: LoopResult) -> LoopFingerpr
         tempo_profile=tempo_profile,
         rarity_score=rarity_score,
     )
+
+
+@dataclass
+class LoopQualityReport:
+    """Highlight balance and pacing traits for a loop."""
+
+    voice_rotation: float
+    fragment_coverage_ratio: float
+    fragment_reuse_ratio: float
+    accent_balance: float
+    longest_voice_streak: int
+    texture_variety: int
+    warnings: List[str] = field(default_factory=list)
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "voice_rotation": self.voice_rotation,
+            "fragment_coverage_ratio": self.fragment_coverage_ratio,
+            "fragment_reuse_ratio": self.fragment_reuse_ratio,
+            "accent_balance": self.accent_balance,
+            "longest_voice_streak": self.longest_voice_streak,
+            "texture_variety": self.texture_variety,
+            "warnings": list(self.warnings),
+        }
+
+
+def evaluate_quality(seed: LoopSeed, loop_result: LoopResult) -> LoopQualityReport:
+    """Assess pacing, variety, and reuse characteristics for a loop."""
+
+    pulses = max(1, seed.pulses)
+    voice_sequence = [
+        entry["voice"]
+        for entry in loop_result.timeline
+        if isinstance(entry, Mapping) and entry.get("voice")
+    ]
+    unique_voices = set(voice_sequence)
+    voice_rotation = len(unique_voices) / pulses
+
+    longest_voice_streak = 0
+    previous_voice: str | None = None
+    streak = 0
+    for voice in voice_sequence:
+        if voice == previous_voice:
+            streak += 1
+        else:
+            previous_voice = voice
+            streak = 1
+        longest_voice_streak = max(longest_voice_streak, streak)
+
+    fragment_reuse_ratio = 0.0
+    if seed.fragments and loop_result.diagnostics.fragments:
+        most_used = loop_result.diagnostics.fragments.most_common(1)[0][1]
+        fragment_reuse_ratio = most_used / pulses
+
+    accents = loop_result.diagnostics.accents
+    accent_balance = 0.0
+    if accents:
+        strong = sum(accents)
+        soft = len(accents) - strong
+        accent_balance = abs(strong - soft) / len(accents)
+
+    textures = {
+        entry.get("texture")
+        for entry in loop_result.timeline
+        if isinstance(entry, Mapping) and entry.get("texture")
+    } or set(loop_result.rhythm.dynamic_tempi)
+    texture_variety = len(textures)
+
+    warnings: List[str] = []
+    coverage_ratio = 0.0
+    if seed.fragments:
+        coverage_ratio = len(loop_result.diagnostics.fragments) / max(1, len(seed.fragments))
+    if voice_rotation < 0.35:
+        warnings.append("Low voice rotation; introduce more voices or loosen bias.")
+    if coverage_ratio < 0.35 and seed.fragments:
+        warnings.append("Most supplied fragments were unused; consider increasing pulses or reuse.")
+    if fragment_reuse_ratio > 0.6:
+        warnings.append("A single fragment dominates the loop; reduce reuse to boost variety.")
+    if accent_balance > 0.5:
+        warnings.append("Accent distribution is skewed; adjust tempo or pulses for balance.")
+    if longest_voice_streak > max(2, pulses // 2):
+        warnings.append("One voice holds the mic for too long; encourage alternation.")
+
+    return LoopQualityReport(
+        voice_rotation=voice_rotation,
+        fragment_coverage_ratio=coverage_ratio,
+        fragment_reuse_ratio=fragment_reuse_ratio,
+        accent_balance=accent_balance,
+        longest_voice_streak=longest_voice_streak,
+        texture_variety=texture_variety,
+        warnings=warnings,
+    )
+
+
 def build_loop_payload(seed: LoopSeed, loop_result: LoopResult, timestamp: str) -> Dict[str, object]:
     """Build a structured payload describing the loop."""
 
@@ -504,6 +611,7 @@ def generate_loop(seed: LoopSeed) -> LoopResult:
     )
     loop_result.summary = summarize_loop(loop_result)
     loop_result.fingerprint = compute_fingerprint(seed, loop_result)
+    loop_result.quality = evaluate_quality(seed, loop_result)
     return loop_result
 
 
@@ -546,7 +654,7 @@ def compose_loop(
     """Create a creative loop in the requested output format.
 
     Supported formats are ``"text"``, ``"json"``, ``"markdown"``, ``"table"``,
-    ``"csv"``, ``"summary"``, ``"insights"``, and ``"html"``.
+    ``"csv"``, ``"summary"``, ``"insights"``, ``"quality"``, and ``"html"``.
     """
 
     timestamp = timestamp or datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
@@ -651,6 +759,28 @@ def compose_loop(
                     f"({entry['tempo_hint']}/{entry['texture']}): {entry['line']}"
                 )
             )
+        return "\n".join(lines)
+
+    if format == "quality":
+        summary = loop_result.summary or summarize_loop(loop_result)
+        report = loop_result.quality or evaluate_quality(seed, loop_result)
+        lines = [
+            f"Quality review for '{seed.motif}'",
+            "",
+            f"tempo={seed.tempo} | pulses={seed.pulses} | generated={timestamp}",
+            "",
+            "Balance metrics:",
+            f"- voice rotation: {report.voice_rotation:.2f}",
+            f"- fragment coverage: {report.fragment_coverage_ratio:.2f}",
+            f"- fragment reuse: {report.fragment_reuse_ratio:.2f}",
+            f"- accent balance: {report.accent_balance:.2f}",
+            f"- longest voice streak: {report.longest_voice_streak}",
+            f"- texture variety: {report.texture_variety}",
+            f"- overall diversity: {summary.voice_diversity:.2f}",
+        ]
+        lines.append("Warnings:" if report.warnings else "Warnings: none")
+        for warning in report.warnings:
+            lines.append(f"- {warning}")
         return "\n".join(lines)
 
     if format == "table":
@@ -797,7 +927,7 @@ def compose_loop(
         )
 
     raise ValueError(
-        "Unsupported format; expected 'text', 'json', 'markdown', 'table', 'csv', 'summary', 'insights', or 'html'."
+        "Unsupported format; expected 'text', 'json', 'markdown', 'table', 'csv', 'summary', 'insights', 'quality', or 'html'."
     )
 
 
@@ -810,6 +940,7 @@ def _extension_for_format(output_format: str) -> str:
         "csv": "csv",
         "summary": "txt",
         "insights": "txt",
+        "quality": "txt",
         "html": "html",
     }
     return mapping.get(output_format, "txt")
@@ -1085,11 +1216,21 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json", "markdown", "table", "csv", "summary", "insights", "html"],
+        choices=[
+            "text",
+            "json",
+            "markdown",
+            "table",
+            "csv",
+            "summary",
+            "insights",
+            "quality",
+            "html",
+        ],
         default="text",
         help=(
             "Choose between human-readable text, JSON, Markdown, table, CSV, summary, "
-            "insights, or HTML output"
+            "insights, quality, or HTML output"
         ),
     )
     parser.add_argument(
