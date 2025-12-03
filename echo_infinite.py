@@ -306,6 +306,85 @@ class EchoInfinite:
 
         self._log_message("EchoInfinite orchestrator stopped", details={"cycle_final": cycle})
 
+    def build_status_report(self) -> Dict[str, object]:
+        """Return a consolidated snapshot of the orchestrator's latest state.
+
+        The report aggregates the most recent state file, heartbeat payload,
+        momentum report, summary snapshot, and harmonic memory record if
+        available.  Missing or malformed files are ignored so the report can be
+        used safely in partially-initialised environments.
+        """
+
+        def _load_json(path: Path) -> Dict[str, object] | None:
+            try:
+                return json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                return None
+
+        state_payload = _load_json(self.state_path)
+        summary_payload = _load_json(self.summary_path)
+        heartbeat_payload = _load_json(self.heartbeat_path)
+        momentum_payload = _load_json(self.momentum_path)
+
+        snapshot_path: Path | None = None
+        if self.last_snapshot_path and self.last_snapshot_path.exists():
+            snapshot_path = self.last_snapshot_path
+
+        harmonic_payload = _load_json(snapshot_path) if snapshot_path else None
+        if not harmonic_payload or "cycle_snapshot" not in harmonic_payload:
+            if self.harmonic_cycles_dir.exists():
+                candidates = sorted(self.harmonic_cycles_dir.glob("cycle_*.json"))
+                snapshot_path = candidates[-1] if candidates else None
+                harmonic_payload = _load_json(snapshot_path) if snapshot_path else None
+
+        harmonic_snapshot = harmonic_payload.get("cycle_snapshot", {}) if harmonic_payload else {}
+
+        summary_entry: Dict[str, object] | None = None
+        if isinstance(summary_payload, dict):
+            cycles = summary_payload.get("cycles", []) or []
+            if cycles:
+                summary_entry = cycles[-1]
+
+        def _path_or_none(path: Path) -> str | None:
+            return str(self._relative_to_base(path)) if path else None
+
+        return {
+            "base_dir": str(self.base_dir),
+            "state": {
+                "cycle": state_payload.get("cycle") if isinstance(state_payload, dict) else None,
+                "updated_at": state_payload.get("updated_at") if isinstance(state_payload, dict) else None,
+                "path": _path_or_none(self.state_path),
+            },
+            "summary": {
+                "latest": summary_entry,
+                "path": _path_or_none(self.summary_path),
+            },
+            "heartbeat": None
+            if not isinstance(heartbeat_payload, dict)
+            else {
+                "path": _path_or_none(self.heartbeat_path),
+                "cycle": heartbeat_payload.get("cycle"),
+                "timestamp": heartbeat_payload.get("timestamp"),
+                "glyph_signature": heartbeat_payload.get("glyph_signature"),
+            },
+            "momentum": None
+            if not isinstance(momentum_payload, dict)
+            else {
+                "path": _path_or_none(self.momentum_path),
+                "recent_cycles": len(momentum_payload.get("cycles", []) or []),
+                "cadence_seconds": momentum_payload.get("cadence_seconds"),
+                "glyph_signatures": momentum_payload.get("glyph_signatures"),
+            },
+            "harmonic_memory": None
+            if not harmonic_snapshot
+            else {
+                "path": _path_or_none(snapshot_path) if snapshot_path else None,
+                "cycle_id": harmonic_snapshot.get("cycle_id"),
+                "glyph_signature": harmonic_snapshot.get("state", {}).get("glyph_signature"),
+                "artifact": harmonic_snapshot.get("artifact", {}),
+            },
+        }
+
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
@@ -1594,6 +1673,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Skip writing the rolling heartbeat status file",
     )
+    parser.add_argument(
+        "--status-report",
+        action="store_true",
+        help="Print the latest orchestrator status without running new cycles",
+    )
     args = parser.parse_args()
     base_dir = args.base_dir
     if base_dir is not None:
@@ -1613,4 +1697,8 @@ if __name__ == "__main__":
         heartbeat_path=args.heartbeat_path,
         enable_heartbeat=not args.disable_heartbeat,
     )
+    if args.status_report:
+        report = orchestrator.build_status_report()
+        print(json.dumps(report, indent=2))
+        raise SystemExit(0)
     orchestrator.run()
