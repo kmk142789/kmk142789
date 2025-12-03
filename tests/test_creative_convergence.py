@@ -122,6 +122,8 @@ def test_summary_surfaces_insights_and_headline() -> None:
     assert summary["insights"].strengths
     assert summary["insights"].recommended_actions
     assert "integration" in summary["panels"]
+    assert summary["readiness"] in {"ready", "progressing", "refine"}
+    assert summary["readiness_note"]
 
 
 def test_insights_reflect_lexical_gaps_and_novelty_tension() -> None:
@@ -140,3 +142,39 @@ def test_insights_reflect_lexical_gaps_and_novelty_tension() -> None:
 
     assert "lexical gaps" in actions.lower()
     assert summary["insights"].risks or summary["insights"].strengths
+
+
+def test_readiness_classification_surfaces_delivery_signal() -> None:
+    brief = ConvergenceBrief(
+        theme="signal sanctuary",
+        motifs=["aurora lattice", "tidal archive"],
+        highlights=["aurora lattice", "community beacon"],
+        tone="uplifting",
+        energy=1.4,
+        constellation_seed=11,
+        resonance_seed=21,
+    )
+
+    summary = summarize_convergence(brief)
+
+    assert summary["readiness"] == "ready"
+    assert "fusion" in summary["readiness_note"].lower()
+
+
+def test_readiness_detects_fragile_alignment() -> None:
+    brief = ConvergenceBrief(
+        theme="orbital chorus",
+        motifs=["signal"],
+        highlights=["orbital", "chorus"],
+        tone="reflective",
+        energy=1.0,
+        constellation_seed=14,
+        resonance_seed=14,
+    )
+
+    summary = summarize_convergence(brief)
+
+    assert summary["readiness"] == "refine"
+    assert "coverage" in summary["readiness_note"].lower() or "coherence" in summary[
+        "readiness_note"
+    ].lower()
