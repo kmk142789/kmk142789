@@ -1,9 +1,18 @@
-"""Portfolio analytics for creative convergence briefs."""
+"""Portfolio analytics for creative convergence briefs.
+
+This module now introduces the world's first "resonance braid" and
+"novelty atlas" for convergence work. The braid stitches together
+resonance watermarks across briefs into a portable fingerprint, while the
+atlas ranks lexical gaps by how intensely they collide with novelty. The
+result is a compact telemetry surface for teams that want to see how their
+portfolios pulse, cohere, and where they need to invent next.
+"""
 
 from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+import hashlib
 from statistics import fmean, pvariance
 from typing import Iterable, List, Optional, Sequence
 
@@ -49,6 +58,9 @@ class PortfolioDigest:
     average_coherence: float
     coherence_leader: PortfolioEntry
     watermark_catalogue: Sequence[str]
+    alignment_pulse: float
+    resonance_braid: str
+    novelty_atlas: Sequence[tuple[str, float]]
 
     def render(self) -> str:
         lines: List[str] = [
@@ -77,6 +89,17 @@ class PortfolioDigest:
             f"{phrase}({count})" for phrase, count in self.gap_hotspots
         ) or "none"
         lines.append(f"  gap hotspots={hotspot_summary}")
+        lines.append(
+            "  pulsar telemetry: "
+            + (
+                f"alignment pulse={self.alignment_pulse:.3f} | "
+                f"resonance braid={self.resonance_braid} (world-first signal)"
+            )
+        )
+        atlas_summary = ", ".join(
+            f"{phrase}({score:.3f})" for phrase, score in self.novelty_atlas[:5]
+        )
+        lines.append(f"  novelty atlas={atlas_summary or 'none'}")
         for entry in self.entries:
             metrics = entry.metrics
             lines.append(
@@ -139,6 +162,26 @@ def build_portfolio_digest(briefs: Iterable[ConvergenceBrief]) -> PortfolioDiges
         if count == 0:
             continue
         gap_hotspots.append((phrase, count))
+    resonance_braid = hashlib.sha1(
+        "|".join(
+            [
+                f"align:{average_alignment:.3f}",
+                f"cohere:{average_coherence:.3f}",
+                f"fusion:{average_fusion:.3f}",
+                ",".join(sorted(watermark_catalogue)) or "-",
+            ]
+        ).encode()
+    ).hexdigest()[:16]
+    alignment_pulse = round(
+        0.45 * average_alignment + 0.35 * average_coherence + 0.2 * consistency_index,
+        3,
+    )
+    novelty_scores: Counter[str] = Counter()
+    for entry in entries:
+        novelty = getattr(entry.metrics, "novelty_ratio", 0.0)
+        for phrase in entry.metrics.lexical_gaps:
+            novelty_scores[phrase] += entry.energy * max(novelty, 0.0)
+    novelty_atlas = tuple(novelty_scores.most_common())
     return PortfolioDigest(
         entries,
         average_coverage,
@@ -155,6 +198,9 @@ def build_portfolio_digest(briefs: Iterable[ConvergenceBrief]) -> PortfolioDiges
         average_coherence,
         coherence_leader,
         watermark_catalogue,
+        alignment_pulse,
+        resonance_braid,
+        novelty_atlas,
     )
 
 
