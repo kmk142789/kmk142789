@@ -165,3 +165,19 @@ def test_echo_infinite_builds_status_report(tmp_path: Path) -> None:
     assert harmonic["cycle_id"] == cycle
     assert harmonic["glyph_signature"] == glyph_signature
     assert harmonic["artifact"]["path"] == str(artifacts.narrative.relative_to(tmp_path))
+
+
+def test_echo_infinite_writes_status_report_to_custom_path(tmp_path: Path) -> None:
+    orchestrator = EchoInfinite(base_dir=tmp_path, sleep_seconds=0)
+
+    payload = {"cycle": 7, "glyph": "∇⊸≋∇"}
+    destination = Path("reports") / "status.json"
+
+    written_path = orchestrator._write_status_report(report=payload, path=destination)
+
+    expected_path = tmp_path / destination
+    assert written_path == expected_path
+    assert written_path.exists()
+
+    saved_payload = json.loads(written_path.read_text(encoding="utf-8"))
+    assert saved_payload == payload

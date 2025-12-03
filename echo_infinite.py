@@ -454,6 +454,19 @@ class EchoInfinite:
             },
         )
 
+    def _write_status_report(self, *, report: Dict[str, object], path: Path) -> Path:
+        destination = path.expanduser()
+        if not destination.is_absolute():
+            destination = self.base_dir / destination
+
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        self._log_message(
+            "Status report persisted",
+            details={"path": self._relative_to_base(destination)},
+        )
+        return destination
+
     def _create_cycle_artifacts(
         self,
         *,
@@ -1688,6 +1701,15 @@ if __name__ == "__main__":
         action="store_true",
         help="Print the latest orchestrator status without running new cycles",
     )
+    parser.add_argument(
+        "--status-report-path",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to write the status payload when using --status-report. "
+            "Relative paths are resolved from the orchestrator base directory."
+        ),
+    )
     args = parser.parse_args()
     base_dir = args.base_dir
     if base_dir is not None:
@@ -1709,6 +1731,15 @@ if __name__ == "__main__":
     )
     if args.status_report:
         report = orchestrator.build_status_report()
+        if args.status_report_path:
+            orchestrator._write_status_report(
+                report=report,
+                path=(
+                    args.status_report_path
+                    if args.status_report_path.is_absolute()
+                    else (base_dir or Path.cwd()) / args.status_report_path
+                ),
+            )
         print(json.dumps(report, indent=2))
         raise SystemExit(0)
     orchestrator.run()
