@@ -383,6 +383,9 @@ def _binding_summary(bindings: Iterable[AuthorityBinding]) -> Dict[str, object]:
 
     level_counts = Counter(binding.authority_level for binding in binding_list)
     status_counts = Counter(binding.echolink_status for binding in binding_list)
+    surface_counts = Counter(
+        surface for binding in binding_list for surface in binding.governance_surfaces
+    )
 
     return {
         "owners": _unique(binding.owner for binding in binding_list),
@@ -390,6 +393,9 @@ def _binding_summary(bindings: Iterable[AuthorityBinding]) -> Dict[str, object]:
         "bound_phrases": _unique(binding.bound_phrase for binding in binding_list),
         "glyphs": _unique(binding.glyphs for binding in binding_list),
         "access_scopes": _unique(binding.access for binding in binding_list),
+        "governance_surfaces": _unique(
+            surface for binding in binding_list for surface in binding.governance_surfaces
+        ),
         "authority_levels": [
             {"authority_level": level, "count": count}
             for level, count in sorted(level_counts.items())
@@ -397,6 +403,10 @@ def _binding_summary(bindings: Iterable[AuthorityBinding]) -> Dict[str, object]:
         "status_breakdown": [
             {"status": status, "count": count}
             for status, count in sorted(status_counts.items())
+        ],
+        "surface_breakdown": [
+            {"surface": surface, "count": count}
+            for surface, count in sorted(surface_counts.items())
         ],
     }
 
