@@ -94,6 +94,7 @@ python -m echo.continuum_observatory todo --limit 10
 
 # craft a compact, theme-driven short story
 python scripts/resonant_story.py "orbital solidarity" --beats 4 --seed 42
+python scripts/resonant_story.py "orbital solidarity" --format markdown --title "Orbit Log"
 ```
 
 ### Creative tooling
