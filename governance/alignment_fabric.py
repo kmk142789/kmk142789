@@ -182,11 +182,22 @@ class Policy:
     active_from: Optional[datetime] = None
     active_until: Optional[datetime] = None
     rotation: Optional[PolicyRotation] = None
+    minimum_trust: float = 0.0
 
     def is_applicable(self, context: Dict[str, Any]) -> bool:
         """Return True when all conditions pass for the given context."""
 
-        return all(condition.check(context) for condition in self.conditions)
+        passed, _ = self.evaluate_conditions(context)
+        return passed
+
+    def evaluate_conditions(self, context: Dict[str, Any]) -> tuple[bool, List[str]]:
+        """Evaluate all conditions and return a tuple of (passed, failures)."""
+
+        failures: List[str] = []
+        for condition in self.conditions:
+            if not condition.check(context):
+                failures.append(condition.name)
+        return not failures, failures
 
     def is_active(self, now: Optional[datetime] = None) -> bool:
         current = now or datetime.now(timezone.utc)
@@ -284,6 +295,7 @@ class GovernanceRouter:
         self.mesh = AgentMesh(agents)
         self.channels: Dict[str, ChannelHandler] = channels.copy() if channels else {}
         self.enforcement_events: List[Dict[str, Any]] = []
+        self.last_route_trace: List[Dict[str, Any]] = []
 
         # Provide a default channel that simply records the payload for observability.
         if "record" not in self.channels:
@@ -313,12 +325,37 @@ class GovernanceRouter:
         """Route context through applicable policies and return enforcement results."""
 
         results: List[Dict[str, Any]] = []
+        trace: List[Dict[str, Any]] = []
         now = datetime.now(timezone.utc)
         for policy in self._iter_effective_policies(now):
-            if not policy.is_active(now) or not policy.is_applicable(context):
+            policy_trace = {
+                "policy_id": policy.policy_id,
+                "version": policy.version,
+                "severity": policy.severity,
+                "status": "evaluating",
+            }
+
+            if not policy.is_active(now):
+                policy_trace.update(status="inactive", reason="outside_active_window")
+                trace.append(policy_trace)
                 continue
 
-            agent = self._select_agent(policy)
+            passed, failures = policy.evaluate_conditions(context)
+            if not passed:
+                policy_trace.update(status="skipped", reason="conditions_failed", failures=failures)
+                trace.append(policy_trace)
+                continue
+
+            try:
+                agent = self._select_agent(policy)
+            except RuntimeError as exc:
+                policy_trace.update(status="failed", reason=str(exc))
+                trace.append(policy_trace)
+                continue
+
+            policy_trace["agent"] = agent.agent_id
+            policy_trace["status"] = "dispatched"
+            policy_trace["actions"] = []
             for action in policy.actions:
                 payload = action.build_payload({**context, "policy_id": policy.policy_id, "agent": agent.agent_id})
                 result = self._dispatch(action, payload)
@@ -333,10 +370,14 @@ class GovernanceRouter:
                     "version": policy.version,
                 }
                 results.append(outcome)
+                policy_trace["actions"].append(action.action_id)
                 persistence.log_action(actor, "enforce", outcome)
+
+            trace.append(policy_trace)
 
         if results:
             persistence.save_snapshot({"context": context, "results": results})
+        self.last_route_trace = trace
         return results
 
     def _iter_effective_policies(self, now: datetime) -> Iterable[Policy]:
@@ -349,8 +390,10 @@ class GovernanceRouter:
         """Select an agent aligned with policy tags, roles, or fallback to trusted actor."""
 
         candidates = self.mesh.candidates(policy, self.roles)
+        if policy.minimum_trust > 0:
+            candidates = [agent for agent in candidates if agent.trust >= policy.minimum_trust]
         if not candidates:
-            candidates = list(self.mesh.agents.values())
+            candidates = [agent for agent in self.mesh.agents.values() if agent.trust >= policy.minimum_trust]
         if not candidates:
             raise RuntimeError("No agents registered for governance routing")
         return sorted(candidates, key=lambda agent: agent.trust, reverse=True)[0]

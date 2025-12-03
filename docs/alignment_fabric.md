@@ -29,6 +29,10 @@ leaves an auditable trace.
 - Uses tags and severity to guide agent selection.
 - Supports role affinity, explicit versions, inheritance from a parent policy,
   and optional timed rotations to alternate rules.
+- Optional `minimum_trust` forces agent selection to respect a trust floor so
+  sensitive actions are only executed by vetted actors.
+- `evaluate_conditions` returns a tuple of `(passed, failures)` so callers can
+  surface which predicates blocked enforcement.
 
 ### Agent & AgentMesh
 - Represents a responsible actor with capabilities, tags, trust, and optional
@@ -46,6 +50,8 @@ leaves an auditable trace.
   without external dependencies.
 - Maintains policy versions, resolves inheritance, and enforces timed
   rotations.
+- Exposes `last_route_trace`, a structured log of why policies were dispatched,
+  skipped, or failed so governance authority can be audited offline.
 
 ## Example
 
