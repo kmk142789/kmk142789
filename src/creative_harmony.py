@@ -51,6 +51,7 @@ class ResonanceContext:
     structural_history: List[str] = field(default_factory=list)
     transitions: List[str] = field(default_factory=list)
     highlight_history: List[str] = field(default_factory=list)
+    highlight_sources: List[str] = field(default_factory=list)
     timestamp: str = field(
         default_factory=lambda: datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     )
@@ -87,6 +88,7 @@ class ResonanceContext:
 
         focus = highlight or self.prompt.theme
         self.highlight_history.append(focus)
+        self.highlight_sources.append("highlight" if highlight else "theme")
 
 
 @dataclass(frozen=True)
@@ -102,8 +104,9 @@ class ResonanceReport:
     structure: Sequence[str]
     transitions: Sequence[str]
     highlights_used: Sequence[str]
+    highlight_sources: Sequence[str]
     timestamp: str
-    metrics: Dict[str, int]
+    metrics: Dict[str, float | int]
 
     def to_dict(self) -> Dict[str, object]:
         """Return a serialisable representation of the report."""
@@ -118,6 +121,7 @@ class ResonanceReport:
             "structure": list(self.structure),
             "transitions": list(self.transitions),
             "highlights_used": list(self.highlights_used),
+            "highlight_sources": list(self.highlight_sources),
             "timestamp": self.timestamp,
             "metrics": dict(self.metrics),
         }
@@ -139,6 +143,10 @@ class ResonanceReport:
                 f"- Transitions: {self.metrics.get('transition_count', 0)}",
                 f"- Unique highlights: {self.metrics.get('unique_highlights', 0)}",
                 f"- Words: {self.metrics.get('word_count', 0)}",
+                (
+                    "- Highlight coverage: "
+                    f"{self.metrics.get('provided_highlight_ratio', 0.0) * 100:.0f}%"
+                ),
             ]
         )
 
@@ -191,7 +199,34 @@ class ResonanceReport:
                     f"sentences={self.metrics.get('sentence_count', 0)}, "
                     f"transitions={self.metrics.get('transition_count', 0)}, "
                     f"unique_highlights={self.metrics.get('unique_highlights', 0)}, "
-                    f"words={self.metrics.get('word_count', 0)}"
+                    f"words={self.metrics.get('word_count', 0)}, "
+                    "highlight_coverage="
+                    f"{self.metrics.get('provided_highlight_ratio', 0.0) * 100:.0f}%"
+                ),
+            ]
+        )
+
+    def to_analysis(self) -> str:
+        """Return a diagnostic view of highlight usage and structural balance."""
+
+        coverage = self.metrics.get("provided_highlight_ratio", 0.0) * 100
+        structure = " → ".join(self.structure) if self.structure else "n/a"
+        seeds = self.seed if self.seed is not None else "random"
+        highlight_breakdown = Counter(self.highlight_sources)
+        return "\n".join(
+            [
+                f"Analysis for '{self.theme}' ({self.tone}, seed={seeds})",
+                f"Structure blueprint: {structure}",
+                f"Highlight coverage: {coverage:.0f}% from provided prompts",
+                f"Sentence count: {self.metrics.get('sentence_count', 0)}",
+                f"Transitions: {self.metrics.get('transition_count', 0)}",
+                (
+                    "Highlight sources: "
+                    + ", ".join(
+                        f"{source}×{count}" for source, count in highlight_breakdown.items()
+                    )
+                    if highlight_breakdown
+                    else "Highlight sources: n/a"
                 ),
             ]
         )
@@ -213,6 +248,10 @@ class ResonanceReport:
                 f"<li>Transitions: {self.metrics.get('transition_count', 0)}</li>",
                 f"<li>Unique highlights: {self.metrics.get('unique_highlights', 0)}</li>",
                 f"<li>Words: {self.metrics.get('word_count', 0)}</li>",
+                (
+                    "<li>Highlight coverage: "
+                    f"{self.metrics.get('provided_highlight_ratio', 0.0) * 100:.0f}%</li>"
+                ),
             ]
         )
 
@@ -510,6 +549,12 @@ def compose_resonance_report(prompt: ResonancePrompt) -> ResonanceReport:
         "transition_count": len(context.transitions),
         "unique_highlights": len(set(context.highlight_history)),
         "word_count": len(" ".join(body).split()),
+        "provided_highlight_ratio": (
+            sum(1 for source in context.highlight_sources if source == "highlight")
+            / len(context.highlight_sources)
+            if context.highlight_sources
+            else 0.0
+        ),
     }
     return ResonanceReport(
         text=text,
@@ -521,6 +566,7 @@ def compose_resonance_report(prompt: ResonancePrompt) -> ResonanceReport:
         structure=tuple(structure),
         transitions=tuple(context.transitions),
         highlights_used=tuple(context.highlight_history),
+        highlight_sources=tuple(context.highlight_sources),
         timestamp=context.timestamp,
         metrics=metrics,
     )
@@ -563,7 +609,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f",
         "--format",
-        choices=["text", "json", "markdown", "summary", "html", "trace"],
+        choices=["text", "json", "markdown", "summary", "html", "trace", "analysis"],
         default="text",
         help="Output format. JSON returns the structured resonance report.",
     )
@@ -589,6 +635,7 @@ if __name__ == "__main__":
         "summary": report.to_summary,
         "html": report.to_html,
         "trace": report.to_trace,
+        "analysis": report.to_analysis,
         "text": lambda: report.text,
     }
 
