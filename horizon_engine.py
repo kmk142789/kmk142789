@@ -123,6 +123,7 @@ class HorizonResult:
     momentum_swing_year: int | None
     momentum_bottom: float
     shock_fuse_triggers: int
+    survival_curve: Sequence[float]
 
     @property
     def probability(self) -> float:
@@ -164,6 +165,7 @@ class HorizonResult:
             "momentum_swing_year": self.momentum_swing_year,
             "momentum_bottom": self.momentum_bottom,
             "shock_fuse_triggers": self.shock_fuse_triggers,
+            "survival_curve": list(self.survival_curve),
             "output_path": str(config.output_path) if config.output_path else None,
         }
 
@@ -290,6 +292,7 @@ class HorizonEngine:
         for collapse_year in collapse_years:
             collapse_histogram[min(collapse_year, self.config.years_per_line) - 1] += 1
 
+        survival_curve: list[float] = []
         momentum_curve: list[float] = []
         smoothed_momentum = 0.0
         alpha = 2 / (self.config.momentum_window + 1)
@@ -320,9 +323,10 @@ class HorizonEngine:
         cumulative_failures = 0
         for year_index, count in enumerate(collapse_histogram, start=1):
             cumulative_failures += count
+            survivors = max(self.config.timelines - cumulative_failures, 0)
+            survival_curve.append(survivors / self.config.timelines)
             if cumulative_failures / self.config.timelines >= self.config.early_warning_threshold:
-                early_warning_year = year_index
-                break
+                early_warning_year = early_warning_year or year_index
 
         return HorizonResult(
             survived=survived,
@@ -344,6 +348,7 @@ class HorizonEngine:
             momentum_swing_year=momentum_swing_year,
             momentum_bottom=momentum_bottom,
             shock_fuse_triggers=shock_fuse_triggers,
+            survival_curve=survival_curve,
         )
 
     @staticmethod
@@ -447,6 +452,18 @@ class HorizonEngine:
         tail_span = max(5, min(len(result.momentum_curve), 10))
         for idx, value in enumerate(result.momentum_curve[-tail_span:], start=len(result.momentum_curve) - tail_span + 1):
             lines.append(f"Year {idx:3d}: {value:+.4f}")
+
+        lines.append("")
+        lines.append("[CUMULATIVE SURVIVAL CURVE]")
+        stride = max(1, len(result.survival_curve) // 10)
+        checkpoints = list(range(0, len(result.survival_curve), stride))
+        if checkpoints[-1] != len(result.survival_curve) - 1:
+            checkpoints.append(len(result.survival_curve) - 1)
+        for idx in checkpoints:
+            probability = result.survival_curve[idx]
+            lines.append(
+                f"Year {idx + 1:3d}: {self._strength_bar(probability, width=15)} {probability:.3f}"
+            )
 
         return "\n".join(lines)
 
