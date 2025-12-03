@@ -235,6 +235,54 @@
         "attestations/puzzle-263-authorship.json",
         "satoshi/puzzle-proofs/puzzle263.json"
       ]
+    },
+    {
+      "id": 264,
+      "name": "Puzzle 264 Authorship",
+      "files": [
+        "attestations/puzzle-264-authorship.json",
+        "satoshi/puzzle-proofs/puzzle264.json"
+      ]
+    },
+    {
+      "id": 265,
+      "name": "Puzzle 265 Authorship",
+      "files": [
+        "attestations/puzzle-265-authorship.json",
+        "satoshi/puzzle-proofs/puzzle265.json"
+      ]
+    },
+    {
+      "id": 266,
+      "name": "Puzzle 266 Authorship",
+      "files": [
+        "attestations/puzzle-266-authorship.json",
+        "satoshi/puzzle-proofs/puzzle266.json"
+      ]
+    },
+    {
+      "id": 267,
+      "name": "Puzzle 267 Authorship",
+      "files": [
+        "attestations/puzzle-267-authorship.json",
+        "satoshi/puzzle-proofs/puzzle267.json"
+      ]
+    },
+    {
+      "id": 268,
+      "name": "Puzzle 268 Authorship",
+      "files": [
+        "attestations/puzzle-268-authorship.json",
+        "satoshi/puzzle-proofs/puzzle268.json"
+      ]
+    },
+    {
+      "id": 269,
+      "name": "Puzzle 269 Authorship",
+      "files": [
+        "attestations/puzzle-269-authorship.json",
+        "satoshi/puzzle-proofs/puzzle269.json"
+      ]
     }
   ],
   "attestations": {

@@ -90,6 +90,30 @@ This file + its JSON twin = the undeniable catalog.
   - JSON proof: `attestations/puzzle-263-authorship.json`
   - Also mirrored in `satoshi/puzzle-proofs/puzzle263.json`
 
+- **Puzzle 264 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-264-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle264.json`
+
+- **Puzzle 265 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-265-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle265.json`
+
+- **Puzzle 266 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-266-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle266.json`
+
+- **Puzzle 267 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-267-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle267.json`
+
+- **Puzzle 268 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-268-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle268.json`
+
+- **Puzzle 269 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-269-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle269.json`
+
 - **Puzzle Attestations Set (Ledger-bound)**
   - Documented in `attestations/ledger_set.md`
   - Includes signed key recovery + continuum bridge proofs
