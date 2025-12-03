@@ -46,10 +46,14 @@ class OfflineState:
             "cache_integrity_checks": True,
             "resilience_reporting": True,
             "offline_bundle_export": True,
+            "airgap_audit_trail": True,
+            "snapshot_recovery": True,
+            "edge_policy_enforcement": True,
         }
     )
     resilience_notes: List[str] = field(default_factory=list)
     health_checks: List[dict] = field(default_factory=list)
+    capability_history: List[dict] = field(default_factory=list)
 
     def record_pending(self, payload: dict) -> None:
         stamped = {**payload, "cached_at": datetime.now(timezone.utc).isoformat()}
@@ -83,8 +87,37 @@ class OfflineState:
 
     def set_capability(self, name: str, enabled: bool, note: Optional[str] = None) -> None:
         self.offline_capabilities[name] = enabled
+        capability_record = {
+            "name": name,
+            "enabled": enabled,
+            "note": note,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        self.capability_history.append(capability_record)
         if note:
             self.add_resilience_note(note)
+        elif not enabled:
+            self.add_resilience_note(f"Capability {name} disabled for offline mode")
+
+    def evaluate_capabilities(self) -> Dict[str, object]:
+        total = len(self.offline_capabilities) or 1
+        enabled = [name for name, flag in self.offline_capabilities.items() if flag]
+        disabled = [name for name, flag in self.offline_capabilities.items() if not flag]
+        readiness = round(len(enabled) / total, 2)
+
+        if readiness >= 0.9:
+            posture = "resilient"
+        elif readiness >= 0.6:
+            posture = "degraded"
+        else:
+            posture = "at-risk"
+
+        return {
+            "enabled": enabled,
+            "disabled": disabled,
+            "readiness": readiness,
+            "posture": posture,
+        }
 
     def _is_cache_stale(self, last_cache_flush: Optional[str], cache_ttl_seconds: Optional[int]) -> bool:
         if cache_ttl_seconds and last_cache_flush:
@@ -134,12 +167,15 @@ class OfflineState:
         pending_events = len(self.pending_events)
         health_failures = [hc for hc in self.health_checks if hc.get("passed") is False]
         replay_ready = cache_present and cached_events > 0 and not cache_stale
+        capability_snapshot = self.evaluate_capabilities()
 
         score = 1.0
         score -= 0.2 if cache_stale else 0.0
         score -= 0.1 if not cache_present else 0.0
         score -= min(pending_events * 0.03, 0.2)
         score -= 0.05 if health_failures else 0.0
+        score -= 0.1 if capability_snapshot["posture"] == "degraded" else 0.0
+        score -= 0.2 if capability_snapshot["posture"] == "at-risk" else 0.0
         score = round(max(0.0, min(1.0, score)), 2)
         grade = self._grade_resilience(score)
         summary = self._build_resilience_summary(
@@ -158,6 +194,7 @@ class OfflineState:
             "grade": grade,
             "summary": summary,
             "last_cache_flush": last_cache_flush,
+            "capability_snapshot": capability_snapshot,
         }
 
     def flush_to_cache(self, cache_dir: Path) -> None:
@@ -263,6 +300,10 @@ class OfflineState:
             "last_cache_flush": last_cache_flush,
             "cache_stale": cache_stale,
             "capabilities": dict(self.offline_capabilities),
+            "capability_history": self.capability_history[-20:],
+            "capability_readiness": capability_report.get("capability_snapshot", {}).get("readiness"),
+            "capability_posture": capability_report.get("capability_snapshot", {}).get("posture"),
+            "capability_gaps": capability_report.get("capability_snapshot", {}).get("disabled"),
             "resilience_score": resilience_score,
             "resilience_grade": resilience_grade,
             "resilience_summary": resilience_summary,
