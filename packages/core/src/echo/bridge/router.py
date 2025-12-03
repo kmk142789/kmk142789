@@ -93,6 +93,12 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         linkedin_secret_name=os.getenv("ECHO_BRIDGE_LINKEDIN_SECRET", "LINKEDIN_ACCESS_TOKEN"),
         reddit_subreddit=os.getenv("ECHO_BRIDGE_REDDIT_SUBREDDIT"),
         reddit_secret_name=os.getenv("ECHO_BRIDGE_REDDIT_SECRET", "REDDIT_APP_TOKEN"),
+        pagerduty_routing_key_secret=os.getenv("ECHO_BRIDGE_PAGERDUTY_SECRET"),
+        pagerduty_source=os.getenv("ECHO_BRIDGE_PAGERDUTY_SOURCE", "echo-bridge"),
+        pagerduty_component=os.getenv("ECHO_BRIDGE_PAGERDUTY_COMPONENT"),
+        pagerduty_group=os.getenv("ECHO_BRIDGE_PAGERDUTY_GROUP"),
+        opsgenie_api_key_secret=os.getenv("ECHO_BRIDGE_OPSGENIE_SECRET"),
+        opsgenie_team=os.getenv("ECHO_BRIDGE_OPSGENIE_TEAM"),
     )
 
 
@@ -281,6 +287,22 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 requires_secrets=[api.reddit_secret_name]
                 if getattr(api, "reddit_secret_name", None)
                 else [],
+            )
+        )
+    if getattr(api, "pagerduty_routing_key_secret", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="pagerduty",
+                action="trigger_event",
+                requires_secrets=[api.pagerduty_routing_key_secret],
+            )
+        )
+    if getattr(api, "opsgenie_api_key_secret", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="opsgenie",
+                action="create_alert",
+                requires_secrets=[api.opsgenie_api_key_secret],
             )
         )
     return connectors

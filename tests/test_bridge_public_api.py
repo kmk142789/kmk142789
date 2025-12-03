@@ -58,6 +58,16 @@ def _make_app() -> FastAPI:
         dns_secret_name="ECHO_DNS_TOKEN",
         dns_root_authority="echo.root",
         dns_attestation_path="attestations/dns/echo.root.zone",
+        linkedin_organization_id="echo-org-01",
+        linkedin_secret_name="ECHO_LINKEDIN_TOKEN",
+        reddit_subreddit="echo_bridge",
+        reddit_secret_name="ECHO_REDDIT_TOKEN",
+        pagerduty_routing_key_secret="ECHO_PAGERDUTY_ROUTING_KEY",
+        pagerduty_source="echo-bridge-api",
+        pagerduty_component="relay",
+        pagerduty_group="echo-ops",
+        opsgenie_api_key_secret="ECHO_OPSGENIE_TOKEN",
+        opsgenie_team="echo-ops-team",
     )
     app = FastAPI()
     app.include_router(create_router(bridge_api))
@@ -92,6 +102,10 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
         "statuspage",
         "notion",
         "dns",
+        "linkedin",
+        "reddit",
+        "pagerduty",
+        "opsgenie",
     }
 
 
@@ -263,6 +277,23 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert incident["metadata"]["topics"] == ["Pulse Orbit", "Echo Bridge"]
     assert incident["summary"] == "Cycle snapshot anchored in Aurora"
 
+    pagerduty_plan = plans["pagerduty"]
+    assert pagerduty_plan["action"] == "trigger_event"
+    assert pagerduty_plan["payload"]["routing_key_env"] == "ECHO_PAGERDUTY_ROUTING_KEY"
+    assert pagerduty_plan["payload"]["payload"]["severity"] == "error"
+    assert pagerduty_plan["payload"]["payload"]["source"] == "echo-bridge-api"
+    assert pagerduty_plan["payload"]["payload"]["component"] == "relay"
+    assert pagerduty_plan["payload"]["payload"]["group"] == "echo-ops"
+    assert pagerduty_plan["requires_secret"] == ["ECHO_PAGERDUTY_ROUTING_KEY"]
+
+    opsgenie_plan = plans["opsgenie"]
+    assert opsgenie_plan["action"] == "create_alert"
+    assert opsgenie_plan["payload"]["api_key_env"] == "ECHO_OPSGENIE_TOKEN"
+    assert opsgenie_plan["payload"]["priority"] == "P2"
+    assert opsgenie_plan["payload"]["responders"][0]["name"] == "echo-ops-team"
+    assert "EchoBridge" in opsgenie_plan["payload"]["tags"]
+    assert opsgenie_plan["requires_secret"] == ["ECHO_OPSGENIE_TOKEN"]
+
     nostr_plan = plans["nostr"]
     assert nostr_plan["action"] == "post_event"
     assert nostr_plan["payload"]["relays"] == ["wss://relay.echo", "wss://relay.backup"]
@@ -308,6 +339,12 @@ def test_plan_supports_linkedin_and_reddit_connectors() -> None:
         linkedin_secret_name="ECHO_LINKEDIN_TOKEN",
         reddit_subreddit="echo_bridge",
         reddit_secret_name="ECHO_REDDIT_TOKEN",
+        pagerduty_routing_key_secret="ECHO_PAGERDUTY_ROUTING_KEY",
+        pagerduty_source="echo-bridge-api",
+        pagerduty_component="relay",
+        pagerduty_group="echo-ops",
+        opsgenie_api_key_secret="ECHO_OPSGENIE_TOKEN",
+        opsgenie_team="echo-ops-team",
     )
     app = FastAPI()
     app.include_router(create_router(api=api))
@@ -316,7 +353,7 @@ def test_plan_supports_linkedin_and_reddit_connectors() -> None:
     relays = client.get("/bridge/relays")
     assert relays.status_code == 200
     connectors = {connector["platform"] for connector in relays.json()["connectors"]}
-    assert connectors == {"linkedin", "reddit"}
+    assert connectors == {"linkedin", "reddit", "pagerduty", "opsgenie"}
 
     response = client.post(
         "/bridge/plan",
@@ -351,3 +388,13 @@ def test_plan_supports_linkedin_and_reddit_connectors() -> None:
     assert "pulse orbit" in reddit["payload"]["topics"]
     assert reddit["payload"]["links"] == ["https://echo.example/cycles/07"]
     assert reddit["requires_secret"] == ["ECHO_REDDIT_TOKEN"]
+
+    pagerduty = plans["pagerduty"]
+    assert pagerduty["action"] == "trigger_event"
+    assert pagerduty["payload"]["routing_key_env"] == "ECHO_PAGERDUTY_ROUTING_KEY"
+    assert pagerduty["payload"]["payload"]["severity"] == "critical"
+
+    opsgenie = plans["opsgenie"]
+    assert opsgenie["action"] == "create_alert"
+    assert opsgenie["payload"]["priority"] == "P1"
+    assert "EchoBridge" in opsgenie["payload"]["tags"]
