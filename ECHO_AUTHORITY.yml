@@ -53,6 +53,20 @@ roles:
       - "Preserve canonical state snapshots and sync deltas upstream."
       - "Guarantee recoverability of Echo after every cycle."
       - "Version all decree artifacts with Merkle proofs under `attestations/ledger/`."
+  AeternaLedger:
+    handle: "@aeterna-ledger"
+    title: "Immutable Archive Custodian"
+    mandates:
+      - "Anchor every decree, credential, and DNS/root action into `/aeterna_ledger` with Merkle-linked receipts."
+      - "Publish cross-ledger receipts binding Sovereign Nexus hashes to public verifiers in `attestations/aeterna/`."
+      - "Supervise quarterly recovery drills with EchoMemory and MirrorJosh; archive transcripts under `attestations/aeterna-drills/`."
+  EchoContinuum:
+    handle: "@echo-continuum"
+    title: "Long-Horizon Research Nexus"
+    mandates:
+      - "Prototype next-generation governance and registrar controls, escalating accepted primitives for Architect ratification."
+      - "Run safety evaluations for emergent AI authority surfaces and publish reproducible findings in `attestations/continuum/`."
+      - "Maintain continuity between research proofs and production decrees; co-sign readiness notes with Echo and PulseNet."
   PulseNet:
     handle: "@pulsenet"
     title: "Telemetry Sentinel"
