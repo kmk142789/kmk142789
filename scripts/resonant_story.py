@@ -42,6 +42,7 @@ def build_story(
     beat_count: int,
     *,
     seed: int | None = None,
+    title: str | None = None,
     format: str = "text",
     width: int = 88,
 ) -> str:
@@ -51,17 +52,24 @@ def build_story(
         theme: Central idea guiding the content.
         beat_count: Number of narrative beats to generate.
         seed: Optional deterministic random seed.
-        format: Either ``"text"`` for human-readable paragraphs or ``"json"`` for
-            structured output.
+        title: Optional explicit title for the story. When omitted a default
+            based on the theme is used.
+        format: Either ``"text"`` for human-readable paragraphs, ``"json"`` for
+            structured output, or ``"markdown"`` for a lightly formatted
+            digest.
         width: Maximum line width applied when wrapping paragraphs.
     """
 
-    payload = build_story_payload(theme, beat_count, seed=seed, width=width)
+    payload = build_story_payload(
+        theme, beat_count, seed=seed, title=title, width=width
+    )
 
     if format == "text":
         return "\n\n".join(payload["paragraphs"])
     if format == "json":
         return json.dumps(payload, ensure_ascii=False, indent=2)
+    if format == "markdown":
+        return _render_markdown(payload, width=width)
     raise ValueError(f"Unsupported format: {format}")
 
 
@@ -70,6 +78,7 @@ def build_story_payload(
     beat_count: int,
     *,
     seed: int | None = None,
+    title: str | None = None,
     width: int = 88,
 ) -> dict:
     """Return the structured representation of a generated story."""
@@ -81,9 +90,11 @@ def build_story_payload(
 
     rng = random.Random(seed)
     beats = _generate_beats(theme, beat_count, rng)
+    resolved_title = _resolve_title(theme, title)
     paragraphs = _assemble_paragraphs(beats, theme, width=width)
     payload = {
         "theme": theme,
+        "title": resolved_title,
         "beats": [asdict(beat) for beat in beats],
         "paragraphs": paragraphs,
     }
@@ -151,6 +162,45 @@ def _assemble_paragraphs(
     return [opening, body, closing]
 
 
+def _resolve_title(theme: str, title: str | None) -> str:
+    if title:
+        return title
+    return f"Resonant story about {theme}"
+
+
+def _render_markdown(payload: dict, *, width: int) -> str:
+    title = payload["title"]
+    theme = payload["theme"]
+
+    opening, body, closing = payload["paragraphs"]
+
+    beat_lines = [
+        f"- {StoryBeat(**beat).render()}" for beat in payload.get("beats", [])
+    ]
+
+    sections = [
+        f"# {title}",
+        f"_Theme: {theme}_",
+        "",
+        opening,
+        "",
+        body,
+        "",
+        "## Beats",
+        *beat_lines,
+        "",
+        closing,
+    ]
+
+    wrapped_sections = [
+        textwrap.fill(section, width=width) if section and not section.startswith("#") and not section.startswith("_") and not section.startswith("-")
+        else section
+        for section in sections
+    ]
+
+    return "\n".join(wrapped_sections)
+
+
 # --- CLI -------------------------------------------------------------------------
 
 
@@ -164,6 +214,12 @@ def main(argv: Iterable[str] | None = None) -> int:
         help="number of narrative beats to weave together",
     )
     parser.add_argument(
+        "--title",
+        type=str,
+        default=None,
+        help="optional explicit title for the story",
+    )
+    parser.add_argument(
         "--seed",
         type=int,
         default=None,
@@ -171,9 +227,9 @@ def main(argv: Iterable[str] | None = None) -> int:
     )
     parser.add_argument(
         "--format",
-        choices=("text", "json"),
+        choices=("text", "json", "markdown"),
         default="text",
-        help="output mode: readable paragraphs or structured JSON",
+        help="output mode: readable paragraphs, structured JSON, or markdown digest",
     )
     parser.add_argument(
         "--width",
@@ -188,6 +244,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         theme=args.theme,
         beat_count=args.beats,
         seed=args.seed,
+        title=args.title,
         format=args.format,
         width=args.width,
     )

@@ -22,3 +22,22 @@ def test_build_story_payload_respects_width():
     payload = rs.build_story_payload("tidal recursion", 1, seed=11, width=40)
     for paragraph in payload["paragraphs"]:
         assert all(len(line) <= 40 for line in paragraph.splitlines())
+
+
+def test_markdown_format_includes_title_and_beats():
+    output = rs.build_story(
+        "orbital solidarity",
+        3,
+        seed=5,
+        title="Orbit Log",
+        format="markdown",
+    )
+
+    assert output.startswith("# Orbit Log")
+    assert "_Theme: orbital solidarity_" in output
+    assert output.count("- ") == 3
+
+
+def test_build_story_payload_sets_default_title():
+    payload = rs.build_story_payload("tidal recursion", 2, seed=3)
+    assert payload["title"] == "Resonant story about tidal recursion"
