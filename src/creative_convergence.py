@@ -70,6 +70,8 @@ class IntegrationInsights:
     strengths: Tuple[str, ...]
     risks: Tuple[str, ...]
     recommended_actions: Tuple[str, ...]
+    delivery_readiness: str
+    delivery_note: str
 
 
 def _build_constellation_panel(
@@ -273,6 +275,8 @@ def _derive_integration_insights(
             f"Refine the '{brief.tone}' tone with clearer anchors to stabilize coherence."
         )
 
+    readiness, readiness_note = _classify_readiness(metrics)
+
     unique_strengths = tuple(dict.fromkeys(strengths))
     unique_risks = tuple(dict.fromkeys(risks))
     unique_actions = tuple(dict.fromkeys(actions)) or (
@@ -283,6 +287,33 @@ def _derive_integration_insights(
         strengths=unique_strengths,
         risks=unique_risks,
         recommended_actions=unique_actions,
+        delivery_readiness=readiness,
+        delivery_note=readiness_note,
+    )
+
+
+def _classify_readiness(metrics: IntegrationMetrics) -> tuple[str, str]:
+    """Summarize delivery readiness using key integration signals."""
+
+    if (
+        metrics.fusion_index >= 0.7
+        and metrics.coherence >= 0.7
+        and metrics.coverage >= 0.5
+    ):
+        return (
+            "ready",
+            "Fusion and coherence pass delivery thresholds; shared lexicon supports immediate drafting.",
+        )
+
+    if metrics.fusion_index >= 0.55 and metrics.coherence >= 0.55:
+        return (
+            "progressing",
+            "Core alignment is present—bridge remaining gaps and trim novelty to lock in flow.",
+        )
+
+    return (
+        "refine",
+        "Coverage and coherence are light; reinforce motifs and reduce novelty before delivery.",
     )
 
 
@@ -329,6 +360,8 @@ def summarize_convergence(brief: ConvergenceBrief) -> dict[str, object]:
         },
         "metrics": metrics,
         "insights": insights,
+        "readiness": insights.delivery_readiness,
+        "readiness_note": insights.delivery_note,
     }
 
 
