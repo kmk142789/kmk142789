@@ -2,6 +2,19 @@
   "updated": "2025-05-21",
   "features": [
     {
+      "id": "cloud-offline-compatibility",
+      "focus": "Cloud",
+      "status": "Ready",
+      "title": "Offline-compatible Echo Computer",
+      "description": "Bundle caches and fallbacks so Echo Computer boots cleanly without network access.",
+      "impact": "Keeps the coding environment usable during air-gapped or travel windows.",
+      "blueprint": [
+        "Pre-bake npm and Python dependency caches into `workspaces/offline-cache` with a refresh script.",
+        "Detect offline mode at startup and skip remote telemetry calls, rendering a status banner instead.",
+        "Expose an `/offline/readiness` JSON endpoint that reports cached images, checksums, and last refresh time."
+      ]
+    },
+    {
       "id": "code-burst-link",
       "focus": "Code",
       "status": "Ready",
