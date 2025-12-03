@@ -8,6 +8,7 @@ from src.creative_convergence import (
     ConvergenceBrief,
     compile_convergence_panels,
     compose_convergence_report,
+    summarize_convergence,
 )
 
 
@@ -102,3 +103,40 @@ def test_integration_metrics_surface_density_coherence_and_watermark() -> None:
     assert metrics.resonance_watermark
     assert metrics.resonance_watermark == metrics_again.resonance_watermark
     assert "watermark" in panel
+
+
+def test_summary_surfaces_insights_and_headline() -> None:
+    brief = ConvergenceBrief(
+        theme="aurora observatory",
+        motifs=["aurora lattice"],
+        highlights=["aurora lattice", "quantum beacon"],
+        tone="radiant",
+        energy=1.2,
+        constellation_seed=9,
+        resonance_seed=9,
+    )
+
+    summary = summarize_convergence(brief)
+
+    assert "coverage=" in summary["headline"]
+    assert summary["insights"].strengths
+    assert summary["insights"].recommended_actions
+    assert "integration" in summary["panels"]
+
+
+def test_insights_reflect_lexical_gaps_and_novelty_tension() -> None:
+    brief = ConvergenceBrief(
+        theme="orbital chorus",
+        motifs=["signal"],
+        highlights=["orbital", "chorus"],
+        tone="reflective",
+        energy=1.0,
+        constellation_seed=14,
+        resonance_seed=14,
+    )
+
+    summary = summarize_convergence(brief)
+    actions = " ".join(summary["insights"].recommended_actions)
+
+    assert "lexical gaps" in actions.lower()
+    assert summary["insights"].risks or summary["insights"].strengths
