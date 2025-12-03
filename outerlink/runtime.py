@@ -32,10 +32,12 @@ class OuterLinkRuntime:
 
     def emit_state(self) -> Dict[str, Any]:
         metrics = self.dsi.get_metrics()
+        offline_snapshot = self.offline_state.status(self.config.offline_cache_dir)
         payload = {
-            "online": self.offline_state.online,
-            "last_sync": self.offline_state.last_sync,
+            "online": offline_snapshot["online"],
+            "last_sync": offline_snapshot["last_sync"],
             "metrics": metrics.__dict__,
+            "offline": offline_snapshot,
         }
         self.event_bus.emit("device_status", payload)
         return payload
@@ -49,6 +51,7 @@ class OuterLinkRuntime:
     def flush_events(self) -> None:
         if self.offline_state.online:
             cached_events = self.offline_state.restore_cache(self.config.offline_cache_dir)
+            self.offline_state.pending_events.clear()
             new_events = [event.to_dict() for event in self.event_bus.history[self._last_flush_index :]]
 
             self._write_events(cached_events + new_events)

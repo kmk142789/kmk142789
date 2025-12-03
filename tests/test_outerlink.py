@@ -71,3 +71,40 @@ def test_dsi_sensor_stub(tmp_path):
 
     assert reading.name == "accelerometer"
     assert "x" in reading.value
+
+
+def test_emit_state_surfaces_offline_cache(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        event_log=tmp_path / "events.log",
+        offline_cache_dir=tmp_path / "cache",
+    )
+    offline_state = OfflineState(online=False)
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.safe_run_shell("echo", ["cache-me"])
+    runtime.flush_events()
+
+    state = runtime.emit_state()
+    assert state["offline"]["cached_events"] == 1
+    assert state["offline"]["pending_events"] == 0
+    assert state["offline"]["online"] is False
+
+
+def test_pending_events_drained_when_connection_recovers(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        event_log=tmp_path / "events.log",
+    )
+    offline_state = OfflineState(online=False)
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.safe_run_shell("echo", ["queued"])
+    runtime.offline_state.mark_online()
+    runtime.flush_events()
+
+    log_lines = config.event_log.read_text().splitlines()
+    assert len(log_lines) == 1
+    assert not runtime.offline_state.pending_events
