@@ -89,6 +89,12 @@ class EchoBridgeAPI:
         linkedin_secret_name: str = "LINKEDIN_ACCESS_TOKEN",
         reddit_subreddit: Optional[str] = None,
         reddit_secret_name: str = "REDDIT_APP_TOKEN",
+        pagerduty_routing_key_secret: Optional[str] = None,
+        pagerduty_source: str = "echo-bridge",
+        pagerduty_component: Optional[str] = None,
+        pagerduty_group: Optional[str] = None,
+        opsgenie_api_key_secret: Optional[str] = None,
+        opsgenie_team: Optional[str] = None,
     ) -> None:
         self.github_repository = github_repository
         self.telegram_chat_id = telegram_chat_id
@@ -139,6 +145,20 @@ class EchoBridgeAPI:
         self.linkedin_secret_name = linkedin_secret_name
         self.reddit_subreddit = (reddit_subreddit or "").strip() or None
         self.reddit_secret_name = reddit_secret_name
+        self.pagerduty_routing_key_secret = (
+            pagerduty_routing_key_secret.strip()
+            if isinstance(pagerduty_routing_key_secret, str)
+            else None
+        )
+        self.pagerduty_source = pagerduty_source or "echo-bridge"
+        self.pagerduty_component = (pagerduty_component or "").strip() or None
+        self.pagerduty_group = (pagerduty_group or "").strip() or None
+        self.opsgenie_api_key_secret = (
+            opsgenie_api_key_secret.strip()
+            if isinstance(opsgenie_api_key_secret, str)
+            else None
+        )
+        self.opsgenie_team = (opsgenie_team or "").strip() or None
 
     def plan_identity_relay(
         self,
@@ -580,6 +600,32 @@ class EchoBridgeAPI:
                     payload=context.base_document,
                 )
             )
+        if self.pagerduty_routing_key_secret and self._platform_enabled(
+            "pagerduty", allowed_platforms
+        ):
+            context.plain_text = context.plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._pagerduty_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=context.plain_text,
+                )
+            )
         if self.linkedin_organization_id and self._platform_enabled(
             "linkedin", allowed_platforms
         ):
@@ -628,6 +674,33 @@ class EchoBridgeAPI:
                     topics=topic_items,
                     priority=priority_text,
                     text=context.social_text,
+                )
+            )
+        if self.opsgenie_api_key_secret and self._platform_enabled(
+            "opsgenie", allowed_platforms
+        ):
+            context.plain_text = context.plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._opsgenie_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=context.plain_text,
+                    document=context.base_document,
                 )
             )
 
@@ -1314,6 +1387,96 @@ class EchoBridgeAPI:
         requires = [self.webhook_secret_name] if self.webhook_secret_name else []
         return BridgePlan(platform="webhook", action="post_json", payload=body, requires_secret=requires)
 
+    def _pagerduty_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: str,
+    ) -> BridgePlan:
+        payload = {
+            "routing_key_env": self.pagerduty_routing_key_secret,
+            "event_action": "trigger",
+            "dedup_key": f"{identity}:{cycle}",
+            "payload": {
+                "summary": summary or f"Echo Bridge Relay {identity}/{cycle}",
+                "source": self.pagerduty_source,
+                "severity": self._pagerduty_severity(priority),
+                "class": "EchoBridgeRelay",
+                "component": self.pagerduty_component,
+                "group": self.pagerduty_group,
+                "custom_details": {
+                    "identity": identity,
+                    "cycle": cycle,
+                    "signature": signature,
+                    "traits": traits,
+                    "topics": topics,
+                    "links": links,
+                    "priority": priority,
+                    "summary": summary,
+                    "rendered": text,
+                },
+            },
+        }
+
+        payload["payload"] = {
+            key: value for key, value in payload["payload"].items() if value is not None
+        }
+        return BridgePlan(
+            platform="pagerduty",
+            action="trigger_event",
+            payload=payload,
+            requires_secret=[self.pagerduty_routing_key_secret]
+            if self.pagerduty_routing_key_secret
+            else [],
+        )
+
+    def _opsgenie_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: str,
+        document: Dict[str, Any],
+    ) -> BridgePlan:
+        tags = [self._topic_hashtag(topic) or topic for topic in topics]
+        tags.append("EchoBridge")
+
+        payload: Dict[str, Any] = {
+            "api_key_env": self.opsgenie_api_key_secret,
+            "message": summary or f"Echo Bridge Relay {identity}/{cycle}",
+            "alias": f"echo-bridge-{identity}-{cycle}",
+            "description": text,
+            "priority": self._opsgenie_priority(priority),
+            "tags": tags,
+            "details": document,
+        }
+        if self.opsgenie_team:
+            payload["responders"] = [
+                {"type": "team", "name": self.opsgenie_team, "identifierType": "name"}
+            ]
+
+        return BridgePlan(
+            platform="opsgenie",
+            action="create_alert",
+            payload=payload,
+            requires_secret=[self.opsgenie_api_key_secret]
+            if self.opsgenie_api_key_secret
+            else [],
+        )
+
     def _sms_plan(
         self,
         *,
@@ -1659,6 +1822,30 @@ class EchoBridgeAPI:
             "low": "none",
         }
         return mapping.get(priority.casefold(), "none")
+
+    @staticmethod
+    def _pagerduty_severity(priority: Optional[str]) -> str:
+        if not priority:
+            return "info"
+        mapping = {
+            "critical": "critical",
+            "high": "error",
+            "medium": "warning",
+            "low": "info",
+        }
+        return mapping.get(priority.casefold(), "info")
+
+    @staticmethod
+    def _opsgenie_priority(priority: Optional[str]) -> str:
+        if not priority:
+            return "P3"
+        mapping = {
+            "critical": "P1",
+            "high": "P2",
+            "medium": "P3",
+            "low": "P4",
+        }
+        return mapping.get(priority.casefold(), "P3")
 
     def _attachment_traits(self, traits: Dict[str, Any]) -> List[Dict[str, Any]]:
         attachments: List[Dict[str, Any]] = []
