@@ -45,6 +45,12 @@ def test_portfolio_digest_tracks_leaders_and_renders_summary():
     assert 0 <= digest.average_coherence <= 1
     assert digest.coherence_leader.theme in {brief.theme for brief in briefs}
     assert len(digest.watermark_catalogue) == len(briefs)
+    assert 0 <= digest.alignment_pulse <= 1
+    assert len(digest.resonance_braid) == 16
+    if digest.novelty_atlas:
+        phrase, score = digest.novelty_atlas[0]
+        assert phrase
+        assert score >= 0
     text = digest.render()
     assert "Convergence Portfolio Digest" in text
     assert "coverage leader" in text
@@ -52,6 +58,8 @@ def test_portfolio_digest_tracks_leaders_and_renders_summary():
     assert "average alignment" in text
     assert "gap leader" in text
     assert "coherence field" in text
+    assert "resonance braid" in text
+    assert "novelty atlas" in text
     assert "tidal archive" in text
 
 

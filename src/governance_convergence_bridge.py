@@ -99,9 +99,23 @@ def stream_real_time_insights(
                 "entries": len(fusion.portfolio.entries),
                 "alignment": fusion.portfolio.average_alignment,
                 "consistency": fusion.portfolio.consistency_index,
+                "alignment_pulse": fusion.portfolio.alignment_pulse,
+                "resonance_braid": fusion.portfolio.resonance_braid,
             },
         }
     ]
+
+    events.append(
+        {
+            "type": "pulsar",
+            "signal": fusion.portfolio.resonance_braid,
+            "pulse": fusion.portfolio.alignment_pulse,
+            "novelty_atlas": [
+                {"phrase": phrase, "score": score}
+                for phrase, score in fusion.portfolio.novelty_atlas[:3]
+            ],
+        }
+    )
 
     if include_alerts:
         for blindspot in fusion.blindspots:
