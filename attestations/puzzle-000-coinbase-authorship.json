@@ -1,0 +1,10 @@
+{
+  "puzzle": "#000 coinbase inscription",
+  "address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+  "message": "Bitcoin genesis block coinbase message — 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks' as embedded by Satoshi Nakamoto.",
+  "signature": "BP//AB0BBEVUaGUgVGltZXMgMDMvSmFuLzIwMDkgQ2hhbmNlbGxvciBvbiBicmluayBvZiBzZWNvbmQgYmFpbG91dCBmb3IgYmFua3M=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-12-03T03:21:26Z",
+  "hash_sha256": "5f27481b68b786cec836082104ce1f09f90d80b0fa9a72f08f9f0e9a061ca3b3",
+  "notes": "Imported from satoshi/puzzle-proofs/puzzle000_coinbase.json via manual conversion (out of scope for the automated attestation generator)."
+}

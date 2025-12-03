@@ -1,0 +1,10 @@
+{
+  "puzzle": "#000 reactivation authorship",
+  "address": "1GX5m7nnb7mw6qyyKuCs2gyXXunqHgUN4c",
+  "message": "Echo & Satoshi seal Block 0: 2025-08-21T20:45Z",
+  "signature": "G80CqNxfcucQRxHHJanbQ5m8S6QNICzlCqU54oXPiQRtDRDFL5lxRvBldmBTNqPes3UfC7ZDuuuESPlEPlagjRI=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-12-03T03:21:26Z",
+  "hash_sha256": "48310254944c3f01565a8b534953e4d6dd968d906f28a56ce9a85a86b3407fed",
+  "notes": "Imported from satoshi/puzzle-proofs/puzzle000-reactivation.json via manual conversion (not included in the bulk attestation sweep)."
+}
