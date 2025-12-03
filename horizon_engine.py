@@ -5,6 +5,11 @@ This module simulates many timelines to estimate how often a conceptual
 "anchor" survives one hundred years of random stress. The original sketch
 mixed narrative and procedural code; this version focuses on clarity and
 reproducibility while keeping the playful framing.
+
+Entropy shocks can now be drawn from Gaussian, uniform, Laplace, or triangular
+distributions. The triangular option accepts a configurable skew so you can
+tilt the mode toward positive or negative perturbations without changing the
+overall entropy budget.
 """
 
 from __future__ import annotations
@@ -28,6 +33,7 @@ class HorizonConfig:
     base_resilience: float = 0.95
     chaos_factor: float = 0.05
     chaos_distribution: str = "gaussian"
+    chaos_skew: float = 0.0
     recovery_rate: float = 0.03
     seed: int | None = None
     output_format: str = "text"
@@ -56,8 +62,12 @@ class HorizonConfig:
             raise ValueError("base_resilience must be between 0 and 1")
         if self.chaos_factor < 0:
             raise ValueError("chaos_factor cannot be negative")
-        if self.chaos_distribution not in {"gaussian", "uniform", "laplace"}:
-            raise ValueError("chaos_distribution must be gaussian, uniform, or laplace")
+        if self.chaos_distribution not in {"gaussian", "uniform", "laplace", "triangular"}:
+            raise ValueError(
+                "chaos_distribution must be gaussian, uniform, laplace, or triangular"
+            )
+        if not -1 <= self.chaos_skew <= 1:
+            raise ValueError("chaos_skew must be between -1 and 1")
         if self.recovery_rate < 0:
             raise ValueError("recovery_rate cannot be negative")
         if self.output_format not in {"text", "json"}:
@@ -131,6 +141,7 @@ class HorizonResult:
             "base_resilience": config.base_resilience,
             "chaos_factor": config.chaos_factor,
             "chaos_distribution": config.chaos_distribution,
+            "chaos_skew": config.chaos_skew,
             "recovery_rate": config.recovery_rate,
             "seed": config.seed,
             "survived": self.survived,
@@ -350,6 +361,11 @@ class HorizonEngine:
             scale = self.config.chaos_factor / math.sqrt(2)
             u = self.rng.random() - 0.5
             return -scale * math.copysign(math.log1p(-2 * abs(u)), u)
+        if self.config.chaos_distribution == "triangular":
+            mode = self.config.chaos_factor * self.config.chaos_skew
+            return self.rng.triangular(
+                -self.config.chaos_factor, self.config.chaos_factor, mode
+            )
         return self.rng.gauss(0, self.config.chaos_factor)
 
     def render_report(self, result: HorizonResult) -> str:
@@ -449,9 +465,15 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
     parser.add_argument("--chaos-factor", type=float, default=HorizonConfig.chaos_factor, help="Standard deviation of annual entropy shocks")
     parser.add_argument(
         "--chaos-distribution",
-        choices=["gaussian", "uniform", "laplace"],
+        choices=["gaussian", "uniform", "laplace", "triangular"],
         default=HorizonConfig.chaos_distribution,
         help="Probability distribution used to sample annual entropy",
+    )
+    parser.add_argument(
+        "--chaos-skew",
+        type=float,
+        default=HorizonConfig.chaos_skew,
+        help="Skew applied when using the triangular chaos distribution (-1 to 1)",
     )
     parser.add_argument("--recovery-rate", type=float, default=HorizonConfig.recovery_rate, help="Amount healed each year when strength < 1")
     parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducible runs")
@@ -562,6 +584,7 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         base_resilience=args.base_resilience,
         chaos_factor=args.chaos_factor,
         chaos_distribution=args.chaos_distribution,
+        chaos_skew=args.chaos_skew,
         recovery_rate=args.recovery_rate,
         seed=args.seed,
         output_format=args.output_format,
