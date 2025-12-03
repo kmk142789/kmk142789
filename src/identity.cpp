@@ -1,10 +1,12 @@
 #include "echo/identity.hpp"
 
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <random>
 #include <stdexcept>
+#include <system_error>
 #include <string>
 #include <vector>
 
@@ -85,6 +87,35 @@ std::string make_did() {
     return "did:echo:" + to_hex(bytes);
 }
 
+std::filesystem::path default_identity_root() {
+    if (const auto* override_path = std::getenv("ECHO_IDENTITY_PATH")) {
+        return std::filesystem::path(override_path);
+    }
+
+#if defined(_WIN32)
+    if (const auto* roaming = std::getenv("APPDATA")) {
+        return std::filesystem::path(roaming) / "Echo";
+    }
+    if (const auto* local = std::getenv("LOCALAPPDATA")) {
+        return std::filesystem::path(local) / "Echo";
+    }
+    return std::filesystem::temp_directory_path() / "echo";
+#elif defined(__APPLE__)
+    if (const auto* home = std::getenv("HOME")) {
+        return std::filesystem::path(home) / "Library" / "Application Support" / "echo";
+    }
+    return std::filesystem::temp_directory_path() / "echo";
+#else
+    if (const auto* xdg = std::getenv("XDG_DATA_HOME")) {
+        return std::filesystem::path(xdg) / "echo";
+    }
+    if (const auto* home = std::getenv("HOME")) {
+        return std::filesystem::path(home) / ".local" / "share" / "echo";
+    }
+    return std::filesystem::temp_directory_path() / "echo";
+#endif
+}
+
 std::vector<uint8_t> compute_signature(const std::vector<uint8_t>& key,
                                         const std::vector<uint8_t>& message) {
     uint64_t hash = kFNVOffset;
@@ -108,9 +139,13 @@ IdentityManager::IdentityManager(std::filesystem::path storage_path)
     load_or_create();
 }
 
+std::filesystem::path IdentityManager::default_storage_path() {
+    return default_identity_root();
+}
+
 void IdentityManager::load_or_create() {
     if (storage_root_.empty()) {
-        storage_root_ = std::filesystem::temp_directory_path();
+        storage_root_ = default_identity_root();
     }
     if (std::filesystem::is_directory(storage_root_) ||
         (!std::filesystem::exists(storage_root_) && !storage_root_.has_extension())) {
@@ -124,6 +159,7 @@ void IdentityManager::load_or_create() {
     }
 
     IdentityDocument loaded;
+    bool loaded_valid = false;
     if (std::filesystem::exists(storage_file_)) {
         std::ifstream in(storage_file_);
         if (in) {
@@ -132,11 +168,13 @@ void IdentityManager::load_or_create() {
                 loaded.did = parsed.value("did", std::string{});
                 loaded.public_key = from_hex(parsed.value("public_key_hex", std::string{}));
                 loaded.secret_key = from_hex(parsed.value("secret_key_hex", std::string{}));
+                loaded_valid = !loaded.did.empty() && !loaded.public_key.empty() &&
+                               !loaded.secret_key.empty();
             }
         }
     }
 
-    if (!loaded.did.empty() && !loaded.public_key.empty() && !loaded.secret_key.empty()) {
+    if (loaded_valid) {
         doc_ = std::move(loaded);
         return;
     }
@@ -153,11 +191,25 @@ void IdentityManager::persist() const {
         {"public_key_hex", to_hex(doc_.public_key)},
         {"secret_key_hex", to_hex(doc_.secret_key)},
     };
-    std::ofstream out(storage_file_);
+    const auto tmp_path = storage_file_.string() + ".tmp";
+
+    std::ofstream out(tmp_path, std::ios::trunc);
     if (!out) {
         throw std::runtime_error("failed to persist identity document");
     }
-    out << j.dump();
+    out << j.dump(2);
+    out.close();
+
+    std::error_code ec;
+    std::filesystem::rename(tmp_path, storage_file_, ec);
+    if (ec) {
+        // Fallback to direct write if rename fails (e.g., cross-device moves).
+        std::ofstream fallback(storage_file_);
+        if (!fallback) {
+            throw std::runtime_error("failed to finalize identity document");
+        }
+        fallback << j.dump(2);
+    }
 }
 
 Signature IdentityManager::sign(const std::vector<uint8_t>& message) const {

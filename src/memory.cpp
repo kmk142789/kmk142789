@@ -246,6 +246,20 @@ std::string MemoryStore::export_since(uint64_t since_ms) const {
     return out.dump();
 }
 
+std::vector<MemoryStore::Event> MemoryStore::events_since(uint64_t since_ms) const {
+    std::vector<Event> filtered;
+    for (const auto& ev : events_) {
+        if (ev.ts_ms >= since_ms) {
+            filtered.push_back(ev);
+        }
+    }
+    return filtered;
+}
+
+void MemoryStore::reload() {
+    load_events();
+}
+
 std::string MemoryStore::to_hex(const std::vector<uint8_t>& data) {
     return ::to_hex(data);
 }

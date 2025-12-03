@@ -9,6 +9,14 @@ namespace echo {
 
 class MemoryStore {
 public:
+    struct Event {
+        uint64_t ts_ms{};
+        std::string actor_did;
+        std::string type;
+        std::string key;
+        std::vector<uint8_t> value;
+    };
+
     explicit MemoryStore(std::filesystem::path root_dir);
 
     std::string put_blob(const std::vector<uint8_t>& blob);
@@ -22,17 +30,15 @@ public:
 
     std::string export_since(uint64_t since_ms) const;
 
+    std::vector<Event> events_since(uint64_t since_ms) const;
+
+    // Reloads the event log from disk so readers can track real-time updates
+    // made by other processes.
+    void reload();
+
     std::filesystem::path root() const { return root_dir_; }
 
 private:
-    struct Event {
-        uint64_t ts_ms{};
-        std::string actor_did;
-        std::string type;
-        std::string key;
-        std::vector<uint8_t> value;
-    };
-
     void ensure_paths();
     void load_events();
     void append_event(const Event& ev);
