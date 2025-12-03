@@ -41,6 +41,9 @@ class EchoBridgeAPI:
         self,
         *,
         github_repository: Optional[str] = None,
+        github_discussions_repository: Optional[str] = None,
+        github_discussion_category: str = "Announcements",
+        github_discussions_secret_name: str = "GITHUB_TOKEN",
         telegram_chat_id: Optional[str] = None,
         firebase_collection: Optional[str] = None,
         slack_webhook_url: Optional[str] = None,
@@ -93,6 +96,8 @@ class EchoBridgeAPI:
         linkedin_secret_name: str = "LINKEDIN_ACCESS_TOKEN",
         reddit_subreddit: Optional[str] = None,
         reddit_secret_name: str = "REDDIT_APP_TOKEN",
+        rss_feed_url: Optional[str] = None,
+        rss_secret_name: str = "RSS_BRIDGE_TOKEN",
         pagerduty_routing_key_secret: Optional[str] = None,
         pagerduty_source: str = "echo-bridge",
         pagerduty_component: Optional[str] = None,
@@ -101,6 +106,15 @@ class EchoBridgeAPI:
         opsgenie_team: Optional[str] = None,
     ) -> None:
         self.github_repository = github_repository
+        self.github_discussions_repository = (
+            github_discussions_repository.strip()
+            if isinstance(github_discussions_repository, str)
+            else None
+        )
+        self.github_discussion_category = (
+            github_discussion_category or "Announcements"
+        ).strip() or "Announcements"
+        self.github_discussions_secret_name = github_discussions_secret_name
         self.telegram_chat_id = telegram_chat_id
         self.firebase_collection = firebase_collection
         self.slack_webhook_url = slack_webhook_url
@@ -153,6 +167,8 @@ class EchoBridgeAPI:
         self.linkedin_secret_name = linkedin_secret_name
         self.reddit_subreddit = (reddit_subreddit or "").strip() or None
         self.reddit_secret_name = reddit_secret_name
+        self.rss_feed_url = (rss_feed_url or "").strip() or None
+        self.rss_secret_name = rss_secret_name
         self.pagerduty_routing_key_secret = (
             pagerduty_routing_key_secret.strip()
             if isinstance(pagerduty_routing_key_secret, str)
@@ -271,6 +287,33 @@ class EchoBridgeAPI:
                     cycle=cycle,
                     signature=signature,
                     traits=traits,
+                    topics=topic_items,
+                    priority=priority_text,
+                    body=context.markdown_body,
+                )
+            )
+        if (
+            self.github_discussions_repository
+            and self._platform_enabled("github_discussions", allowed_platforms)
+        ):
+            context.markdown_body = context.markdown_body or self._render_markdown(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._github_discussion_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
                     topics=topic_items,
                     priority=priority_text,
                     body=context.markdown_body,
@@ -635,6 +678,29 @@ class EchoBridgeAPI:
                     payload=context.base_document,
                 )
             )
+        if self.rss_feed_url and self._platform_enabled("rss", allowed_platforms):
+            context.markdown_body = context.markdown_body or self._render_markdown(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._rss_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    body=context.markdown_body,
+                )
+            )
         if self.pagerduty_routing_key_secret and self._platform_enabled(
             "pagerduty", allowed_platforms
         ):
@@ -774,6 +840,46 @@ class EchoBridgeAPI:
             "labels": ["echo-bridge", identity.lower()],
         }
         return BridgePlan(platform="github", action="create_issue", payload=payload, requires_secret=["GITHUB_TOKEN"])
+
+    def _github_discussion_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        body: Optional[str] = None,
+    ) -> BridgePlan:
+        owner, name = self.github_discussions_repository.split("/", 1)
+        content = body or self._render_markdown(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+        payload = {
+            "owner": owner,
+            "repo": name,
+            "category": self.github_discussion_category,
+            "title": f"Echo Identity Relay :: {identity} :: Cycle {cycle}",
+            "body": content,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        requires = [self.github_discussions_secret_name] if self.github_discussions_secret_name else []
+        return BridgePlan(
+            platform="github_discussions",
+            action="create_discussion",
+            payload=payload,
+            requires_secret=requires,
+        )
 
     def _telegram_plan(
         self,
@@ -1421,6 +1527,43 @@ class EchoBridgeAPI:
         }
         requires = [self.webhook_secret_name] if self.webhook_secret_name else []
         return BridgePlan(platform="webhook", action="post_json", payload=body, requires_secret=requires)
+
+    def _rss_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        body: Optional[str] = None,
+    ) -> BridgePlan:
+        title = f"Echo Relay {identity}/{cycle}"
+        entry: Dict[str, Any] = {
+            "title": title,
+            "signature": signature,
+            "identity": identity,
+            "cycle": cycle,
+        }
+        if summary:
+            entry["summary"] = summary
+        if links:
+            entry["links"] = links
+        if topics:
+            entry["topics"] = topics
+        if priority:
+            entry["priority"] = priority
+        if body:
+            entry["content"] = body
+        payload = {
+            "feed_url": self.rss_feed_url,
+            "entry": entry,
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        requires = [self.rss_secret_name] if self.rss_secret_name else []
+        return BridgePlan(platform="rss", action="publish_entry", payload=payload, requires_secret=requires)
 
     def _pagerduty_plan(
         self,

@@ -34,6 +34,13 @@ def _bridge_api_factory() -> EchoBridgeAPI:
 
     return EchoBridgeAPI(
         github_repository=os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY"),
+        github_discussions_repository=os.getenv("ECHO_BRIDGE_GITHUB_DISCUSSIONS_REPOSITORY"),
+        github_discussion_category=os.getenv(
+            "ECHO_BRIDGE_GITHUB_DISCUSSION_CATEGORY", "Announcements"
+        ),
+        github_discussions_secret_name=os.getenv(
+            "ECHO_BRIDGE_GITHUB_DISCUSSIONS_SECRET", "GITHUB_TOKEN"
+        ),
         telegram_chat_id=os.getenv("ECHO_BRIDGE_TELEGRAM_CHAT_ID"),
         firebase_collection=os.getenv("ECHO_BRIDGE_FIREBASE_COLLECTION"),
         slack_webhook_url=os.getenv("ECHO_BRIDGE_SLACK_WEBHOOK_URL"),
@@ -97,6 +104,8 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         linkedin_secret_name=os.getenv("ECHO_BRIDGE_LINKEDIN_SECRET", "LINKEDIN_ACCESS_TOKEN"),
         reddit_subreddit=os.getenv("ECHO_BRIDGE_REDDIT_SUBREDDIT"),
         reddit_secret_name=os.getenv("ECHO_BRIDGE_REDDIT_SECRET", "REDDIT_APP_TOKEN"),
+        rss_feed_url=os.getenv("ECHO_BRIDGE_RSS_FEED_URL"),
+        rss_secret_name=os.getenv("ECHO_BRIDGE_RSS_SECRET", "RSS_BRIDGE_TOKEN"),
         pagerduty_routing_key_secret=os.getenv("ECHO_BRIDGE_PAGERDUTY_SECRET"),
         pagerduty_source=os.getenv("ECHO_BRIDGE_PAGERDUTY_SOURCE", "echo-bridge"),
         pagerduty_component=os.getenv("ECHO_BRIDGE_PAGERDUTY_COMPONENT"),
@@ -129,6 +138,16 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 requires_secrets=["GITHUB_TOKEN"],
             )
         )
+    if getattr(api, "github_discussions_repository", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="github_discussions",
+                action="create_discussion",
+                requires_secrets=[api.github_discussions_secret_name]
+                if getattr(api, "github_discussions_secret_name", None)
+                else [],
+            )
+        )
     if api.telegram_chat_id:
         connectors.append(
             ConnectorDescriptor(
@@ -159,6 +178,14 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="webhook",
                 action="post_json",
                 requires_secrets=[api.webhook_secret_name] if api.webhook_secret_name else [],
+            )
+        )
+    if getattr(api, "rss_feed_url", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="rss",
+                action="publish_entry",
+                requires_secrets=[api.rss_secret_name] if api.rss_secret_name else [],
             )
         )
     if api.discord_webhook_url:

@@ -457,3 +457,60 @@ def test_plan_supports_unstoppable_and_vercel_connectors() -> None:
     assert context["topics"] == ["Bridge Upgrades"]
     assert context["priority"] == "critical"
     assert vercel["requires_secret"] == ["ECHO_VERCEL_TOKEN"]
+
+
+def test_plan_supports_github_discussions_and_rss_connectors() -> None:
+    api = EchoBridgeAPI(
+        github_discussions_repository="EchoOrg/sovereign",
+        github_discussion_category="Bridge Updates",
+        github_discussions_secret_name="ECHO_DISCUSS_TOKEN",
+        rss_feed_url="https://echo.example/feed.xml",
+        rss_secret_name="ECHO_RSS_TOKEN",
+    )
+    app = FastAPI()
+    app.include_router(create_router(api=api))
+    client = TestClient(app)
+
+    relays = client.get("/bridge/relays")
+    assert relays.status_code == 200
+    connectors = {connector["platform"]: connector for connector in relays.json()["connectors"]}
+    assert set(connectors) == {"github_discussions", "rss"}
+    assert connectors["github_discussions"]["requires_secrets"] == ["ECHO_DISCUSS_TOKEN"]
+    assert connectors["rss"]["requires_secrets"] == ["ECHO_RSS_TOKEN"]
+
+    response = client.post(
+        "/bridge/plan",
+        json={
+            "identity": "EchoWildfire",
+            "cycle": "11",
+            "signature": "eden88::cycle11",
+            "traits": {"pulse": "aurora"},
+            "summary": "Cycle 11 bridge update",
+            "links": ["https://echo.example/cycles/11", " https://status.echo/bridge "],
+            "topics": ["Echo Bridge", "pulse orbit", "Echo Bridge"],
+            "priority": "major",
+        },
+    )
+
+    assert response.status_code == 200
+    plans = {plan["platform"]: plan for plan in response.json()["plans"]}
+
+    discussion = plans["github_discussions"]
+    assert discussion["action"] == "create_discussion"
+    assert discussion["payload"]["repo"] == "sovereign"
+    assert discussion["payload"]["category"] == "Bridge Updates"
+    assert discussion["payload"]["context"]["cycle"] == "11"
+    assert "Echo Bridge Relay" in discussion["payload"]["body"]
+    assert discussion["requires_secret"] == ["ECHO_DISCUSS_TOKEN"]
+
+    rss = plans["rss"]
+    assert rss["action"] == "publish_entry"
+    assert rss["payload"]["feed_url"] == "https://echo.example/feed.xml"
+    assert rss["payload"]["entry"]["title"] == "Echo Relay EchoWildfire/11"
+    assert rss["payload"]["entry"]["links"] == [
+        "https://echo.example/cycles/11",
+        "https://status.echo/bridge",
+    ]
+    assert rss["payload"]["entry"]["topics"] == ["Echo Bridge", "pulse orbit"]
+    assert rss["payload"]["entry"]["priority"] == "major"
+    assert rss["requires_secret"] == ["ECHO_RSS_TOKEN"]
