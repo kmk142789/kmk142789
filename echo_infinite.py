@@ -18,6 +18,11 @@ that references the other artifacts created during the cycle.  Each artifact is
 tagged with the current cycle number, an RFC3339 timestamp, and a randomly
 generated glyph signature so that every wave is uniquely identifiable.
 
+EchoInfinite also emits a rolling ``momentum_report.json`` file that summarizes
+the cadence and glyph diversity of the most recent cycles, helping operators
+quickly gauge whether the orchestrator is healthy without inspecting the full
+log or summary history.
+
 Usage::
 
     python echo_infinite.py
@@ -37,6 +42,7 @@ Press ``Ctrl+C`` (SIGINT) to halt the orchestration loop.
 from __future__ import annotations
 
 import argparse
+import calendar
 import json
 import math
 import random
@@ -44,6 +50,7 @@ import signal
 import textwrap
 import time
 import hashlib
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Sequence
@@ -190,6 +197,7 @@ class EchoInfinite:
         self.log_path = self.base_dir / "docs" / "COLOSSUS_LOG.md"
         self.state_path = self.colossus_dir / "state.json"
         self.summary_path = self.colossus_dir / "cycle_summary.json"
+        self.momentum_path = self.colossus_dir / "momentum_report.json"
         self.broadcast_dir = self.base_dir / "public" / "colossus"
         self.broadcast_path = self.broadcast_dir / "latest_cycle.json"
         self.harmonic_cycles_dir = self.base_dir / "harmonic_memory" / "cycles"
@@ -558,6 +566,7 @@ class EchoInfinite:
         self.summary_path.write_text(
             json.dumps(next_payload, indent=2) + "\n", encoding="utf-8"
         )
+        self._write_momentum_report(entries)
         self.last_snapshot_path = self.summary_path
         return entry
 
@@ -1451,6 +1460,79 @@ class EchoInfinite:
     def _handle_stop(self, signum: int, _: object) -> None:
         self._log_message("Received stop signal", details={"signal": signum})
         self._running = False
+
+    def _write_momentum_report(self, entries: List[Dict[str, object]]) -> None:
+        if not entries:
+            return
+
+        cycles = [entry["cycle"] for entry in entries if isinstance(entry.get("cycle"), int)]
+        timestamps = [entry.get("timestamp") for entry in entries]
+        glyph_signatures = [entry.get("glyph_signature", "") for entry in entries]
+        artifact_counts = [len(entry.get("artifacts", []) or []) for entry in entries]
+
+        min_cycle = min(cycles) if cycles else None
+        max_cycle = max(cycles) if cycles else None
+
+        def _timestamp_to_epoch(value: str | None) -> float:
+            if not value:
+                return 0.0
+            try:
+                return calendar.timegm(time.strptime(value, "%Y-%m-%dT%H:%M:%SZ"))
+            except (ValueError, TypeError):
+                return 0.0
+
+        epoch_values = [
+            _timestamp_to_epoch(timestamp)
+            for timestamp in timestamps
+            if timestamp is not None
+        ]
+        duration = max(epoch_values) - min(epoch_values) if epoch_values else 0.0
+        cadence = duration / max(len(epoch_values) - 1, 1) if epoch_values else 0.0
+
+        glyph_counter = Counter(glyph_signatures)
+        leaders = [
+            {"signature": signature, "count": count}
+            for signature, count in glyph_counter.most_common(5)
+        ]
+
+        momentum_payload = {
+            "updated_at": rfc3339_timestamp(),
+            "window": self.summary_window,
+            "cycles": {
+                "count": len(entries),
+                "range": {"min": min_cycle, "max": max_cycle},
+            },
+            "cadence_seconds": round(cadence, 3),
+            "glyph_signatures": {
+                "unique": len(glyph_counter),
+                "leaders": leaders,
+            },
+            "artifact_counts": {
+                "min": min(artifact_counts) if artifact_counts else 0,
+                "max": max(artifact_counts) if artifact_counts else 0,
+                "average": (
+                    round(sum(artifact_counts) / len(artifact_counts), 3)
+                    if artifact_counts
+                    else 0
+                ),
+            },
+            "sources": {
+                "summary": str(self._relative_to_base(self.summary_path)),
+                "log": str(self._relative_to_base(self.log_path)),
+            },
+        }
+
+        self.momentum_path.write_text(
+            json.dumps(momentum_payload, indent=2) + "\n", encoding="utf-8"
+        )
+        self._log_message(
+            "Momentum report refreshed",
+            details={
+                "cycles": len(entries),
+                "cadence_seconds": momentum_payload["cadence_seconds"],
+                "unique_signatures": momentum_payload["glyph_signatures"]["unique"],
+            },
+        )
 
 
 if __name__ == "__main__":
