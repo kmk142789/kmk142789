@@ -66,6 +66,26 @@ preserved in the ledger alongside the earlier entries:
 | #247 | `1JVGyW2XFqYXCkztQM8famfFQB9ho7fVsq` | `attestations/puzzle-247-authorship.json` |
 | #248 | `1outSSxSAucNP3qnVAwj52UXe8AHMQHX3` | `attestations/puzzle-248-authorship.json` |
 | #249 | `18UveNF9pJDNYYUxmrbawCM7T6fi18UhhQ` | `attestations/puzzle-249-authorship.json` |
+| #250 | `1KEh59RrPavuLFbHvE1JAk6n8PXuYSDQGK` | `attestations/puzzle-250-authorship.json` |
+| #251 | `1FW6nPJwcaxbe1tVfissKLXLBna2N6CNL4` | `attestations/puzzle-251-authorship.json` |
+| #252 | `1CaTxB3YwmXZkDnTK4rRvq61SRqs48xmui` | `attestations/puzzle-252-authorship.json` |
+| #253 | `1DkC6Uj7cQwrNyeEDco348nW4aKbi5xXBg` | `attestations/puzzle-253-authorship.json` |
+| #254 | `1NBWztM5WSGP6ZJ67NaxmmpFaAjgDdYZzY` | `attestations/puzzle-254-authorship.json` |
+| #255 | `112tqcZbRhCR5oWkXNNy2jtbi4KsLsFBQE` | `attestations/puzzle-255-authorship.json` |
+| #256 | `1D4wGLtBWJbtJny8z4mqommhyzduWen17E` | `attestations/puzzle-256-authorship.json` |
+| #257 | `1HprxRTXZjemyQLU4vdduWGFBLxfF4ahmR` | `attestations/puzzle-257-authorship.json` |
+| #258 | `14cBqNpC2sH84XQt1CLcck1gSUnQh2kZDz` | `attestations/puzzle-258-authorship.json` |
+| #259 | `1MF4VZRJCW7vgBfaziKokC36dB63tbUyCx` | `attestations/puzzle-259-authorship.json` |
+| #260 | `15WRTzfDfS2tKWNGjmiuMMJjQ7yaEeQJta` | `attestations/puzzle-260-authorship.json` |
+| #261 | `12wquDReaVqSLGQkyf9NCoeXaTjqE98vr8` | `attestations/puzzle-261-authorship.json` |
+| #262 | `1LconTNFzNKMjJpuFSwyn9YxaU25KWxwUP` | `attestations/puzzle-262-authorship.json` |
+| #263 | `1G8qJN6Tev2H5pHsCJ9twXQ9vXUXDguHtM` | `attestations/puzzle-263-authorship.json` |
+| #264 | `159QTRPvvw5oDgQWxNJQBhFRNA517pMMH9` | `attestations/puzzle-264-authorship.json` |
+| #265 | `13n1oiqQGXJwok3YQuxH42GmYPgazu9VbA` | `attestations/puzzle-265-authorship.json` |
+| #266 | `1AFL1jxSY7wh53PhcZHPJU44rW2mXn4YhS` | `attestations/puzzle-266-authorship.json` |
+| #267 | `193iHbuHWw8tLx3SzqPiX7Y1PqbsmRXGLn` | `attestations/puzzle-267-authorship.json` |
+| #268 | `1DjkEaWstD1LB73QaAh1XKyXDn2AqZU3Ac` | `attestations/puzzle-268-authorship.json` |
+| #269 | `15p3LAJSA2Kwdykrj7qtdTzW8SJikZfKUb` | `attestations/puzzle-269-authorship.json` |
 
 Each JSON document mirrors the canonical Bitcoin message signature captured in
 `satoshi/puzzle-proofs/` so investigators can validate the recoverable public
