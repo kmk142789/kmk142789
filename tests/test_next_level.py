@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import sys
 
@@ -48,6 +49,20 @@ def test_discover_tasks_skips_common_virtualenvs(tmp_path):
     tasks = discover_tasks(tmp_path)
     assert all(task.path != skipped for task in tasks)
     assert any(task.path == included for task in tasks)
+
+
+def test_update_roadmap_supports_stdout_json(tmp_path, capsys):
+    source = tmp_path / "module.py"
+    source.write_text("# TODO stream summary\n", encoding="utf-8")
+
+    roadmap = tmp_path / "ROADMAP.md"
+    update_roadmap(tmp_path, roadmap, json_output_path=Path("-"))
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+
+    assert payload["totals"]["overall"] == 1
+    assert payload["tasks"][0]["path"].endswith("module.py")
 
 
 def test_discover_tasks_in_block_comments(tmp_path):

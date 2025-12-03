@@ -455,10 +455,11 @@ def update_roadmap(
     roadmap_path.write_text(roadmap, encoding="utf-8")
     if json_output_path is not None:
         payload = build_summary_payload(tasks, base_path, hotspot_limit=hotspot_limit)
-        json_output_path.write_text(
-            json.dumps(payload, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        rendered = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+        if str(json_output_path) == "-":
+            sys.stdout.write(rendered)
+        else:
+            json_output_path.write_text(rendered, encoding="utf-8")
     return tasks
 
 
