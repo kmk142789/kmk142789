@@ -77,6 +77,8 @@ class JsonlTelemetryStorage(TelemetryStorage):
         with self._lock:
             with self.path.open("r", encoding="utf-8") as stream:
                 for line in stream:
+                    if not line.strip():
+                        continue
                     payload = json.loads(line)
                     events.append(TelemetryEvent.model_validate(payload))
         return events
