@@ -21,6 +21,8 @@ class IdentityManager {
 public:
     explicit IdentityManager(std::filesystem::path storage_path);
 
+    static std::filesystem::path default_storage_path();
+
     const IdentityDocument& doc() const noexcept { return doc_; }
 
     Signature sign(const std::vector<uint8_t>& message) const;
