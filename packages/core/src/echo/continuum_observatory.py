@@ -137,10 +137,18 @@ CODE_EXTENSIONS = {
 }
 
 TODO_KEYWORDS = ("TODO", "FIXME", "HACK")
-TODO_PATTERN = re.compile(
-    r"\b(?P<keyword>TODO|FIXME|HACK)\b(?:[:\s-]+(?P<text>.*))?",
-    re.IGNORECASE,
-)
+
+
+def _build_todo_pattern(keywords: Sequence[str]) -> re.Pattern[str]:
+    normalized = tuple(dict.fromkeys(k.upper() for k in keywords))  # preserve order, deduplicate
+    escaped = "|".join(re.escape(keyword) for keyword in normalized)
+    return re.compile(
+        rf"\b(?P<keyword>{escaped})\b(?:[:\s-]+(?P<text>.*))?",
+        re.IGNORECASE,
+    )
+
+
+DEFAULT_TODO_PATTERN = _build_todo_pattern(TODO_KEYWORDS)
 TODO_SCAN_LIMIT_BYTES = 1_000_000  # avoid loading massive binaries
 
 
@@ -266,12 +274,12 @@ class ContinuumObservatory:
         latest_mtime = 0.0
 
         for current_dir, dirnames, filenames in os.walk(self.root, topdown=True):
-            dirnames[:] = [
+            dirnames[:] = sorted(
                 d
                 for d in dirnames
                 if d not in self.ignore_dirs and not d.startswith(".")
-            ]
-            for filename in filenames:
+            )
+            for filename in sorted(filenames):
                 path = Path(current_dir, filename)
                 try:
                     stat = path.stat()
@@ -294,8 +302,9 @@ class ContinuumObservatory:
         )
         return self._snapshot
 
-    def scan_todos(self, limit: int = 20) -> List[TodoMatch]:
+    def scan_todos(self, limit: int = 20, keywords: Sequence[str] | None = None) -> List[TodoMatch]:
         matches: List[TodoMatch] = []
+        pattern = DEFAULT_TODO_PATTERN if keywords is None else _build_todo_pattern(keywords)
         for path in self._iter_text_candidates():
             try:
                 stat = path.stat()
@@ -306,7 +315,7 @@ class ContinuumObservatory:
             try:
                 with path.open("r", encoding="utf-8", errors="ignore") as handle:
                     for line_no, line in enumerate(handle, start=1):
-                        match = TODO_PATTERN.search(line)
+                        match = pattern.search(line)
                         if match:
                             keyword = match.group("keyword").upper()
                             text = (match.group("text") or "").strip()
@@ -330,12 +339,12 @@ class ContinuumObservatory:
     # ------------------------------------------------------------------
     def _iter_text_candidates(self) -> Iterator[Path]:
         for current_dir, dirnames, filenames in os.walk(self.root, topdown=True):
-            dirnames[:] = [
+            dirnames[:] = sorted(
                 d
                 for d in dirnames
                 if d not in self.ignore_dirs and not d.startswith(".")
-            ]
-            for filename in filenames:
+            )
+            for filename in sorted(filenames):
                 path = Path(current_dir, filename)
                 if path.suffix.lower() in DOC_EXTENSIONS | CODE_EXTENSIONS:
                     yield path
@@ -558,6 +567,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
     todo_parser = subparsers.add_parser("todo", help="List outstanding TODO/FIXME markers")
     todo_parser.add_argument("--limit", type=int, default=20, help="Maximum TODO markers to display")
+    todo_parser.add_argument(
+        "--keyword",
+        action="append",
+        default=[],
+        metavar="WORD",
+        help="Additional TODO-like keywords to scan (defaults to TODO/FIXME/HACK)",
+    )
 
     args = parser.parse_args(argv)
     command = args.command or "summary"
@@ -585,7 +601,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             limit=args.limit,
         )
     elif command == "todo":
-        matches = observatory.scan_todos(limit=args.limit)
+        keywords = TODO_KEYWORDS + tuple(args.keyword)
+        matches = observatory.scan_todos(limit=args.limit, keywords=keywords)
         output = _render_todos_json(matches) if args.json else _render_todos(matches)
     else:
         parser.error(f"Unknown command: {command}")
