@@ -14,6 +14,8 @@ Use Electrum `signmessage` or equivalent to produce `signature`.
 - `puzzle-000-sample.json` &mdash; canonical schema example for CI validation.
 - `puzzle-071-key-recovery.json` &mdash; recovery attestation for Bitcoin Puzzle #71 (MirrorNet staging).
 - `puzzle-079-continuum-bridge.json` &mdash; continuum bridge attestation for Bitcoin Puzzle #79 derivation work.
+- `puzzle-000-coinbase-authorship.json` &mdash; preservation of the genesis coinbase headline signature bound to Puzzle #000.
+- `puzzle-000-reactivation-authorship.json` &mdash; attestation for the Block 0 reactivation broadcast signature.
 
 ## Bulk puzzle attestations
 
