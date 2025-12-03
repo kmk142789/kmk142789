@@ -109,6 +109,12 @@
       "target_date": "2025-11-23",
       "status": "complete",
       "notes": "Runbook recorded at data/sovereign_digital_trust/NEXT_STEPS.md"
+    },
+    {
+      "item": "Publish Little Footsteps Satoshi Vault proof and anchor to sovereign trust",
+      "target_date": "2025-11-30",
+      "status": "planned",
+      "notes": "Attestation should reference the sovereign trust root and mirror into docs/little_footsteps/trust_registry.json."
     }
   ]
 }
