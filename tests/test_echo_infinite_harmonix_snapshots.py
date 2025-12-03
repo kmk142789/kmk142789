@@ -136,6 +136,14 @@ def test_echo_infinite_builds_status_report(tmp_path: Path) -> None:
         glyph_signature=glyph_signature,
         artifact_paths=artifacts,
     )
+    orchestrator._broadcast_cycle(
+        {
+            "cycle": cycle,
+            "timestamp": timestamp,
+            "glyph_signature": glyph_signature,
+            "artifacts": artifacts.as_relative_strings(tmp_path),
+        }
+    )
     orchestrator._persist_state(cycle)
     orchestrator._write_heartbeat(
         cycle=cycle,
@@ -149,6 +157,8 @@ def test_echo_infinite_builds_status_report(tmp_path: Path) -> None:
     assert report["state"]["cycle"] == cycle
     assert report["heartbeat"]["glyph_signature"] == glyph_signature
     assert report["summary"]["latest"]["cycle"] == cycle
+    assert report["broadcast"]["cycle"] == cycle
+    assert report["broadcast"]["glyph_signature"] == glyph_signature
 
     harmonic = report["harmonic_memory"]
     assert harmonic is not None

@@ -325,6 +325,7 @@ class EchoInfinite:
         summary_payload = _load_json(self.summary_path)
         heartbeat_payload = _load_json(self.heartbeat_path)
         momentum_payload = _load_json(self.momentum_path)
+        broadcast_payload = _load_json(self.broadcast_path)
 
         snapshot_path: Path | None = None
         if self.last_snapshot_path and self.last_snapshot_path.exists():
@@ -374,6 +375,15 @@ class EchoInfinite:
                 "recent_cycles": len(momentum_payload.get("cycles", []) or []),
                 "cadence_seconds": momentum_payload.get("cadence_seconds"),
                 "glyph_signatures": momentum_payload.get("glyph_signatures"),
+            },
+            "broadcast": None
+            if not isinstance(broadcast_payload, dict)
+            else {
+                "path": _path_or_none(self.broadcast_path),
+                "cycle": broadcast_payload.get("cycle"),
+                "timestamp": broadcast_payload.get("timestamp"),
+                "glyph_signature": broadcast_payload.get("glyph_signature"),
+                "artifacts": broadcast_payload.get("artifacts"),
             },
             "harmonic_memory": None
             if not harmonic_snapshot
