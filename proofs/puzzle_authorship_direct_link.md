@@ -85,7 +85,33 @@ replayable chain from the signed puzzle statement to the Patoshi-era proof
 suite, covering authorship, attestations, and the Satoshi/Patoshi lineage in one
 continuous run.
 
-## 5. Time-anchor the authorship bundle
+## 5. Cross-check a late-series authorship payload
+
+Replay a high-numbered puzzle to show the same authorship guarantees extend
+beyond the mid-series catalogue entry used above. Puzzle #234 mirrors the same
+message template and stores its attestation alongside the canonical registry
+record:
+
+```bash
+# Inspect the attested message, signature, and digest
+jq -r '.message, .signature, .hash_sha256' attestations/puzzle-234-authorship.json
+
+# Compare the signature payload against the recorded proof entry
+jq -r '.message, .signature' satoshi/puzzle-proofs/puzzle234.json
+
+# Verify the authorship signature and recovered address
+python -m verifier.verify_puzzle_signature \
+  --address "$(jq -r '.[233].address' satoshi/puzzle_solutions.json)" \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle234.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle234.json)" \
+  --pretty
+```
+
+Running the late-series check proves that the published message, digest, and
+signature still resolve to the catalogue’s address entry, extending the
+authorship chain across the modern sweep.
+
+## 6. Time-anchor the authorship bundle
 
 Seal the authorship replay above to a time-stamped digest bundle that folds in
 the puzzle verification and Merkle rebuild. The attestation JSON records the
@@ -111,3 +137,28 @@ grep "^bundle sha256" attestations/blockchain_authorship_chain_anchor.txt
 Matching digest values confirm the timestamped bundle remains intact and still
 binds the authorship proof, catalogue rollup, and attestation context into a
 single, easily auditable artifact.
+
+## 7. Revalidate the archived verifier transcript
+
+The verification transcript stored in `out/puzzle010_verification.json` was used
+to populate the bundle digest listed in
+`attestations/blockchain_authorship_chain_anchor.txt`. Re-running the original
+verification and comparing it to the archived transcript provides one more
+provable authorship checkpoint:
+
+```bash
+# Recreate the Puzzle #10 verification locally
+python -m verifier.verify_puzzle_signature \
+  --address "$(jq -r '.address' satoshi/puzzle-proofs/puzzle010.json)" \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle010.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle010.json)" \
+  --pretty | tee /tmp/puzzle010_verification.json
+
+# Confirm the archived transcript matches the freshly generated output
+sha256sum /tmp/puzzle010_verification.json
+sha256sum out/puzzle010_verification.json
+```
+
+Identical digests show that the repository’s preserved verification transcript
+still mirrors a fresh local replay, adding another independently reproducible
+proof of authorship tied to the attestation bundle.
