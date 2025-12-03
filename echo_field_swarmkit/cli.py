@@ -74,7 +74,8 @@ def main():
     node = EchoNode(node_config)
 
     if args.run_once:
-        node.health.run_health_check_cycle()
+        checks = node.health.run_health_check_cycle()
+        node.gecs.observe_and_correct(checks)
         node._sync_with_peers()
         node._execute_local_tasks()
     else:

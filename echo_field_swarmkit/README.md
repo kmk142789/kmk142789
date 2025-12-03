@@ -6,6 +6,8 @@ EchoField SwarmKit is an offline-first swarm coordination and self-healing agent
 - **Swarm gossip sync:** Exchange tasks and node health summaries over any transport (file drop, HTTP, sneaker-net) with deterministic merge semantics.
 - **Task ledger:** CRDT-inspired task versions ensure the freshest update wins while keeping history on disk.
 - **Geek Squad health engine:** Periodic health checks emit remediation tasks and update the node health summary.
+- **Global Error-Correction Substrate (GECS):** Predictive detector that pre-flags digital/mechanical/human workflow risks, auto-stabilizes them, and dispatches micro-agents into the task ledger.
+- **Resilient signal mesh:** Compresses and annotates sync payloads into compact `.cjson` packets for degraded/offline links while remaining interoperable with the normal JSON snapshots.
 - **Node agent loop:** Runs health cycles, executes local tasks, and syncs with peers on timers.
 - **CLI:** Start the node agent or run a single health check cycle for quick diagnostics.
 - **Offline hardening:** Atomic snapshot writes, stale-peer guarding, and automatic peer discovery keep file-drop gossip resilient when connectivity is sparse.
@@ -27,6 +29,7 @@ EchoField SwarmKit is an offline-first swarm coordination and self-healing agent
 - `swarm_protocol.py`: Stateless gossip-style protocol that exports and merges task and node state snapshots.
 - `task_ledger.py`: Task data model and helpers for creating new tasks.
 - `health_engine.py`: Offline “Geek Squad” that emits remediation tasks based on local health signals.
+- `gecs.py`: Global Error-Correction Substrate that pre-detects risks, auto-stabilizes nodes, and compresses sync signals for degraded transports.
 - `storage.py`: Durable storage for tasks and node state using JSON on disk.
 - `cli.py`: CLI entrypoint to start the agent or run one-off cycles.
 
