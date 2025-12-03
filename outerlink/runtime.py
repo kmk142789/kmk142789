@@ -32,7 +32,9 @@ class OuterLinkRuntime:
 
     def emit_state(self) -> Dict[str, Any]:
         metrics = self.dsi.get_metrics()
-        offline_snapshot = self.offline_state.status(self.config.offline_cache_dir)
+        offline_snapshot = self.offline_state.status(
+            self.config.offline_cache_dir, self.config.offline_cache_ttl_seconds
+        )
         payload = {
             "online": offline_snapshot["online"],
             "last_sync": offline_snapshot["last_sync"],
@@ -49,6 +51,9 @@ class OuterLinkRuntime:
         return response
 
     def flush_events(self) -> None:
+        self.offline_state.prune_stale_cache(
+            self.config.offline_cache_dir, self.config.offline_cache_ttl_seconds
+        )
         if self.offline_state.online:
             cached_events = self.offline_state.restore_cache(self.config.offline_cache_dir)
             self.offline_state.pending_events.clear()
