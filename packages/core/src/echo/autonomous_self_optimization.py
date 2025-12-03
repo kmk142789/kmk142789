@@ -155,13 +155,23 @@ class OfflineTask:
     requires_network: bool = False
     executed: bool = False
     result: Mapping[str, object] | None = None
+    blocked_reason: str | None = None
+
+
+@dataclass
+class RegisteredCapability:
+    """Capability metadata registered with the local runtime."""
+
+    handler: Callable[[Mapping[str, object]], Mapping[str, object] | object]
+    offline_ready: bool = True
+    description: str | None = None
 
 
 class LocalDeviceRuntime:
     """Offline-first runtime that can execute tasks without network access."""
 
     def __init__(self) -> None:
-        self._capabilities: MutableMapping[str, Callable[[Mapping[str, object]], Mapping[str, object] | object]] = {}
+        self._capabilities: MutableMapping[str, RegisteredCapability] = {}
         self._task_queue: list[OfflineTask] = []
         self._completed: list[OfflineTask] = []
 
@@ -169,8 +179,13 @@ class LocalDeviceRuntime:
         self,
         name: str,
         handler: Callable[[Mapping[str, object]], Mapping[str, object] | object],
+        *,
+        offline_ready: bool = True,
+        description: str | None = None,
     ) -> None:
-        self._capabilities[name] = handler
+        self._capabilities[name] = RegisteredCapability(
+            handler=handler, offline_ready=offline_ready, description=description
+        )
 
     def submit_task(self, task: OfflineTask) -> None:
         self._task_queue.append(task)
@@ -180,15 +195,29 @@ class LocalDeviceRuntime:
 
         remaining: list[OfflineTask] = []
         for task in self._task_queue:
-            if task.requires_network and not network_available:
+            capability = self._capabilities.get(task.name)
+
+            if capability is None:
+                task.blocked_reason = "unregistered_capability"
                 remaining.append(task)
                 continue
-            handler = self._capabilities.get(task.name)
-            if handler:
-                result = handler(task.payload)
-                task.executed = True
-                task.result = result if isinstance(result, Mapping) else {"result": result}
+
+            if task.requires_network and not network_available:
+                task.blocked_reason = "network_unavailable"
+                remaining.append(task)
+                continue
+
+            if not capability.offline_ready and not network_available:
+                task.blocked_reason = "capability_offline_disabled"
+                remaining.append(task)
+                continue
+
+            result = capability.handler(task.payload)
+            task.executed = True
+            task.blocked_reason = None
+            task.result = result if isinstance(result, Mapping) else {"result": result}
             self._completed.append(task)
+
         self._task_queue = remaining
         return list(self._completed)
 
@@ -207,6 +236,14 @@ class LocalDeviceRuntime:
         return {
             "pending": [task.name for task in self._task_queue],
             "pending_requires_network": pending_network,
+            "pending_details": [
+                {
+                    "name": task.name,
+                    "requires_network": task.requires_network,
+                    "blocked_reason": task.blocked_reason,
+                }
+                for task in self._task_queue
+            ],
             "completed": [
                 {
                     "name": task.name,
@@ -215,6 +252,13 @@ class LocalDeviceRuntime:
                 }
                 for task in self._completed
             ],
+            "capabilities": {
+                name: {
+                    "offline_ready": capability.offline_ready,
+                    "description": capability.description,
+                }
+                for name, capability in self._capabilities.items()
+            },
         }
 
 
