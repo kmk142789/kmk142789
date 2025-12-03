@@ -398,3 +398,62 @@ def test_plan_supports_linkedin_and_reddit_connectors() -> None:
     assert opsgenie["action"] == "create_alert"
     assert opsgenie["payload"]["priority"] == "P1"
     assert "EchoBridge" in opsgenie["payload"]["tags"]
+
+
+def test_plan_supports_unstoppable_and_vercel_connectors() -> None:
+    api = EchoBridgeAPI(
+        unstoppable_domains=["echo.crypto", " echo.crypto ", "nexus.crypto"],
+        unstoppable_secret_name="ECHO_UNSTOPPABLE_SECRET",
+        vercel_projects=["dashboard", "console"],
+        vercel_secret_name="ECHO_VERCEL_TOKEN",
+    )
+    app = FastAPI()
+    app.include_router(create_router(api=api))
+    client = TestClient(app)
+
+    relays = client.get("/bridge/relays")
+    assert relays.status_code == 200
+    connectors = {connector["platform"] for connector in relays.json()["connectors"]}
+    assert connectors == {"unstoppable", "vercel"}
+
+    response = client.post(
+        "/bridge/plan",
+        json={
+            "identity": "EchoWildfire",
+            "cycle": "09",
+            "signature": "eden88::cycle09",
+            "traits": {"pulse": "aurora"},
+            "summary": "Advance bridge payload",
+            "links": ["https://echo.example/cycles/09"],
+            "topics": ["Bridge Upgrades", "bridge upgrades"],
+            "priority": "critical",
+        },
+    )
+
+    assert response.status_code == 200
+    plans = {plan["platform"]: plan for plan in response.json()["plans"]}
+
+    unstoppable = plans["unstoppable"]
+    assert unstoppable["action"] == "update_domain_records"
+    assert unstoppable["payload"]["domains"] == ["echo.crypto", "nexus.crypto"]
+    records = unstoppable["payload"]["records"]
+    assert records["echo.identity"] == "EchoWildfire"
+    assert records["echo.cycle"] == "09"
+    assert records["echo.summary"] == "Advance bridge payload"
+    assert records["echo.links"] == ["https://echo.example/cycles/09"]
+    assert records["echo.topics"] == ["Bridge Upgrades"]
+    assert records["echo.priority"] == "critical"
+    assert records["echo.traits"]["pulse"] == "aurora"
+    assert unstoppable["requires_secret"] == ["ECHO_UNSTOPPABLE_SECRET"]
+
+    vercel = plans["vercel"]
+    assert vercel["action"] == "trigger_deploy"
+    assert vercel["payload"]["projects"] == ["dashboard", "console"]
+    context = vercel["payload"]["context"]
+    assert context["identity"] == "EchoWildfire"
+    assert context["cycle"] == "09"
+    assert context["summary"] == "Advance bridge payload"
+    assert context["links"] == ["https://echo.example/cycles/09"]
+    assert context["topics"] == ["Bridge Upgrades"]
+    assert context["priority"] == "critical"
+    assert vercel["requires_secret"] == ["ECHO_VERCEL_TOKEN"]
