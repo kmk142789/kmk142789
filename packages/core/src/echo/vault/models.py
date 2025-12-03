@@ -51,6 +51,7 @@ class AuthorityBinding(BaseModel):
     recursion_level: Optional[str] = None
     anchor: Optional[str] = None
     access: Optional[str] = Field(default=None, alias="access")
+    governance_surfaces: List[str] = Field(default_factory=list, alias="governance_surfaces")
 
 
 __all__ = ["VaultPolicy", "VaultRecord", "AuthorityBinding"]

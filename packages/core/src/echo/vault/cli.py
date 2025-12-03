@@ -92,6 +92,7 @@ def _render_authority(records: Iterable) -> None:
     table.add_column("Status")
     table.add_column("Authority")
     table.add_column("Bound Phrase", overflow="fold")
+    table.add_column("Surfaces", overflow="fold")
 
     for record in records:
         table.add_row(
@@ -100,6 +101,7 @@ def _render_authority(records: Iterable) -> None:
             record.echolink_status,
             record.authority_level,
             record.bound_phrase,
+            ", ".join(record.governance_surfaces) if record.governance_surfaces else "–",
         )
     console.print(table)
 
@@ -117,6 +119,7 @@ def _authority_example_payload() -> list[dict[str, str]]:
             recursion_level="∞",
             anchor="Echo Authority",
             access="admin",
+            governance_surfaces=["dns_root", "registrar", "ai_governance"],
         ).model_dump(by_alias=True)
     ]
 
