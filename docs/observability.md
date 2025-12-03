@@ -2,7 +2,7 @@
 
 This repository now bundles a full OpenTelemetry pipeline so every service exports traces, metrics, and structured logs into a shared stack.  Shared configuration lives under [`/observability`](../observability) and is consumed by both the Docker Compose workflow (`deploy/docker-compose.yml`) and the Helm chart (`deploy/helm/echo-stack`).
 
-For fast troubleshooting when the full stack is unavailable, use the lightweight snapshot helper:
+For fast troubleshooting when the full stack is unavailable, use the lightweight snapshot helper. It now reports CPU usage, load averages, memory pressure, uptime, process counts, and active network interfaces so you can spot host-level anomalies without attaching to the full stack:
 
 ```bash
 python scripts/observability_snapshot.py           # JSON by default
@@ -14,11 +14,18 @@ A sample JSON payload looks like:
 
 ```json
 {
-  "cpu_percent": 0.0,
+  "cpu_percent": 4.25,
   "hostname": "echo-dev",
-  "node_count": 1,
-  "process_count": 3,
-  "timestamp_utc": "2025-05-11T07:00:00Z"
+  "load_average": [
+    0.09,
+    0.07,
+    0.05
+  ],
+  "memory_percent": 38.1,
+  "node_count": 2,
+  "process_count": 127,
+  "timestamp_utc": "2025-10-26T07:00:00Z",
+  "uptime_seconds": 98232.4
 }
 ```
 

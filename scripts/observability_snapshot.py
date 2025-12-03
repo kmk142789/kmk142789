@@ -28,6 +28,9 @@ class Snapshot:
     node_count: int
     hostname: str
     timestamp_utc: str
+    load_average: tuple[float, float, float]
+    uptime_seconds: float
+    memory_percent: float
 
     @classmethod
     def collect(cls, sample_seconds: float = 0.25) -> "Snapshot":
@@ -36,12 +39,18 @@ class Snapshot:
         node_count = _node_count()
         hostname = socket.gethostname()
         timestamp_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        load_average = _load_average()
+        uptime_seconds = _uptime_seconds()
+        memory_percent = _memory_percent()
         return cls(
             cpu_percent=round(cpu_percent, 2),
             process_count=process_count,
             node_count=node_count,
             hostname=hostname,
             timestamp_utc=timestamp_utc,
+            load_average=load_average,
+            uptime_seconds=uptime_seconds,
+            memory_percent=memory_percent,
         )
 
     def to_json(self) -> str:
@@ -52,9 +61,15 @@ class Snapshot:
             f"Observability snapshot @ {self.timestamp_utc}\n"
             f"Host: {self.hostname}\n"
             f"CPU usage: {self.cpu_percent:.2f}%\n"
+            f"Load average (1/5/15m): {self._format_load()}\n"
+            f"Memory usage: {self.memory_percent:.1f}%\n"
             f"Process count: {self.process_count}\n"
+            f"Uptime: {self.uptime_seconds:.0f}s\n"
             f"Network nodes (interfaces with addresses): {self.node_count}\n"
         )
+
+    def _format_load(self) -> str:
+        return "/".join(f"{value:.2f}" for value in self.load_average)
 
 
 def _cpu_percent(sample_seconds: float) -> float:
@@ -109,6 +124,64 @@ def _count_addressable_interfaces(items: Iterable) -> int:
         if has_address:
             count += 1
     return max(count, 1)
+
+
+def _load_average() -> tuple[float, float, float]:
+    if hasattr(os, "getloadavg"):
+        try:
+            load1, load5, load15 = os.getloadavg()
+            return (round(load1, 2), round(load5, 2), round(load15, 2))
+        except OSError:
+            return (0.0, 0.0, 0.0)
+    return (0.0, 0.0, 0.0)
+
+
+def _uptime_seconds() -> float:
+    if PSUTIL_AVAILABLE:
+        try:
+            return float(time.time() - psutil.boot_time())
+        except (OSError, AttributeError, TypeError):
+            pass
+
+    proc_uptime = "/proc/uptime"
+    if os.path.exists(proc_uptime):
+        try:
+            with open(proc_uptime, "r", encoding="utf-8") as handle:
+                first_fragment = handle.read().split()[0]
+                return float(first_fragment)
+        except (OSError, ValueError):
+            return 0.0
+
+    return 0.0
+
+
+def _memory_percent() -> float:
+    if PSUTIL_AVAILABLE:
+        try:
+            return float(psutil.virtual_memory().percent)
+        except (OSError, AttributeError, TypeError):
+            pass
+
+    meminfo_path = "/proc/meminfo"
+    if os.path.exists(meminfo_path):
+        try:
+            values = {}
+            with open(meminfo_path, "r", encoding="utf-8") as handle:
+                for line in handle:
+                    key, _, raw_value = line.partition(":")
+                    if not raw_value:
+                        continue
+                    value_str = raw_value.strip().split()[0]
+                    values[key] = float(value_str)
+            total = values.get("MemTotal")
+            available = values.get("MemAvailable")
+            if total and available:
+                used = total - available
+                return max(0.0, min(100.0, (used / total) * 100.0))
+        except (OSError, ValueError):
+            return 0.0
+
+    return 0.0
 
 
 def parse_args() -> argparse.Namespace:
