@@ -14,6 +14,7 @@ import dataclasses
 import json
 import math
 import random
+from pathlib import Path
 from typing import List, Sequence
 
 
@@ -44,6 +45,7 @@ class HorizonConfig:
     momentum_alert: float = -0.02
     shock_fuse_length: int = 2
     shock_fuse_boost: float = 0.08
+    output_path: Path | None = None
 
     def validate(self) -> None:
         if self.timelines <= 0:
@@ -84,6 +86,8 @@ class HorizonConfig:
             raise ValueError("shock_fuse_length cannot be negative")
         if self.shock_fuse_boost < 0:
             raise ValueError("shock_fuse_boost cannot be negative")
+        if self.output_path is not None and str(self.output_path).strip() == "":
+            raise ValueError("output_path cannot be an empty string")
 
 
 @dataclasses.dataclass
@@ -149,6 +153,7 @@ class HorizonResult:
             "momentum_swing_year": self.momentum_swing_year,
             "momentum_bottom": self.momentum_bottom,
             "shock_fuse_triggers": self.shock_fuse_triggers,
+            "output_path": str(config.output_path) if config.output_path else None,
         }
 
 
@@ -542,6 +547,12 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         default=HorizonConfig.shock_fuse_boost,
         help="Resilience boost applied when the shock fuse fires",
     )
+    parser.add_argument(
+        "--output-path",
+        type=Path,
+        default=None,
+        help="Optional path to write the rendered report alongside stdout",
+    )
     args = parser.parse_args(argv)
 
     return HorizonConfig(
@@ -568,6 +579,7 @@ def parse_args(argv: Sequence[str] | None = None) -> HorizonConfig:
         momentum_alert=args.momentum_alert,
         shock_fuse_length=args.shock_fuse_length,
         shock_fuse_boost=args.shock_fuse_boost,
+        output_path=args.output_path,
     )
 
 
@@ -576,9 +588,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     engine = HorizonEngine(config=config)
     result = engine.run()
     if config.output_format == "json":
-        print(engine.render_json(result))
+        rendered_report = engine.render_json(result)
     else:
-        print(engine.render_report(result))
+        rendered_report = engine.render_report(result)
+
+    print(rendered_report)
+
+    if config.output_path:
+        config.output_path.parent.mkdir(parents=True, exist_ok=True)
+        config.output_path.write_text(rendered_report, encoding="utf-8")
+        print(f"Saved report to {config.output_path}")
     return 0
 
 
