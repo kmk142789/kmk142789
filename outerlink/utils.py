@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
@@ -14,6 +15,7 @@ class SafeModeConfig:
     allowed_roots: List[Path] = field(default_factory=lambda: [Path.cwd()])
     event_log: Path = Path("outerlink_events.log")
     offline_cache_dir: Path = Path("outerlink_cache")
+    offline_cache_ttl_seconds: Optional[int] = 24 * 60 * 60
 
     def is_command_allowed(self, command: str) -> bool:
         return command.split()[0] in self.allowed_commands
@@ -34,6 +36,7 @@ class OfflineState:
     last_sync: Optional[str] = None
     pending_events: List[dict] = field(default_factory=list)
     offline_reason: Optional[str] = None
+    last_cache_flush: Optional[str] = None
 
     def record_pending(self, payload: dict) -> None:
         self.pending_events.append(payload)
@@ -48,17 +51,32 @@ class OfflineState:
 
     def flush_to_cache(self, cache_dir: Path) -> None:
         cache_dir.mkdir(parents=True, exist_ok=True)
-        offset = len(list(cache_dir.glob("event_*.json")))
-        for index, payload in enumerate(self.pending_events, start=offset):
+        manifest = self._load_manifest(cache_dir)
+        offset = int(manifest.get("next_index", 0))
+        pending_snapshot = list(self.pending_events)
+        for index, payload in enumerate(pending_snapshot, start=offset):
             cache_file = cache_dir / f"event_{index}.json"
             cache_file.write_text(json.dumps(payload, indent=2))
         self.pending_events.clear()
+
+        cached_events = self.cached_event_count(cache_dir)
+        self.last_cache_flush = datetime.now(timezone.utc).isoformat()
+        manifest.update(
+            {
+                "next_index": offset + len(pending_snapshot),
+                "cached_events": cached_events,
+                "last_cache_flush": self.last_cache_flush,
+                "offline_reason": self.offline_reason,
+            }
+        )
+        self._write_manifest(cache_dir, manifest)
 
     def restore_cache(self, cache_dir: Path) -> List[dict]:
         restored: List[dict] = []
         if not cache_dir.exists():
             return restored
 
+        manifest = self._load_manifest(cache_dir)
         cache_files = sorted(cache_dir.glob("event_*.json"))
         for cache_file in cache_files:
             try:
@@ -68,6 +86,11 @@ class OfflineState:
             finally:
                 cache_file.unlink(missing_ok=True)
 
+        if manifest.get("last_cache_flush"):
+            self.last_cache_flush = manifest["last_cache_flush"]
+        manifest.update({"cached_events": 0})
+        self._write_manifest(cache_dir, manifest)
+
         return restored
 
     def cached_event_count(self, cache_dir: Path) -> int:
@@ -76,15 +99,75 @@ class OfflineState:
 
         return len(list(cache_dir.glob("event_*.json")))
 
-    def status(self, cache_dir: Optional[Path] = None) -> Dict[str, Optional[int | str | bool]]:
-        cached_events = self.cached_event_count(cache_dir) if cache_dir else 0
+    def prune_stale_cache(self, cache_dir: Path, ttl_seconds: Optional[int]) -> None:
+        if ttl_seconds is None or ttl_seconds <= 0:
+            return
+
+        manifest = self._load_manifest(cache_dir)
+        last_cache_flush = manifest.get("last_cache_flush")
+        if not last_cache_flush:
+            return
+
+        try:
+            last_flush_dt = datetime.fromisoformat(last_cache_flush)
+        except ValueError:
+            return
+
+        if datetime.now(timezone.utc) - last_flush_dt <= timedelta(seconds=ttl_seconds):
+            return
+
+        for cache_file in cache_dir.glob("event_*.json"):
+            cache_file.unlink(missing_ok=True)
+        manifest.update({"cached_events": 0})
+        self._write_manifest(cache_dir, manifest)
+
+    def status(
+        self, cache_dir: Optional[Path] = None, cache_ttl_seconds: Optional[int] = None
+    ) -> Dict[str, Optional[int | str | bool]]:
+        manifest: Dict[str, Optional[int | str | bool]] = {}
+        if cache_dir:
+            manifest = self._load_manifest(cache_dir)
+
+        cached_events = (
+            manifest.get("cached_events")
+            if manifest.get("cached_events") is not None
+            else self.cached_event_count(cache_dir) if cache_dir else 0
+        )
+        last_cache_flush = manifest.get("last_cache_flush") or self.last_cache_flush
+        cache_stale = False
+        if cache_ttl_seconds and last_cache_flush:
+            try:
+                last_flush_dt = datetime.fromisoformat(str(last_cache_flush))
+                cache_stale = datetime.now(timezone.utc) - last_flush_dt > timedelta(seconds=cache_ttl_seconds)
+            except ValueError:
+                cache_stale = False
+
         return {
             "online": self.online,
             "last_sync": self.last_sync,
             "pending_events": len(self.pending_events),
             "cached_events": cached_events,
             "offline_reason": self.offline_reason,
+            "last_cache_flush": last_cache_flush,
+            "cache_stale": cache_stale,
         }
+
+    def _manifest_path(self, cache_dir: Path) -> Path:
+        return cache_dir / "manifest.json"
+
+    def _load_manifest(self, cache_dir: Path) -> Dict[str, Optional[int | str | bool]]:
+        path = self._manifest_path(cache_dir)
+        if not path.exists():
+            return {}
+
+        try:
+            return json.loads(path.read_text())
+        except json.JSONDecodeError:
+            return {}
+
+    def _write_manifest(self, cache_dir: Path, manifest: Dict[str, Optional[int | str | bool]]) -> None:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        self._manifest_path(cache_dir).write_text(json.dumps(manifest, indent=2))
 
 
 def coerce_paths(paths: Iterable[str]) -> List[Path]:
