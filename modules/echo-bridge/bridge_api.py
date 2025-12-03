@@ -85,6 +85,10 @@ class EchoBridgeAPI:
         dns_secret_name: str = "DNS_PROVIDER_TOKEN",
         dns_root_authority: Optional[str] = None,
         dns_attestation_path: Optional[str] = None,
+        unstoppable_domains: Optional[Sequence[str]] = None,
+        unstoppable_secret_name: str = "UNSTOPPABLE_API_TOKEN",
+        vercel_projects: Optional[Sequence[str]] = None,
+        vercel_secret_name: str = "VERCEL_API_TOKEN",
         linkedin_organization_id: Optional[str] = None,
         linkedin_secret_name: str = "LINKEDIN_ACCESS_TOKEN",
         reddit_subreddit: Optional[str] = None,
@@ -141,6 +145,10 @@ class EchoBridgeAPI:
         self.dns_secret_name = dns_secret_name
         self.dns_root_authority = (dns_root_authority or "").strip() or None
         self.dns_attestation_path = (dns_attestation_path or "").strip() or None
+        self.unstoppable_domains = tuple(self._normalise_links(unstoppable_domains)) if unstoppable_domains else ()
+        self.unstoppable_secret_name = unstoppable_secret_name
+        self.vercel_projects = tuple(self._normalise_links(vercel_projects)) if vercel_projects else ()
+        self.vercel_secret_name = vercel_secret_name
         self.linkedin_organization_id = (linkedin_organization_id or "").strip() or None
         self.linkedin_secret_name = linkedin_secret_name
         self.reddit_subreddit = (reddit_subreddit or "").strip() or None
@@ -216,6 +224,33 @@ class EchoBridgeAPI:
                     signature=signature,
                     traits=traits,
                     topics=topic_items,
+                )
+            )
+
+        if self.unstoppable_domains and self._platform_enabled("unstoppable", allowed_platforms):
+            plans.append(
+                self._unstoppable_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                )
+            )
+
+        if self.vercel_projects and self._platform_enabled("vercel", allowed_platforms):
+            plans.append(
+                self._vercel_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
                 )
             )
 
@@ -1589,6 +1624,82 @@ class EchoBridgeAPI:
             action="upsert_txt_record",
             payload=payload,
             requires_secret=requires,
+        )
+
+    def _unstoppable_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+    ) -> BridgePlan:
+        records = {
+            "echo.identity": identity,
+            "echo.cycle": cycle,
+            "echo.signature": signature,
+            "echo.traits": traits,
+        }
+        if summary:
+            records["echo.summary"] = summary
+        if links:
+            records["echo.links"] = links
+        if topics:
+            records["echo.topics"] = topics
+        if priority:
+            records["echo.priority"] = priority
+
+        payload = {
+            "domains": list(self.unstoppable_domains),
+            "records": records,
+        }
+
+        return BridgePlan(
+            platform="unstoppable",
+            action="update_domain_records",
+            payload=payload,
+            requires_secret=[self.unstoppable_secret_name] if self.unstoppable_secret_name else [],
+        )
+
+    def _vercel_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+    ) -> BridgePlan:
+        context = {
+            "identity": identity,
+            "cycle": cycle,
+            "signature": signature,
+        }
+        if summary:
+            context["summary"] = summary
+        if links:
+            context["links"] = links
+        if topics:
+            context["topics"] = topics
+        if priority:
+            context["priority"] = priority
+
+        payload = {
+            "projects": list(self.vercel_projects),
+            "context": context,
+        }
+
+        return BridgePlan(
+            platform="vercel",
+            action="trigger_deploy",
+            payload=payload,
+            requires_secret=[self.vercel_secret_name] if self.vercel_secret_name else [],
         )
 
     # ------------------------------------------------------------------

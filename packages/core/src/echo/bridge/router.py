@@ -89,6 +89,10 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         dns_secret_name=os.getenv("ECHO_BRIDGE_DNS_SECRET", "DNS_PROVIDER_TOKEN"),
         dns_root_authority=os.getenv("ECHO_BRIDGE_DNS_ROOT_AUTHORITY"),
         dns_attestation_path=os.getenv("ECHO_BRIDGE_DNS_ATTESTATION_PATH"),
+        unstoppable_domains=_parse_recipients_env(os.getenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS")),
+        unstoppable_secret_name=os.getenv("ECHO_BRIDGE_UNSTOPPABLE_SECRET", "UNSTOPPABLE_API_TOKEN"),
+        vercel_projects=_parse_recipients_env(os.getenv("ECHO_BRIDGE_VERCEL_PROJECTS")),
+        vercel_secret_name=os.getenv("ECHO_BRIDGE_VERCEL_SECRET", "VERCEL_API_TOKEN"),
         linkedin_organization_id=os.getenv("ECHO_BRIDGE_LINKEDIN_ORG"),
         linkedin_secret_name=os.getenv("ECHO_BRIDGE_LINKEDIN_SECRET", "LINKEDIN_ACCESS_TOKEN"),
         reddit_subreddit=os.getenv("ECHO_BRIDGE_REDDIT_SUBREDDIT"),
@@ -215,6 +219,26 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="dns",
                 action="upsert_txt_record",
                 requires_secrets=[api.dns_secret_name] if getattr(api, "dns_secret_name", None) else [],
+            )
+        )
+    if getattr(api, "unstoppable_domains", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="unstoppable",
+                action="update_domain_records",
+                requires_secrets=[api.unstoppable_secret_name]
+                if getattr(api, "unstoppable_secret_name", None)
+                else [],
+            )
+        )
+    if getattr(api, "vercel_projects", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="vercel",
+                action="trigger_deploy",
+                requires_secrets=[api.vercel_secret_name]
+                if getattr(api, "vercel_secret_name", None)
+                else [],
             )
         )
     if getattr(api, "teams_webhook_url", None):
