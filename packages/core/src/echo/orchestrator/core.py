@@ -494,6 +494,52 @@ class OrchestratorCore:
             logging.debug("Unable to purge offline cache: %s", exc)
             return False
 
+    def export_offline_bundle(self, path: Path | str | None = None) -> Mapping[str, Any]:
+        """Persist an offline-ready bundle with cache inputs and state snapshots.
+
+        The bundle stitches together the current offline cache (if any), a
+        fresh snapshot from the local store, the most recent manifest path, and
+        the last in-memory decision. It is designed for environments that need
+        to ship diagnostics or replay orchestration inputs without network
+        access.
+        """
+
+        target = Path(path) if path is not None else self._state_dir / "offline_bundle.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+        status = self.offline_status()
+        cache_payload: MutableMapping[str, Any] = {}
+        if status.get("exists"):
+            try:
+                raw_cache = json.loads(self._offline_cache_path.read_text())
+                if isinstance(raw_cache, Mapping):
+                    cache_payload.update(raw_cache)
+            except Exception as exc:  # pragma: no cover - defensive read
+                cache_payload["cache_error"] = str(exc)
+
+        manifests = sorted(self._manifest_dir.glob("orchestration_*.json"))
+        latest_manifest = str(manifests[-1]) if manifests else None
+
+        bundle: MutableMapping[str, Any] = {
+            "generated_at": self._now_iso(),
+            "status": status,
+            "cache_metadata": {
+                key: cache_payload.get(key)
+                for key in ("cached_at", "cache_ttl_hours", "cache_error")
+                if cache_payload.get(key) is not None
+            },
+            "inputs": cache_payload.get("inputs"),
+            "offline_state": cache_payload.get("offline_state")
+            if cache_payload.get("offline_state") is not None
+            else self._store.snapshot_state(),
+            "latest_manifest": latest_manifest,
+            "last_decision": self._last_decision,
+        }
+
+        target.write_text(json.dumps(bundle, ensure_ascii=False, indent=2, default=str))
+        bundle["path"] = str(target)
+        return bundle
+
     def _enrich_attestations(
         self, attestations: Sequence[Mapping[str, Any]]
     ) -> list[Mapping[str, Any]]:
