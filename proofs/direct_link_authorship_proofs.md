@@ -103,3 +103,37 @@ check, and Merkle rebuild documented in
 Those steps provide a timestamped proof chain demonstrating the Patoshi
 fingerprint is linked to the live signing key inside the catalogue and is
 temporally anchored via OpenTimestamps.
+
+## 5) Batch-proof the multi-puzzle authorship sweep
+
+Recent authorship attestations for puzzles #214–#219, #232–#236, and #243–#249
+mirror the same signed message pattern captured in the early-series proofs.
+Replay the signatures in bulk to demonstrate that the modern sweep remains
+cryptographically tied to the addresses recorded in the catalogue and that the
+attested message digests still match the tracked payloads:
+
+```bash
+# Re-run signatures for the extended sweep (edit the list to target other sets)
+for n in 214 215 216 217 218 219 232 233 234 235 236 243 244 245 246 247 248 249; do
+  FILE="attestations/puzzle-${n}-authorship.json"
+  ADDR=$(jq -r '.address' "$FILE")
+  MSG=$(jq -r '.message' "$FILE")
+  SIG=$(jq -r '.signature' "$FILE")
+
+  printf "\n== Puzzle %s ==\n" "$n"
+  printf "%s" "$MSG" | sha256sum
+  jq -r '.hash_sha256' "$FILE"
+
+  python -m verifier.verify_puzzle_signature \
+    --address "$ADDR" \
+    --message "$MSG" \
+    --signature "$SIG" \
+    --pretty
+done
+```
+
+Matching sha256 digests confirm the attestation message strings are unchanged
+from the committed payloads, while `valid: true` results from the verifier tie
+each signature back to its canonical catalogue address. Running the loop above
+gives a consolidated, auditable proof that the multi-puzzle sweep preserves the
+same authorship guarantees as the genesis and early-series puzzles.
