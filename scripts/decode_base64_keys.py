@@ -22,6 +22,8 @@ import sys
 from dataclasses import dataclass
 from typing import Iterable, Sequence
 
+from echo.glyphnet_decoder import GlyphnetKeyDecoder, GlyphnetKeyFeature
+
 
 BASE64_PATTERN = re.compile(r"[A-Za-z0-9+/]+={0,2}")
 DEFAULT_DATA_PATH = (
@@ -89,6 +91,14 @@ def format_segment(segment: DecodedSegment) -> str:
     return f"{segment.index:03d} [{kind}] {preview}"
 
 
+def format_feature(feature: GlyphnetKeyFeature) -> str:
+    tags = ",".join(feature.tags)
+    return (
+        f"{feature.token} :: len={feature.length} ascii={feature.ascii_ratio:.3f} "
+        f"entropy={feature.entropy:.3f} tags={tags}"
+    )
+
+
 def _resolve_tokens(
     *, tokens: Sequence[str] | None, raw_source: str | None
 ) -> list[str]:
@@ -131,6 +141,11 @@ def main(argv: Iterable[str] | None = None) -> None:
             "repository dataset when omitted."
         ),
     )
+    parser.add_argument(
+        "--features",
+        action="store_true",
+        help="Render EchoGlyphNet metadata (entropy, ascii ratio, tags) for each token.",
+    )
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
@@ -148,6 +163,16 @@ def main(argv: Iterable[str] | None = None) -> None:
         decoded_segments = decode_all(tokens)
         for segment in decoded_segments:
             print(format_segment(segment))
+
+        if args.features:
+            decoder = GlyphnetKeyDecoder()
+            features = decoder.decode_tokens(tokens)
+            report = decoder.build_protocol_report(features)
+
+            print("\n# EchoGlyphNet feature map")
+            for feature in features:
+                print(format_feature(feature))
+            print(f"summary={report}")
     except BrokenPipeError:
         # Allow piping to commands like ``head`` without raising tracebacks.
         sys.exit(0)
