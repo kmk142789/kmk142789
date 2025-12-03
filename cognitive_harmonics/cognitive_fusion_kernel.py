@@ -15,7 +15,9 @@ class FusionSnapshot:
 
     def to_dict(self) -> Dict[str, object]:
         return {
-            "ranked_signals": list(self.ranked_signals),
+            "ranked_signals": [
+                [label, float(score)] for label, score in self.ranked_signals
+            ],
             "conflicts": list(self.conflicts),
             "action_tendency": self.action_tendency,
             "confidence_profile": dict(self.confidence_profile),
