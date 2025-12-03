@@ -309,6 +309,49 @@ def test_orchestrator_offline_cache_persists_state(tmp_path: Path) -> None:
     assert details.get("policy_snapshot")
 
 
+def test_orchestrator_exports_offline_bundle(tmp_path: Path) -> None:
+    summary = _make_summary()
+    pulsenet = StubPulseNet(summary, _make_attestations())
+    evolver = StubEvolver(_make_digest())
+    resonance = StubResonance(450.0)
+
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=evolver,  # type: ignore[arg-type]
+        resonance_engine=resonance,
+        atlas_resolver=None,
+    )
+
+    service.orchestrate()
+    bundle = service.export_offline_bundle(tmp_path / "bundles" / "offline.json")
+
+    bundle_path = Path(bundle["path"])
+    assert bundle_path.exists()
+    payload = json.loads(bundle_path.read_text())
+    assert payload["status"]["exists"] is True
+    assert payload["inputs"]["pulse_summary"]["total_entries"] == summary["total_entries"]
+    assert payload["offline_state"]["policies"] == []
+    assert payload["latest_manifest"]
+
+
+def test_orchestrator_offline_bundle_handles_missing_cache(tmp_path: Path) -> None:
+    pulsenet = StubPulseNet(_make_summary(), _make_attestations())
+    service = OrchestratorCore(
+        state_dir=tmp_path,
+        pulsenet=pulsenet,
+        evolver=StubEvolver(_make_digest()),  # type: ignore[arg-type]
+        resonance_engine=StubResonance(300.0),
+        atlas_resolver=None,
+    )
+
+    bundle = service.export_offline_bundle(tmp_path / "offline.json")
+
+    assert bundle["status"]["exists"] is False
+    assert bundle["inputs"] is None
+    assert bundle["offline_state"]["config"] == {}
+
+
 def test_orchestrator_offline_cache_reports_staleness(tmp_path: Path) -> None:
     pulsenet = StubPulseNet(_make_summary(), _make_attestations())
     evolver = StubEvolver(_make_digest())
