@@ -106,3 +106,52 @@ def test_echo_infinite_builds_resilience_report(tmp_path: Path) -> None:
     assert 0.0 <= payload["metrics"]["risk_score"] <= 1.0
     assert payload["recommendations"]
     assert payload["signals"]["merkle_root"]
+
+
+def test_echo_infinite_builds_status_report(tmp_path: Path) -> None:
+    orchestrator = EchoInfinite(base_dir=tmp_path, sleep_seconds=0)
+
+    cycle = 2
+    timestamp = rfc3339_timestamp()
+    glyph_signature = "∞⌘⟁★::status"
+    cycle_dir = orchestrator.colossus_dir / f"cycle_{cycle:05d}"
+    cycle_dir.mkdir(parents=True, exist_ok=True)
+
+    artifacts = orchestrator._create_cycle_artifacts(
+        cycle=cycle,
+        timestamp=timestamp,
+        glyph_signature=glyph_signature,
+        cycle_dir=cycle_dir,
+    )
+
+    orchestrator._append_log_entry(
+        cycle=cycle,
+        timestamp=timestamp,
+        glyph_signature=glyph_signature,
+        artifact_paths=artifacts,
+    )
+    orchestrator._update_cycle_summary(
+        cycle=cycle,
+        timestamp=timestamp,
+        glyph_signature=glyph_signature,
+        artifact_paths=artifacts,
+    )
+    orchestrator._persist_state(cycle)
+    orchestrator._write_heartbeat(
+        cycle=cycle,
+        timestamp=timestamp,
+        glyph_signature=glyph_signature,
+        artifact_paths=artifacts,
+    )
+
+    report = orchestrator.build_status_report()
+
+    assert report["state"]["cycle"] == cycle
+    assert report["heartbeat"]["glyph_signature"] == glyph_signature
+    assert report["summary"]["latest"]["cycle"] == cycle
+
+    harmonic = report["harmonic_memory"]
+    assert harmonic is not None
+    assert harmonic["cycle_id"] == cycle
+    assert harmonic["glyph_signature"] == glyph_signature
+    assert harmonic["artifact"]["path"] == str(artifacts.narrative.relative_to(tmp_path))
