@@ -151,6 +151,19 @@ class FunctionRouter:
 
         if (
             any(alias in normalised for alias in self._COMPUTER_ALIASES)
+            and ("evolve" in normalised or "evolution" in normalised)
+        ):
+            arguments = {}
+            focus = self._match_focus(normalised)
+            if focus:
+                arguments["focus"] = focus
+            limit = self._extract_limit(normalised)
+            if limit is not None:
+                arguments["limit"] = limit
+            return FunctionCall(name="evolution_briefing", arguments=arguments)
+
+        if (
+            any(alias in normalised for alias in self._COMPUTER_ALIASES)
             and ("upgrade" in normalised or "update" in normalised)
             and not any(
                 excluded in normalised
@@ -776,6 +789,38 @@ class EchoChatAgent:
                     ],
                 },
             ),
+            "evolution_briefing": FunctionSpec(
+                name="evolution_briefing",
+                description=(
+                    "Blend feature blueprints, rituals, daily invitations, and quantam guidance"
+                    " into a single Echo Computer evolution packet."
+                ),
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "focus": {
+                            "type": "string",
+                            "enum": ["Code", "Create", "Collaborate", "Cloud"],
+                            "description": "Optional focus filter to bias the evolution packet.",
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5,
+                            "description": "Restrict how many items per lane are surfaced.",
+                        },
+                    },
+                },
+                handler=self._handle_evolution_briefing,
+                metadata={
+                    "category": "echo_computer",
+                    "examples": [
+                        "upgrade and evolve echos computer",
+                        "evolution ritual for echo computer",
+                        "echo.computer evolution packet top 2",
+                    ],
+                },
+            ),
             "digital_computer": FunctionSpec(
                 name="digital_computer",
                 description="Generate or execute assembly programs using the Echo digital computer.",
@@ -1126,6 +1171,83 @@ class EchoChatAgent:
 
         return CommandResponse(
             function="weekly_rituals",
+            message=message,
+            data=data,
+            metadata=metadata,
+        )
+
+    def _handle_evolution_briefing(self, call: FunctionCall, _: CommandContext) -> CommandResponse:
+        focus = call.arguments.get("focus")
+        limit = call.arguments.get("limit")
+
+        focus_label = str(focus) if focus else None
+        limit_value = int(limit) if isinstance(limit, int) else None
+
+        daily_snapshot = self._task_registry.snapshot(
+            focus=focus_label, limit=limit_value
+        )
+        ritual_snapshot = self._ritual_registry.snapshot(
+            focus=focus_label, limit=limit_value
+        )
+        feature_snapshot = self._feature_registry.snapshot(
+            focus=focus_label, limit=limit_value
+        )
+
+        tasks = daily_snapshot.get("tasks", [])
+        rituals = ritual_snapshot.get("rituals", [])
+        features = feature_snapshot.get("features", [])
+
+        cycle_anchor = (
+            daily_snapshot.get("total_tasks", 0)
+            + ritual_snapshot.get("total_rituals", 0)
+            + feature_snapshot.get("total_features", 0)
+        )
+        iterations = max(1, min(limit_value or 3, 5))
+        cascade = generate_quantam_feature_sequence(
+            glyphs="∇⊸≋∇",
+            cycle=cycle_anchor,
+            joy=0.94,
+            curiosity=0.91,
+            iterations=iterations,
+        )
+        cascade_summary = cascade.get("summary", {})
+
+        message = (
+            "Echo Computer evolution packet assembled: "
+            f"{len(tasks)} daily invitations, {len(rituals)} rituals, "
+            f"{len(features)} feature blueprints; "
+            f"quantam cascade braided across {cascade_summary.get('total_layers', iterations)} layers."
+        )
+
+        metadata = {
+            "confidence": 0.96 if features or rituals or tasks else 0.4,
+            "focus": focus_label,
+            "limit": limit_value,
+            "updated": {
+                "daily": daily_snapshot.get("updated"),
+                "weekly": ritual_snapshot.get("updated"),
+                "features": feature_snapshot.get("updated"),
+            },
+            "quantam": {
+                "entanglement": cascade_summary.get("entanglement"),
+                "world_first_proof": cascade_summary.get("world_first_proof"),
+            },
+        }
+
+        data = {
+            "daily_invitations": tasks,
+            "weekly_rituals": rituals,
+            "feature_blueprints": features,
+            "quantam_cascade": cascade,
+            "sources": {
+                "daily": daily_snapshot.get("source"),
+                "weekly": ritual_snapshot.get("source"),
+                "features": feature_snapshot.get("source"),
+            },
+        }
+
+        return CommandResponse(
+            function="evolution_briefing",
             message=message,
             data=data,
             metadata=metadata,

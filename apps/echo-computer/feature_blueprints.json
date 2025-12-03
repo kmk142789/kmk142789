@@ -104,6 +104,32 @@
         "Design a compact radar view showing error budgets, saturation, and dependency health in one card.",
         "Publish a `/cloud/radar` JSON feed so rituals and handoff kits can quote the latest snapshots."
       ]
+    },
+    {
+      "id": "code-echo-cache",
+      "focus": "Code",
+      "status": "Research",
+      "title": "Echo cache accelerator",
+      "description": "Layer a workspace-aware cache in front of the runner so repeated calls reuse compiled artifacts.",
+      "impact": "Shrinks rebuild times for common toolchains and keeps paired languages in sync during rapid runs.",
+      "blueprint": [
+        "Detect deterministic build outputs (node_modules, venv) and store them per-branch in a warm cache lane.",
+        "Expose a cache hit/miss HUD inside the terminal footer with guidance to refresh or pin versions.",
+        "Add a `echo-cache inspect` command that prints current keys, sizes, and invalidation signals."
+      ]
+    },
+    {
+      "id": "collab-ops-journal",
+      "focus": "Collaborate",
+      "status": "Prototype",
+      "title": "Ops journal co-author",
+      "description": "Co-author a running journal entry from telemetry snippets, TODOs, and reviewer replies inside Echo Computer.",
+      "impact": "Keeps the full upgrade story in one place while pairing or handing off across timezones.",
+      "blueprint": [
+        "Capture telemetry snippets and command outputs into a markdown buffer with attribution.",
+        "Offer AI-suggested section headers (Context, Risks, Next) that can be toggled inline.",
+        "Publish the journal to `/handoff/journal` with signed hashes for downstream packaging."
+      ]
     }
   ]
 }
