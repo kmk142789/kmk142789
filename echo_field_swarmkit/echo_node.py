@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Iterable, Optional
 
 from .health_engine import HealthEngine
+from .gecs import GlobalErrorCorrectionSubstrate, ResilientSignalMesh
 from .storage import StateStore, TaskStore
 from .swarm_protocol import SwarmProtocol
 from .task_ledger import Task
@@ -30,6 +31,24 @@ class FileSyncAdapter:
         self.node_id = node_id
         self.sync_path = os.path.abspath(os.path.expanduser(sync_path))
         os.makedirs(self.sync_path, exist_ok=True)
+
+    def publish_compact(self, packet: dict) -> None:
+        path = os.path.join(self.sync_path, f"{self.node_id}.cjson")
+        tmp_path = f"{path}.tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(packet, f, indent=2)
+        os.replace(tmp_path, path)
+
+    def fetch_compact(self, peer_id: str) -> Optional[dict]:
+        path = os.path.join(self.sync_path, f"{peer_id}.cjson")
+        if not os.path.exists(path):
+            return None
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            logger.warning("Peer compact signal for %s is corrupt; skipping", peer_id)
+            return None
 
     def publish(self, state: dict) -> None:
         path = os.path.join(self.sync_path, f"{self.node_id}.json")
@@ -77,6 +96,10 @@ class EchoNode:
         self.state = StateStore(self.node_id, config.state_store_path)
         self.swarm = SwarmProtocol(self.node_id, self.tasks, self.state)
         self.health = HealthEngine(self.node_id, self.tasks, self.state)
+        self.signal_mesh = ResilientSignalMesh(self.node_id)
+        self.gecs = GlobalErrorCorrectionSubstrate(
+            self.node_id, self.tasks, self.state, signal_mesh=self.signal_mesh
+        )
         self.sync_adapter = FileSyncAdapter(self.node_id, config.sync_path)
         self.health_interval = config.health_interval
         self.sync_interval = config.sync_interval
@@ -95,6 +118,7 @@ class EchoNode:
             if now - last_health > self.health_interval:
                 checks = self.health.run_health_check_cycle()
                 logger.info("Health checks: %s", checks)
+                self.gecs.observe_and_correct(checks)
                 last_health = now
 
             if now - last_sync > self.sync_interval:
@@ -106,10 +130,18 @@ class EchoNode:
 
     def _sync_with_peers(self):
         local_state = self.swarm.export_state()
+        packet = self.gecs.package_signal(local_state)
         self.sync_adapter.publish(local_state)
+        self.sync_adapter.publish_compact(packet)
         discovered_peers = set(self.sync_adapter.discover_peers())
         for peer in set(self.state.get_peers()) | discovered_peers:
             remote = self.sync_adapter.fetch(peer)
+            if not remote:
+                compact_signal = self.sync_adapter.fetch_compact(peer)
+                if compact_signal:
+                    remote = self.gecs.unpack_signal(compact_signal)
+                    interpretation = self.gecs.interpret_signal(compact_signal)
+                    logger.debug("Compact signal from %s interpreted as %s", peer, interpretation)
             if not remote:
                 continue
             last_seen = remote.get("node_state", {}).get("last_seen", 0)
@@ -141,6 +173,12 @@ class EchoNode:
             return self._cpu_cooldown(task.payload)
         if task.type == "memory_cleanup":
             return self._memory_cleanup(task.payload)
+        if task.type == "stabilize_system":
+            return self._stabilize_system(task.payload)
+        if task.type == "refresh_peer_routes":
+            return self._refresh_peer_routes(task.payload)
+        if task.type == "reconcile_operator_workflow":
+            return self._reconcile_operator_workflow(task.payload)
         logger.info("No handler for task %s", task.type)
         return False
 
@@ -173,4 +211,18 @@ class EchoNode:
 
     def _memory_cleanup(self, payload: dict) -> bool:
         logger.info("Memory cleanup stub executed with payload=%s", payload)
+        return True
+
+    def _stabilize_system(self, payload: dict) -> bool:
+        logger.info("GECS stabilize_system executed with payload=%s", payload)
+        time.sleep(1)
+        return True
+
+    def _refresh_peer_routes(self, payload: dict) -> bool:
+        logger.info("GECS refresh_peer_routes invoked with payload=%s", payload)
+        self._sync_with_peers()
+        return True
+
+    def _reconcile_operator_workflow(self, payload: dict) -> bool:
+        logger.info("GECS reconcile_operator_workflow acknowledged with payload=%s", payload)
         return True
