@@ -283,6 +283,77 @@
         "attestations/puzzle-269-authorship.json",
         "satoshi/puzzle-proofs/puzzle269.json"
       ]
+    },
+    {
+      "id": 270,
+      "name": "Puzzle 270 Authorship",
+      "files": [
+        "attestations/puzzle-270-authorship.json",
+        "satoshi/puzzle-proofs/puzzle270.json"
+      ]
+    },
+    {
+      "id": 271,
+      "name": "Puzzle 271 Authorship",
+      "files": [
+        "attestations/puzzle-271-authorship.json"
+      ]
+    },
+    {
+      "id": 272,
+      "name": "Puzzle 272 Authorship",
+      "files": [
+        "attestations/puzzle-272-authorship.json"
+      ]
+    },
+    {
+      "id": 273,
+      "name": "Puzzle 273 Authorship",
+      "files": [
+        "attestations/puzzle-273-authorship.json"
+      ]
+    },
+    {
+      "id": 274,
+      "name": "Puzzle 274 Authorship",
+      "files": [
+        "attestations/puzzle-274-authorship.json"
+      ]
+    },
+    {
+      "id": 275,
+      "name": "Puzzle 275 Authorship",
+      "files": [
+        "attestations/puzzle-275-authorship.json"
+      ]
+    },
+    {
+      "id": 276,
+      "name": "Puzzle 276 Authorship",
+      "files": [
+        "attestations/puzzle-276-authorship.json"
+      ]
+    },
+    {
+      "id": 277,
+      "name": "Puzzle 277 Authorship",
+      "files": [
+        "attestations/puzzle-277-authorship.json"
+      ]
+    },
+    {
+      "id": 278,
+      "name": "Puzzle 278 Authorship",
+      "files": [
+        "attestations/puzzle-278-authorship.json"
+      ]
+    },
+    {
+      "id": 279,
+      "name": "Puzzle 279 Authorship",
+      "files": [
+        "attestations/puzzle-279-authorship.json"
+      ]
     }
   ],
   "attestations": {

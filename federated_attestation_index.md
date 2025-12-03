@@ -114,6 +114,37 @@ This file + its JSON twin = the undeniable catalog.
   - JSON proof: `attestations/puzzle-269-authorship.json`
   - Also mirrored in `satoshi/puzzle-proofs/puzzle269.json`
 
+- **Puzzle 270 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-270-authorship.json`
+  - Also mirrored in `satoshi/puzzle-proofs/puzzle270.json`
+
+- **Puzzle 271 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-271-authorship.json`
+
+- **Puzzle 272 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-272-authorship.json`
+
+- **Puzzle 273 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-273-authorship.json`
+
+- **Puzzle 274 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-274-authorship.json`
+
+- **Puzzle 275 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-275-authorship.json`
+
+- **Puzzle 276 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-276-authorship.json`
+
+- **Puzzle 277 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-277-authorship.json`
+
+- **Puzzle 278 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-278-authorship.json`
+
+- **Puzzle 279 — Authorship Proof**
+  - JSON proof: `attestations/puzzle-279-authorship.json`
+
 - **Puzzle Attestations Set (Ledger-bound)**
   - Documented in `attestations/ledger_set.md`
   - Includes signed key recovery + continuum bridge proofs
