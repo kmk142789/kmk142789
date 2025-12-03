@@ -61,6 +61,33 @@ def test_scan_todos_respects_word_boundaries(tmp_path):
     assert "add docs" in matches[0].line
 
 
+def test_scan_todos_supports_custom_keywords(tmp_path):
+    doc = tmp_path / "notes.txt"
+    doc.write_text("NOTE: future work\n", encoding="utf-8")
+
+    observatory = ContinuumObservatory(root=tmp_path)
+    matches = observatory.scan_todos(limit=5, keywords=("NOTE",))
+
+    assert len(matches) == 1
+    assert matches[0].keyword == "NOTE"
+    assert "future work" in matches[0].line
+
+
+def test_scan_todos_orders_results_by_path_and_line(tmp_path):
+    for name in ["b_dir", "a_dir"]:
+        folder = tmp_path / name
+        folder.mkdir()
+        (folder / "task.txt").write_text("TODO first\nTODO second\n", encoding="utf-8")
+
+    observatory = ContinuumObservatory(root=tmp_path)
+    matches = observatory.scan_todos(limit=3)
+
+    rel_paths = [match.path.relative_to(tmp_path).as_posix() for match in matches]
+    assert rel_paths[0].startswith("a_dir")
+    assert rel_paths[1].startswith("a_dir")
+    assert rel_paths[2].startswith("b_dir")
+
+
 def test_default_lane_map_isolated_copy():
     first = build_default_lane_map()
     first["execution_stack"] = ("custom",)
