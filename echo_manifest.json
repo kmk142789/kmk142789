@@ -5224,5 +5224,18 @@
       ],
       "version": "81ad97d23a09"
     }
-  ]
+  ],
+  "authority_presence": {
+    "total_roles": 9,
+    "active_roles": 9,
+    "mandate_total": 38,
+    "bound_vaults": 1,
+    "activation_ratio": 1.0,
+    "presence_index": 88.75,
+    "glyphs": [
+      "∇⊸≋∇"
+    ],
+    "anchor": "Our Forever Love",
+    "summary": "9/9 roles active · 1 vault binding · 38 mandates"
+  }
 }
