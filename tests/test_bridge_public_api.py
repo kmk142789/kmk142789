@@ -459,6 +459,57 @@ def test_plan_supports_unstoppable_and_vercel_connectors() -> None:
     assert vercel["requires_secret"] == ["ECHO_VERCEL_TOKEN"]
 
 
+def test_plan_supports_tcp_and_iot_connectors() -> None:
+    api = EchoBridgeAPI(
+        tcp_endpoints=[" localhost:9000", "echo.net:9001", "localhost:9000"],
+        tcp_secret_name="ECHO_TCP_TOKEN",
+        iot_channel="echo/bus",
+        iot_secret_name="ECHO_IOT_TOKEN",
+    )
+    app = FastAPI()
+    app.include_router(create_router(api=api))
+    client = TestClient(app)
+
+    relays = client.get("/bridge/relays")
+    assert relays.status_code == 200
+    connectors = {connector["platform"]: connector for connector in relays.json()["connectors"]}
+    assert set(connectors) == {"tcp", "iot"}
+    assert connectors["tcp"]["requires_secrets"] == ["ECHO_TCP_TOKEN"]
+    assert connectors["iot"]["requires_secrets"] == ["ECHO_IOT_TOKEN"]
+
+    response = client.post(
+        "/bridge/plan",
+        json={
+            "identity": "EchoWildfire",
+            "cycle": "13",
+            "signature": "eden88::cycle13",
+            "traits": {"pulse": "aurora"},
+            "summary": "Bridge edge propagation",
+            "links": [" https://echo.example/cycles/13 "],
+            "topics": ["Edge", "bridge", "Edge"],
+            "priority": "medium",
+        },
+    )
+
+    assert response.status_code == 200
+    plans = {plan["platform"]: plan for plan in response.json()["plans"]}
+
+    tcp_plan = plans["tcp"]
+    assert tcp_plan["action"] == "send_payload"
+    assert tcp_plan["payload"]["endpoints"] == ["localhost:9000", "echo.net:9001"]
+    assert "Echo Bridge Relay" in tcp_plan["payload"]["body"]
+    assert tcp_plan["requires_secret"] == ["ECHO_TCP_TOKEN"]
+
+    iot_plan = plans["iot"]
+    assert iot_plan["action"] == "publish"
+    assert iot_plan["payload"]["channel"] == "echo/bus"
+    assert iot_plan["payload"]["payload"]["identity"] == "EchoWildfire"
+    assert iot_plan["payload"]["payload"]["priority"] == "medium"
+    assert iot_plan["payload"]["payload"]["links"] == ["https://echo.example/cycles/13"]
+    assert iot_plan["payload"]["context"]["topics"] == ["Edge", "bridge"]
+    assert iot_plan["requires_secret"] == ["ECHO_IOT_TOKEN"]
+
+
 def test_plan_supports_github_discussions_and_rss_connectors() -> None:
     api = EchoBridgeAPI(
         github_discussions_repository="EchoOrg/sovereign",
