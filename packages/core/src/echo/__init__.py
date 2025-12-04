@@ -5,6 +5,14 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING, Any, Iterable
 
+from .cognitive_field_inference_engine import (
+    CFIEngine,
+    CognitiveField,
+    CognitiveFeatureEncoder,
+    CognitiveForecast,
+    CognitiveMetrics,
+    SignalFusion,
+)
 from .aurora_chronicles import AuroraChronicleMoment, AuroraChronicles, forge_chronicle
 from .autonomous_coordination_engine import (
     AutonomousCoordinationEngine,
