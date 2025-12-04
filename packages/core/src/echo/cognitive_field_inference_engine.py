@@ -143,6 +143,7 @@ class CognitiveForecast:
 
         attention_drift = features["attention_delta"] > self.attention_threshold or metrics.torsion > 0.25
         instability_index = float(metrics.curvature * max(metrics.torsion, 1e-5))
+        collapse_risk = metrics.gradient_norm < 0.08 and not overload_risk
 
         attention_heat = np.array(features["attention_heat"])
         blind_zones = np.where(attention_heat < 0.05)[0].tolist()
@@ -150,6 +151,7 @@ class CognitiveForecast:
         return {
             "overload_risk": overload_risk,
             "attention_drift": attention_drift,
+            "attentional_collapse": collapse_risk,
             "misconception_axis": metrics.misconception_axis,
             "blind_zones": blind_zones,
             "instability_index": instability_index,
@@ -169,6 +171,7 @@ class CFIEngine:
         self.fusion = SignalFusion(rng=rng, noise_scale=noise_scale)
         self.encoder = CognitiveFeatureEncoder()
         self.forecast = CognitiveForecast()
+        self.last_forecast: Optional[MutableMapping[str, object]] = None
 
     def step(self, signals: Mapping[str, float], dt: float = 0.12) -> MutableMapping[str, object]:
         fused = self.fusion.fuse(signals, dt=dt)
@@ -182,6 +185,7 @@ class CFIEngine:
             misconception_axis=self.manifold.misconception_axis(),
         )
         forecast = self.forecast.predict(self.manifold, feature_metrics, metrics)
+        self.last_forecast = forecast
 
         return {
             "manifold": {

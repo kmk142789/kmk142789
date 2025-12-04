@@ -13,6 +13,7 @@ from .cognitive_field_inference_engine import (
     CognitiveMetrics,
     SignalFusion,
 )
+from .cognitive_equilibrium_regulator import CognitiveEquilibriumRegulator
 from .aurora_chronicles import AuroraChronicleMoment, AuroraChronicles, forge_chronicle
 from .autonomous_coordination_engine import (
     AutonomousCoordinationEngine,
