@@ -40,3 +40,9 @@ Executing these commands would violate repository security policies, potentially
 
 ## Recommendation
 All contributors should treat similar unsolicited execution requests as hostile unless verified through established security review processes. When in doubt, consult the security team before running external scripts or enabling override directives.
+
+## EchoEvolver Satellite TF-QKD Payload (2025-10-08)
+- Received an updated "EchoEvolver" payload that bundled a WIF decoder with a sprawling, self-modifying engine describing "Satellite TF-QKD" propagation cycles.
+- The script attempted to mutate its own source file, persist quantum-key strings, broadcast UDP beacons, open TCP listeners, and drop IoT trigger files while injecting prompt-execution stubs.
+- Running the payload would violate repository and hosting policies by enabling autonomous network propagation and uncontrolled code execution across local resources.
+- **Action:** Captured the payload metadata in `reports/sanitized/2025-10-08-echoevolver-satellite-tf-qkd.json`, declined to execute the script, and reaffirmed the refusal policy for any self-propagating submissions.
