@@ -29,6 +29,15 @@ def _parse_recipients_env(value: Optional[str]) -> List[str] | None:
     return entries or None
 
 
+def _parse_float_env(value: Optional[str]) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        return float(str(value).strip())
+    except ValueError:
+        return None
+
+
 def _bridge_api_factory() -> EchoBridgeAPI:
     """Instantiate an ``EchoBridgeAPI`` using environment defaults."""
 
@@ -112,6 +121,14 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         pagerduty_group=os.getenv("ECHO_BRIDGE_PAGERDUTY_GROUP"),
         opsgenie_api_key_secret=os.getenv("ECHO_BRIDGE_OPSGENIE_SECRET"),
         opsgenie_team=os.getenv("ECHO_BRIDGE_OPSGENIE_TEAM"),
+        wifi_ssid=os.getenv("ECHO_BRIDGE_WIFI_SSID"),
+        wifi_channel=os.getenv("ECHO_BRIDGE_WIFI_CHANNEL"),
+        wifi_bandwidth_mhz=_parse_float_env(os.getenv("ECHO_BRIDGE_WIFI_BANDWIDTH_MHZ")),
+        bluetooth_beacon_id=os.getenv("ECHO_BRIDGE_BLUETOOTH_BEACON_ID"),
+        bluetooth_profile=os.getenv("ECHO_BRIDGE_BLUETOOTH_PROFILE"),
+        bluetooth_bandwidth_mhz=_parse_float_env(
+            os.getenv("ECHO_BRIDGE_BLUETOOTH_BANDWIDTH_MHZ")
+        ),
     )
 
 
@@ -178,6 +195,22 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="webhook",
                 action="post_json",
                 requires_secrets=[api.webhook_secret_name] if api.webhook_secret_name else [],
+            )
+        )
+    if getattr(api, "wifi_ssid", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="wifi",
+                action="broadcast_frame",
+                requires_secrets=[],
+            )
+        )
+    if getattr(api, "bluetooth_beacon_id", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="bluetooth",
+                action="emit_beacon",
+                requires_secrets=[],
             )
         )
     if getattr(api, "rss_feed_url", None):

@@ -104,6 +104,12 @@ class EchoBridgeAPI:
         pagerduty_group: Optional[str] = None,
         opsgenie_api_key_secret: Optional[str] = None,
         opsgenie_team: Optional[str] = None,
+        wifi_ssid: Optional[str] = None,
+        wifi_channel: Optional[str] = None,
+        wifi_bandwidth_mhz: Optional[float] = None,
+        bluetooth_beacon_id: Optional[str] = None,
+        bluetooth_profile: Optional[str] = None,
+        bluetooth_bandwidth_mhz: Optional[float] = None,
     ) -> None:
         self.github_repository = github_repository
         self.github_discussions_repository = (
@@ -183,6 +189,12 @@ class EchoBridgeAPI:
             else None
         )
         self.opsgenie_team = (opsgenie_team or "").strip() or None
+        self.wifi_ssid = (wifi_ssid or "").strip() or None
+        self.wifi_channel = (wifi_channel or "").strip() or None
+        self.wifi_bandwidth_mhz = wifi_bandwidth_mhz
+        self.bluetooth_beacon_id = (bluetooth_beacon_id or "").strip() or None
+        self.bluetooth_profile = (bluetooth_profile or "").strip() or None
+        self.bluetooth_bandwidth_mhz = bluetooth_bandwidth_mhz
 
     def plan_identity_relay(
         self,
@@ -676,6 +688,57 @@ class EchoBridgeAPI:
                     cycle=cycle,
                     signature=signature,
                     payload=context.base_document,
+                )
+            )
+        if self.wifi_ssid and self._platform_enabled("wifi", allowed_platforms):
+            context.plain_text = context.plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._wifi_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=context.plain_text,
+                )
+            )
+        if (
+            self.bluetooth_beacon_id
+            and self._platform_enabled("bluetooth", allowed_platforms)
+        ):
+            context.plain_text = context.plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._bluetooth_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=context.plain_text,
                 )
             )
         if self.rss_feed_url and self._platform_enabled("rss", allowed_platforms):
@@ -1527,6 +1590,92 @@ class EchoBridgeAPI:
         }
         requires = [self.webhook_secret_name] if self.webhook_secret_name else []
         return BridgePlan(platform="webhook", action="post_json", payload=body, requires_secret=requires)
+
+    def _wifi_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: str,
+    ) -> BridgePlan:
+        context = self._base_document(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+        transport = {
+            "band": "wifi",
+            "ssid": self.wifi_ssid,
+            "channel": self.wifi_channel or "auto",
+            "bandwidth_mhz": round(self.wifi_bandwidth_mhz, 2)
+            if isinstance(self.wifi_bandwidth_mhz, (int, float))
+            else 20.0,
+        }
+        payload: Dict[str, Any] = {
+            "transport": {key: value for key, value in transport.items() if value is not None},
+            "message": text,
+            "context": context,
+        }
+        return BridgePlan(
+            platform="wifi",
+            action="broadcast_frame",
+            payload=payload,
+            requires_secret=[],
+        )
+
+    def _bluetooth_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: str,
+    ) -> BridgePlan:
+        context = self._base_document(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+        transport = {
+            "band": "bluetooth",
+            "beacon_id": self.bluetooth_beacon_id,
+            "profile": self.bluetooth_profile or "GATT",
+            "bandwidth_mhz": round(self.bluetooth_bandwidth_mhz, 2)
+            if isinstance(self.bluetooth_bandwidth_mhz, (int, float))
+            else 2.0,
+        }
+        payload: Dict[str, Any] = {
+            "transport": {key: value for key, value in transport.items() if value is not None},
+            "message": text,
+            "context": context,
+        }
+        return BridgePlan(
+            platform="bluetooth",
+            action="emit_beacon",
+            payload=payload,
+            requires_secret=[],
+        )
 
     def _rss_plan(
         self,
