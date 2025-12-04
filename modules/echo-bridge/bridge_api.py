@@ -104,6 +104,10 @@ class EchoBridgeAPI:
         pagerduty_group: Optional[str] = None,
         opsgenie_api_key_secret: Optional[str] = None,
         opsgenie_team: Optional[str] = None,
+        tcp_endpoints: Optional[Sequence[str]] = None,
+        tcp_secret_name: str = "TCP_RELAY_TOKEN",
+        iot_channel: Optional[str] = None,
+        iot_secret_name: str = "IOT_RELAY_TOKEN",
         wifi_ssid: Optional[str] = None,
         wifi_channel: Optional[str] = None,
         wifi_bandwidth_mhz: Optional[float] = None,
@@ -189,6 +193,10 @@ class EchoBridgeAPI:
             else None
         )
         self.opsgenie_team = (opsgenie_team or "").strip() or None
+        self.tcp_endpoints = tuple(self._normalise_links(tcp_endpoints)) if tcp_endpoints else ()
+        self.tcp_secret_name = tcp_secret_name
+        self.iot_channel = (iot_channel or "").strip() or None
+        self.iot_secret_name = iot_secret_name
         self.wifi_ssid = (wifi_ssid or "").strip() or None
         self.wifi_channel = (wifi_channel or "").strip() or None
         self.wifi_bandwidth_mhz = wifi_bandwidth_mhz
@@ -688,6 +696,44 @@ class EchoBridgeAPI:
                     cycle=cycle,
                     signature=signature,
                     payload=context.base_document,
+                )
+            )
+        if self.tcp_endpoints and self._platform_enabled("tcp", allowed_platforms):
+            context.plain_text = context.plain_text or self._render_plain(
+                identity=identity,
+                cycle=cycle,
+                signature=signature,
+                traits=traits,
+                summary=summary_text,
+                links=link_items,
+                topics=topic_items,
+                priority=priority_text,
+            )
+            plans.append(
+                self._tcp_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    text=context.plain_text,
+                )
+            )
+        if self.iot_channel and self._platform_enabled("iot", allowed_platforms):
+            plans.append(
+                self._iot_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    document=context.base_document,
                 )
             )
         if self.wifi_ssid and self._platform_enabled("wifi", allowed_platforms):
@@ -1803,6 +1849,64 @@ class EchoBridgeAPI:
             if self.opsgenie_api_key_secret
             else [],
         )
+
+    def _tcp_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        text: str,
+    ) -> BridgePlan:
+        context = self._base_document(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+        payload = {
+            "endpoints": list(self.tcp_endpoints),
+            "body": text,
+            "context": context,
+        }
+        requires = [self.tcp_secret_name] if self.tcp_secret_name else []
+        return BridgePlan(platform="tcp", action="send_payload", payload=payload, requires_secret=requires)
+
+    def _iot_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        document: Dict[str, Any],
+    ) -> BridgePlan:
+        payload: Dict[str, Any] = {
+            "channel": self.iot_channel,
+            "payload": document,
+            "context": {
+                "identity": identity,
+                "cycle": cycle,
+                "signature": signature,
+                "topics": topics,
+                "priority": priority,
+            },
+        }
+        requires = [self.iot_secret_name] if self.iot_secret_name else []
+        return BridgePlan(platform="iot", action="publish", payload=payload, requires_secret=requires)
 
     def _sms_plan(
         self,
