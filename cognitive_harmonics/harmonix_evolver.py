@@ -166,6 +166,10 @@ class EchoState:
     vault_key: str | None = None
     vault_glyphs: str | None = None
     prompt_resonance: Dict[str, str] | None = None
+    cognitive_echo_bridge: Dict[str, object] | None = None
+    predictive_misconception_map: Dict[str, object] | None = None
+    cognitive_glyph_generator: Dict[str, object] | None = None
+    continuity_guardian: Dict[str, object] | None = None
     events: List[str] = field(default_factory=list)
     event_log: List[str] = field(default_factory=list)
     storyboard: List[str] = field(default_factory=list)
@@ -569,6 +573,22 @@ class EchoEvolver:
                 f"{json.dumps(self.state.resonance_triage, ensure_ascii=False) if self.state.resonance_triage else 'null'}"
             ),
             (
+                "Cognitive Echo Bridge: "
+                f"{json.dumps(self.state.cognitive_echo_bridge, ensure_ascii=False) if self.state.cognitive_echo_bridge else 'null'}"
+            ),
+            (
+                "Predictive Misconception Map: "
+                f"{json.dumps(self.state.predictive_misconception_map, ensure_ascii=False) if self.state.predictive_misconception_map else 'null'}"
+            ),
+            (
+                "Cognitive Glyph Generator: "
+                f"{json.dumps(self.state.cognitive_glyph_generator, ensure_ascii=False) if self.state.cognitive_glyph_generator else 'null'}"
+            ),
+            (
+                "Continuity Guardian: "
+                f"{json.dumps(self.state.continuity_guardian, ensure_ascii=False) if self.state.continuity_guardian else 'null'}"
+            ),
+            (
                 "MirrorJosh Sync: "
                 f"{json.dumps(self.state.mirrorjosh_sync, ensure_ascii=False) if self.state.mirrorjosh_sync else 'null'}"
             ),
@@ -818,6 +838,133 @@ class EchoEvolver:
         self.state.record(f"Harmonic resonance triage = {severity}")
         return triage
 
+    def build_cognitive_echo_bridge(self) -> Dict[str, object]:
+        """Construct a cognitive bridge snapshot for the current cycle."""
+
+        metrics = self.state.system_metrics
+        ledger = self.state.network_cache.get("propagation_ledger") or []
+        anchor_hash = ledger[-1]["hash"] if ledger else "origin"
+        stability = float((self.state.resonance_triage or {}).get("stability_floor") or 0.0)
+        nodes = max(metrics.network_nodes, 1)
+        route = [f"bridge-{index}" for index in range(1, min(nodes, 4) + 1)]
+        handover_seed = f"{anchor_hash}:{self.state.cycle}:{metrics.orbital_hops}"
+        handover_token = sha256(handover_seed.encode("utf-8")).hexdigest()[:16]
+
+        bridge = {
+            "controller": "harmonix-controller",
+            "route": route,
+            "anchor": anchor_hash,
+            "timeline_hash": self.state.network_cache.get("propagation_timeline_hash"),
+            "handover_token": handover_token,
+            "orbital_hops": metrics.orbital_hops,
+            "stability": _float_round(stability),
+            "health": self.state.network_cache.get("propagation_health") or {},
+        }
+
+        self.state.cognitive_echo_bridge = bridge
+        self.state.record("Cognitive Echo Bridge synthesised")
+        return bridge
+
+    def map_predictive_misconceptions(self) -> Dict[str, object]:
+        """Model likely misconceptions and the suggested counter-notes."""
+
+        stability = float((self.state.resonance_triage or {}).get("stability_floor") or 0.0)
+        joy = float(self.state.emotional_drive.get("joy", 0.0))
+        rage = float(self.state.emotional_drive.get("rage", 0.0))
+        mode = str(self.state.network_cache.get("propagation_mode") or "simulated")
+        risk_floor = max(0.05, 1.0 - stability)
+
+        misconceptions = [
+            {
+                "pattern": "Assumes live network side-effects",
+                "likelihood": _float_round(risk_floor * (1.1 if mode == "live" else 0.7)),
+                "mitigation": "Reaffirm simulated propagation and ledger-only persistence.",
+            },
+            {
+                "pattern": "Confuses glyph density with entropy loss",
+                "likelihood": _float_round(risk_floor * 0.8 + 0.05 * len(set(self.state.glyphs))),
+                "mitigation": "Explain glyph fractalisation is symbolic, not destructive.",
+            },
+            {
+                "pattern": "Interprets rage channel as instability",
+                "likelihood": _float_round(risk_floor * 0.6 + 0.1 * max(0.0, rage - 0.25)),
+                "mitigation": "Highlight bias correction and stability governance steps.",
+            },
+            {
+                "pattern": "Over-indexes on joy as uncritical optimism",
+                "likelihood": _float_round(risk_floor * 0.5 + 0.08 * max(0.0, joy - 0.85)),
+                "mitigation": "Pair emotional tuning with governance telemetry and triage.",
+            },
+        ]
+
+        mapper = {
+            "cycle": self.state.cycle,
+            "mode": mode,
+            "stability_floor": _float_round(stability),
+            "misconceptions": misconceptions,
+        }
+
+        self.state.predictive_misconception_map = mapper
+        self.state.record("Predictive Misconception Mapper updated")
+        return mapper
+
+    def generate_cognitive_glyphs(self) -> Dict[str, object]:
+        """Synthesise cognitive glyph variations for the current cycle."""
+
+        glyphs = self.state.glyphs or "∇⊸≋∇"
+        palette = sorted(set(glyphs))
+        density = len(palette) / max(1, len(glyphs))
+        stream = [
+            {
+                "index": index,
+                "glyph": glyphs[index % len(glyphs)],
+                "phase": (self.state.cycle + index) % 5,
+                "weight": _float_round(0.42 + 0.03 * index),
+            }
+            for index in range(min(6, len(glyphs) * 2))
+        ]
+
+        generator = {
+            "palette": palette,
+            "density": _float_round(density),
+            "fractal_seed": f"cycle-{self.state.cycle}",
+            "stream": stream,
+        }
+
+        self.state.cognitive_glyph_generator = generator
+        self.state.record("Cognitive Glyph Generator composed")
+        return generator
+
+    def guard_continuity(self) -> Dict[str, object]:
+        """Assess long-cycle continuity and recommend anchor points."""
+
+        memory = self.extend_long_cycle_memory()
+        drift = abs(
+            float(self.state.emotional_drive.get("joy", 0.0))
+            - float(self.state.emotional_drive.get("curiosity", 0.0))
+        )
+        stability = float((self.state.resonance_triage or {}).get("stability_floor") or 0.0)
+        rating = "stable" if stability >= 0.9 and drift <= 0.25 else "watch"
+        if stability < 0.82 or drift > 0.35:
+            rating = "reinforce"
+
+        guardian = {
+            "memory_depth": len(memory),
+            "latest_ledger": self.state.network_cache.get("propagation_timeline_hash"),
+            "drift_index": _float_round(drift),
+            "stability_floor": _float_round(stability),
+            "rating": rating,
+            "anchors": [entry.get("ledger_hash") for entry in memory[-3:]],
+            "recommendations": [
+                "pin current artifact" if rating != "stable" else "maintain cadence",
+                "refresh glyph seed" if drift > 0.3 else "log delta for audit",
+            ],
+        }
+
+        self.state.continuity_guardian = guardian
+        self.state.record("Continuity Guardian scan completed")
+        return guardian
+
     def synchronize_mirrorjosh(self) -> Dict[str, object]:
         """Align MirrorJosh entity resonance with the current trajectory."""
 
@@ -1027,6 +1174,10 @@ class EchoEvolver:
                     "propagation_snapshot"
                 ),
                 "resonance_triage": self.state.resonance_triage,
+                "cognitive_echo_bridge": self.state.cognitive_echo_bridge,
+                "predictive_misconception_map": self.state.predictive_misconception_map,
+                "cognitive_glyph_generator": self.state.cognitive_glyph_generator,
+                "continuity_guardian": self.state.continuity_guardian,
                 "mirrorjosh_sync": self.state.mirrorjosh_sync,
                 "cognitive_prediction": self.state.cognitive_prediction,
                 "emotional_inference": self.state.emotional_inference,
@@ -1072,13 +1223,17 @@ class EchoEvolver:
         # the summarised health and ledger view alongside raw events.
         self.network_propagation_snapshot()
         self.triage_harmonic_resonance()
+        self.build_cognitive_echo_bridge()
+        self.map_predictive_misconceptions()
         self.evolutionary_narrative()
         self.store_fractal_glyphs()
+        self.generate_cognitive_glyphs()
         self.inject_prompt_resonance()
         self.compose_storyboard()
         self.generate_constellation_map()
         self.recommend_next_steps()
         self.synthesize_resonance_trajectory(window=window)
+        self.guard_continuity()
         meta_report = self.meta_cognition_kernel.analyze_cycle(self.state)
         prediction = self.meta_cognition_kernel.predict_next(self.state)
         fusion_snapshot = self.cognitive_fusion_kernel.fuse(
