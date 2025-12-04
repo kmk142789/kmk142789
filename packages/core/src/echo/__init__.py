@@ -13,6 +13,17 @@ from .cognitive_field_inference_engine import (
     CognitiveMetrics,
     SignalFusion,
 )
+from .cognitive_echo_bridge import (
+    BridgeEdge,
+    CognitiveEchoBridge,
+    CognitiveEchoBridgeReport,
+)
+from .cognitive_glyph_generator import CognitiveGlyphGenerator, GlyphSequence
+from .predictive_misconception_mapper import (
+    MisconceptionHypothesis,
+    PredictiveMisconceptionMapper,
+)
+from .resonant_drift_sentinel import DriftObservation, ResonantDriftSentinel
 from .aurora_chronicles import AuroraChronicleMoment, AuroraChronicles, forge_chronicle
 from .autonomous_coordination_engine import (
     AutonomousCoordinationEngine,
