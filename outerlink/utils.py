@@ -17,6 +17,8 @@ class SafeModeConfig:
     event_log: Path = Path("outerlink_events.log")
     offline_cache_dir: Path = Path("outerlink_cache")
     offline_cache_ttl_seconds: Optional[int] = 24 * 60 * 60
+    pending_backlog_threshold: int = 50
+    pending_backlog_hard_limit: int = 500
 
     def is_command_allowed(self, command: str) -> bool:
         return command.split()[0] in self.allowed_commands
@@ -59,6 +61,22 @@ class OfflineState:
     def record_pending(self, payload: dict) -> None:
         stamped = {**payload, "cached_at": datetime.now(timezone.utc).isoformat()}
         self.pending_events.append(stamped)
+
+    def enforce_backpressure(self, hard_limit: Optional[int]) -> int:
+        """Clamp pending events to a hard limit and log any drops."""
+
+        if not hard_limit or hard_limit <= 0:
+            return 0
+
+        excess = len(self.pending_events) - hard_limit
+        if excess <= 0:
+            return 0
+
+        del self.pending_events[0:excess]
+        self.add_resilience_note(
+            f"Dropped {excess} pending events to enforce backpressure limit {hard_limit}"
+        )
+        return excess
 
     def mark_online(self) -> None:
         self.online = True
@@ -110,6 +128,7 @@ class OfflineState:
         cache_stale: bool,
         pending_events: int,
         replay_ready: bool,
+        backlog_threshold: int = 50,
     ) -> None:
         """Auto-adjust capability flags based on current offline posture."""
 
@@ -124,7 +143,6 @@ class OfflineState:
             note="Replay disabled until cache is refreshed" if not replay_ready else None,
         )
 
-        backlog_threshold = 50
         backlog_ok = pending_events <= backlog_threshold
         self.set_capability(
             "backpressure_guardrails",

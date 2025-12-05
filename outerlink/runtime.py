@@ -32,18 +32,12 @@ class OuterLinkRuntime:
 
     def emit_state(self) -> Dict[str, Any]:
         metrics = self.dsi.get_metrics()
+        self.offline_state.enforce_backpressure(self.config.pending_backlog_hard_limit)
         offline_snapshot = self.offline_state.status(
             self.config.offline_cache_dir, self.config.offline_cache_ttl_seconds
         )
 
-        cache_healthy = not bool(offline_snapshot["cache_stale"])
-        self.offline_state.record_health_check(
-            "cache_health",
-            passed=cache_healthy,
-            details="offline cache within ttl" if cache_healthy else "offline cache stale",
-        )
-
-        backlog_ok = offline_snapshot["pending_events"] <= 50
+        backlog_ok = offline_snapshot["pending_events"] <= self.config.pending_backlog_threshold
         self.offline_state.record_health_check(
             "pending_event_backlog",
             passed=backlog_ok,
@@ -54,6 +48,13 @@ class OuterLinkRuntime:
             ),
         )
 
+        cache_healthy = not bool(offline_snapshot["cache_stale"])
+        self.offline_state.record_health_check(
+            "cache_health",
+            passed=cache_healthy,
+            details="offline cache within ttl" if cache_healthy else "offline cache stale",
+        )
+
         capability_report = offline_snapshot.get("capability_report", {})
         replay_ready = capability_report.get("replay_ready", False)
         cache_present = self.config.offline_cache_dir.exists()
@@ -62,6 +63,7 @@ class OuterLinkRuntime:
             cache_stale=offline_snapshot["cache_stale"],
             pending_events=offline_snapshot["pending_events"],
             replay_ready=replay_ready,
+            backlog_threshold=self.config.pending_backlog_threshold,
         )
 
         capability_report = self.offline_state.capability_report(
