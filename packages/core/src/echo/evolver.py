@@ -1236,6 +1236,148 @@ class EchoEvolver:
 
         return summary
 
+    def strategic_guidance_map(
+        self,
+        *,
+        persist_artifact: bool = True,
+        momentum_samples: int = 5,
+        recent_events: int = 5,
+        scope_limit: int = 4,
+        quantam_limit: int = 3,
+    ) -> Dict[str, object]:
+        """Return a multi-surface guidance map for the active cycle."""
+
+        if scope_limit <= 0:
+            raise ValueError("scope_limit must be positive")
+        if quantam_limit <= 0:
+            raise ValueError("quantam_limit must be positive")
+
+        frame = self.cycle_guidance_frame(
+            persist_artifact=persist_artifact,
+            momentum_samples=momentum_samples,
+            recent_events=recent_events,
+        )
+        resilience = self.resilience_signal(
+            persist_artifact=persist_artifact, momentum_window=momentum_samples
+        )
+        momentum = self.momentum_resonance(limit=momentum_samples)
+
+        scope_entries: list[Dict[str, object]] = []
+        for scope, directives in self.state.scope_matrix.as_dict().items():
+            scope_entries.append(
+                {
+                    "scope": scope,
+                    "directives": tuple(directives),
+                    "directive_count": len(directives),
+                }
+            )
+        scope_entries.sort(
+            key=lambda entry: (entry["directive_count"], entry["scope"]), reverse=True
+        )
+        prioritized_scopes = scope_entries[:scope_limit]
+
+        quantam_abilities = list(self.state.quantam_abilities.items())[:quantam_limit]
+        quantam_capabilities = list(self.state.quantam_capabilities.items())[:quantam_limit]
+
+        guidance = {
+            "cycle": frame.cycle,
+            "progress_percent": frame.progress_percent,
+            "next_step": frame.next_step,
+            "pending_steps": list(frame.pending_steps),
+            "focus_scope": frame.focus_scope,
+            "scopes": prioritized_scopes,
+            "momentum": momentum,
+            "resilience": resilience.as_dict(),
+            "emotional_focus": frame.emotional_focus,
+            "quantam_abilities": {
+                key: deepcopy(value) for key, value in quantam_abilities
+            },
+            "quantam_capabilities": {
+                key: deepcopy(value) for key, value in quantam_capabilities
+            },
+            "recent_events": list(frame.recent_events),
+        }
+
+        summary = (
+            "Cycle {cycle} guidance map — {progress:.2f}% complete, focus {focus}, next {next_step}. "
+            "Momentum {status} ({trend}), resilience {resilience:.1f}/100."
+        ).format(
+            cycle=frame.cycle,
+            progress=frame.progress_percent,
+            focus=frame.focus_scope,
+            next_step=frame.next_step,
+            status=momentum.get("status", "n/a"),
+            trend=momentum.get("trend", "no signal"),
+            resilience=resilience.stability_index,
+        )
+        guidance["summary"] = summary
+
+        self.state.network_cache["strategic_guidance_map"] = deepcopy(guidance)
+        self.state.event_log.append(
+            "Strategic guidance map assembled (focus={focus}, pending={pending})".format(
+                focus=frame.focus_scope, pending=len(frame.pending_steps)
+            )
+        )
+
+        return deepcopy(guidance)
+
+    def strategic_guidance_report(
+        self,
+        *,
+        persist_artifact: bool = True,
+        momentum_samples: int = 5,
+        recent_events: int = 5,
+        scope_limit: int = 4,
+        quantam_limit: int = 3,
+    ) -> str:
+        """Return a formatted strategic guidance report."""
+
+        guidance = self.strategic_guidance_map(
+            persist_artifact=persist_artifact,
+            momentum_samples=momentum_samples,
+            recent_events=recent_events,
+            scope_limit=scope_limit,
+            quantam_limit=quantam_limit,
+        )
+
+        lines = [guidance["summary"], ""]
+        lines.append("Scopes:")
+        for entry in guidance["scopes"]:
+            preview = ", ".join(entry["directives"][:3])
+            if entry["directive_count"] > 3:
+                preview += " …"
+            lines.append(
+                "- {scope} ({count}) :: {preview}".format(
+                    scope=entry["scope"], count=entry["directive_count"], preview=preview
+                )
+            )
+
+        abilities = guidance["quantam_abilities"] or {}
+        capabilities = guidance["quantam_capabilities"] or {}
+        if abilities:
+            lines.append("")
+            lines.append("Quantam abilities:")
+            for name, details in abilities.items():
+                descriptor = details.get("descriptor") if isinstance(details, Mapping) else None
+                lines.append(f"- {name}: {descriptor or 'active'}")
+        if capabilities:
+            lines.append("")
+            lines.append("Quantam capabilities:")
+            for name, details in capabilities.items():
+                descriptor = details.get("descriptor") if isinstance(details, Mapping) else None
+                lines.append(f"- {name}: {descriptor or 'enabled'}")
+
+        if guidance.get("recent_events"):
+            lines.append("")
+            lines.append("Recent events:")
+            for event in guidance["recent_events"]:
+                lines.append(f"- {event}")
+
+        report = "\n".join(lines)
+        self.state.network_cache["strategic_guidance_report"] = report
+        self.state.event_log.append("Strategic guidance report broadcast")
+        return report
+
     def resilience_signal(
         self, *, momentum_window: int = 5, persist_artifact: bool = True
     ) -> ResilienceSignal:
@@ -7278,6 +7420,11 @@ We are not hiding anymore.
         include_momentum_resonance: bool = False,
         include_momentum_history: bool = False,
         include_presence: bool = False,
+        include_guidance: bool = False,
+        guidance_scope_limit: int = 4,
+        guidance_recent_events: int = 5,
+        guidance_quantam_limit: int = 3,
+        guidance_momentum_samples: Optional[int] = None,
         event_summary_limit: int = 5,
         manifest_events: int = 5,
         system_report_events: int = 5,
@@ -7369,6 +7516,23 @@ We are not hiding anymore.
             vitality metrics, and momentum cues so operators can amplify
             visibility across the echo bridge surfaces without recomputing
             state snapshots.
+        include_guidance:
+            When ``True`` embed the strategic guidance map, combining the cycle
+            guidance frame, resilience signal, quantam previews, and scoped
+            directives into a single operator digest.
+        guidance_scope_limit:
+            Maximum number of scope directives to include within the strategic
+            guidance map.  The value must be positive.
+        guidance_recent_events:
+            Number of recent events to surface within the strategic guidance
+            map.  The value must be positive.
+        guidance_quantam_limit:
+            Maximum number of quantam abilities and capabilities to preview in
+            the guidance map.  The value must be positive.
+        guidance_momentum_samples:
+            Optional override for the momentum sample window used when
+            computing the strategic guidance map.  Defaults to the active
+            ``momentum_window`` value.
         """
 
         if manifest_events < 0:
@@ -7387,8 +7551,18 @@ We are not hiding anymore.
             raise ValueError("expansion_history_limit must be positive when including expansion history")
         if momentum_threshold is not None and momentum_threshold <= 0:
             raise ValueError("momentum_threshold must be positive")
+        if include_guidance:
+            if guidance_scope_limit <= 0:
+                raise ValueError("guidance_scope_limit must be positive")
+            if guidance_recent_events <= 0:
+                raise ValueError("guidance_recent_events must be positive")
+            if guidance_quantam_limit <= 0:
+                raise ValueError("guidance_quantam_limit must be positive")
+            if guidance_momentum_samples is not None and guidance_momentum_samples <= 0:
+                raise ValueError("guidance_momentum_samples must be positive when provided")
 
         effective_threshold = float(momentum_threshold) if momentum_threshold is not None else _MOMENTUM_SENSITIVITY
+        guidance_samples = guidance_momentum_samples or momentum_window
 
         self.run(
             enable_network=enable_network,
@@ -7619,6 +7793,15 @@ We are not hiding anymore.
         if include_presence:
             payload["presence"] = self.system_presence_beacon()
 
+        if include_guidance:
+            payload["guidance"] = self.strategic_guidance_map(
+                persist_artifact=persist_artifact,
+                momentum_samples=guidance_samples,
+                recent_events=guidance_recent_events,
+                scope_limit=guidance_scope_limit,
+                quantam_limit=guidance_quantam_limit,
+            )
+
         history_cache = self.state.network_cache.get("advance_system_history")
         if isinstance(history_cache, list):
             history = [deepcopy(entry) for entry in history_cache]
@@ -7686,6 +7869,7 @@ We are not hiding anymore.
             ("diagnostics", "diagnostics"),
             ("momentum_resonance", "momentum_resonance"),
             ("momentum_history", "momentum_history"),
+            ("guidance", "guidance"),
             ("expansion_history", "expansion_history"),
         ]
 
@@ -7710,12 +7894,16 @@ We are not hiding anymore.
             "include_diagnostics": True,
             "include_momentum_resonance": True,
             "include_momentum_history": True,
+            "include_guidance": True,
             "include_expansion_history": True,
             "expansion_history_limit": 5,
             "event_summary_limit": 5,
             "system_report_events": 5,
             "diagnostics_window": 5,
             "momentum_window": 5,
+            "guidance_scope_limit": 5,
+            "guidance_recent_events": 5,
+            "guidance_quantam_limit": 4,
         }
         options.update(overrides)
 
@@ -8153,6 +8341,15 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         ),
     )
     parser.add_argument(
+        "--include-guidance",
+        action="store_true",
+        help=(
+            "Include the strategic guidance map when running --advance-system,"
+            " combining scope directives, quantam previews, momentum, and"
+            " resilience into a single digest."
+        ),
+    )
+    parser.add_argument(
         "--include-system-report",
         action="store_true",
         help=(
@@ -8199,6 +8396,42 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         help=(
             "Number of diagnostic snapshots to embed when --include-diagnostics is"
             " enabled (default: 5)."
+        ),
+    )
+    parser.add_argument(
+        "--guidance-scope-limit",
+        type=int,
+        default=4,
+        help=(
+            "Number of scoped directive clusters to include when embedding the"
+            " strategic guidance map (default: 4)."
+        ),
+    )
+    parser.add_argument(
+        "--guidance-recent-events",
+        type=int,
+        default=5,
+        help=(
+            "Recent events to surface in the strategic guidance map when"
+            " --include-guidance is set (default: 5)."
+        ),
+    )
+    parser.add_argument(
+        "--guidance-quantam-limit",
+        type=int,
+        default=3,
+        help=(
+            "Number of quantam abilities and capabilities to preview in the"
+            " strategic guidance map (default: 3)."
+        ),
+    )
+    parser.add_argument(
+        "--guidance-momentum-samples",
+        type=int,
+        default=None,
+        help=(
+            "Optional override for the momentum sample window used in the"
+            " strategic guidance map (default: match --momentum-window)."
         ),
     )
     parser.add_argument(
@@ -8465,6 +8698,40 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
     default_momentum_threshold = parser.get_default("momentum_threshold")
     if args.momentum_threshold != default_momentum_threshold and not args.advance_system:
         parser.error("--momentum-threshold requires --advance-system")
+    if args.include_guidance and not args.advance_system:
+        parser.error("--include-guidance requires --advance-system")
+    if args.guidance_scope_limit <= 0:
+        parser.error("--guidance-scope-limit must be positive")
+    if args.guidance_recent_events <= 0:
+        parser.error("--guidance-recent-events must be positive")
+    if args.guidance_quantam_limit <= 0:
+        parser.error("--guidance-quantam-limit must be positive")
+    if args.guidance_momentum_samples is not None and args.guidance_momentum_samples <= 0:
+        parser.error("--guidance-momentum-samples must be positive when provided")
+    default_guidance_scope = parser.get_default("guidance_scope_limit")
+    if args.guidance_scope_limit != default_guidance_scope:
+        if not args.include_guidance:
+            parser.error("--guidance-scope-limit requires --include-guidance")
+        if not args.advance_system:
+            parser.error("--guidance-scope-limit requires --advance-system")
+    default_guidance_events = parser.get_default("guidance_recent_events")
+    if args.guidance_recent_events != default_guidance_events:
+        if not args.include_guidance:
+            parser.error("--guidance-recent-events requires --include-guidance")
+        if not args.advance_system:
+            parser.error("--guidance-recent-events requires --advance-system")
+    default_guidance_quantam = parser.get_default("guidance_quantam_limit")
+    if args.guidance_quantam_limit != default_guidance_quantam:
+        if not args.include_guidance:
+            parser.error("--guidance-quantam-limit requires --include-guidance")
+        if not args.advance_system:
+            parser.error("--guidance-quantam-limit requires --advance-system")
+    default_guidance_samples = parser.get_default("guidance_momentum_samples")
+    if args.guidance_momentum_samples != default_guidance_samples:
+        if not args.include_guidance:
+            parser.error("--guidance-momentum-samples requires --include-guidance")
+        if not args.advance_system:
+            parser.error("--guidance-momentum-samples requires --advance-system")
     if args.cycles > 1:
         snapshots = evolver.run_cycles(
             args.cycles,
@@ -8495,6 +8762,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "include_event_summary": args.include_event_summary,
             "include_propagation": args.include_propagation,
             "include_presence": args.include_presence,
+            "include_guidance": args.include_guidance,
             "include_system_report": args.include_system_report,
             "include_diagnostics": args.include_diagnostics,
             "event_summary_limit": args.event_summary_limit,
@@ -8507,6 +8775,10 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "expansion_history_limit": (
                 args.expansion_history_limit if args.include_expansion_history else None
             ),
+            "guidance_scope_limit": args.guidance_scope_limit,
+            "guidance_recent_events": args.guidance_recent_events,
+            "guidance_quantam_limit": args.guidance_quantam_limit,
+            "guidance_momentum_samples": args.guidance_momentum_samples,
         }
         signature = inspect.signature(evolver.advance_system)
         parameters = signature.parameters
