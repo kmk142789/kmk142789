@@ -35,14 +35,49 @@ class OuterLinkRuntime:
         offline_snapshot = self.offline_state.status(
             self.config.offline_cache_dir, self.config.offline_cache_ttl_seconds
         )
+
+        cache_healthy = not bool(offline_snapshot["cache_stale"])
         self.offline_state.record_health_check(
             "cache_health",
-            passed=not bool(offline_snapshot["cache_stale"]),
-            details="offline cache within ttl" if not offline_snapshot["cache_stale"] else "offline cache stale",
+            passed=cache_healthy,
+            details="offline cache within ttl" if cache_healthy else "offline cache stale",
         )
-        offline_snapshot = self.offline_state.status(
-            self.config.offline_cache_dir, self.config.offline_cache_ttl_seconds
+
+        backlog_ok = offline_snapshot["pending_events"] <= 50
+        self.offline_state.record_health_check(
+            "pending_event_backlog",
+            passed=backlog_ok,
+            details=(
+                "pending events within guardrails"
+                if backlog_ok
+                else f"{offline_snapshot['pending_events']} events waiting for flush"
+            ),
         )
+
+        capability_report = offline_snapshot.get("capability_report", {})
+        replay_ready = capability_report.get("replay_ready", False)
+        cache_present = self.config.offline_cache_dir.exists()
+        self.offline_state.refresh_dynamic_capabilities(
+            cache_present=cache_present,
+            cache_stale=offline_snapshot["cache_stale"],
+            pending_events=offline_snapshot["pending_events"],
+            replay_ready=replay_ready,
+        )
+
+        capability_report = self.offline_state.capability_report(
+            self.config.offline_cache_dir,
+            self.config.offline_cache_ttl_seconds,
+            offline_snapshot.get("cached_events", 0),
+            offline_snapshot.get("cache_stale", False),
+            offline_snapshot.get("last_cache_flush"),
+        )
+        offline_snapshot.update({
+            "capability_report": capability_report,
+            "capability_readiness": capability_report.get("capability_snapshot", {}).get("readiness"),
+            "capability_posture": capability_report.get("capability_snapshot", {}).get("posture"),
+            "capability_gaps": capability_report.get("capability_snapshot", {}).get("disabled"),
+        })
+
         payload = {
             "online": offline_snapshot["online"],
             "last_sync": offline_snapshot["last_sync"],
