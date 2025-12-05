@@ -147,3 +147,44 @@ def test_offline_package_exports_integrity(tmp_path):
     assert package["status"]["cached_events"] == 1
     assert package["health_checks"][-1]["name"] == "radio_link"
     assert package["integrity_hash"]
+
+
+def test_backpressure_caps_pending_events(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        pending_backlog_hard_limit=2,
+    )
+    offline_state = OfflineState(online=False)
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.safe_run_shell("echo", ["one"])
+    runtime.safe_run_shell("echo", ["two"])
+    runtime.safe_run_shell("echo", ["three"])
+
+    state = runtime.emit_state()
+
+    assert len(runtime.offline_state.pending_events) == 2
+    assert state["offline"]["pending_events"] == 2
+    assert any("backpressure limit" in note for note in runtime.offline_state.resilience_notes)
+
+
+def test_backpressure_updates_capabilities(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        pending_backlog_threshold=1,
+    )
+    offline_state = OfflineState(online=False)
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.safe_run_shell("echo", ["first"])
+    runtime.safe_run_shell("echo", ["second"])
+
+    runtime.emit_state()
+
+    assert runtime.offline_state.offline_capabilities["backpressure_guardrails"] is False
+    assert any(
+        entry["name"] == "backpressure_guardrails" and entry["enabled"] is False
+        for entry in runtime.offline_state.capability_history
+    )
