@@ -1,0 +1,28 @@
+{
+  "version": "0.1.0",
+  "rituals": {
+    "RESET_EVENT": {
+      "effect": "clear volatile state",
+      "corrections": ["state_machine:RESET"],
+      "preconditions": ["incident_logged"],
+      "postconditions": ["state=INITIAL"]
+    },
+    "UNITY_WEAVE": {
+      "effect": "reinforce coherence",
+      "corrections": ["align_manifests", "refresh_constraints"],
+      "preconditions": ["uql_clean"],
+      "postconditions": ["state=FUNCTIONAL"]
+    },
+    "THREAD_CLEANSE": {
+      "effect": "purge misaligned residues",
+      "corrections": ["clear_dead_letters", "replay_pending_events"],
+      "preconditions": ["dispatcher_ready"],
+      "postconditions": ["ledger_appended"]
+    }
+  },
+  "invocation_rules": {
+    "mode": "guarded",
+    "verification": ["signer_proof", "ledger_reference"],
+    "allowed_states": ["INITIAL", "FUNCTIONAL", "DEGRADED"]
+  }
+}

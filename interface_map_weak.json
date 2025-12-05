@@ -1,0 +1,19 @@
+{
+  "interfaces": {
+    "governance_kernel": {
+      "inputs": ["ad_hoc_manifest"],
+      "outputs": ["best_effort_state"],
+      "assumptions": ["manual_review", "partial_validation"]
+    },
+    "change_request_pipeline": {
+      "inputs": ["unsigned_cr"],
+      "outputs": ["preflight_feedback"],
+      "assumptions": ["no_quorum", "advisory_only"]
+    },
+    "ritual_engine": {
+      "inputs": ["manual_invocation"],
+      "outputs": ["non_binding_receipt"],
+      "assumptions": ["observer_mode"]
+    }
+  }
+}

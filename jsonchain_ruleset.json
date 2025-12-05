@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "chain": {
+    "root": "governance_kernel",
+    "links": [
+      {
+        "from": "governance_kernel",
+        "to": "change_request_pipeline",
+        "condition": "uql_enforced"
+      },
+      {
+        "from": "change_request_pipeline",
+        "to": "ritual_engine",
+        "condition": "quorum_reached"
+      },
+      {
+        "from": "ritual_engine",
+        "to": "integrity_ledger",
+        "condition": "state_correction_applied"
+      }
+    ]
+  },
+  "compiler": {
+    "optimize": true,
+    "emit": ["graph", "constraints", "handlers"],
+    "target": "jsonchain_compiler.py"
+  }
+}

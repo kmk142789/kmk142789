@@ -1,0 +1,43 @@
+cr_schema:
+  id: string
+  author: string
+  signature: string
+  description: string
+  changes: list
+  validation:
+    - structural_integrity
+    - uql_consistency
+    - ledger_attestation
+signer_proof:
+  algorithm: ed25519
+  required: true
+  attestation_chain: integrity_ledger.jsonl
+review_pipeline:
+  stages:
+    - name: intake
+      actions: ["schema_validate", "signature_verify"]
+    - name: impact_assessment
+      actions: ["uql_simulation", "risk_score"]
+    - name: quorum_vote
+      quorum: 2
+      actions: ["record_votes", "verify_votes"]
+    - name: finalization
+      actions: ["ledger_append", "ritual_confirmation"]
+merging_rules:
+  strategy: guarded_merge
+  prerequisites:
+    - all_validations_passed
+    - quorum_reached
+    - ritual_state_safe
+  post_actions:
+    - notify_event_dispatcher
+    - update_state_machine
+rejection_protocol:
+  reasons:
+    - failed_validation
+    - insufficient_quorum
+    - state_violation
+  actions:
+    - record_rejection
+    - notify_author
+    - ledger_append_rejection
