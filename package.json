@@ -17,6 +17,7 @@
     "hardhat:compile": "hardhat compile",
     "hardhat:mint-codex": "hardhat run hardhat/scripts/mint_erc1155.cjs",
     "governance:cr": "ts-node echo-os-prime/src/governance/cr/cli.ts",
+    "governance:loop": "ts-node echo-os-prime/src/governance/loop.ts",
     "governance:demo": "ts-node scripts/examples/demo-governance-flow.ts"
   },
   "keywords": [],
