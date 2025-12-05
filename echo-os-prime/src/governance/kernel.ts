@@ -21,6 +21,10 @@ export class GovernanceKernel {
     this.state.phase = "FUNCTIONAL";
   }
 
+  getStrongInterface(): StrongGovernanceAPI {
+    return this.strong;
+  }
+
   getState(): KernelState {
     return {
       ...this.state,
