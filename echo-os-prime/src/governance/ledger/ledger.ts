@@ -18,6 +18,7 @@ export type IntegrityEvent = {
 export interface LedgerStore {
   append(event: IntegrityEvent): void;
   readAll(): IntegrityEvent[];
+  getLocation?(): string;
 }
 
 export class FileLedgerStore implements LedgerStore {
@@ -33,6 +34,10 @@ export class FileLedgerStore implements LedgerStore {
     if (!fs.existsSync(this.filePath)) {
       fs.writeFileSync(this.filePath, "", "utf-8");
     }
+  }
+
+  getLocation(): string {
+    return this.filePath;
   }
 
   append(event: IntegrityEvent) {

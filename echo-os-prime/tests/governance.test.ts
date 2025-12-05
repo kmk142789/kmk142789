@@ -10,6 +10,7 @@ import {
   InMemoryLedgerStore,
   logEvent
 } from "../src/governance/ledger/ledger";
+import { initGovernanceRuntime, initKernel } from "../src/governance/runtime";
 
 const run = async () => {
   const tests: Array<() => void> = [];
@@ -132,6 +133,27 @@ const run = async () => {
 
     const summary = weak.summarizeChangeRequest(cr);
     assert.ok(summary.includes(cr.title));
+  });
+
+  tests.push(() => {
+    const ledger = new InMemoryLedgerStore();
+    const { state, runtime } = initKernel("../governance_kernel.json", { store: ledger });
+    assert.equal(state.phase, "FUNCTIONAL");
+    const history = ledger.readAll();
+    assert.equal(history.length, 1);
+    assert.equal(history[0].type, "INIT");
+    assert.ok(runtime.interfaceMaps.strong);
+    assert.ok(runtime.interfaceMaps.weak);
+  });
+
+  tests.push(() => {
+    const ledger = new InMemoryLedgerStore();
+    const runtime = initGovernanceRuntime({ store: ledger });
+    runtime.rituals.RESET_EVENT();
+    const health = runtime.health();
+    assert.ok(health.state);
+    assert.equal(health.lastEvent?.type, "RESET_EVENT");
+    assert.equal(health.state.sci, health.sci);
   });
 
   tests.forEach((test) => test());
