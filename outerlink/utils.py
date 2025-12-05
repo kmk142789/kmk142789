@@ -49,6 +49,7 @@ class OfflineState:
             "airgap_audit_trail": True,
             "snapshot_recovery": True,
             "edge_policy_enforcement": True,
+            "backpressure_guardrails": True,
         }
     )
     resilience_notes: List[str] = field(default_factory=list)
@@ -86,7 +87,10 @@ class OfflineState:
         return entry
 
     def set_capability(self, name: str, enabled: bool, note: Optional[str] = None) -> None:
+        previous = self.offline_capabilities.get(name)
         self.offline_capabilities[name] = enabled
+        if previous == enabled and note is None:
+            return
         capability_record = {
             "name": name,
             "enabled": enabled,
@@ -98,6 +102,42 @@ class OfflineState:
             self.add_resilience_note(note)
         elif not enabled:
             self.add_resilience_note(f"Capability {name} disabled for offline mode")
+
+    def refresh_dynamic_capabilities(
+        self,
+        *,
+        cache_present: bool,
+        cache_stale: bool,
+        pending_events: int,
+        replay_ready: bool,
+    ) -> None:
+        """Auto-adjust capability flags based on current offline posture."""
+
+        self.set_capability(
+            "cache_integrity_checks",
+            not cache_stale,
+            note="Cache marked stale; integrity checks downgraded" if cache_stale else None,
+        )
+        self.set_capability(
+            "event_cache_replay",
+            replay_ready,
+            note="Replay disabled until cache is refreshed" if not replay_ready else None,
+        )
+
+        backlog_threshold = 50
+        backlog_ok = pending_events <= backlog_threshold
+        self.set_capability(
+            "backpressure_guardrails",
+            backlog_ok,
+            note=(
+                f"Pending event backlog {pending_events} exceeded guardrail threshold {backlog_threshold}"
+                if not backlog_ok
+                else None
+            ),
+        )
+
+        if not cache_present:
+            self.set_capability("airgap_audit_trail", False, note="Offline cache missing; audit trail disabled")
 
     def evaluate_capabilities(self) -> Dict[str, object]:
         total = len(self.offline_capabilities) or 1
