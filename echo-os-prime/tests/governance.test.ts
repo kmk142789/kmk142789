@@ -11,6 +11,7 @@ import {
   logEvent
 } from "../src/governance/ledger/ledger";
 import { initGovernanceRuntime, initKernel } from "../src/governance/runtime";
+import { runGovernanceLoop } from "../src/governance/loop";
 
 const run = async () => {
   const tests: Array<() => void> = [];
@@ -36,6 +37,95 @@ const run = async () => {
     assert.equal(history.length, 2);
     assert.equal(history[0].type, "INIT");
     assert.equal(history[1].type, "CR_ACCEPTED");
+  });
+
+  tests.push(() => {
+    const ledger = new InMemoryLedgerStore();
+    const cr: ChangeRequest = {
+      id: "loop-cr-1",
+      title: "Loop Valid",
+      description: "Valid change through governance loop",
+      proposedBy: "core",
+      signers: [
+        { id: "alpha" },
+        { id: "beta" }
+      ],
+      uql: { statement: "update alpha beta", target: "alpha" }
+    };
+
+    const result = runGovernanceLoop({ changeRequests: [cr], store: ledger, lastEventLimit: 5 });
+    const history = ledger.readAll();
+
+    assert.ok(result.appliedChanges.includes("loop-cr-1"));
+    assert.deepStrictEqual(
+      history.map((event) => event.type),
+      ["INIT", "INFO", "CR_ACCEPTED"]
+    );
+    assert.equal(result.lastEvents.length, 3);
+  });
+
+  tests.push(() => {
+    const ledger = new InMemoryLedgerStore();
+    const cr: ChangeRequest = {
+      id: "loop-cr-invalid",
+      title: "Invalid Loop",
+      description: "Invalid change should be rejected",
+      proposedBy: "core",
+      signers: [{ id: "alpha" }],
+      quorum: 2,
+      uql: { statement: "target alpha", target: "alpha" }
+    };
+
+    const result = runGovernanceLoop({ changeRequests: [cr], store: ledger });
+    const history = ledger.readAll();
+
+    assert.equal(result.appliedChanges.length, 0);
+    assert.equal(result.triggeredRituals.length, 0);
+    assert.deepStrictEqual(history.map((event) => event.type), ["INIT", "INFO"]);
+  });
+
+  tests.push(() => {
+    const ledger = new InMemoryLedgerStore();
+    logEvent({ type: "RESET_EVENT" }, ledger);
+    logEvent({ type: "RESET_EVENT" }, ledger);
+    logEvent({ type: "RESET_EVENT" }, ledger);
+
+    const result = runGovernanceLoop({
+      changeRequests: [],
+      store: ledger,
+      sciThreshold: 0.9,
+      ritualHooks: ["THREAD_CLEANSE"]
+    });
+
+    assert.ok(result.triggeredRituals.includes("UNITY_WEAVE"));
+    assert.ok(result.triggeredRituals.includes("THREAD_CLEANSE"));
+    assert.ok(result.sci >= 0 && result.sci <= 1);
+  });
+
+  tests.push(() => {
+    const ledger = new InMemoryLedgerStore();
+    const cr: ChangeRequest = {
+      id: "loop-deterministic",
+      title: "Deterministic",
+      description: "Deterministic loop run",
+      proposedBy: "core",
+      signers: [
+        { id: "alpha" },
+        { id: "beta" }
+      ],
+      uql: { statement: "deterministic alpha beta", target: "alpha" }
+    };
+
+    const first = runGovernanceLoop({ changeRequests: [cr], store: ledger });
+    const secondStore = new InMemoryLedgerStore();
+    const second = runGovernanceLoop({ changeRequests: [cr], store: secondStore });
+
+    assert.deepStrictEqual(
+      first.lastEvents.map((event) => event.type),
+      second.lastEvents.map((event) => event.type)
+    );
+    assert.deepStrictEqual(first.state.phase, second.state.phase);
+    assert.deepStrictEqual(first.appliedChanges, second.appliedChanges);
   });
 
   tests.push(() => {
