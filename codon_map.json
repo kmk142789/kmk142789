@@ -1,0 +1,15 @@
+{
+  "codons": {
+    "A1": "governance.primitive",
+    "B2": "ritual.bind",
+    "C3": "state.transition",
+    "D4": "ledger.append",
+    "E5": "uql.enforce"
+  },
+  "bindings": {
+    "governance_kernel": ["A1", "C3", "E5"],
+    "change_request_pipeline": ["A1", "D4"],
+    "ritual_engine": ["B2", "C3"],
+    "jsonchain": ["D4"]
+  }
+}

@@ -1,0 +1,3 @@
+{"event":"INIT","sci":1.0,"ritual":"BOOT","provenance":"genesis","hash":"","timestamp":"<t>"}
+{"event":"KERNEL_LOAD","sci":0.98,"ritual":"UNITY_WEAVE","provenance":"governance_kernel","hash":"sha256:<pending>","timestamp":"<t>"}
+{"event":"CR_PIPELINE_ATTACHED","sci":0.99,"ritual":"THREAD_CLEANSE","provenance":"change_request_pipeline","hash":"sha256:<pending>","timestamp":"<t>"}
