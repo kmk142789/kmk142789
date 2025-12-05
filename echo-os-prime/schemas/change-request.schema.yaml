@@ -1,0 +1,79 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+title: ChangeRequest
+type: object
+required:
+  - id
+  - title
+  - description
+  - proposedBy
+  - signers
+  - uql
+properties:
+  id:
+    type: string
+    minLength: 1
+  title:
+    type: string
+    minLength: 3
+  description:
+    type: string
+    minLength: 10
+  proposedBy:
+    type: string
+    minLength: 1
+  quorum:
+    type: integer
+    minimum: 1
+    default: 2
+  metadata:
+    type: object
+    additionalProperties: true
+  signers:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          minLength: 1
+        weight:
+          type: number
+          minimum: 0
+        signature:
+          type: string
+          minLength: 1
+  uql:
+    type: object
+    required:
+      - statement
+      - target
+    properties:
+      statement:
+        type: string
+        minLength: 5
+      target:
+        type: string
+        minLength: 1
+      expectedStateHash:
+        type: string
+        minLength: 6
+  ledgerAttestation:
+    type: object
+    required:
+      - source
+      - cursor
+      - hash
+    properties:
+      source:
+        type: string
+        minLength: 1
+      cursor:
+        type: integer
+        minimum: 0
+      hash:
+        type: string
+        pattern: "^[a-fA-F0-9]{8,}$"
+additionalProperties: false

@@ -6,10 +6,15 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "dev": "ts-node src/index.ts",
+    "test": "ts-node tests/governance.test.ts"
   },
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.5.0"
+  },
   "devDependencies": {
     "typescript": "^5.6.0",
     "ts-node": "^10.9.2"
