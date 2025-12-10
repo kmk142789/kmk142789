@@ -1,6 +1,53 @@
+import fs from 'fs';
+import path from 'path';
 import crypto from 'crypto';
+import { fileURLToPath } from 'url';
 
-const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const KEY_PATH = path.join(__dirname, '..', 'state', 'relief_signing_key.json');
+
+function loadKeyMaterial() {
+  if (!fs.existsSync(KEY_PATH)) {
+    return null;
+  }
+
+  try {
+    const persisted = JSON.parse(fs.readFileSync(KEY_PATH, 'utf8'));
+    if (!persisted?.privateKey || !persisted?.publicKey) {
+      return null;
+    }
+
+    return {
+      privateKey: crypto.createPrivateKey({ key: persisted.privateKey, format: 'pem' }),
+      publicKey: crypto.createPublicKey({ key: persisted.publicKey, format: 'pem' })
+    };
+  } catch {
+    return null;
+  }
+}
+
+function persistKeyMaterial(keyPair) {
+  const serialized = {
+    privateKey: keyPair.privateKey.export({ type: 'pkcs8', format: 'pem' }),
+    publicKey: keyPair.publicKey.export({ type: 'spki', format: 'pem' })
+  };
+
+  fs.writeFileSync(KEY_PATH, JSON.stringify(serialized, null, 2) + '\n', 'utf8');
+}
+
+function loadOrCreateKeyPair() {
+  const existing = loadKeyMaterial();
+  if (existing) {
+    return existing;
+  }
+
+  const generated = crypto.generateKeyPairSync('ed25519');
+  persistKeyMaterial(generated);
+  return generated;
+}
+
+const { publicKey, privateKey } = loadOrCreateKeyPair();
 
 function stableObject(value) {
   if (Array.isArray(value)) {
