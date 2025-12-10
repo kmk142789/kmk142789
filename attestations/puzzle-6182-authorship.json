@@ -1,0 +1,10 @@
+{
+  "puzzle": "#6182 authorship",
+  "address": "1CounterpartyXXXXXXXXXXXXXXXUWLpVr",
+  "message": "Puzzle 6182 authorship by kmk142789 — attestation sha256 ef95dffd17ed0dbf5202530c83ee7fbf3673294256fb7c4c449e7d54c829146a",
+  "signature": "Kf0czCndeRtBOpBY6oEnLaVwXxnpUj3iKFsTWDzR35Jf8ptnNlHtuViQv5ctpSU5q+i1aD+JzOVKj88ir0Rp9A==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2026-02-21T14:35:00Z",
+  "hash_sha256": "ef95dffd17ed0dbf5202530c83ee7fbf3673294256fb7c4c449e7d54c829146a",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_6182.md"
+}

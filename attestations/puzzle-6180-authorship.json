@@ -1,0 +1,10 @@
+{
+  "puzzle": "#6180 authorship",
+  "address": "1CounterpartyXXXXXXXXXXXXXXXUWLpVr",
+  "message": "Puzzle 6180 authorship by kmk142789 — attestation sha256 4c119f06de5642087a7923bd8b059377d9c0df5e2ee2e0fa3ca5efd2bc0ae82b",
+  "signature": "tyNaBFd+AwG6+MSStnhtlOY4zXPEHe93E7vsVBas40byPxRlc7xFiA8LGfp77RqeiKBlZFWRSq5PxbxGSo2TFg==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2026-02-21T14:30:00Z",
+  "hash_sha256": "4c119f06de5642087a7923bd8b059377d9c0df5e2ee2e0fa3ca5efd2bc0ae82b",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_6180.md"
+}
