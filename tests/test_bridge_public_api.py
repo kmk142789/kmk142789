@@ -650,3 +650,30 @@ def test_plan_supports_github_discussions_and_rss_connectors() -> None:
     assert rss["payload"]["entry"]["topics"] == ["Echo Bridge", "pulse orbit"]
     assert rss["payload"]["entry"]["priority"] == "major"
     assert rss["requires_secret"] == ["ECHO_RSS_TOKEN"]
+
+
+def test_router_factory_uses_environment_defaults(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("ECHO_BRIDGE_STATE_DIR", str(tmp_path / "bridge"))
+    monkeypatch.setenv("ECHO_BRIDGE_GITHUB_REPOSITORY", "EchoOrg/sovereign")
+    monkeypatch.setenv(
+        "ECHO_BRIDGE_SLACK_WEBHOOK_URL",
+        "https://hooks.slack.com/services/T000/B000/XXXX",
+    )
+    monkeypatch.setenv("ECHO_BRIDGE_SLACK_SECRET", "SLACK_ECHO_WEBHOOK")
+    monkeypatch.setenv("ECHO_BRIDGE_WEBHOOK_URL", "https://bridge.echo/webhook")
+    monkeypatch.setenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS", "echo.crypto,nexus.crypto")
+    monkeypatch.setenv("ECHO_BRIDGE_VERCEL_PROJECTS", "console")
+
+    app = FastAPI()
+    app.include_router(create_router())
+    client = TestClient(app)
+
+    response = client.get("/bridge/relays", params={"include_sync": True})
+    assert response.status_code == 200
+    payload = response.json()
+
+    connectors = {connector["platform"] for connector in payload["connectors"]}
+    assert {"github", "slack", "webhook", "unstoppable", "vercel"} <= connectors
+
+    sync_connectors = {connector["platform"] for connector in payload["sync_connectors"]}
+    assert {"github", "unstoppable", "vercel"} <= sync_connectors
