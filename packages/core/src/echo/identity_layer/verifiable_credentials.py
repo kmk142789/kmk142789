@@ -30,6 +30,10 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+VC_CONTEXT_V1 = "https://www.w3.org/2018/credentials/v1"
+VC_CONTEXT_V2 = "https://www.w3.org/ns/credentials/v2"
+
+
 @dataclass
 class CredentialIssuer:
     """High level helper that issues Ed25519 signed verifiable credentials."""
@@ -37,7 +41,7 @@ class CredentialIssuer:
     vault: EncryptedIdentityVault
     issuer_did: str
     verification_method: Optional[str] = None
-    base_context: Sequence[str] = ("https://www.w3.org/2018/credentials/v1",)
+    base_context: Sequence[str] = (VC_CONTEXT_V2, VC_CONTEXT_V1)
     proof_type: str = "Ed25519Signature2020"
 
     def __post_init__(self) -> None:
