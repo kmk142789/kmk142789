@@ -18,9 +18,12 @@ from governance.alignment_fabric import (
 )
 from governance.persistence import (
     clear_offline_state,
+    load_policy_readiness,
     list_snapshots,
     load_audit_log,
+    load_authority_presence,
     load_snapshot,
+    save_policy_readiness,
 )
 
 __all__ = [
@@ -39,7 +42,10 @@ __all__ = [
     "simple_payload",
     "threshold_condition",
     "clear_offline_state",
+    "load_policy_readiness",
     "list_snapshots",
     "load_audit_log",
+    "load_authority_presence",
     "load_snapshot",
+    "save_policy_readiness",
 ]

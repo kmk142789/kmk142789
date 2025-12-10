@@ -491,6 +491,45 @@ class GovernanceRouter:
         self.last_route_trace = trace
         return results
 
+    def policy_readiness(self) -> Dict[str, Any]:
+        """Assess which policies can be executed and persist a readiness report.
+
+        The report highlights policies that currently have no eligible agents that
+        meet their trust requirements. It can be consumed by operational tooling
+        to backfill staffing, adjust trust scores, or tune policy minimums.
+        """
+
+        now = datetime.now(timezone.utc)
+        readiness: List[Dict[str, Any]] = []
+        unroutable: List[str] = []
+
+        for policy in self._iter_effective_policies(now):
+            candidates = self.mesh.candidates(policy, self.roles)
+            eligible = [agent for agent in candidates if agent.trust >= policy.minimum_trust]
+            entry = {
+                "policy_id": policy.policy_id,
+                "version": policy.version,
+                "roles": list(policy.roles),
+                "tags": list(policy.tags),
+                "minimum_trust": policy.minimum_trust,
+                "eligible_agents": [agent.agent_id for agent in eligible],
+                "candidate_count": len(eligible),
+                "severity": policy.severity,
+            }
+            readiness.append(entry)
+            if not eligible:
+                unroutable.append(policy.policy_id)
+
+        report = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "policies": readiness,
+            "unroutable": unroutable,
+            "counts": {"policies": len(readiness), "unroutable": len(unroutable)},
+        }
+
+        persistence.save_policy_readiness(report)
+        return report
+
     def _iter_effective_policies(self, now: datetime) -> Iterable[Policy]:
         for versions in self.policy_versions.values():
             latest = self._select_latest_version(versions)

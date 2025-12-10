@@ -110,3 +110,18 @@ def load_authority_presence():
     """Return the stored authority presence snapshot or an empty dict."""
 
     return load_json("authority_presence.json")
+
+
+# ---- Readiness Reports ---- #
+
+
+def save_policy_readiness(report):
+    """Persist the latest policy readiness report for gap analysis."""
+
+    save_json("policy_readiness.json", report)
+
+
+def load_policy_readiness():
+    """Return the stored policy readiness report or an empty dict."""
+
+    return load_json("policy_readiness.json")
