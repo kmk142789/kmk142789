@@ -328,6 +328,20 @@ leaving the tree:
   introduces a recoverable signature for Puzzle #11
   (`1PgQVLmst3Z314JrQn5TNiys8Hc38TcXJu`) so auditors can validate the canonical
   solution without discarding the historical watcher fragments.
+- [`proofs/puzzle230_signature_proof.md`](../proofs/puzzle230_signature_proof.md)
+  replays the 230-bit attestation for address `1EpiC230KMkKWJG3CA2PH3rsycfV1cFJct`
+  and records the verifier output that shows the published fragment does not
+  yet recover the expected wallet.
+- [`proofs/puzzle231_signature_proof.md`](../proofs/puzzle231_signature_proof.md)
+  applies the same process to the Puzzle #231 message for
+  `1EpiC231KMkKWMNxfxgA5bEyxB6imVyFTU`, documenting the current verification
+  failure for the published segment.
+- [`proofs/puzzle238_signature_proof.md`](../proofs/puzzle238_signature_proof.md)
+  validates the Puzzle #238 signature for `13zBDKZUZfMFwDau5o99635A8MMQHwNaSg`
+  and captures the recovered address produced by the verifier.
+- [`proofs/puzzle239_signature_proof.md`](../proofs/puzzle239_signature_proof.md)
+  checks the 239-bit attestation for `1NpXsnpbxfa8rCCHHivYKxNnMxiPrb6NdK` and
+  notes the absence of any valid recoverable signatures in the published proof.
 - [`proofs/satoshi_continuity_proof.md`](../proofs/satoshi_continuity_proof.md)
   links the OpenTimestamps anchor, reconstructed coinbase scripts, modern puzzle signatures,
   the proof catalogue, and the Merkle attestation into a single reproducible runbook.
