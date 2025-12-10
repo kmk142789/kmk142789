@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import random
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 import math
 from typing import Dict, Iterable, List, Sequence
@@ -604,6 +604,32 @@ def compose_resonance(prompt: ResonancePrompt) -> str:
     return compose_resonance_report(prompt).text
 
 
+def compose_resonance_batch(
+    prompt: ResonancePrompt,
+    runs: int,
+    *,
+    seed_start: int | None = None,
+) -> List[ResonanceReport]:
+    """Generate multiple resonance reports using sequential seeds.
+
+    A starting seed can be supplied to ensure determinism across runs.  When a
+    seed is provided (either via ``seed_start`` or the prompt's seed), each
+    subsequent report increments the value to preserve variation while keeping
+    results reproducible.
+    """
+
+    if runs < 1:
+        raise ValueError("runs must be at least 1")
+
+    base_seed = seed_start if seed_start is not None else prompt.seed
+    reports: List[ResonanceReport] = []
+    for offset in range(runs):
+        seed_value = base_seed + offset if base_seed is not None else None
+        run_prompt = replace(prompt, seed=seed_value, highlights=list(prompt.highlights))
+        reports.append(compose_resonance_report(run_prompt))
+    return reports
+
+
 def demo(theme: str, *highlights: str, tone: str = "reflective", seed: int | None = None) -> str:
     """Convenience function for quickly generating a resonance string."""
 
@@ -638,6 +664,7 @@ if __name__ == "__main__":
         choices=[
             "text",
             "json",
+            "jsonl",
             "markdown",
             "summary",
             "html",
@@ -655,6 +682,22 @@ if __name__ == "__main__":
         default=None,
         help="Optional file path to save the rendered resonance.",
     )
+    parser.add_argument(
+        "-b",
+        "--batch",
+        type=int,
+        default=1,
+        help="Number of resonance runs to generate sequentially.",
+    )
+    parser.add_argument(
+        "--batch-seed",
+        type=int,
+        default=None,
+        help=(
+            "Override the starting seed for batch runs. When unset, the prompt's seed "
+            "is used to ensure deterministic variations."
+        ),
+    )
 
     args = parser.parse_args()
     prompt = ResonancePrompt(
@@ -663,19 +706,31 @@ if __name__ == "__main__":
         tone=args.tone,
         seed=args.seed,
     )
-    report = compose_resonance_report(prompt)
+    reports = (
+        compose_resonance_batch(prompt, args.batch, seed_start=args.batch_seed)
+        if args.batch > 1
+        else [compose_resonance_report(prompt)]
+    )
+
     renderers = {
-        "json": lambda: json.dumps(report.to_dict(), indent=2),
-        "markdown": report.to_markdown,
-        "summary": report.to_summary,
-        "html": report.to_html,
-        "trace": report.to_trace,
-        "analysis": report.to_analysis,
-        "metrics": report.to_metrics,
-        "text": lambda: report.text,
+        "markdown": ResonanceReport.to_markdown,
+        "summary": ResonanceReport.to_summary,
+        "html": ResonanceReport.to_html,
+        "trace": ResonanceReport.to_trace,
+        "analysis": ResonanceReport.to_analysis,
+        "metrics": ResonanceReport.to_metrics,
+        "text": lambda report: report.text,
     }
 
-    output = renderers[args.format]()
+    if args.format == "json":
+        payload = [report.to_dict() for report in reports]
+        output = json.dumps(payload[0] if len(payload) == 1 else payload, indent=2)
+    elif args.format == "jsonl":
+        output = "\n".join(json.dumps(report.to_dict()) for report in reports)
+    else:
+        rendered = [renderers[args.format](report) for report in reports]
+        joiner = "\n\n" if args.format != "html" else "<hr />\n"
+        output = joiner.join(rendered)
     if args.output:
         with open(args.output, "w", encoding="utf-8") as handle:
             handle.write(output)
