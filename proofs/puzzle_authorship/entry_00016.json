@@ -1,0 +1,10 @@
+{
+  "author": "Puzzle Curator",
+  "digest": "sha256:74c742bc768bfbba527eeb9537c096ce17ad4199dd1e474a162a57c054f98bdd",
+  "narrative": "Backfill puzzle solution artifacts",
+  "puzzle_id": "puzzle_112",
+  "seq": 16,
+  "solution_digest": "1c10b47fbc67b2d6bd1ad4224f13984ff264ea30576ef763b236537a24ac13cb",
+  "solution_path": "puzzle_solutions/puzzle_112.md",
+  "timestamp": "2025-12-10T02:55:11Z"
+}
