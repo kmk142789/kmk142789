@@ -1,0 +1,12 @@
+{
+  "attestation_digest": "d06bf1cf4aa42819d118cdd3bc31013cf6b45ad1df105e0c58566346744be5f2",
+  "attestation_path": "attestations/puzzle-053-authorship.json",
+  "author": "Puzzle Curator",
+  "digest": "sha256:4494f2492a4cdbc57b0bf95b972ca58c8a850db9be09607399f602d9d131aac0",
+  "narrative": "Attested puzzle solution enrichment",
+  "puzzle_id": "puzzle053",
+  "seq": 323,
+  "solution_digest": "5594cae0c465a88bc358728d8b91673c30b7135845de7cc0791ca5c889930100",
+  "solution_path": "satoshi/puzzle-solutions/puzzle053.md",
+  "timestamp": "2025-12-10T03:08:02Z"
+}
