@@ -62,6 +62,10 @@
 - **Auditable Artifacts:** Every governance touchpoint (issues, RFCs, Mirror
   posts, attestations) must quote the Git commit SHA and timestamp.  Missing
   metadata blocks release signing.
+- **Authority Presence:** Use the governance router's authority snapshot to
+  prove which roles are staffed, which policies bind them, and any orphaned
+  agents.  Persist the snapshot to `.offline_state/authority_presence.json` so
+  audits can confirm coverage even while offline.
 
 ## Conflict Resolution & Escalation
 
