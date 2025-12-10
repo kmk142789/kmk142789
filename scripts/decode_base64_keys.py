@@ -170,6 +170,14 @@ def main(argv: Iterable[str] | None = None) -> None:
         action="store_true",
         help="Render EchoGlyphNet metadata (entropy, ascii ratio, tags) for each token.",
     )
+    parser.add_argument(
+        "--integers",
+        action="store_true",
+        help=(
+            "After decoding, print a summary table of integer values for binary "
+            "segments (payloads up to 64 bytes)."
+        ),
+    )
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
@@ -187,6 +195,13 @@ def main(argv: Iterable[str] | None = None) -> None:
         decoded_segments = decode_all(tokens)
         for segment in decoded_segments:
             print(format_segment(segment))
+
+        if args.integers:
+            integer_segments = [segment for segment in decoded_segments if segment.integer is not None]
+            if integer_segments:
+                print("\n# integer values")
+                for segment in integer_segments:
+                    print(f"{segment.index:03d} int={segment.integer} len={segment.length}")
 
         if args.features:
             decoder = GlyphnetKeyDecoder()
