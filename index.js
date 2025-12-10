@@ -65,7 +65,7 @@ app.get('/echo/status', (_req, res) => {
   }
 });
 
-app.post('/echo/evolve', (_req, res) => {
+app.post('/echo/evolve/basic', (_req, res) => {
   try {
     const result = runEvolution();
     res.json(result);
