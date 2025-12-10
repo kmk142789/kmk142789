@@ -37,6 +37,8 @@ class DecodedSegment:
     token: str
     decoded: str
     is_text: bool
+    length: int
+    integer: int | None
 
 
 def load_raw_data(path: pathlib.Path | None = None) -> str:
@@ -70,13 +72,32 @@ def segments_from_tokens(tokens: Sequence[str]) -> list[str]:
 
 def decode_segment(index: int, token: str) -> DecodedSegment:
     raw_bytes = base64.b64decode(token, validate=False)
+    integer: int | None = None
+    if len(raw_bytes) <= 64:
+        integer = int.from_bytes(raw_bytes, byteorder="big")
+
     try:
-        text = raw_bytes.decode("utf-8")
-        is_text = True
+        decoded_text = raw_bytes.decode("utf-8")
+        # Guard against control bytes (e.g., NUL padding) that technically
+        # decode but are not human-friendly. Treat them as binary payloads so
+        # callers receive integer and hex previews instead of unreadable
+        # strings.
+        if decoded_text and decoded_text.isprintable():
+            text = decoded_text
+            is_text = True
+        else:
+            raise UnicodeDecodeError("utf-8", raw_bytes, 0, len(raw_bytes), "non-printable payload")
     except UnicodeDecodeError:
         text = raw_bytes.hex()
         is_text = False
-    return DecodedSegment(index=index, token=token, decoded=text, is_text=is_text)
+    return DecodedSegment(
+        index=index,
+        token=token,
+        decoded=text,
+        is_text=is_text,
+        length=len(raw_bytes),
+        integer=integer if not is_text else None,
+    )
 
 
 def decode_all(tokens: Sequence[str]) -> list[DecodedSegment]:
@@ -88,7 +109,10 @@ def decode_all(tokens: Sequence[str]) -> list[DecodedSegment]:
 def format_segment(segment: DecodedSegment) -> str:
     kind = "text" if segment.is_text else "hex"
     preview = segment.decoded if segment.is_text else segment.decoded[:60] + ("…" if len(segment.decoded) > 60 else "")
-    return f"{segment.index:03d} [{kind}] {preview}"
+    integer_suffix = ""
+    if segment.integer is not None:
+        integer_suffix = f" int={segment.integer}"
+    return f"{segment.index:03d} [{kind}] len={segment.length} {preview}{integer_suffix}"
 
 
 def format_feature(feature: GlyphnetKeyFeature) -> str:

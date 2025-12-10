@@ -28,9 +28,16 @@ def test_decode_segment_marks_binary_payloads_as_hex() -> None:
     segment = decode_segment(1, token)
     assert isinstance(segment, DecodedSegment)
     assert not segment.is_text
+    assert segment.length == 32
     # The payload is 32 bytes, therefore the hex preview spans 64 characters.
     assert len(segment.decoded) == 64
     assert segment.decoded.startswith("00")
+
+
+def test_decode_segment_reports_integer_hint_for_binary_payloads() -> None:
+    token = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI="
+    segment = decode_segment(1, token)
+    assert segment.integer == 2
 
 
 def test_resolve_tokens_prefers_cli_tokens_over_raw_source() -> None:
