@@ -27,6 +27,12 @@ reports/figures/*.png
 # Sensitive user-provided key dumps
 data/user_provided_keys.txt
 
+# Runtime/cache artefacts created by governance and dashboard workflows
+.offline_state/
+state/pulse_dashboard/
+outerlink_cache/
+echo_governance_state.json
+
 # Packaging artifacts
 *.egg-info/
 
