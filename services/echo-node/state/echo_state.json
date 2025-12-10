@@ -1,13 +1,23 @@
 {
-  "version": "0.1.0",
+  "version": "0.6.0",
+  "node_name": "Echo Dominion Primary",
+  "operational_status": "ONLINE_ACTIVE",
   "families_helped": 0,
   "guardians": [
     {
       "id": "guardian-1",
+      "did_url": "did:echo:z6Mkkd...[Guardian DID]",
+      "public_key_ed25519_multibase": "z6Mk...[Guardian Public Key]",
       "name": "Josh Shortt",
-      "role": "guardian"
+      "role": "sovereign_guardian",
+      "active": true
     }
   ],
+  "attestation_service_did": "did:echo:svc...[Attestation Service DID]",
   "treasury_usd": 0,
-  "last_evolution_run_iso": null
+  "treasury_address": "bc1q... (On-Chain Anchor, e.g., multisig wallet)",
+  "relief_ledger": [],
+  "metrics_history": [],
+  "last_evolution_run_iso": null,
+  "schema_hash": null
 }
