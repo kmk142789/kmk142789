@@ -114,6 +114,8 @@ class EchoBridgeAPI:
         bluetooth_beacon_id: Optional[str] = None,
         bluetooth_profile: Optional[str] = None,
         bluetooth_bandwidth_mhz: Optional[float] = None,
+        arweave_gateway_url: Optional[str] = None,
+        arweave_wallet_secret_name: str = "ARWEAVE_WALLET_JWK",
     ) -> None:
         self.github_repository = github_repository
         self.github_discussions_repository = (
@@ -203,6 +205,8 @@ class EchoBridgeAPI:
         self.bluetooth_beacon_id = (bluetooth_beacon_id or "").strip() or None
         self.bluetooth_profile = (bluetooth_profile or "").strip() or None
         self.bluetooth_bandwidth_mhz = bluetooth_bandwidth_mhz
+        self.arweave_gateway_url = (arweave_gateway_url or "").strip() or None
+        self.arweave_wallet_secret_name = arweave_wallet_secret_name
 
     def plan_identity_relay(
         self,
@@ -489,6 +493,19 @@ class EchoBridgeAPI:
                     topics=topic_items,
                     priority=priority_text,
                     text=context.social_text,
+                )
+            )
+        if self.arweave_gateway_url and self._platform_enabled("arweave", allowed_platforms):
+            plans.append(
+                self._arweave_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
                 )
             )
         if self.teams_webhook_url and self._platform_enabled("teams", allowed_platforms):
@@ -1636,6 +1653,59 @@ class EchoBridgeAPI:
         }
         requires = [self.webhook_secret_name] if self.webhook_secret_name else []
         return BridgePlan(platform="webhook", action="post_json", payload=body, requires_secret=requires)
+
+    def _arweave_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+    ) -> BridgePlan:
+        document = self._base_document(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+        tags: List[Dict[str, str]] = [
+            {"name": "App-Name", "value": "EchoBridge"},
+            {"name": "App-Version", "value": "1.0"},
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "Identity", "value": identity},
+            {"name": "Cycle", "value": cycle},
+        ]
+        for topic in topics[:3]:
+            tags.append({"name": "Topic", "value": topic})
+
+        payload: Dict[str, Any] = {
+            "gateway_url": self.arweave_gateway_url or "https://arweave.net",
+            "transaction": {
+                "data": document,
+                "content_type": "application/json",
+                "tags": tags,
+            },
+            "context": {"identity": identity, "cycle": cycle, "signature": signature},
+        }
+        requires = (
+            [self.arweave_wallet_secret_name]
+            if self.arweave_wallet_secret_name
+            else []
+        )
+        return BridgePlan(
+            platform="arweave",
+            action="submit_transaction",
+            payload=payload,
+            requires_secret=requires,
+        )
 
     def _wifi_plan(
         self,

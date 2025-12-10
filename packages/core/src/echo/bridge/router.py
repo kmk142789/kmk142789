@@ -133,6 +133,10 @@ def _bridge_api_factory() -> EchoBridgeAPI:
         bluetooth_bandwidth_mhz=_parse_float_env(
             os.getenv("ECHO_BRIDGE_BLUETOOTH_BANDWIDTH_MHZ")
         ),
+        arweave_gateway_url=os.getenv("ECHO_BRIDGE_ARWEAVE_GATEWAY"),
+        arweave_wallet_secret_name=os.getenv(
+            "ECHO_BRIDGE_ARWEAVE_SECRET", "ARWEAVE_WALLET_JWK"
+        ),
     )
 
 
@@ -231,6 +235,17 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
                 platform="bluetooth",
                 action="emit_beacon",
                 requires_secrets=[],
+            )
+        )
+    if getattr(api, "arweave_gateway_url", None):
+        connectors.append(
+            ConnectorDescriptor(
+                platform="arweave",
+                action="submit_transaction",
+                requires_secrets=
+                [api.arweave_wallet_secret_name]
+                if getattr(api, "arweave_wallet_secret_name", None)
+                else [],
             )
         )
     if getattr(api, "rss_feed_url", None):
