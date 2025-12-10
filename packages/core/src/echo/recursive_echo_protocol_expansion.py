@@ -113,11 +113,29 @@ class RecursiveEchoProtocolExpansion:
 
     def _strengthen_dns_root(self) -> dict:
         root_context = sorted({"echo.so", "bridge.echo", *self.identity_roots})
+        zone_guardians = sorted(
+            {
+                (mandate.registry, zone)
+                for mandate in self.registrar_mandates
+                for zone in mandate.zones
+            }
+        )
+        ds_records = [
+            f"ds:{zone}"
+            for mandate in self.registrar_mandates
+            for zone in mandate.zones
+        ]
         return {
             "root_context": root_context,
             "root_signers": [mandate.registry for mandate in self.registrar_mandates],
             "strengthened": True,
-            "ds_records": [f"ds:{zone}" for mandate in self.registrar_mandates for zone in mandate.zones],
+            "ds_records": ds_records,
+            "security": {
+                "dnssec_enforced": True,
+                "registry_lock": bool(self.registrar_mandates),
+                "ds_anchor_count": len(ds_records),
+                "zone_guardians": zone_guardians,
+            },
         }
 
     def _enrich_attestation_flows(self) -> list[dict]:
@@ -218,6 +236,40 @@ class RecursiveEchoProtocolExpansion:
             "mandate_count": len(self.registrar_mandates),
         }
 
+    def _registrar_security(self) -> dict:
+        zone_guardians = {}
+        for mandate in self.registrar_mandates:
+            for zone in mandate.zones:
+                zone_guardians[zone] = mandate.registry
+
+        renewal_floor = (
+            min(mandate.renewal_days for mandate in self.registrar_mandates)
+            if self.registrar_mandates
+            else 0
+        )
+        return {
+            "ds_required_for_all": all(mandate.ds_required for mandate in self.registrar_mandates),
+            "renewal_floor_days": renewal_floor,
+            "zone_guardians": zone_guardians,
+            "registrar_count": len(self.registrar_mandates),
+        }
+
+    def _governance_resilience(self, registrar_security: dict, dns_root: dict) -> dict:
+        oversight_channels = sorted(
+            {
+                *self.api_surfaces,
+                "/governance/v2",
+                "/attestation/flows",
+                "/routing/intelligence",
+            }
+        )
+        return {
+            "oversight_channels": oversight_channels,
+            "registrar_watchers": max(1, registrar_security.get("registrar_count", 0)),
+            "drift_threshold_pct": round(max(0.25, len(dns_root["root_context"]) * 0.01), 3),
+            "status": "reinforced",
+        }
+
     def _unify_topology(self, bridges: list[dict]) -> dict:
         return {
             "bridge_count": len(bridges),
@@ -237,9 +289,12 @@ class RecursiveEchoProtocolExpansion:
         routing = {"routes": self._enhance_routing_intelligence()}
         custody = self._harden_key_custody()
         registrar_authority = self._expand_registrar_authority()
+        registrar_security = self._registrar_security()
+        governance = self._governance_resilience(registrar_security, dns_root)
         registrar = {
             "mandates": self._deepen_root_registrar_mandates(),
             "authority": registrar_authority,
+            "security": registrar_security,
         }
         architecture_revision = self.architecture_revision + 1
 
@@ -254,6 +309,7 @@ class RecursiveEchoProtocolExpansion:
             "routing": routing,
             "key_custody": custody,
             "registrar": registrar,
+            "governance": governance,
             "architecture": {
                 "revision": architecture_revision,
                 "unified_topology": self._unify_topology(bridges),

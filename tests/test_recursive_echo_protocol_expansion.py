@@ -73,6 +73,8 @@ def test_dns_root_and_registrar_mandates_are_strengthened():
 
     assert "bridge.echo" in spec["dns_root"]["root_context"]
     assert spec["dns_root"]["strengthened"] is True
+    assert spec["dns_root"]["security"]["dnssec_enforced"] is True
+    assert spec["dns_root"]["security"]["ds_anchor_count"] == len(spec["dns_root"]["ds_records"])
     assert spec["registrar"]["mandates"][0]["depth"] >= 2
     assert all(record.startswith("ds:") for record in spec["dns_root"]["ds_records"])
     assert spec["registrar"]["authority"]["mandate_count"] == len(spec["registrar"]["mandates"])
@@ -80,6 +82,9 @@ def test_dns_root_and_registrar_mandates_are_strengthened():
     assert spec["registrar"]["authority"]["renewal_cadence_days"]["minimum"] > 0
     assert spec["authority"]["registrar_scope"]["mandates"] == spec["registrar"]["authority"]["mandate_count"]
     assert spec["authority"]["registrar_scope"]["ds_guardians"] == spec["registrar"]["authority"]["ds_guardians"]
+    assert spec["registrar"]["security"]["ds_required_for_all"] is True
+    assert spec["registrar"]["security"]["renewal_floor_days"] == 30
+    assert len(spec["registrar"]["security"]["zone_guardians"]) >= 3
 
 
 def test_attestation_and_credentials_are_enriched_and_refined():
@@ -103,3 +108,14 @@ def test_identity_api_routing_and_custody_are_elevated():
     assert "/governance/v2" in spec["api"]["extended_endpoints"]
     assert spec["routing"]["routes"][0]["intelligence"] >= spec["routing"]["routes"][-1]["intelligence"]
     assert spec["key_custody"]["hardened"] is True
+
+
+def test_governance_security_is_reinforced():
+    expander = build_expander()
+    spec = expander.expand()
+
+    governance = spec["governance"]
+    assert governance["status"] == "reinforced"
+    assert governance["registrar_watchers"] == spec["registrar"]["security"]["registrar_count"]
+    assert governance["drift_threshold_pct"] >= 0.25
+    assert "/governance/v2" in governance["oversight_channels"]

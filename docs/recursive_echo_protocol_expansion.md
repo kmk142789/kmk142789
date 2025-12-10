@@ -26,6 +26,9 @@ be applied by automation pipelines and governance reviews alike.
   rotations.
 - **Deepen root registrar mandates:** capture renewal cadence and DS
   requirements for each registrar guardian.
+- **Reinforce governance and DNS security:** surface registrar security posture
+  (DS coverage, renewal floors, and guardianship) and publish DNSSEC + registry
+  lock expectations directly in the generated specification.
 - **Unify bridges, routers, and identity engines:** build a single topology view
   so orchestration tools can reason about the overall health.
 
