@@ -1104,7 +1104,7 @@ class EchoBridgeAPI:
             )
 
         payload: Dict[str, Any] = {
-            "database_id": self.notion_database_id,
+            "parent": {"database_id": self.notion_database_id},
             "properties": properties,
             "children": children,
             "context": {
