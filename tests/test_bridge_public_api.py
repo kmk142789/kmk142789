@@ -112,6 +112,22 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
     }
 
 
+def test_relays_endpoint_optionally_includes_sync_connectors() -> None:
+    app = _make_app()
+    client = TestClient(app)
+
+    response = client.get("/bridge/relays", params={"include_sync": True})
+    assert response.status_code == 200
+    payload = response.json()
+
+    sync_connectors = payload.get("sync_connectors")
+    assert sync_connectors is not None
+    platforms = {connector["platform"] for connector in sync_connectors}
+    assert platforms >= {"domains", "unstoppable", "vercel", "github"}
+    github = next(item for item in sync_connectors if item["platform"] == "github")
+    assert github["requires_secrets"] == ["GITHUB_TOKEN"]
+
+
 def test_plan_endpoint_returns_bridge_instructions() -> None:
     app = _make_app()
     client = TestClient(app)

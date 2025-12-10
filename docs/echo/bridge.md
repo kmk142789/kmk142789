@@ -67,7 +67,9 @@ The FastAPI router behind `/bridge` exposes three public endpoints for
 automation and dashboards.【F:packages/core/src/echo/bridge/router.py†L1-L144】
 
 1. `GET /bridge/relays` → Enumerates the connectors that are ready, including
-   the secrets automation must resolve.
+   the secrets automation must resolve. Passing `include_sync=true` also lists
+   orchestrator sync connectors (domain inventory, Unstoppable, Vercel, GitHub)
+   so dashboards can surface both planning and replay capabilities in one call.
 2. `POST /bridge/plan` → Accepts identity, cycle, signature, optional traits,
    summaries, and links, then returns the `BridgePlan` objects described above.
 3. `GET /bridge/sync` → Streams the most recent sync operations captured by the
