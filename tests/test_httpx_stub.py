@@ -14,6 +14,16 @@ def test_client_can_return_mock_response():
     assert result.is_success
 
 
+def test_client_get_uses_mock_response():
+    response = httpx.Response(status_code=200, _json={"ping": "pong"}, _text="ok")
+    client = httpx.Client(mock_responses={"https://example.test": response})
+
+    result = client.get("https://example.test")
+
+    assert result is response
+    assert result.json()["ping"] == "pong"
+
+
 def test_raise_for_status_uses_http_status_error():
     response = httpx.Response(status_code=503, _json={}, _text="")
 
@@ -33,3 +43,14 @@ async def test_async_client_get_uses_mock_response():
 
     assert result is response
     assert result.json()["hello"] == "world"
+
+
+@pytest.mark.asyncio
+async def test_async_client_post_uses_mock_response():
+    response = httpx.Response(status_code=201, _json={"created": True}, _text="ok")
+
+    async with httpx.AsyncClient(mock_responses={"https://example.test": response}) as client:
+        result = await client.post("https://example.test", json={"payload": 1})
+
+    assert result is response
+    assert result.json()["created"] is True
