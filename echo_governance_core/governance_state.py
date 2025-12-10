@@ -12,13 +12,18 @@ DEFAULT_STATE: Dict[str, Any] = {
     "actors": {
         "josh.superadmin": {
             "roles": ["superadmin"],
-        }
+        },
+        "system": {
+            "roles": ["billing_agent"],
+        },
     },
     "domains": {
         "authority": None,
         "managed": [],
     },
     "audit": [],
+    "policies": [],
+    "roles": {},
 }
 
 
@@ -47,6 +52,10 @@ def load_state() -> Dict[str, Any]:
     # Ensure required keys exist
     for key, default_value in DEFAULT_STATE.items():
         data.setdefault(key, _deep_copy(default_value))
+
+    # Guarantee the built-in system actor can operate billing flows
+    actors = data.setdefault("actors", {})
+    actors.setdefault("system", {"roles": ["billing_agent"]})
 
     return data
 
