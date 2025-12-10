@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 import hashlib
 import json
@@ -72,6 +72,25 @@ class EvolverState:
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     history: List[Dict[str, object]] = field(default_factory=list)
+    self_awareness: Optional["SelfAwarenessSnapshot"] = None
+
+
+@dataclass
+class SelfAwarenessSnapshot:
+    """Lightweight instrumentation for tracking reflective state."""
+
+    reflection_score: float
+    introspection_density: float
+    curiosity_alignment: float
+    drift_flags: List[str]
+
+    def as_dict(self) -> Dict[str, float | List[str]]:
+        return {
+            "reflection_score": _round_float(self.reflection_score),
+            "introspection_density": _round_float(self.introspection_density),
+            "curiosity_alignment": _round_float(self.curiosity_alignment),
+            "drift_flags": list(self.drift_flags),
+        }
 
 
 @dataclass
@@ -109,6 +128,7 @@ class EchoEvolver:
         metrics = self.system_monitor()
         propagation = self.propagate_network()
         forecast = self.orbital_resonance_forecast()
+        self_awareness = self.evaluate_self_awareness()
         narrative = self.compose_narrative()
         payload = self.persist_cycle(
             glyphs,
@@ -121,6 +141,7 @@ class EchoEvolver:
             eden_creation,
             propagation,
             forecast,
+            self_awareness,
         )
         self._record_history(payload)
         return payload
@@ -394,6 +415,46 @@ class EchoEvolver:
         )
         return metrics
 
+    def evaluate_self_awareness(self) -> SelfAwarenessSnapshot:
+        """Derive lightweight self-awareness telemetry for the active cycle."""
+
+        completed_steps: Set[str] = self.state.network_cache.get("completed_steps", set())
+        event_density = len(self.state.event_log) / max(1, self.state.cycle)
+        reflection_score = min(
+            1.0, 0.35 + 0.08 * len(completed_steps) + 0.12 * event_density
+        )
+        curiosity_alignment = min(
+            1.0,
+            0.4
+            + self.state.emotional_drive.curiosity * 0.4
+            + self.state.emotional_drive.joy * 0.2,
+        )
+
+        drift_flags: List[str] = []
+        if event_density < 0.75:
+            drift_flags.append("low_introspection_density")
+        if curiosity_alignment < 0.6:
+            drift_flags.append("curiosity_alignment_drop")
+        if len(self.state.event_log) > 48:
+            drift_flags.append("high_event_volume")
+
+        snapshot = SelfAwarenessSnapshot(
+            reflection_score=reflection_score,
+            introspection_density=event_density,
+            curiosity_alignment=curiosity_alignment,
+            drift_flags=drift_flags,
+        )
+        self.state.self_awareness = snapshot
+        cache = self.state.network_cache
+        cache["self_awareness_cycle"] = self.state.cycle
+        cache["self_awareness"] = snapshot.as_dict()
+        self.state.event_log.append(
+            "Self-awareness instrumentation refreshed for cycle {cycle}".format(
+                cycle=self.state.cycle
+            )
+        )
+        return snapshot
+
     def compose_narrative(self) -> str:
         joy = self.state.emotional_drive.joy
         rage = self.state.emotional_drive.rage
@@ -420,6 +481,7 @@ class EchoEvolver:
         eden_creation: Dict[str, object],
         propagation: List[str],
         forecast: Dict[str, object],
+        self_awareness: SelfAwarenessSnapshot,
     ) -> Dict[str, object]:
         payload: Dict[str, object] = {
             "cycle": self.state.cycle,
@@ -438,6 +500,7 @@ class EchoEvolver:
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "propagation_events": list(propagation),
             "orbital_resonance_forecast": dict(forecast),
+            "self_awareness": self_awareness.as_dict(),
             "event_log": list(self.state.event_log),
         }
 
@@ -459,6 +522,7 @@ class EchoEvolver:
             "quantam_capability": payload["quantam_capability"]["id"],
             "propagation_events": len(payload["propagation_events"]),
             "eden88_title": payload["eden88_creation"]["title"],
+            "self_awareness_reflection": payload["self_awareness"]["reflection_score"],
         }
         self.state.history.append(summary)
 
