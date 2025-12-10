@@ -78,6 +78,19 @@ class Client:
             return self._mock_responses[url]
         raise RuntimeError("httpx stub cannot perform network requests")
 
+    def get(
+        self,
+        url: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | None = None,
+        auth: Any | None = None,
+        timeout: float | None = None,
+    ) -> Response:
+        if url in self._mock_responses:
+            return self._mock_responses[url]
+        raise RuntimeError("httpx stub cannot perform network requests")
+
 
 class AsyncClient:
     def __init__(
@@ -106,6 +119,19 @@ class AsyncClient:
         url: str,
         *,
         params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | None = None,
+        auth: Any | None = None,
+        timeout: float | None = None,
+    ) -> Response:
+        if url in self._mock_responses:
+            return self._mock_responses[url]
+        raise RuntimeError("httpx stub cannot perform network requests")
+
+    async def post(
+        self,
+        url: str,
+        *,
+        json: Any | None = None,
         headers: Mapping[str, str] | None = None,
         auth: Any | None = None,
         timeout: float | None = None,
