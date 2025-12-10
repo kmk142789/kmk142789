@@ -90,13 +90,30 @@ class OuterLinkRuntime:
             "cache_window": cache_window,
         })
 
+        action_plan = self.offline_state.resilience_action_plan(
+            cache_present=cache_present,
+            cache_stale=offline_snapshot.get("cache_stale", False),
+            backlog=offline_snapshot.get("pending_events", 0),
+            backlog_threshold=self.config.pending_backlog_threshold,
+            offline_reason=offline_snapshot.get("offline_reason"),
+            online=offline_snapshot.get("online", False),
+        )
         resilience = {
             "grade": offline_snapshot.get("resilience_grade"),
             "score": offline_snapshot.get("resilience_score"),
             "summary": offline_snapshot.get("resilience_summary"),
-            "next_action": self._recommend_next_action(offline_snapshot),
+            "action_plan": action_plan,
+            "next_action": action_plan.get("next_action"),
         }
         offline_snapshot["recommended_action"] = resilience["next_action"]
+        offline_snapshot["action_plan"] = action_plan
+
+        health_report = self.offline_state.write_health_report(
+            self.config.offline_cache_dir,
+            self.config.offline_cache_dir / "offline_health.json",
+            self.config.offline_cache_ttl_seconds,
+            self.config.pending_backlog_threshold,
+        )
 
         payload = {
             "online": offline_snapshot["online"],
@@ -104,6 +121,7 @@ class OuterLinkRuntime:
             "metrics": metrics.__dict__,
             "offline": offline_snapshot,
             "resilience": resilience,
+            "health_report": str(health_report),
         }
         self.event_bus.emit("device_status", payload)
         return payload
@@ -152,25 +170,15 @@ class OuterLinkRuntime:
         self.broker.write_config(path, content)
 
     def _recommend_next_action(self, offline_snapshot: Dict[str, Any]) -> str:
-        backlog = offline_snapshot.get("pending_events", 0)
-        backlog_threshold = self.config.pending_backlog_threshold
-        cache_stale = bool(offline_snapshot.get("cache_stale"))
-        cache_present = self.config.offline_cache_dir.exists()
-        offline_reason = offline_snapshot.get("offline_reason")
-
-        if cache_stale:
-            return "Cache marked stale; refresh offline cache or trigger sync to rebuild manifest."
-        if backlog > backlog_threshold:
-            return (
-                f"Pending event backlog {backlog} exceeds guardrail {backlog_threshold}; "
-                "flush events when connectivity is available."
-            )
-        if not cache_present:
-            return "Create offline cache directory to retain audit trail before next run."
-        if not offline_snapshot.get("online", False):
-            reason = offline_reason or "connectivity unavailable"
-            return f"Operating offline ({reason}); prepare offline package for replay."
-        return "Posture steady; continue periodic heartbeats and capability checks."
+        plan = self.offline_state.resilience_action_plan(
+            cache_present=self.config.offline_cache_dir.exists(),
+            cache_stale=bool(offline_snapshot.get("cache_stale")),
+            backlog=int(offline_snapshot.get("pending_events", 0)),
+            backlog_threshold=self.config.pending_backlog_threshold,
+            offline_reason=offline_snapshot.get("offline_reason"),
+            online=bool(offline_snapshot.get("online")),
+        )
+        return plan.get("next_action", "Posture steady; continue periodic heartbeats and capability checks.")
 
     def _write_events(self, events: list[dict]) -> None:
         if not events:
