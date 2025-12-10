@@ -18,8 +18,12 @@ function requireGuardian(req, res, next) {
     const guardianId = req.header('x-guardian-id');
     const guardianToken = req.header('x-guardian-token') || req.header('authorization');
 
+    if (!guardianToken) {
+      return res.status(403).json({ error: 'Guardian authentication required' });
+    }
+
     const guardian = state.guardians?.find(
-      (g) => g.id === guardianId || (guardianToken && g.auth_token === guardianToken)
+      (g) => g.auth_token === guardianToken && (!guardianId || g.id === guardianId)
     );
 
     if (!guardian) {
