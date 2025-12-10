@@ -1,4 +1,35 @@
+from __future__ import annotations
+
+from dataclasses import asdict
+from typing import TYPE_CHECKING, Dict, List
+
 from .billing import get_conn
+
+if TYPE_CHECKING:
+    from services.revenue_mesh.runtime import Receipt, RevenueMeshRuntime, Task
+
+
+def _serialize_tasks(tasks: List["Task"]) -> List[Dict[str, object]]:
+    return [asdict(task) for task in tasks]
+
+
+def _serialize_receipts(receipts: List["Receipt"]) -> List[Dict[str, object]]:
+    return [asdict(receipt) for receipt in receipts]
+
+
+def build_dashboard_snapshot(runtime: "RevenueMeshRuntime") -> Dict[str, object]:
+    """Return a lightweight snapshot of runtime income and task progress."""
+
+    income = sum(receipt.amount for receipt in runtime.receipts)
+    return {
+        "income": income,
+        "clients": list(runtime.clients.keys()),
+        "queued": _serialize_tasks(runtime.queue),
+        "in_progress": _serialize_tasks(runtime.in_progress),
+        "completed": _serialize_tasks(runtime.completed_tasks),
+        "receipts": _serialize_receipts(runtime.receipts),
+        "audit_events": [asdict(entry) for entry in runtime.audit_log],
+    }
 
 
 def format_currency(cents: int) -> str:

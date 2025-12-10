@@ -7,6 +7,7 @@ import gzip
 import json
 import os
 import time
+from pathlib import Path
 from hashlib import sha256
 
 from Crypto.Cipher import AES
@@ -131,4 +132,38 @@ def restore_from_snapshot(master_secret: str, filename: str) -> bool:
     return True
 
 
-__all__ = ["take_snapshot", "restore_from_snapshot", "SNAPSHOT_DIR"]
+def restore_last_snapshot(master_secret: str | None = None) -> bool:
+    """Restore the most recent snapshot in ``SNAPSHOT_DIR``.
+
+    The helper prefers plaintext snapshots (``snapshot_*.json``) and falls back
+    to encrypted snapshots (``snapshot_*.enc.json``). It returns ``True`` when
+    a snapshot is successfully restored.
+    """
+
+    secret = master_secret or os.getenv("ECHO_MASTER_SECRET", "default-master-secret")
+    snapshot_dir = Path(SNAPSHOT_DIR)
+    candidates = sorted(
+        (p for p in snapshot_dir.glob("snapshot_*.json") if not p.name.endswith(".enc.json")),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    encrypted = sorted(snapshot_dir.glob("snapshot_*.enc.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+
+    for path in candidates:
+        if restore_from_snapshot(secret, path.name):
+            return True
+
+    for path in encrypted:
+        if restore_serialized_snapshot(secret, path.name):
+            return True
+
+    return False
+
+
+__all__ = [
+    "take_snapshot",
+    "restore_from_snapshot",
+    "restore_serialized_snapshot",
+    "restore_last_snapshot",
+    "SNAPSHOT_DIR",
+]
