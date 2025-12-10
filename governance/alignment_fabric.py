@@ -337,12 +337,31 @@ class GovernanceRouter:
 
             if not policy.is_active(now):
                 policy_trace.update(status="inactive", reason="outside_active_window")
+                persistence.log_action(
+                    actor,
+                    "route_skipped",
+                    {
+                        "policy_id": policy.policy_id,
+                        "version": policy.version,
+                        "reason": "inactive",
+                    },
+                )
                 trace.append(policy_trace)
                 continue
 
             passed, failures = policy.evaluate_conditions(context)
             if not passed:
                 policy_trace.update(status="skipped", reason="conditions_failed", failures=failures)
+                persistence.log_action(
+                    actor,
+                    "route_skipped",
+                    {
+                        "policy_id": policy.policy_id,
+                        "version": policy.version,
+                        "reason": "conditions_failed",
+                        "failures": failures,
+                    },
+                )
                 trace.append(policy_trace)
                 continue
 
@@ -350,6 +369,15 @@ class GovernanceRouter:
                 agent = self._select_agent(policy)
             except RuntimeError as exc:
                 policy_trace.update(status="failed", reason=str(exc))
+                persistence.log_action(
+                    actor,
+                    "route_failed",
+                    {
+                        "policy_id": policy.policy_id,
+                        "version": policy.version,
+                        "reason": str(exc),
+                    },
+                )
                 trace.append(policy_trace)
                 continue
 
@@ -375,8 +403,8 @@ class GovernanceRouter:
 
             trace.append(policy_trace)
 
-        if results:
-            persistence.save_snapshot({"context": context, "results": results})
+        if trace:
+            persistence.save_snapshot({"context": context, "results": results, "trace": trace})
         self.last_route_trace = trace
         return results
 

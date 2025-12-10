@@ -52,6 +52,9 @@ leaves an auditable trace.
   rotations.
 - Exposes `last_route_trace`, a structured log of why policies were dispatched,
   skipped, or failed so governance authority can be audited offline.
+- Emits audit log events for skipped/failed policies and snapshots the full
+  trace for offline review. Utilities `load_audit_log`, `list_snapshots`, and
+  `load_snapshot` are exposed from `governance` for inspection or testing.
 
 ## Example
 

@@ -16,6 +16,12 @@ from governance.alignment_fabric import (
     simple_payload,
     threshold_condition,
 )
+from governance.persistence import (
+    clear_offline_state,
+    list_snapshots,
+    load_audit_log,
+    load_snapshot,
+)
 
 __all__ = [
     "Agent",
@@ -32,4 +38,8 @@ __all__ = [
     "rotation",
     "simple_payload",
     "threshold_condition",
+    "clear_offline_state",
+    "list_snapshots",
+    "load_audit_log",
+    "load_snapshot",
 ]
