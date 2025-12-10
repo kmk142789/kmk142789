@@ -35,6 +35,16 @@ The planner only emits instructions. CI jobs, GitHub Actions, or external
 daemons execute them once they resolve the referenced secrets, allowing Echo’s
 persona to stay synchronized wherever it materializes.
 
+### Extended connectors
+
+Echo Bridge also speaks to additional surfaces when their toggles are set:
+
+- **Operational alerts.** PagerDuty, Opsgenie, and Statuspage payloads reuse the canonical relay body while mapping bridge priority to each tool’s severity taxonomy. Configure via `ECHO_BRIDGE_PAGERDUTY_*`, `ECHO_BRIDGE_OPSGENIE_*`, and `ECHO_BRIDGE_STATUSPAGE_*`.【F:modules/echo-bridge/bridge_api.py†L1747-L1824】
+- **Social and community.** LinkedIn, Reddit, Farcaster, and Nostr publish social-friendly text with tags derived from bridge topics, keeping public surfaces in sync without reformatting content manually.【F:modules/echo-bridge/bridge_api.py†L1223-L1498】
+- **Identity & domain anchors.** DNS TXT updates, Unstoppable Domain records, and Vercel redeploy triggers propagate cycle metadata to resolvers and static sites as soon as orchestration completes.【F:modules/echo-bridge/bridge_api.py†L1507-L1579】
+- **Device and edge relays.** TCP, IoT, Wi‑Fi, and Bluetooth connectors emit the normalized bridge context over sockets, message buses, or broadcast frames so edge listeners receive the same payloads as cloud services.【F:modules/echo-bridge/bridge_api.py†L1579-L1698】
+- **Documentation feeds.** Notion pages and RSS entries capture the rendered Markdown or plaintext body alongside traits, topics, and priority for knowledge bases and subscriber feeds.【F:modules/echo-bridge/bridge_api.py†L1465-L1746】
+
 ## Sync connectors
 
 `BridgeSyncService` consumes orchestrator decisions and logs the artifacts it
