@@ -1,0 +1,10 @@
+{
+  "puzzle": "#306 authorship",
+  "address": "1BitcoinEaterAddressDontSendf59kuE",
+  "message": "Puzzle 306 authorship by kmk142789 — attestation sha256 6c6dc6d516e454737ce6c1301a4fa417d10db557187eb97cd0d309b8962045d4",
+  "signature": "ikzgAJgHcGFuII9JoQG6dh+o40Tv1LeQKDFDkdPMphzWZ+TvTHkjXODISCEsnXheCER7UVj0qKQHayumGjvfHA==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-12-06T14:00:00Z",
+  "hash_sha256": "6c6dc6d516e454737ce6c1301a4fa417d10db557187eb97cd0d309b8962045d4",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_306.md"
+}

@@ -1,0 +1,10 @@
+{
+  "puzzle": "#307 authorship",
+  "address": "1HB5XMLmzFVj8ALj6mfBsbifRoD4miY36v",
+  "message": "Puzzle 307 authorship by kmk142789 — attestation sha256 196aeafec192291043778fb27430634c9469a79c0c63a6589852a959ecd4b467",
+  "signature": "JK0bFwrfdI2jko6k1Gs5Pq41iOd9ZDL8GrRT2rN5tG9/4gEWM5N7F7XDleWUkfiOLL2dwZcxnQ13xHuV4U/yRw==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-12-06T14:05:00Z",
+  "hash_sha256": "196aeafec192291043778fb27430634c9469a79c0c63a6589852a959ecd4b467",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_307.md"
+}
