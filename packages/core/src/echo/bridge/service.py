@@ -377,6 +377,23 @@ class BridgeSyncService:
 
         return self._log_path
 
+    def describe_connectors(self) -> list[dict[str, object]]:
+        """Return connector metadata suitable for status reporting."""
+
+        descriptors: list[dict[str, object]] = []
+        for connector in self._connectors:
+            required: list[str] = []
+            if isinstance(connector, GitHubIssueConnector):
+                required = ["GITHUB_TOKEN"]
+            descriptors.append(
+                {
+                    "platform": connector.name,
+                    "action": connector.action,
+                    "requires_secrets": required,
+                }
+            )
+        return descriptors
+
     def sync(
         self,
         decision: Mapping[str, object],

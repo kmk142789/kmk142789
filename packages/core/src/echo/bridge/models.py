@@ -79,6 +79,13 @@ class StatusResponse(BaseModel):
     connectors: List[ConnectorDescriptor] = Field(
         ..., description="Connectors that are currently configured."
     )
+    sync_connectors: Optional[List[ConnectorDescriptor]] = Field(
+        default=None,
+        description=(
+            "Optional list of sync connectors available to the orchestrator. "
+            "Included when sync metadata is requested by the caller."
+        ),
+    )
 
 
 class SyncLogEntry(BaseModel):

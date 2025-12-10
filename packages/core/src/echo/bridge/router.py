@@ -445,7 +445,15 @@ def create_router(
     )
 
     @router.get("/relays", response_model=StatusResponse)
-    def list_relays(bridge: EchoBridgeAPI = Depends(lambda: api)) -> StatusResponse:
+    def list_relays(
+        bridge: EchoBridgeAPI = Depends(lambda: api),
+        include_sync: bool = Query(
+            False,
+            description=(
+                "When true, include sync connector metadata alongside planner connectors."
+            ),
+        ),
+    ) -> StatusResponse:
         """Return the connectors that are ready for relay planning."""
 
         connectors = _discover_connectors(bridge)
@@ -454,7 +462,17 @@ def create_router(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="No bridge connectors are currently configured.",
             )
-        return StatusResponse(connectors=connectors)
+        sync_connectors = None
+        if include_sync:
+            sync_connectors = [
+                ConnectorDescriptor(
+                    platform=descriptor.get("platform", "unknown"),
+                    action=descriptor.get("action", ""),
+                    requires_secrets=list(descriptor.get("requires_secrets") or []),
+                )
+                for descriptor in sync_service.describe_connectors()
+            ]
+        return StatusResponse(connectors=connectors, sync_connectors=sync_connectors)
 
     @router.post("/plan", response_model=PlanResponse)
     def plan_relay(
