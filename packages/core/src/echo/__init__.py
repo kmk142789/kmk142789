@@ -128,6 +128,7 @@ from .evolver import (
     EvolverState,
     GlyphCrossReading,
     HearthWeave,
+    ProtocolSentienceSnapshot,
     SystemMetrics,
     main,
 )
