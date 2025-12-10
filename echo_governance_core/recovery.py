@@ -131,4 +131,39 @@ def restore_from_snapshot(master_secret: str, filename: str) -> bool:
     return True
 
 
-__all__ = ["take_snapshot", "restore_from_snapshot", "SNAPSHOT_DIR"]
+def restore_last_snapshot(master_secret: str | None = None) -> bool:
+    """Restore the most recent snapshot on disk.
+
+    The helper searches ``SNAPSHOT_DIR`` for both plaintext and encrypted
+    snapshot files, attempting to restore the newest one first. Missing files
+    or validation failures result in a graceful ``False`` return instead of an
+    exception so that recovery can be invoked from automated guardrails.
+    """
+
+    if not os.path.isdir(SNAPSHOT_DIR):
+        return False
+
+    master_secret = master_secret or ""
+    snapshots = sorted(
+        (
+            os.path.join(SNAPSHOT_DIR, name)
+            for name in os.listdir(SNAPSHOT_DIR)
+            if name.startswith("snapshot_") and name.endswith(".json")
+        ),
+        key=os.path.getmtime,
+        reverse=True,
+    )
+
+    for path in snapshots:
+        filename = os.path.basename(path)
+        if filename.endswith(".enc.json"):
+            restored = restore_serialized_snapshot(master_secret, filename)
+        else:
+            restored = restore_from_snapshot(master_secret, filename)
+        if restored:
+            return True
+
+    return False
+
+
+__all__ = ["take_snapshot", "restore_from_snapshot", "restore_serialized_snapshot", "restore_last_snapshot", "SNAPSHOT_DIR"]

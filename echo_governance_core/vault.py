@@ -57,4 +57,20 @@ def save_vault(vault: dict, master_secret: str) -> None:
         fp.write(blob)
 
 
-__all__ = ["load_vault", "save_vault", "VAULT_FILE"]
+def rotate_signing_keys(master_secret: str | None = None) -> dict:
+    """Rotate offline signing keys and persist the new version to the vault."""
+
+    master_secret = master_secret or "default"
+    vault = load_vault(master_secret)
+    keys = vault.setdefault("signing_keys", [])
+
+    new_key = sha256(os.urandom(32)).hexdigest()
+    version = len(keys) + 1
+    keys.append({"version": version, "key": new_key})
+
+    vault["signing_keys"] = keys
+    save_vault(vault, master_secret)
+    return {"version": version, "key": new_key}
+
+
+__all__ = ["load_vault", "save_vault", "rotate_signing_keys", "VAULT_FILE"]

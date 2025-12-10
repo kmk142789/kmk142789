@@ -12,13 +12,18 @@ DEFAULT_STATE: Dict[str, Any] = {
     "actors": {
         "josh.superadmin": {
             "roles": ["superadmin"],
-        }
+        },
+        "system": {
+            "roles": ["billing_agent"],
+        },
     },
     "domains": {
         "authority": None,
         "managed": [],
     },
     "audit": [],
+    "policies": {},
+    "roles": {},
 }
 
 
@@ -47,6 +52,15 @@ def load_state() -> Dict[str, Any]:
     # Ensure required keys exist
     for key, default_value in DEFAULT_STATE.items():
         data.setdefault(key, _deep_copy(default_value))
+
+    # Merge mandatory actor records without overwriting existing metadata
+    actors = data.setdefault("actors", {})
+    for actor_id, default_info in DEFAULT_STATE["actors"].items():
+        actors.setdefault(actor_id, _deep_copy(default_info))
+
+    # Ensure policy and role maps exist
+    data.setdefault("policies", {})
+    data.setdefault("roles", {})
 
     return data
 
