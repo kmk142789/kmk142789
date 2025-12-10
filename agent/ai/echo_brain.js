@@ -11,8 +11,9 @@ const CONTEXT_CACHE_FILE = 'agent/ai/context_cache.json';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 class OfflinePriorityQueue {
-  constructor(persistPath = OFFLINE_QUEUE_FILE) {
+  constructor(persistPath = OFFLINE_QUEUE_FILE, { maxSize = 256 } = {}) {
     this.persistPath = persistPath;
+    this.maxSize = maxSize;
     this.queue = [];
     this.loadFromDisk();
   }
@@ -41,8 +42,12 @@ class OfflinePriorityQueue {
       ...task,
       enqueuedAt: task.enqueuedAt || Date.now()
     };
+    if (enriched.id) {
+      this.queue = this.queue.filter((existing) => existing.id !== enriched.id);
+    }
     this.queue.push(enriched);
     this.queue.sort((a, b) => b.priority - a.priority || a.enqueuedAt - b.enqueuedAt);
+    this.prune();
     this.persist();
     return enriched;
   }
@@ -55,6 +60,28 @@ class OfflinePriorityQueue {
 
   peekOffline() {
     return this.queue.filter((task) => task.offlineOnly);
+  }
+
+  prune(maxSize = this.maxSize) {
+    if (this.queue.length <= maxSize) return;
+    const offline = this.queue.filter((task) => task.offlineOnly);
+    const online = this.queue.filter((task) => !task.offlineOnly);
+    const trimmed = [...offline, ...online].slice(0, maxSize);
+    this.queue = trimmed;
+  }
+
+  stats() {
+    const offlineOnly = this.queue.filter((task) => task.offlineOnly).length;
+    const oldestEnqueuedAt = this.queue.reduce(
+      (oldest, task) => (oldest === null || task.enqueuedAt < oldest ? task.enqueuedAt : oldest),
+      null
+    );
+    return {
+      size: this.queue.length,
+      offlineOnly,
+      highestPriority: this.queue[0]?.priority ?? null,
+      oldestEnqueuedAt
+    };
   }
 
   isEmpty() {
@@ -105,6 +132,14 @@ class OfflineFirstBrain {
     const serialized = Array.from(this.contextCache.values());
     fs.mkdirSync(path.dirname(this.contextCacheFile), { recursive: true });
     fs.writeFileSync(this.contextCacheFile, JSON.stringify(serialized, null, 2));
+  }
+
+  snapshot() {
+    return {
+      cache: Array.from(this.contextCache.values()),
+      ruleFallbacks: this.ruleFallbacks.map((rule) => ({ id: rule.id })),
+      cacheSize: this.contextCache.size
+    };
   }
 
   cacheContext(key, contextWindow) {
@@ -320,6 +355,15 @@ class EchoRuntime {
     });
   }
 
+  offlineStatus() {
+    return {
+      queue: this.taskQueue.stats(),
+      failures: Object.fromEntries(this.failures),
+      recoveryQueueSize: this.recoveryQueue.length,
+      evaluations: this.evaluationHistory.length
+    };
+  }
+
   async start({ seedTasks = [], maxCycles = 5, loopIntervalMs = 100, recoveryIntervalMs = 250 } = {}) {
     seedTasks.forEach((task) => this.queueTask(task));
     this.active = true;
@@ -336,7 +380,8 @@ class EchoRuntime {
     await Promise.allSettled(runners);
     return {
       evaluations: this.evaluationHistory,
-      failures: Object.fromEntries(this.failures)
+      failures: Object.fromEntries(this.failures),
+      offlineStatus: this.offlineStatus()
     };
   }
 
@@ -398,7 +443,10 @@ class EchoBrain {
     return this.bridge.createOfflineSyncBundle({
       memory: this.memory.slice(-5),
       offlineQueue: this.runtime.taskQueue.peekOffline(),
-      mesh: Array.from(this.bridge.meshNodes)
+      mesh: Array.from(this.bridge.meshNodes),
+      queueStats: this.runtime.taskQueue.stats(),
+      runtime: this.runtime.offlineStatus(),
+      contextSnapshot: this.offlineBrain.snapshot()
     });
   }
 

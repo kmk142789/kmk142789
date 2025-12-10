@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Iterable, List, Optional
 
@@ -17,6 +18,26 @@ from .recovery import (
 def _latest_snapshot(extension: str) -> Optional[Path]:
     snapshots = sorted(Path(SNAPSHOT_DIR).glob(f"*{extension}"))
     return snapshots[-1] if snapshots else None
+
+
+def _snapshot_health() -> dict:
+    """Summarize the freshness and integrity of the latest snapshot file."""
+
+    encrypted = _latest_snapshot(".enc.json")
+    legacy = _latest_snapshot(".json")
+    candidate = encrypted or legacy
+    if not candidate:
+        return {"status": "missing", "message": "No snapshots available"}
+
+    stat = candidate.stat()
+    age_seconds = max(0, time.time() - stat.st_mtime)
+    return {
+        "status": "healthy" if stat.st_size > 0 else "corrupt",
+        "file": candidate.name,
+        "size_bytes": stat.st_size,
+        "age_seconds": age_seconds,
+        "encrypted": candidate.suffixes[-2:] == [".enc", ".json"],
+    }
 
 
 def activate_offline_mode(master_secret: str) -> dict:
@@ -39,6 +60,7 @@ def activate_offline_mode(master_secret: str) -> dict:
 
     return {
         "restored_from": restored_from,
+        "health": _snapshot_health(),
         "fallback_rules": {
             "mode": "offline",
             "allow": ["read:*", "metrics:*"],
