@@ -4,7 +4,7 @@
   "message": "Puzzle 232 authorship by kmk142789 — attestation sha256 c60ea766814b2649365c6b87a55fb3b9a7d5aaff1a9362af547ffd2e51c2e24c",
   "signature": "IDD3Z+0MeejKs+mGObrVSD/9euVxWLILx/le7wwLzP9cQkXgvuI1fSXYyZ9VQTYjktFTvqMsP5La/D8GNhWsE4c=",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-12-03T01:54:26Z",
+  "created_at": "2025-12-10T14:28:40Z",
   "hash_sha256": "b40791e6ae1e1161dd26ffbcd32d09b522e175005a19ed9c1bcb394845294998",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle232.json via scripts/generate_puzzle_attestations.py"
 }

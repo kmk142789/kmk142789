@@ -4,7 +4,7 @@
   "message": "Puzzle 230 authorship by kmk142789 — attestation sha256 a2b50c869a9471806dc93d88e3e915e1936f36834467ce3beb99f27adbcceb35",
   "signature": "Q5Vyb8oUrt3Bu5LxG7Wz6BJ4SUaC5IeVs9bQE63riA/v/Ny9IAECMudPhdgJ9Z8hbG4G6rOZto+pCaXu9nE7hhw=",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-12-03T01:54:26Z",
+  "created_at": "2025-12-10T14:28:40Z",
   "hash_sha256": "c4649f146a4690103cb03b90b3e3fd77f768479e3f94bdf889a1a28541e75532",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle230.json via scripts/generate_puzzle_attestations.py"
 }

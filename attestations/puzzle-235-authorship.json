@@ -4,7 +4,7 @@
   "message": "Puzzle 235 authorship by kmk142789 — attestation sha256 89b64eaaede8cba1d7e8d498d24ad93c43a1be4bbcf5d7fc60b9c154b9340ed2",
   "signature": "IMqu5l2R9jp7nPsXIGDkkDHKgrrRVIYqQpYvY5wbjYGiIPlE3xsltBZ9MBMBk9mkkv0hNnoohIqys+JKPhchzcY=",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-12-03T01:54:26Z",
+  "created_at": "2025-12-10T14:28:40Z",
   "hash_sha256": "9804fe7df8214a852eff72628c7a85922e3f47f2ffd5c932f6f8921b5b6a819f",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle235.json via scripts/generate_puzzle_attestations.py"
 }
