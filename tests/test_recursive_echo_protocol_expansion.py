@@ -103,3 +103,21 @@ def test_identity_api_routing_and_custody_are_elevated():
     assert "/governance/v2" in spec["api"]["extended_endpoints"]
     assert spec["routing"]["routes"][0]["intelligence"] >= spec["routing"]["routes"][-1]["intelligence"]
     assert spec["key_custody"]["hardened"] is True
+
+
+def test_governance_surface_strengthens_registrar_and_dns_authority():
+    expander = build_expander()
+    spec = expander.expand()
+
+    assert spec["dns_root"]["ds_required"] is True
+    assert spec["dns_root"]["root_hash"].startswith("hash:")
+
+    registrar_authority = spec["registrar"]["authority"]
+    assert registrar_authority["zones_signed"] == len(registrar_authority["zone_coverage"])
+    assert registrar_authority["ds_required"] is True
+
+    governance = spec["governance"]
+    assert set(governance["offline_safe_flows"]) == {"vc-issuance"}
+    assert governance["registrar_alignment"]["ds_required"] is True
+    assert governance["dns_root"]["ds_required"] is True
+    assert "/governance/v2" in governance["api_surfaces"]

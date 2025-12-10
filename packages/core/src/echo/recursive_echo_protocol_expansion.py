@@ -113,11 +113,15 @@ class RecursiveEchoProtocolExpansion:
 
     def _strengthen_dns_root(self) -> dict:
         root_context = sorted({"echo.so", "bridge.echo", *self.identity_roots})
+        ds_records = [f"ds:{zone}" for mandate in self.registrar_mandates for zone in mandate.zones]
+        root_material = "|".join(root_context + ds_records)
         return {
             "root_context": root_context,
             "root_signers": [mandate.registry for mandate in self.registrar_mandates],
             "strengthened": True,
-            "ds_records": [f"ds:{zone}" for mandate in self.registrar_mandates for zone in mandate.zones],
+            "ds_records": ds_records,
+            "ds_required": bool(ds_records),
+            "root_hash": f"hash:{len(root_material)}:{len(ds_records)}",
         }
 
     def _enrich_attestation_flows(self) -> list[dict]:
@@ -216,6 +220,9 @@ class RecursiveEchoProtocolExpansion:
             "ds_guardians": ds_guardians,
             "renewal_cadence_days": renewal_cadence,
             "mandate_count": len(self.registrar_mandates),
+            "zone_coverage_map": {mandate.registry: sorted(set(mandate.zones)) for mandate in self.registrar_mandates},
+            "ds_required": all(mandate.ds_required for mandate in self.registrar_mandates),
+            "zones_signed": len(zones),
         }
 
     def _unify_topology(self, bridges: list[dict]) -> dict:
@@ -224,6 +231,26 @@ class RecursiveEchoProtocolExpansion:
             "router_roles": sum(bridge.get("score", 0) > 0 for bridge in bridges),
             "identity_engines": len(self.identity_roots),
             "unified": True,
+        }
+
+    def _governance_surface(self, dns_root: dict, registrar: dict, registrar_authority: dict) -> dict:
+        offline_safe_flows = [flow.name for flow in self.attestation_flows if flow.offline_safe]
+        return {
+            "signals": ["amplify authority", "expand governance", "strengthen registrar"],
+            "offline_safe_flows": offline_safe_flows,
+            "registrar_alignment": {
+                "ds_required": registrar_authority.get("ds_required", False),
+                "ds_guardians": registrar_authority.get("ds_guardians", []),
+                "zones": registrar_authority.get("zone_coverage", []),
+            },
+            "dns_root": {
+                "anchors": dns_root["root_context"],
+                "ds_required": dns_root["ds_required"],
+                "root_hash": dns_root["root_hash"],
+            },
+            "api_surfaces": registrar.get("api_surfaces")
+            if isinstance(registrar, dict) and "api_surfaces" in registrar
+            else self._extend_api_surfaces(),
         }
 
     def expand(self) -> dict:
@@ -240,6 +267,7 @@ class RecursiveEchoProtocolExpansion:
         registrar = {
             "mandates": self._deepen_root_registrar_mandates(),
             "authority": registrar_authority,
+            "api_surfaces": api["extended_endpoints"],
         }
         architecture_revision = self.architecture_revision + 1
 
@@ -254,6 +282,7 @@ class RecursiveEchoProtocolExpansion:
             "routing": routing,
             "key_custody": custody,
             "registrar": registrar,
+            "governance": self._governance_surface(dns_root, registrar, registrar_authority),
             "architecture": {
                 "revision": architecture_revision,
                 "unified_topology": self._unify_topology(bridges),

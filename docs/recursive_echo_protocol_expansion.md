@@ -26,6 +26,9 @@ be applied by automation pipelines and governance reviews alike.
   rotations.
 - **Deepen root registrar mandates:** capture renewal cadence and DS
   requirements for each registrar guardian.
+- **Surface governance readiness:** publish a governance block that ties DNS
+  root anchors, registrar DS guardians, and offline-safe attestation flows to
+  the canonical API surfaces.
 - **Unify bridges, routers, and identity engines:** build a single topology view
   so orchestration tools can reason about the overall health.
 
