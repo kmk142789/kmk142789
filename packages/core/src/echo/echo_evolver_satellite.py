@@ -82,6 +82,9 @@ class SatelliteEvolverState:
     propagation_recommendation: str = ""
     propagation_alerts: List[str] = field(default_factory=list)
     propagation_report: str = ""
+    satellite_relay_window: str = ""
+    satellite_relay_status: str = ""
+    satellite_relay_metrics: Dict[str, object] = field(default_factory=dict)
     mutation_history: List[str] = field(default_factory=list)
     resilience_score: float = 0.0
     resilience_grade: str = ""
@@ -207,6 +210,8 @@ class SatelliteEchoEvolver:
         metrics.process_count = self._estimate_process_count()
         metrics.network_nodes = self._rng.randint(7, 24)
         metrics.orbital_hops = self._rng.randint(2, 6)
+        relay_window = f"SR-{self.state.cycle:04d}-{self._rng.randint(1000, 9999)}"
+        self.state.satellite_relay_window = relay_window
         log.info(
             "📊 system metrics | cpu=%.2f%% | processes=%d | nodes=%d | hops=%d",
             metrics.cpu_usage,
@@ -310,6 +315,16 @@ class SatelliteEchoEvolver:
             "Orbital": (0.82, 0.99),
         }
 
+        relay_window = self.state.satellite_relay_window or f"SR-{self.state.cycle:04d}-{self._rng.randint(1000, 9999)}"
+        self.state.satellite_relay_window = relay_window
+        if enable_network:
+            channel_templates["Satellite Relay"] = (
+                "Satellite relay uplink locked for window {window}; beacon ready."
+            )
+            tactic_labels["Satellite Relay"] = "Orbital Relay"
+            bandwidth_ranges["Satellite Relay"] = (780.0, 1250.0)
+            signal_ranges["Satellite Relay"] = (0.86, 0.995)
+
         events: List[str] = []
         tactics: List[Dict[str, object]] = []
         for channel, template in channel_templates.items():
@@ -317,6 +332,7 @@ class SatelliteEchoEvolver:
                 cycle=self.state.cycle,
                 key=self.state.vault_key or "N/A",
                 hops=metrics.orbital_hops,
+                window=relay_window,
             )
             events.append(event)
             latency = round(self._rng.uniform(20.0, 140.0), 2)
@@ -358,6 +374,29 @@ class SatelliteEchoEvolver:
             tactics.append(tactic_entry)
             log.info("📡 %s", event)
 
+        relay_metrics: Dict[str, object] = {}
+        relay_entry = next(
+            (entry for entry in tactics if entry["channel"] == "Satellite Relay"), None
+        )
+        if relay_entry:
+            relay_stability = float(relay_entry.get("stability", 0.0))
+            handoff_integrity = round(
+                min(1.0, max(0.0, (relay_stability * 0.6) + 0.25)), 3
+            )
+            relay_metrics = {
+                "window": relay_window,
+                "latency_ms": relay_entry.get("latency_ms", 0.0),
+                "bandwidth_mbps": relay_entry.get("bandwidth_mbps", 0.0),
+                "stability": relay_stability,
+                "signal_strength": relay_entry.get("signal_strength", 0.0),
+                "handoff_integrity": handoff_integrity,
+            }
+            self.state.satellite_relay_status = (
+                "uplink-confirmed" if enable_network else "simulated"
+            )
+        else:
+            self.state.satellite_relay_status = "not-initialised"
+
         if tactics:
             average_latency = round(
                 sum(entry["latency_ms"] for entry in tactics) / len(tactics), 2
@@ -393,6 +432,11 @@ class SatelliteEchoEvolver:
         )
         if recommended_channel:
             summary += f"; recommended channel: {recommended_channel}"
+        if relay_metrics:
+            summary += (
+                f"; satellite relay window {relay_window} integrity="
+                f"{relay_metrics.get('handoff_integrity', 0.0):.3f}"
+            )
         log.info(summary)
 
         alerts: List[str] = []
@@ -419,6 +463,11 @@ class SatelliteEchoEvolver:
             "recommended_channel": recommended_channel,
             "alerts": list(alerts),
         }
+        if relay_metrics:
+            health_report["satellite_relay"] = relay_metrics
+            health_report["satellite_relay_status"] = self.state.satellite_relay_status
+
+        self.state.satellite_relay_metrics = relay_metrics
 
         self.state.propagation_events = list(events)
         self.state.propagation_tactics = list(tactics)
@@ -568,6 +617,17 @@ class SatelliteEchoEvolver:
             )
             recommendation = health.get("recommended_channel") or "None"
             lines.append(f"  - Recommended channel: {recommendation}")
+            relay_health = health.get("satellite_relay")
+            if isinstance(relay_health, dict):
+                lines.append(
+                    f"  - Satellite relay window: {relay_health.get('window', 'n/a')}"
+                )
+                lines.append(
+                    f"    • Handoff integrity: {_fmt(relay_health.get('handoff_integrity', 0.0), precision=3)}"
+                )
+                lines.append(
+                    f"    • Relay status: {health.get('satellite_relay_status', 'n/a')}"
+                )
         else:
             lines.append("Health snapshot: pending")
 
@@ -664,6 +724,9 @@ class SatelliteEchoEvolver:
             "propagation_recommendation": self.state.propagation_recommendation,
             "propagation_alerts": self.state.propagation_alerts,
             "propagation_report": self.state.propagation_report,
+            "satellite_relay_window": self.state.satellite_relay_window,
+            "satellite_relay_status": self.state.satellite_relay_status,
+            "satellite_relay_metrics": self.state.satellite_relay_metrics,
             "mutation_history": self.state.mutation_history,
             "prompt": self.state.prompt_resonance,
             "resilience_score": self.state.resilience_score,
