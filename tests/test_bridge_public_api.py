@@ -348,6 +348,60 @@ def test_plan_endpoint_filters_requested_connectors() -> None:
             assert plan["payload"]["url_hint"] == "https://bridge.echo/webhook"
 
 
+def test_dns_plan_supports_additional_domains() -> None:
+    api = EchoBridgeAPI(
+        dns_root_domain="echo.test",
+        dns_additional_root_domains=[" echo.alt ", "echo.test", "bridge.echo"],
+        dns_record_prefix="_echo",
+        dns_provider="root-authority",
+        dns_secret_name="ECHO_DNS_TOKEN",
+        dns_root_authority="echo.root",
+        dns_attestation_path="attestations/dns/echo.root.zone",
+    )
+    app = FastAPI()
+    app.include_router(create_router(api=api))
+    client = TestClient(app)
+
+    relays = client.get("/bridge/relays")
+    assert relays.status_code == 200
+    connectors = {connector["platform"]: connector for connector in relays.json()["connectors"]}
+    assert set(connectors) == {"dns"}
+    assert connectors["dns"]["requires_secrets"] == ["ECHO_DNS_TOKEN"]
+
+    response = client.post(
+        "/bridge/plan",
+        json={
+            "identity": "EchoWildfire",
+            "cycle": "21",
+            "signature": "eden88::cycle21",
+            "traits": {"pulse": "aurora"},
+            "summary": "Bridge all domains",
+            "links": ["https://echo.example/cycles/21"],
+            "topics": ["Echo Bridge"],
+            "priority": "high",
+        },
+    )
+
+    assert response.status_code == 200
+    plans = {plan["platform"]: plan for plan in response.json()["plans"]}
+    dns_plan = plans["dns"]
+    payload = dns_plan["payload"]
+
+    assert payload["root_domain"] == "echo.test"
+    assert payload["record"] == "_echo.echo.test"
+    assert payload["value"] == "echo-root=EchoWildfire:21:eden88::cycle21"
+    assert payload["authority"]["attestation"] == "attestations/dns/echo.root.zone"
+
+    records = payload["records"]
+    assert {record["root_domain"] for record in records} == {
+        "echo.test",
+        "echo.alt",
+        "bridge.echo",
+    }
+    assert all(record["record"].startswith("_echo.") for record in records)
+    assert all(record["value"] == payload["value"] for record in records)
+
+
 def test_plan_supports_linkedin_and_reddit_connectors() -> None:
     api = EchoBridgeAPI(
         linkedin_organization_id="echo-org-01",

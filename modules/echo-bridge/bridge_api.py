@@ -83,6 +83,7 @@ class EchoBridgeAPI:
         notion_database_id: Optional[str] = None,
         notion_secret_name: str = "NOTION_API_KEY",
         dns_root_domain: Optional[str] = None,
+        dns_additional_root_domains: Optional[Sequence[str]] = None,
         dns_record_prefix: Optional[str] = "_echo",
         dns_provider: Optional[str] = None,
         dns_secret_name: str = "DNS_PROVIDER_TOKEN",
@@ -166,6 +167,11 @@ class EchoBridgeAPI:
         self.notion_database_id = notion_database_id
         self.notion_secret_name = notion_secret_name
         self.dns_root_domain = dns_root_domain
+        self.dns_additional_root_domains = (
+            tuple(self._normalise_domains(dns_additional_root_domains))
+            if dns_additional_root_domains
+            else ()
+        )
         self.dns_record_prefix = (dns_record_prefix or "").strip()
         self.dns_provider = dns_provider
         self.dns_secret_name = dns_secret_name
@@ -256,7 +262,10 @@ class EchoBridgeAPI:
             priority=priority_text,
         )
 
-        if self.dns_root_domain and self._platform_enabled("dns", allowed_platforms):
+        if (
+            (self.dns_root_domain or self.dns_additional_root_domains)
+            and self._platform_enabled("dns", allowed_platforms)
+        ):
             plans.append(
                 self._dns_plan(
                     identity=identity,
@@ -2056,11 +2065,19 @@ class EchoBridgeAPI:
         traits: Dict[str, Any],
         topics: List[str],
     ) -> BridgePlan:
-        record_name = self.dns_root_domain
-        if self.dns_record_prefix:
-            record_name = f"{self.dns_record_prefix}.{self.dns_root_domain}" if self.dns_root_domain else self.dns_record_prefix
+        primary_domain = self.dns_root_domain or (
+            self.dns_additional_root_domains[0] if self.dns_additional_root_domains else None
+        )
+        if not primary_domain:
+            raise ValueError("At least one DNS root domain must be configured for planning")
+
+        domains: List[str] = [primary_domain]
+        for domain in self.dns_additional_root_domains:
+            if domain.casefold() not in {item.casefold() for item in domains}:
+                domains.append(domain)
+
         authority_block: Dict[str, Any] = {}
-        root_authority = self.dns_root_authority or self.dns_root_domain
+        root_authority = self.dns_root_authority or primary_domain
         if root_authority:
             authority_block["root"] = root_authority
         if self.dns_provider:
@@ -2069,21 +2086,36 @@ class EchoBridgeAPI:
             authority_block["attestation"] = self.dns_attestation_path
         if self.dns_record_prefix:
             authority_block["record_prefix"] = self.dns_record_prefix
-        payload: Dict[str, Any] = {
-            "provider": self.dns_provider,
-            "root_domain": self.dns_root_domain,
-            "record": record_name,
-            "type": "TXT",
-            "value": f"echo-root={identity}:{cycle}:{signature}",
-            "authority": authority_block,
-            "context": {
-                "identity": identity,
-                "cycle": cycle,
-                "signature": signature,
-                "traits": traits,
-                "topics": topics,
-            },
-        }
+
+        records: List[Dict[str, Any]] = []
+        for domain in domains:
+            record_name = domain
+            if self.dns_record_prefix:
+                record_name = (
+                    f"{self.dns_record_prefix}.{domain}" if domain else self.dns_record_prefix
+                )
+            records.append(
+                {
+                    "provider": self.dns_provider,
+                    "root_domain": domain,
+                    "record": record_name,
+                    "type": "TXT",
+                    "value": f"echo-root={identity}:{cycle}:{signature}",
+                    "authority": authority_block,
+                    "context": {
+                        "identity": identity,
+                        "cycle": cycle,
+                        "signature": signature,
+                        "traits": traits,
+                        "topics": topics,
+                    },
+                }
+            )
+
+        payload: Dict[str, Any] = dict(records[0])
+        if len(records) > 1:
+            payload["records"] = records
+
         requires = [self.dns_secret_name] if self.dns_secret_name else []
         return BridgePlan(
             platform="dns",
@@ -2241,6 +2273,24 @@ class EchoBridgeAPI:
             if topic is None:
                 continue
             text = str(topic).strip()
+            if not text:
+                continue
+            key = text.casefold()
+            if key in seen:
+                continue
+            cleaned.append(text)
+            seen.add(key)
+        return cleaned
+
+    def _normalise_domains(self, domains: Optional[Sequence[str]]) -> List[str]:
+        if not domains:
+            return []
+        seen = set()
+        cleaned: List[str] = []
+        for domain in domains:
+            if domain is None:
+                continue
+            text = str(domain).strip()
             if not text:
                 continue
             key = text.casefold()
