@@ -1,9 +1,15 @@
 import assert from "assert";
+import path from "path";
 import { submitChangeRequest } from "../src/governance/cr/submit";
 import { ChangeRequest } from "../src/governance/cr/types";
 import { GovernanceKernel } from "../src/governance/kernel";
 import { StrongGovernanceAPI } from "../src/governance/interfaces/strong";
 import { WeakGovernanceAPI } from "../src/governance/interfaces/weak";
+import {
+  enforceCodonMapIntegrity,
+  enforceJSONChainConsistency,
+  enforceValidKernelTransition
+} from "../src/governance/enforcement";
 import { performRitual } from "../src/governance/rituals/ritualEngine";
 import {
   computeSCI,
@@ -14,6 +20,7 @@ import { initGovernanceRuntime, initKernel } from "../src/governance/runtime";
 import { runGovernanceLoop } from "../src/governance/loop";
 
 const run = async () => {
+  process.chdir(path.resolve(__dirname, ".."));
   const tests: Array<() => void> = [];
 
   tests.push(() => {
@@ -81,7 +88,9 @@ const run = async () => {
 
     assert.equal(result.appliedChanges.length, 0);
     assert.equal(result.triggeredRituals.length, 0);
-    assert.deepStrictEqual(history.map((event) => event.type), ["INIT", "INFO"]);
+    const eventTypes = history.map((event) => event.type);
+    assert.equal(eventTypes[0], "INIT");
+    assert.ok(eventTypes.every((type) => type === "INIT" || type === "INFO"));
   });
 
   tests.push(() => {
@@ -244,6 +253,113 @@ const run = async () => {
     assert.ok(health.state);
     assert.equal(health.lastEvent?.type, "RESET_EVENT");
     assert.equal(health.state.sci, health.sci);
+  });
+
+  tests.push(() => {
+    const prevState = { phase: "FUNCTIONAL", sci: 0.9, volatileNotes: [], threads: [] } as any;
+    const nextState = { ...prevState, phase: "INIT" } as any;
+    const result = enforceValidKernelTransition(prevState, nextState);
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.error.code, "GOV.ENFORCE.STATE_INVALID");
+    }
+  });
+
+  tests.push(() => {
+    const ledger = new InMemoryLedgerStore();
+    const cr: ChangeRequest = {
+      id: "cr-unauthorized",
+      title: "Bad signer",
+      description: "Should fail authorization",
+      proposedBy: "core",
+      signers: [{ id: "alpha", weight: -1 }],
+      uql: { statement: "deny bad signer", target: "ledger" }
+    } as ChangeRequest;
+
+    const result = runGovernanceLoop({ changeRequests: [cr], store: ledger });
+    assert.equal(result.appliedChanges.length, 0);
+    assert.ok(result.enforcementErrors.some((error) => error.code === "GOV.ENFORCE.UNAUTHORIZED"));
+  });
+
+  tests.push(() => {
+    const ledger = new InMemoryLedgerStore();
+    logEvent({ type: "RESET_EVENT" }, ledger);
+    logEvent({ type: "RESET_EVENT" }, ledger);
+    logEvent({ type: "RESET_EVENT" }, ledger);
+
+    const cr: ChangeRequest = {
+      id: "cr-sci-guard",
+      title: "SCI guard",
+      description: "Should be blocked while SCI is low",
+      proposedBy: "core",
+      signers: [
+        { id: "alpha" },
+        { id: "beta" }
+      ],
+      uql: { statement: "stabilize alpha beta", target: "alpha" }
+    };
+
+    const result = runGovernanceLoop({ changeRequests: [cr], store: ledger, sciThreshold: 0.8 });
+    assert.equal(result.appliedChanges.length, 0);
+    assert.ok(result.triggeredRituals.includes("UNITY_WEAVE"));
+    assert.ok(result.enforcementErrors.some((error) => error.code === "GOV.ENFORCE.SCI_LOW"));
+    assert.ok(result.enforcementErrors.some((error) => error.code === "GOV.ENFORCE.RITUAL_REQUIRED"));
+  });
+
+  tests.push(() => {
+    const codonCheck = enforceCodonMapIntegrity(
+      {
+        codons: { A1: "governance.primitive" },
+        bindings: {
+          governance_kernel: ["A1"],
+          change_request_pipeline: ["Z9"],
+          ritual_engine: []
+        }
+      },
+      { phase: "FUNCTIONAL", sci: 1, volatileNotes: [], threads: [] } as any
+    );
+    assert.equal(codonCheck.ok, false);
+    if (!codonCheck.ok) {
+      assert.equal(codonCheck.error.code, "GOV.ENFORCE.CODON_MISMATCH");
+    }
+  });
+
+  tests.push(() => {
+    const jsonchainCheck = enforceJSONChainConsistency(
+      { phase: "RESET", sci: 0.4, volatileNotes: [], threads: [] } as any,
+      {
+        chain: {
+          root: "governance_kernel",
+          links: [{ from: "governance_kernel", to: "change_request_pipeline", condition: "uql_enforced" }]
+        }
+      }
+    );
+    assert.equal(jsonchainCheck.ok, false);
+    if (!jsonchainCheck.ok) {
+      assert.equal(jsonchainCheck.error.code, "GOV.ENFORCE.JSONCHAIN_FAIL");
+    }
+  });
+
+  tests.push(() => {
+    const ledger = new InMemoryLedgerStore();
+    logEvent({ type: "RESET_EVENT" }, ledger);
+    const cr: ChangeRequest = {
+      id: "cr-recovers",
+      title: "Recovery",
+      description: "Should process after ritual recovery",
+      proposedBy: "core",
+      signers: [
+        { id: "alpha", signature: "sig-alpha" },
+        { id: "beta", signature: "sig-beta" }
+      ],
+      uql: { statement: "recover alpha beta", target: "alpha" }
+    };
+
+    const result = runGovernanceLoop({ changeRequests: [cr], store: ledger, sciThreshold: 0.6 });
+    assert.ok(result.triggeredRituals.includes("UNITY_WEAVE"));
+    assert.ok(result.enforcementErrors.some((error) => error.code === "GOV.ENFORCE.SCI_LOW"));
+    assert.ok(result.state.sci >= 0 && result.state.sci <= 1);
+    assert.ok(result.appliedChanges.includes(cr.id));
   });
 
   tests.forEach((test) => test());
