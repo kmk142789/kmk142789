@@ -46,19 +46,25 @@ function recordRelief(event) {
   const state = loadState();
   TREASURY_ADDRESS = state.treasury_address || TREASURY_ADDRESS;
 
-  validateReliefEvent(event);
+  const normalizedAmount = Number(event.amount_usd);
+  const normalizedAtIso = event.at_iso || new Date().toISOString();
+  validateReliefEvent({ ...event, amount_usd: normalizedAmount });
 
   const audit_challenge_nonce = crypto.randomBytes(8).toString('hex');
 
-  const fullEvent = {
-    id: event.id || generateEventId(event.at_iso),
-    amount_usd: Number(event.amount_usd) || 0,
+  const normalizedEvent = {
+    id: event.id || generateEventId(normalizedAtIso),
+    amount_usd: normalizedAmount,
     reason: event.reason || 'unspecified_emergency',
-    at_iso: event.at_iso || new Date().toISOString(),
+    at_iso: normalizedAtIso,
     approved_by: event.approved_by || 'guardian-1',
-    version: '1.3',
+    version: '1.3'
+  };
+
+  const fullEvent = {
+    ...normalizedEvent,
     attestation_block: {
-      satoshi_commitment_hash: generateSatoshiProof(event, TREASURY_ADDRESS),
+      satoshi_commitment_hash: generateSatoshiProof(normalizedEvent, TREASURY_ADDRESS),
       signed_by_key_multibase: PUBLIC_KEY_MULTIBASE,
       signing_algorithm: 'Ed25519',
       issuer_did: state.attestation_service_did,
