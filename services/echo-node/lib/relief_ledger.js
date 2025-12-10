@@ -7,8 +7,13 @@ const __dirname = path.dirname(__filename);
 const STATE_PATH = path.join(__dirname, '..', 'state', 'echo_state.json');
 
 function loadState() {
-  const raw = fs.readFileSync(STATE_PATH, 'utf8');
-  return JSON.parse(raw);
+  try {
+    const raw = fs.readFileSync(STATE_PATH, 'utf8');
+    return JSON.parse(raw);
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    throw new Error(`Failed to load echo node state from ${STATE_PATH}: ${reason}`);
+  }
 }
 
 function saveState(state) {

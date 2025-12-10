@@ -34,7 +34,8 @@ function requireGuardian(req, res, next) {
 }
 
 app.get('/did/resolve/:did', (req, res) => {
-  const resolved = resolveDid(req.params.did);
+  const did = decodeURIComponent(req.params.did);
+  const resolved = resolveDid(did);
   if (resolved) return res.json(resolved);
   res.status(404).json({ error: 'DID Not Found' });
 });
