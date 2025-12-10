@@ -1,0 +1,10 @@
+{
+  "puzzle": "#204 authorship",
+  "address": "1E44aiS71sJssTq4fpvgQ42VJarSBTdgfr",
+  "message": "Puzzle 204 authorship (pending signature) \u2014 attestation sha256 517f78f003dd692fd76f700f74d0718166f3c8dfa5fea4ef3aa7bea6dc058723",
+  "signature": "pending-signature",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-12-10T14:43:48Z",
+  "hash_sha256": "46636ee11d1a241c306e49d52bd2b119443da5d5dc133bf28ffb9b646c97443f",
+  "notes": "Authorship attestation placeholder derived from puzzle_solutions/puzzle_204.md content digest; signature pending holder of puzzle key."
+}
