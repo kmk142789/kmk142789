@@ -445,6 +445,8 @@ class EchoEvolver:
             log.info(event)
 
         setattr(self.state, "propagation_events", events)
+        self.state.event_log.append(notice)
+        self.state.event_log.extend(events)
         return events
 
     # narrative + artifact
