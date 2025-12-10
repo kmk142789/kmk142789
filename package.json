@@ -12,6 +12,7 @@
     "create:lil-footsteps-wallet": "node --loader ts-node/esm scripts/createLilFootstepsWallet.ts",
     "transparency:api": "node apps/transparency.bank/api/server.mjs",
     "apps:echo-computer": "node apps/echo-computer/server.js",
+    "services:echo-node": "node services/echo-node/server.js",
     "apps:echo-dashboard:api": "node apps/echo-dashboard/backend/server.mjs",
     "apps:echo-dashboard:web": "npm --prefix apps/echo-dashboard run dev",
     "hardhat:compile": "hardhat compile",

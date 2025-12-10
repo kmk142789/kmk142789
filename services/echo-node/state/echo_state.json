@@ -1,13 +1,30 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "families_helped": 0,
   "guardians": [
     {
       "id": "guardian-1",
       "name": "Josh Shortt",
-      "role": "guardian"
+      "role": "guardian",
+      "did_url": "did:echo:guardian-1",
+      "public_key_ed25519_multibase": "z6Mko1zRSQkTVHkS7oHKR9uQAz4om67tKSkU9S2W9FnmB5Kr",
+      "auth_token": "echo-guardian-token"
     }
   ],
   "treasury_usd": 0,
-  "last_evolution_run_iso": null
+  "last_evolution_run_iso": null,
+  "relief_ledger": [
+    {
+      "id": "event-1",
+      "at_iso": "2025-01-01T00:00:00Z",
+      "signature": "eyJzaWduYXR1cmUiOiJlY2hvLXNpbXVsYXRlZCJ9",
+      "attestation_block": {
+        "issuer_did": "did:echo:guardian-1",
+        "satoshi_commitment_hash": "bafkreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku",
+        "puzzle_attestations": {
+          "reason_category": "emergency_shelter"
+        }
+      }
+    }
+  ]
 }
