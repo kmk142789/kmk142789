@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+import scripts.decode_base64_keys as decode_base64_keys
 from scripts.decode_base64_keys import (
     DecodedSegment,
     _resolve_tokens,
@@ -53,3 +54,23 @@ def test_resolve_tokens_requires_raw_source_when_no_tokens() -> None:
 def test_resolve_tokens_normalises_raw_source_when_tokens_absent() -> None:
     tokens = _resolve_tokens(tokens=None, raw_source="QUJDRA YWJj")
     assert tokens == ["QUJDRA==", "YWJj"]
+
+
+def test_main_prints_integer_summary_when_requested(capsys: pytest.CaptureFixture[str]) -> None:
+    tokens = [
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY=",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAc=",
+    ]
+
+    decode_base64_keys.main([
+        "--token",
+        tokens[0],
+        "--token",
+        tokens[1],
+        "--integers",
+    ])
+
+    output_lines = capsys.readouterr().out.strip().splitlines()
+    assert "# integer values" in output_lines
+    assert any(line.endswith("int=6 len=32") for line in output_lines)
+    assert any(line.endswith("int=7 len=32") for line in output_lines)
