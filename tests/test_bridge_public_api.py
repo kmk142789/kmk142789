@@ -68,6 +68,8 @@ def _make_app() -> FastAPI:
         pagerduty_group="echo-ops",
         opsgenie_api_key_secret="ECHO_OPSGENIE_TOKEN",
         opsgenie_team="echo-ops-team",
+        arweave_gateway_url="https://arweave.net",
+        arweave_wallet_secret_name="ECHO_ARWEAVE_JWK",
     )
     app = FastAPI()
     app.include_router(create_router(bridge_api))
@@ -106,6 +108,7 @@ def test_relays_endpoint_returns_configured_connectors() -> None:
         "reddit",
         "pagerduty",
         "opsgenie",
+        "arweave",
     }
 
 
@@ -293,6 +296,18 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert opsgenie_plan["payload"]["responders"][0]["name"] == "echo-ops-team"
     assert "EchoBridge" in opsgenie_plan["payload"]["tags"]
     assert opsgenie_plan["requires_secret"] == ["ECHO_OPSGENIE_TOKEN"]
+
+    arweave_plan = plans["arweave"]
+    assert arweave_plan["action"] == "submit_transaction"
+    assert arweave_plan["payload"]["gateway_url"] == "https://arweave.net"
+    assert arweave_plan["payload"]["transaction"]["content_type"] == "application/json"
+    assert {tag["name"] for tag in arweave_plan["payload"]["transaction"]["tags"]} >= {
+        "App-Name",
+        "Identity",
+        "Cycle",
+    }
+    assert arweave_plan["payload"]["transaction"]["data"]["identity"] == "EchoWildfire"
+    assert arweave_plan["requires_secret"] == ["ECHO_ARWEAVE_JWK"]
 
     nostr_plan = plans["nostr"]
     assert nostr_plan["action"] == "post_event"
