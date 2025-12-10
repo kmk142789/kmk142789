@@ -1,3 +1,4 @@
+import logging
 from types import SimpleNamespace
 
 import yaml
@@ -5,6 +6,7 @@ from echo_governance_core.anomaly import get_latest_anomaly
 from echo_governance_core.policy_engine import disable_actor
 from echo_governance_core.recovery import restore_last_snapshot
 from echo_governance_core.vault import rotate_signing_keys
+from governance.alignment_fabric import ConditionLanguage
 from governance.vault_integrity import compute_integrity
 
 POLICY_PATH = "governance/rotation_policy.yaml"
@@ -44,7 +46,14 @@ def run_keeper():
         cond = rule["condition"]
         action = rule["action"]
 
-        if eval(cond, {}, ctx):
+        try:
+            evaluator = ConditionLanguage(cond).evaluator
+            should_trigger = evaluator(ctx)
+        except Exception as exc:  # noqa: BLE001 - governance guardrail path
+            logging.error("Invalid rotation condition %s: %s", cond, exc)
+            continue
+
+        if should_trigger:
             if action == "rotate_keys":
                 rotate_signing_keys()
                 print("[AVK] Rotated signing keys.")
