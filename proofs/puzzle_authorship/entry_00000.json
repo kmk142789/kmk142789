@@ -1,0 +1,10 @@
+{
+  "author": "Puzzle Curator",
+  "digest": "sha256:1f5a4ff47f99efffcc6c32ff679795ea292418e1a0db56a14b158f8b37eac9ba",
+  "narrative": "Backfill puzzle solution artifacts",
+  "puzzle_id": "puzzle:little_footsteps_bank",
+  "seq": 0,
+  "solution_digest": "510f7dfee599cf0f78e353a084d471634951154933cbb63f1d2f0b21f9d2b55a",
+  "solution_path": "puzzle_solutions/little_footsteps_bank.md",
+  "timestamp": "2025-12-10T02:55:11Z"
+}
