@@ -55,6 +55,9 @@ leaves an auditable trace.
 - Emits audit log events for skipped/failed policies and snapshots the full
   trace for offline review. Utilities `load_audit_log`, `list_snapshots`, and
   `load_snapshot` are exposed from `governance` for inspection or testing.
+- Provides `policy_readiness()`, which reports which policies currently have
+  eligible agents (respecting trust minimums) and persists the report to
+  `.offline_state/policy_readiness.json` for gap remediation.
 
 ## Example
 

@@ -4,9 +4,11 @@ from governance import (
     GovernanceRouter,
     Policy,
     PolicyCondition,
+    Role,
     clear_offline_state,
     list_snapshots,
     load_audit_log,
+    load_policy_readiness,
     load_snapshot,
     simple_payload,
 )
@@ -139,3 +141,59 @@ def test_route_failures_are_audited_with_trace():
     latest = load_snapshot(snapshots[-1])
     assert latest["trace"][0]["status"] == "failed"
     assert "No agents" in latest["trace"][0]["reason"]
+
+
+def test_policy_readiness_reports_unroutable_policies_and_persists_gap():
+    """Readiness report should flag policies without eligible agents."""
+
+    clear_offline_state()
+
+    guardian_policy = Policy(
+        policy_id="p-guardian",
+        description="Guardian policy with enforceable trust",
+        conditions=[PolicyCondition("always", "always", evaluator=lambda ctx: True)],
+        actions=[
+            EnforcementAction(
+                action_id="contain",
+                channel="record",
+                payload_builder=simple_payload("contain"),
+            )
+        ],
+        minimum_trust=0.75,
+        roles=["guardian"],
+        tags=["safety"],
+    )
+
+    ombuds_policy = Policy(
+        policy_id="p-ombudsman",
+        description="Ombudsman policy requires higher trust than available",
+        conditions=[PolicyCondition("always", "always", evaluator=lambda ctx: True)],
+        actions=[
+            EnforcementAction(
+                action_id="escalate",
+                channel="record",
+                payload_builder=simple_payload("escalate"),
+            )
+        ],
+        minimum_trust=0.95,
+        roles=["ombudsman"],
+    )
+
+    agents = [
+        Agent("guardian-1", capabilities=["contain"], tags=["safety"], trust=0.9, role="guardian"),
+        Agent("observer", capabilities=["observe"], tags=["insight"], trust=0.4, role="ombudsman"),
+    ]
+
+    router = GovernanceRouter(
+        policies=[guardian_policy, ombuds_policy],
+        agents=agents,
+        roles=[Role("guardian", ""), Role("ombudsman", "")],
+    )
+
+    report = router.policy_readiness()
+
+    assert any(entry["policy_id"] == "p-guardian" and entry["eligible_agents"] == ["guardian-1"] for entry in report["policies"])
+    assert "p-ombudsman" in report["unroutable"]
+
+    persisted = load_policy_readiness()
+    assert persisted["counts"]["unroutable"] == 1
