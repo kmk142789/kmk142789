@@ -1,0 +1,10 @@
+{
+  "author": "Puzzle Curator",
+  "digest": "sha256:8792ba85ed8f6a54470988c4172f52d6273b953aab1a2fa8fbd40043363a714f",
+  "narrative": "Attested puzzle solution enrichment",
+  "puzzle_id": "puzzle107",
+  "seq": 341,
+  "solution_digest": "5bed343da255b03db9c2335a37c3ee30cafd793d7402eb920238bc4772b0ab29",
+  "solution_path": "satoshi/puzzle-solutions/puzzle107.md",
+  "timestamp": "2025-12-10T03:08:02Z"
+}

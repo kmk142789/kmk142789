@@ -215,11 +215,48 @@ def _collect_paths(directory: Path) -> list[Path]:
     return sorted(p for p in directory.glob("*.md") if p.is_file())
 
 
+def _resolve_attestation_for_solution(
+    solution_path: Path, attestation_dir: Optional[Path]
+) -> Optional[Path]:
+    if attestation_dir is None:
+        return None
+    if not attestation_dir.exists():
+        logger.debug("Attestation directory does not exist: %s", attestation_dir)
+        return None
+
+    stem = solution_path.stem
+    candidates = [f"{stem}-authorship.json"]
+    dashed = stem.replace("_", "-")
+    if dashed != stem:
+        candidates.append(f"{dashed}-authorship.json")
+    if stem.startswith("puzzle"):
+        suffix = stem.removeprefix("puzzle").lstrip("_- ")
+        if suffix:
+            candidates.append(f"puzzle-{suffix}-authorship.json")
+
+    for name in dict.fromkeys(candidates):
+        candidate = attestation_dir / name
+        if candidate.exists():
+            logger.info("Auto-linked attestation %s for %s", candidate, solution_path)
+            return candidate
+    return None
+
+
 def cli(argv: Optional[Iterable[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Register puzzle solution authorship records")
     parser.add_argument("--solution", action="append", type=Path, help="Path to puzzle solution artifact")
     parser.add_argument("--attestation", action="append", type=Path, help="Optional attestation file matching --solution entries")
-    parser.add_argument("--solution-dir", type=Path, help="Scan a directory for *.md solutions to record")
+    parser.add_argument(
+        "--solution-dir",
+        action="append",
+        type=Path,
+        help="Scan one or more directories for *.md solutions to record",
+    )
+    parser.add_argument(
+        "--attestation-dir",
+        type=Path,
+        help="Optional directory containing per-puzzle attestation payloads",
+    )
     parser.add_argument("--author", default=_default_author(), help="Authorship label to store in the ledger")
     parser.add_argument(
         "--narrative",
@@ -254,10 +291,12 @@ def cli(argv: Optional[Iterable[str]] = None) -> int:
     attestations: list[Optional[Path]] = []
 
     if args.solution_dir is not None:
-        if not args.solution_dir.exists():
-            parser.error(f"Solution directory does not exist: {args.solution_dir}")
-        solutions.extend(_collect_paths(args.solution_dir))
-        attestations.extend([None] * len(solutions))
+        for solution_dir in args.solution_dir:
+            if not solution_dir.exists():
+                parser.error(f"Solution directory does not exist: {solution_dir}")
+            new_paths = _collect_paths(solution_dir)
+            solutions.extend(new_paths)
+            attestations.extend([None] * len(new_paths))
 
     if args.solution:
         solutions.extend(args.solution)
@@ -272,6 +311,7 @@ def cli(argv: Optional[Iterable[str]] = None) -> int:
         if not solution_path.exists():
             logger.warning("Skipping missing solution: %s", solution_path)
             continue
+        attestation_path = attestation_path or _resolve_attestation_for_solution(solution_path, args.attestation_dir)
         registry.register_solution(
             solution_path=solution_path,
             attestation_path=attestation_path,

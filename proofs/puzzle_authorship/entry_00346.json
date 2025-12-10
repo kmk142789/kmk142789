@@ -1,0 +1,10 @@
+{
+  "author": "Puzzle Curator",
+  "digest": "sha256:71e40a8b7bc398221bca6c629c93b5f0fcb564c784e85b31241f2ea7971421b8",
+  "narrative": "Attested puzzle solution enrichment",
+  "puzzle_id": "puzzle:satoshi-keys",
+  "seq": 346,
+  "solution_digest": "a0e128eadc62ad956d0b2eb4847b2a3af4c137f14c01706368100bcddd8bbb31",
+  "solution_path": "satoshi/puzzle-solutions/satoshi-keys.md",
+  "timestamp": "2025-12-10T03:08:02Z"
+}
