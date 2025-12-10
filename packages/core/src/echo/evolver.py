@@ -1749,13 +1749,17 @@ class EchoEvolver:
         self,
         *,
         artifact_path: Optional[Path | str] = None,
+        seed: Optional[int] = None,
         rng: Optional[random.Random] = None,
         time_source: Optional[Callable[[], int]] = None,
         autonomy_engine: Optional[DecentralizedAutonomyEngine] = None,
         amplifier: Optional[AmplificationEngine] = None,
         memory_store: Optional[JsonMemoryStore] = None,
     ) -> None:
-        self.rng = rng or random.Random()
+        if rng is not None and seed is not None:
+            raise ValueError("Pass either 'seed' or 'rng', not both")
+
+        self.rng = rng if rng is not None else random.Random(seed)
         self.time_source = time_source or time.time_ns
         self.state = EvolverState()
         if artifact_path is not None:
