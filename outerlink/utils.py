@@ -57,6 +57,7 @@ class OfflineState:
     resilience_notes: List[str] = field(default_factory=list)
     health_checks: List[dict] = field(default_factory=list)
     capability_history: List[dict] = field(default_factory=list)
+    offline_since: Optional[str] = None
 
     def record_pending(self, payload: dict) -> None:
         stamped = {**payload, "cached_at": datetime.now(timezone.utc).isoformat()}
@@ -81,10 +82,12 @@ class OfflineState:
     def mark_online(self) -> None:
         self.online = True
         self.offline_reason = None
+        self.offline_since = None
 
     def mark_offline(self, reason: Optional[str] = None) -> None:
         self.online = False
         self.offline_reason = reason
+        self.offline_since = datetime.now(timezone.utc).isoformat()
         if reason:
             self.add_resilience_note(f"Offline because: {reason}")
 
@@ -341,6 +344,16 @@ class OfflineState:
         )
         last_cache_flush = manifest.get("last_cache_flush") or self.last_cache_flush
         cache_stale = self._is_cache_stale(last_cache_flush, cache_ttl_seconds)
+        cache_integrity = self._cache_integrity(cache_dir, manifest)
+
+        offline_since = self.offline_since
+        offline_duration_seconds: Optional[float] = None
+        if offline_since:
+            try:
+                offline_started = datetime.fromisoformat(offline_since)
+                offline_duration_seconds = (datetime.now(timezone.utc) - offline_started).total_seconds()
+            except ValueError:
+                offline_duration_seconds = None
 
         capability_report = self.capability_report(
             cache_dir, cache_ttl_seconds, cached_events, cache_stale, last_cache_flush
@@ -352,11 +365,14 @@ class OfflineState:
         return {
             "online": self.online,
             "last_sync": self.last_sync,
+            "offline_since": offline_since,
+            "offline_duration_seconds": offline_duration_seconds,
             "pending_events": len(self.pending_events),
             "cached_events": cached_events,
             "offline_reason": self.offline_reason,
             "last_cache_flush": last_cache_flush,
             "cache_stale": cache_stale,
+            "cache_integrity": cache_integrity,
             "capabilities": dict(self.offline_capabilities),
             "capability_history": self.capability_history[-20:],
             "capability_readiness": capability_report.get("capability_snapshot", {}).get("readiness"),
@@ -407,6 +423,28 @@ class OfflineState:
     def _write_manifest(self, cache_dir: Path, manifest: Dict[str, Optional[int | str | bool]]) -> None:
         cache_dir.mkdir(parents=True, exist_ok=True)
         self._manifest_path(cache_dir).write_text(json.dumps(manifest, indent=2))
+
+    def _cache_integrity(
+        self, cache_dir: Optional[Path], manifest: Optional[Dict[str, Optional[int | str | bool]]] = None
+    ) -> Dict[str, Optional[int | str]]:
+        if not cache_dir or not cache_dir.exists():
+            return {"present": False, "files": 0, "hash": None}
+
+        manifest_payload = manifest or self._load_manifest(cache_dir)
+        cache_files = sorted(cache_dir.glob("event_*.json"))
+        event_hashes: List[str] = []
+        for cache_file in cache_files:
+            try:
+                content = cache_file.read_text()
+            except OSError:
+                continue
+            event_hashes.append(hashlib.sha256(content.encode()).hexdigest())
+
+        serialized_manifest = json.dumps(manifest_payload, sort_keys=True)
+        combined = serialized_manifest + "".join(event_hashes)
+        bundle_hash = hashlib.sha256(combined.encode()).hexdigest()
+
+        return {"present": True, "files": len(cache_files), "hash": bundle_hash}
 
 
 def coerce_paths(paths: Iterable[str]) -> List[Path]:

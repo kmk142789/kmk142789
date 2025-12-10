@@ -149,6 +149,29 @@ def test_offline_package_exports_integrity(tmp_path):
     assert package["integrity_hash"]
 
 
+def test_offline_status_tracks_duration_and_integrity(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        event_log=tmp_path / "events.log",
+        offline_cache_dir=tmp_path / "cache",
+    )
+    offline_state = OfflineState(online=False)
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.safe_run_shell("echo", ["cache-me"])
+    runtime.flush_events()
+
+    offline_state.mark_offline("link_down")
+    snapshot = offline_state.status(config.offline_cache_dir, config.offline_cache_ttl_seconds)
+
+    assert snapshot["offline_since"] is not None
+    assert snapshot["offline_duration_seconds"] is not None
+    assert snapshot["cache_integrity"]["present"] is True
+    assert snapshot["cache_integrity"]["files"] == 1
+    assert snapshot["cache_integrity"]["hash"]
+
+
 def test_backpressure_caps_pending_events(tmp_path):
     config = SafeModeConfig(
         allowed_commands=["echo"],
