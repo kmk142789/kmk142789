@@ -78,6 +78,28 @@ class OfflineState:
         )
         return excess
 
+    def backpressure_profile(self, threshold: int, hard_limit: Optional[int] = None) -> Dict[str, object]:
+        """Summarize backlog posture to inform router and governance hints."""
+
+        pending = len(self.pending_events)
+        state = "ok"
+        if pending > threshold:
+            state = "elevated"
+        if hard_limit and pending >= hard_limit:
+            state = "capped"
+
+        ratio = 0.0
+        if hard_limit and hard_limit > 0:
+            ratio = round(min(1.0, pending / hard_limit), 2)
+
+        return {
+            "pending": pending,
+            "threshold": threshold,
+            "hard_limit": hard_limit,
+            "ratio": ratio,
+            "state": state,
+        }
+
     def mark_online(self) -> None:
         self.online = True
         self.offline_reason = None
@@ -194,6 +216,41 @@ class OfflineState:
         if score >= 0.4:
             return "Watch"
         return "Critical"
+
+    def cache_window(self, cache_ttl_seconds: Optional[int], last_cache_flush: Optional[str]) -> Dict[str, Optional[object]]:
+        """Return cache expiry projections and whether the window is still healthy."""
+
+        if not cache_ttl_seconds or cache_ttl_seconds <= 0:
+            return {
+                "ttl_seconds": cache_ttl_seconds,
+                "expires_at": None,
+                "seconds_remaining": None,
+                "stale": False,
+            }
+
+        try:
+            last_flush_dt = datetime.fromisoformat(str(last_cache_flush)) if last_cache_flush else None
+        except ValueError:
+            last_flush_dt = None
+
+        if last_flush_dt is None:
+            return {
+                "ttl_seconds": cache_ttl_seconds,
+                "expires_at": None,
+                "seconds_remaining": None,
+                "stale": True,
+            }
+
+        expires_at = last_flush_dt + timedelta(seconds=cache_ttl_seconds)
+        seconds_remaining = int((expires_at - datetime.now(timezone.utc)).total_seconds())
+        remaining_clamped = max(0, seconds_remaining)
+
+        return {
+            "ttl_seconds": cache_ttl_seconds,
+            "expires_at": expires_at.isoformat(),
+            "seconds_remaining": remaining_clamped,
+            "stale": remaining_clamped == 0,
+        }
 
     def _build_resilience_summary(
         self,

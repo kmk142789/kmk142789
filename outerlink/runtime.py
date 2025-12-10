@@ -66,6 +66,14 @@ class OuterLinkRuntime:
             backlog_threshold=self.config.pending_backlog_threshold,
         )
 
+        backpressure = self.offline_state.backpressure_profile(
+            threshold=self.config.pending_backlog_threshold,
+            hard_limit=self.config.pending_backlog_hard_limit,
+        )
+        cache_window = self.offline_state.cache_window(
+            self.config.offline_cache_ttl_seconds, offline_snapshot.get("last_cache_flush")
+        )
+
         capability_report = self.offline_state.capability_report(
             self.config.offline_cache_dir,
             self.config.offline_cache_ttl_seconds,
@@ -78,6 +86,8 @@ class OuterLinkRuntime:
             "capability_readiness": capability_report.get("capability_snapshot", {}).get("readiness"),
             "capability_posture": capability_report.get("capability_snapshot", {}).get("posture"),
             "capability_gaps": capability_report.get("capability_snapshot", {}).get("disabled"),
+            "backpressure": backpressure,
+            "cache_window": cache_window,
         })
 
         resilience = {

@@ -210,3 +210,29 @@ def test_emit_state_recommends_next_action(tmp_path):
     assert "resilience" in state
     assert "next_action" in state["resilience"]
     assert "backlog" in state["resilience"]["next_action"]
+
+
+def test_emit_state_surfaces_backpressure_and_cache_window(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        pending_backlog_threshold=1,
+        pending_backlog_hard_limit=3,
+        offline_cache_dir=tmp_path / "cache",
+        offline_cache_ttl_seconds=10,
+    )
+    offline_state = OfflineState(online=False)
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.safe_run_shell("echo", ["one"])
+    runtime.safe_run_shell("echo", ["two"])
+
+    state = runtime.emit_state()
+
+    backpressure = state["offline"]["backpressure"]
+    cache_window = state["offline"]["cache_window"]
+
+    assert backpressure["pending"] == 2
+    assert backpressure["state"] == "elevated"
+    assert cache_window["ttl_seconds"] == 10
+    assert cache_window["stale"] is True
