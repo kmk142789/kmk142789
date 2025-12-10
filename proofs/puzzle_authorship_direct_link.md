@@ -162,3 +162,37 @@ sha256sum out/puzzle010_verification.json
 Identical digests show that the repository’s preserved verification transcript
 still mirrors a fresh local replay, adding another independently reproducible
 proof of authorship tied to the attestation bundle.
+
+## 8. Extend the proof chain back to puzzle #000
+
+Replay the genesis puzzle’s attestation to show that the direct-link authorship
+checks also bind the earliest catalogue entry, including its archived digest:
+
+```bash
+# Compare the attested puzzle #000 payload with the recorded proof
+jq -r '.message, .signature' attestations/puzzle-000-authorship.json
+jq -r '.message, .signature' satoshi/puzzle-proofs/puzzle000.json
+
+# Recompute and match the attestation digest
+MESSAGE=$(jq -r '.message' attestations/puzzle-000-authorship.json)
+printf "%s" "$MESSAGE" | sha256sum
+jq -r '.hash_sha256' attestations/puzzle-000-authorship.json
+
+# Verify the genesis signature still recovers the catalogue address
+python -m verifier.verify_puzzle_signature \
+  --address "$(jq -r '.address' satoshi/puzzle-proofs/puzzle000.json)" \
+  --message "$MESSAGE" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle000.json)" \
+  --pretty
+
+# Optional: confirm the follow-on reactivation proof uses a valid recoverable signature
+python -m verifier.verify_puzzle_signature \
+  --address "$(jq -r '.address' satoshi/puzzle-proofs/puzzle000-reactivation.json)" \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle000-reactivation.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle000-reactivation.json)" \
+  --pretty
+```
+
+Completing the genesis replay adds a reproducible authorship proof for the
+earliest puzzle, creating an end-to-end chain from the original key to the
+mid- and late-series attestations documented above.
