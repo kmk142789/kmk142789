@@ -1,5 +1,5 @@
 {
-  "version": "0.6.0",
+  "version": "0.7.0",
   "node_name": "Echo Dominion Primary",
   "operational_status": "ONLINE_ACTIVE",
   "families_helped": 0,
@@ -18,6 +18,8 @@
   "treasury_address": "bc1q... (On-Chain Anchor, e.g., multisig wallet)",
   "relief_ledger": [],
   "metrics_history": [],
+  "resilience_score": 0,
+  "commitment_hash": null,
   "last_evolution_run_iso": null,
   "schema_hash": null
 }
