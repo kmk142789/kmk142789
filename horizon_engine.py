@@ -315,11 +315,12 @@ class HorizonEngine:
             window = self.config.fragility_window
             for idx in range(len(per_year_strength) - window + 1):
                 window_score = sum(per_year_strength[idx : idx + window]) / window
-                if window_score < self.config.fragility_threshold and (
-                    fragility_window_score is None or window_score < fragility_window_score
-                ):
-                    fragility_window_score = window_score
-                    fragility_window_start = idx + 1
+                if window_score < self.config.fragility_threshold:
+                    if fragility_window_start is None:
+                        fragility_window_start = idx + 1
+                        fragility_window_score = window_score
+                    elif fragility_window_score is not None and window_score < fragility_window_score:
+                        fragility_window_score = window_score
 
         collapse_histogram = [0] * self.config.years_per_line
         for collapse_year in collapse_years:
