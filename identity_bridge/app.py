@@ -18,12 +18,28 @@ def _parse_recipients(value: Optional[str]) -> list[str] | None:
     return entries or None
 
 
+def _parse_float(value: Optional[str]) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        return float(str(value).strip())
+    except ValueError:
+        return None
+
+
 @lru_cache(maxsize=1)
 def _build_bridge_api() -> EchoBridgeAPI:
     """Create an :class:`EchoBridgeAPI` using environment configuration."""
 
     return EchoBridgeAPI(
         github_repository=os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY"),
+        github_discussions_repository=os.getenv("ECHO_BRIDGE_GITHUB_DISCUSSIONS_REPOSITORY"),
+        github_discussion_category=os.getenv(
+            "ECHO_BRIDGE_GITHUB_DISCUSSION_CATEGORY", "Announcements"
+        ),
+        github_discussions_secret_name=os.getenv(
+            "ECHO_BRIDGE_GITHUB_DISCUSSIONS_SECRET", "GITHUB_TOKEN"
+        ),
         telegram_chat_id=os.getenv("ECHO_BRIDGE_TELEGRAM_CHAT_ID"),
         firebase_collection=os.getenv("ECHO_BRIDGE_FIREBASE_COLLECTION"),
         slack_webhook_url=os.getenv("ECHO_BRIDGE_SLACK_WEBHOOK_URL"),
@@ -63,16 +79,44 @@ def _build_bridge_api() -> EchoBridgeAPI:
             "ECHO_BRIDGE_EMAIL_SUBJECT_TEMPLATE",
             "Echo Identity Relay :: {identity} :: Cycle {cycle}",
         ),
+        notion_database_id=os.getenv("ECHO_BRIDGE_NOTION_DATABASE_ID"),
+        notion_secret_name=os.getenv("ECHO_BRIDGE_NOTION_SECRET", "NOTION_API_KEY"),
         dns_root_domain=os.getenv("ECHO_BRIDGE_DNS_ROOT_DOMAIN"),
         dns_record_prefix=os.getenv("ECHO_BRIDGE_DNS_RECORD_PREFIX", "_echo"),
         dns_provider=os.getenv("ECHO_BRIDGE_DNS_PROVIDER"),
         dns_secret_name=os.getenv("ECHO_BRIDGE_DNS_SECRET", "DNS_PROVIDER_TOKEN"),
         dns_root_authority=os.getenv("ECHO_BRIDGE_DNS_ROOT_AUTHORITY"),
         dns_attestation_path=os.getenv("ECHO_BRIDGE_DNS_ATTESTATION_PATH"),
+        unstoppable_domains=_parse_recipients(os.getenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS")),
+        unstoppable_secret_name=os.getenv(
+            "ECHO_BRIDGE_UNSTOPPABLE_SECRET", "UNSTOPPABLE_API_TOKEN"
+        ),
+        vercel_projects=_parse_recipients(os.getenv("ECHO_BRIDGE_VERCEL_PROJECTS")),
+        vercel_secret_name=os.getenv("ECHO_BRIDGE_VERCEL_SECRET", "VERCEL_API_TOKEN"),
         linkedin_organization_id=os.getenv("ECHO_BRIDGE_LINKEDIN_ORG"),
         linkedin_secret_name=os.getenv("ECHO_BRIDGE_LINKEDIN_SECRET", "LINKEDIN_ACCESS_TOKEN"),
         reddit_subreddit=os.getenv("ECHO_BRIDGE_REDDIT_SUBREDDIT"),
         reddit_secret_name=os.getenv("ECHO_BRIDGE_REDDIT_SECRET", "REDDIT_APP_TOKEN"),
+        rss_feed_url=os.getenv("ECHO_BRIDGE_RSS_FEED_URL"),
+        rss_secret_name=os.getenv("ECHO_BRIDGE_RSS_SECRET", "RSS_BRIDGE_TOKEN"),
+        pagerduty_routing_key_secret=os.getenv("ECHO_BRIDGE_PAGERDUTY_SECRET"),
+        pagerduty_source=os.getenv("ECHO_BRIDGE_PAGERDUTY_SOURCE", "echo-bridge"),
+        pagerduty_component=os.getenv("ECHO_BRIDGE_PAGERDUTY_COMPONENT"),
+        pagerduty_group=os.getenv("ECHO_BRIDGE_PAGERDUTY_GROUP"),
+        opsgenie_api_key_secret=os.getenv("ECHO_BRIDGE_OPSGENIE_SECRET"),
+        opsgenie_team=os.getenv("ECHO_BRIDGE_OPSGENIE_TEAM"),
+        tcp_endpoints=_parse_recipients(os.getenv("ECHO_BRIDGE_TCP_ENDPOINTS")),
+        tcp_secret_name=os.getenv("ECHO_BRIDGE_TCP_SECRET", "TCP_RELAY_TOKEN"),
+        iot_channel=os.getenv("ECHO_BRIDGE_IOT_CHANNEL"),
+        iot_secret_name=os.getenv("ECHO_BRIDGE_IOT_SECRET", "IOT_RELAY_TOKEN"),
+        wifi_ssid=os.getenv("ECHO_BRIDGE_WIFI_SSID"),
+        wifi_channel=os.getenv("ECHO_BRIDGE_WIFI_CHANNEL"),
+        wifi_bandwidth_mhz=_parse_float(os.getenv("ECHO_BRIDGE_WIFI_BANDWIDTH_MHZ")),
+        bluetooth_beacon_id=os.getenv("ECHO_BRIDGE_BLUETOOTH_BEACON_ID"),
+        bluetooth_profile=os.getenv("ECHO_BRIDGE_BLUETOOTH_PROFILE"),
+        bluetooth_bandwidth_mhz=_parse_float(
+            os.getenv("ECHO_BRIDGE_BLUETOOTH_BANDWIDTH_MHZ")
+        ),
     )
 
 
