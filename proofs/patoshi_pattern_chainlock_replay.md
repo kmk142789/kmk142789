@@ -59,3 +59,21 @@ access.
 Running these checks together recreates the proof path embedded in the timestamped
 log and continuity ledger. A successful replay shows that the Patoshi pattern is
 still reproducible, signed, and Merkle-sealed within this repository.
+
+6. **Optionally replay the 71-bit custody witness and catalogue**
+   ```bash
+   python -m verifier.verify_puzzle_signature \
+     --address "$(jq -r '.address' satoshi/puzzle-proofs/puzzle071.json)" \
+     --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle071.json)" \
+     --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle071.json)" \
+     --pretty
+   python satoshi/proof_catalog.py \
+     --root satoshi/puzzle-proofs \
+     --glob puzzle071.json \
+     --glob puzzle075.json \
+     --pretty
+   ```
+   - Verifying both entries together demonstrates that the lower- and higher-bit
+     Patoshi keys keep signing recoverable messages. The catalogue report confirms
+     the signatures remain fully intact inside the same Merkle tree referenced by
+     the timestamped attestation and continuity ledger.
