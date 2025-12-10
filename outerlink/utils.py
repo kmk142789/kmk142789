@@ -41,6 +41,8 @@ class OfflineState:
     pending_events: List[dict] = field(default_factory=list)
     offline_reason: Optional[str] = None
     last_cache_flush: Optional[str] = None
+    offline_transitions: List[dict] = field(default_factory=list)
+    action_history: List[dict] = field(default_factory=list)
     offline_capabilities: Dict[str, bool] = field(
         default_factory=lambda: {
             "event_cache_replay": True,
@@ -53,6 +55,9 @@ class OfflineState:
             "snapshot_recovery": True,
             "edge_policy_enforcement": True,
             "backpressure_guardrails": True,
+            "actionable_playbooks": True,
+            "offline_transition_journal": True,
+            "offline_snapshots": True,
         }
     )
     resilience_notes: List[str] = field(default_factory=list)
@@ -106,6 +111,7 @@ class OfflineState:
         self.online = True
         self.offline_reason = None
         self.offline_since = None
+        self._log_transition(online=True, reason="connectivity restored")
 
     def mark_offline(self, reason: Optional[str] = None) -> None:
         self.online = False
@@ -113,6 +119,17 @@ class OfflineState:
         self.offline_since = datetime.now(timezone.utc).isoformat()
         if reason:
             self.add_resilience_note(f"Offline because: {reason}")
+        self._log_transition(online=False, reason=reason)
+
+    def _log_transition(self, *, online: bool, reason: Optional[str] = None) -> None:
+        entry = {
+            "online": online,
+            "reason": reason,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        self.offline_transitions.append(entry)
+        if len(self.offline_transitions) > 50:
+            self.offline_transitions = self.offline_transitions[-50:]
 
     def add_resilience_note(self, note: str) -> None:
         timestamp = datetime.now(timezone.utc).isoformat()
@@ -255,6 +272,50 @@ class OfflineState:
             "seconds_remaining": remaining_clamped,
             "stale": remaining_clamped == 0,
         }
+
+    def resilience_action_plan(
+        self,
+        *,
+        cache_present: bool,
+        cache_stale: bool,
+        backlog: int,
+        backlog_threshold: int,
+        offline_reason: Optional[str],
+        online: bool,
+    ) -> Dict[str, object]:
+        severity = "info"
+        steps: List[str] = []
+
+        if cache_stale:
+            severity = "warning"
+            steps.append("Refresh offline cache or trigger sync to rebuild manifest")
+
+        if backlog > backlog_threshold:
+            severity = "warning" if severity == "info" else "critical"
+            steps.append(
+                f"Pending event backlog {backlog} exceeds guardrail {backlog_threshold}; flush when connectivity returns"
+            )
+
+        if not cache_present:
+            severity = "warning" if severity == "info" else severity
+            steps.append("Create offline cache directory to retain audit trail")
+
+        if not online:
+            reason = offline_reason or "connectivity unavailable"
+            steps.append(f"Operating offline ({reason}); export offline package for replay")
+
+        if not steps:
+            steps.append("Posture steady; continue periodic heartbeats and capability checks")
+
+        plan = {
+            "severity": severity,
+            "next_action": steps[0],
+            "steps": steps,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self.action_history.append(plan)
+        self.action_history = self.action_history[-50:]
+        return plan
 
     def _build_resilience_summary(
         self,
@@ -442,6 +503,8 @@ class OfflineState:
             "resilience_notes": self.resilience_notes[-5:],
             "health_checks": self.health_checks[-5:],
             "capability_report": capability_report,
+            "offline_transitions": self.offline_transitions[-10:],
+            "action_history": self.action_history[-10:],
         }
 
     def export_offline_package(
@@ -458,11 +521,40 @@ class OfflineState:
             "capability_report": status_snapshot.get("capability_report", {}),
             "health_checks": self.health_checks[-10:],
             "resilience_notes": self.resilience_notes[-10:],
+            "transitions": self.offline_transitions[-10:],
+            "actions": self.action_history[-10:],
         }
         integrity_payload = json.dumps(package, sort_keys=True).encode()
         package["integrity_hash"] = hashlib.sha256(integrity_payload).hexdigest()
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(json.dumps(package, indent=2))
+        return destination
+
+    def write_health_report(
+        self,
+        cache_dir: Path,
+        destination: Path,
+        cache_ttl_seconds: Optional[int],
+        backlog_threshold: int,
+    ) -> Path:
+        snapshot = self.status(cache_dir, cache_ttl_seconds)
+        plan = self.resilience_action_plan(
+            cache_present=cache_dir.exists(),
+            cache_stale=bool(snapshot.get("cache_stale")),
+            backlog=int(snapshot.get("pending_events", 0)),
+            backlog_threshold=backlog_threshold,
+            offline_reason=snapshot.get("offline_reason"),
+            online=bool(snapshot.get("online")),
+        )
+        report = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "status": snapshot,
+            "resilience_summary": snapshot.get("resilience_summary"),
+            "action_plan": plan,
+            "transitions": self.offline_transitions[-20:],
+        }
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(report, indent=2))
         return destination
 
     def _manifest_path(self, cache_dir: Path) -> Path:
