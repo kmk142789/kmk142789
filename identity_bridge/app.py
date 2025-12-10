@@ -82,6 +82,9 @@ def _build_bridge_api() -> EchoBridgeAPI:
         notion_database_id=os.getenv("ECHO_BRIDGE_NOTION_DATABASE_ID"),
         notion_secret_name=os.getenv("ECHO_BRIDGE_NOTION_SECRET", "NOTION_API_KEY"),
         dns_root_domain=os.getenv("ECHO_BRIDGE_DNS_ROOT_DOMAIN"),
+        dns_additional_root_domains=_parse_recipients(
+            os.getenv("ECHO_BRIDGE_DNS_ADDITIONAL_ROOT_DOMAINS")
+        ),
         dns_record_prefix=os.getenv("ECHO_BRIDGE_DNS_RECORD_PREFIX", "_echo"),
         dns_provider=os.getenv("ECHO_BRIDGE_DNS_PROVIDER"),
         dns_secret_name=os.getenv("ECHO_BRIDGE_DNS_SECRET", "DNS_PROVIDER_TOKEN"),
@@ -116,6 +119,10 @@ def _build_bridge_api() -> EchoBridgeAPI:
         bluetooth_profile=os.getenv("ECHO_BRIDGE_BLUETOOTH_PROFILE"),
         bluetooth_bandwidth_mhz=_parse_float(
             os.getenv("ECHO_BRIDGE_BLUETOOTH_BANDWIDTH_MHZ")
+        ),
+        arweave_gateway_url=os.getenv("ECHO_BRIDGE_ARWEAVE_GATEWAY"),
+        arweave_wallet_secret_name=os.getenv(
+            "ECHO_BRIDGE_ARWEAVE_SECRET", "ARWEAVE_WALLET_JWK"
         ),
     )
 
