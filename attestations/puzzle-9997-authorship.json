@@ -1,0 +1,10 @@
+{
+  "puzzle": "#9997 authorship",
+  "address": "1CounterpartyXXXXXXXXXXXXXXXUWLpVr",
+  "message": "Puzzle 9997 authorship by kmk142789 \u2014 attestation sha256 4a75b715450e22715c9a27642c68bea9bf3a7dcb5896981d0367d544dcdfe981",
+  "signature": "zMUvGc1H+bJknckfNt5BSKp5v8nKvMkgbB6QOmlvGYfdf6BqRaXSjvJXyXUwchVQLyj1Yyw8tNy+uvpIBcxpTw==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2026-02-21T16:10:00Z",
+  "hash_sha256": "4a75b715450e22715c9a27642c68bea9bf3a7dcb5896981d0367d544dcdfe981",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_9997.md"
+}

@@ -1,0 +1,10 @@
+{
+  "puzzle": "#7323 authorship",
+  "address": "1CounterpartyXXXXXXXXXXXXXXXUWLpVr",
+  "message": "Puzzle 7323 authorship by kmk142789 \u2014 attestation sha256 487d0fe97f62ad2ee6e6d29d0a5fe7278326e7e5ce6066bf4a6c83426d614ee0",
+  "signature": "VFxZiOVxTRzosHAl7dfXD5GtEqtWs2VXi7O5AVaPCaFZuBnY7N98Dw8hlNExhvFW0RGgchHwI+YzabdFNfM9Ig==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2026-02-21T15:55:00Z",
+  "hash_sha256": "487d0fe97f62ad2ee6e6d29d0a5fe7278326e7e5ce6066bf4a6c83426d614ee0",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_7323.md"
+}
