@@ -19,6 +19,7 @@ class SafeModeConfig:
     offline_cache_ttl_seconds: Optional[int] = 24 * 60 * 60
     pending_backlog_threshold: int = 50
     pending_backlog_hard_limit: int = 500
+    event_history_limit: int = 1000
 
     def is_command_allowed(self, command: str) -> bool:
         return command.split()[0] in self.allowed_commands
