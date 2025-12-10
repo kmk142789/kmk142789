@@ -188,3 +188,25 @@ def test_backpressure_updates_capabilities(tmp_path):
         entry["name"] == "backpressure_guardrails" and entry["enabled"] is False
         for entry in runtime.offline_state.capability_history
     )
+
+
+def test_emit_state_recommends_next_action(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        pending_backlog_threshold=1,
+        offline_cache_dir=tmp_path / "cache",
+    )
+    offline_state = OfflineState(online=False)
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.offline_state.pending_events.extend([
+        {"name": "one"},
+        {"name": "two"},
+    ])
+
+    state = runtime.emit_state()
+
+    assert "resilience" in state
+    assert "next_action" in state["resilience"]
+    assert "backlog" in state["resilience"]["next_action"]

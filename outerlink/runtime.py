@@ -80,11 +80,20 @@ class OuterLinkRuntime:
             "capability_gaps": capability_report.get("capability_snapshot", {}).get("disabled"),
         })
 
+        resilience = {
+            "grade": offline_snapshot.get("resilience_grade"),
+            "score": offline_snapshot.get("resilience_score"),
+            "summary": offline_snapshot.get("resilience_summary"),
+            "next_action": self._recommend_next_action(offline_snapshot),
+        }
+        offline_snapshot["recommended_action"] = resilience["next_action"]
+
         payload = {
             "online": offline_snapshot["online"],
             "last_sync": offline_snapshot["last_sync"],
             "metrics": metrics.__dict__,
             "offline": offline_snapshot,
+            "resilience": resilience,
         }
         self.event_bus.emit("device_status", payload)
         return payload
@@ -131,6 +140,27 @@ class OuterLinkRuntime:
 
     def safe_write_config(self, path: Path, content: Dict[str, str]) -> None:
         self.broker.write_config(path, content)
+
+    def _recommend_next_action(self, offline_snapshot: Dict[str, Any]) -> str:
+        backlog = offline_snapshot.get("pending_events", 0)
+        backlog_threshold = self.config.pending_backlog_threshold
+        cache_stale = bool(offline_snapshot.get("cache_stale"))
+        cache_present = self.config.offline_cache_dir.exists()
+        offline_reason = offline_snapshot.get("offline_reason")
+
+        if cache_stale:
+            return "Cache marked stale; refresh offline cache or trigger sync to rebuild manifest."
+        if backlog > backlog_threshold:
+            return (
+                f"Pending event backlog {backlog} exceeds guardrail {backlog_threshold}; "
+                "flush events when connectivity is available."
+            )
+        if not cache_present:
+            return "Create offline cache directory to retain audit trail before next run."
+        if not offline_snapshot.get("online", False):
+            reason = offline_reason or "connectivity unavailable"
+            return f"Operating offline ({reason}); prepare offline package for replay."
+        return "Posture steady; continue periodic heartbeats and capability checks."
 
     def _write_events(self, events: list[dict]) -> None:
         if not events:
