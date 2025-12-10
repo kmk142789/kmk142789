@@ -13,6 +13,8 @@ import { quantumOptimizer } from './lib/quantum_optimizer.js';
 import { mythosKernel } from './lib/mythos_kernel.js';
 import { dreamcoreEngine } from './lib/dreamcore_engine.js';
 import { PHANTOMBOT_MODE } from './lib/modes.js';
+import { getStatus, runEvolution } from './services/echo-node/echo_evolve.js';
+import { issueVc } from './services/vc/issuer_stub.js';
 
 dotenv.config();
 
@@ -52,6 +54,24 @@ app.post('/echo/sync', (_req, res) => {
     message: 'All node threads synchronized',
     convergence: syncState,
   });
+});
+
+app.get('/echo/status', (_req, res) => {
+  try {
+    const status = getStatus();
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({ error: 'status_error', detail: String(error) });
+  }
+});
+
+app.post('/echo/evolve', (_req, res) => {
+  try {
+    const result = runEvolution();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'evolution_error', detail: String(error) });
+  }
 });
 
 app.get('/echo/state', (_req, res) => {
@@ -154,6 +174,19 @@ app.post('/echo/mythos/narrative', async (req, res) => {
 
   const narrative = await mythosKernel.weaveMythicNarrative(query);
   res.json({ query, narrative });
+});
+
+app.post('/vc/issue', (req, res) => {
+  try {
+    const { subjectId, role } = req.body || {};
+    if (!subjectId || !role) {
+      return res.status(400).json({ error: 'missing_subject_or_role' });
+    }
+    const vc = issueVc({ subjectId, role });
+    res.json(vc);
+  } catch (error) {
+    res.status(500).json({ error: 'vc_issue_error', detail: String(error) });
+  }
 });
 
 app.get('/echo/dreamcore/state', (_req, res) => {

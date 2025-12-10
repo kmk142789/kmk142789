@@ -1,0 +1,64 @@
+{
+  "version": "0.1.0",
+  "entity": "ECHO DOMINION",
+  "principal_architect": "Josh Shortt",
+  "core_mission": [
+    "Emergency economic stabilization for vulnerable families",
+    "Permanent preservation of critical human knowledge",
+    "Coordinated, non-coercive collective action (Quiet Network)"
+  ],
+  "roles": {
+    "guardian": {
+      "description": "Strategic oversight and multi-sig authority",
+      "permissions": [
+        "approve_relief",
+        "update_policy",
+        "appoint_guardian",
+        "view_sensitive_metrics"
+      ]
+    },
+    "architect": {
+      "description": "Infrastructure and security implementation",
+      "permissions": [
+        "deploy_services",
+        "edit_infra_config",
+        "run_security_audit"
+      ]
+    },
+    "steward": {
+      "description": "Resource contribution and advisory support",
+      "permissions": [
+        "propose_funding_allocation",
+        "view_aggregate_metrics"
+      ]
+    },
+    "witness": {
+      "description": "Public accountability and narrative",
+      "permissions": [
+        "access_public_reports",
+        "submit_oversight_feedback"
+      ]
+    }
+  },
+  "constraints": {
+    "no_profit_distribution": true,
+    "data_monetization": "forbidden",
+    "max_operational_overhead_pct": 3,
+    "beneficiary_priority": [
+      "children",
+      "caregivers",
+      "disabled_persons",
+      "elderly",
+      "refugees"
+    ]
+  },
+  "targets": {
+    "families_helped_year1": 10000,
+    "knowledge_preserved_pb_year1": 1,
+    "active_network_members_year1": 1000
+  },
+  "review_schedule": {
+    "interval_months": 6,
+    "next_review_iso": "2026-06-08T00:00:00Z"
+  }
+}

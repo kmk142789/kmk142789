@@ -1,0 +1,13 @@
+{
+  "version": "0.1.0",
+  "families_helped": 0,
+  "guardians": [
+    {
+      "id": "guardian-1",
+      "name": "Josh Shortt",
+      "role": "guardian"
+    }
+  ],
+  "treasury_usd": 0,
+  "last_evolution_run_iso": null
+}
