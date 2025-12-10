@@ -57,6 +57,7 @@ DEFAULT_SKIP_DIRS = {
     "build",
     ".mypy_cache",
     ".pytest_cache",
+    ".direnv",
     ".venv",
     "venv",
     "env",

@@ -53,11 +53,16 @@ def test_discover_tasks_skips_common_virtualenvs(tmp_path):
     skipped.parent.mkdir()
     skipped.write_text("# TODO inside virtualenv\n", encoding="utf-8")
 
+    direnv = tmp_path / ".direnv" / "module.py"
+    direnv.parent.mkdir()
+    direnv.write_text("# TODO inside direnv\n", encoding="utf-8")
+
     included = tmp_path / "app.py"
     included.write_text("# TODO keep me\n", encoding="utf-8")
 
     tasks = discover_tasks(tmp_path)
     assert all(task.path != skipped for task in tasks)
+    assert all(task.path != direnv for task in tasks)
     assert any(task.path == included for task in tasks)
 
 
