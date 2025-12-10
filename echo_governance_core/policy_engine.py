@@ -6,7 +6,7 @@ import fnmatch
 
 from .anomaly_detector import is_blocked
 from .audit_log import log_event
-from .governance_state import load_state
+from .governance_state import load_state, save_state
 from .metrics import record_decision
 from .roles import ROLES
 
@@ -46,4 +46,26 @@ def enforce(actor: str, action: str) -> bool:
     return allowed
 
 
-__all__ = ["enforce"]
+def disable_actor(actor: str | None) -> bool:
+    """Block an actor and persist the decision."""
+
+    if not actor:
+        return False
+
+    state = load_state()
+    actors = state.setdefault("actors", {})
+    info = actors.setdefault(actor, {"roles": [], "flags": []})
+    flags = info.setdefault("flags", [])
+
+    if "blocked" not in flags:
+        flags.append("blocked")
+        save_state(state)
+        record_decision(actor, "policy:force_deny", False)
+        log_event(actor, "policy:force_deny", {"result": "blocked"})
+    else:
+        save_state(state)
+
+    return True
+
+
+__all__ = ["enforce", "disable_actor"]

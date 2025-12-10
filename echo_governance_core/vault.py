@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from hashlib import sha256
+from time import time
 
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
@@ -57,4 +58,17 @@ def save_vault(vault: dict, master_secret: str) -> None:
         fp.write(blob)
 
 
-__all__ = ["load_vault", "save_vault", "VAULT_FILE"]
+def rotate_signing_keys(master_secret: str | None = None) -> dict:
+    """Generate and persist a new signing key entry."""
+
+    secret = master_secret or os.getenv("ECHO_MASTER_SECRET", "default-master-secret")
+    vault = load_vault(secret)
+    keys = vault.setdefault("signing_keys", [])
+    new_key = sha256(get_random_bytes(32)).hexdigest()
+    entry = {"key": new_key, "rotated_at": int(time())}
+    keys.append(entry)
+    save_vault(vault, secret)
+    return entry
+
+
+__all__ = ["load_vault", "save_vault", "rotate_signing_keys", "VAULT_FILE"]
