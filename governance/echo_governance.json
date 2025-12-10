@@ -38,12 +38,41 @@
         "access_public_reports",
         "submit_oversight_feedback"
       ]
+    },
+    "ombudsman": {
+      "description": "Independent reviewer of escalations and incident handling",
+      "permissions": [
+        "request_postmortem",
+        "audit_risk_register",
+        "halt_noncompliant_change",
+        "publish_findings"
+      ]
+    },
+    "ops_controller": {
+      "description": "Day-to-day operator with bounded emergency powers",
+      "permissions": [
+        "invoke_runbook",
+        "trigger_rotation",
+        "open_recovery_channel",
+        "file_emergency_bulletin"
+      ]
+    },
+    "continuity_guard": {
+      "description": "Ensures backups, attestations, and mirrors stay in parity",
+      "permissions": [
+        "verify_backup",
+        "sign_attestation",
+        "crosscheck_mirror_state",
+        "enforce_parity_thresholds"
+      ]
     }
   },
   "constraints": {
     "no_profit_distribution": true,
     "data_monetization": "forbidden",
     "max_operational_overhead_pct": 3,
+    "quorum_percentage": 66,
+    "emergency_override_window_minutes": 90,
     "beneficiary_priority": [
       "children",
       "caregivers",
@@ -56,6 +85,12 @@
     "families_helped_year1": 10000,
     "knowledge_preserved_pb_year1": 1,
     "active_network_members_year1": 1000
+  },
+  "authority_layers": {
+    "root": ["guardian", "architect"],
+    "operational": ["ops_controller", "continuity_guard"],
+    "oversight": ["ombudsman", "witness"],
+    "advisory": ["steward"]
   },
   "review_schedule": {
     "interval_months": 6,

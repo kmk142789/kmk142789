@@ -96,3 +96,17 @@ def load_snapshot(name: str):
         return {}
     with path.open() as fp:
         return json.load(fp)
+
+
+# ---- Authority Presence ---- #
+
+def save_authority_presence(snapshot):
+    """Persist the latest authority presence snapshot for offline review."""
+
+    save_json("authority_presence.json", snapshot)
+
+
+def load_authority_presence():
+    """Return the stored authority presence snapshot or an empty dict."""
+
+    return load_json("authority_presence.json")

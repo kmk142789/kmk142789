@@ -149,6 +149,38 @@ class Role:
 
 
 @dataclass
+class AuthorityFootprint:
+    """Snapshot describing how a role is staffed and governed."""
+
+    role_id: str
+    capabilities: List[str]
+    tags: List[str]
+    agents: List[str]
+    policies: List[str]
+    minimum_trust: float = 0.0
+
+    def status(self) -> str:
+        if not self.agents and not self.policies:
+            return "unassigned"
+        if not self.agents:
+            return "unstaffed"
+        if not self.policies:
+            return "unbounded"
+        return "active"
+
+    def as_dict(self) -> Dict[str, Any]:
+        return {
+            "role_id": self.role_id,
+            "capabilities": self.capabilities,
+            "tags": self.tags,
+            "agents": self.agents,
+            "policies": self.policies,
+            "minimum_trust": self.minimum_trust,
+            "status": self.status(),
+        }
+
+
+@dataclass
 class PolicyRotation:
     """Time-based rotation between policy versions or alternates."""
 
@@ -320,6 +352,46 @@ class GovernanceRouter:
     def register_role(self, role: Role) -> None:
         self.roles[role.role_id] = role
         persistence.log_action("governance-router", "register_role", {"role_id": role.role_id})
+
+    def authority_presence(self) -> Dict[str, Any]:
+        """Summarize how authority is distributed across roles, agents, and policies."""
+
+        footprints: List[AuthorityFootprint] = []
+        for role_id, role in self.roles.items():
+            agent_ids = sorted({agent.agent_id for agent in self.mesh.agents.values() if agent.role == role_id})
+            policy_ids = sorted({policy.policy_id for policy in self.policies.values() if role_id in policy.roles})
+            minimum_trust = min(
+                (policy.minimum_trust for policy in self.policies.values() if role_id in policy.roles),
+                default=0.0,
+            )
+            footprints.append(
+                AuthorityFootprint(
+                    role_id=role_id,
+                    capabilities=list(role.capabilities),
+                    tags=list(role.tags),
+                    agents=agent_ids,
+                    policies=policy_ids,
+                    minimum_trust=minimum_trust,
+                )
+            )
+
+        orphan_agents = sorted({agent.agent_id for agent in self.mesh.agents.values() if not agent.role})
+        unscoped_policies = sorted({policy.policy_id for policy in self.policies.values() if not policy.roles})
+
+        presence = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "roles": [footprint.as_dict() for footprint in footprints],
+            "orphans": {"agents": orphan_agents, "policies": unscoped_policies},
+            "counts": {
+                "roles": len(footprints),
+                "agents": len(self.mesh.agents),
+                "policies": len(self.policies),
+                "assigned_agents": sum(1 for footprint in footprints if footprint.agents),
+            },
+        }
+
+        persistence.save_authority_presence(presence)
+        return presence
 
     def route(self, context: Dict[str, Any], actor: str = "system") -> List[Dict[str, Any]]:
         """Route context through applicable policies and return enforcement results."""
