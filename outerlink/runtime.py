@@ -18,7 +18,7 @@ class OuterLinkRuntime:
     def __init__(self, config: Optional[SafeModeConfig] = None, offline_state: Optional[OfflineState] = None) -> None:
         self.config = config or SafeModeConfig()
         self.offline_state = offline_state or OfflineState()
-        self.event_bus = EventBus()
+        self.event_bus = EventBus(max_history=self.config.event_history_limit)
         self.dsi = DeviceSurfaceInterface(self.config)
         self.broker = ExecutionBroker(self.config, self.dsi, self.event_bus, self.offline_state)
         self.router = TaskRouter(self.event_bus, self.offline_state)
@@ -106,6 +106,7 @@ class OuterLinkRuntime:
             "resilience": resilience,
         }
         self.event_bus.emit("device_status", payload)
+        payload["events"] = self.event_bus.stats()
         return payload
 
     def handle_task(self, task: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

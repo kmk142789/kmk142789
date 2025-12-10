@@ -259,3 +259,27 @@ def test_emit_state_surfaces_backpressure_and_cache_window(tmp_path):
     assert backpressure["state"] == "elevated"
     assert cache_window["ttl_seconds"] == 10
     assert cache_window["stale"] is True
+
+
+def test_event_history_enforces_retention_limit(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        event_history_limit=3,
+    )
+    runtime = OuterLinkRuntime(config=config)
+
+    for index in range(3):
+        runtime.event_bus.emit("custom", {"i": index})
+
+    stats_before = runtime.event_bus.stats()
+    assert stats_before["retained"] == 3
+    assert stats_before["dropped"] == 0
+
+    state = runtime.emit_state()
+
+    stats_after = runtime.event_bus.stats()
+    assert stats_after["retained"] == 3
+    assert stats_after["dropped"] == 1
+    assert state["events"]["limit"] == 3
+    assert state["events"]["dropped"] == 1
