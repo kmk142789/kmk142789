@@ -28,6 +28,13 @@ ROLES = {
     "alignment_agent": {
         "can": ["alignment:update", "alignment:read"],
     },
+    "domain_registrar": {
+        "can": [
+            "domain:*",
+            "dns:*",
+            "registrar:*",
+        ],
+    },
 }
 
 __all__ = ["ROLES"]

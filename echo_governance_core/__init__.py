@@ -4,6 +4,12 @@ from .anomaly_detector import evaluate_anomalies, flag_actor, is_blocked
 from .audit_log import log_event
 from .auto_assign import auto_register_agent
 from .governance_state import DEFAULT_STATE, STATE_FILE, load_state, save_state
+from .domain_authority import (
+    DOMAIN_AUTHORITY_ACTOR,
+    DOMAINS_FILE,
+    ensure_domain_authority,
+    load_domains,
+)
 from .key_rotation import get_key_bundle, rotate_if_needed
 from .metrics import get_metrics, record_decision, anomaly_report
 from .mint_agent import mint_agent
@@ -21,10 +27,14 @@ __all__ = [
     "STATE_FILE",
     "ROLES",
     "SUPERADMIN",
+    "DOMAIN_AUTHORITY_ACTOR",
+    "DOMAINS_FILE",
     "load_state",
     "save_state",
     "enforce",
     "log_event",
+    "ensure_domain_authority",
+    "load_domains",
     "mint_agent",
     "snapshot",
     "restore",

@@ -14,6 +14,10 @@ DEFAULT_STATE: Dict[str, Any] = {
             "roles": ["superadmin"],
         }
     },
+    "domains": {
+        "authority": None,
+        "managed": [],
+    },
     "audit": [],
 }
 
