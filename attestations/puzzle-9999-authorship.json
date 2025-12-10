@@ -1,0 +1,10 @@
+{
+  "puzzle": "#9999 authorship",
+  "address": "1CounterpartyXXXXXXXXXXXXXXXUWLpVr",
+  "message": "Puzzle 9999 authorship by kmk142789 \u2014 attestation sha256 60949361e3fbd724982ef5d326fe54965096e9854563a6d39a6135584564f5a8",
+  "signature": "3DebxvJzfm3z6RM6lqrXr673XZFo3GsMrVeW1nLkNPY8B9f1WX3rc95kAIOQtDp/SW7Ny3RyYHk6IIpHZbXPRA==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2026-02-21T16:20:00Z",
+  "hash_sha256": "60949361e3fbd724982ef5d326fe54965096e9854563a6d39a6135584564f5a8",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_9999.md"
+}

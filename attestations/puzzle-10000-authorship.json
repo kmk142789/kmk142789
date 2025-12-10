@@ -1,0 +1,10 @@
+{
+  "puzzle": "#10000 authorship",
+  "address": "1CounterpartyXXXXXXXXXXXXXXXUWLpVr",
+  "message": "Puzzle 10000 authorship by kmk142789 \u2014 attestation sha256 5fc7b75decf00840a2562157230953b243e1aaa01af63c233860c9e1c7e4158e",
+  "signature": "C/dblAA9ApC1Ox2dUNPV0NQAV/Nl/oj7G3zr+VpSxHMkUojlX3IE6pav7mFe4eCAxP8kKlf3EOCmgx6nqXX81A==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2026-02-21T16:25:00Z",
+  "hash_sha256": "5fc7b75decf00840a2562157230953b243e1aaa01af63c233860c9e1c7e4158e",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_10000.md"
+}
