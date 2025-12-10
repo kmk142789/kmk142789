@@ -1,11 +1,13 @@
-import pytest
-
 from governance import (
     Agent,
     EnforcementAction,
     GovernanceRouter,
     Policy,
     PolicyCondition,
+    clear_offline_state,
+    list_snapshots,
+    load_audit_log,
+    load_snapshot,
     simple_payload,
 )
 
@@ -68,3 +70,72 @@ def test_minimum_trust_filters_agents_and_records_trace():
     assert results[0]["agent"] == "trusted"
     assert router.last_route_trace[0]["agent"] == "trusted"
     assert router.last_route_trace[0]["actions"] == ["contain"]
+
+
+def test_audit_log_tracks_skipped_policies_and_snapshots():
+    """Skipped policies should create audit entries and snapshot traces."""
+
+    clear_offline_state()
+
+    policy = Policy(
+        policy_id="p-audit",
+        description="Requires allow tag",
+        conditions=[
+            PolicyCondition(
+                name="allow-tag",
+                description="tag must be allow",
+                evaluator=lambda ctx: ctx.get("tag") == "allow",
+            )
+        ],
+        actions=[
+            EnforcementAction(
+                action_id="noop",
+                channel="record",
+                payload_builder=simple_payload("noop"),
+            )
+        ],
+    )
+
+    router = GovernanceRouter(policies=[policy], agents=[Agent("sentinel", capabilities=[])])
+    router.route({"tag": "deny"}, actor="tester")
+
+    events = load_audit_log()
+    assert any(event["action"] == "route_skipped" for event in events)
+
+    snapshots = list_snapshots()
+    assert snapshots, "expected snapshot after routing trace"
+
+    latest = load_snapshot(snapshots[-1])
+    assert latest["trace"][0]["status"] == "skipped"
+    assert latest["trace"][0]["reason"] == "conditions_failed"
+
+
+def test_route_failures_are_audited_with_trace():
+    """Routing failures (no agents) should be persisted for offline audits."""
+
+    clear_offline_state()
+
+    policy = Policy(
+        policy_id="p-fail",
+        description="Requires nonexistent agents",
+        conditions=[PolicyCondition("always", "always", evaluator=lambda ctx: True)],
+        actions=[
+            EnforcementAction(
+                action_id="noop",
+                channel="record",
+                payload_builder=simple_payload("noop"),
+            )
+        ],
+        minimum_trust=0.5,
+    )
+
+    router = GovernanceRouter(policies=[policy], agents=[])
+    router.route({}, actor="tester")
+
+    events = load_audit_log()
+    assert any(event["action"] == "route_failed" for event in events)
+
+    snapshots = list_snapshots()
+    latest = load_snapshot(snapshots[-1])
+    assert latest["trace"][0]["status"] == "failed"
+    assert "No agents" in latest["trace"][0]["reason"]
