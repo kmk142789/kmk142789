@@ -30,7 +30,7 @@ def test_issue_and_verify_verifiable_credential(issuer_vault):
     assert "credentialSubject" in credential
     assert credential["credentialSubject"]["role"] == "guarantor"
     assert "EchoCredential" in credential["type"]
-    assert credential["@context"][0] == "https://www.w3.org/2018/credentials/v1"
+    assert credential["@context"][0] == "https://www.w3.org/ns/credentials/v2"
 
     public_key_b64 = issuer_record["verification_public_key_b64"]
     assert verify_credential(credential, public_key_b64=public_key_b64) is True
