@@ -440,7 +440,9 @@ class SatelliteEchoEvolver:
     def evaluate_resilience(self) -> Dict[str, object]:
         """Score the cycle's resilience using propagation health and sentiment."""
 
-        if not self.state.propagation_health:
+        cache = self.state.network_cache
+        cached_cycle = cache.get("propagation_cycle")
+        if not self.state.propagation_health or cached_cycle != self.state.cycle:
             self.propagate_network()
 
         health = self.state.propagation_health

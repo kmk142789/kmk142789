@@ -91,3 +91,19 @@ def test_satellite_resilience_report_and_artifact(tmp_path: Path) -> None:
     assert payload["resilience_grade"] == evolver.state.resilience_grade
     assert payload["resilience_summary"].startswith("Resilience score")
 
+
+def test_satellite_resilience_refreshes_when_cycle_changes(tmp_path: Path) -> None:
+    evolver = SatelliteEchoEvolver(artifact_path=tmp_path / "artifact.json", seed=19)
+
+    evolver.propagate_network()
+    initial_events = list(evolver.state.propagation_events)
+    cached_cycle = evolver.state.network_cache["propagation_cycle"]
+
+    evolver.state.cycle = cached_cycle + 1
+
+    result = evolver.evaluate_resilience()
+
+    assert evolver.state.network_cache["propagation_cycle"] == evolver.state.cycle
+    assert evolver.state.propagation_events != initial_events
+    assert 0.0 <= result["score"] <= 1.0
+
