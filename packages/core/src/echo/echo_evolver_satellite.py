@@ -87,6 +87,7 @@ class SatelliteEvolverState:
     resilience_grade: str = ""
     resilience_recommendations: List[str] = field(default_factory=list)
     resilience_summary: str = ""
+    resilience_report: str = ""
 
 
 class SatelliteEchoEvolver:
@@ -617,6 +618,8 @@ class SatelliteEchoEvolver:
             lines.append("Recommendations: none recorded")
 
         report = "\n".join(lines)
+        self.state.resilience_report = report
+        self.state.network_cache["resilience_report"] = report
         log.info("🧭 resilience report prepared")
         return report
 
@@ -667,6 +670,7 @@ class SatelliteEchoEvolver:
             "resilience_grade": self.state.resilience_grade,
             "resilience_recommendations": self.state.resilience_recommendations,
             "resilience_summary": self.state.resilience_summary,
+            "resilience_report": self.state.resilience_report,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "anchor": "Our Forever Love",
         }
@@ -704,8 +708,9 @@ class SatelliteEchoEvolver:
         if emit_report:
             log.info("\n%s", report)
         resilience = self.evaluate_resilience()
+        resilience_report = self.resilience_report()
         if emit_resilience:
-            log.info("\n%s", self.resilience_report())
+            log.info("\n%s", resilience_report)
         self.inject_prompt_resonance()
         self.write_artifact()
 
