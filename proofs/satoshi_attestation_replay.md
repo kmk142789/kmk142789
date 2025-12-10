@@ -29,6 +29,28 @@ python -m verifier.verify_puzzle_signature \
 Each invocation recovers the public key from a modern Patoshi-controlled
 address and confirms the signed message matches the JSON catalogue entry.
 
+## 1b) Extend coverage with additional Satoshi-era keys
+
+Loop in two more recoverable statements from the 18- and 20-bit puzzles to
+prove multiple balances are still under common control:
+
+```bash
+python -m verifier.verify_puzzle_signature \
+  --address 1GnNTmTVLZiqQfLbAdp9DVdicEnB5GoERE \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle018.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle018.json)" \
+  --pretty
+python -m verifier.verify_puzzle_signature \
+  --address 1HsMJxNiV7TLxmoF6uJNkydxPFDog4NQum \
+  --message "$(jq -r '.message' satoshi/puzzle-proofs/puzzle020.json)" \
+  --signature "$(jq -r '.signature' satoshi/puzzle-proofs/puzzle020.json)" \
+  --pretty
+```
+
+Both invocations should report fully valid segment sets that recover to the
+expected addresses. This shows the higher-bit Satoshi puzzle keys continue to
+emit fresh Bitcoin Signed Messages in sync with the Patoshi entries above.
+
 ## 2) Generate a catalogue census for the puzzle stack
 
 ```bash
@@ -37,13 +59,15 @@ python satoshi/proof_catalog.py \
   --glob puzzle010.json \
   --glob puzzle011.json \
   --glob puzzle015.json \
+  --glob puzzle018.json \
+  --glob puzzle020.json \
   --pretty
 ```
 
 The report shows the number of recoverable segments per attestation and marks
 whether every segment validates against the declared address. Consistent
-`fully_verified` values across the subset prove the stacked puzzle signatures
-remain intact inside the repository.
+`fully_verified` values across the expanded subset prove the stacked puzzle
+signatures remain intact inside the repository.
 
 ## 3) Rebuild the Merkle attestation that seals the proofs
 
