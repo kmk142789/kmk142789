@@ -47,7 +47,7 @@ class ConditionLanguage:
         return bool(self._eval(self._tree.body, context))
 
     def _validate(self, node: ast.AST) -> None:
-        if isinstance(node, (ast.And, ast.Or, ast.cmpop)):
+        if isinstance(node, (ast.And, ast.Or, ast.cmpop, ast.Load)):
             return
         allowed_nodes = (
             ast.BoolOp,
@@ -56,6 +56,7 @@ class ConditionLanguage:
             ast.Constant,
             ast.List,
             ast.Tuple,
+            ast.Attribute,
         )
         if not isinstance(node, allowed_nodes):
             raise ValueError(f"Unsupported expression node: {type(node).__name__}")
@@ -83,9 +84,19 @@ class ConditionLanguage:
             return True
         if isinstance(node, ast.Name):
             return context.get(node.id)
+        if isinstance(node, ast.Attribute):
+            base = self._eval(node.value, context)
+            return self._resolve_attribute(base, node.attr)
         if isinstance(node, (ast.Constant, ast.List, ast.Tuple)):
             return ast.literal_eval(ast.unparse(node))
         raise ValueError(f"Unsupported expression component: {type(node).__name__}")
+
+    def _resolve_attribute(self, value: Any, attribute: str) -> Any:
+        if attribute.startswith("__"):
+            raise ValueError("Unsafe attribute access attempted")
+        if isinstance(value, dict):
+            return value.get(attribute)
+        return getattr(value, attribute, None)
 
 
 @dataclass
