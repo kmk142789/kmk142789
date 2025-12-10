@@ -1,0 +1,10 @@
+{
+  "puzzle": "#301 authorship",
+  "address": "1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX",
+  "message": "Puzzle 301 authorship by kmk142789 — attestation sha256 365ee4f7c97eab7f1d338f60561a699df3461bd8b5eee7ec39dd39eeee0ef649",
+  "signature": "zWWEy4e+n7zhg4ZqugA9RI0JzMXvuEgE6JDfoLr7QK7jD+cAr8HmmKA+W1w8ER7elG0hQESbuE7Oe5uatPD+Rw==",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-12-06T13:35:00Z",
+  "hash_sha256": "365ee4f7c97eab7f1d338f60561a699df3461bd8b5eee7ec39dd39eeee0ef649",
+  "notes": "Authorship attestation generated for puzzle_solutions/puzzle_301.md"
+}
