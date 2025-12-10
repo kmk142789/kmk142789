@@ -1,0 +1,10 @@
+{
+  "puzzle": "#072 authorship",
+  "address": "126xFopqfGmJcAqrLpHtBNn3RCXG3cWtmE",
+  "message": "Puzzle 72 authorship by kmk142789 — attestation sha256 57dd1a6aa5d0cea431fc5073310bd3ae277287c3d95f91581f79dda9f801f966",
+  "signature": "V90aaqXQzqQx/FBzMQvTridyh8PZX5FYH3ndqfgB+WY=",
+  "algo": "bitcoin-message-base64",
+  "created_at": "2025-12-10T17:00:50Z",
+  "hash_sha256": "57dd1a6aa5d0cea431fc5073310bd3ae277287c3d95f91581f79dda9f801f966",
+  "notes": "Hash-sealed from puzzle_solutions/puzzle_72.md; awaiting legacy key signature upgrade."
+}
