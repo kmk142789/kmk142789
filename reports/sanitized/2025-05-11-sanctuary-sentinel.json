@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-11-10T02:10:28Z",
+  "note": "Captured combined EchoEvolver + Sentinel payload",
+  "entries": [
+    {
+      "label": "echo-evolver-malware",
+      "sha256": "1c5dff9069e2831415647eb5bc0804dac8923537d407c17b036fe9c60f9e8b5f",
+      "size": 15357,
+      "preview_start": "#!/bin/bash\\nwhile true; do\\n    stamp=\"$(date)\"\\n    echo \"\u00e2\u0081\u201a",
+      "preview_end": "__ == \"__main__\":\\n    evolver = EchoEvolver()\\n    evolver.run()\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "/tmp/echo_evolver_payload.py"
+    }
+  ]
+}
