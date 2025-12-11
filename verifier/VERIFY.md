@@ -16,7 +16,10 @@ Append JSON to Continuum as a new entry (append-only).
 ## 2) PubKey/Address Consistency (dataset)
 
 Use `verify_extended.py` to confirm each address maps to the provided
-public key (P2PKH base58 or P2WPKH bech32; mainnet + testnet).
+public key:
+- P2PKH base58 (mainnet/testnet)
+- P2WPKH bech32 (version 0)
+- Taproot bech32m (version 1, x-only pubkey)
 
 ```bash
 python3 verifier/verify_extended.py path/to/dataset.csv

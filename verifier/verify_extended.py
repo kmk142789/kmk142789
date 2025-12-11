@@ -68,6 +68,8 @@ def _b58decode_check(addr: str) -> bytes:
 # ---- bech32 decoding (adapted from BIP-0173 reference implementation) ----
 _BECH32_ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 _BECH32_ALPHABET_MAP = {c: i for i, c in enumerate(_BECH32_ALPHABET)}
+_BECH32_CONST = 1
+_BECH32M_CONST = 0x2BC830A3
 
 
 def _bech32_polymod(values: Iterable[int]) -> int:
@@ -86,8 +88,27 @@ def _bech32_hrp_expand(hrp: str) -> List[int]:
     return [ord(x) >> 5 for x in hrp] + [0] + [ord(x) & 31 for x in hrp]
 
 
-def _bech32_verify_checksum(hrp: str, data: List[int]) -> bool:
-    return _bech32_polymod(_bech32_hrp_expand(hrp) + data) == 1
+def _bech32_verify_checksum(hrp: str, data: List[int]) -> tuple[str, int]:
+    """Return checksum encoding and polymod result.
+
+    The checksum constant distinguishes bech32 (1) from bech32m
+    (0x2BC830A3).  Returning the encoding string lets callers enforce
+    the witness version rules from BIP-0173/350.
+    """
+
+    polymod = _bech32_polymod(_bech32_hrp_expand(hrp) + data)
+    if polymod == _BECH32_CONST:
+        return "bech32", polymod
+    if polymod == _BECH32M_CONST:
+        return "bech32m", polymod
+    raise ValueError("invalid checksum")
+
+
+def _bech32_create_checksum(hrp: str, data: List[int], *, encoding: str) -> List[int]:
+    const = _BECH32M_CONST if encoding == "bech32m" else _BECH32_CONST
+    values = _bech32_hrp_expand(hrp) + data
+    polymod = _bech32_polymod(values + [0, 0, 0, 0, 0, 0]) ^ const
+    return [(polymod >> 5 * (5 - i)) & 31 for i in range(6)]
 
 
 def _convertbits(data: Iterable[int], from_bits: int, to_bits: int, *, pad: bool = True) -> List[int]:
@@ -112,8 +133,8 @@ def _convertbits(data: Iterable[int], from_bits: int, to_bits: int, *, pad: bool
     return result
 
 
-def _bech32_decode(addr: str) -> Tuple[str, int, bytes]:
-    if not (addr.lower().startswith("bc1") or addr.lower().startswith("tb1")):
+def _bech32_decode(addr: str) -> Tuple[str, int, bytes, str]:
+    if not addr.lower().startswith(("bc1", "tb1", "bcrt1")):
         raise ValueError("unsupported HRP")
 
     if any(ord(char) < 33 or ord(char) > 126 for char in addr):
@@ -132,16 +153,17 @@ def _bech32_decode(addr: str) -> Tuple[str, int, bytes]:
     except KeyError as exc:
         raise ValueError(f"invalid Bech32 character: {exc.args[0]}") from exc
 
-    if not _bech32_verify_checksum(hrp, data):
-        raise ValueError("invalid checksum")
+    encoding, _ = _bech32_verify_checksum(hrp, data)
 
     values = data[:-6]
     if not values:
         raise ValueError("empty data section")
 
     witness_version = values[0]
+    if witness_version > 16:
+        raise ValueError("invalid witness version")
     program = bytes(_convertbits(values[1:], 5, 8, pad=False))
-    return hrp, witness_version, program
+    return hrp, witness_version, program, encoding
 
 
 # ---------------------------------------------------------------------------
@@ -152,7 +174,7 @@ def _validate_pair(address: str, pubkey_hex: str) -> Tuple[bool, str | None]:
     except ValueError:
         return False, "pubkey is not valid hex"
 
-    if len(pubkey) not in (33, 65):
+    if len(pubkey) not in (32, 33, 65):
         return False, "unexpected pubkey length"
 
     pkh = hash160(pubkey)
@@ -171,14 +193,25 @@ def _validate_pair(address: str, pubkey_hex: str) -> Tuple[bool, str | None]:
 
     if address.lower().startswith(("bc1", "tb1")):
         try:
-            _, version, program = _bech32_decode(address)
+            _, version, program, encoding = _bech32_decode(address)
         except ValueError as exc:
             return False, str(exc)
-        if version != 0:
-            return False, f"unsupported witness version {version}"
-        if len(program) != 20:
-            return False, f"unexpected witness length {len(program)}"
-        return (program == pkh, None if program == pkh else "witness mismatch")
+        if version == 0:
+            if encoding != "bech32":
+                return False, "version 0 witness addresses require bech32"
+            if len(program) != 20:
+                return False, f"unexpected witness length {len(program)}"
+            return (program == pkh, None if program == pkh else "witness mismatch")
+
+        if version == 1:
+            if encoding != "bech32m":
+                return False, "version 1 witness addresses require bech32m"
+            if len(program) != 32:
+                return False, f"unexpected witness length {len(program)}"
+            xonly = pubkey if len(pubkey) == 32 else pubkey[1:33]
+            return (program == xonly, None if program == xonly else "taproot mismatch")
+
+        return False, f"unsupported witness version {version}"
 
     return False, "unsupported address format"
 
