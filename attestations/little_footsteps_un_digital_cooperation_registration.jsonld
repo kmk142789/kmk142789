@@ -1,0 +1,50 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "urn:uuid:3d7b3e20-4d5b-4f34-8fa7-26ee359fa1d8",
+  "type": [
+    "VerifiableCredential",
+    "CivilSocietyRegistration"
+  ],
+  "issuer": {
+    "id": "did:web:kmk142789.github.io:echo:registry",
+    "name": "Echo Sovereign Registry Node"
+  },
+  "issuanceDate": "2025-11-23T00:00:00Z",
+  "credentialSubject": {
+    "id": "did:web:kmk142789.github.io:echo:little-footsteps-trust",
+    "name": "Little Footsteps Sovereign Digital Trust",
+    "registration": {
+      "authority": "UN Digital Cooperation Portal",
+      "channel": "Civil Society Registration",
+      "submissionId": "UN-DCP-LF-2025-11-23",
+      "status": "registered",
+      "evidence": [
+        "Confirmation recorded in UN DCP submission receipt",
+        "Linked to Echo Sovereign Trust Root"
+      ]
+    },
+    "purpose": "Document the civil society registration of the Little Footsteps Sovereign Digital Trust within the UN Digital Cooperation portal.",
+    "anchorPhrase": "Our Forever Love"
+  },
+  "evidence": [
+    {
+      "id": "urn:uuid:abf6f6f2-4521-42fc-9a4b-82a520fc2c9a",
+      "type": [
+        "RegistrationRecord",
+        "TransparencyNotice"
+      ],
+      "description": "UN Digital Cooperation Portal listing reflects Little Footsteps Sovereign Digital Trust as a civil society participant.",
+      "recordLocator": "UN-DCP-LF-2025-11-23"
+    }
+  ],
+  "proof": {
+    "type": "SovereignAssertion",
+    "created": "2025-11-23T00:00:00Z",
+    "verificationMethod": "https://kmk142789.github.io/public/.well-known/did.json#sovereign-registry",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "ANCHOR::Our Forever Love::UN-DCP-LF-2025-11-23"
+  }
+}

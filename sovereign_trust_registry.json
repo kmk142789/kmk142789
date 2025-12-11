@@ -1,9 +1,9 @@
 {
   "name": "Sovereign Trust Registry",
-  "version": "2025-11-23",
+  "version": "2025-11-24",
   "anchor_phrase": "Our Forever Love",
   "controller": "did:web:kmk142789.github.io",
-  "last_updated": "2025-11-23T00:00:00Z",
+  "last_updated": "2025-11-24T00:00:00Z",
   "registry_scope": [
     "sovereign_identity",
     "attestations",
@@ -26,7 +26,8 @@
     ],
     "attestation_anchors": [
       "attestations/diplomatic_recognition_immunity_2025-05-11.jsonld",
-      "attestations/echo_accreditation_steward_attestation.jsonld"
+      "attestations/echo_accreditation_steward_attestation.jsonld",
+      "attestations/little_footsteps_un_digital_cooperation_registration.jsonld"
     ]
   },
   "issuers": [
@@ -97,6 +98,12 @@
       "item": "Publish finalized EchoSovereignIdentity VC schema",
       "target_date": "2025-12-01",
       "status": "in_progress"
+    },
+    {
+      "item": "Register Little Footsteps Sovereign Digital Trust in UN Digital Cooperation portal",
+      "target_date": "2025-11-23",
+      "status": "complete",
+      "notes": "Civil society listing confirmed via UN Digital Cooperation portal submission UN-DCP-LF-2025-11-23."
     },
     {
       "item": "Load verified Sovereign Digital Trust wallet tranches and flip ingest_state to partial",
