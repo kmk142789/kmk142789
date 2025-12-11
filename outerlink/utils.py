@@ -220,6 +220,101 @@ class OfflineState:
             "posture": posture,
         }
 
+    def analyze_offline_posture(
+        self,
+        cache_dir: Optional[Path],
+        cache_ttl_seconds: Optional[int],
+        backlog_threshold: int,
+        backlog_hard_limit: Optional[int] = None,
+    ) -> tuple[Dict[str, object], Dict[str, object]]:
+        """Produce an enriched offline snapshot and resilience summary.
+
+        This consolidates the repeated bookkeeping in :class:`OuterLinkRuntime` by
+        refreshing dynamic capabilities, computing cache/backpressure posture, and
+        generating the next recommended action in one pass.
+        """
+
+        snapshot = self.status(cache_dir, cache_ttl_seconds)
+
+        backlog_ok = snapshot.get("pending_events", 0) <= backlog_threshold
+        self.record_health_check(
+            "pending_event_backlog",
+            passed=backlog_ok,
+            details=(
+                "pending events within guardrails"
+                if backlog_ok
+                else f"{snapshot.get('pending_events', 0)} events waiting for flush"
+            ),
+        )
+
+        cache_healthy = not bool(snapshot.get("cache_stale"))
+        self.record_health_check(
+            "cache_health",
+            passed=cache_healthy,
+            details="offline cache within ttl" if cache_healthy else "offline cache stale",
+        )
+
+        capability_report = snapshot.get("capability_report", {})
+        replay_ready = capability_report.get("replay_ready", False)
+        cache_present = cache_dir.exists() if cache_dir else False
+
+        self.refresh_dynamic_capabilities(
+            cache_present=cache_present,
+            cache_stale=bool(snapshot.get("cache_stale")),
+            pending_events=int(snapshot.get("pending_events", 0)),
+            replay_ready=replay_ready,
+            backlog_threshold=backlog_threshold,
+        )
+
+        backpressure = self.backpressure_profile(
+            threshold=backlog_threshold, hard_limit=backlog_hard_limit
+        )
+        cache_window = self.cache_window(cache_ttl_seconds, snapshot.get("last_cache_flush"))
+
+        updated_capability_report = self.capability_report(
+            cache_dir,
+            cache_ttl_seconds,
+            snapshot.get("cached_events", 0),
+            bool(snapshot.get("cache_stale")),
+            snapshot.get("last_cache_flush"),
+        )
+        snapshot.update(
+            {
+                "capability_report": updated_capability_report,
+                "capability_readiness": updated_capability_report.get("capability_snapshot", {}).get(
+                    "readiness"
+                ),
+                "capability_posture": updated_capability_report.get("capability_snapshot", {}).get(
+                    "posture"
+                ),
+                "capability_gaps": updated_capability_report.get("capability_snapshot", {}).get(
+                    "disabled"
+                ),
+                "backpressure": backpressure,
+                "cache_window": cache_window,
+            }
+        )
+
+        action_plan = self.resilience_action_plan(
+            cache_present=cache_present,
+            cache_stale=bool(snapshot.get("cache_stale", False)),
+            backlog=int(snapshot.get("pending_events", 0)),
+            backlog_threshold=backlog_threshold,
+            offline_reason=snapshot.get("offline_reason"),
+            online=bool(snapshot.get("online")),
+        )
+        resilience = {
+            "grade": snapshot.get("resilience_grade"),
+            "score": snapshot.get("resilience_score"),
+            "summary": snapshot.get("resilience_summary"),
+            "action_plan": action_plan,
+            "next_action": action_plan.get("next_action"),
+        }
+        snapshot["recommended_action"] = resilience["next_action"]
+        snapshot["action_plan"] = action_plan
+
+        return snapshot, resilience
+
     def _is_cache_stale(self, last_cache_flush: Optional[str], cache_ttl_seconds: Optional[int]) -> bool:
         if cache_ttl_seconds and last_cache_flush:
             try:
