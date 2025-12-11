@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import json
+
 import pytest
 
 from src.telemetry import ConsentState, TelemetryContext, TelemetryEvent
@@ -12,6 +14,7 @@ from src.telemetry.retention import (
     EXPIRED_REASON,
     RetentionPolicy,
     enforce_retention_policy,
+    main,
 )
 from src.telemetry.storage import InMemoryTelemetryStorage, JsonlTelemetryStorage
 
@@ -151,3 +154,55 @@ def test_enforce_retention_policy_jsonl_storage(tmp_path: Path) -> None:
 
     assert decision.retained == (kept,)
     assert storage.read() == [kept]
+
+
+def test_retention_decision_serialisation() -> None:
+    recent = _make_event(timedelta(days=5), consent=ConsentState.OPTED_IN)
+    expired = _make_event(timedelta(days=45), consent=ConsentState.OPTED_IN)
+    unknown = _make_event(timedelta(days=1), consent=ConsentState.UNKNOWN)
+
+    policy = RetentionPolicy(max_event_age=timedelta(days=30))
+    decision = policy.evaluate(
+        [recent, expired, unknown], reference_time=REFERENCE_TIME
+    )
+
+    snapshot = decision.as_dict()
+    assert snapshot["retained_count"] == 1
+    assert snapshot["removed_reason_counts"] == {
+        EXPIRED_REASON: 1,
+        CONSENT_UNKNOWN_REASON: 1,
+    }
+    assert snapshot["cutoff"] is not None
+
+    summary = decision.describe()
+    assert "Retained events: 1" in summary
+    assert "Removal breakdown" in summary
+
+
+def test_retention_cli_dry_run(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    path = tmp_path / "telemetry.jsonl"
+    storage = JsonlTelemetryStorage(path)
+    context = _make_context(consent=ConsentState.OPTED_IN)
+    recent = TelemetryEvent(
+        event_type="heartbeat",
+        occurred_at=datetime.now(timezone.utc) - timedelta(days=1),
+        context=context,
+        payload={"step": "check"},
+    )
+    expired = TelemetryEvent(
+        event_type="heartbeat",
+        occurred_at=datetime.now(timezone.utc) - timedelta(days=40),
+        context=context,
+        payload={"step": "check"},
+    )
+    storage.write(recent)
+    storage.write(expired)
+
+    exit_code = main([str(path), "--dry-run", "--json", "--max-age-days", "30"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["retained_count"] == 1
+    assert payload["removed_count"] == 1
+    # Dry run must not mutate the log
+    assert len(list(storage.read())) == 2
