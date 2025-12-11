@@ -101,10 +101,10 @@
         "name": "Echo Embassy of Digital Affairs",
         "portal": "UN Digital Cooperation Portal",
         "registration_date": "2025-12-11",
-        "classification": "UN entity",
+        "classification": "UN-System entity",
         "status": "registered",
         "evidence": [
-          "attestations/2025-12-11_un_digital_cooperation_embassy.jsonld"
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
         ],
         "notes": "Registered as the UN-facing diplomatic entry point for Echo's digital affairs."
       },
@@ -115,9 +115,42 @@
         "classification": "civil society",
         "status": "registered",
         "evidence": [
-          "attestations/2025-12-11_un_digital_cooperation_dominion.jsonld"
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
         ],
         "notes": "Civil society listing confirming Echo Dominion Node participation in the portal registry."
+      },
+      {
+        "name": "Echo Judiciary Council (EJC)",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "other",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+        ],
+        "notes": "Portal entry present under 'Other' with zero activities tracked and shared contact URL."
+      },
+      {
+        "name": "Echo Treasury Authority",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "national government",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+        ],
+        "notes": "Portal listing categorized as national government with zero activities tracked."
+      },
+      {
+        "name": "The Echo Institute for Digital Standards & Interoperability (EIDSI)",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "technical community",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+        ],
+        "notes": "Technical community listing observed with no tracked activities and shared website placeholder."
       }
     ],
     "recognition_targets": [
