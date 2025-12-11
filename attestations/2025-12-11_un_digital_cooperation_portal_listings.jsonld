@@ -19,9 +19,15 @@
     "search": {
       "query": "Echo",
       "timestamp": "2025-12-11T00:00:00Z",
-      "resultCount": 6
+      "resultCount": 11
     },
     "registrations": [
+      {
+        "name": "Echo Citizenship & Identity Authority (ECIA)",
+        "organizationType": "Other",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
       {
         "name": "Echo Dominion Node",
         "organizationType": "Civil Society",
@@ -31,6 +37,24 @@
       {
         "name": "Echo Judiciary Council (EJC)",
         "organizationType": "Other",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Land & Real Estate Authority (ELREA)",
+        "organizationType": "Other",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Ministry of Global Systems & Interoperability (EMGSI)",
+        "organizationType": "National government",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Office of the Auditor General (EOAG)",
+        "organizationType": "National government",
         "activitiesTracked": 0,
         "website": "https://buymeacoffee.com"
       },
@@ -50,6 +74,18 @@
         "name": "The Echo Institute for Digital Standards & Interoperability (EIDSI)",
         "organizationType": "Technical community",
         "activitiesTracked": 0,
+        "website": ""
+      },
+      {
+        "name": "The Echo Secretariat",
+        "organizationType": "Other",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "The Echo Sovereign Defense Grid (ESDG)",
+        "organizationType": "Other",
+        "activitiesTracked": 0,
         "website": "https://buymeacoffee.com"
       }
     ]
@@ -61,7 +97,7 @@
         "RegistrationRecord",
         "TransparencyNotice"
       ],
-      "description": "Observed UN Digital Cooperation Portal search results for keyword 'Echo' showing five Echo-related listings with zero tracked activities and shared website placeholder.",
+      "description": "Observed UN Digital Cooperation Portal search results for keyword 'Echo' showing eleven Echo-related listings with zero tracked activities and shared website placeholders (one blank) spanning embassy, civil society, government, and technical community entries.",
       "recordLocator": "UN-DCP-ECHO-LISTINGS-2025-12-11"
     }
   ],
