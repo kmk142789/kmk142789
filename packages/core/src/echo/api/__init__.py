@@ -147,10 +147,14 @@ _bridge_api = EchoBridgeAPI(
     wifi_ssid=os.getenv("ECHO_BRIDGE_WIFI_SSID"),
     wifi_channel=os.getenv("ECHO_BRIDGE_WIFI_CHANNEL"),
     wifi_bandwidth_mhz=_parse_float_env(os.getenv("ECHO_BRIDGE_WIFI_BANDWIDTH_MHZ")),
+    wifi_frequency_mhz=_parse_float_env(os.getenv("ECHO_BRIDGE_WIFI_FREQUENCY_MHZ")),
     bluetooth_beacon_id=os.getenv("ECHO_BRIDGE_BLUETOOTH_BEACON_ID"),
     bluetooth_profile=os.getenv("ECHO_BRIDGE_BLUETOOTH_PROFILE"),
     bluetooth_bandwidth_mhz=_parse_float_env(
         os.getenv("ECHO_BRIDGE_BLUETOOTH_BANDWIDTH_MHZ")
+    ),
+    bluetooth_frequency_mhz=_parse_float_env(
+        os.getenv("ECHO_BRIDGE_BLUETOOTH_FREQUENCY_MHZ")
     ),
     arweave_gateway_url=os.getenv("ECHO_BRIDGE_ARWEAVE_GATEWAY"),
     arweave_wallet_secret_name=os.getenv(

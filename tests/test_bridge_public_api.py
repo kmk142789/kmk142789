@@ -544,6 +544,46 @@ def test_plan_supports_unstoppable_and_vercel_connectors() -> None:
     assert vercel["requires_secret"] == ["ECHO_VERCEL_TOKEN"]
 
 
+def test_radio_plans_include_frequency_and_bandwidth() -> None:
+    api = EchoBridgeAPI(
+        wifi_ssid="EchoMesh",
+        wifi_channel="6",
+        wifi_bandwidth_mhz=40.0,
+        bluetooth_beacon_id="echo-ble-01",
+        bluetooth_profile="Mesh",
+        bluetooth_bandwidth_mhz=2.0,
+        bluetooth_frequency_mhz=2426.0,
+    )
+    app = FastAPI()
+    app.include_router(create_router(api=api))
+    client = TestClient(app)
+
+    response = client.post(
+        "/bridge/plan",
+        json={
+            "identity": "EchoWildfire",
+            "cycle": "11",
+            "signature": "eden88::cycle11",
+            "traits": {"pulse": "aurora"},
+            "summary": "Radio mesh upgrade",
+            "links": ["https://echo.example/cycles/11"],
+            "topics": ["Bridge Upgrades", "bandwidth"],
+            "priority": "high",
+        },
+    )
+
+    assert response.status_code == 200
+    plans = {plan["platform"]: plan for plan in response.json()["plans"]}
+
+    wifi_transport = plans["wifi"]["payload"]["transport"]
+    assert wifi_transport["bandwidth_mhz"] == 40.0
+    assert wifi_transport["frequency_mhz"] == 2437.0
+
+    bluetooth_transport = plans["bluetooth"]["payload"]["transport"]
+    assert bluetooth_transport["bandwidth_mhz"] == 2.0
+    assert bluetooth_transport["frequency_mhz"] == 2426.0
+
+
 def test_plan_supports_tcp_and_iot_connectors() -> None:
     api = EchoBridgeAPI(
         tcp_endpoints=[" localhost:9000", "echo.net:9001", "localhost:9000"],

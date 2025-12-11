@@ -112,9 +112,11 @@ class EchoBridgeAPI:
         wifi_ssid: Optional[str] = None,
         wifi_channel: Optional[str] = None,
         wifi_bandwidth_mhz: Optional[float] = None,
+        wifi_frequency_mhz: Optional[float] = None,
         bluetooth_beacon_id: Optional[str] = None,
         bluetooth_profile: Optional[str] = None,
         bluetooth_bandwidth_mhz: Optional[float] = None,
+        bluetooth_frequency_mhz: Optional[float] = None,
         arweave_gateway_url: Optional[str] = None,
         arweave_wallet_secret_name: str = "ARWEAVE_WALLET_JWK",
     ) -> None:
@@ -208,9 +210,11 @@ class EchoBridgeAPI:
         self.wifi_ssid = (wifi_ssid or "").strip() or None
         self.wifi_channel = (wifi_channel or "").strip() or None
         self.wifi_bandwidth_mhz = wifi_bandwidth_mhz
+        self.wifi_frequency_mhz = wifi_frequency_mhz
         self.bluetooth_beacon_id = (bluetooth_beacon_id or "").strip() or None
         self.bluetooth_profile = (bluetooth_profile or "").strip() or None
         self.bluetooth_bandwidth_mhz = bluetooth_bandwidth_mhz
+        self.bluetooth_frequency_mhz = bluetooth_frequency_mhz
         self.arweave_gateway_url = (arweave_gateway_url or "").strip() or None
         self.arweave_wallet_secret_name = arweave_wallet_secret_name
 
@@ -1746,6 +1750,7 @@ class EchoBridgeAPI:
             "bandwidth_mhz": round(self.wifi_bandwidth_mhz, 2)
             if isinstance(self.wifi_bandwidth_mhz, (int, float))
             else 20.0,
+            "frequency_mhz": self._resolve_wifi_frequency(),
         }
         payload: Dict[str, Any] = {
             "transport": {key: value for key, value in transport.items() if value is not None},
@@ -1789,6 +1794,7 @@ class EchoBridgeAPI:
             "bandwidth_mhz": round(self.bluetooth_bandwidth_mhz, 2)
             if isinstance(self.bluetooth_bandwidth_mhz, (int, float))
             else 2.0,
+            "frequency_mhz": self._resolve_bluetooth_frequency(),
         }
         payload: Dict[str, Any] = {
             "transport": {key: value for key, value in transport.items() if value is not None},
@@ -1801,6 +1807,31 @@ class EchoBridgeAPI:
             payload=payload,
             requires_secret=[],
         )
+
+    def _resolve_wifi_frequency(self) -> float | None:
+        if isinstance(self.wifi_frequency_mhz, (int, float)):
+            return float(self.wifi_frequency_mhz)
+
+        if not self.wifi_channel:
+            return None
+
+        try:
+            channel = int(str(self.wifi_channel).strip())
+        except ValueError:
+            return None
+
+        if channel == 14:
+            return 2484.0
+        if 1 <= channel <= 13:
+            return 2407.0 + 5 * channel
+        if 36 <= channel <= 165:
+            return 5000.0 + 5 * channel
+        return None
+
+    def _resolve_bluetooth_frequency(self) -> float:
+        if isinstance(self.bluetooth_frequency_mhz, (int, float)):
+            return float(self.bluetooth_frequency_mhz)
+        return 2402.0
 
     def _rss_plan(
         self,
