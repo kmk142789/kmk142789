@@ -75,6 +75,10 @@ Design discussions often start inside Echo Computer. The new feature blueprint f
 
 The backend exposes `GET /features/roadmap` with optional `focus`, `status`, and `limit` query params. Responses include focus/status counts plus the featured blueprint so clients can highlight the highest priority upgrade.
 
+## Offline cloud readiness
+
+Echo Computer now mirrors its cloud configuration locally so work persists when offline or air-gapped. Set `ECHO_OFFLINE=true` (or create `workspaces/offline-cache/.offline`) to force offline mode. The server writes snapshots of the tasks, rituals, and feature blueprints to `workspaces/offline-cache/*.json` and surfaces their checksums via `GET /offline/readiness`. The standard `/health` endpoint now reports whether offline mode is active.
+
 ## Python step limiter
 
 Python executions are wrapped with `sys.settrace` to enforce a configurable maximum number of executed lines. If the limit is exceeded, the run aborts with a runtime error, providing a soft guardrail against unbounded loops.
