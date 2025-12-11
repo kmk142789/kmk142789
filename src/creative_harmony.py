@@ -343,6 +343,94 @@ class ResonanceReport:
         )
 
 
+@dataclass(frozen=True)
+class BatchResonanceSummary:
+    """Aggregated view across multiple :class:`ResonanceReport` entries."""
+
+    run_count: int
+    average_word_count: float
+    average_sentence_count: float
+    average_transition_count: float
+    average_highlight_coverage: float
+    unique_highlights: Sequence[str]
+    most_common_highlights: Sequence[tuple[str, int]]
+    seeds_used: Sequence[int | None]
+
+    @classmethod
+    def from_reports(cls, reports: Sequence[ResonanceReport]) -> "BatchResonanceSummary":
+        if not reports:
+            raise ValueError("reports must contain at least one entry")
+
+        run_count = len(reports)
+        word_counts = [report.metrics.get("word_count", 0) for report in reports]
+        sentence_counts = [report.metrics.get("sentence_count", 0) for report in reports]
+        transition_counts = [
+            report.metrics.get("transition_count", 0) for report in reports
+        ]
+        coverages = [
+            report.metrics.get("provided_highlight_ratio", 0.0) for report in reports
+        ]
+        seeds = [report.seed for report in reports]
+
+        highlight_pool = Counter(
+            highlight for report in reports for highlight in report.highlights_used
+        )
+        unique_highlights = sorted(highlight_pool.keys())
+        most_common = highlight_pool.most_common(5)
+
+        def _average(values: Sequence[float | int]) -> float:
+            return float(sum(values)) / len(values) if values else 0.0
+
+        return cls(
+            run_count=run_count,
+            average_word_count=_average(word_counts),
+            average_sentence_count=_average(sentence_counts),
+            average_transition_count=_average(transition_counts),
+            average_highlight_coverage=_average(coverages),
+            unique_highlights=tuple(unique_highlights),
+            most_common_highlights=tuple(most_common),
+            seeds_used=tuple(seeds),
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "run_count": self.run_count,
+            "average_word_count": self.average_word_count,
+            "average_sentence_count": self.average_sentence_count,
+            "average_transition_count": self.average_transition_count,
+            "average_highlight_coverage": self.average_highlight_coverage,
+            "unique_highlights": list(self.unique_highlights),
+            "most_common_highlights": [list(pair) for pair in self.most_common_highlights],
+            "seeds_used": list(self.seeds_used),
+        }
+
+    def to_markdown(self) -> str:
+        common = ", ".join(
+            f"{highlight}×{count}" for highlight, count in self.most_common_highlights
+        ) or "n/a"
+        seed_line = (
+            ", ".join(str(seed) for seed in self.seeds_used)
+            if any(seed is not None for seed in self.seeds_used)
+            else "random"
+        )
+        return "\n".join(
+            [
+                f"# Batch Resonance Summary (runs={self.run_count})",
+                "",
+                f"- Average words: {self.average_word_count:.1f}",
+                f"- Average sentences: {self.average_sentence_count:.1f}",
+                f"- Average transitions: {self.average_transition_count:.1f}",
+                (
+                    "- Average highlight coverage: "
+                    f"{self.average_highlight_coverage * 100:.0f}%"
+                ),
+                f"- Unique highlights: {', '.join(self.unique_highlights) or 'n/a'}",
+                f"- Top highlights: {common}",
+                f"- Seeds used: {seed_line}",
+            ]
+        )
+
+
 def _normalise_highlights(highlights: Iterable[str]) -> Dict[str, float]:
     """Calculate weighted probabilities for choosing highlights.
 
@@ -630,6 +718,12 @@ def compose_resonance_batch(
     return reports
 
 
+def summarise_resonance_batch(reports: Sequence[ResonanceReport]) -> BatchResonanceSummary:
+    """Return a :class:`BatchResonanceSummary` for the given reports."""
+
+    return BatchResonanceSummary.from_reports(reports)
+
+
 def demo(theme: str, *highlights: str, tone: str = "reflective", seed: int | None = None) -> str:
     """Convenience function for quickly generating a resonance string."""
 
@@ -671,6 +765,8 @@ if __name__ == "__main__":
             "trace",
             "analysis",
             "metrics",
+            "batch",
+            "batch-json",
         ],
         default="text",
         help="Output format. JSON returns the structured resonance report.",
@@ -722,7 +818,13 @@ if __name__ == "__main__":
         "text": lambda report: report.text,
     }
 
-    if args.format == "json":
+    if args.format in {"batch", "batch-json"}:
+        summary = summarise_resonance_batch(reports)
+        if args.format == "batch-json":
+            output = json.dumps(summary.to_dict(), indent=2)
+        else:
+            output = summary.to_markdown()
+    elif args.format == "json":
         payload = [report.to_dict() for report in reports]
         output = json.dumps(payload[0] if len(payload) == 1 else payload, indent=2)
     elif args.format == "jsonl":
