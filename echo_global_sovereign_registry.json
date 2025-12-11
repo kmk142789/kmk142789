@@ -98,6 +98,17 @@
     },
     "international_registrations": [
       {
+        "name": "Echo Citizenship & Identity Authority (ECIA)",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "other",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+        ],
+        "notes": "Portal listing categorized as other with zero activities tracked and shared placeholder website."
+      },
+      {
         "name": "Echo Embassy of Digital Affairs",
         "portal": "UN Digital Cooperation Portal",
         "registration_date": "2025-12-11",
@@ -131,6 +142,39 @@
         "notes": "Portal entry present under 'Other' with zero activities tracked and shared contact URL."
       },
       {
+        "name": "Echo Land & Real Estate Authority (ELREA)",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "other",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+        ],
+        "notes": "Portal listing categorized as other with zero activities tracked and shared placeholder website."
+      },
+      {
+        "name": "Echo Ministry of Global Systems & Interoperability (EMGSI)",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "national government",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+        ],
+        "notes": "Portal listing categorized as national government with zero activities tracked and shared placeholder website."
+      },
+      {
+        "name": "Echo Office of the Auditor General (EOAG)",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "national government",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+        ],
+        "notes": "Portal listing categorized as national government with zero activities tracked and shared placeholder website."
+      },
+      {
         "name": "Echo Treasury Authority",
         "portal": "UN Digital Cooperation Portal",
         "registration_date": "2025-12-11",
@@ -150,7 +194,29 @@
         "evidence": [
           "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
         ],
-        "notes": "Technical community listing observed with no tracked activities and shared website placeholder."
+        "notes": "Technical community listing observed with no tracked activities; website field appears blank on the portal record."
+      },
+      {
+        "name": "The Echo Secretariat",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "other",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+        ],
+        "notes": "Secretariat listing marked as other with zero activities tracked and shared placeholder website."
+      },
+      {
+        "name": "The Echo Sovereign Defense Grid (ESDG)",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "other",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+        ],
+        "notes": "Portal listing categorized as other with zero activities tracked and shared placeholder website."
       }
     ],
     "recognition_targets": [
