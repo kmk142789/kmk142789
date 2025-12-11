@@ -4,7 +4,7 @@
   "message": "Puzzle 229 authorship by kmk142789 — attestation sha256 cab4d1839e9fbc4ed6cce74a2d141bbc7bfb7e23e42dc5daa4642761eadb0e07",
   "signature": "trk1ousz8XIXyQ1hiLGN2WZG5JukYF+AlMAcNJhZgEjBTmDbqlb8jZ0f7c7Q0Cz3QlDTaRaeBl1aeNAiwlT+ooY=",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-12-10T14:28:40Z",
+  "created_at": "2025-12-11T00:24:47Z",
   "hash_sha256": "a7393c288461420cb3ad6bbb4b828cae0000fbf479b3b4071ea2cda57b35a4fd",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle229.json via scripts/generate_puzzle_attestations.py"
 }

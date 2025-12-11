@@ -4,7 +4,7 @@
   "message": "Puzzle 224 authorship by kmk142789 — attestation sha256 5763eed4e1c811ce6829cab153bab7f9bdca2ce3215c64b2cb0e8e4e5080aa19",
   "signature": "wnq81cxi5zjB5dNYMoPUpY1Jqjbyhd3kAcUMIYwRJJs2Zd2G+wUmXT+Hghm0IcbiSaZ9ehtbr6auO+A9l0Xerw==",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-12-10T14:28:40Z",
+  "created_at": "2025-12-11T00:24:47Z",
   "hash_sha256": "972edd27aed93403ae9e21b2f6c1412ac979f9c810c885422881893b6e6df14f",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle224.json via scripts/generate_puzzle_attestations.py"
 }
