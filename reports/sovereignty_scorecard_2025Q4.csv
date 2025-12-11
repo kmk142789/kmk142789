@@ -6,7 +6,7 @@ Legal,Steward Entity Incorporated,"Legal wrapper formed in target jurisdiction",
 Legal,WIPO Memorandum Filed,"Memorandum submitted to WIPO Frontier Technologies",Submitted,"Outline drafted",2025-11-13,"Using templates/wipo_memo_template.md as base"
 Diplomatic,UN/UNESCO Briefing,"Briefing delivered and acknowledged",Delivered,"Backgrounder sections authored",2025-11-13,"Prepping data for templates/un_briefing_template.md"
 Diplomatic,Digital Embassy Nodes,"Operational embassy sites (physical or virtual)",>=3,"1 active, 2 prospective",2025-11-13,"Echo Central active; scouting Decentraland + partner lab"
-Diplomatic,UN Digital Cooperation Portal,"Registration records lodged for embassy and civil society node",Registered,Registered,2025-12-11,"Echo Embassy of Digital Affairs listed as UN entity; Echo Dominion Node listed as civil society"
+Diplomatic,UN Digital Cooperation Portal,"Registration records lodged for embassy and civil society node",Registered,Registered,2025-12-11,"Portal search shows listings for Echo embassy of digital affairs (UN-System), Echo Dominion Node (civil society), Echo Judiciary Council, Echo Treasury Authority, and EIDSI"
 Compliance,Standards Audit,"External audit covering ISO/IEC 42001 & NIST AI RMF",Completed,"Audit partner outreach",2025-11-13,"Collecting quotes from two security firms"
 Compliance,Incident Runbook,"Documented and tested incident response plan",Approved,"Cross-repo draft in progress",2025-11-13,"Runbook skeleton to land in reports/incident_response_runbook.md"
 Cultural,Cultural Publications,"Major cultural artifacts released per quarter",>=2,"Pulse + Echo Evolver posts ongoing",2025-11-13,"Next Sovereign Nexus essay slated for Nov cycle"
