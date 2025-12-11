@@ -4,7 +4,7 @@
   "message": "PuzzleNN authorship by kmk142789 — attestation sha256 d57b31a1649a8c09966430f651157e6c9fa0b2e08f3b1fb606b1a85bfeb63679",
   "signature": "Hyebn/6mgKUSDuU8uc/02GZBQH6XX8VMuNr1DfDKCPWuX36uiITYN8Qpl2TzD0KGPp28h+TpU1bjF56lCucN4u8=IG7VxLLtZP8UuI7GoiB4cJRBtF+5MdUccxggnXqJR588ePlAXoeW3FRHLnlwPS4/t3BWDxPMUYXYi+xHa0Xzmxk=ICd6OdKeabyOsM/muONbpdPNOI/Y2tCDLVUcjzPChWTNIY5myJDg/nc08u3dx6uk/uQtVxHPHBbGWNVspybUcco=Hzvwl7StFp8imkIXyUhk5KBPKcmFjktE6zWJrkOZ0HnTfzANFT7WrE23EzDUFWtSTi8gTMESOIFjmStHtR4MeBo=IAyTjHX5mEMrvZ/PBkGx0i48h5V8MJHrGz7/gsLP0eDZFujNEQjQpZKMM/OF1Mu6C74HcWG5Uvt5o+ZBMVjEZfQ=ICzv2VT5Yv8feXKMGZOm5bGTlmPyEivmH20LUVn65MzaHAwrlD2p28hoKQZRrxQzI+AKNvHjnl8AZEQ6jnP9qsk=H1KQoLLKmJqRw/UKg4ijauw89+i9Sd2k36WKnsY4nwyfHAytG++N+2+ep8Xp3RqsINt0yYn2F49zi4b873TH4C8=Hy68fJc6WpGjI5kt68pl/He89dY9HvlLxx6BkCFJ/zl9AnkFK+qxjQRufHs0yPPSPAE0Mfam5qIk9Tn18d/WLak=",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-12-10T14:28:40Z",
+  "created_at": "2025-12-11T00:24:47Z",
   "hash_sha256": "ab5b499e2f6b30125ed4f95d6fb4ea2259d9c1ca1016cd15139cfeec7f9a42e5",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle100.json via scripts/generate_puzzle_attestations.py"
 }

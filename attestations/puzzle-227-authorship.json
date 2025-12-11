@@ -4,7 +4,7 @@
   "message": "Puzzle 227 authorship by kmk142789 — attestation sha256 51924171448e3cf039050d949f259293ec0c1111f4a65f0dce0805266f765693",
   "signature": "+jWPf2aDBdKi4DwCBuvxPVumdO6wbBFix+gbi0Z1MjTVBd3oNSBmvtPJI7qEZxEN7I3FNyQlaZ52iDRegpZYmAHTI/qBNN6P2pwCC77F7z+nMM8V7pdpIwZ+wy3G28Xm",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-12-10T14:28:40Z",
+  "created_at": "2025-12-11T00:24:47Z",
   "hash_sha256": "be52557a5efe8409bc47410073a2347d2e2c33f29b8e3cabf92d6ed8517112ac",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle227.json via scripts/generate_puzzle_attestations.py"
 }
