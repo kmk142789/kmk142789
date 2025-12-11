@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import crypto from 'node:crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,11 +15,16 @@ const DEFAULT_USER = process.env.ECHO_USER || 'demo';
 const WORKSPACE_ROOT = path.resolve(
   process.env.ECHO_WORKSPACE_ROOT || path.join(process.cwd(), 'workspaces')
 );
+const OFFLINE_CACHE_ROOT = path.resolve(
+  process.env.ECHO_OFFLINE_CACHE_ROOT || path.join(WORKSPACE_ROOT, 'offline-cache')
+);
 const TASKS_FILE = path.join(__dirname, 'daily_tasks.json');
 const RITUALS_FILE = path.join(__dirname, 'weekly_rituals.json');
 const FEATURE_BLUEPRINTS_FILE = path.join(__dirname, 'feature_blueprints.json');
+const OFFLINE_SENTINEL = path.join(OFFLINE_CACHE_ROOT, '.offline');
 
 await fs.mkdir(WORKSPACE_ROOT, { recursive: true });
+await fs.mkdir(OFFLINE_CACHE_ROOT, { recursive: true });
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -69,6 +75,11 @@ let cachedWeeklyRituals = null;
 let cachedWeeklyRitualsMtime = 0;
 let cachedFeatureBlueprints = null;
 let cachedFeatureBlueprintsMtime = 0;
+const mirrorPaths = {
+  dailyTasks: path.join(OFFLINE_CACHE_ROOT, 'daily_tasks.json'),
+  weeklyRituals: path.join(OFFLINE_CACHE_ROOT, 'weekly_rituals.json'),
+  featureBlueprints: path.join(OFFLINE_CACHE_ROOT, 'feature_blueprints.json')
+};
 
 const fallbackWeeklyRituals = {
   updated: new Date().toISOString().slice(0, 10),
@@ -160,6 +171,100 @@ const fallbackFeatureBlueprints = {
   ]
 };
 
+const OFFLINE_FLAG_VALUES = new Set(['1', 'true', 'yes', 'on']);
+
+function offlineEnvEnabled() {
+  const raw = String(process.env.ECHO_OFFLINE || '').toLowerCase();
+  return OFFLINE_FLAG_VALUES.has(raw);
+}
+
+async function offlineModeEnabled() {
+  if (offlineEnvEnabled()) {
+    return true;
+  }
+  try {
+    await fs.stat(OFFLINE_SENTINEL);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function mirrorOfflineCache(name, payload) {
+  const target = mirrorPaths[name];
+  if (!target) return null;
+  try {
+    const body = { cachedAt: new Date().toISOString(), payload };
+    await fs.writeFile(target, JSON.stringify(body, null, 2), 'utf8');
+    return target;
+  } catch (error) {
+    console.error('offline cache mirror error', { name, error: error?.message });
+    return null;
+  }
+}
+
+async function describeCacheEntry(id, location) {
+  try {
+    const stats = await fs.stat(location);
+    const raw = await fs.readFile(location);
+    const checksum = crypto.createHash('sha256').update(raw).digest('hex');
+    const parsed = JSON.parse(raw.toString('utf8'));
+    const cachedAt = typeof parsed?.cachedAt === 'string' ? parsed.cachedAt : null;
+    return {
+      id,
+      present: true,
+      path: location,
+      bytes: stats.size,
+      cachedAt,
+      checksum
+    };
+  } catch (error) {
+    return { id, present: false, path: location, reason: error?.message || 'unavailable' };
+  }
+}
+
+async function describeDirectoryEntry(id, location) {
+  try {
+    const stats = await fs.stat(location);
+    const entries = await fs.readdir(location);
+    return {
+      id,
+      present: true,
+      path: location,
+      cachedAt: stats.mtime.toISOString(),
+      entries: entries.length
+    };
+  } catch (error) {
+    return { id, present: false, path: location, reason: error?.message || 'unavailable' };
+  }
+}
+
+async function buildOfflineReadiness() {
+  const offline = await offlineModeEnabled();
+  const caches = await Promise.all([
+    describeCacheEntry('daily_tasks', mirrorPaths.dailyTasks),
+    describeCacheEntry('weekly_rituals', mirrorPaths.weeklyRituals),
+    describeCacheEntry('feature_blueprints', mirrorPaths.featureBlueprints),
+    describeDirectoryEntry('offline_cache_root', OFFLINE_CACHE_ROOT)
+  ]);
+
+  const requiredIds = new Set(['daily_tasks', 'weekly_rituals', 'feature_blueprints']);
+  const ok = caches.every((entry) => !requiredIds.has(entry.id) || entry.present);
+  const newest = caches
+    .map((entry) => entry.cachedAt)
+    .filter(Boolean)
+    .sort()
+    .pop();
+
+  return {
+    offline,
+    ok,
+    cacheRoot: OFFLINE_CACHE_ROOT,
+    lastRefresh: newest || null,
+    caches
+  };
+}
+
 const ensureWorkspace = async (user) => {
   const safeUser = user?.replace(/[^a-zA-Z0-9_-]/g, '') || DEFAULT_USER;
   const dir = path.join(WORKSPACE_ROOT, safeUser);
@@ -177,8 +282,24 @@ const resolveUserPath = async (user, target = '.') => {
   return { baseDir, absolute };
 };
 
-app.get('/health', (_req, res) => {
-  res.json({ ok: true, workspaces: WORKSPACE_ROOT });
+app.get('/health', async (_req, res) => {
+  try {
+    const offline = await offlineModeEnabled();
+    res.json({ ok: true, workspaces: WORKSPACE_ROOT, offline });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: 'failed to compute health status' });
+  }
+});
+
+app.get('/offline/readiness', async (_req, res) => {
+  try {
+    await Promise.all([loadDailyTasks(), loadWeeklyRituals(), loadFeatureBlueprints()]);
+    const readiness = await buildOfflineReadiness();
+    res.json({ ok: readiness.ok, ...readiness });
+  } catch (error) {
+    console.error('offline readiness error', error);
+    res.status(500).json({ ok: false, error: 'failed to assemble offline readiness' });
+  }
 });
 
 app.get('/tasks/daily', async (_req, res) => {
@@ -645,6 +766,9 @@ async function loadDailyTasks() {
       cachedDailyTasks = fallbackDailyTasks;
     }
   }
+  if (cachedDailyTasks) {
+    await mirrorOfflineCache('dailyTasks', cachedDailyTasks);
+  }
   return cachedDailyTasks;
 }
 
@@ -666,6 +790,9 @@ async function loadWeeklyRituals() {
       cachedWeeklyRituals = fallbackWeeklyRituals;
     }
   }
+  if (cachedWeeklyRituals) {
+    await mirrorOfflineCache('weeklyRituals', cachedWeeklyRituals);
+  }
   return cachedWeeklyRituals;
 }
 
@@ -686,6 +813,9 @@ async function loadFeatureBlueprints() {
     if (!cachedFeatureBlueprints) {
       cachedFeatureBlueprints = fallbackFeatureBlueprints;
     }
+  }
+  if (cachedFeatureBlueprints) {
+    await mirrorOfflineCache('featureBlueprints', cachedFeatureBlueprints);
   }
   return cachedFeatureBlueprints;
 }
