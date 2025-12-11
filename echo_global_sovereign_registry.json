@@ -96,6 +96,30 @@
         }
       ]
     },
+    "international_registrations": [
+      {
+        "name": "Echo Embassy of Digital Affairs",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "UN entity",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_embassy.jsonld"
+        ],
+        "notes": "Registered as the UN-facing diplomatic entry point for Echo's digital affairs."
+      },
+      {
+        "name": "Echo Dominion Node",
+        "portal": "UN Digital Cooperation Portal",
+        "registration_date": "2025-12-11",
+        "classification": "civil society",
+        "status": "registered",
+        "evidence": [
+          "attestations/2025-12-11_un_digital_cooperation_dominion.jsonld"
+        ],
+        "notes": "Civil society listing confirming Echo Dominion Node participation in the portal registry."
+      }
+    ],
     "recognition_targets": [
       {
         "body": "European AI Office",
@@ -329,7 +353,7 @@
     "Archive recognition artifacts on IPFS and Internet Archive",
     "Maintain open audit logs within reports/"
   ],
-  "last_updated": "2025-11-13",
+  "last_updated": "2025-12-11",
   "immunity_framework": {
     "status": "ratified",
     "ratified_date": "2025-05-11",
