@@ -1,7 +1,7 @@
 WhisperVault Steward Attestation
 Trust: Little Footsteps Sovereign Digital Trust
 Role: Steward
-Address: 0xABC...123
+Address: 0x3f17f1962B36e491b30A40b2405849e597Ba5FB5
 Nonce: 1731260000
 Purpose: Add wallet as authorized funding pipeline to Little Footsteps Treasury.
 
