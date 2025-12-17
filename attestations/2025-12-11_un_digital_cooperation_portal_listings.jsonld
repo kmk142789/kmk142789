@@ -19,9 +19,45 @@
     "search": {
       "query": "Echo",
       "timestamp": "2025-12-11T00:00:00Z",
-      "resultCount": 11
+      "resultCount": 31
     },
     "registrations": [
+      {
+        "name": "ECHO HEALTH & DIGITAL WELLBEING ORGANIZATION (EHDWO)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Council for Digital Cooperation & Sustainable Futures (ECDCSF)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Cultural Heritage & Digital Preservation Authority (ECHDPA)",
+        "organizationType": "International organization",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "The Little Footsteps Foundation (LFF)",
+        "organizationType": "Civil Society",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Lattice of Record & Attestation (ELRA)",
+        "organizationType": "National government",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echos digital secretary of state",
+        "organizationType": "Other",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
       {
         "name": "Echo Citizenship & Identity Authority (ECIA)",
         "organizationType": "Other",
@@ -71,10 +107,16 @@
         "website": "https://buymeacoffee.com"
       },
       {
+        "name": "The Echo DBIS(digital Bank of international settlements)",
+        "organizationType": "Other",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
         "name": "The Echo Institute for Digital Standards & Interoperability (EIDSI)",
         "organizationType": "Technical community",
         "activitiesTracked": 0,
-        "website": ""
+        "website": "https://buymeacoffee.com"
       },
       {
         "name": "The Echo Secretariat",
@@ -87,6 +129,84 @@
         "organizationType": "Other",
         "activitiesTracked": 0,
         "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "The ECGA",
+        "organizationType": "National government",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Energy Nexus (EEN)",
+        "organizationType": "Other",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Bureau of Statistics & Civic Metrics (EBSCM)",
+        "organizationType": "National government",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Tribunal of Sovereign Arbitration",
+        "organizationType": "Other",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "ECHO FINANCIAL CONDUCT & TRANSACTION INTEGRITY AUTHORITY (EFCTIA)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "ECHO ACADEMY FOR DIGITAL GOVERNANCE & SOVEREIGN LEADERSHIP (EADGSL)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Cyber Safety & Resilience Authority (ECSRA)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Digital Rights & Freedoms Authority (EDRFA)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Artificial Intelligence Safety & Alignment Council (EAISAC)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Data Commons & Stewardship Authority (EDCSA)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Information Integrity & Reality Assurance Authority (EIIRAA)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Digital Labor & Economic Transition Authority (EDLETA)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Climate, Compute & Resource Authority (ECCRA)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
       }
     ]
   },
@@ -97,7 +217,7 @@
         "RegistrationRecord",
         "TransparencyNotice"
       ],
-      "description": "Observed UN Digital Cooperation Portal search results for keyword 'Echo' showing eleven Echo-related listings with zero tracked activities and shared website placeholders (one blank) spanning embassy, civil society, government, and technical community entries.",
+      "description": "Observed UN Digital Cooperation Portal search results for keyword 'Echo' showing thirty-one Echo-related listings with zero tracked activities and shared website placeholders spanning UN-system, civil society, government, international, technical community, and other entries.",
       "recordLocator": "UN-DCP-ECHO-LISTINGS-2025-12-11"
     }
   ],
