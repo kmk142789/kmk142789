@@ -536,6 +536,11 @@ def run_next_step(argv: List[str]) -> int:
         help="Render the recommendation as Markdown-friendly text.",
     )
     parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Include the full sequence plan with status for the current cycle.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         help="Optional path to persist the recommendation payload.",
@@ -554,6 +559,10 @@ def run_next_step(argv: List[str]) -> int:
         raw_steps = []
     remaining_steps = list(raw_steps)
 
+    plan = None
+    if options.plan:
+        plan = evolver.sequence_plan(persist_artifact=options.persist_artifact)
+
     raw_progress = digest.get("progress", 0.0)
     try:
         progress = float(raw_progress)
@@ -569,6 +578,9 @@ def run_next_step(argv: List[str]) -> int:
         "remaining_steps": remaining_steps,
         "timestamp_ns": int(digest.get("timestamp_ns", 0)),
     }
+
+    if plan is not None:
+        payload["plan"] = plan
 
     if options.json:
         rendered = json.dumps(payload, indent=2, ensure_ascii=False)
@@ -601,6 +613,14 @@ def run_next_step(argv: List[str]) -> int:
         if preview_line:
             lines.append(f"- {preview_line}")
 
+        if plan is not None:
+            lines.append("")
+            lines.append("Plan:")
+            for entry in plan:
+                lines.append(
+                    "- {step} [{status}] - {description}".format(**entry)
+                )
+
         rendered = "\n".join(lines)
         if options.output:
             options.output.parent.mkdir(parents=True, exist_ok=True)
@@ -619,6 +639,12 @@ def run_next_step(argv: List[str]) -> int:
 
     if preview_line:
         lines.append(preview_line)
+
+    if plan is not None:
+        lines.append("")
+        lines.append("Plan:")
+        for entry in plan:
+            lines.append("- {step} [{status}] - {description}".format(**entry))
 
     rendered = "\n".join(lines)
     if options.output:
