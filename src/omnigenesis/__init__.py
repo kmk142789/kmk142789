@@ -8,6 +8,7 @@ from .paradigm import (
     create_paradigm_p1,
     create_paradigm_p2,
     create_paradigm_p3,
+    derive_genesis_key,
     generate_paradigm_lineage,
 )
 
@@ -20,5 +21,6 @@ __all__ = [
     "create_paradigm_p1",
     "create_paradigm_p2",
     "create_paradigm_p3",
+    "derive_genesis_key",
     "generate_paradigm_lineage",
 ]
