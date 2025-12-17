@@ -261,6 +261,30 @@ def test_emit_state_surfaces_backpressure_and_cache_window(tmp_path):
     assert cache_window["stale"] is True
 
 
+def test_emit_state_adds_stability_insights(tmp_path):
+    config = SafeModeConfig(
+        allowed_commands=["echo"],
+        allowed_roots=[tmp_path],
+        pending_backlog_threshold=1,
+        offline_cache_dir=tmp_path / "cache",
+    )
+    offline_state = OfflineState(online=False)
+    offline_state.mark_offline("link_down")
+    runtime = OuterLinkRuntime(config=config, offline_state=offline_state)
+
+    runtime.safe_run_shell("echo", ["offline-one"])
+    runtime.safe_run_shell("echo", ["offline-two"])
+
+    state = runtime.emit_state()
+    stability = state["offline"].get("stability")
+
+    assert stability is not None
+    assert stability.get("stability_index") is not None
+    assert stability.get("risk_signals"), "stability insights should flag active risks"
+    assert stability.get("priority") in {"flush_backlog", "refresh_cache", "prepare_sync", "steady_state"}
+    assert state["resilience"].get("stability") == stability
+
+
 def test_event_history_enforces_retention_limit(tmp_path):
     config = SafeModeConfig(
         allowed_commands=["echo"],
