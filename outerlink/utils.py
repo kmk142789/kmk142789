@@ -43,6 +43,7 @@ class OfflineState:
     last_cache_flush: Optional[str] = None
     offline_transitions: List[dict] = field(default_factory=list)
     action_history: List[dict] = field(default_factory=list)
+    stability_history: List[dict] = field(default_factory=list)
     offline_capabilities: Dict[str, bool] = field(
         default_factory=lambda: {
             "event_cache_replay": True,
@@ -58,6 +59,7 @@ class OfflineState:
             "actionable_playbooks": True,
             "offline_transition_journal": True,
             "offline_snapshots": True,
+            "stability_intelligence": True,
         }
     )
     resilience_notes: List[str] = field(default_factory=list)
@@ -271,6 +273,12 @@ class OfflineState:
         )
         cache_window = self.cache_window(cache_ttl_seconds, snapshot.get("last_cache_flush"))
 
+        stability = self.stability_insights(
+            snapshot,
+            backpressure=backpressure,
+            cache_window=cache_window,
+        )
+
         updated_capability_report = self.capability_report(
             cache_dir,
             cache_ttl_seconds,
@@ -292,6 +300,8 @@ class OfflineState:
                 ),
                 "backpressure": backpressure,
                 "cache_window": cache_window,
+                "stability": stability,
+                "stability_history": self.stability_history[-10:],
             }
         )
 
@@ -302,6 +312,7 @@ class OfflineState:
             backlog_threshold=backlog_threshold,
             offline_reason=snapshot.get("offline_reason"),
             online=bool(snapshot.get("online")),
+            stability=stability,
         )
         resilience = {
             "grade": snapshot.get("resilience_grade"),
@@ -309,6 +320,7 @@ class OfflineState:
             "summary": snapshot.get("resilience_summary"),
             "action_plan": action_plan,
             "next_action": action_plan.get("next_action"),
+            "stability": stability,
         }
         snapshot["recommended_action"] = resilience["next_action"]
         snapshot["action_plan"] = action_plan
@@ -377,19 +389,27 @@ class OfflineState:
         backlog_threshold: int,
         offline_reason: Optional[str],
         online: bool,
+        stability: Optional[Dict[str, object]] = None,
     ) -> Dict[str, object]:
         severity = "info"
         steps: List[str] = []
-
-        if cache_stale:
-            severity = "warning"
-            steps.append("Refresh offline cache or trigger sync to rebuild manifest")
+        backlog_message: Optional[str] = None
+        cache_message: Optional[str] = None
 
         if backlog > backlog_threshold:
             severity = "warning" if severity == "info" else "critical"
-            steps.append(
+            backlog_message = (
                 f"Pending event backlog {backlog} exceeds guardrail {backlog_threshold}; flush when connectivity returns"
             )
+
+        if cache_stale:
+            severity = "warning"
+            cache_message = "Refresh offline cache or trigger sync to rebuild manifest"
+
+        if backlog_message:
+            steps.append(backlog_message)
+        if cache_message:
+            steps.append(cache_message)
 
         if not cache_present:
             severity = "warning" if severity == "info" else severity
@@ -398,6 +418,10 @@ class OfflineState:
         if not online:
             reason = offline_reason or "connectivity unavailable"
             steps.append(f"Operating offline ({reason}); export offline package for replay")
+
+        if stability and stability.get("stability_index", 1.0) < 0.5:
+            severity = "critical"
+            steps.insert(0, "Stability fragile; prioritize reconnection or cache refresh")
 
         if not steps:
             steps.append("Posture steady; continue periodic heartbeats and capability checks")
@@ -411,6 +435,65 @@ class OfflineState:
         self.action_history.append(plan)
         self.action_history = self.action_history[-50:]
         return plan
+
+    def stability_insights(
+        self,
+        snapshot: Dict[str, object],
+        *,
+        backpressure: Dict[str, object],
+        cache_window: Dict[str, object],
+    ) -> Dict[str, object]:
+        """Derive a compact stability index and horizon-aware recommendations."""
+
+        stability_index = 1.0
+        risk_signals: List[str] = []
+
+        if not snapshot.get("online"):
+            stability_index -= 0.08
+            risk_signals.append("offline")
+
+        offline_duration = snapshot.get("offline_duration_seconds") or 0
+        if offline_duration and offline_duration > 900:
+            stability_index -= 0.12
+            risk_signals.append("extended_offline")
+
+        backlog_state = backpressure.get("state")
+        if backlog_state == "elevated":
+            stability_index -= 0.14
+            risk_signals.append("backlog_elevated")
+        elif backlog_state == "capped":
+            stability_index -= 0.25
+            risk_signals.append("backlog_capped")
+
+        if cache_window.get("stale"):
+            stability_index -= 0.18
+            risk_signals.append("cache_stale")
+
+        if not snapshot.get("last_sync"):
+            stability_index -= 0.05
+            risk_signals.append("no_sync_recorded")
+
+        stability_index = round(max(0.0, min(1.0, stability_index)), 2)
+
+        priority = "steady_state"
+        if "cache_stale" in risk_signals:
+            priority = "refresh_cache"
+        elif backlog_state in {"elevated", "capped"}:
+            priority = "flush_backlog"
+        elif not snapshot.get("online"):
+            priority = "prepare_sync"
+
+        insights = {
+            "stability_index": stability_index,
+            "risk_signals": risk_signals,
+            "priority": priority,
+            "horizon_seconds": cache_window.get("seconds_remaining"),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+        self.stability_history.append(insights)
+        self.stability_history = self.stability_history[-50:]
+        return insights
 
     def _build_resilience_summary(
         self,
@@ -600,6 +683,7 @@ class OfflineState:
             "capability_report": capability_report,
             "offline_transitions": self.offline_transitions[-10:],
             "action_history": self.action_history[-10:],
+            "stability_history": self.stability_history[-10:],
         }
 
     def export_offline_package(
