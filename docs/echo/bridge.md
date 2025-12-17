@@ -3,9 +3,9 @@
 The Echo Bridge API plans deterministic relays while the sync service mirrors
 completed cycles into downstream ecosystems. Together, they keep GitHub,
 Telegram, Firebase, Slack, Discord, Bluesky, ActivityPub/Mastodon, email lists,
-generic webhooks, DNS inventories, Unstoppable Domains, Vercel deployments, and
-GitHub reporting in lockstep without duplicating integration logic across
-services.【F:modules/echo-bridge/bridge_api.py†L9-L222】【F:packages/core/src/echo/bridge/service.py†L94-L214】
+generic webhooks, DNS inventories, Unstoppable Domains, Vercel deployments,
+Kafka streams, S3 archives, and GitHub reporting in lockstep without duplicating
+integration logic across services.【F:modules/echo-bridge/bridge_api.py†L9-L294】【F:packages/core/src/echo/bridge/service.py†L94-L214】
 
 ## Planner connectors
 
@@ -44,6 +44,7 @@ Echo Bridge also speaks to additional surfaces when their toggles are set:
 - **Identity & domain anchors.** DNS TXT updates, Unstoppable Domain records, and Vercel redeploy triggers propagate cycle metadata to resolvers and static sites as soon as orchestration completes.【F:modules/echo-bridge/bridge_api.py†L1507-L1579】
 - **Device and edge relays.** TCP, IoT, Wi‑Fi, and Bluetooth connectors emit the normalized bridge context over sockets, message buses, or broadcast frames so edge listeners receive the same payloads as cloud services.【F:modules/echo-bridge/bridge_api.py†L1579-L1698】
 - **Documentation feeds.** Notion pages and RSS entries capture the rendered Markdown or plaintext body alongside traits, topics, and priority for knowledge bases and subscriber feeds.【F:modules/echo-bridge/bridge_api.py†L1465-L1746】
+- **Data relays.** Kafka event payloads and S3 object writes persist the normalized bridge document for downstream stream processors or archival pipelines without reformatting per consumer.【F:modules/echo-bridge/bridge_api.py†L294-L356】
 
 ## Sync connectors
 

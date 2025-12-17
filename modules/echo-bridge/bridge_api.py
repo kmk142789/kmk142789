@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 
@@ -109,6 +110,9 @@ class EchoBridgeAPI:
         tcp_secret_name: str = "TCP_RELAY_TOKEN",
         iot_channel: Optional[str] = None,
         iot_secret_name: str = "IOT_RELAY_TOKEN",
+        kafka_topic: Optional[str] = None,
+        kafka_bootstrap_servers: Optional[Sequence[str]] = None,
+        kafka_secret_name: str = "KAFKA_RELAY_TOKEN",
         wifi_ssid: Optional[str] = None,
         wifi_channel: Optional[str] = None,
         wifi_bandwidth_mhz: Optional[float] = None,
@@ -117,6 +121,10 @@ class EchoBridgeAPI:
         bluetooth_profile: Optional[str] = None,
         bluetooth_bandwidth_mhz: Optional[float] = None,
         bluetooth_frequency_mhz: Optional[float] = None,
+        s3_bucket: Optional[str] = None,
+        s3_prefix: Optional[str] = None,
+        s3_region: Optional[str] = None,
+        s3_secret_name: str = "S3_RELAY_TOKEN",
         arweave_gateway_url: Optional[str] = None,
         arweave_wallet_secret_name: str = "ARWEAVE_WALLET_JWK",
     ) -> None:
@@ -207,6 +215,13 @@ class EchoBridgeAPI:
         self.tcp_secret_name = tcp_secret_name
         self.iot_channel = (iot_channel or "").strip() or None
         self.iot_secret_name = iot_secret_name
+        self.kafka_topic = (kafka_topic or "").strip() or None
+        self.kafka_bootstrap_servers = (
+            tuple(self._normalise_links(kafka_bootstrap_servers))
+            if kafka_bootstrap_servers
+            else ()
+        )
+        self.kafka_secret_name = kafka_secret_name
         self.wifi_ssid = (wifi_ssid or "").strip() or None
         self.wifi_channel = (wifi_channel or "").strip() or None
         self.wifi_bandwidth_mhz = wifi_bandwidth_mhz
@@ -215,6 +230,10 @@ class EchoBridgeAPI:
         self.bluetooth_profile = (bluetooth_profile or "").strip() or None
         self.bluetooth_bandwidth_mhz = bluetooth_bandwidth_mhz
         self.bluetooth_frequency_mhz = bluetooth_frequency_mhz
+        self.s3_bucket = (s3_bucket or "").strip() or None
+        self.s3_prefix = (s3_prefix or "").strip() or None
+        self.s3_region = (s3_region or "").strip() or None
+        self.s3_secret_name = s3_secret_name
         self.arweave_gateway_url = (arweave_gateway_url or "").strip() or None
         self.arweave_wallet_secret_name = arweave_wallet_secret_name
 
@@ -304,6 +323,36 @@ class EchoBridgeAPI:
                     links=link_items,
                     topics=topic_items,
                     priority=priority_text,
+                )
+            )
+
+        if self.kafka_topic and self._platform_enabled("kafka", allowed_platforms):
+            plans.append(
+                self._kafka_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    document=context.base_document,
+                )
+            )
+
+        if self.s3_bucket and self._platform_enabled("s3", allowed_platforms):
+            plans.append(
+                self._s3_plan(
+                    identity=identity,
+                    cycle=cycle,
+                    signature=signature,
+                    traits=traits,
+                    summary=summary_text,
+                    links=link_items,
+                    topics=topic_items,
+                    priority=priority_text,
+                    document=context.base_document,
                 )
             )
 
@@ -2231,6 +2280,100 @@ class EchoBridgeAPI:
             requires_secret=[self.vercel_secret_name] if self.vercel_secret_name else [],
         )
 
+    def _kafka_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        document: Optional[Dict[str, Any]] = None,
+    ) -> BridgePlan:
+        message = document or self._base_document(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+
+        payload = {
+            "topic": self.kafka_topic,
+            "bootstrap_servers": list(self.kafka_bootstrap_servers),
+            "message": message,
+            "key": f"{identity}:{cycle}",
+            "context": {
+                "identity": identity,
+                "cycle": cycle,
+                "priority": priority,
+                "topics": topics,
+            },
+        }
+
+        requires = [self.kafka_secret_name] if self.kafka_secret_name else []
+        return BridgePlan(
+            platform="kafka",
+            action="publish_event",
+            payload=payload,
+            requires_secret=requires,
+        )
+
+    def _s3_plan(
+        self,
+        *,
+        identity: str,
+        cycle: str,
+        signature: str,
+        traits: Dict[str, Any],
+        summary: Optional[str],
+        links: List[str],
+        topics: List[str],
+        priority: Optional[str],
+        document: Optional[Dict[str, Any]] = None,
+    ) -> BridgePlan:
+        record = document or self._base_document(
+            identity=identity,
+            cycle=cycle,
+            signature=signature,
+            traits=traits,
+            summary=summary,
+            links=links,
+            topics=topics,
+            priority=priority,
+        )
+
+        prefix = self.s3_prefix.strip("/") if self.s3_prefix else "bridge"
+        key = f"{prefix}/{self._slugify(identity)}-{self._slugify(cycle)}.json"
+
+        payload = {
+            "bucket": self.s3_bucket,
+            "key": key,
+            "region": self.s3_region,
+            "content_type": "application/json",
+            "body": record,
+            "metadata": {
+                "identity": identity,
+                "cycle": str(cycle),
+                "priority": priority,
+                "topics": topics,
+            },
+        }
+
+        requires = [self.s3_secret_name] if self.s3_secret_name else []
+        return BridgePlan(
+            platform="s3",
+            action="write_object",
+            payload=payload,
+            requires_secret=requires,
+        )
+
     # ------------------------------------------------------------------
     # Rendering helpers
     # ------------------------------------------------------------------
@@ -2261,6 +2404,14 @@ class EchoBridgeAPI:
         if topics:
             document["topics"] = topics
         return document
+
+    @staticmethod
+    def _slugify(value: str) -> str:
+        """Return a filesystem-friendly slug for connector payloads."""
+
+        text = str(value or "").strip().casefold()
+        text = re.sub(r"[^a-z0-9._-]+", "-", text)
+        return text.strip("-") or "echo"
 
     def _normalise_traits(self, traits: Dict[str, Any]) -> Dict[str, Any]:
         normalised: Dict[str, Any] = {}

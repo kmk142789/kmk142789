@@ -544,6 +544,62 @@ def test_plan_supports_unstoppable_and_vercel_connectors() -> None:
     assert vercel["requires_secret"] == ["ECHO_VERCEL_TOKEN"]
 
 
+def test_plan_supports_kafka_and_s3_connectors() -> None:
+    api = EchoBridgeAPI(
+        kafka_topic="echo.bridge",
+        kafka_bootstrap_servers=[" kafka:9092", "kafka:9092", "backup:9093"],
+        kafka_secret_name="ECHO_KAFKA_SECRET",
+        s3_bucket="echo-bridge-bucket",
+        s3_prefix="relays/state",
+        s3_region="us-east-2",
+        s3_secret_name="ECHO_S3_SECRET",
+    )
+    app = FastAPI()
+    app.include_router(create_router(api=api))
+    client = TestClient(app)
+
+    relays = client.get("/bridge/relays")
+    assert relays.status_code == 200
+    connectors = {connector["platform"]: connector for connector in relays.json()["connectors"]}
+    assert {"kafka", "s3"} <= set(connectors)
+    assert connectors["kafka"]["requires_secrets"] == ["ECHO_KAFKA_SECRET"]
+    assert connectors["s3"]["requires_secrets"] == ["ECHO_S3_SECRET"]
+
+    response = client.post(
+        "/bridge/plan",
+        json={
+            "identity": "EchoWildfire",
+            "cycle": "17",
+            "signature": "eden88::cycle17",
+            "traits": {"pulse": "aurora"},
+            "summary": "New edge sync",
+            "links": [" https://echo.example/cycles/17 ", "https://status.echo/bridge"],
+            "topics": ["Bridge Orbit", "bridge orbit"],
+            "priority": "high",
+        },
+    )
+
+    assert response.status_code == 200
+    plans = {plan["platform"]: plan for plan in response.json()["plans"]}
+
+    kafka_plan = plans["kafka"]
+    assert kafka_plan["action"] == "publish_event"
+    assert kafka_plan["payload"]["topic"] == "echo.bridge"
+    assert kafka_plan["payload"]["bootstrap_servers"] == ["kafka:9092", "backup:9093"]
+    assert kafka_plan["payload"]["message"]["identity"] == "EchoWildfire"
+    assert kafka_plan["payload"]["message"]["topics"] == ["Bridge Orbit"]
+    assert kafka_plan["requires_secret"] == ["ECHO_KAFKA_SECRET"]
+
+    s3_plan = plans["s3"]
+    assert s3_plan["action"] == "write_object"
+    assert s3_plan["payload"]["bucket"] == "echo-bridge-bucket"
+    assert s3_plan["payload"]["region"] == "us-east-2"
+    assert s3_plan["payload"]["key"] == "relays/state/echowildfire-17.json"
+    assert s3_plan["payload"]["body"]["signature"] == "eden88::cycle17"
+    assert s3_plan["payload"]["metadata"]["priority"] == "high"
+    assert s3_plan["requires_secret"] == ["ECHO_S3_SECRET"]
+
+
 def test_radio_plans_include_frequency_and_bandwidth() -> None:
     api = EchoBridgeAPI(
         wifi_ssid="EchoMesh",
