@@ -137,6 +137,37 @@ class AutonomousTaskList:
         self._persist_state()
         return planned
 
+    def ensure_persistent_system_tasks(
+        self,
+        *,
+        owner_did: Optional[str] = None,
+        priority: str = "high",
+    ) -> Sequence[AutonomousTask]:
+        """Seed long-lived optimization and maintenance tasks if missing.
+
+        This helper protects core operational objectives by ensuring Echo always
+        tracks system optimization, dependency upgrades, and health maintenance
+        across memory and telemetry. Tasks are only created when they do not yet
+        exist in the persisted task ledger, preventing duplicate inserts while
+        still recording memory anchors for any newly added work.
+        """
+
+        persistent_objectives = (
+            "Optimize autonomous policy bundles and convergence thresholds",
+            "Upgrade sovereign runtime dependencies and apply security patches",
+            "Maintain telemetry, memory, and ledger health across nodes",
+        )
+        missing = [
+            objective
+            for objective in persistent_objectives
+            if not self._has_task_with_objective(objective)
+        ]
+
+        if not missing:
+            return []
+
+        return self.plan_tasks(missing, owner_did=owner_did, priority=priority)
+
     def advance_task(self, task_id: str, *, status: str, note: str | None = None) -> AutonomousTask:
         """Update a task status, recording the change into memory."""
 
@@ -175,6 +206,9 @@ class AutonomousTaskList:
     def _persist_state(self) -> None:
         payload = self.export()
         self.storage_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    def _has_task_with_objective(self, objective: str) -> bool:
+        return any(task.objective == objective for task in self._tasks.values())
 
     def _record_memory(
         self,
