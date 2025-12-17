@@ -99,6 +99,75 @@ def test_run_next_step_handles_missing_fields(monkeypatch, capsys) -> None:
     assert "Pending:" not in output
 
 
+def test_run_next_step_includes_plan_in_json(monkeypatch, capsys) -> None:
+    class DummyEvolver:
+        def __init__(self, rng=None):
+            self.rng = rng
+
+        def cycle_digest(self, *, persist_artifact: bool = True):
+            return _dummy_digest()
+
+        def sequence_plan(self, *, persist_artifact: bool = True):
+            return [
+                {
+                    "index": 1,
+                    "step": "advance_cycle",
+                    "status": "completed",
+                    "description": "advance_cycle() to open the cycle",
+                },
+                {
+                    "index": 2,
+                    "step": "mutate_code",
+                    "status": "pending",
+                    "description": "mutate_code() to seed the resonance mutation",
+                },
+            ]
+
+    monkeypatch.setattr("echo.echoctl.EchoEvolver", lambda rng=None: DummyEvolver(rng=rng))
+
+    exit_code = run_next_step(["--json", "--plan"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["plan"][0]["step"] == "advance_cycle"
+    assert payload["plan"][1]["status"] == "pending"
+
+
+def test_run_next_step_renders_plan(monkeypatch, capsys) -> None:
+    class DummyEvolver:
+        def __init__(self, rng=None):
+            self.rng = rng
+
+        def cycle_digest(self, *, persist_artifact: bool = True):
+            return _dummy_digest()
+
+        def sequence_plan(self, *, persist_artifact: bool = True):
+            return [
+                {
+                    "index": 1,
+                    "step": "advance_cycle",
+                    "status": "completed",
+                    "description": "advance_cycle() to open the cycle",
+                },
+                {
+                    "index": 2,
+                    "step": "mutate_code",
+                    "status": "pending",
+                    "description": "mutate_code() to seed the resonance mutation",
+                },
+            ]
+
+    monkeypatch.setattr("echo.echoctl.EchoEvolver", lambda rng=None: DummyEvolver(rng=rng))
+
+    exit_code = run_next_step(["--preview", "1", "--markdown", "--plan"])
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "Plan:" in output
+    assert "- advance_cycle [completed] - advance_cycle() to open the cycle" in output
+    assert "- mutate_code [pending] - mutate_code() to seed the resonance mutation" in output
+
+
 def test_run_next_step_writes_output(monkeypatch, tmp_path, capsys) -> None:
     class DummyEvolver:
         def __init__(self, rng=None):
