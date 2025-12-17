@@ -55,3 +55,26 @@ def test_advance_task_updates_status_and_summary(tmp_path) -> None:
     contexts = store.recent_executions()
     assert contexts[-1].summary == "memory loop online"
     assert contexts[-1].metadata["status"] == "in_progress"
+
+
+def test_ensure_persistent_system_tasks_only_creates_missing(tmp_path) -> None:
+    store = _build_store(tmp_path)
+    tasks_path = tmp_path / "tasks.json"
+    task_list = AutonomousTaskList(_FakeIdentityKernel(), storage_path=tasks_path, memory_store=store)
+
+    created = task_list.ensure_persistent_system_tasks(owner_did="did:echo:pilot")
+
+    payload = json.loads(tasks_path.read_text())
+    titles = {task["title"] for task in payload["tasks"]}
+    assert titles == {
+        "Optimize autonomous policy bundles and convergence thresholds",
+        "Upgrade sovereign runtime dependencies and apply security patches",
+        "Maintain telemetry, memory, and ledger health across nodes",
+    }
+    assert {task.title for task in created} == titles
+
+    # Second invocation should be idempotent and avoid duplicates.
+    again = task_list.ensure_persistent_system_tasks(owner_did="did:echo:pilot")
+    payload_after = json.loads(tasks_path.read_text())
+    assert again == []
+    assert len(payload_after["tasks"]) == len(payload["tasks"])
