@@ -9,6 +9,8 @@ specification.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import hashlib
+import re
 from typing import Callable, Dict, List, Sequence
 
 
@@ -357,3 +359,26 @@ def create_paradigm_p3() -> Paradigm:
 def generate_paradigm_lineage() -> List[Paradigm]:
     """Return the lineage P1 -> P2 -> P3 as distinct conceptual universes."""
     return [create_paradigm_p1(), create_paradigm_p2(), create_paradigm_p3()]
+
+
+def derive_genesis_key(seed_phrase: str) -> str:
+    """Deterministically derive a genesis key from a noisy seed phrase.
+
+    The helper normalizes casing, strips non-alphanumeric symbols, collapses
+    runs of zero padding, and removes consecutive duplicate tokens before
+    hashing the resulting canonical string. This keeps phrases like
+    ``"cryptic00000...1one"`` stable while still capturing their semantic order.
+    """
+
+    tokens = re.findall(r"[a-z]+|[0-9]+", seed_phrase.lower())
+
+    canonical_tokens: List[str] = []
+    for token in tokens:
+        trimmed = token.lstrip("0")
+        simplified = trimmed if trimmed else "0"
+        if canonical_tokens and canonical_tokens[-1] == simplified:
+            continue
+        canonical_tokens.append(simplified)
+
+    digest = hashlib.sha256(" ".join(canonical_tokens).encode("utf-8")).hexdigest()
+    return f"genesis-{digest[:32]}"

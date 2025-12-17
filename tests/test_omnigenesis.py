@@ -5,6 +5,7 @@ from omnigenesis import (
     create_paradigm_p1,
     create_paradigm_p2,
     create_paradigm_p3,
+    derive_genesis_key,
     generate_paradigm_lineage,
 )
 
@@ -38,3 +39,22 @@ def test_human_uplift_layer_present():
     uplift = paradigm.human_uplift
     assert "consent" in uplift.ethics.lower()
     assert "wellbeing" not in uplift.ethics.lower() or uplift.wellbeing_architecture
+
+
+def test_genesis_key_is_stable_and_condensed():
+    noisy_phrase = (
+        "Genesis historic mysterious cryptic0000000000000000000000000000000000000000000001"
+        "one key to rule them all"
+    )
+    cleaned_variant = noisy_phrase.replace("cryptic", "CRyPTiC--")
+
+    base_key = derive_genesis_key(noisy_phrase)
+    variant_key = derive_genesis_key(cleaned_variant)
+
+    assert base_key.startswith("genesis-")
+    assert len(base_key.split("-", 1)[1]) == 32
+    assert base_key == variant_key
+
+
+def test_genesis_key_collapses_zero_padding_noise():
+    assert derive_genesis_key("genesis 000001 00001") == derive_genesis_key("genesis 1")
