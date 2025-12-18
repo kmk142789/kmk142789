@@ -111,6 +111,7 @@ class DomainInventoryConnector:
     root_authority: str | None = None
     authority_attestation_path: Path | None = None
     authority_provider: str | None = None
+    required_secrets: Sequence[str] | None = None
 
     name: str = "domains"
     action: str = "publish_dns_records"
@@ -211,6 +212,7 @@ class UnstoppableDomainConnector:
     """Connector that mirrors cycle data into Unstoppable Domains records."""
 
     default_domains: Sequence[str] | None = None
+    required_secrets: Sequence[str] | None = None
 
     name: str = "unstoppable"
     action: str = "update_domain_records"
@@ -256,6 +258,7 @@ class VercelDeployConnector:
     """Connector that prepares redeploy instructions for Vercel projects."""
 
     default_projects: Sequence[str] | None = None
+    required_secrets: Sequence[str] | None = None
 
     name: str = "vercel"
     action: str = "trigger_deploy"
@@ -297,6 +300,7 @@ class GitHubIssueConnector:
     """Connector that prepares GitHub issue payloads summarising a cycle."""
 
     repository: Optional[str] = None
+    required_secrets: Sequence[str] | None = None
 
     name: str = "github"
     action: str = "create_issue"
@@ -382,9 +386,9 @@ class BridgeSyncService:
 
         descriptors: list[dict[str, object]] = []
         for connector in self._connectors:
-            required: list[str] = []
-            if isinstance(connector, GitHubIssueConnector):
-                required = ["GITHUB_TOKEN"]
+            required = _normalise_sequence(
+                getattr(connector, "required_secrets", None)
+            )
             descriptors.append(
                 {
                     "platform": connector.name,
@@ -578,6 +582,12 @@ class BridgeSyncService:
 
         unstoppable = _parse_csv_env(os.getenv("ECHO_BRIDGE_UNSTOPPABLE_DOMAINS"))
         vercel = _parse_csv_env(os.getenv("ECHO_BRIDGE_VERCEL_PROJECTS"))
+        dns_secret = os.getenv("ECHO_BRIDGE_DNS_SECRET", "DNS_PROVIDER_TOKEN")
+        unstoppable_secret = os.getenv(
+            "ECHO_BRIDGE_UNSTOPPABLE_SECRET", "UNSTOPPABLE_API_TOKEN"
+        )
+        vercel_secret = os.getenv("ECHO_BRIDGE_VERCEL_SECRET", "VERCEL_API_TOKEN")
+        github_secret = os.getenv("ECHO_BRIDGE_GITHUB_SECRET", "GITHUB_TOKEN")
 
         repository = github_repository or os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY")
 
@@ -590,10 +600,22 @@ class BridgeSyncService:
                 root_authority=root_authority,
                 authority_attestation_path=authority_attestation_path,
                 authority_provider=authority_provider,
+                required_secrets=[dns_secret] if dns_secret else None,
             ),
-            UnstoppableDomainConnector(default_domains=unstoppable),
-            VercelDeployConnector(default_projects=vercel),
-            GitHubIssueConnector(repository=repository),
+            UnstoppableDomainConnector(
+                default_domains=unstoppable,
+                required_secrets=[unstoppable_secret]
+                if unstoppable_secret
+                else None,
+            ),
+            VercelDeployConnector(
+                default_projects=vercel,
+                required_secrets=[vercel_secret] if vercel_secret else None,
+            ),
+            GitHubIssueConnector(
+                repository=repository,
+                required_secrets=[github_secret] if repository and github_secret else None,
+            ),
         ]
 
         return cls(state_dir=resolved_path, connectors=connectors)
