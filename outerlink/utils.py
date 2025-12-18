@@ -66,6 +66,7 @@ class OfflineState:
     health_checks: List[dict] = field(default_factory=list)
     capability_history: List[dict] = field(default_factory=list)
     offline_since: Optional[str] = None
+    last_manifest_error: Optional[str] = None
 
     def record_pending(self, payload: dict) -> None:
         stamped = {**payload, "cached_at": datetime.now(timezone.utc).isoformat()}
@@ -173,14 +174,17 @@ class OfflineState:
         cache_stale: bool,
         pending_events: int,
         replay_ready: bool,
+        manifest_valid: bool = True,
         backlog_threshold: int = 50,
     ) -> None:
         """Auto-adjust capability flags based on current offline posture."""
 
         self.set_capability(
             "cache_integrity_checks",
-            not cache_stale,
-            note="Cache marked stale; integrity checks downgraded" if cache_stale else None,
+            not cache_stale and manifest_valid,
+            note="Cache marked stale; integrity checks downgraded"
+            if cache_stale
+            else None,
         )
         self.set_capability(
             "event_cache_replay",
@@ -201,6 +205,15 @@ class OfflineState:
 
         if not cache_present:
             self.set_capability("airgap_audit_trail", False, note="Offline cache missing; audit trail disabled")
+
+        if not manifest_valid:
+            self.set_capability(
+                "offline_bundle_export",
+                False,
+                note="Offline manifest corrupted; bundle export disabled until rebuilt",
+            )
+        elif cache_present:
+            self.set_capability("offline_bundle_export", True)
 
     def evaluate_capabilities(self) -> Dict[str, object]:
         total = len(self.offline_capabilities) or 1
@@ -259,12 +272,21 @@ class OfflineState:
         capability_report = snapshot.get("capability_report", {})
         replay_ready = capability_report.get("replay_ready", False)
         cache_present = cache_dir.exists() if cache_dir else False
+        manifest_valid = snapshot.get("manifest_valid", True)
+        manifest_error = snapshot.get("manifest_error")
+
+        self.record_health_check(
+            "manifest_integrity",
+            passed=manifest_valid,
+            details=manifest_error or "manifest readable",
+        )
 
         self.refresh_dynamic_capabilities(
             cache_present=cache_present,
             cache_stale=bool(snapshot.get("cache_stale")),
             pending_events=int(snapshot.get("pending_events", 0)),
             replay_ready=replay_ready,
+            manifest_valid=manifest_valid,
             backlog_threshold=backlog_threshold,
         )
 
@@ -285,6 +307,7 @@ class OfflineState:
             snapshot.get("cached_events", 0),
             bool(snapshot.get("cache_stale")),
             snapshot.get("last_cache_flush"),
+            manifest_valid=manifest_valid,
         )
         snapshot.update(
             {
@@ -312,6 +335,7 @@ class OfflineState:
             backlog_threshold=backlog_threshold,
             offline_reason=snapshot.get("offline_reason"),
             online=bool(snapshot.get("online")),
+            manifest_valid=manifest_valid,
             stability=stability,
         )
         resilience = {
@@ -389,12 +413,14 @@ class OfflineState:
         backlog_threshold: int,
         offline_reason: Optional[str],
         online: bool,
+        manifest_valid: bool = True,
         stability: Optional[Dict[str, object]] = None,
     ) -> Dict[str, object]:
         severity = "info"
         steps: List[str] = []
         backlog_message: Optional[str] = None
         cache_message: Optional[str] = None
+        manifest_message: Optional[str] = None
 
         if backlog > backlog_threshold:
             severity = "warning" if severity == "info" else "critical"
@@ -406,10 +432,16 @@ class OfflineState:
             severity = "warning"
             cache_message = "Refresh offline cache or trigger sync to rebuild manifest"
 
+        if not manifest_valid:
+            severity = "warning" if severity == "info" else severity
+            manifest_message = "Offline manifest unreadable; flush events to rebuild cache manifest"
+
         if backlog_message:
             steps.append(backlog_message)
         if cache_message:
             steps.append(cache_message)
+        if manifest_message:
+            steps.append(manifest_message)
 
         if not cache_present:
             severity = "warning" if severity == "info" else severity
@@ -469,6 +501,10 @@ class OfflineState:
             stability_index -= 0.18
             risk_signals.append("cache_stale")
 
+        if not snapshot.get("manifest_valid", True):
+            stability_index -= 0.12
+            risk_signals.append("manifest_invalid")
+
         if not snapshot.get("last_sync"):
             stability_index -= 0.05
             risk_signals.append("no_sync_recorded")
@@ -504,13 +540,15 @@ class OfflineState:
         cache_stale: bool,
         replay_ready: bool,
         last_cache_flush: Optional[str],
+        manifest_valid: bool,
     ) -> str:
         freshness = "fresh" if not cache_stale else "stale"
         replay_state = "ready" if replay_ready else "cold"
+        manifest_state = "valid" if manifest_valid else "needs_rebuild"
         return (
             f"Resilience score {score:.2f} ({grade}); cache {freshness}"
             f" with {cached_events} cached/{pending_events} pending; replay {replay_state}; "
-            f"last cache flush: {last_cache_flush or 'unknown'}"
+            f"last cache flush: {last_cache_flush or 'unknown'}; manifest {manifest_state}"
         )
 
     def capability_report(
@@ -520,16 +558,19 @@ class OfflineState:
         cached_events: int,
         cache_stale: bool,
         last_cache_flush: Optional[str],
+        *,
+        manifest_valid: bool = True,
     ) -> Dict[str, object]:
         cache_present = cache_dir.exists() if cache_dir else False
         pending_events = len(self.pending_events)
         health_failures = [hc for hc in self.health_checks if hc.get("passed") is False]
-        replay_ready = cache_present and cached_events > 0 and not cache_stale
+        replay_ready = cache_present and cached_events > 0 and not cache_stale and manifest_valid
         capability_snapshot = self.evaluate_capabilities()
 
         score = 1.0
         score -= 0.2 if cache_stale else 0.0
         score -= 0.1 if not cache_present else 0.0
+        score -= 0.12 if not manifest_valid else 0.0
         score -= min(pending_events * 0.03, 0.2)
         score -= 0.05 if health_failures else 0.0
         score -= 0.1 if capability_snapshot["posture"] == "degraded" else 0.0
@@ -537,7 +578,14 @@ class OfflineState:
         score = round(max(0.0, min(1.0, score)), 2)
         grade = self._grade_resilience(score)
         summary = self._build_resilience_summary(
-            score, grade, cached_events, pending_events, cache_stale, replay_ready, last_cache_flush
+            score,
+            grade,
+            cached_events,
+            pending_events,
+            cache_stale,
+            replay_ready,
+            last_cache_flush,
+            manifest_valid,
         )
 
         return {
@@ -546,6 +594,7 @@ class OfflineState:
             "cached_events": cached_events,
             "pending_events": pending_events,
             "replay_ready": replay_ready,
+            "manifest_valid": manifest_valid,
             "health_checks": len(self.health_checks),
             "health_failures": len(health_failures),
             "score": score,
@@ -642,6 +691,7 @@ class OfflineState:
         last_cache_flush = manifest.get("last_cache_flush") or self.last_cache_flush
         cache_stale = self._is_cache_stale(last_cache_flush, cache_ttl_seconds)
         cache_integrity = self._cache_integrity(cache_dir, manifest)
+        manifest_valid = self.last_manifest_error is None
 
         offline_since = self.offline_since
         offline_duration_seconds: Optional[float] = None
@@ -653,7 +703,12 @@ class OfflineState:
                 offline_duration_seconds = None
 
         capability_report = self.capability_report(
-            cache_dir, cache_ttl_seconds, cached_events, cache_stale, last_cache_flush
+            cache_dir,
+            cache_ttl_seconds,
+            cached_events,
+            cache_stale,
+            last_cache_flush,
+            manifest_valid=manifest_valid,
         )
         resilience_score = capability_report["score"]
         resilience_grade = capability_report["grade"]
@@ -670,6 +725,8 @@ class OfflineState:
             "last_cache_flush": last_cache_flush,
             "cache_stale": cache_stale,
             "cache_integrity": cache_integrity,
+            "manifest_valid": manifest_valid,
+            "manifest_error": self.last_manifest_error,
             "capabilities": dict(self.offline_capabilities),
             "capability_history": self.capability_history[-20:],
             "capability_readiness": capability_report.get("capability_snapshot", {}).get("readiness"),
@@ -724,6 +781,7 @@ class OfflineState:
             backlog_threshold=backlog_threshold,
             offline_reason=snapshot.get("offline_reason"),
             online=bool(snapshot.get("online")),
+            manifest_valid=bool(snapshot.get("manifest_valid", True)),
         )
         report = {
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -742,15 +800,30 @@ class OfflineState:
     def _load_manifest(self, cache_dir: Path) -> Dict[str, Optional[int | str | bool]]:
         path = self._manifest_path(cache_dir)
         if not path.exists():
+            self.last_manifest_error = None
             return {}
 
         try:
-            return json.loads(path.read_text())
-        except json.JSONDecodeError:
+            manifest = json.loads(path.read_text())
+            if isinstance(manifest, dict):
+                self.last_manifest_error = None
+                return manifest
+
+            error_message = "manifest corrupted: expected mapping"
+            if self.last_manifest_error != error_message:
+                self.add_resilience_note("Offline manifest malformed; expected mapping structure")
+            self.last_manifest_error = error_message
+            return {}
+        except json.JSONDecodeError as exc:
+            error_message = f"manifest corrupted: {exc}"
+            if self.last_manifest_error != error_message:
+                self.add_resilience_note(f"Offline manifest corrupted; rebuilding suggested ({exc})")
+            self.last_manifest_error = error_message
             return {}
 
     def _write_manifest(self, cache_dir: Path, manifest: Dict[str, Optional[int | str | bool]]) -> None:
         cache_dir.mkdir(parents=True, exist_ok=True)
+        self.last_manifest_error = None
         self._manifest_path(cache_dir).write_text(json.dumps(manifest, indent=2))
 
     def _cache_integrity(
