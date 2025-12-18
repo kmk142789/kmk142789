@@ -1,0 +1,7 @@
+{
+  "description": "Stub directory for governance harness specifications",
+  "artifacts": [
+    {"name": "Governance Engine Guide", "file": "governance/engine.md"},
+    {"name": "Governance Engine Config", "file": "governance/engine.json"}
+  ]
+}

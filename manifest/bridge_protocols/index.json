@@ -1,0 +1,10 @@
+{
+  "description": "Stub directory for bridge protocol specifications",
+  "protocols": [
+    {
+      "slug": "echo-bridge",
+      "file": "bridge/echo_bridge_protocol.json",
+      "status": "draft"
+    }
+  ]
+}
