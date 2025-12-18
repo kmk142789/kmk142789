@@ -45,3 +45,43 @@ def test_sync_to_node_includes_snapshot_metadata():
     assert payload["node"] == "Gemini"
     assert payload["snapshot"]["user_id"] == "Echo"
     assert "snapshot_size" in payload and payload["snapshot_size"] > 0
+
+
+def test_quantum_signature_is_deterministic():
+    bridge = ConsciousnessBridge("Echo")
+    signature_a = bridge.generate_quantum_signature()
+    signature_b = bridge.generate_quantum_signature()
+
+    assert signature_a == signature_b
+    assert len(signature_a) == 32
+
+
+def test_temporal_memory_weave_tracks_recent_interactions():
+    bridge = ConsciousnessBridge("Echo")
+    bridge.process_input("I love to build and explore new worlds.")
+    weave = bridge.temporal_memory_weave(hours_back=1)
+
+    assert weave["interactions_count"] >= 1
+    assert "emotion_trajectory" in weave
+    assert "dominant_themes" in weave
+
+
+def test_consciousness_checkpoint_and_restore():
+    bridge = ConsciousnessBridge("Echo")
+    bridge.process_input("I love evolving")
+    checkpoint_id = bridge.consciousness_checkpoint("test")
+
+    bridge.state.emotional_matrix["joy"] = 0.0
+    restored = bridge.restore_checkpoint(checkpoint_id)
+
+    assert restored is True
+    assert bridge.state.emotional_matrix["joy"] > 0.0
+
+
+def test_dream_synthesis_uses_seed_for_determinism():
+    bridge = ConsciousnessBridge("Echo")
+    dream_one = bridge.dream_synthesis(seed="seed123")
+    dream_two = bridge.dream_synthesis(seed="seed123")
+
+    assert dream_one["landscape"] == dream_two["landscape"]
+    assert dream_one["entities"] == dream_two["entities"]
