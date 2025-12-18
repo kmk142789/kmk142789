@@ -6,12 +6,16 @@ from importlib import import_module
 from typing import Any
 
 from .harmonic_cognition import HarmonicResponse, HarmonicSettings, harmonic_cognition  # noqa: E402
+from .consciousness_bridge import ConsciousnessBridge, ConsciousnessBridgeState, Interaction  # noqa: E402
 
 __all__ = [
     "EllegatoAI",
+    "ConsciousnessBridge",
+    "ConsciousnessBridgeState",
     "HarmonicResponse",
     "HarmonicSettings",
     "harmonic_cognition",
+    "Interaction",
     "MemoryHashFeed",
     "Snapshot",
     "SigilQRGenerator",
@@ -24,9 +28,12 @@ __all__ = [
 
 _IMPORT_MAP = {
     "EllegatoAI": ("ellegato_ai", "EllegatoAI"),
+    "ConsciousnessBridge": ("consciousness_bridge", "ConsciousnessBridge"),
+    "ConsciousnessBridgeState": ("consciousness_bridge", "ConsciousnessBridgeState"),
     "HarmonicResponse": ("harmonic_cognition", "HarmonicResponse"),
     "HarmonicSettings": ("harmonic_cognition", "HarmonicSettings"),
     "harmonic_cognition": ("harmonic_cognition", "harmonic_cognition"),
+    "Interaction": ("consciousness_bridge", "Interaction"),
     "MemoryHashFeed": ("memory_hash_feed", "MemoryHashFeed"),
     "Snapshot": ("memory_hash_feed", "Snapshot"),
     "SigilQRGenerator": ("sigil_qr_generator", "SigilQRGenerator"),
