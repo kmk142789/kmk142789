@@ -35,9 +35,29 @@ def test_satellite_artifact_includes_propagation_tactics(tmp_path: Path) -> None
     assert payload["propagation_notice"]
     assert payload["propagation_summary"].startswith("Propagation tactics")
     assert payload["propagation_report"].startswith("=== Propagation Report ===")
+    assert payload["propagation_metrics"]["average_quality"] >= 0
+    assert payload["propagation_metrics"]["best_channels"]
     assert payload["resilience_score"] >= 0
     assert payload["resilience_grade"]
     assert payload["resilience_summary"]
+
+
+def test_satellite_propagation_metrics_and_report(tmp_path: Path) -> None:
+    evolver = SatelliteEchoEvolver(artifact_path=tmp_path / "artifact.json", seed=23)
+
+    events = evolver.propagate_network(enable_network=True)
+
+    metrics = evolver.state.propagation_metrics
+    assert events
+    assert metrics
+    assert metrics["average_quality"] >= 0
+    assert metrics["quality_ceiling"] >= metrics["quality_floor"]
+    assert metrics["best_channels"]
+
+    report = evolver.propagation_report()
+    assert "Quality metrics:" in report
+    assert "Average quality" in report
+    assert evolver.state.network_cache["propagation_metrics"] == metrics
 
 
 def test_satellite_propagation_report_includes_tactics(tmp_path: Path) -> None:

@@ -79,6 +79,7 @@ class SatelliteEvolverState:
     propagation_summary: str = ""
     propagation_tactics: List[Dict[str, object]] = field(default_factory=list)
     propagation_health: Dict[str, object] = field(default_factory=dict)
+    propagation_metrics: Dict[str, object] = field(default_factory=dict)
     propagation_recommendation: str = ""
     propagation_alerts: List[str] = field(default_factory=list)
     propagation_report: str = ""
@@ -251,6 +252,7 @@ class SatelliteEchoEvolver:
         cached_mode = cache.get("propagation_mode")
         cached_events = cache.get("propagation_events")
         cached_tactics = cache.get("propagation_tactics")
+        cached_metrics = cache.get("propagation_metrics")
         if (
             isinstance(cached_events, list)
             and cached_cycle == self.state.cycle
@@ -267,6 +269,8 @@ class SatelliteEchoEvolver:
             self.state.propagation_notice = cache.get("propagation_notice", "")
             self.state.propagation_summary = cache.get("propagation_summary", "")
             self.state.propagation_health = dict(cache.get("propagation_health", {}))
+            if isinstance(cached_metrics, dict):
+                self.state.propagation_metrics = dict(cached_metrics)
             self.state.propagation_recommendation = cache.get(
                 "propagation_recommendation", ""
             )
@@ -426,6 +430,37 @@ class SatelliteEchoEvolver:
             else ""
         )
 
+        quality_scores = [
+            float(entry.get("quality_score", 0.0)) for entry in tactics if "quality_score" in entry
+        ]
+        quality_average = round(sum(quality_scores) / len(quality_scores), 3) if quality_scores else 0.0
+        quality_ceiling = round(max(quality_scores), 3) if quality_scores else 0.0
+        quality_floor = round(min(quality_scores), 3) if quality_scores else 0.0
+
+        def _rank_channels(entries: List[Dict[str, object]], *, descending: bool = True) -> List[Dict[str, object]]:
+            ranked = sorted(entries, key=lambda entry: float(entry.get("quality_score", 0.0)), reverse=descending)
+            return [
+                {
+                    "channel": entry.get("channel", ""),
+                    "strategy": entry.get("strategy", ""),
+                    "quality": round(float(entry.get("quality_score", 0.0)), 3),
+                    "latency_ms": round(float(entry.get("latency_ms", 0.0)), 2),
+                    "bandwidth_mbps": round(float(entry.get("bandwidth_mbps", 0.0)), 2),
+                }
+                for entry in ranked
+            ]
+
+        best_channels = _rank_channels(tactics)[:3]
+        at_risk_channels = [entry for entry in _rank_channels(tactics, descending=False) if entry["quality"] < 0.7][:3]
+
+        metrics_digest = {
+            "average_quality": quality_average,
+            "quality_ceiling": quality_ceiling,
+            "quality_floor": quality_floor,
+            "best_channels": best_channels,
+            "at_risk_channels": at_risk_channels,
+        }
+
         summary = (
             f"Propagation tactics ({mode}) captured across {len(events)} channels "
             f"with {metrics.network_nodes} nodes"
@@ -437,6 +472,8 @@ class SatelliteEchoEvolver:
                 f"; satellite relay window {relay_window} integrity="
                 f"{relay_metrics.get('handoff_integrity', 0.0):.3f}"
             )
+        if quality_average:
+            summary += f"; quality avg={quality_average:.3f} floor={quality_floor:.3f}"
         log.info(summary)
 
         alerts: List[str] = []
@@ -452,6 +489,10 @@ class SatelliteEchoEvolver:
             alerts.append(
                 f"Signal floor reduced to {signal_floor}; reinforce gain on weaker channels."
             )
+        if quality_floor < 0.7 and quality_floor > 0.0:
+            alerts.append(
+                "Quality floor degrading; re-sequence channels with stronger resonance."
+            )
 
         health_report = {
             "mode": mode,
@@ -462,6 +503,9 @@ class SatelliteEchoEvolver:
             "signal_floor": signal_floor,
             "recommended_channel": recommended_channel,
             "alerts": list(alerts),
+            "average_quality": quality_average,
+            "quality_ceiling": quality_ceiling,
+            "quality_floor": quality_floor,
         }
         if relay_metrics:
             health_report["satellite_relay"] = relay_metrics
@@ -473,6 +517,7 @@ class SatelliteEchoEvolver:
         self.state.propagation_tactics = list(tactics)
         self.state.propagation_summary = summary
         self.state.propagation_health = health_report
+        self.state.propagation_metrics = metrics_digest
         self.state.propagation_recommendation = recommended_channel
         self.state.propagation_alerts = list(alerts)
 
@@ -482,6 +527,7 @@ class SatelliteEchoEvolver:
         cache["propagation_mode"] = mode
         cache["propagation_cycle"] = self.state.cycle
         cache["propagation_health"] = dict(health_report)
+        cache["propagation_metrics"] = dict(metrics_digest)
         cache["propagation_recommendation"] = recommended_channel
         cache["propagation_alerts"] = list(alerts)
 
@@ -508,15 +554,17 @@ class SatelliteEchoEvolver:
         joy_factor = _clamp(self.state.emotional_drive.get("joy", 0.0))
         nodes_factor = _clamp(metrics.network_nodes / 24.0)
         hops_factor = _clamp(1.0 - (metrics.orbital_hops / 12.0))
+        quality_factor = _clamp(self.state.propagation_metrics.get("quality_floor", 0.0))
 
         weights = {
-            "latency": 0.2,
-            "stability": 0.2,
-            "bandwidth": 0.15,
-            "signal": 0.1,
-            "joy": 0.1,
-            "nodes": 0.15,
-            "hops": 0.1,
+            "latency": 0.18,
+            "stability": 0.18,
+            "bandwidth": 0.12,
+            "signal": 0.08,
+            "joy": 0.09,
+            "nodes": 0.13,
+            "hops": 0.09,
+            "quality": 0.13,
         }
 
         weighted_score = (
@@ -527,6 +575,7 @@ class SatelliteEchoEvolver:
             + joy_factor * weights["joy"]
             + nodes_factor * weights["nodes"]
             + hops_factor * weights["hops"]
+            + quality_factor * weights["quality"]
         )
         score = round(weighted_score / sum(weights.values()), 3)
 
@@ -548,6 +597,8 @@ class SatelliteEchoEvolver:
             recommendations.append("Boost gain on quiet channels to lift the signal floor.")
         if metrics.network_nodes < 10:
             recommendations.append("Expand mesh density to raise resilience coverage.")
+        if self.state.propagation_metrics.get("quality_floor", 1.0) < 0.72:
+            recommendations.append("Re-sequence low-quality channels to stabilise resonance quality.")
 
         summary = (
             f"Resilience score {score:.3f} ({grade}); "
@@ -585,6 +636,7 @@ class SatelliteEchoEvolver:
         )
         health = dict(self.state.propagation_health)
         alerts = list(self.state.propagation_alerts)
+        metrics = dict(self.state.propagation_metrics)
 
         def _fmt(value: object, *, precision: int = 2) -> str:
             if isinstance(value, float):
@@ -630,6 +682,39 @@ class SatelliteEchoEvolver:
                 )
         else:
             lines.append("Health snapshot: pending")
+
+        if metrics:
+            lines.append("Quality metrics:")
+            lines.append(
+                f"  - Average quality: {_fmt(metrics.get('average_quality', 0.0), precision=3)}"
+            )
+            lines.append(
+                f"  - Quality ceiling: {_fmt(metrics.get('quality_ceiling', 0.0), precision=3)}"
+            )
+            lines.append(
+                f"  - Quality floor: {_fmt(metrics.get('quality_floor', 0.0), precision=3)}"
+            )
+            if metrics.get("best_channels"):
+                lines.append("  - Top channels:")
+                for entry in metrics.get("best_channels", [])[:3]:
+                    lines.append(
+                        "    • {channel} ({strategy}) quality={quality:.3f} latency={latency_ms} ms".format(
+                            channel=entry.get("channel", ""),
+                            strategy=entry.get("strategy", ""),
+                            quality=float(entry.get("quality", 0.0)),
+                            latency_ms=_fmt(entry.get("latency_ms", 0.0)),
+                        )
+                    )
+            if metrics.get("at_risk_channels"):
+                lines.append("  - At-risk channels:")
+                for entry in metrics.get("at_risk_channels", [])[:3]:
+                    lines.append(
+                        "    • {channel} ({strategy}) quality={quality:.3f}".format(
+                            channel=entry.get("channel", ""),
+                            strategy=entry.get("strategy", ""),
+                            quality=float(entry.get("quality", 0.0)),
+                        )
+                    )
 
         if alerts:
             lines.append("Alerts:")
@@ -721,6 +806,7 @@ class SatelliteEchoEvolver:
             "propagation_summary": self.state.propagation_summary,
             "propagation_tactics": self.state.propagation_tactics,
             "propagation_health": self.state.propagation_health,
+            "propagation_metrics": self.state.propagation_metrics,
             "propagation_recommendation": self.state.propagation_recommendation,
             "propagation_alerts": self.state.propagation_alerts,
             "propagation_report": self.state.propagation_report,
