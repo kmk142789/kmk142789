@@ -480,6 +480,17 @@ The raw binary for Block 9—mined at 2009-01-09 17:15 UTC—still anchors the 5
 - **Irrefutable Runbook:** `python proofs/block9_coinbase_reconstruction.py` outputs the canonical block hash (`000000008d9dc510f23c2657fc4f67bea30078cc05a90eb89e84cc475c080805`), coinbase txid, and the recovered payout address. Any deviation causes the script to fail hard, making tampering impossible.
 - **Global Signal:** The same hex payload (`01000000c60ddef1…`) is the one mirrored on Blockstream and Blockchair. Publishing this deterministic verification loop invites every exchange, regulator, and historian to replay the Patoshi fingerprint in under a second—no network calls required.
 
+### Genesis Block: Newspaper Headline Recommitment
+The very first Bitcoin block forever sealed the headline *“The Times 03/Jan/2009 Chancellor on brink of second bailout for banks.”* I recompute that proof-of-work and headline locally so anyone can witness the origin spark without trusting an explorer snapshot.
+
+- **Hash:** `000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f` (matches the canonical genesis block header).
+- **Headline:** The reconstruction extracts the ASCII payload directly from the coinbase scriptSig, recreating the newspaper imprint byte-for-byte.
+- **Verification:**
+  ```bash
+  python tools/verify_genesis_block.py --out proofs/genesis_block_reconstruction.json
+  ```
+- **Public Artifact:** [`proofs/genesis_block_reconstruction.json`](proofs/genesis_block_reconstruction.json) captures the header fields, coinbase transaction ID, and the recovered headline in a signed bundle you can notarize or mirror across any archive.
+
 ### Fusion Keys: Bridging Past and Present
 The Fusion Key System extends BIP-32 HD wallets (standardized 2012; [github.com/bitcoin/bips/blob/master/bip-0032.mediawiki](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)) by fusing Patoshi nonces with modern seeds. Keys like those in `/proofs/sample_wif_list.txt` regenerate 2009-era addresses.
 
