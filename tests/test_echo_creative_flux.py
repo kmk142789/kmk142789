@@ -5,7 +5,18 @@ import random
 from datetime import datetime
 from pathlib import Path
 
-from echo_creative_flux import FluxContext, FluxPassage, _load_stopwords, build_passage, compute_top_words, generate_passage
+import pytest
+
+from echo_creative_flux import (
+    FluxContext,
+    FluxPassage,
+    _load_stopwords,
+    analyze_passages,
+    build_passage,
+    compute_passage_metrics,
+    compute_top_words,
+    generate_passage,
+)
 
 
 def test_build_passage_is_deterministic():
@@ -97,4 +108,28 @@ def test_compute_top_words_respects_stopwords():
 
     filtered = compute_top_words([passage], limit=2, stopwords={"echo"})
     assert all(word != "echo" for word, _ in filtered)
+
+
+def test_lexical_diversity_metrics():
+    context = FluxContext(
+        mood="curious",
+        artifact="glyph loom",
+        timestamp=datetime(2025, 1, 1, 0, 0, 0),
+    )
+    passage = FluxPassage(
+        context=context,
+        prompt="echo echo river",  # tokens: echo echo river
+        closing="river light echo",  # tokens: river light echo
+    )
+
+    metrics = compute_passage_metrics(passage)
+
+    # unique tokens: echo, river, light => 3 / 6 total tokens
+    assert metrics["lexical_diversity"] == pytest.approx(0.5, rel=1e-3)
+
+    analysis = analyze_passages([passage])
+    aggregate = analysis["aggregate"]
+
+    assert aggregate["average_lexical_diversity"] == pytest.approx(metrics["lexical_diversity"], rel=1e-6)
+    assert aggregate["session_lexical_diversity"] == pytest.approx(metrics["lexical_diversity"], rel=1e-6)
 
