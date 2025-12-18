@@ -568,6 +568,7 @@ def build_summary_payload(
             "per_tag": dict(sorted(per_tag.items())),
             "per_location": dict(sorted(per_location.items())),
             "per_extension": dict(sorted(per_extension.items())),
+            "per_file": dict(sorted(per_file.items())),
         },
         "hotspots": [
             {"path": path, "count": count}

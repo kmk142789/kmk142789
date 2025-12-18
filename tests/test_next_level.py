@@ -80,6 +80,23 @@ def test_update_roadmap_supports_stdout_json(tmp_path, capsys):
     assert payload["tasks"][0]["path"].endswith("module.py")
 
 
+def test_build_summary_payload_includes_per_file(tmp_path):
+    first = tmp_path / "first.py"
+    second = tmp_path / "nested" / "second.py"
+    second.parent.mkdir()
+
+    first.write_text("# TODO alpha\n# TODO beta\n", encoding="utf-8")
+    second.write_text("# FIXME gamma\n", encoding="utf-8")
+
+    tasks = discover_tasks(tmp_path)
+    payload = build_summary_payload(tasks, tmp_path)
+
+    assert payload["totals"]["per_file"] == {
+        "first.py": 2,
+        "nested/second.py": 1,
+    }
+
+
 def test_discover_tasks_in_block_comments(tmp_path):
     source = tmp_path / "engine.c"
     source.write_text(
