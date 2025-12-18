@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import math
+import random
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 from .quantum_flux_mapper import QuantumFluxMapper, SIGIL_ROTATION_MAP, STANDARD_GATES
@@ -35,6 +37,42 @@ def _gate_sequence(glyphs: str, cycle: int, length: int = 4) -> List[str]:
     for index in range(length):
         sequence.append(GATE_ORDER[digest[index] % len(GATE_ORDER)])
     return sequence
+
+
+@lru_cache(maxsize=256)
+def _quantam_rng_seed(glyphs: str, cycle: int) -> int:
+    """Derive a deterministic seed for quantam number generation."""
+
+    glyph_stream = glyphs or "∇⊸≋∇"
+    digest = hashlib.blake2b(f"{glyph_stream}|{cycle}".encode("utf-8"), digest_size=8).digest()
+    return int.from_bytes(digest, byteorder="big", signed=False)
+
+
+def generate_quantam_numbers(
+    *,
+    glyphs: str,
+    cycle: int,
+    count: int,
+    low: float = 0.0,
+    high: float = 1.0,
+) -> List[float]:
+    """Generate a deterministic stream of quantam-inspired numbers.
+
+    The generator is anchored to ``glyphs`` and ``cycle`` so repeated calls with
+    the same inputs are stable and cache-friendly. Numbers are uniformly
+    distributed within ``[low, high]`` and rounded for compact payloads.
+    """
+
+    if count <= 0:
+        raise ValueError("count must be positive")
+    if not math.isfinite(low) or not math.isfinite(high):
+        raise ValueError("bounds must be finite")
+    if low > high:
+        raise ValueError("low must be less than or equal to high")
+
+    rng = random.Random(_quantam_rng_seed(glyphs, cycle))
+    span = high - low
+    return [round(low + span * rng.random(), 6) for _ in range(count)]
 
 
 def _quantum_lattice(glyphs: str, cycle: int) -> Dict[str, object]:
@@ -119,6 +157,9 @@ def compute_quantam_feature(
     phase_noise = round(abs(probability_zero - probability_one) * 0.5 + fidelity * 0.1, 6)
     lattice = _quantum_lattice(glyph_stream, cycle)
     state_vector = _serialize_state(mapper.state)
+    quantam_numbers = generate_quantam_numbers(
+        glyphs=glyph_stream, cycle=cycle, count=6, low=0.0, high=1.0
+    )
 
     signature_source = (
         f"{sigil}|{axis}|{angle:.6f}|{probability_zero:.6f}|{probability_one:.6f}|{fidelity:.6f}"
@@ -143,6 +184,7 @@ def compute_quantam_feature(
         "signature": signature,
         "phase_noise": phase_noise,
         "lattice": lattice,
+        "quantam_numbers": quantam_numbers,
         "world_first_stamp": world_first_stamp,
     }
     return feature
@@ -246,5 +288,10 @@ def generate_quantam_feature_sequence(
     return {"layers": exported_layers, "summary": summary}
 
 
-__all__ = ["compute_quantam_feature", "generate_quantam_feature_sequence", "QuantamFeatureLayer"]
+__all__ = [
+    "compute_quantam_feature",
+    "generate_quantam_feature_sequence",
+    "generate_quantam_numbers",
+    "QuantamFeatureLayer",
+]
 
