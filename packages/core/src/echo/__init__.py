@@ -339,6 +339,7 @@ from .quantam_features import (
     QuantamFeatureLayer,
     compute_quantam_feature,
     generate_quantam_feature_sequence,
+    generate_quantam_numbers,
 )
 from .recursive_evolution_engine import (
     CycleReport as RecursiveCycleReport,
@@ -555,6 +556,7 @@ __all__ = [
     "STANDARD_GATES",
     "QuantamFeatureLayer",
     "compute_quantam_feature",
+    "generate_quantam_numbers",
     "QuantumFeature",
     "generate_quantum_features",
     "generate_quantam_feature_sequence",
