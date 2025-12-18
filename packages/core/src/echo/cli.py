@@ -39,6 +39,7 @@ from .semantic_negotiation import (
 from echo.atlas.temporal_ledger import TemporalLedger
 from echo.pulseweaver import PulseBus, WatchdogConfig, build_pulse_bus, build_watchdog
 from echo.pulseweaver.fabric import FabricOperations
+from echo.pulse import forecast_pulse_activity, load_pulse_events
 
 
 EXPECTED_STEPS = 13
@@ -750,6 +751,28 @@ def _cmd_pulse_history(args: argparse.Namespace) -> int:
         ts = datetime.fromtimestamp(entry.get("timestamp", 0), tz=timezone.utc)
         message = entry.get("message", "")
         print(f"{ts.strftime('%Y-%m-%d %H:%M:%S')} | {message}")
+    return 0
+
+
+def _cmd_pulse_forecast(args: argparse.Namespace) -> int:
+    history_path = args.history
+    if not history_path.exists():
+        print(f"No pulse history found at {history_path}")
+        return 1
+
+    events = load_pulse_events(history_path)
+    forecast = forecast_pulse_activity(
+        events,
+        horizon_hours=args.horizon_hours,
+        warning_hours=args.warning_hours,
+        critical_hours=args.critical_hours,
+    )
+
+    if args.json:
+        print(json.dumps(forecast.to_dict(), indent=2, sort_keys=True))
+        return 0
+
+    print(forecast.to_report())
     return 0
 
 
@@ -1512,6 +1535,36 @@ def main(argv: Iterable[str] | None = None) -> int:
         help="Aggregate counts by a segment of the pulse message",
     )
     pulse_history.set_defaults(func=_cmd_pulse_history)
+
+    pulse_forecast = pulse_sub.add_parser(
+        "forecast", help="Project pulse cadence and risk across a planning horizon"
+    )
+    pulse_forecast.add_argument(
+        "--history",
+        type=Path,
+        default=Path("pulse_history.json"),
+        help="Path to pulse history ledger (default: pulse_history.json)",
+    )
+    pulse_forecast.add_argument(
+        "--horizon-hours",
+        type=float,
+        default=168.0,
+        help="Lookahead window for projected cadence (default: 168h / 7 days)",
+    )
+    pulse_forecast.add_argument(
+        "--warning-hours",
+        type=float,
+        default=24.0,
+        help="Warning threshold for stale cadence (default: 24h)",
+    )
+    pulse_forecast.add_argument(
+        "--critical-hours",
+        type=float,
+        default=72.0,
+        help="Critical threshold for stale cadence (default: 72h)",
+    )
+    pulse_forecast.add_argument("--json", action="store_true", help="Emit JSON output")
+    pulse_forecast.set_defaults(func=_cmd_pulse_forecast)
 
     ledger_parser = subparsers.add_parser("ledger", help="Temporal ledger commands")
     ledger_sub = ledger_parser.add_subparsers(dest="ledger_command", required=True)

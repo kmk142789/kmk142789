@@ -12,6 +12,7 @@ from .analytics import (
     summarize_ledger,
     summarize_receipts,
 )
+from .forecast import PulseForecast, forecast_pulse_activity, load_pulse_events
 from .broadcaster import CrossLedgerBroadcast, CrossLedgerBroadcaster, CrossLedgerProof
 from .cross_ledger import CrossLedgerSynchronizer
 from .ledger import PulseLedger, PulseReceipt, create_app
@@ -42,4 +43,7 @@ __all__ = list(getattr(_legacy, "__all__", [])) + [
     "summarize_receipts",
     "summarize_ledger",
     "render_summary_table",
+    "PulseForecast",
+    "forecast_pulse_activity",
+    "load_pulse_events",
 ]
