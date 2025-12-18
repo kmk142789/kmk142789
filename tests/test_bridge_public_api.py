@@ -588,6 +588,11 @@ def test_plan_supports_kafka_and_s3_connectors() -> None:
     assert kafka_plan["payload"]["bootstrap_servers"] == ["kafka:9092", "backup:9093"]
     assert kafka_plan["payload"]["message"]["identity"] == "EchoWildfire"
     assert kafka_plan["payload"]["message"]["topics"] == ["Bridge Orbit"]
+    context = kafka_plan["payload"]["context"]
+    assert context["signature"] == "eden88::cycle17"
+    assert context["summary"] == "New edge sync"
+    assert context["links"] == ["https://echo.example/cycles/17", "https://status.echo/bridge"]
+    assert context["traits"]["pulse"] == "aurora"
     assert kafka_plan["requires_secret"] == ["ECHO_KAFKA_SECRET"]
 
     s3_plan = plans["s3"]
@@ -597,6 +602,7 @@ def test_plan_supports_kafka_and_s3_connectors() -> None:
     assert s3_plan["payload"]["key"] == "relays/state/echowildfire-17.json"
     assert s3_plan["payload"]["body"]["signature"] == "eden88::cycle17"
     assert s3_plan["payload"]["metadata"]["priority"] == "high"
+    assert s3_plan["payload"]["metadata"]["signature"] == "eden88::cycle17"
     assert s3_plan["requires_secret"] == ["ECHO_S3_SECRET"]
 
 
