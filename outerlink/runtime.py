@@ -110,6 +110,7 @@ class OuterLinkRuntime:
             backlog_threshold=self.config.pending_backlog_threshold,
             offline_reason=offline_snapshot.get("offline_reason"),
             online=bool(offline_snapshot.get("online")),
+            manifest_valid=bool(offline_snapshot.get("manifest_valid", True)),
         )
         return plan.get("next_action", "Posture steady; continue periodic heartbeats and capability checks.")
 
