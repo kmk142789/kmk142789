@@ -779,3 +779,22 @@ def test_router_factory_uses_environment_defaults(monkeypatch, tmp_path) -> None
 
     sync_connectors = {connector["platform"] for connector in payload["sync_connectors"]}
     assert {"github", "unstoppable", "vercel"} <= sync_connectors
+
+
+def test_api_module_respects_bridge_state_dir(monkeypatch, tmp_path) -> None:
+    bridge_state = tmp_path / "bridge-state"
+    state_root = tmp_path / "state-root"
+    monkeypatch.setenv("ECHO_BRIDGE_STATE_DIR", str(bridge_state))
+    monkeypatch.setenv("ECHO_STATE_ROOT", str(state_root))
+    monkeypatch.setenv("ECHO_BRIDGE_GITHUB_REPOSITORY", "EchoOrg/sovereign")
+
+    import importlib
+    import sys
+
+    sys.modules.pop("echo.api", None)
+    api = importlib.import_module("echo.api")
+
+    try:
+        assert api._bridge_sync_service.log_path.parent == bridge_state
+    finally:
+        sys.modules.pop("echo.api", None)

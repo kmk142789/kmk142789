@@ -162,7 +162,12 @@ _bridge_api = EchoBridgeAPI(
     ),
 )
 _state_root = Path(os.getenv("ECHO_STATE_ROOT", str(Path.cwd() / "state")))
-_bridge_state_dir = _state_root / "bridge"
+_bridge_state_dir_env = os.getenv("ECHO_BRIDGE_STATE_DIR")
+_bridge_state_dir = (
+    Path(_bridge_state_dir_env)
+    if _bridge_state_dir_env
+    else _state_root / "bridge"
+)
 _bridge_state_dir.mkdir(parents=True, exist_ok=True)
 _bridge_sync_service = BridgeSyncService.from_environment(
     state_dir=_bridge_state_dir,
