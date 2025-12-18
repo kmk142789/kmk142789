@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Sequence
 
 
 @dataclass(slots=True)
@@ -54,6 +54,24 @@ class AutonomousFeatureRecord:
         return asdict(self)
 
 
+@dataclass(slots=True)
+class AutonomousFeatureUpgradeRecord:
+    """Upgrade event that links a feature to its successor artifact."""
+
+    upgrade_id: str
+    from_feature_id: str
+    to_feature_id: str
+    codename: str
+    reason: str
+    ledger_anchor: str
+    issued_at: str
+    digest: str
+    artifact_path: str
+
+    def to_payload(self) -> Dict[str, object]:
+        return asdict(self)
+
+
 class SovereignLedgerLayer:
     """Map constitutional amendments and features to verifiable credentials."""
 
@@ -63,13 +81,16 @@ class SovereignLedgerLayer:
         registry_path: Path,
         credential_dir: Path,
         feature_registry_path: Optional[Path] = None,
+        feature_upgrade_registry_path: Optional[Path] = None,
     ) -> None:
         self.registry_path = registry_path
         self.credential_dir = credential_dir
         self.feature_registry_path = feature_registry_path or registry_path.parent / "autonomous_features.jsonl"
+        self.feature_upgrade_registry_path = feature_upgrade_registry_path or registry_path.parent / "autonomous_feature_upgrades.jsonl"
         self.credential_dir.mkdir(parents=True, exist_ok=True)
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
         self.feature_registry_path.parent.mkdir(parents=True, exist_ok=True)
+        self.feature_upgrade_registry_path.parent.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
     # Amendment credentials
@@ -156,6 +177,60 @@ class SovereignLedgerLayer:
         with self.feature_registry_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(payload, sort_keys=True) + "\n")
         return record
+
+    def record_autonomous_feature_upgrade(
+        self,
+        *,
+        base_feature_id: str,
+        codename: str,
+        reason: str,
+        ledger_anchor: str,
+        artifact_path: Path,
+    ) -> AutonomousFeatureUpgradeRecord:
+        """Register an upgrade for an existing autonomous feature artifact.
+
+        The upgrade record links the previous feature snapshot to the new
+        artifact digest so downstream systems can trace upgrade lineage and
+        validate ledger anchors.
+        """
+
+        feature_index = {entry.feature_id: entry for entry in self.load_autonomous_features()}
+        if base_feature_id not in feature_index:
+            raise ValueError(f"Unknown feature id: {base_feature_id}")
+
+        issued_at = self._iso_now()
+        digest = self._sha256_hex(artifact_path.read_bytes())
+        to_feature_id = f"feature:{digest[:16]}"
+        upgrade_id = f"feature-upgrade:{digest[:12]}"
+        record = AutonomousFeatureUpgradeRecord(
+            upgrade_id=upgrade_id,
+            from_feature_id=base_feature_id,
+            to_feature_id=to_feature_id,
+            codename=codename,
+            reason=reason,
+            ledger_anchor=ledger_anchor,
+            issued_at=issued_at,
+            digest=digest,
+            artifact_path=str(artifact_path),
+        )
+        with self.feature_upgrade_registry_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record.to_payload(), sort_keys=True) + "\n")
+        return record
+
+    def load_autonomous_features(self) -> Sequence[AutonomousFeatureRecord]:
+        """Load feature records from the registry JSONL file."""
+
+        if not self.feature_registry_path.exists():
+            return []
+
+        records: list[AutonomousFeatureRecord] = []
+        with self.feature_registry_path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                payload = json.loads(line)
+                records.append(AutonomousFeatureRecord(**payload))
+        return records
 
     # ------------------------------------------------------------------
     # Helpers
