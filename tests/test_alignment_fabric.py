@@ -12,6 +12,7 @@ from governance import (
     load_snapshot,
     simple_payload,
 )
+from governance import persistence
 
 
 def test_route_trace_reports_failed_conditions():
@@ -197,3 +198,24 @@ def test_policy_readiness_reports_unroutable_policies_and_persists_gap():
 
     persisted = load_policy_readiness()
     assert persisted["counts"]["unroutable"] == 1
+
+
+def test_clear_offline_state_removes_nested_directories(tmp_path):
+    """Offline state cleanup should remove nested files and directories."""
+
+    temp_base = tmp_path / ".offline_state"
+    temp_base.mkdir(parents=True)
+    nested = temp_base / "nested" / "deeper"
+    nested.mkdir(parents=True)
+    (temp_base / "root.txt").write_text("root", encoding="utf-8")
+    (nested / "inner.txt").write_text("inner", encoding="utf-8")
+
+    original_base = persistence.BASE
+    persistence.BASE = temp_base
+    try:
+        persistence.clear_offline_state()
+    finally:
+        persistence.BASE = original_base
+
+    assert temp_base.exists()
+    assert list(temp_base.iterdir()) == []
