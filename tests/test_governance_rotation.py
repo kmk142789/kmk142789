@@ -77,3 +77,13 @@ rotation_rules:
     assert "Rotated signing keys" in captured.out
     assert "Restored last snapshot" in captured.out
     assert "Disabled malicious actor" in captured.out
+
+
+def test_vault_keeper_handles_missing_policy(monkeypatch, tmp_path, caplog):
+    monkeypatch.setattr(vault_keeper, "POLICY_PATH", str(tmp_path / "missing.yaml"))
+    caplog.set_level("WARNING")
+
+    executed = vault_keeper.run_keeper()
+
+    assert executed == []
+    assert "Rotation policy missing" in caplog.text
