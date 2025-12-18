@@ -100,6 +100,22 @@ def test_local_device_runtime_can_mark_capabilities_offline_only():
     assert runtime.snapshot()["capabilities"]["sensitive"]["offline_ready"] is False
 
 
+def test_local_device_runtime_surfaces_handler_errors_and_continues():
+    runtime = LocalDeviceRuntime()
+
+    runtime.register_capability("boom", lambda payload: (_ for _ in ()).throw(ValueError("boom")))
+    runtime.register_capability("ok", lambda payload: {"done": True})
+
+    runtime.submit_task(OfflineTask("boom", payload={}))
+    runtime.submit_task(OfflineTask("ok", payload={}))
+
+    completed = runtime.run()
+
+    assert runtime.pending[0].blocked_reason == "handler_error"
+    assert runtime.pending[0].result == {"error": "boom"}
+    assert any(task.executed for task in completed)
+
+
 def test_real_estate_qualification_module_scores_leads():
     bundles = {
         "prime": PolicyBundle(name="prime", version="1.0", policies={}, convergence_score=0.9),

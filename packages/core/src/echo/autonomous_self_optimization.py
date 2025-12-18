@@ -212,7 +212,14 @@ class LocalDeviceRuntime:
                 remaining.append(task)
                 continue
 
-            result = capability.handler(task.payload)
+            try:
+                result = capability.handler(task.payload)
+            except Exception as exc:  # pragma: no cover - defensive path validated in tests
+                task.blocked_reason = "handler_error"
+                task.result = {"error": str(exc)}
+                remaining.append(task)
+                continue
+
             task.executed = True
             task.blocked_reason = None
             task.result = result if isinstance(result, Mapping) else {"result": result}
