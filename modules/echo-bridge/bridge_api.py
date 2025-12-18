@@ -2312,6 +2312,10 @@ class EchoBridgeAPI:
             "context": {
                 "identity": identity,
                 "cycle": cycle,
+                "signature": signature,
+                "traits": traits,
+                "summary": summary,
+                "links": links,
                 "priority": priority,
                 "topics": topics,
             },
@@ -2361,8 +2365,11 @@ class EchoBridgeAPI:
             "metadata": {
                 "identity": identity,
                 "cycle": str(cycle),
+                "signature": signature,
                 "priority": priority,
                 "topics": topics,
+                "summary": summary,
+                "links": links,
             },
         }
 
