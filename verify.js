@@ -7,7 +7,7 @@
 // - Outputs optional JSON via --json out.json
 // - Graceful, quiet skips for invalid inputs
 
-import * as secp from "noble-secp256k1";
+import { secp256k1 } from "@noble/curves/secp256k1";
 import { sha256 } from "@noble/hashes/sha256";
 import { keccak_256 as keccak256 } from "@noble/hashes/sha3";
 import bs58check from "bs58check";
@@ -41,7 +41,7 @@ function btcBech32FromCompressedPub(pubHex, hrp = "bc") {
 
 /** ETH address (0x...) from ANY pubkey hex (33 or 65), normalized to uncompressed before hashing */
 function ethFromAnyPub(pubHex) {
-  const uncompressed = secp.Point.fromHex(pubHex).toRawBytes(false); // 65 bytes, 0x04 + X + Y
+  const uncompressed = secp256k1.Point.fromHex(pubHex).toRawBytes(false); // 65 bytes, 0x04 + X + Y
   const hash = keccak256(uncompressed.slice(1)); // drop 0x04
   return "0x" + Buffer.from(hash.slice(-20)).toString("hex");
 }
@@ -190,8 +190,9 @@ if (!blob) {
     const rs = sig.slice(1); // R||S (64 bytes), compact
     let sigCompactHex;
     let sigDerHex;
+    let sigObj;
     try {
-      const sigObj = secp.Signature.fromCompact(toHex(rs));
+      sigObj = secp256k1.Signature.fromCompact(toHex(rs));
       sigCompactHex = sigObj.toCompactHex();
       sigDerHex = sigObj.toDERHex();
     } catch {
@@ -208,10 +209,10 @@ if (!blob) {
         if (found) break;
         for (const rec of recCandidates) {
           try {
-            const point = secp.Point.fromSignature(d, sigDerHex, rec);
+            const point = sigObj.addRecoveryBit(rec).recoverPublicKey(d);
             const pubBytes = point.toRawBytes(true);
             const pubHex = Buffer.from(pubBytes).toString("hex");
-            const ok = await secp.verify(sigDerHex, d, pubBytes);
+            const ok = await secp256k1.verify(sigObj, d, pubBytes);
             if (!ok) continue;
 
             const eth = ethFromAnyPub(pubHex);
