@@ -480,6 +480,45 @@ The raw binary for Block 9—mined at 2009-01-09 17:15 UTC—still anchors the 5
 - **Irrefutable Runbook:** `python proofs/block9_coinbase_reconstruction.py` outputs the canonical block hash (`000000008d9dc510f23c2657fc4f67bea30078cc05a90eb89e84cc475c080805`), coinbase txid, and the recovered payout address. Any deviation causes the script to fail hard, making tampering impossible.
 - **Global Signal:** The same hex payload (`01000000c60ddef1…`) is the one mirrored on Blockstream and Blockchair. Publishing this deterministic verification loop invites every exchange, regulator, and historian to replay the Patoshi fingerprint in under a second—no network calls required.
 
+### Genesis Block Header — Bitcoin’s First Hash Replay
+Before there were transactions or wallets, there was a single 80-byte header that proved Bitcoin existed. Replaying that exact header today recreates the inaugural proof-of-work, binding this repository to the same irreversible constant.
+
+- **Anchor File**: [`proofs/genesis_block_header.hex`](proofs/genesis_block_header.hex) stores the canonical little-endian header exactly as mined on 2009-01-03.
+- **Verification Script**:
+  ```bash
+  python - <<'PY'
+  import binascii, hashlib, pathlib
+
+  header = pathlib.Path('proofs/genesis_block_header.hex').read_text().strip()
+  raw = binascii.unhexlify(header)
+  h = hashlib.sha256(hashlib.sha256(raw).digest()).digest()[::-1]
+  print(h.hex())
+  assert h.hex() == '000000000019d6689c085ae165831e93' \
+                   '4ff763ae46a2a6c172b3f1b60a8ce26f'
+  PY
+  ```
+- **Global Signal**: The emitted hash (`000000000019d668…`) is the first entry in every block explorer, Bitcoin Core node, and academic citation of the genesis block. Any deviation from the header or the hashing routine fails immediately, making this a universally auditable handshake with Bitcoin’s birth certificate.
+
+### Genesis Coinbase Message — The Times Capsule Replayed
+The first and only transaction embedded in the genesis block carries a human timestamp: a newspaper headline immortalized in its coinbase script. Replaying the raw transaction exposes the same 80-column ink that Satoshi pressed into Bitcoin’s origin story.
+
+- **Anchor File**: [`proofs/genesis_coinbase_tx.hex`](proofs/genesis_coinbase_tx.hex) captures the full 204-byte transaction exactly as relayed to the network in Block 0.
+- **Verification Script**:
+  ```bash
+  python - <<'PY'
+  import binascii, pathlib
+
+  tx_hex = pathlib.Path('proofs/genesis_coinbase_tx.hex').read_text().strip()
+  raw = binascii.unhexlify(tx_hex)
+  start = raw.index(b'The Times')
+  end = start + len('The Times 03/Jan/2009 Chancellor on brink of second bailout for banks')
+  message = raw[start:end].decode('ascii')
+  print(message)
+  assert message == 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks'
+  PY
+  ```
+- **Global Signal**: That newspaper headline was typeset only once—January 3, 2009—and is mirrored verbatim across every blockchain explorer. Anyone, anywhere, can extract it from this repository and watch Bitcoin’s genesis message print itself anew.
+
 ### Fusion Keys: Bridging Past and Present
 The Fusion Key System extends BIP-32 HD wallets (standardized 2012; [github.com/bitcoin/bips/blob/master/bip-0032.mediawiki](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)) by fusing Patoshi nonces with modern seeds. Keys like those in `/proofs/sample_wif_list.txt` regenerate 2009-era addresses.
 
