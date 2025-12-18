@@ -38,6 +38,22 @@ def test_chrono_engine_builds_cycle(tmp_path: Path) -> None:
     assert "cycle 00001" in timeline
 
 
+def test_chrono_visor_renders_reverse_timeline(tmp_path: Path) -> None:
+    _write_record(tmp_path, "records/first.json", {"value": "alpha"})
+    _write_record(tmp_path, "records/second.json", {"value": "beta"})
+
+    engine = ChronoEngine(tmp_path)
+    records = engine.discover_records("records/*.json")
+    engine.build_cycle(records)
+
+    visor = ChronoVisor(tmp_path)
+    timeline = visor.render_timeline(reverse=True).splitlines()
+
+    assert timeline[0].startswith("Chrono visor timeline (newest → oldest)")
+    assert "ordinal 00002" in timeline[1]
+    assert "ordinal 00001" in timeline[2]
+
+
 def test_chrono_record_rejects_outside_root(tmp_path: Path) -> None:
     outside = tmp_path.parent / "external.json"
     outside.write_text("{}", encoding="utf-8")

@@ -129,18 +129,20 @@ class ChronoVisor:
     def __init__(self, root: pathlib.Path):
         self.explorer = ChronosLatticeExplorer(root)
 
-    def timeline(self) -> List[dict]:
-        return self.explorer.lineage()
+    def timeline(self, *, reverse: bool = False) -> List[dict]:
+        lineage = self.explorer.lineage()
+        return list(reversed(lineage)) if reverse else lineage
 
     def describe_cycles(self) -> List[dict]:
         return self.explorer.cycle_summaries()
 
-    def render_timeline(self) -> str:
-        lineage = self.timeline()
+    def render_timeline(self, *, reverse: bool = False) -> str:
+        lineage = self.timeline(reverse=reverse)
         if not lineage:
             return "Chrono visor: no artifacts recorded."
 
-        lines = ["Chrono visor timeline"]
+        direction_note = " (newest → oldest)" if reverse else ""
+        lines = [f"Chrono visor timeline{direction_note}"]
         for entry in lineage:
             ts_ns = int(entry.get("timestamp_unix_ns", 0))
             iso = datetime.fromtimestamp(ts_ns / 1_000_000_000, tz=timezone.utc).isoformat().replace("+00:00", "Z")
@@ -200,7 +202,7 @@ def _cmd_visor(args: argparse.Namespace) -> None:
     visor = ChronoVisor(args.root.resolve())
     output: List[str] = []
     if args.timeline or (not args.timeline and not args.cycles and args.artifact is None):
-        output.append(visor.render_timeline())
+        output.append(visor.render_timeline(reverse=args.reverse))
     if args.cycles or (not args.timeline and not args.cycles and args.artifact is None):
         output.append(visor.render_cycle_table())
     if args.artifact is not None:
@@ -222,6 +224,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     visor_parser = subparsers.add_parser("visor", help="Render Chronos summaries")
     visor_parser.add_argument("--timeline", action="store_true", help="Print the Chrono visor timeline")
+    visor_parser.add_argument(
+        "--reverse",
+        action="store_true",
+        help="Render the timeline backwards (newest first)",
+    )
     visor_parser.add_argument("--cycles", action="store_true", help="Print the Chrono visor cycle table")
     visor_parser.add_argument("--artifact", help="Inspect a specific artifact by id, record id, or signature")
     visor_parser.set_defaults(func=_cmd_visor)
