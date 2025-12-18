@@ -8,6 +8,8 @@ agent/ai/offline_bundle_*.json
 agent/ai/offline_queue.json
 agent/ai/runtime_snapshot.json
 agent/ai/context_cache.json
+agent/ai/runtime_health.jsonl
+agent/ai/memory_archive.jsonl
 
 # Assistant Kit generated artifacts
 artifacts/akit/

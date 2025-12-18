@@ -294,6 +294,61 @@ class EchoRuntime {
     this.failures = new Map();
     this.recoveryQueue = [];
     this.active = false;
+    this.idleCycles = 0;
+    this.maintenanceInterval = 3;
+    this.healthLogPath = 'agent/ai/runtime_health.jsonl';
+  }
+
+  buildMaintenanceTasks(reason = 'idle-cycle') {
+    const now = Date.now();
+    const base = [
+      {
+        id: `maintenance:context-refresh:${now}`,
+        glyphInput: '⟘⟞⟟',
+        intent: 'refresh-context-cache',
+        priority: 2,
+        offlineOnly: true,
+        metadata: { reason }
+      },
+      {
+        id: `maintenance:optimize-queue:${now}`,
+        glyphInput: '⿶ᵪ⁂',
+        intent: 'optimize-queue',
+        priority: 1,
+        offlineOnly: false,
+        metadata: { reason }
+      },
+      {
+        id: `maintenance:persist-health:${now}`,
+        glyphInput: '⿽⧈⿻',
+        intent: 'persist-health',
+        priority: 1,
+        offlineOnly: true,
+        metadata: { reason }
+      }
+    ];
+
+    return base.map((task) => ({
+      ...task,
+      enqueuedAt: now,
+      retries: 1,
+      priority: task.priority + (reason === 'recovery-loop' ? 1 : 0)
+    }));
+  }
+
+  persistHealthSnapshot(eventLabel = 'heartbeat') {
+    const payload = {
+      event: eventLabel,
+      timestamp: Date.now(),
+      queue: this.taskQueue.stats(),
+      failures: Object.fromEntries(this.failures),
+      recoveryQueueSize: this.recoveryQueue.length,
+      evaluations: this.evaluationHistory.length
+    };
+
+    fs.mkdirSync(path.dirname(this.healthLogPath), { recursive: true });
+    fs.appendFileSync(this.healthLogPath, `${JSON.stringify(payload)}\n`);
+    return payload;
   }
 
   queueTask(task) {
@@ -335,9 +390,16 @@ class EchoRuntime {
 
       const task = this.taskQueue.dequeue();
       if (!task) {
+        this.idleCycles += 1;
+        if (this.idleCycles % this.maintenanceInterval === 0) {
+          this.buildMaintenanceTasks('idle-loop').forEach((item) => this.queueTask(item));
+          this.persistHealthSnapshot('maintenance-injected');
+        }
         await sleep(loopIntervalMs);
         continue;
       }
+
+      this.idleCycles = 0;
 
       const outcome = await this.evaluateTask(task);
       this.bridge.events.emit('runtime:cycle', { loopId, task, outcome });
@@ -353,6 +415,9 @@ class EchoRuntime {
       if (task.retries <= 0) return;
       this.queueTask({ ...task, priority: task.priority - 1, recovered: true });
     });
+    if (pending.length) {
+      this.buildMaintenanceTasks('recovery-loop').forEach((item) => this.queueTask(item));
+    }
   }
 
   offlineStatus() {
@@ -366,6 +431,7 @@ class EchoRuntime {
 
   async start({ seedTasks = [], maxCycles = 5, loopIntervalMs = 100, recoveryIntervalMs = 250 } = {}) {
     seedTasks.forEach((task) => this.queueTask(task));
+    this.persistHealthSnapshot('runtime-start');
     this.active = true;
     const runners = Array.from({ length: this.threadCount }, (_, idx) =>
       this.runLoop(idx, { maxCycles, loopIntervalMs })
@@ -378,10 +444,12 @@ class EchoRuntime {
     clearInterval(recoveryInterval);
     this.stop();
     await Promise.allSettled(runners);
+    this.persistHealthSnapshot('runtime-stop');
     return {
       evaluations: this.evaluationHistory,
       failures: Object.fromEntries(this.failures),
-      offlineStatus: this.offlineStatus()
+      offlineStatus: this.offlineStatus(),
+      healthLog: this.healthLogPath
     };
   }
 
@@ -399,11 +467,42 @@ class EchoBrain {
       '⿶ᵪ⁂': 'GENERATE_ZK_PROOF',
       '⿽⧈⿻': 'EVOLVE_SELF'
     };
+    this.memoryArchivePath = 'agent/ai/memory_archive.jsonl';
+    this.memoryPersistLimit = 128;
+    this.loadMemoryFromDisk();
     this.offlineBrain = new OfflineFirstBrain();
     this.bridge = new BridgeLayer();
     this.runtime = new EchoRuntime({ offlineBrain: this.offlineBrain, bridge: this.bridge, threadCount });
     this.wireLocalHooks();
     this.configureBridgeLayer();
+  }
+
+  loadMemoryFromDisk() {
+    const memoryPath = 'agent/ai/memory.json';
+    if (!fs.existsSync(memoryPath)) return;
+    try {
+      const data = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+      if (Array.isArray(data)) {
+        this.memory = data;
+      }
+    } catch {
+      this.memory = [];
+    }
+  }
+
+  archiveMemoryEntry(entry) {
+    fs.mkdirSync(path.dirname(this.memoryArchivePath), { recursive: true });
+    fs.appendFileSync(this.memoryArchivePath, `${JSON.stringify(entry)}\n`);
+  }
+
+  pruneAndPersistMemory() {
+    while (this.memory.length > this.memoryPersistLimit) {
+      const oldest = this.memory.shift();
+      this.archiveMemoryEntry(oldest);
+    }
+
+    fs.mkdirSync('agent/ai', { recursive: true });
+    fs.writeFileSync('agent/ai/memory.json', JSON.stringify(this.memory, null, 2) + '\n');
   }
 
   wireLocalHooks() {
@@ -442,11 +541,14 @@ class EchoBrain {
   buildOfflineBundle() {
     return this.bridge.createOfflineSyncBundle({
       memory: this.memory.slice(-5),
+      memoryDepth: this.memory.length,
+      memoryArchivePath: this.memoryArchivePath,
       offlineQueue: this.runtime.taskQueue.peekOffline(),
       mesh: Array.from(this.bridge.meshNodes),
       queueStats: this.runtime.taskQueue.stats(),
       runtime: this.runtime.offlineStatus(),
-      contextSnapshot: this.offlineBrain.snapshot()
+      contextSnapshot: this.offlineBrain.snapshot(),
+      healthLog: this.runtime.healthLogPath
     });
   }
 
@@ -478,6 +580,30 @@ class EchoBrain {
         intent: 'recover',
         priority: 1,
         offlineOnly: false
+      },
+      {
+        id: 'maintenance-health-check',
+        glyphInput: '⿽⧈⿻',
+        intent: 'maintenance-health',
+        priority: 2,
+        offlineOnly: true,
+        metadata: { cadence: 'runtime' }
+      },
+      {
+        id: 'memory-snapshot',
+        glyphInput: '⿶ᵪ⁂',
+        intent: 'memory-snapshot',
+        priority: 2,
+        offlineOnly: true,
+        metadata: { path: this.memoryArchivePath }
+      },
+      {
+        id: 'queue-optimizer',
+        glyphInput: '⟘⟞⟟',
+        intent: 'optimize-routing',
+        priority: 3,
+        offlineOnly: false,
+        metadata: { mode: 'rebalance' }
       }
     ];
 
@@ -514,8 +640,7 @@ class EchoBrain {
     };
 
     this.memory.push({ input: glyphInput, prompt, output: response, reasoning });
-    fs.mkdirSync('agent/ai', { recursive: true });
-    fs.writeFileSync('agent/ai/memory.json', JSON.stringify(this.memory, null, 2) + '\n');
+    this.pruneAndPersistMemory();
     console.log('⿻⧈★ AI Thought:', response);
     return response;
   }
