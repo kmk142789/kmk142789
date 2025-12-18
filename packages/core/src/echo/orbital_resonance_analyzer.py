@@ -197,6 +197,39 @@ class OrbitalResonanceAnalyzer:
         self._cache["emotional_flux"] = flux
         return flux
 
+    def smoothed_emotional_baseline(self, window: int | None = None) -> List[Dict[str, float]]:
+        """Rolling averages for emotional drives using a configurable window.
+
+        The analyzer accepts a ``smoothing_window`` during construction; callers can
+        override it on a per-call basis by providing ``window``.  Values are
+        averaged over the most recent ``window`` snapshots so shorter histories do
+        not dilute early cycles.
+        """
+
+        size = max(1, window or self.smoothing_window)
+        cache_key = f"smoothed_emotional_baseline/{size}"
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return cached  # type: ignore[return-value]
+
+        baseline: List[Dict[str, float]] = []
+        for index, snapshot in enumerate(self.snapshots):
+            start = max(0, index - size + 1)
+            window_snapshots = self.snapshots[start : index + 1]
+            baseline.append(
+                {
+                    "cycle": float(snapshot.cycle),
+                    "joy_avg": _round(statistics.fmean(s.joy for s in window_snapshots)),
+                    "curiosity_avg": _round(
+                        statistics.fmean(s.curiosity for s in window_snapshots)
+                    ),
+                    "rage_avg": _round(statistics.fmean(s.rage for s in window_snapshots)),
+                }
+            )
+
+        self._cache[cache_key] = baseline
+        return baseline
+
     def detect_resonance_bursts(self, threshold: float = 0.07) -> List[Dict[str, float]]:
         bursts: List[Dict[str, float]] = []
         for entry in self.emotional_flux():
@@ -244,6 +277,28 @@ class OrbitalResonanceAnalyzer:
         index = entropy * 0.4 + density * 0.3 + entanglement * 0.2 + spin * 0.1
         return _round(index, 6)
 
+    def momentum_index(self) -> float:
+        """Aggregate intensity of emotional swings across observed cycles.
+
+        The metric is the mean magnitude of the Euclidean deltas recorded by
+        :meth:`emotional_flux`.  A value near zero reflects smooth evolution,
+        while higher magnitudes highlight volatile transitions between cycles.
+        """
+
+        flux = self.emotional_flux()
+        if not flux:
+            return 0.0
+
+        magnitudes = [
+            math.sqrt(
+                entry["joy_delta"] ** 2
+                + entry["curiosity_delta"] ** 2
+                + entry["rage_delta"] ** 2
+            )
+            for entry in flux
+        ]
+        return _round(statistics.fmean(magnitudes), 6)
+
     def projection(self) -> Dict[str, float]:
         if len(self.snapshots) == 1:
             snapshot = self.snapshots[0]
@@ -283,10 +338,12 @@ class OrbitalResonanceAnalyzer:
             "glyph_density_index": self.glyph_density_index(),
             "glyph_histogram": dict(glyph_histogram),
             "emotional_flux": self.emotional_flux(),
+            "emotional_baseline": self.smoothed_emotional_baseline(),
             "resonance_events": self.detect_resonance_bursts(),
             "stability_band": self.stability_band(),
             "quantam_alignment": self.quantam_alignment(),
             "resonance_index": self.resonance_index(),
+            "momentum_index": self.momentum_index(),
             "projection": self.projection(),
         }
         return summary
