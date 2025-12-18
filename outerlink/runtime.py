@@ -77,17 +77,23 @@ class OuterLinkRuntime:
         self.offline_state.prune_stale_cache(
             self.config.offline_cache_dir, self.config.offline_cache_ttl_seconds
         )
+        stats = self.event_bus.stats()
+        total_events = stats.get("total") or len(self.event_bus.history)
+        dropped_events = stats.get("dropped") or 0
+        start_index = max(0, self._last_flush_index - dropped_events)
+
         if self.offline_state.online:
             cached_events = self.offline_state.restore_cache(self.config.offline_cache_dir)
             self.offline_state.pending_events.clear()
-            new_events = [event.to_dict() for event in self.event_bus.history[self._last_flush_index :]]
+            history = self.event_bus.history
+            new_events = [event.to_dict() for event in history[start_index:]]
 
             self._write_events(cached_events + new_events)
-            self._last_flush_index = len(self.event_bus.history)
+            self._last_flush_index = total_events
             self.offline_state.last_sync = datetime.now(timezone.utc).isoformat()
         else:
             self.offline_state.flush_to_cache(self.config.offline_cache_dir)
-            self._last_flush_index = len(self.event_bus.history)
+            self._last_flush_index = total_events
 
     def safe_run_shell(self, command: str, args: Optional[list[str]] = None) -> Dict[str, Any]:
         result = self.broker.run_shell(command, args)
