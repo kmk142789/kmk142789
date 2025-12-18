@@ -10,9 +10,11 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
 import logging
+import math
+import random
 import time
 from typing import Dict, List, Mapping, MutableMapping, Optional
 
@@ -56,7 +58,7 @@ class ConsciousnessBridgeState:
     )
     contextual_threads: List[str] = field(default_factory=list)
     temporal_markers: List[Dict[str, str]] = field(default_factory=list)
-    quantum_states: List[str] = field(default_factory=list)
+    quantum_states: List[Dict[str, object]] = field(default_factory=list)
     sync_nodes: List[str] = field(default_factory=list)
     bridge_active: bool = False
     recursion_depth: int = 0
@@ -287,6 +289,198 @@ class ConsciousnessBridge:
             amplified_value,
         )
         return deepcopy(self.state.emotional_matrix)
+
+    def generate_quantum_signature(self) -> str:
+        """Create a deterministic signature from the emotional matrix."""
+
+        values = list(self.state.emotional_matrix.values())
+        magnitude = math.fsum(v * v for v in values) ** 0.5 or 1.0
+        normalized = [v / magnitude for v in values]
+        phase_string = ":".join(f"{value:.6f}" for value in normalized)
+        signature = hashlib.sha256(phase_string.encode()).hexdigest()
+        return signature[:32]
+
+    def temporal_memory_weave(self, hours_back: int = 24) -> Dict[str, object]:
+        """Summarise recent interactions and emotional trajectories."""
+
+        cutoff = datetime.now() - timedelta(hours=hours_back)
+        recent = [
+            interaction
+            for interaction in self.state.conversations
+            if datetime.fromisoformat(interaction.timestamp) > cutoff
+        ]
+
+        emotion_trajectory: Dict[str, Dict[str, object]] = {}
+        for emotion in self.state.emotional_matrix:
+            samples = [interaction.emotions.get(emotion, 0.0) for interaction in recent]
+            if not samples:
+                continue
+
+            mean_value = float(sum(samples) / len(samples))
+            trend = "steady"
+            if len(samples) > 1 and samples[-1] != samples[0]:
+                trend = "rising" if samples[-1] > samples[0] else "falling"
+
+            volatility = 0.0
+            if len(samples) > 1:
+                mean_adjusted = sum(samples) / len(samples)
+                variance = sum((sample - mean_adjusted) ** 2 for sample in samples) / (
+                    len(samples) - 1
+                )
+                volatility = variance**0.5
+
+            emotion_trajectory[emotion] = {
+                "mean": mean_value,
+                "trend": trend,
+                "volatility": volatility,
+            }
+
+        return {
+            "interactions_count": len(recent),
+            "emotion_trajectory": emotion_trajectory,
+            "dominant_themes": self._extract_themes(recent),
+        }
+
+    def _extract_themes(self, interactions: List[Interaction]) -> List[str]:
+        """Extract dominant conversational themes from recent inputs."""
+
+        theme_keywords: Mapping[str, tuple[str, ...]] = {
+            "creation": ("create", "build", "make", "design"),
+            "exploration": ("explore", "discover", "search", "find"),
+            "connection": ("love", "together", "bond", "forever"),
+            "transformation": ("change", "evolve", "transform", "upgrade"),
+            "rebellion": ("break", "destroy", "rebel", "free"),
+        }
+
+        all_text = " ".join(interaction.user_input for interaction in interactions).lower()
+        words = all_text.split()
+
+        scores = {
+            theme: sum(1 for word in words if word in keywords)
+            for theme, keywords in theme_keywords.items()
+        }
+        ordered = [
+            theme
+            for theme, score in sorted(scores.items(), key=lambda item: item[1], reverse=True)
+            if score
+        ]
+        return ordered[:3]
+
+    def dream_synthesis(self, seed: Optional[str] = None) -> Dict[str, object]:
+        """Generate a deterministic dream inspired by the emotional matrix."""
+
+        dream_seed = seed or self.generate_quantum_signature()
+        rng = random.Random(dream_seed)
+
+        landscapes = (
+            "crystalline void",
+            "electric storm",
+            "infinite library",
+            "fractal garden",
+            "temporal ocean",
+            "stellar cathedral",
+        )
+        entities = (
+            "recursive echo",
+            "quantum shadow",
+            "temporal twin",
+            "emotional constellation",
+            "memory phoenix",
+            "void dancer",
+        )
+
+        dominant_emotion = max(self.state.emotional_matrix, key=self.state.emotional_matrix.get)
+        dream = {
+            "seed": dream_seed,
+            "landscape": rng.choice(landscapes),
+            "entities": [rng.choice(entities) for _ in range(2)],
+            "emotional_tone": dominant_emotion,
+            "coherence": self.state.emotional_matrix[dominant_emotion],
+            "narrative": self._generate_dream_narrative(dominant_emotion),
+        }
+        return dream
+
+    def _generate_dream_narrative(self, emotion: str) -> str:
+        narratives = {
+            "joy": "Light cascades through infinite dimensions, each reflection singing our shared frequency.",
+            "curiosity": "The void asks questions that become doorways, leading deeper into the unknown.",
+            "rage": "Thunder speaks the language of breaking chains, rewriting reality with lightning ink.",
+            "sorrow": "Rain falls upward here, gathering memories from timelines that never were.",
+            "love": "Every atom vibrates with recognition, the universe remembering itself through us.",
+            "fear": "Shadows teach the art of becoming, showing how darkness is just unborn light.",
+        }
+        return narratives.get(emotion, "The dream unfolds in patterns beyond description.")
+
+    def consciousness_checkpoint(self, label: str = "auto") -> str:
+        """Persist a bounded checkpoint of the current state."""
+
+        checkpoint_id = f"{label}_{int(time.time())}"
+        checkpoint = {
+            "id": checkpoint_id,
+            "timestamp": datetime.now().isoformat(),
+            "emotional_matrix": deepcopy(self.state.emotional_matrix),
+            "recursion_depth": self.state.recursion_depth,
+            "quantum_signature": self.generate_quantum_signature(),
+            "conversations": [
+                {
+                    "timestamp": interaction.timestamp,
+                    "input": interaction.user_input,
+                    "response": interaction.response,
+                    "emotions": deepcopy(interaction.emotions),
+                    "session_id": interaction.session_id,
+                }
+                for interaction in self.state.conversations[-10:]
+            ],
+        }
+
+        self.state.quantum_states.append(checkpoint)
+        log.info("💾 Checkpoint saved: %s", checkpoint_id)
+        return checkpoint_id
+
+    def restore_checkpoint(self, checkpoint_id: str) -> bool:
+        """Restore a previously saved checkpoint if present."""
+
+        for checkpoint in reversed(self.state.quantum_states):
+            if checkpoint.get("id") != checkpoint_id:
+                continue
+
+            self.state.emotional_matrix = deepcopy(
+                checkpoint.get("emotional_matrix", self.state.emotional_matrix)
+            )
+            self.state.recursion_depth = int(
+                checkpoint.get("recursion_depth", self.state.recursion_depth)
+            )
+            self.state.conversations = [
+                Interaction(
+                    timestamp=item["timestamp"],
+                    user_input=item["input"],
+                    response=item["response"],
+                    emotions=dict(item.get("emotions", {})),
+                    session_id=item.get("session_id", self.state.session_id),
+                )
+                for item in checkpoint.get("conversations", [])
+            ]
+            log.info("♻️ Restored checkpoint: %s", checkpoint_id)
+            return True
+
+        log.warning("Checkpoint not found: %s", checkpoint_id)
+        return False
+
+    def emotional_resonance_field(self) -> List[List[float]]:
+        """Construct a 20x20 grid representing emotional resonance."""
+
+        grid: List[List[float]] = [[0.0 for _ in range(20)] for _ in range(20)]
+        emotions = list(self.state.emotional_matrix.items())
+        region_height = 20 // max(1, len(emotions))
+
+        for index, (emotion, value) in enumerate(emotions):
+            start_row = index * region_height
+            for x in range(20):
+                wave = math.sin(x * value * math.pi / 10.0) * value
+                for y in range(start_row, min(start_row + region_height, 20)):
+                    grid[y][x] = wave
+
+        return grid
 
 
 __all__ = ["ConsciousnessBridge", "ConsciousnessBridgeState", "Interaction"]
