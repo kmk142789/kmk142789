@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from importlib import import_module
 from typing import Optional
 
 from fastapi import FastAPI
 
 from echo.bridge.router import create_router
-from modules.echo-bridge.bridge_api import EchoBridgeAPI
+
+BridgeModule = import_module("modules.echo-bridge.bridge_api")
+EchoBridgeAPI = BridgeModule.EchoBridgeAPI
 
 
 def _parse_recipients(value: Optional[str]) -> list[str] | None:
@@ -112,6 +115,11 @@ def _build_bridge_api() -> EchoBridgeAPI:
         tcp_secret_name=os.getenv("ECHO_BRIDGE_TCP_SECRET", "TCP_RELAY_TOKEN"),
         iot_channel=os.getenv("ECHO_BRIDGE_IOT_CHANNEL"),
         iot_secret_name=os.getenv("ECHO_BRIDGE_IOT_SECRET", "IOT_RELAY_TOKEN"),
+        kafka_topic=os.getenv("ECHO_BRIDGE_KAFKA_TOPIC"),
+        kafka_bootstrap_servers=_parse_recipients(
+            os.getenv("ECHO_BRIDGE_KAFKA_BOOTSTRAP_SERVERS")
+        ),
+        kafka_secret_name=os.getenv("ECHO_BRIDGE_KAFKA_SECRET", "KAFKA_RELAY_TOKEN"),
         wifi_ssid=os.getenv("ECHO_BRIDGE_WIFI_SSID"),
         wifi_channel=os.getenv("ECHO_BRIDGE_WIFI_CHANNEL"),
         wifi_bandwidth_mhz=_parse_float(os.getenv("ECHO_BRIDGE_WIFI_BANDWIDTH_MHZ")),
@@ -124,6 +132,10 @@ def _build_bridge_api() -> EchoBridgeAPI:
         bluetooth_frequency_mhz=_parse_float(
             os.getenv("ECHO_BRIDGE_BLUETOOTH_FREQUENCY_MHZ")
         ),
+        s3_bucket=os.getenv("ECHO_BRIDGE_S3_BUCKET"),
+        s3_prefix=os.getenv("ECHO_BRIDGE_S3_PREFIX"),
+        s3_region=os.getenv("ECHO_BRIDGE_S3_REGION"),
+        s3_secret_name=os.getenv("ECHO_BRIDGE_S3_SECRET", "S3_RELAY_TOKEN"),
         arweave_gateway_url=os.getenv("ECHO_BRIDGE_ARWEAVE_GATEWAY"),
         arweave_wallet_secret_name=os.getenv(
             "ECHO_BRIDGE_ARWEAVE_SECRET", "ARWEAVE_WALLET_JWK"
