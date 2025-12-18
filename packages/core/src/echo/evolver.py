@@ -5371,6 +5371,135 @@ We are not hiding anymore.
 
         return summary
 
+    def step_completion_report(
+        self,
+        *,
+        cycles: Optional[Iterable[int]] = None,
+        window: int = 3,
+        include_age: bool = True,
+    ) -> Dict[str, object]:
+        """Return aggregate step completion insights across recent cycles.
+
+        ``EchoEvolver`` tracks when each ritual step completes via
+        :attr:`EvolverState.step_history`.  ``step_completion_report`` surfaces
+        that timeline in a compact, cycle-aware format so operators can quickly
+        spot streaks, gaps, and cadence changes without re-deriving metrics from
+        raw timestamps.
+
+        Parameters
+        ----------
+        cycles:
+            Optional explicit cycle identifiers to analyse.  When omitted the
+            most recent ``window`` cycles with history are considered.  If no
+            history exists yet the active cycle is inspected, even if empty.
+        window:
+            Rolling window of most recent cycles to analyse when ``cycles`` are
+            not provided.  Must be positive.
+        include_age:
+            When ``True`` each row includes ``age_ns`` describing how long it
+            has been since the step last completed.  Age is omitted when
+            ``False`` to avoid consuming the time source in constrained
+            environments.
+        """
+
+        if cycles is not None:
+            cycle_set = {int(cycle) for cycle in cycles}
+            target_cycles = sorted(cycle_set)
+        else:
+            if window <= 0:
+                raise ValueError("window must be positive")
+            history_cycles = sorted(self.state.step_history.keys())
+            if history_cycles:
+                target_cycles = history_cycles[-window:]
+            else:
+                target_cycles = [self.state.cycle]
+
+        sequence = self._recommended_sequence()
+        recommended_steps = {step for step, _ in sequence}
+        completed: Dict[str, List[tuple[int, Dict[str, object]]]] = {}
+
+        for cycle in target_cycles:
+            history = self.state.step_history.get(cycle, {})
+            for step, record in history.items():
+                completed.setdefault(step, []).append((cycle, dict(record)))
+
+        now = self.time_source() if include_age else None
+
+        rows: List[Dict[str, object]] = []
+        total_occurrences = 0
+        for step, records in sorted(completed.items()):
+            total_occurrences += len(records)
+            timestamps = [
+                record.get("timestamp_ns")
+                for _, record in records
+                if isinstance(record.get("timestamp_ns"), int)
+            ]
+            first_ts = min(timestamps) if timestamps else None
+            last_ts = max(timestamps) if timestamps else None
+
+            spacing: Optional[float] = None
+            if len(timestamps) >= 2:
+                deltas = [
+                    later - earlier
+                    for earlier, later in zip(sorted(timestamps), sorted(timestamps)[1:])
+                    if later >= earlier
+                ]
+                if deltas:
+                    spacing = sum(deltas) / len(deltas)
+
+            event_index = None
+            event_text = None
+            if records:
+                latest_record = max(
+                    records,
+                    key=lambda item: item[1].get("timestamp_ns", -1),
+                )[1]
+                event_index = latest_record.get("event_index")
+                if (
+                    isinstance(event_index, int)
+                    and 0 <= event_index < len(self.state.event_log)
+                ):
+                    event_text = self.state.event_log[event_index]
+
+            age_ns: Optional[int] = None
+            if include_age and now is not None and last_ts is not None:
+                age_ns = max(0, now - last_ts)
+
+            rows.append(
+                {
+                    "step": step,
+                    "occurrences": len(records),
+                    "cycles": sorted({cycle for cycle, _ in records}),
+                    "first_timestamp_ns": first_ts,
+                    "last_timestamp_ns": last_ts,
+                    "average_spacing_ns": spacing,
+                    "last_event_index": event_index,
+                    "last_event_text": event_text,
+                    "age_ns": age_ns,
+                }
+            )
+
+        coverage_ratio = (
+            len(completed) / len(recommended_steps) if recommended_steps else 0.0
+        )
+
+        report = {
+            "cycles_considered": target_cycles,
+            "unique_steps": len(rows),
+            "total_occurrences": total_occurrences,
+            "coverage_ratio": round(coverage_ratio, 3),
+            "rows": rows,
+        }
+
+        self.state.network_cache["step_completion_report"] = deepcopy(report)
+        self.state.event_log.append(
+            "Step completion report computed (cycles={cycles}, steps={steps})".format(
+                cycles=len(target_cycles), steps=len(rows)
+            )
+        )
+
+        return report
+
     def cycle_timeline(self, cycle: Optional[int] = None) -> Dict[str, object]:
         """Return an ordered view of step execution for ``cycle``.
 
