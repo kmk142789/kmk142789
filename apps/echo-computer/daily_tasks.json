@@ -1,59 +1,59 @@
 {
-  "updated": "2025-05-21",
+  "updated": "2025-06-07",
   "tasks": [
     {
-      "id": "code-runner-burst",
+      "id": "code-skyline-prewarm",
       "focus": "Code",
-      "title": "Turbocharge the runner burst lane",
-      "description": "Trim the queue latency between chained Python and Node runs so Echo Computer feels instantaneous again.",
+      "title": "Prewarm the skyline runner lane",
+      "description": "Trim cold-starts by teaching Echo Computer to spin up a warm pool for back-to-back Python/Node chains.",
       "steps": [
-        "Trace a full multi-language request and log when each container starts, streams, and tears down.",
-        "Patch the scheduler so idle sandboxes pre-warm, then rerun a dual-language script to confirm the burst.",
-        "Capture the before/after timings plus the command you used inside your workspace journal."
+        "Log every runner phase (queue, start, teardown) for a dual-language request and capture the gaps.",
+        "Enable prewarming for the second language and rerun until the delta drops below 5s end-to-end.",
+        "Save the before/after timings plus config toggles to `workspaces/demo/logs/runner-skyline.json`."
       ]
     },
     {
-      "id": "creative-luminary-overlay",
+      "id": "create-celestial-overlay",
       "focus": "Create",
-      "title": "Compose the aurora luminary overlay",
-      "description": "Design a gradient overlay card that communicates palette + soundtrack cues without covering the terminal.",
+      "title": "Paint the celestial overlay palette",
+      "description": "Draft a narrative overlay that surfaces palette, soundtrack, and intent without hiding the terminal.",
       "steps": [
-        "Draft a JSON stub under `overlays/luminary.json` with color, audio, and copy references.",
-        "Prototype the overlay in HTML/CSS or ASCII art directly inside the workspace to feel the motion.",
-        "Annotate how the overlay should react to run success/failure inside the mock file."
+        "Author `overlays/celestial.json` with gradient stops, soundtrack links, and on-success/failure copy.",
+        "Prototype the overlay in HTML/CSS or ASCII art inside the workspace to feel the motion cues.",
+        "Annotate how the overlay should react to latency spikes or test failures inside the mock file."
       ]
     },
     {
-      "id": "collab-ground-station",
+      "id": "collab-ground-station-kit",
       "focus": "Collaborate",
-      "title": "Broadcast the ground-station handoff kit",
-      "description": "Bundle commands, logs, and reviewer radar notes so another Echo operator can resume the upgrade immediately.",
+      "title": "Ship the ground-station handoff kit",
+      "description": "Bundle commands, logs, and reviewer radar notes so another operator can resume the upgrade instantly.",
       "steps": [
         "List the critical files touched today plus `npm`/`python` commands to replay the run.",
         "Highlight at least two ideal reviewers with reasons (recent commits, subsystem familiarity, etc.).",
-        "Share the kit path + summary link inside the Echo Computer feed or your preferred ops channel."
+        "Publish the kit to `/handoff/kits/ground-station.json` and drop a link in the Echo feed."
       ]
     },
     {
-      "id": "cloud-signal-healthcheck",
+      "id": "cloud-signal-trace",
       "focus": "Cloud",
-      "title": "Run the cloud signal healthcheck",
-      "description": "Validate Echo Computer's cloud endpoints, tracing latency + error budgets before the next upgrade.",
+      "title": "Trace the cloud signal lane",
+      "description": "Validate Echo Computer's cloud endpoints and record latency/error budgets before the next rollout.",
       "steps": [
-        "Ping each public endpoint and record latency + status into `cloud/healthcheck.json`.",
-        "Capture a short log tail from the worker pods to confirm no silent retries or throttling.",
-        "Summarize drift or regressions in the ops journal with a link to the collected metrics."
+        "Ping each public endpoint and write latency + status into `cloud/healthcheck.json`.",
+        "Tail the worker pods for 2–3 minutes to confirm no silent retries or throttling.",
+        "Summarize regressions in the ops journal with links to the collected metrics."
       ]
     },
     {
-      "id": "code-cache-probe",
+      "id": "code-cache-drift-check",
       "focus": "Code",
-      "title": "Probe the Echo cache accelerator",
-      "description": "Benchmark a cached vs. cold run for the same project and document how to trigger invalidation.",
+      "title": "Check the cache drift lane",
+      "description": "Benchmark cached vs. cold runs for the same project and document how to trigger safe invalidation.",
       "steps": [
-        "Run a representative build twice and capture the timing + cache hit/miss signals.",
+        "Run a representative build twice and capture timing + cache hit/miss signals.",
         "Toggle a dependency version to confirm the cache invalidates and restores cleanly.",
-        "Record the commands and deltas inside `workspaces/demo/logs/cache-probe.json`."
+        "Record the commands and deltas inside `workspaces/demo/logs/cache-drift.json`."
       ]
     },
     {

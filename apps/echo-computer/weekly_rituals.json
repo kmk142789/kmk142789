@@ -1,38 +1,38 @@
 {
-  "updated": "2025-05-21",
+  "updated": "2025-06-07",
   "rituals": [
     {
-      "id": "code-flight-recorder",
+      "id": "code-orbit-recorder",
       "focus": "Code",
-      "title": "Launch the sandbox flight recorder",
+      "title": "Harden the orbit flight recorder",
       "cadence": "weekly",
-      "description": "Dedicate a deep session to harden the timing instrumentation that keeps the runner honest under load.",
+      "description": "Dedicate a deep session to tighten runner telemetry so Echo can prove performance before each upgrade.",
       "steps": [
-        "Trace at least three full executions (Python, Node, dual-run) and record queue/start/teardown timing.",
-        "Add structured telemetry to the Node stream so every run emits latency + resource hints automatically.",
-        "Export the latest capture into `workspaces/demo/logs/flight-recorder.json` for the changelog."
+        "Trace three full executions (Python, Node, chained) and log queue/start/teardown timings.",
+        "Expose structured events on the WebSocket stream with per-phase latency + resource hints.",
+        "Export the latest capture to `workspaces/demo/logs/orbit-flight-recorder.json` for the changelog."
       ],
       "tags": ["advance", "upgrade", "optimize"]
     },
     {
-      "id": "creative-beacon-grid",
+      "id": "creative-luminary-grid",
       "focus": "Create",
-      "title": "Weave the luminary beacon grid",
+      "title": "Evolve the luminary beacon grid",
       "cadence": "weekly",
-      "description": "Iterate on the narrative overlay system that keeps palette, soundtrack, and intent visible in the editor.",
+      "description": "Iterate on the overlay system that keeps palette, soundtrack, and intent visible in the editor.",
       "steps": [
-        "Storyboard at least two overlay states (calm + launch) including typography, gradients, and motion.",
-        "Prototype the transitions in CSS variables or shader-like pseudo code inside the workspace.",
+        "Storyboard at least two overlay states (calm + launch) with typography, gradients, and motion.",
+        "Prototype transitions with CSS variables or shader-like pseudo code inside the workspace.",
         "Publish a GIF/screenshot or markdown walkthrough linked from the ritual log."
       ],
       "tags": ["create", "advance"]
     },
     {
-      "id": "collab-ground-station",
+      "id": "collab-reviewer-radar",
       "focus": "Collaborate",
-      "title": "Activate the reviewer ground-station",
+      "title": "Activate the reviewer radar",
       "cadence": "weekly",
-      "description": "Pair with another operator to stress-test reviewer radar flows and leave a ready-to-run handoff kit.",
+      "description": "Pair with another operator to stress-test reviewer discovery and leave a ready-to-run handoff kit.",
       "steps": [
         "Enumerate the last five commits for the feature files and label likely reviewers.",
         "Bundle run instructions, telemetry screenshots, and TODO prompts into a single console note.",
@@ -41,22 +41,22 @@
       "tags": ["advance", "upgrade", "optimize"]
     },
     {
-      "id": "cloud-skyway-upgrade",
+      "id": "cloud-skyway-rehearsal",
       "focus": "Cloud",
-      "title": "Rehearse the cloud skyway upgrade",
+      "title": "Rehearse the skyway upgrade lane",
       "cadence": "weekly",
       "description": "Dry-run the blue/green rollout for Echo Computer cloud services with telemetry stitched into the ritual log.",
       "steps": [
-        "Spin up the canary environment and smoke-test the public endpoints with synthetic workload traces.",
-        "Shift 10-20% traffic through the canary using weighted routing or feature flags while watching error budgets.",
-        "Record rollback/rollback-ready commands plus metrics snapshots into the ritual journal for reuse."
+        "Spin up the canary environment and smoke-test public endpoints with synthetic workload traces.",
+        "Shift 10–20% traffic through the canary using weighted routing or feature flags while watching error budgets.",
+        "Record rollback-ready commands plus metrics snapshots into the ritual journal for reuse."
       ],
       "tags": ["upgrade", "optimize", "cloud"]
     },
     {
       "id": "code-cache-corridor",
       "focus": "Code",
-      "title": "Stabilise the Echo cache corridor",
+      "title": "Stabilise the cache corridor",
       "cadence": "weekly",
       "description": "Validate cache hit rates across three workspaces and decide which keys should be pinned or rotated.",
       "steps": [

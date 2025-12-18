@@ -1,42 +1,42 @@
 {
-  "updated": "2025-05-21",
+  "updated": "2025-06-07",
   "features": [
     {
-      "id": "cloud-offline-compatibility",
+      "id": "cloud-offline-fusion",
       "focus": "Cloud",
       "status": "Ready",
-      "title": "Offline-compatible Echo Computer",
-      "description": "Bundle caches and fallbacks so Echo Computer boots cleanly without network access.",
-      "impact": "Keeps the coding environment usable during air-gapped or travel windows.",
+      "title": "Offline + cloud fusion cache",
+      "description": "Bundle workspace caches so Echo Computer boots cleanly offline while mirroring cloud telemetry once online.",
+      "impact": "Keeps the coding environment resilient during air-gapped windows and syncs context when back on the network.",
       "blueprint": [
-        "Pre-bake npm and Python dependency caches into `workspaces/offline-cache` with a refresh script.",
-        "Detect offline mode at startup and skip remote telemetry calls, rendering a status banner instead.",
-        "Expose an `/offline/readiness` JSON endpoint that reports cached images, checksums, and last refresh time."
+        "Pre-bake npm and Python caches into `workspaces/offline-cache` with a refresh script and checksum report.",
+        "Detect offline mode at startup and render a status banner while deferring cloud telemetry calls.",
+        "Sync cached runs to the cloud once connectivity returns via a lightweight `/offline/replay` endpoint."
       ]
     },
     {
-      "id": "code-burst-link",
+      "id": "code-burst-prewarm",
       "focus": "Code",
       "status": "Ready",
-      "title": "Burst-link multi-runner",
-      "description": "Queue Python and Node executions through a shared warm pool so chained runs feel instantaneous.",
-      "impact": "Cuts polyglot feedback loops below five seconds for most scripts.",
+      "title": "Burst prewarm multi-runner",
+      "description": "Queue Python and Node executions through a warm pool so chained runs feel instantaneous.",
+      "impact": "Cuts polyglot feedback loops below five seconds for most scripts while keeping logs coherent.",
       "blueprint": [
         "Add a runner toggle that pre-warms the next language container when the current run is >50% complete.",
         "Stream per-language stdout/stderr with timestamps so latency regressions are obvious.",
-        "Persist merged logs plus timing metadata to `workspaces/<user>/logs/burst-link.json`."
+        "Persist merged logs plus timing metadata to `workspaces/<user>/logs/burst-prewarm.json`."
       ]
     },
     {
-      "id": "code-latency-map",
+      "id": "code-latency-console",
       "focus": "Code",
       "status": "Prototype",
-      "title": "Latency map console",
+      "title": "Latency console HUD",
       "description": "Expose a live console that visualises queue, start, and teardown timings for every sandbox run.",
       "impact": "Gives Echo instant awareness of runner pressure before launching the next upgrade.",
       "blueprint": [
         "Instrument the Node server with structured telemetry events emitted over WebSocket.",
-        "Aggregate the events in the client and render sparkline charts beside the terminal.",
+        "Aggregate events in the client and render sparkline charts beside the terminal.",
         "Add alert thresholds so spikes over 2× baseline get highlighted with recovery tips."
       ]
     },
