@@ -13,8 +13,12 @@ POLICY_PATH = "governance/rotation_policy.yaml"
 
 
 def load_policy():
-    with open(POLICY_PATH) as fp:
-        return yaml.safe_load(fp)
+    try:
+        with open(POLICY_PATH) as fp:
+            return yaml.safe_load(fp) or {}
+    except FileNotFoundError:
+        logging.warning("Rotation policy missing at %s; skipping keeper run.", POLICY_PATH)
+        return {"rotation_rules": []}
 
 
 def evaluate_conditions(policy):
@@ -41,8 +45,9 @@ def evaluate_conditions(policy):
 def run_keeper():
     policy = load_policy()
     ctx = evaluate_conditions(policy)
+    executed: list[str] = []
 
-    for rule in policy["rotation_rules"]:
+    for rule in policy.get("rotation_rules", []) or []:
         cond = rule["condition"]
         action = rule["action"]
 
@@ -57,14 +62,19 @@ def run_keeper():
             if action == "rotate_keys":
                 rotate_signing_keys()
                 print("[AVK] Rotated signing keys.")
+                executed.append(action)
 
             elif action == "restore_snapshot":
                 restore_last_snapshot()
                 print("[AVK] Restored last snapshot.")
+                executed.append(action)
 
             elif action == "force_deny":
                 disable_actor(getattr(ctx["actor"], "id", None))
                 print("[AVK] Disabled malicious actor.")
+                executed.append(action)
+
+    return executed
 
 
 if __name__ == "__main__":
