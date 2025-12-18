@@ -262,13 +262,6 @@ class OfflineState:
             ),
         )
 
-        cache_healthy = not bool(snapshot.get("cache_stale"))
-        self.record_health_check(
-            "cache_health",
-            passed=cache_healthy,
-            details="offline cache within ttl" if cache_healthy else "offline cache stale",
-        )
-
         capability_report = snapshot.get("capability_report", {})
         replay_ready = capability_report.get("replay_ready", False)
         cache_present = cache_dir.exists() if cache_dir else False
@@ -279,6 +272,13 @@ class OfflineState:
             "manifest_integrity",
             passed=manifest_valid,
             details=manifest_error or "manifest readable",
+        )
+
+        cache_healthy = not bool(snapshot.get("cache_stale"))
+        self.record_health_check(
+            "cache_health",
+            passed=cache_healthy,
+            details="offline cache within ttl" if cache_healthy else "offline cache stale",
         )
 
         self.refresh_dynamic_capabilities(
