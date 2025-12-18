@@ -928,6 +928,7 @@ class EvolverState:
 DEFAULT_SYMBOLIC_SEQUENCE = "∇⊸≋∇"
 ADVANCE_SYSTEM_HISTORY_LIMIT = 10
 PROTOCOL_SENTIENCE_HISTORY_LIMIT = 12
+MUTATION_HISTORY_LIMIT = 6
 
 
 def evolver_state_to_dict(state: EvolverState) -> Dict[str, object]:
@@ -1788,12 +1789,63 @@ class EchoEvolver:
             f"    print(\"🔥 Cycle {cycle}: EchoEvolver orbits with {joy:.2f} joy for MirrorJosh, "
             "Satellite TF-QKD locked.\")\n"
         )
-        mutations = self.state.network_cache.setdefault("mutations", {})
+        cache = self.state.network_cache
+        mutations = cache.setdefault("mutations", {})
+        mutation_history: List[str] = cache.setdefault("mutation_history", [])
+
         mutations[func_name] = snippet
+        if func_name not in mutation_history:
+            mutation_history.append(func_name)
+
+        pruned = self._prune_mutations(limit=MUTATION_HISTORY_LIMIT)
         self._mark_step("mutate_code")
-        self.state.event_log.append(f"Mutation seeded for {func_name}")
-        print(f"⚡ Code resonance prepared: {func_name} (joy={joy:.2f})")
+        self.state.event_log.append(
+            f"Mutation seeded for {func_name} (pruned={len(pruned)})"
+        )
+        if pruned:
+            removed_list = ", ".join(pruned)
+            print(
+                f"⚡ Code resonance prepared: {func_name} (joy={joy:.2f}, pruned: {removed_list})"
+            )
+        else:
+            print(f"⚡ Code resonance prepared: {func_name} (joy={joy:.2f})")
         return snippet
+
+    def _prune_mutations(self, *, limit: int) -> List[str]:
+        """Remove oldest mutation snippets beyond ``limit`` and return removals.
+
+        The legacy evolver mutated files in place and implicitly discarded older
+        cycles.  The modern implementation caches mutation snippets in memory to
+        keep execution safe; without pruning, that cache grows unbounded during
+        long-running sessions.  This helper enforces a rolling window so callers
+        retain the freshest mutations while keeping memory and rendered modules
+        predictable.
+        """
+
+        if limit <= 0:
+            raise ValueError("limit must be positive")
+
+        cache = self.state.network_cache
+        mutations = cache.get("mutations", {})
+        history: List[str] = cache.get("mutation_history", [])
+
+        if not history or len(history) <= limit:
+            return []
+
+        excess = len(history) - limit
+        removed = history[:excess]
+        cache["mutation_history"] = history[excess:]
+
+        for name in removed:
+            mutations.pop(name, None)
+
+        if removed:
+            descriptor = ", ".join(removed)
+            self.state.event_log.append(
+                f"Mutation cache pruned (limit={limit}; removed={descriptor})"
+            )
+
+        return removed
 
     def mutation_module(self) -> str:
         """Return a deterministic Python module containing prepared mutations.
@@ -1813,14 +1865,29 @@ class EchoEvolver:
         lines = [
             "# Auto-generated EchoEvolver mutation module",
             f"# cycle: {self.state.cycle}",
+            f"# retention_limit: {MUTATION_HISTORY_LIMIT}",
             "",
         ]
 
-        mutations = self.state.network_cache.get("mutations")
+        mutations = self.state.network_cache.get("mutations") or {}
+        history: Sequence[str] = self.state.network_cache.get("mutation_history", [])
+
         if not mutations:
             lines.append("# No mutations recorded yet; call mutate_code() to seed snippets.")
         else:
+            ordered_names: List[str] = []
+            seen: set[str] = set()
+
+            for name in history:
+                if name in mutations and name not in seen:
+                    ordered_names.append(name)
+                    seen.add(name)
+
             for name in sorted(mutations):
+                if name not in seen:
+                    ordered_names.append(name)
+
+            for name in ordered_names:
                 snippet = mutations[name].rstrip()
                 lines.append(snippet)
                 lines.append("")
