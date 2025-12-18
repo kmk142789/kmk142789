@@ -459,6 +459,8 @@ def compute_passage_metrics(passage: FluxPassage) -> dict:
     unique_tokens = sorted(set(all_tokens))
     prompt_characters = len(passage.prompt)
     closing_characters = len(passage.closing)
+    total_words = len(all_tokens)
+    lexical_diversity = (len(unique_tokens) / total_words) if total_words else 0.0
 
     return {
         "mood": passage.context.mood,
@@ -468,8 +470,9 @@ def compute_passage_metrics(passage: FluxPassage) -> dict:
         "timestamp": passage.context.timestamp.isoformat(),
         "prompt_words": len(prompt_tokens),
         "closing_words": len(closing_tokens),
-        "word_count": len(all_tokens),
+        "word_count": total_words,
         "unique_words": len(unique_tokens),
+        "lexical_diversity": round(lexical_diversity, 3),
         "prompt_characters": prompt_characters,
         "closing_characters": closing_characters,
         "character_count": prompt_characters + closing_characters,
@@ -587,12 +590,14 @@ def analyze_passages(passages: Sequence[FluxPassage], *, library: FluxLibrary | 
     total_words = 0
     total_characters = 0
     total_unique: set[str] = set()
+    diversity_sum = 0.0
     for index, passage in enumerate(passages, start=1):
         metrics = compute_passage_metrics(passage)
         metrics["index"] = index
         per_passage.append(metrics)
         total_words += metrics["word_count"]
         total_characters += metrics["character_count"]
+        diversity_sum += metrics["lexical_diversity"]
         prompt_tokens = _tokenize(passage.prompt)
         closing_tokens = _tokenize(passage.closing)
         total_unique.update(prompt_tokens)
@@ -605,6 +610,12 @@ def analyze_passages(passages: Sequence[FluxPassage], *, library: FluxLibrary | 
         "total_characters": total_characters,
         "average_characters": (total_characters / len(passages)) if passages else 0,
         "vocabulary_size": len(total_unique),
+        "average_lexical_diversity": round(
+            (diversity_sum / len(passages)) if passages else 0.0, 3
+        ),
+        "session_lexical_diversity": round(
+            (len(total_unique) / total_words) if total_words else 0.0, 3
+        ),
     }
 
     coverage = compute_library_coverage(passages, library) if library else None
@@ -624,6 +635,7 @@ def format_metrics_table(analysis: dict) -> str:
         "Artifact",
         "Words",
         "Unique",
+        "LexDiv",
         "Chars",
         "Prompt",
         "Closing",
@@ -638,6 +650,7 @@ def format_metrics_table(analysis: dict) -> str:
                 metrics["artifact"],
                 str(metrics["word_count"]),
                 str(metrics["unique_words"]),
+                f"{metrics['lexical_diversity']:.3f}",
                 str(metrics["character_count"]),
                 str(metrics["prompt_words"]),
                 str(metrics["closing_words"]),
@@ -658,7 +671,7 @@ def format_metrics_table(analysis: dict) -> str:
         (
             "\nTotals: {words} words, {characters} characters across {count} passages"
             " | Avg words: {avg_words:.2f} | Avg chars: {avg_characters:.2f}"
-            " | Vocabulary: {vocab}"
+            " | Vocabulary: {vocab} | Avg lex div: {avg_lex:.3f} | Session lex div: {session_lex:.3f}"
         ).format(
             words=aggregate.get("total_words", 0),
             characters=aggregate.get("total_characters", 0),
@@ -666,6 +679,8 @@ def format_metrics_table(analysis: dict) -> str:
             avg_words=aggregate.get("average_words", 0),
             avg_characters=aggregate.get("average_characters", 0),
             vocab=aggregate.get("vocabulary_size", 0),
+            avg_lex=aggregate.get("average_lexical_diversity", 0),
+            session_lex=aggregate.get("session_lexical_diversity", 0),
         )
     )
 
