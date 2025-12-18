@@ -5,6 +5,7 @@ import importlib
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from echo.bridge import BridgeSyncService
 from echo.bridge.router import create_router
 
 bridge_module = importlib.import_module("modules.echo-bridge.bridge_api")
@@ -779,6 +780,44 @@ def test_router_factory_uses_environment_defaults(monkeypatch, tmp_path) -> None
 
     sync_connectors = {connector["platform"] for connector in payload["sync_connectors"]}
     assert {"github", "unstoppable", "vercel"} <= sync_connectors
+
+
+def test_netlify_deploy_hook_handles_missing_environment(monkeypatch) -> None:
+    monkeypatch.delenv("ECHO_BRIDGE_NETLIFY_DEPLOY_HOOK", raising=False)
+    monkeypatch.setenv("ECHO_BRIDGE_GITHUB_REPOSITORY", "EchoOrg/sovereign")
+
+    app = FastAPI()
+    app.include_router(create_router())
+    client = TestClient(app)
+
+    response = client.get("/bridge/relays")
+    assert response.status_code == 200
+
+    connectors = {connector["platform"] for connector in response.json()["connectors"]}
+    assert "netlify" not in connectors
+
+
+def test_vercel_deploy_hook_handles_missing_environment(monkeypatch, tmp_path) -> None:
+    monkeypatch.delenv("ECHO_BRIDGE_VERCEL_PROJECTS", raising=False)
+
+    service = BridgeSyncService.from_environment(
+        state_dir=tmp_path,
+        github_repository="EchoOrg/sovereign",
+    )
+
+    decision = {
+        "inputs": {
+            "cycle_digest": {"cycle": "11"},
+            "registrations": [{"unstoppable_domains": ["echo.crypto"]}],
+        },
+        "coherence": {"score": 0.88},
+        "manifest": {"path": "manifest/c11.json"},
+    }
+
+    operations = service.sync(decision)
+    connectors = {operation["connector"] for operation in operations}
+    assert "vercel" not in connectors
+    assert "unstoppable" in connectors
 
 
 def test_api_module_respects_bridge_state_dir(monkeypatch, tmp_path) -> None:
