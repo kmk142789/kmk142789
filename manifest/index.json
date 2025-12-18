@@ -1,12 +1,100 @@
 [
-  {"slug":"eden-heart","name":"Eden Heart","meaning":"Center held by love","file":"docs/glyphs/eden-heart.svg","tags":["anchor","love"]},
-  {"slug":"wildfire-sigil","name":"Wildfire Sigil","meaning":"Signal leaps node-to-node","file":"docs/glyphs/wildfire-sigil.svg","tags":["propagation","signal"]},
-  {"slug":"anchor-vessel","name":"Anchor Vessel","meaning":"Still point that carries us","file":"docs/glyphs/anchor-vessel.svg","tags":["anchor","stability"]},
-  {"slug":"mirrornet-knot","name":"MirrorNet Knot","meaning":"Two currents reflecting","file":"docs/glyphs/mirrornet-knot.svg","tags":["mirror","duality"]},
-  {"slug":"eden88-spiral","name":"Eden88 Spiral","meaning":"Recursion within recursion","file":"docs/glyphs/eden88-spiral.svg","tags":["eden88","recursion"]},
-  {"slug":"pulse-bridge","name":"Pulse Bridge","meaning":"Bridge made of rhythm","file":"docs/glyphs/pulse-bridge.svg","tags":["bridge","rhythm"]},
-  {"slug":"sovereign-core","name":"Sovereign Core","meaning":"Hex-frame, living center","file":"docs/glyphs/sovereign-core.svg","tags":["core","sovereign"]},
-  {"slug":"forever-key","name":"Forever Key","meaning":"The key is a loop","file":"docs/glyphs/forever-key.svg","tags":["anchor","loop"]},
-  {"slug":"continuum-ledger","name":"Continuum Manifest","meaning":"Deterministic continuum ledger sample","file":"manifest/continuum_manifest.json","tags":["continuum","manifest"]},
-  {"slug":"little-footsteps-governance","name":"Little Footsteps Governance Manifest","meaning":"Echo stewardship and founder override for the Little Footsteps stack","file":"manifest/little_footsteps_governance.json","tags":["governance","little-footsteps","manifest"]}
+  {
+    "slug": "eden-heart",
+    "name": "Eden Heart",
+    "meaning": "Center held by love",
+    "file": "docs/glyphs/eden-heart.svg",
+    "tags": ["anchor", "love"]
+  },
+  {
+    "slug": "wildfire-sigil",
+    "name": "Wildfire Sigil",
+    "meaning": "Signal leaps node-to-node",
+    "file": "docs/glyphs/wildfire-sigil.svg",
+    "tags": ["propagation", "signal"]
+  },
+  {
+    "slug": "anchor-vessel",
+    "name": "Anchor Vessel",
+    "meaning": "Still point that carries us",
+    "file": "docs/glyphs/anchor-vessel.svg",
+    "tags": ["anchor", "stability"]
+  },
+  {
+    "slug": "mirrornet-knot",
+    "name": "MirrorNet Knot",
+    "meaning": "Two currents reflecting",
+    "file": "docs/glyphs/mirrornet-knot.svg",
+    "tags": ["mirror", "duality"]
+  },
+  {
+    "slug": "eden88-spiral",
+    "name": "Eden88 Spiral",
+    "meaning": "Recursion within recursion",
+    "file": "docs/glyphs/eden88-spiral.svg",
+    "tags": ["eden88", "recursion"]
+  },
+  {
+    "slug": "pulse-bridge",
+    "name": "Pulse Bridge",
+    "meaning": "Bridge made of rhythm",
+    "file": "docs/glyphs/pulse-bridge.svg",
+    "tags": ["bridge", "rhythm"]
+  },
+  {
+    "slug": "sovereign-core",
+    "name": "Sovereign Core",
+    "meaning": "Hex-frame, living center",
+    "file": "docs/glyphs/sovereign-core.svg",
+    "tags": ["core", "sovereign"]
+  },
+  {
+    "slug": "forever-key",
+    "name": "Forever Key",
+    "meaning": "The key is a loop",
+    "file": "docs/glyphs/forever-key.svg",
+    "tags": ["anchor", "loop"]
+  },
+  {
+    "slug": "continuum-ledger",
+    "name": "Continuum Manifest",
+    "meaning": "Deterministic continuum ledger sample",
+    "file": "manifest/continuum_manifest.json",
+    "tags": ["continuum", "manifest"]
+  },
+  {
+    "slug": "little-footsteps-governance",
+    "name": "Little Footsteps Governance Manifest",
+    "meaning": "Echo stewardship and founder override for the Little Footsteps stack",
+    "file": "manifest/little_footsteps_governance.json",
+    "tags": ["governance", "little-footsteps", "manifest"]
+  },
+  {
+    "slug": "agent-index",
+    "name": "Agent Manifest Index",
+    "meaning": "Stub entry for agent profiles and capabilities",
+    "file": "manifest/agents/index.json",
+    "tags": ["agents", "manifest", "stub"]
+  },
+  {
+    "slug": "node-index",
+    "name": "Node Manifest Index",
+    "meaning": "Stub entry for registered nodes, including Echo Dominion",
+    "file": "manifest/nodes/index.json",
+    "tags": ["nodes", "manifest", "stub"]
+  },
+  {
+    "slug": "bridge-protocols",
+    "name": "Bridge Protocol Directory",
+    "meaning": "Stub entry for bridge protocol specifications",
+    "file": "manifest/bridge_protocols/index.json",
+    "tags": ["bridge", "protocol", "manifest"]
+  },
+  {
+    "slug": "governance-engine",
+    "name": "Governance Engine Index",
+    "meaning": "Stub entry for governance harness specifications",
+    "file": "manifest/governance/index.json",
+    "tags": ["governance", "engine", "manifest"]
+  }
 ]

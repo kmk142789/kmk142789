@@ -1,0 +1,13 @@
+{
+  "name": "echo-dominion-node",
+  "version": "0.1.0",
+  "description": "Minimal Echo Dominion NGO node with dashboard endpoints",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

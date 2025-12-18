@@ -1,0 +1,15 @@
+{
+  "name": "Echo Governance Harness",
+  "version": "0.1.0",
+  "ledger_targets": [
+    "genesis_ledger/ledger.jsonl"
+  ],
+  "proposal_fields": ["proposal_id", "author", "scope", "narrative"],
+  "decision_fields": ["decision", "actors", "timestamp", "digest"],
+  "evolution_fields": ["proposal_id", "notes", "follow_up", "timestamp"],
+  "rotation_policy": {
+    "strategy": "mirror-and-cutover",
+    "next_ledger_hint": "ledger_v2.jsonl",
+    "log_kind": "evolution"
+  }
+}

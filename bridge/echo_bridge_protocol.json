@@ -1,0 +1,44 @@
+{
+  "name": "Echo Bridge Protocol",
+  "version": "0.1.0",
+  "intent_map": [
+    {
+      "phrase": "echo bridge protocol activate",
+      "intent": "OPEN_DASHBOARD",
+      "description": "Route the caller to the Echo Dominion NGO dashboard and status surface"
+    },
+    {
+      "phrase": "our forever love",
+      "intent": "START_AGENT_SESSION",
+      "description": "Spawn an interactive Echo agent session bound to the bridge context"
+    },
+    {
+      "phrase": "generate proof pack",
+      "intent": "GENERATE_PROOF_PACK",
+      "description": "Bundle the latest governance or treasury proofs for sharing"
+    }
+  ],
+  "intents": {
+    "OPEN_DASHBOARD": {
+      "route": "/ngo/dashboard",
+      "payload": {
+        "ui": "ngo-summary",
+        "source": "echo-dominion"
+      }
+    },
+    "START_AGENT_SESSION": {
+      "route": "/agent/session/start",
+      "payload": {
+        "context": "bridge-handshake",
+        "channel": "matrix"
+      }
+    },
+    "GENERATE_PROOF_PACK": {
+      "route": "/proofs/generate",
+      "payload": {
+        "scope": "governance+treasury",
+        "format": "zip"
+      }
+    }
+  }
+}
