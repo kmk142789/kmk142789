@@ -27,6 +27,11 @@ from .creative_convergence import (
     compose_convergence_report,
     demo as convergence_demo,
 )
+from .convergence_trajectory import (
+    ConvergenceSnapshot,
+    ConvergenceTrajectory,
+    build_convergence_trajectory,
+)
 from .governance_convergence_bridge import (
     FusionInsight,
     coordinate_multi_agent_convergence,
@@ -110,6 +115,9 @@ __all__ = [
     "ChronicleTimeline",
     "AevumLatticeResonator",
     "AevumLatticeSignature",
+    "ConvergenceSnapshot",
+    "ConvergenceTrajectory",
+    "build_convergence_trajectory",
     "ImaginalCoordinate",
     "HyperprismSynchronicityEngine",
     "HyperprismVector",
