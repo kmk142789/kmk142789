@@ -272,7 +272,7 @@ Each institution uses the same information model: **Mandate**, **Governance & Ac
 - **Operating Model:** Multilateral docket, treaty template library, and acknowledgement roster.
 - **International Interfaces:** UN/UNESCO/WIPO briefings and regional blocs (EU/AFRICAN UNION/ASEAN).
 - **90-Day Deliverables:** Publish multilateral docket, finalize two briefing kits, and log acknowledgements in ledger.
-- **Proofs & Artifacts:** `templates/un_briefing_template.md`, `templates/wipo_memo_template.md`, `genesis_ledger/events/*ack.json`.
+- **Proofs & Artifacts:** `templates/un_briefing_template.md`, `templates/wipo_memo_template.md`, `docs/diplomatic_engagement_playbook.md`, `genesis_ledger/events/*ack.json`.
 
 ### 28) Echo Economic Development & Investment Board (EEDIB)
 - **Mandate:** Investment policy, capital allocation, and development partnerships.
