@@ -4,6 +4,11 @@ This utility captures lightweight host metrics so on-call engineers can
 quickly confirm a machine's baseline health without attaching to the full
 observability stack. It prints JSON by default and supports a readable text
 mode for ad-hoc debugging.
+
+Recent upgrades expand the collected metrics to cover disk pressure, swap
+consumption, and system-wide open file descriptors. A new `--disk-path`
+option lets you target non-root volumes when debugging container mounts or
+separate data partitions.
 """
 from __future__ import annotations
 
@@ -31,9 +36,13 @@ class Snapshot:
     load_average: tuple[float, float, float]
     uptime_seconds: float
     memory_percent: float
+    disk_percent: float
+    swap_percent: float
+    open_file_descriptors: int
+    disk_scope: str
 
     @classmethod
-    def collect(cls, sample_seconds: float = 0.25) -> "Snapshot":
+    def collect(cls, sample_seconds: float = 0.25, disk_path: str = "/") -> "Snapshot":
         cpu_percent = _cpu_percent(sample_seconds)
         process_count = _process_count()
         node_count = _node_count()
@@ -42,6 +51,9 @@ class Snapshot:
         load_average = _load_average()
         uptime_seconds = _uptime_seconds()
         memory_percent = _memory_percent()
+        disk_percent = _disk_percent(disk_path)
+        swap_percent = _swap_percent()
+        open_file_descriptors = _open_file_descriptors()
         return cls(
             cpu_percent=round(cpu_percent, 2),
             process_count=process_count,
@@ -51,6 +63,10 @@ class Snapshot:
             load_average=load_average,
             uptime_seconds=uptime_seconds,
             memory_percent=memory_percent,
+            disk_percent=disk_percent,
+            swap_percent=swap_percent,
+            open_file_descriptors=open_file_descriptors,
+            disk_scope=disk_path,
         )
 
     def to_json(self) -> str:
@@ -63,13 +79,19 @@ class Snapshot:
             f"CPU usage: {self.cpu_percent:.2f}%\n"
             f"Load average (1/5/15m): {self._format_load()}\n"
             f"Memory usage: {self.memory_percent:.1f}%\n"
+            f"Disk usage ({self._disk_scope()}): {self.disk_percent:.1f}%\n"
+            f"Swap usage: {self.swap_percent:.1f}%\n"
             f"Process count: {self.process_count}\n"
             f"Uptime: {self.uptime_seconds:.0f}s\n"
             f"Network nodes (interfaces with addresses): {self.node_count}\n"
+            f"Open file descriptors (system-wide): {self.open_file_descriptors}\n"
         )
 
     def _format_load(self) -> str:
         return "/".join(f"{value:.2f}" for value in self.load_average)
+
+    def _disk_scope(self) -> str:
+        return getattr(self, "disk_scope", "/")
 
 
 def _cpu_percent(sample_seconds: float) -> float:
@@ -184,11 +206,81 @@ def _memory_percent() -> float:
     return 0.0
 
 
+def _disk_percent(path: str) -> float:
+    if PSUTIL_AVAILABLE:
+        try:
+            return float(psutil.disk_usage(path).percent)
+        except (OSError, AttributeError, TypeError, FileNotFoundError):
+            pass
+
+    if hasattr(os, "statvfs"):
+        try:
+            stats = os.statvfs(path)
+            if stats.f_blocks == 0:
+                return 0.0
+            used = (stats.f_blocks - stats.f_bfree) * stats.f_frsize
+            total = stats.f_blocks * stats.f_frsize
+            return max(0.0, min(100.0, (used / total) * 100.0))
+        except OSError:
+            return 0.0
+
+    return 0.0
+
+
+def _swap_percent() -> float:
+    if PSUTIL_AVAILABLE:
+        try:
+            return float(psutil.swap_memory().percent)
+        except (OSError, AttributeError, TypeError):
+            pass
+
+    meminfo_path = "/proc/meminfo"
+    if os.path.exists(meminfo_path):
+        try:
+            values = {}
+            with open(meminfo_path, "r", encoding="utf-8") as handle:
+                for line in handle:
+                    key, _, raw_value = line.partition(":")
+                    if not raw_value:
+                        continue
+                    value_str = raw_value.strip().split()[0]
+                    values[key] = float(value_str)
+            total = values.get("SwapTotal")
+            free = values.get("SwapFree")
+            if total and total > 0:
+                used = total - (free or 0.0)
+                return max(0.0, min(100.0, (used / total) * 100.0))
+        except (OSError, ValueError):
+            return 0.0
+
+    return 0.0
+
+
+def _open_file_descriptors() -> int:
+    file_nr = "/proc/sys/fs/file-nr"
+    if os.path.exists(file_nr):
+        try:
+            with open(file_nr, "r", encoding="utf-8") as handle:
+                allocated, unused, _ = handle.read().split()
+                return max(0, int(allocated) - int(unused))
+        except (OSError, ValueError):
+            return 0
+
+    if PSUTIL_AVAILABLE:
+        try:
+            # psutil counters reflect allocated file descriptors system-wide.
+            return int(psutil.sysctl("fs.file-nr")[0])
+        except (OSError, AttributeError, TypeError, KeyError):
+            pass
+
+    return 0
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Emit a lightweight observability snapshot with CPU, process, "
-            "and node counts."
+            "node, disk, swap, and file descriptor metrics."
         )
     )
     parser.add_argument(
@@ -206,12 +298,22 @@ def parse_args() -> argparse.Namespace:
             "averages on noisy hosts."
         ),
     )
+    parser.add_argument(
+        "--disk-path",
+        default="/",
+        help=(
+            "Filesystem path to measure when reporting disk utilisation. "
+            "Use this to target container mounts or data volumes."
+        ),
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    snapshot = Snapshot.collect(sample_seconds=args.sample_seconds)
+    snapshot = Snapshot.collect(
+        sample_seconds=args.sample_seconds, disk_path=args.disk_path
+    )
     if args.format == "json":
         print(snapshot.to_json())
     else:
