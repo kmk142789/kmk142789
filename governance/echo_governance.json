@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "entity": "ECHO DOMINION",
   "principal_architect": "Josh Shortt",
   "core_mission": [
@@ -14,7 +14,8 @@
         "approve_relief",
         "update_policy",
         "appoint_guardian",
-        "view_sensitive_metrics"
+        "view_sensitive_metrics",
+        "ratify_root_actions"
       ]
     },
     "architect": {
@@ -22,7 +23,18 @@
       "permissions": [
         "deploy_services",
         "edit_infra_config",
-        "run_security_audit"
+        "run_security_audit",
+        "approve_registrar_rotation"
+      ]
+    },
+    "registrar": {
+      "description": "Root registrar for DNS, credentials, and treaty ledgers",
+      "permissions": [
+        "sign_root_zone",
+        "issue_credential",
+        "revoke_credential",
+        "publish_custody_attestation",
+        "rotate_registrar_keys"
       ]
     },
     "steward": {
@@ -65,6 +77,24 @@
         "crosscheck_mirror_state",
         "enforce_parity_thresholds"
       ]
+    },
+    "bridge_conductor": {
+      "description": "Cross-network authority for mirror parity and rollback rituals",
+      "permissions": [
+        "verify_bridge_parity",
+        "open_recovery_channel",
+        "publish_bridge_receipt",
+        "halt_unsynced_updates"
+      ]
+    },
+    "audit_chair": {
+      "description": "Independent assurance lead for authority proofs and drift checks",
+      "permissions": [
+        "schedule_audit",
+        "request_evidence",
+        "publish_assurance_report",
+        "demand_corrective_action"
+      ]
     }
   },
   "constraints": {
@@ -87,10 +117,28 @@
     "active_network_members_year1": 1000
   },
   "authority_layers": {
-    "root": ["guardian", "architect"],
-    "operational": ["ops_controller", "continuity_guard"],
-    "oversight": ["ombudsman", "witness"],
+    "root": ["guardian", "architect", "registrar"],
+    "operational": ["ops_controller", "continuity_guard", "bridge_conductor"],
+    "oversight": ["ombudsman", "witness", "audit_chair"],
     "advisory": ["steward"]
+  },
+  "authority_extensions": {
+    "universal_root": {
+      "description": "Defines the active surface area for DNS, credential, and treaty authority.",
+      "mandates": [
+        "Registrar must publish custody proofs and rotation attestations every quarter",
+        "Guardian and Architect must co-sign any root key ceremony",
+        "Bridge Conductor must confirm mirror parity within 24 hours of any registrar action"
+      ]
+    },
+    "assurance": {
+      "description": "Assurance cadence that binds parity, continuity, and oversight roles to concrete evidence",
+      "mandates": [
+        "Audit Chair publishes an assurance note after each rotation window",
+        "Continuity Guard links integrity proofs to the latest offline snapshot",
+        "Ombudsman receives a public-facing summary of any detected drift within 48 hours"
+      ]
+    }
   },
   "review_schedule": {
     "interval_months": 6,
