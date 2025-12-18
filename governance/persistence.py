@@ -1,4 +1,5 @@
 import json
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -27,14 +28,13 @@ def clear_offline_state():
     missing files will simply be recreated on the next persistence call.
     """
 
-    for item in BASE.glob("*"):
-        if item.is_file():
+    BASE.mkdir(exist_ok=True)
+
+    for item in BASE.iterdir():
+        if item.is_dir():
+            shutil.rmtree(item)
+        else:
             item.unlink()
-        elif item.is_dir():
-            for child in item.glob("**/*"):
-                if child.is_file():
-                    child.unlink()
-            item.rmdir()
 
 
 # ---- Governance Objects ---- #
