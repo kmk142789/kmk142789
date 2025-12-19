@@ -20,7 +20,7 @@ def test_pending_steps_tracks_progress_and_event_log():
 
     pending_after_progress = evolver.pending_steps()
     assert "advance_cycle" not in pending_after_progress
-    assert pending_after_progress[0] == "generate_symbolic_language"
+    assert pending_after_progress[0] == "forge_legacy_compass"
     assert evolver.state.network_cache["pending_steps"] == pending_after_progress
     after_log = evolver.state.event_log[-1]
     assert "persist_artifact=True" in after_log
