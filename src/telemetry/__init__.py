@@ -18,6 +18,12 @@ from .report import (
     main as generate_vitality_report_cli,
 )
 from .holographic_time_weaver import HologramFrame, TemporalHologramWeaver
+from .resilience import (
+    ResiliencePulseError,
+    ResiliencePulseReport,
+    generate_resilience_report,
+    main as generate_resilience_report_cli,
+)
 
 __all__ = [
     "ConsentState",
@@ -40,4 +46,8 @@ __all__ = [
     "generate_vitality_report_cli",
     "HologramFrame",
     "TemporalHologramWeaver",
+    "ResiliencePulseError",
+    "ResiliencePulseReport",
+    "generate_resilience_report",
+    "generate_resilience_report_cli",
 ]
