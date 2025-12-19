@@ -150,6 +150,7 @@ from .innovation import app as innovation_app
 from .pulse_analysis import (
     DEFAULT_PULSE_HISTORY,
     build_pulse_timeline,
+    detect_pulse_gaps,
     extract_pulse_channel,
     load_pulse_history,
     summarize_pulse_activity,
@@ -247,6 +248,15 @@ def _format_duration(seconds: float | None) -> str:
     if hours:
         return f"{hours}:{minutes:02d}:{secs:02d}"
     return f"{minutes}:{secs:02d}"
+
+
+def _truncate_text(text: str, limit: int = 60) -> str:
+    """Truncate long text for compact console displays."""
+
+    stripped = text.strip()
+    if len(stripped) <= limit:
+        return stripped
+    return f"{stripped[: max(limit - 1, 1)].rstrip()}…"
 
 
 def _format_timestamp_for_table(timestamp: datetime | None) -> str:
@@ -3965,6 +3975,95 @@ def pulse_timeline(
             ["Window", "Events"],
             rows,
             title=f"Pulse timeline per {period.lower()}",
+        )
+    )
+
+
+@pulse_app.command("gaps")
+def pulse_gaps(
+    ctx: typer.Context,
+    min_gap: float = typer.Option(
+        3600.0,
+        "--min-gap",
+        help="Minimum gap size in seconds to report (default: one hour).",
+    ),
+    limit: int = typer.Option(
+        5,
+        "--limit",
+        "-l",
+        help="Maximum number of gaps to display (use 0 to show all).",
+    ),
+    file: Path = typer.Option(
+        DEFAULT_PULSE_HISTORY,
+        "--file",
+        "-f",
+        exists=True,
+        readable=True,
+        help="Path to a pulse_history.json file to analyse.",
+    ),
+    json_mode: bool = typer.Option(
+        False, "--json", "-j", help="Emit JSON payloads instead of formatted text"
+    ),
+) -> None:
+    """Highlight quiet periods between pulse events."""
+
+    _ensure_ctx(ctx)
+    _set_json_mode(ctx, json_mode)
+    if min_gap <= 0:
+        raise typer.BadParameter("--min-gap must be a positive number of seconds")
+    if limit < 0:
+        raise typer.BadParameter("limit must be zero or a positive integer")
+    try:
+        events = load_pulse_history(file)
+    except FileNotFoundError as exc:  # pragma: no cover - validated by typer
+        raise typer.BadParameter(f"Pulse history not found: {file}") from exc
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    gaps = detect_pulse_gaps(events, min_gap_seconds=min_gap)
+    if limit > 0:
+        gaps = gaps[:limit]
+
+    payload = {
+        "path": str(file),
+        "min_gap_seconds": min_gap,
+        "limit": limit,
+        "gaps": [
+            {
+                "start": _format_iso(gap["start"]),
+                "end": _format_iso(gap["end"]),
+                "duration_seconds": float(gap["duration_seconds"]),
+                "start_message": gap["start_message"],
+                "end_message": gap["end_message"],
+            }
+            for gap in gaps
+        ],
+    }
+
+    if ctx.obj.get("json", False):
+        _echo(ctx, payload)
+        return
+
+    if not gaps:
+        console.print("No gaps detected for the selected pulse history file.")
+        return
+
+    rows = [
+        (
+            _format_duration(float(gap["duration_seconds"])),
+            _format_timestamp_for_table(gap["start"]),
+            _format_timestamp_for_table(gap["end"]),
+            _truncate_text(str(gap["start_message"])),
+            _truncate_text(str(gap["end_message"])),
+        )
+        for gap in gaps
+    ]
+
+    console.print(
+        _build_table(
+            ["Duration", "Start", "End", "Start message", "End message"],
+            rows,
+            title="Detected pulse gaps",
         )
     )
 

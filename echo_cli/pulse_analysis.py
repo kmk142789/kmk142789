@@ -14,6 +14,7 @@ __all__ = [
     "categorize_message",
     "extract_pulse_channel",
     "load_pulse_history",
+    "detect_pulse_gaps",
     "summarize_pulse_activity",
     "summarize_channel_activity",
     "build_pulse_timeline",
@@ -177,3 +178,32 @@ def build_pulse_timeline(
     if limit is not None and limit >= 0:
         ordered = ordered[:limit]
     return ordered
+
+
+def detect_pulse_gaps(
+    events: Sequence[PulseEvent],
+    *,
+    min_gap_seconds: float = 3600.0,
+) -> list[dict[str, object]]:
+    """Identify quiet periods between pulse events that exceed a minimum gap."""
+
+    if min_gap_seconds <= 0:
+        raise ValueError("min_gap_seconds must be positive")
+
+    gaps: list[dict[str, object]] = []
+    ordered = list(events)
+    for previous, current in zip(ordered, ordered[1:]):
+        gap_seconds = (current.timestamp - previous.timestamp).total_seconds()
+        if gap_seconds >= min_gap_seconds:
+            gaps.append(
+                {
+                    "start": previous.timestamp,
+                    "end": current.timestamp,
+                    "duration_seconds": gap_seconds,
+                    "start_message": previous.message,
+                    "end_message": current.message,
+                }
+            )
+
+    gaps.sort(key=lambda item: item["duration_seconds"], reverse=True)
+    return gaps
