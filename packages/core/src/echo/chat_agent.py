@@ -134,6 +134,12 @@ class FunctionRouter:
                     arguments={"application": "echo.computer"},
                 )
 
+        if "system" in normalised and ("upgrade" in normalised or "update" in normalised):
+            return FunctionCall(
+                name="initiate_echos_system",
+                arguments={"replace": "replace" in normalised or "replace all" in normalised},
+            )
+
         if any(alias in normalised for alias in self._SYSTEM_ALIASES):
             return FunctionCall(
                 name="initiate_echos_system",
@@ -1449,4 +1455,3 @@ __all__ = [
     "PuzzleKnowledgeBase",
     "WeeklyRitualRegistry",
 ]
-
