@@ -60,6 +60,21 @@ class OfflineState:
             "offline_transition_journal": True,
             "offline_snapshots": True,
             "stability_intelligence": True,
+            "uplink_sync": True,
+            "mesh_discovery": True,
+            "mesh_broadcast": True,
+            "external_bridge_adapters": True,
+            "capability_registry": True,
+            "telemetry_digest": True,
+            "command_execution": True,
+            "config_updates": True,
+            "state_export": True,
+            "policy_attestation": True,
+            "event_streaming": True,
+            "event_backfill": True,
+            "device_metrics": True,
+            "sensor_sampling": True,
+            "safe_shell": True,
         }
     )
     resilience_notes: List[str] = field(default_factory=list)
@@ -288,6 +303,47 @@ class OfflineState:
             replay_ready=replay_ready,
             manifest_valid=manifest_valid,
             backlog_threshold=backlog_threshold,
+        )
+        online = bool(snapshot.get("online"))
+        self.set_capability(
+            "uplink_sync",
+            online,
+            note=None if online else "Uplink sync disabled while offline",
+        )
+        self.set_capability(
+            "mesh_discovery",
+            online,
+            note=None if online else "Mesh discovery paused while offline",
+        )
+        self.set_capability(
+            "mesh_broadcast",
+            online,
+            note=None if online else "Mesh broadcasts paused while offline",
+        )
+        self.set_capability(
+            "event_streaming",
+            online,
+            note=None if online else "Event streaming disabled while offline",
+        )
+        self.set_capability(
+            "external_bridge_adapters",
+            online,
+            note=None if online else "External bridge adapters require connectivity",
+        )
+        self.set_capability(
+            "event_backfill",
+            replay_ready,
+            note=None if replay_ready else "Event backfill waiting on cache replay readiness",
+        )
+        self.set_capability(
+            "state_export",
+            cache_present,
+            note=None if cache_present else "State export requires an offline cache directory",
+        )
+        self.set_capability(
+            "telemetry_digest",
+            backlog_ok,
+            note=None if backlog_ok else "Telemetry digest paused due to elevated backlog",
         )
 
         backpressure = self.backpressure_profile(

@@ -6,6 +6,7 @@ from .broker import ExecutionBroker, SafeExecutionResult
 from .dsi import DeviceSurfaceInterface, SensorReading, DeviceMetrics
 from .events import Event, EventBus
 from .mesh import MeshNode, OuterLinkMeshNetwork
+from .abilities import AbilityRegistry, OuterLinkAbility, default_outerlink_abilities
 from .utils import SafeModeConfig, OfflineState
 from .echo_world_runtime import (
     AstralProjectionSimulator,
@@ -30,6 +31,9 @@ __all__ = [
     "OuterLinkMeshNetwork",
     "SafeModeConfig",
     "OfflineState",
+    "AbilityRegistry",
+    "OuterLinkAbility",
+    "default_outerlink_abilities",
     "AstralProjectionSimulator",
     "ConsciousnessPersistenceLayer",
     "EchoWorldRuntimeEnvironment",
