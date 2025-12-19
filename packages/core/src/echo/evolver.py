@@ -5939,6 +5939,94 @@ We are not hiding anymore.
         )
         return status
 
+    def cycle_highlight_reel(
+        self,
+        *,
+        persist_artifact: bool = True,
+        event_limit: int = 5,
+        quantam_limit: int = 3,
+        momentum_samples: int = 5,
+    ) -> Dict[str, object]:
+        """Return a compact highlight reel for the active cycle."""
+
+        if event_limit < 0:
+            raise ValueError("event_limit must be non-negative")
+        if quantam_limit <= 0:
+            raise ValueError("quantam_limit must be positive")
+        if momentum_samples <= 0:
+            raise ValueError("momentum_samples must be positive")
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        momentum = self.momentum_resonance(limit=momentum_samples)
+        resilience = self.resilience_signal(
+            momentum_window=momentum_samples, persist_artifact=persist_artifact
+        )
+
+        abilities: List[Dict[str, object]] = []
+        for ability_id, details in list(self.state.quantam_abilities.items())[
+            :quantam_limit
+        ]:
+            entry = {"id": ability_id}
+            if isinstance(details, Mapping):
+                entry.update(deepcopy(details))
+            abilities.append(entry)
+
+        capabilities: List[Dict[str, object]] = []
+        for capability_id, details in list(self.state.quantam_capabilities.items())[
+            :quantam_limit
+        ]:
+            entry = {"id": capability_id}
+            if isinstance(details, Mapping):
+                entry.update(deepcopy(details))
+            capabilities.append(entry)
+
+        recent_events = list(self.state.event_log[-event_limit:]) if event_limit else []
+        progress_pct = digest["progress"] * 100
+
+        summary = (
+            "Cycle {cycle} highlight — {progress:.1f}% complete, momentum {status} ({trend}), "
+            "resilience {resilience:.1f}/100. Next step: {next_step}."
+        ).format(
+            cycle=digest["cycle"],
+            progress=progress_pct,
+            status=momentum.get("status", "unavailable"),
+            trend=momentum.get("trend", "no signal"),
+            resilience=resilience.stability_index,
+            next_step=digest["next_step"],
+        )
+
+        if abilities or capabilities:
+            summary += " Quantam: {abilities} abilities, {capabilities} capabilities.".format(
+                abilities=len(abilities), capabilities=len(capabilities)
+            )
+
+        if recent_events:
+            summary += " Recent events: {}.".format(" | ".join(recent_events))
+
+        reel = {
+            "cycle": digest["cycle"],
+            "progress": digest["progress"],
+            "next_step": digest["next_step"],
+            "momentum": deepcopy(momentum),
+            "resilience": resilience.as_dict(),
+            "system_metrics": asdict(self.state.system_metrics),
+            "emotional_drive": asdict(self.state.emotional_drive),
+            "recent_events": recent_events,
+            "quantam_abilities": abilities,
+            "quantam_capabilities": capabilities,
+            "summary": summary,
+        }
+
+        self.state.network_cache["cycle_highlight_reel"] = deepcopy(reel)
+        self.state.event_log.append(
+            "Cycle highlight reel composed (events={events}, abilities={abilities}, capabilities={capabilities})".format(
+                events=len(recent_events),
+                abilities=len(abilities),
+                capabilities=len(capabilities),
+            )
+        )
+        return deepcopy(reel)
+
     def cycle_diagnostics(
         self,
         *,
@@ -9088,4 +9176,3 @@ __all__ = [
     "EvolutionAdvancementStage",
     "main",
 ]
-
