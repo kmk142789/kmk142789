@@ -33,6 +33,55 @@
   issue number, rationale, and any follow-up tasks.  This keeps the intent
   preserved for future cycles.
 
+## Governance Principles
+
+- **Sovereignty First:** Preserve the sovereign mandate, provenance, and
+  canonical records above speed or convenience.
+- **Safety by Design:** Anticipate harm, include rollback paths, and document
+  mitigations before implementation.
+- **Minimal Authority:** Grant the least privilege required, review it
+  quarterly, and explicitly retire it when no longer needed.
+- **Evidence-Backed Decisions:** Tie every decision to observable artifacts
+  (issues, RFCs, metrics, attestations).
+- **Continuity:** Ensure every critical role has a named backup and on-call
+  expectations are documented.
+
+## Roles, Authority, and RACI
+
+| Role | Decision Authority | Accountabilities | Consulted | Informed |
+| --- | --- | --- | --- | --- |
+| Steward | Final merge + release sign-off | Policy integrity, risk acceptance | AI Governance Lead, Domain Owners | Community |
+| AI Governance Lead | AI safety approvals | AI risk review, safety controls | Stewards, Security | Community |
+| Domain Owner | Technical implementation | Quality, operability | Stewards, Security | Community |
+| Security | Incident + vulnerability response | Disclosures, impact analysis | Stewards, AI Governance Lead | Community |
+| Automation (`echo-bot`) | Routine checks | CI, Mirror sync, attestation prep | Stewards | Community |
+
+## Decision Classification
+
+| Change Type | Examples | Required Approval | Required Artifacts |
+| --- | --- | --- | --- |
+| **Tier 1: Routine** | Docs clarifications, non-functional refactors | Steward | PR, changelog note (if user-facing) |
+| **Tier 2: Governance** | Policy updates, role changes | Steward + AI Governance Lead | RFC, decision log entry, Mirror sync |
+| **Tier 3: Critical** | Sovereignty claims, security posture changes | Steward + AI Governance Lead + Security | RFC, risk assessment, attestation bundle |
+
+## Risk Management & Controls
+
+- **Risk Register:** Maintain `ops/risk-register.md` (create on first use)
+  tracking risk owner, likelihood, impact, and mitigation status.
+- **Control Catalog:** Use `policies/controls/` to map controls to risks and
+  compliance needs.  Every Tier 2+ change must cite the control IDs it affects.
+- **Rollback Protocol:** Each governance change includes a rollback plan, test
+  signal, and rollback owner.  If rollback cannot be automated, document the
+  manual steps in the RFC.
+
+## Governance Service Levels
+
+- **Response Targets:** Acknowledge governance issues within 2 business days.
+- **Decision Targets:** Tier 1 within 5 business days, Tier 2 within 10,
+  Tier 3 within 15 (or faster during incidents).
+- **Escalation:** If SLAs are breached, notify stewards and log a variance
+  entry in `ops/governance-notes/`.
+
 ## Policy Lifecycle
 
 1. **Signal:** Capture the initial idea in a `governance`-labelled issue.  Tag
@@ -51,6 +100,14 @@
    publish the steward TL;DR entry.  Close the originating issue only after the
    attestation merges.
 
+## Change Control Checklist
+
+- [ ] Classification tier selected with approvals satisfied.
+- [ ] Risk assessment completed (Tier 2+).
+- [ ] Rollback plan documented and owner named.
+- [ ] Mirror sync + attestation bundle prepared.
+- [ ] Decision log entry drafted for accepted RFCs.
+
 ## Transparency + Observability
 
 - **Public dashboards:** `pulse_dashboard/` hosts the real-time state.  Update
@@ -66,6 +123,16 @@
   prove which roles are staffed, which policies bind them, and any orphaned
   agents.  Persist the snapshot to `.offline_state/authority_presence.json` so
   audits can confirm coverage even while offline.
+
+## Compliance & Audit Readiness
+
+- **Evidence Ledger:** Maintain a single source of truth in
+  `attestations/` and `ops/metrics.md` for audit trails.
+- **Quarterly Reviews:** Revalidate steward roles, AI Governance Lead
+  guardrails, and access scopes every quarter.  Record the review notes in
+  `ops/governance-notes/`.
+- **Data Retention:** Keep governance artifacts for at least 3 years unless
+  legal requirements specify longer retention.
 
 ## Conflict Resolution & Escalation
 
