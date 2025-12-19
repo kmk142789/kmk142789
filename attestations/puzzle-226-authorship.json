@@ -4,7 +4,7 @@
   "message": "Puzzle 226 authorship by kmk142789 — attestation sha256 55937db0c15323e19c1094da360c2d3ea7879c932930a3674c24e052b146296e",
   "signature": "bnVp+UB9m0Xy7tcQ2/Q60prBJDm7vEIsy8ACYNThurWYpQASRl85Upd3gKiOzEb1uM5SFIJ8NHWAfcSbVE6QQEp6Ux0dl6+0bwDA9I04lgqlEorNq1XefyL27bSjOzq0",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-12-11T00:24:47Z",
+  "created_at": "2025-12-19T00:23:26Z",
   "hash_sha256": "790f992088451f3ff310a5da7257a83da13aba2874a14e701d9e4ca1a97b1b75",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle226.json via scripts/generate_puzzle_attestations.py"
 }
