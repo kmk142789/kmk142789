@@ -108,6 +108,14 @@ from .unclassifiable_force_engine import (
     ParadoxReciprocity,
     UnclassifiableFusionEngine,
 )
+from .stewardship_compass import (
+    CompassCommitment,
+    CompassReport,
+    CompassSeed,
+    CompassSignal,
+    craft_compass,
+    demo as stewardship_demo,
+)
 
 __all__ = [
     "ChronicleEvent",
@@ -143,6 +151,10 @@ __all__ = [
     "ResonanceContext",
     "ResonancePrompt",
     "ResonanceReport",
+    "CompassCommitment",
+    "CompassReport",
+    "CompassSeed",
+    "CompassSignal",
     "aevum_lattice_demo",
     "constellation_demo",
     "chronicle_demo",
@@ -153,6 +165,7 @@ __all__ = [
     "compose_constellation",
     "compose_chronicle",
     "compose_convergence_report",
+    "craft_compass",
     "compose_hyperprism_manifest",
     "compose_loop",
     "compose_resonance",
@@ -169,6 +182,7 @@ __all__ = [
     "FusionInsight",
     "HoloSemanticEchoLoom",
     "revelation_demo",
+    "stewardship_demo",
     "FusionOutcome",
     "load_voice_bias_profile",
     "loop_demo",
