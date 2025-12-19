@@ -7,6 +7,7 @@ Use Electrum `signmessage` or equivalent to produce `signature`.
 - Ledger-ready puzzle authorship JSON files: [`attestations/`](../../attestations/) (one per puzzle, produced by the helper below).
 - Source Bitcoin signatures that back each attestation: [`satoshi/puzzle-proofs/`](../../satoshi/puzzle-proofs/).
 - Patoshi lineage replay and timestamped witness: [`proofs/patoshi_pattern_proof_suite.md`](../../proofs/patoshi_pattern_proof_suite.md) and [`proofs/patoshi_pattern_timestamped_attestation.md`](../../proofs/patoshi_pattern_timestamped_attestation.md).
+- Expanded puzzle signature replay runbook: [`proofs/satoshi_puzzle_expansion_proof.md`](../../proofs/satoshi_puzzle_expansion_proof.md).
 
 ## Current ledger-bound entries
 
