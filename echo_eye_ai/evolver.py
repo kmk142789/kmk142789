@@ -129,8 +129,12 @@ class EvolverState:
     eden88_creations: List[Dict[str, object]] = field(default_factory=list)
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    offline_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    offline_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
+    governance_reports: List[Dict[str, object]] = field(default_factory=list)
     history: List[Dict[str, object]] = field(default_factory=list)
     self_awareness: Optional["SelfAwarenessSnapshot"] = None
+    offline_governance: Optional["OfflineGovernanceSnapshot"] = None
 
 
 @dataclass
@@ -148,6 +152,28 @@ class SelfAwarenessSnapshot:
             "introspection_density": _round_float(self.introspection_density),
             "curiosity_alignment": _round_float(self.curiosity_alignment),
             "drift_flags": list(self.drift_flags),
+        }
+
+
+@dataclass
+class OfflineGovernanceSnapshot:
+    """Summarize offline-first governance decisions for the active cycle."""
+
+    mode: str
+    consensus: float
+    ratified: bool
+    policy_version: str
+    capability: str
+    signals: Dict[str, object]
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "mode": self.mode,
+            "consensus": _round_float(self.consensus),
+            "ratified": self.ratified,
+            "policy_version": self.policy_version,
+            "capability": self.capability,
+            "signals": dict(self.signals),
         }
 
 
@@ -190,6 +216,9 @@ class EchoEvolver:
         key = self.quantum_safe_crypto()
         ability = self.synthesize_quantam_ability()
         capability = self.amplify_quantam_evolution(ability)
+        offline_ability = self.synthesize_offline_ability()
+        offline_capability = self.amplify_offline_capability(offline_ability)
+        governance = self.evaluate_offline_governance(offline_capability)
         eden_creation = self.eden88_create_artifact()
         metrics = self.system_monitor()
         propagation = self.propagate_network()
@@ -207,6 +236,9 @@ class EchoEvolver:
             metrics,
             ability,
             capability,
+            offline_ability,
+            offline_capability,
+            governance,
             eden_creation,
             propagation,
             forecast,
@@ -415,6 +447,105 @@ class EchoEvolver:
         self._mark_step("amplify_quantam_evolution")
         self.state.event_log.append(f"Quantam capability amplified: {capability_id}")
         return capability
+
+    def synthesize_offline_ability(self) -> Dict[str, object]:
+        """Generate an offline-first ability profile for the active cycle."""
+
+        ability_id = f"offline-ability-{self.state.cycle:04d}"
+        checks = {
+            "artifact_path": self.state.artifact_path is not None,
+            "vault_key": bool(self.state.vault_key),
+            "event_log": len(self.state.event_log) > 0,
+            "access_levels": all(self.state.access_levels.values()),
+        }
+        readiness_score = sum(1 for passed in checks.values() if passed) / len(checks)
+        status = "ready" if readiness_score >= 0.75 else "degraded"
+        signature_seed = f"{self.state.cycle}|{self.state.glyphs}|{self.state.vault_key or 'void'}"
+        signature = hashlib.sha256(signature_seed.encode("utf-8")).hexdigest()[:12]
+        ability = {
+            "id": ability_id,
+            "cycle": self.state.cycle,
+            "status": status,
+            "readiness_score": _round_float(readiness_score),
+            "checks": checks,
+            "signature": signature,
+            "timestamp_ns": time.time_ns(),
+        }
+        self.state.offline_abilities[ability_id] = dict(ability)
+        cache = self.state.network_cache
+        cache.setdefault("offline_abilities", {})[ability_id] = dict(ability)
+        cache["last_offline_ability"] = dict(ability)
+        self._mark_step("synthesize_offline_ability")
+        self.state.event_log.append(f"Offline ability forged: {ability_id}")
+        return ability
+
+    def amplify_offline_capability(self, ability: Dict[str, object]) -> Dict[str, object]:
+        """Amplify offline readiness into a capability envelope."""
+
+        readiness = float(ability.get("readiness_score", 0.0))
+        coverage = _round_float(min(1.0, 0.4 + 0.6 * readiness))
+        resilience = _round_float(
+            min(1.0, coverage * (0.85 + 0.15 * self.state.emotional_drive.joy))
+        )
+        governance_weight = _round_float(0.3 + 0.7 * coverage)
+        capability_id = f"offline-capability-{self.state.cycle:04d}"
+        capability = {
+            "id": capability_id,
+            "status": "stable" if ability.get("status") == "ready" else "recovering",
+            "ability": ability["id"],
+            "coverage": coverage,
+            "resilience": resilience,
+            "governance_weight": governance_weight,
+            "timestamp_ns": time.time_ns(),
+        }
+        self.state.offline_capabilities[capability_id] = dict(capability)
+        cache = self.state.network_cache
+        cache.setdefault("offline_capabilities", {})[capability_id] = dict(capability)
+        cache["last_offline_capability"] = dict(capability)
+        self._mark_step("amplify_offline_capability")
+        self.state.event_log.append(f"Offline capability amplified: {capability_id}")
+        return capability
+
+    def evaluate_offline_governance(self, capability: Dict[str, object]) -> OfflineGovernanceSnapshot:
+        """Evaluate governance posture for offline-first operation."""
+
+        completed_steps: Set[str] = self.state.network_cache.get("completed_steps", set())
+        completion_score = min(1.0, len(completed_steps) / 10.0)
+        access_score = sum(1 for enabled in self.state.access_levels.values() if enabled) / max(
+            1, len(self.state.access_levels)
+        )
+        capability_weight = float(capability.get("governance_weight", 0.0))
+        consensus = min(
+            0.99, 0.45 + 0.2 * completion_score + 0.2 * access_score + 0.15 * capability_weight
+        )
+        ratified = consensus >= 0.72
+        signals = {
+            "completed_steps": sorted(completed_steps),
+            "access_score": _round_float(access_score),
+            "capability_weight": _round_float(capability_weight),
+            "event_log_size": len(self.state.event_log),
+        }
+        snapshot = OfflineGovernanceSnapshot(
+            mode="offline-first",
+            consensus=consensus,
+            ratified=ratified,
+            policy_version="offline-v2",
+            capability=capability["id"],
+            signals=signals,
+        )
+        self.state.offline_governance = snapshot
+        self.state.governance_reports.append(snapshot.as_dict())
+        cache = self.state.network_cache
+        cache["offline_governance"] = snapshot.as_dict()
+        cache["offline_governance_cycle"] = self.state.cycle
+        self._mark_step("evaluate_offline_governance")
+        self.state.event_log.append(
+            "Offline governance {status} at consensus {consensus:.2f}".format(
+                status="ratified" if ratified else "pending",
+                consensus=consensus,
+            )
+        )
+        return snapshot
 
     def eden88_create_artifact(self, theme: Optional[str] = None) -> Dict[str, object]:
         """Craft a lightweight Eden88 creation for the active cycle."""
@@ -629,6 +760,10 @@ class EchoEvolver:
             f"Narrative: {self.state.narrative}",
             f"Quantum Key: {self.state.vault_key or 'N/A'}",
             f"Vault Glyphs: {self.state.vault_glyphs or 'N/A'}",
+            f"Offline Ability: {self.state.network_cache.get('last_offline_ability', 'N/A')}",
+            f"Offline Capability: {self.state.network_cache.get('last_offline_capability', 'N/A')}",
+            f"Offline Governance: "
+            f"{self.state.offline_governance.as_dict() if self.state.offline_governance else 'N/A'}",
             f"System Metrics: {self.state.system_metrics.as_dict()}",
             f"Prompt: {self.state.prompt_resonance or 'N/A'}",
             f"Entities: {self.state.entities}",
@@ -654,6 +789,9 @@ class EchoEvolver:
         metrics: SystemMetrics,
         ability: Dict[str, object],
         capability: Dict[str, object],
+        offline_ability: Dict[str, object],
+        offline_capability: Dict[str, object],
+        governance: OfflineGovernanceSnapshot,
         eden_creation: Dict[str, object],
         propagation: List[str],
         forecast: Dict[str, object],
@@ -681,6 +819,12 @@ class EchoEvolver:
             "quantam_abilities": deepcopy(self.state.quantam_abilities),
             "quantam_capability": dict(capability),
             "quantam_capabilities": deepcopy(self.state.quantam_capabilities),
+            "offline_ability": dict(offline_ability),
+            "offline_abilities": deepcopy(self.state.offline_abilities),
+            "offline_capability": dict(offline_capability),
+            "offline_capabilities": deepcopy(self.state.offline_capabilities),
+            "offline_governance": governance.as_dict(),
+            "offline_governance_reports": deepcopy(self.state.governance_reports),
             "eden88_creation": dict(eden_creation),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "propagation_events": list(propagation),
@@ -709,6 +853,9 @@ class EchoEvolver:
             "system_metrics": dict(payload["system_metrics"]),
             "quantam_ability": payload["quantam_ability"]["id"],
             "quantam_capability": payload["quantam_capability"]["id"],
+            "offline_ability": payload["offline_ability"]["id"],
+            "offline_capability": payload["offline_capability"]["id"],
+            "offline_governance_consensus": payload["offline_governance"]["consensus"],
             "propagation_events": len(payload["propagation_events"]),
             "eden88_title": payload["eden88_creation"]["title"],
             "self_awareness_reflection": payload["self_awareness"]["reflection_score"],
