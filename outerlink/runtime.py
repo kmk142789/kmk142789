@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from .abilities import AbilityRegistry, default_outerlink_abilities
 from .broker import ExecutionBroker
 from .dsi import DeviceSurfaceInterface
 from .events import EventBus
@@ -22,6 +23,7 @@ class OuterLinkRuntime:
         self.dsi = DeviceSurfaceInterface(self.config)
         self.broker = ExecutionBroker(self.config, self.dsi, self.event_bus, self.offline_state)
         self.router = TaskRouter(self.event_bus, self.offline_state)
+        self.abilities = AbilityRegistry(default_outerlink_abilities())
         self._last_flush_index = 0
         self._bootstrap_default_mappings()
 
@@ -39,6 +41,7 @@ class OuterLinkRuntime:
             self.config.pending_backlog_threshold,
             self.config.pending_backlog_hard_limit,
         )
+        self.abilities.sync_from_capabilities(offline_snapshot.get("capabilities", {}))
 
         health_report = self.offline_state.write_health_report(
             self.config.offline_cache_dir,
@@ -54,6 +57,7 @@ class OuterLinkRuntime:
             "offline": offline_snapshot,
             "resilience": resilience,
             "health_report": str(health_report),
+            "abilities": self.abilities.snapshot(),
         }
         self.event_bus.emit("device_status", payload)
         payload["events"] = self.event_bus.stats()
