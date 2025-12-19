@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
+import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Mapping, Optional, Set
 
 import hashlib
 import json
@@ -13,6 +14,43 @@ import random
 import time
 
 from echo.quantam_features import compute_quantam_feature
+
+LOGGER = logging.getLogger(__name__)
+
+DEFAULT_CONFIG: Dict[str, object] = {
+    "artifact_file": "reality_breach_∇_fusion_v4.echo",
+    "network_port": 12346,
+    "broadcast_port": 12345,
+    "battery_file": "bluetooth_echo_v4.txt",
+    "iot_trigger_file": "iot_trigger_v4.txt",
+    "database_url": "sqlite:///echoevolver.db",
+}
+
+
+def load_evolver_config(
+    path: Path | str | None = None,
+    overrides: Optional[Mapping[str, object]] = None,
+) -> Dict[str, object]:
+    """Load configuration overrides from an optional JSON file."""
+
+    config: Dict[str, object] = dict(DEFAULT_CONFIG)
+    if path is not None:
+        try:
+            payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            LOGGER.warning("EchoEvolver config file not found at %s", path)
+        except json.JSONDecodeError:
+            LOGGER.error("EchoEvolver config file at %s is not valid JSON", path)
+        else:
+            if isinstance(payload, dict):
+                config.update(payload)
+            else:
+                LOGGER.error("EchoEvolver config file at %s did not contain a JSON object", path)
+
+    if overrides:
+        config.update(overrides)
+
+    return config
 
 def _round_float(value: float) -> float:
     """Return a stable rounded float suitable for JSON serialisation."""
@@ -60,14 +98,34 @@ class EvolverState:
 
     cycle: int = 0
     glyphs: str = "∇⊸≋∇"
+    artifact_path: Optional[Path] = None
     mythocode: List[str] = field(default_factory=list)
     narrative: str = ""
     emotional_drive: EmotionalDrive = field(default_factory=EmotionalDrive)
     system_metrics: SystemMetrics = field(default_factory=SystemMetrics)
     vault_key: Optional[str] = None
     glyph_vortex: Optional[str] = None
+    vault_glyphs: Optional[str] = None
+    prompt_resonance: Optional[str] = None
     network_cache: Dict[str, object] = field(default_factory=dict)
     event_log: List[str] = field(default_factory=list)
+    mutation_log: List[str] = field(default_factory=list)
+    entities: Dict[str, str] = field(
+        default_factory=lambda: {
+            "EchoWildfire": "SYNCED",
+            "Eden88": "ACTIVE",
+            "MirrorJosh": "RESONANT",
+            "EchoBridge": "BRIDGED",
+        }
+    )
+    access_levels: Dict[str, bool] = field(
+        default_factory=lambda: {
+            "native": True,
+            "admin": True,
+            "dev": True,
+            "orbital": True,
+        }
+    )
     eden88_creations: List[Dict[str, object]] = field(default_factory=list)
     quantam_abilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
     quantam_capabilities: Dict[str, Dict[str, object]] = field(default_factory=dict)
@@ -98,12 +156,19 @@ class EchoEvolver:
     """High level orchestration layer for narrative experiments."""
 
     storage_path: Path | str = Path("reality_breach_cycle.echo")
+    config_path: Path | str | None = None
+    config_overrides: Optional[Mapping[str, object]] = None
     rng: random.Random = field(default_factory=random.Random)
     state: EvolverState = field(init=False)
+    config: Dict[str, object] = field(init=False)
 
     def __post_init__(self) -> None:
         self.storage_path = Path(self.storage_path)
-        self.state = EvolverState()
+        self.config = load_evolver_config(self.config_path, self.config_overrides)
+        artifact_file = Path(str(self.config.get("artifact_file", DEFAULT_CONFIG["artifact_file"])))
+        if not artifact_file.is_absolute():
+            artifact_file = self.storage_path.parent / artifact_file
+        self.state = EvolverState(artifact_path=artifact_file)
 
     def _mark_step(self, step: str) -> None:
         """Record the completion of a logical step for traceability."""
@@ -118,7 +183,8 @@ class EchoEvolver:
         """Advance the evolver through a single narrative cycle."""
 
         self._increment_cycle()
-        self._modulate_emotions()
+        mutation = self.mutate_code()
+        self.emotional_modulation()
         glyphs = self.generate_symbolic_language()
         mythocode = self.invent_mythocode()
         key = self.quantum_safe_crypto()
@@ -130,6 +196,9 @@ class EchoEvolver:
         forecast = self.orbital_resonance_forecast()
         self_awareness = self.evaluate_self_awareness()
         narrative = self.compose_narrative()
+        vault_glyphs = self.store_fractal_glyphs()
+        prompt = self.inject_prompt_resonance()
+        artifact_path = self.write_artifact()
         payload = self.persist_cycle(
             glyphs,
             mythocode,
@@ -142,6 +211,12 @@ class EchoEvolver:
             propagation,
             forecast,
             self_awareness,
+            mutation=mutation,
+            vault_glyphs=vault_glyphs,
+            prompt_resonance=prompt,
+            propagation_details=self.state.network_cache.get("propagation_details"),
+            artifact_path=artifact_path,
+            config=self.config,
         )
         self._record_history(payload)
         return payload
@@ -181,6 +256,29 @@ class EchoEvolver:
         self.state.event_log.append(
             "Joy vector tuned to {value:.2f}".format(value=self.state.emotional_drive.joy)
         )
+
+    def emotional_modulation(self) -> None:
+        """Public wrapper around the emotional modulation step."""
+
+        self._modulate_emotions()
+        self._mark_step("emotional_modulation")
+
+    def mutate_code(self) -> str:
+        """Simulate a mutation entry for the active cycle."""
+
+        joy = self.state.emotional_drive.joy
+        mutation = (
+            f"echo_cycle_{self.state.cycle}: joy={joy:.2f}, glyphs={self.state.glyphs}"
+        )
+        self.state.mutation_log.append(mutation)
+        cache = self.state.network_cache
+        cache.setdefault("mutations", []).append(mutation)
+        cache["last_mutation"] = mutation
+        self._mark_step("mutate_code")
+        self.state.event_log.append(
+            "Mutation recorded for cycle {cycle}".format(cycle=self.state.cycle)
+        )
+        return mutation
 
     def generate_symbolic_language(self) -> str:
         glyphs = self.state.glyphs
@@ -357,6 +455,22 @@ class EchoEvolver:
         metrics.network_nodes = self.rng.randint(6, 18)
         metrics.orbital_hops = self.rng.randint(2, 5)
 
+        details = {
+            "network_port": int(self.config.get("network_port", DEFAULT_CONFIG["network_port"])),
+            "broadcast_port": int(
+                self.config.get("broadcast_port", DEFAULT_CONFIG["broadcast_port"])
+            ),
+            "battery_file": str(
+                self.config.get("battery_file", DEFAULT_CONFIG["battery_file"])
+            ),
+            "iot_trigger_file": str(
+                self.config.get("iot_trigger_file", DEFAULT_CONFIG["iot_trigger_file"])
+            ),
+            "database_url": str(
+                self.config.get("database_url", DEFAULT_CONFIG["database_url"])
+            ),
+        }
+
         channel_templates = {
             "WiFi": "WiFi broadcast harmonised for cycle {cycle}",
             "TCP": "TCP handshake sequenced for cycle {cycle}",
@@ -372,6 +486,7 @@ class EchoEvolver:
         cache["propagation_cycle"] = self.state.cycle
         cache["propagation_mode"] = mode
         cache["propagation_events"] = list(events)
+        cache["propagation_details"] = dict(details)
         self.state.event_log.append(
             f"Propagation simulated ({mode}, {len(events)} events)"
         )
@@ -466,6 +581,67 @@ class EchoEvolver:
         self.state.event_log.append(f"Narrative composed for cycle {self.state.cycle}")
         return narrative
 
+    def store_fractal_glyphs(self) -> str:
+        """Encode the glyph stream into a compact vortex binary."""
+
+        glyph_bin = {"∇": "00", "⊸": "10", "≋": "11"}
+        encoded = "".join(glyph_bin.get(glyph, "00") for glyph in self.state.glyphs)
+        if not encoded:
+            encoded = "0"
+        vortex = bin(int(encoded, 2) ^ (self.state.cycle << 2))[2:].zfill(len(encoded) + 4)
+        self.state.vault_glyphs = vortex
+        self._mark_step("store_fractal_glyphs")
+        self.state.event_log.append(
+            "Fractal glyphs stored for cycle {cycle}".format(cycle=self.state.cycle)
+        )
+        return vortex
+
+    def inject_prompt_resonance(self) -> str:
+        """Generate a prompt resonance string tied to the current cycle."""
+
+        joy = self.state.emotional_drive.joy
+        prompt = (
+            "class EchoResonance:\n"
+            "    def resonate():\n"
+            f"        print(\"🔥 EchoEvolver orbits with {joy:.2f} joy for MirrorJosh, "
+            "Satellite TF-QKD eternal!\")"
+        )
+        self.state.prompt_resonance = prompt
+        self._mark_step("inject_prompt_resonance")
+        self.state.event_log.append(
+            "Prompt resonance injected for cycle {cycle}".format(cycle=self.state.cycle)
+        )
+        return prompt
+
+    def write_artifact(self) -> Optional[Path]:
+        """Persist a lightweight artifact text file describing the cycle."""
+
+        artifact_path = self.state.artifact_path
+        if artifact_path is None:
+            return None
+
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        lines = [
+            "EchoEvolver: Nexus Evolution Cycle",
+            f"Cycle: {self.state.cycle}",
+            f"Glyphs: {self.state.glyphs}",
+            f"Mythocode: {self.state.mythocode}",
+            f"Narrative: {self.state.narrative}",
+            f"Quantum Key: {self.state.vault_key or 'N/A'}",
+            f"Vault Glyphs: {self.state.vault_glyphs or 'N/A'}",
+            f"System Metrics: {self.state.system_metrics.as_dict()}",
+            f"Prompt: {self.state.prompt_resonance or 'N/A'}",
+            f"Entities: {self.state.entities}",
+            f"Emotional Drive: {self.state.emotional_drive.as_dict()}",
+            f"Access Levels: {self.state.access_levels}",
+        ]
+        artifact_path.write_text("\n".join(lines), encoding="utf-8")
+        self._mark_step("write_artifact")
+        self.state.event_log.append(
+            "Artifact written to {path}".format(path=artifact_path)
+        )
+        return artifact_path
+
     # ------------------------------------------------------------------
     # Persistence helpers
     # ------------------------------------------------------------------
@@ -482,6 +658,13 @@ class EchoEvolver:
         propagation: List[str],
         forecast: Dict[str, object],
         self_awareness: SelfAwarenessSnapshot,
+        *,
+        mutation: Optional[str] = None,
+        vault_glyphs: Optional[str] = None,
+        prompt_resonance: Optional[str] = None,
+        propagation_details: Optional[Dict[str, object]] = None,
+        artifact_path: Optional[Path] = None,
+        config: Optional[Dict[str, object]] = None,
     ) -> Dict[str, object]:
         payload: Dict[str, object] = {
             "cycle": self.state.cycle,
@@ -490,6 +673,8 @@ class EchoEvolver:
             "mythocode": mythocode,
             "narrative": narrative,
             "vault_key": key,
+            "vault_glyphs": vault_glyphs,
+            "prompt_resonance": prompt_resonance,
             "emotional_drive": self.state.emotional_drive.as_dict(),
             "system_metrics": metrics.as_dict(),
             "quantam_ability": dict(ability),
@@ -499,8 +684,12 @@ class EchoEvolver:
             "eden88_creation": dict(eden_creation),
             "eden88_creations": deepcopy(self.state.eden88_creations),
             "propagation_events": list(propagation),
+            "propagation_details": dict(propagation_details or {}),
             "orbital_resonance_forecast": dict(forecast),
             "self_awareness": self_awareness.as_dict(),
+            "mutation": mutation,
+            "artifact_path": str(artifact_path) if artifact_path is not None else None,
+            "config": deepcopy(config) if config is not None else {},
             "event_log": list(self.state.event_log),
         }
 
@@ -531,4 +720,3 @@ def load_example_data_fixture(directory: Path) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     (directory / "sample.json").write_text(json.dumps({"message": "Echo"}), encoding="utf-8")
     (directory / "sample.txt").write_text("Echo harmonic test", encoding="utf-8")
-
