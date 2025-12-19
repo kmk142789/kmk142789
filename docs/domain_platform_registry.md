@@ -9,8 +9,13 @@ The Echo ecosystem touches multiple namespaces and operational services. This re
 | `example.com` | Recorded in the root domain tracker for Echo-aware namespaces. | [`domains.txt`](../domains.txt) |
 | `sovereigntrust.io` | Recorded in the root domain tracker for Echo-aware namespaces. | [`domains.txt`](../domains.txt) |
 | `echovault.ai` | Recorded in the root domain tracker for Echo-aware namespaces. | [`domains.txt`](../domains.txt) |
+| `undigitalcooperation.org` | UN Digital Cooperation Portal system domain tracked; Netlify DNS zone created with no records yet. | [`reports/undigitalcooperation_netlify_status.md`](../reports/undigitalcooperation_netlify_status.md) |
 
 The generated external inventory enumerates every other URL and domain currently referenced in the codebase for quick cross-checks as the list expands.【F:docs/domain_asset_inventory.md†L1-L16】
+
+### Highlight: UN Digital Cooperation Portal DNS status
+
+> **UN Digital Cooperation Portal domain (`undigitalcooperation.org`)** is in Netlify with zero DNS records configured. The registrar still needs to point name servers to Netlify (`dns1-4.p06.nsone.net`). See the status report for details.【F:reports/undigitalcooperation_netlify_status.md†L1-L12】
 
 ### Expansion queue
 
