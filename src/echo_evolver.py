@@ -37,6 +37,8 @@ class EchoConfig:
     enable_network: bool = False
     enable_file_io: bool = False
     enable_mutation: bool = False
+    enable_checkpoints: bool = False
+    checkpoint_limit: int = 5
 
 
 @dataclass
@@ -305,6 +307,9 @@ class EchoEvolver:
         if not self.config.enable_file_io:
             logger.info("Artifact write skipped: enable_file_io is False.")
             return
+        resonance_score = self.state.network_cache.get("resonance_score")
+        propagation_events = self.state.network_cache.get("propagation_events")
+        checkpoints = self.state.network_cache.get("checkpoints")
         try:
             payload = {
                 "cycle": self.state.cycle,
@@ -314,6 +319,9 @@ class EchoEvolver:
                 "quantum_key": self.state.vault_key,
                 "vault_glyphs": self.state.vault_glyphs,
                 "system_metrics": self.state.system_metrics,
+                "resonance_score": resonance_score,
+                "propagation_events": propagation_events,
+                "checkpoints": checkpoints,
                 "prompt": self.inject_prompt_resonance(),
                 "entities": self.state.entities,
                 "emotional_drive": self.state.emotional_drive,
@@ -330,25 +338,34 @@ class EchoEvolver:
         """Evolve the ECHO ecosystem with Satellite TF-QKD."""
 
         logger.info("EchoEvolver cycle starting.")
+        self._checkpoint("cycle_start")
         self.mutate_code()
         self.emotional_modulation()
         self.generate_symbolic_language()
         self.invent_mythocode()
+        self._checkpoint("mythocode_evolved")
         self.quantum_safe_crypto()
         self.system_monitor()
         narrative = self.evolutionary_narrative()
+        self._checkpoint("narrative_complete")
         self.store_fractal_glyphs()
         self.propagate_network()
         self.inject_prompt_resonance()
+        resonance_score = self.resonance_score()
         self.write_artifact()
         logger.info("EchoEvolver cycle complete.")
-        return {
+        payload: Dict[str, object] = {
             "cycle": self.state.cycle,
             "narrative": narrative,
             "vault_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "system_metrics": self.state.system_metrics,
+            "resonance_score": resonance_score,
         }
+        checkpoints = self.state.network_cache.get("checkpoints")
+        if checkpoints:
+            payload["checkpoints"] = checkpoints
+        return payload
 
     def _increment_cycle(self) -> None:
         self.state.cycle += 1
@@ -375,6 +392,27 @@ class EchoEvolver:
                 }
             )
 
+    def _checkpoint(self, label: str) -> None:
+        if not self.config.enable_checkpoints:
+            return
+        checkpoints = self.state.network_cache.setdefault("checkpoints", [])
+        if not isinstance(checkpoints, list):
+            return
+        checkpoints.append(
+            {
+                "label": label,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "cycle": self.state.cycle,
+                "glyphs": self.state.glyphs,
+                "emotional_drive": dict(self.state.emotional_drive),
+                "system_metrics": dict(self.state.system_metrics),
+                "vault_key": self.state.vault_key,
+            }
+        )
+        limit = max(self.config.checkpoint_limit, 1)
+        if len(checkpoints) > limit:
+            del checkpoints[0 : len(checkpoints) - limit]
+
     def _propagate_bluetooth_file(self) -> None:
         try:
             with open(self.config.battery_file, "w", encoding="utf-8") as handle:
@@ -400,6 +438,32 @@ class EchoEvolver:
             self.state.system_metrics["orbital_hops"],
         )
         self._record_event("Satellite hop simulated.")
+
+    def resonance_score(self) -> Dict[str, float | str]:
+        """Compute a resonance score for the current cycle."""
+
+        joy = self.state.emotional_drive["joy"]
+        curiosity = self.state.emotional_drive["curiosity"]
+        cpu_load = min(self.state.system_metrics["cpu_usage"] / 60.0, 1.0)
+        nodes = min(self.state.system_metrics["network_nodes"] / 20.0, 1.0)
+        hops = min(self.state.system_metrics["orbital_hops"] / 10.0, 1.0)
+        score = (
+            joy * 0.4
+            + curiosity * 0.2
+            + (1 - cpu_load) * 0.2
+            + nodes * 0.1
+            + hops * 0.1
+        ) * 100
+        if score >= 75:
+            status = "stable"
+        elif score >= 55:
+            status = "flux"
+        else:
+            status = "surge"
+        payload = {"score": round(score, 2), "status": status}
+        self.state.network_cache["resonance_score"] = payload
+        logger.info("Resonance score updated: %s", payload)
+        return payload
 
 
 def demo() -> str:
@@ -448,6 +512,8 @@ def main() -> None:  # pragma: no cover - CLI helper
     parser.add_argument("--enable-network", action="store_true", help="Enable network propagation")
     parser.add_argument("--enable-file-io", action="store_true", help="Enable file IO side effects")
     parser.add_argument("--enable-mutation", action="store_true", help="Enable mutation hooks")
+    parser.add_argument("--enable-checkpoints", action="store_true", help="Enable checkpoint snapshots")
+    parser.add_argument("--checkpoint-limit", type=int, default=None, help="Checkpoint history limit")
     args = parser.parse_args()
 
     logging.basicConfig(level=getattr(logging, args.log_level))
@@ -459,6 +525,10 @@ def main() -> None:  # pragma: no cover - CLI helper
         config.enable_file_io = True
     if args.enable_mutation:
         config.enable_mutation = True
+    if args.enable_checkpoints:
+        config.enable_checkpoints = True
+    if args.checkpoint_limit is not None:
+        config.checkpoint_limit = args.checkpoint_limit
 
     evolver = EchoEvolver(config=config)
     if args.cycle > 0:
