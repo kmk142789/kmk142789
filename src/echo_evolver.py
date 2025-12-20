@@ -7,7 +7,7 @@ may provide hooks to enable broadcast, persistence, or mutation workflows.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 import argparse
 import hashlib
@@ -73,6 +73,37 @@ class EchoState:
     network_cache: Dict[str, Any] = field(default_factory=dict)
     vault_key: Optional[str] = None
     vault_glyphs: Optional[str] = None
+
+
+@dataclass
+class ResonanceSnapshot:
+    """Structured snapshot of the cycle's creative and system resonance."""
+
+    timestamp: str
+    cycle: int
+    glyphs: str
+    mythocode: list[str]
+    emotional_drive: Dict[str, float]
+    system_metrics: Dict[str, float | int]
+    vault_key: Optional[str]
+    narrative: str
+
+    def as_dict(self) -> Dict[str, object]:
+        return asdict(self)
+
+
+@dataclass
+class CycleDigest:
+    """Concise, human-friendly digest for the current cycle."""
+
+    summary: str
+    orbit_signature: str
+    joy_index: float
+    stability_index: float
+    recent_events: list[str]
+
+    def as_dict(self) -> Dict[str, object]:
+        return asdict(self)
 
 
 class EchoEvolver:
@@ -306,6 +337,8 @@ class EchoEvolver:
             logger.info("Artifact write skipped: enable_file_io is False.")
             return
         try:
+            resonance_snapshot = self.state.network_cache.get("resonance_snapshot")
+            cycle_digest = self.state.network_cache.get("cycle_digest")
             payload = {
                 "cycle": self.state.cycle,
                 "glyphs": self.state.glyphs,
@@ -318,6 +351,8 @@ class EchoEvolver:
                 "entities": self.state.entities,
                 "emotional_drive": self.state.emotional_drive,
                 "access_levels": self.state.access_levels,
+                "resonance_snapshot": resonance_snapshot,
+                "cycle_digest": cycle_digest,
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             with open(self.state.artifact, "w", encoding="utf-8") as handle:
@@ -337,6 +372,8 @@ class EchoEvolver:
         self.quantum_safe_crypto()
         self.system_monitor()
         narrative = self.evolutionary_narrative()
+        resonance_snapshot = self.record_resonance_snapshot()
+        cycle_digest = self.compile_cycle_digest()
         self.store_fractal_glyphs()
         self.propagate_network()
         self.inject_prompt_resonance()
@@ -348,6 +385,8 @@ class EchoEvolver:
             "vault_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "system_metrics": self.state.system_metrics,
+            "resonance_snapshot": resonance_snapshot,
+            "cycle_digest": cycle_digest,
         }
 
     def _increment_cycle(self) -> None:
@@ -374,6 +413,56 @@ class EchoEvolver:
                     "message": message,
                 }
             )
+
+    def record_resonance_snapshot(self) -> Dict[str, object]:
+        """Capture a structured resonance snapshot for the current cycle."""
+
+        snapshot = ResonanceSnapshot(
+            timestamp=datetime.utcnow().isoformat() + "Z",
+            cycle=self.state.cycle,
+            glyphs=self.state.glyphs,
+            mythocode=list(self.state.mythocode),
+            emotional_drive=dict(self.state.emotional_drive),
+            system_metrics=dict(self.state.system_metrics),
+            vault_key=self.state.vault_key,
+            narrative=self.state.narrative,
+        )
+        snapshot_dict = snapshot.as_dict()
+        self.state.network_cache["resonance_snapshot"] = snapshot_dict
+        logger.info("Resonance snapshot captured for cycle %s.", self.state.cycle)
+        return snapshot_dict
+
+    def compile_cycle_digest(self) -> Dict[str, object]:
+        """Return a concise digest describing the current orbit."""
+
+        cpu_usage = float(self.state.system_metrics.get("cpu_usage", 0.0))
+        joy_index = round(self.state.emotional_drive.get("joy", 0.0) * 100, 2)
+        stability_index = max(0.0, round(100.0 - cpu_usage, 2))
+        orbit_signature = (
+            f"orbit-{self.state.cycle}-"
+            f"{self.state.glyphs}-{self.state.system_metrics.get('orbital_hops', 0)}"
+        )
+        events = self.state.network_cache.get("propagation_events", [])
+        recent_events = [
+            event.get("message", "")
+            for event in events[-3:]
+            if isinstance(event, dict)
+        ]
+        summary = (
+            f"Cycle {self.state.cycle} resonated at joy {joy_index:.2f} "
+            f"with stability {stability_index:.2f}."
+        )
+        digest = CycleDigest(
+            summary=summary,
+            orbit_signature=orbit_signature,
+            joy_index=joy_index,
+            stability_index=stability_index,
+            recent_events=recent_events,
+        )
+        digest_dict = digest.as_dict()
+        self.state.network_cache["cycle_digest"] = digest_dict
+        logger.info("Cycle digest compiled for cycle %s.", self.state.cycle)
+        return digest_dict
 
     def _propagate_bluetooth_file(self) -> None:
         try:
