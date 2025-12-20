@@ -39,6 +39,15 @@ EchoFusionDrone_EvidencePack_<program>_<pack-id>_<version>/
 │  │  ├─ octave_band_levels.csv
 │  ├─ environment/
 │  │  ├─ background_noise_profile.csv
+├─ governance/
+│  ├─ test_plan.md
+│  ├─ raw_data/
+│  │  ├─ state_transitions.jsonl
+│  │  ├─ power_ledger.jsonl
+│  │  ├─ violation_events.jsonl
+│  ├─ processed/
+│  │  ├─ derating_summary.csv
+│  │  ├─ constraint_compliance_report.pdf
 ├─ thermal/
 │  ├─ test_plan.md
 │  ├─ raw_data/
@@ -99,6 +108,24 @@ The manifest binds all artifacts to assumptions, models, and test conditions. It
       "id": "acoustics.spl_spectrum",
       "path": "acoustics/processed/spl_spectrum.csv",
       "type": "test",
+      "sha256": "<sha256>"
+    },
+    {
+      "id": "governance.state_transitions",
+      "path": "governance/raw_data/state_transitions.jsonl",
+      "type": "test",
+      "sha256": "<sha256>"
+    },
+    {
+      "id": "governance.power_ledger",
+      "path": "governance/raw_data/power_ledger.jsonl",
+      "type": "test",
+      "sha256": "<sha256>"
+    },
+    {
+      "id": "governance.constraint_compliance_report",
+      "path": "governance/processed/constraint_compliance_report.pdf",
+      "type": "analysis",
       "sha256": "<sha256>"
     },
     {
@@ -167,7 +194,16 @@ Include:
 - Thermocouple and IR camera logs (`raw_data/*.csv`)
 - Thermal FEA summary and limit compliance report
 
-### 5) Fatigue Analysis
+### 5) Governance & Power Compliance
+**Location:** `governance/`
+
+Include:
+- Governance test plan mapping to the Flight Mode Constitution
+- State transition logs and violation events (`raw_data/*.jsonl`)
+- Power source contribution ledger with cap enforcement
+- Constraint compliance report (thermal, acoustic, power caps)
+
+### 6) Fatigue Analysis
 **Location:** `fatigue/`
 
 Include:

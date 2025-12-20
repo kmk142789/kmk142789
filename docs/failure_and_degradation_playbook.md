@@ -1,6 +1,6 @@
-# Failure & Degradation Playbook — Echo Fusion Drone (Thermal & Power Governance)
+# Failure & Degradation Playbook — Echo Fusion Drone (Governed Power + Thermal + Acoustic)
 
-This playbook enumerates failure modes, detection logic, and safe degradation paths for the Thermal & Power Governance Layer prototype.
+This playbook enumerates failure modes, detection logic, and safe degradation paths for the Governance Layer.
 
 ## Failure Modes, Detection, Response
 
@@ -18,26 +18,40 @@ This playbook enumerates failure modes, detection logic, and safe degradation pa
   2. Trigger alert log event.
   3. If persists for > 3 seconds → force **Degraded** mode.
 
-### 3) Overcurrent
+### 3) Acoustic Limit Breach
+- **Detection**: `SPL_peak > SPL_mode_max` OR `power_ramp_rate > ramp_mode_max`.
+- **Response**:
+  1. Soft derate and clamp ramp rate.
+  2. Log acoustic violation with SPL snapshot.
+  3. If breach persists for > 2 seconds → force **Degraded** mode.
+
+### 4) Overcurrent
 - **Detection**: `current_high_rail > max_current`.
 - **Response**:
   1. Clamp duty cycle to safe threshold.
   2. If repeated within 5 seconds → open high rail.
 
-### 4) Brownout / Rail Sag
+### 5) Brownout / Rail Sag
 - **Detection**: `voltage_high_rail < min_voltage`.
 - **Response**:
   1. Reduce load immediately.
   2. Enter **Degraded** if voltage does not recover within 2 seconds.
 
-### 5) Sensor Fault
+### 6) Power Source Anomaly
+- **Detection**: source over-voltage, reverse current, or contribution > configured cap.
+- **Response**:
+  1. Isolate source via governance switch.
+  2. Log source ID and failure code.
+  3. If primary power affected → enter **Degraded**.
+
+### 7) Sensor Fault
 - **Detection**: invalid checksum, missing sensor, or out-of-range readings.
 - **Response**:
   1. Log sensor fault.
   2. Enter **Degraded** mode.
   3. Limit power to ≤ 30% until manual reset.
 
-### 6) MCU Watchdog Trip
+### 8) MCU Watchdog Trip
 - **Detection**: watchdog reset or heartbeat missing.
 - **Response**:
   1. Cut high rail immediately.
@@ -47,7 +61,7 @@ This playbook enumerates failure modes, detection logic, and safe degradation pa
 ---
 
 ## Safe Degradation Paths
-1. **Soft derating**: Reduce power until thermal margin restored.
+1. **Soft derating**: Reduce power until thermal/acoustic margin restored.
 2. **Hard derating**: Clamp to minimal throttle to avoid uncontrolled oscillations.
 3. **High rail cut**: Open MOSFET switch to remove propulsion/actuation power.
 4. **Controlled landing**: If flight control still operational, execute safe landing sequence.
@@ -57,6 +71,7 @@ This playbook enumerates failure modes, detection logic, and safe degradation pa
 
 ## Recovery Criteria
 - All temperatures below `T_node_max - 10°C`.
+- Acoustic guard inactive and SPL within limits for 60 seconds.
 - No new violations for 60 seconds.
 - Operator acknowledgment received.
 

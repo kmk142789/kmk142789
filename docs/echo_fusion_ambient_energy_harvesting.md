@@ -1,7 +1,7 @@
 # Echo Fusion Drone — Secondary Ambient Energy Harvesting Evaluation
 
 ## Purpose
-This document evaluates **secondary ambient energy harvesting** methods for the Echo Fusion Drone. It focuses on three classes explicitly requested: **thermal gradients**, **vibration harvesting**, and **regenerative capture**. Each method includes quantified yield estimates, operational niches, and viability constraints. Non-viable expectations are rejected explicitly.
+This document evaluates **secondary ambient energy harvesting** methods for the Echo Fusion Drone. It covers **solar PV**, **thermal gradients**, **vibration harvesting**, and **regenerative capture** with quantified yield estimates, operational niches, and strict limits. Non-viable expectations are rejected explicitly.
 
 ## Baseline Assumptions
 - **Vehicle mass**: 1.5–3.0 kg class, battery-powered.
@@ -9,6 +9,32 @@ This document evaluates **secondary ambient energy harvesting** methods for the 
 - **Secondary harvesting target**: milliwatts to low watts for sensors, logging, and trickle recovery.
 - **Thermal environment**: electronics/motor housings typically 40–80°C under load; ambient 0–35°C.
 - **Mechanical environment**: vibration dominated by actuator harmonics, variable by mode.
+- **Governance caps**: augmentation ≤15% instantaneous load and ≤8% mission energy.
+
+---
+
+## 0) Flexible Photovoltaic Skin (PV)
+**Mechanism**: Conformal thin-film PV panels on upper shell and morphing surfaces provide solar augmentation.
+
+### Expected Yield (Conservative Ranges)
+| Condition | Approx. Output | Notes |
+|---|---:|---|
+| Full sun, optimal incidence | 20–45 W | Peak only; requires clean surface and optimal orientation |
+| Typical daylight | 8–20 W | Partial incidence, variable attitude |
+| Overcast / low sun | 2–8 W | Intermittent; not reliable for critical load |
+
+### Operational Niches
+- **Daylight cruise**: offsets avionics + sensor power.
+- **Stationary loiter**: small endurance gains under stable orientation.
+- **Ground standby**: maintains logging and comms with minimal battery draw.
+
+### Viability Assessment
+- **Viable for**: resilience and endurance support (avionics/sensors).
+- **Not viable for**: propulsion or primary lift power.
+
+### Explicit Rejections
+- **Rejected**: “Solar sustains flight” — PV output is far below propulsion demand.
+- **Rejected**: “Reliable output in all attitudes” — self-shadowing and incidence reduce output sharply.
 
 ---
 
@@ -93,22 +119,23 @@ This document evaluates **secondary ambient energy harvesting** methods for the 
 ## Cross-Method Summary
 | Method | Typical Power | Best Use Case | Viability Summary |
 |---|---:|---|---|
-| Thermal gradients (TEG) | mW to ~1 W | Cold ambient + warm electronics | Trickle power for sensors, logging |
+| Solar PV | 2–45 W | Daylight avionics/sensors | Resilience support only |
+| Thermal gradients (TEG) | mW to ~1.5 W | Cold ambient + warm electronics | Trickle power for sensors, logging |
 | Vibration harvesting | µW to tens of mW | Health monitoring / diagnostics | Only micro-power applications |
 | Regenerative capture | 0.5–15 W (bursts) / 0.05–0.3 Wh per descent | Descent / actuator rollback | Intermittent, marginal endurance gains |
 
 ---
 
 ## Non-Viable Expectations (Explicit)
-1. **Secondary harvesting is not a propulsion substitute**: All evaluated methods yield **orders of magnitude less** than propulsion power needs.
-2. **No perpetual or self-sustaining flight**: Harvesting depends on **existing energy sinks** (heat loss, vibration, or descent energy) and cannot exceed them.
-3. **Steady-state flight provides minimal harvestable energy**: Low vibration and balanced thermal gradients limit recoverable power.
+1. **Secondary harvesting is not a propulsion substitute**: all evaluated methods yield **orders of magnitude less** than propulsion power needs.
+2. **No perpetual or self-sustaining flight**: harvesting depends on **existing energy sinks** (sunlight, heat loss, vibration, or descent energy) and cannot exceed them.
+3. **Steady-state flight provides minimal harvestable energy**: low vibration and balanced thermal gradients limit recoverable power.
 
 ---
 
 ## Recommended Integration Strategy
-- **Tier 1 (Always-Useful)**: TEGs on hot electronics + heat spreaders for **thermal governance + trickle power**.
+- **Tier 1 (Always-Useful)**: PV + TEG for **resilience and avionics support**.
 - **Tier 2 (Diagnostic)**: Piezo vibration harvesters for **fault detection and sensor wake-up**.
 - **Tier 3 (Mission-Specific)**: Regenerative capture on morphing actuators and controlled descent for **small energy recovery**.
 
-**Design Rule**: Treat all secondary harvesting as **micro-power supplements** and **sensing enablers**, not as endurance multipliers.
+**Design Rule**: Treat all secondary harvesting as **supplemental** and **bounded by governance caps**, not as endurance multipliers.

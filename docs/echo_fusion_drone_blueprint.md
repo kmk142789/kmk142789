@@ -1,5 +1,7 @@
 # Echo Fusion Drone Blueprint (Rotorless + CVT + Jointed Morphology)
 
+**Canonical Baseline:** This document replaces prior versions and is the authoritative blueprint for the Echo Fusion Drone. All supporting governance, validation, and evidence artifacts must align with this baseline.
+
 ## Overview
 This blueprint fuses three prior concepts into a single, first-of-its-kind drone platform:
 
@@ -7,16 +9,32 @@ This blueprint fuses three prior concepts into a single, first-of-its-kind drone
 2. **Continuously Variable Transmission (CVT) power routing** (dynamic torque/efficiency management).
 3. **Jointed morphology** (articulated structure for shape-shifting flight modes).
 
-Together, they enable a drone that is safer to operate near humans, exceptionally quiet, and able to adapt its geometry for endurance, agility, or heavy lift on demand.
+The build merges propulsion, morphology, power, thermal, acoustic, control, and governance layers into one coherent system with explicit limits, strict safety invariants, and evidence-grade logging.
 
 ---
 
-## System Architecture
+## Integrated System Architecture (Merged Layers)
+
+| Layer | Core Responsibility | Hard Constraints (Non-Optional) | Evidence / Logs |
+|---|---|---|---|
+| Propulsion | Rotorless thrust ring generates vectorable lift/forward thrust | Thrust control must remain stable under derating and regen limits | Thrust command vs. output, stability metrics |
+| Morphology | Jointed geometry reshapes drag/lift profile | No morph action allowed if it violates thermal/acoustic/power caps | Joint torque, position, lock status |
+| Power | Multi-source energy system with governed routing | Source caps, SOC reserve floor, derate logic | Source contribution ledger |
+| Thermal | Limits heat rise and absolute temps | T_node, dT/dt, thermal margin | Node telemetry, guard triggers |
+| Acoustic | Enforces noise ceilings | SPL peak + ramp limits | Acoustic telemetry + limit violations |
+| Control | Flight mode management + stability control | Flight Mode Constitution enforced | State transitions + invariants |
+| Governance | Hard constraints, derating, failure handling | No override of safety invariants | Audit-grade logs + attestations |
+
+**System integration rule:** Thermal, acoustic, and power limits are first-class constraints. They are not optimizations and cannot be traded away by mission logic.
+
+---
+
+## Propulsion + Morphology Core (Foundational)
 
 ### 1. Rotorless Thrust Ring (RTR)
 **Purpose:** Generate thrust without exposed rotors.
 
-**Concept:** A sealed annular flow system that accelerates air through a multi-stage ducted loop. The flow exits through controllable micro-nozzles around the ring perimeter to vector thrust.
+**Concept:** A sealed annular flow system accelerates air through a multi-stage ducted loop. The flow exits through controllable micro-nozzles around the ring perimeter to vector thrust.
 
 **Key elements:**
 - **Multi-stage flow channels** with internal pressure amplification.
@@ -64,12 +82,13 @@ Together, they enable a drone that is safer to operate near humans, exceptionall
 
 ---
 
-## Integrated Flight Modes
+## Integrated Flight Modes (Constitutional)
+All mode entry/exit logic **must** satisfy the Flight Mode Constitution (`docs/flight_mode_constitution.md`).
 
 ### A. **Silent Hover Mode**
 - **Rotorless thrust ring** provides stable lift.
 - **CVT** locks into high-torque low-RPM regime.
-- **Joints** compress into a compact, high-control geometry.
+- **Joints** compress into compact, high-control geometry.
 
 ### B. **Endurance Cruise Mode**
 - **Rotorless thrust** shifts to forward-vectoring jets.
@@ -81,6 +100,10 @@ Together, they enable a drone that is safer to operate near humans, exceptionall
 - **CVT** amplifies torque for short high-output bursts.
 - **Joints** expand to maximize lift area and stability.
 
+### D. **Degraded Mode (Mandatory on Violations)**
+- Enforced when any hard-limit condition occurs.
+- Powers only essential avionics and controlled descent logic.
+
 ---
 
 ## Materials & Structural Notes
@@ -90,105 +113,110 @@ Together, they enable a drone that is safer to operate near humans, exceptionall
 
 ---
 
-## Supplemental Ambient Power Augmentation (Lawful/Passive Sources)
-These systems extend mission endurance and improve avionics survivability; they do **not** enable perpetual flight. All sources feed a governed power-management layer with explicit prioritization and hard limits.
+## Power Budget & Energy Source Contributions (Realistic + Bounded)
 
-### Baseline Power Envelope (Reference)
-- **Hover:** ~450–650 W (median 520 W)
-- **Cruise:** ~250–380 W (median 300 W)
-- **Avionics + comms + navigation:** ~12–25 W
-- **Sensor suite (EO/IR/LiDAR):** ~8–35 W (duty-cycled)
+### Baseline Load Envelope (Reference)
+- **Hover:** 450–650 W (median 520 W)
+- **Cruise:** 250–380 W (median 300 W)
+- **Avionics + comms + navigation:** 12–25 W
+- **Sensor suite (EO/IR/LiDAR):** 8–35 W (duty-cycled)
 
-These figures ground the augmentation budgets below; supplemental sources are sized to cover avionics, not propulsion.
+### Energy Sources (All Routed Through Governance Layer)
+All supplemental sources are **resilience/endurance support only** and cannot be used to justify perpetual flight or propulsion claims.
 
-### A. Flexible Photovoltaic Skin (PV)
-**Concept:** Conformal thin-film PV laminated onto upper shell panels and morphing surface segments to create a **solar augmentation subsystem** that flexes with the jointed frame.
+| Source | Realistic Output | Duty-Cycle Contribution | Physical Limits | Hard Constraints |
+|---|---:|---:|---|---|
+| **Primary Battery** | Mission-defined | 85–95% of mission energy | Mass + C-rate + thermal limits | SOC reserve floor enforced |
+| **Flexible PV Skin** | 2–45 W (peak 45 W) | 3–12% of avionics + sensors in daylight | Surface area ≤ 0.2 m², mass +120–260 g | Throttled by skin temp + shading rules |
+| **Thermal Gradient (TEG)** | 1–8 W | 0.5–3% avionics + sensors | ΔT-dependent, mass +40–90 g | Disabled if it impairs heat rejection |
+| **Vibration / Kinetic** | 0.2–3 W (bursts) | <1% avionics load | Mass +20–60 g, isolated mounts | Must not inject sensor noise |
+| **Regenerative Capture (CVT + Descent)** | 15–60 W (short) | 1–4% mission energy | Limited descent windows + torque caps | Disabled if stability risk |
 
-**Role framing (resilience/endurance support):**
-- Solar is **not** a primary lift power source; it is a resilience layer that reduces avionics draw, extends loiter windows, and slows battery depletion.
-- Contribution is capped by the governed power layer and is explicitly secondary to mission-critical propulsion and stabilization.
-
-**MPPT behavior under morphing geometry & incidence:**
-- **Distributed MPPT zones:** Each morphing panel string has its own micro-MPPT channel to isolate shading and variable curvature.
-- **Geometry-aware setpoint:** The flight controller provides surface normal vectors and joint angles to the power manager; MPPT duty cycles bias toward the predicted maximum-power angle of incidence.
-- **Rapid re-tracking:** MPPT refresh rate increases during morph transitions (e.g., 5–10 Hz) and relaxes during steady cruise (e.g., 0.5–1 Hz).
-- **Partial shading logic:** If any string sees a >30% mismatch in V-I curve slope, it is isolated and throttled to protect the rest of the array.
-
-**Realistic power budget:**
-- **Peak (full sun, clean skin):** 20–45 W
-- **Typical midday (partial angles):** 8–20 W
-- **Overcast/low sun:** 2–8 W
-
-**Duty-cycle contribution:**
-- **Cruise daylight:** 5–12% of avionics + sensor load.
-- **Hover daylight:** 3–8% of avionics + sensor load.
-
-**Limits:**
-- No meaningful propulsion contribution.
-- Heavily geometry- and attitude-dependent; degrades during high-bank maneuvers.
-
-**Degradation, shadowing, and thermal interaction:**
-- **Degradation:** Flexible thin-film efficiency degrades 1–2%/year under UV, micro-cracking, and flex fatigue; budget a 10–15% derate over service life.
-- **Shadowing:** Morphing surfaces can self-shadow; MPPT zones and bypass diodes prevent collapse but reduce net output during high-curvature or folded modes.
-- **Thermal coupling:** PV adds a skin heat load (2–6°C rise) and can reduce duct heat rejection; thermal guard throttles PV input when skin exceeds safe limits or when internal duct temps approach redline.
-
-### B. Thermal Gradient Harvesting (TEG)
-**Concept:** Thermoelectric strips bridging warm internal ducts and cooler external skin.
-
-**Realistic power budget:**
-- **Steady cruise (ΔT 15–30°C):** 1–5 W
-- **High load hover (ΔT 25–40°C):** 2–8 W
-
-**Duty-cycle contribution:**
-- **Continuous baseline:** 0.5–3% of avionics + sensor load.
-
-**Limits:**
-- Output collapses as skin temperature rises; requires airflow for gradient.
-- Adds thermal resistance; must not impede duct heat rejection.
-
-### C. Vibration / Kinetic Energy Recovery
-**Concept:** Micro-generators at jointed morphology pivots and landing shock mounts.
-
-**Realistic power budget:**
-- **In-flight vibration (steady):** 0.2–1.2 W
-- **Landing events (bursty):** 1–3 W equivalent during touchdown windows
-
-**Duty-cycle contribution:**
-- **Low, opportunistic:** <1% of avionics + sensor load; useful for trickle charging sensor buffers.
-
-**Limits:**
-- Must be mechanically isolated to avoid coupling noise into sensors.
-- Energy is spiky; requires buffer capacitor.
-
-### D. Regenerative Electrical Capture (CVT + Descent)
-**Concept:** CVT-enabled back-drive for controlled descent and deceleration phases.
-
-**Realistic power budget:**
-- **Short descent windows:** 15–60 W
-- **Average across mission:** 1–4% of total energy, depending on profile
-
-**Duty-cycle contribution:**
-- **Best-case urban inspection:** 3–6% battery life extension.
-- **Long cruise:** negligible.
-
-**Limits:**
-- Not available during aggressive maneuvers or low-altitude safety descents.
-- Requires strict torque limits to avoid destabilizing thrust ring control.
+### Strict Physical Limits
+- **Supplemental total cap:** ≤15% instantaneous system load and ≤8% total mission energy.
+- **Mass budget for augmentation:** <8% of airframe mass.
+- **No propulsion dependency:** supplemental sources can never be scheduled to satisfy propulsion demand.
 
 ---
 
-## Governed Power-Management Layer (Priority & Limits)
-All supplemental sources are routed through a **power governance layer** that enforces survivability-first policies:
+## Solar + Ambient Energy Integration (Resilience Layer)
 
+### Flexible Photovoltaic Skin (PV)
+**Purpose:** Resilience augmentation; offsets avionics/sensor draw to extend endurance.
+
+**MPPT behavior under morphing geometry & incidence:**
+- **Distributed MPPT zones** for each morphing panel string.
+- **Geometry-aware setpoints** from flight controller surface normal vectors.
+- **Rapid re-tracking** during morph (5–10 Hz), slower in stable cruise (0.5–1 Hz).
+- **Partial shading isolation** if mismatch exceeds 30%.
+
+**Thermal coupling:** PV throttles if skin temperature threatens duct heat rejection. PV never overrides thermal guard.
+
+### Thermal Gradient Harvesting (TEG)
+Thermoelectric strips bridge warm internal ducts and cooler external skin.
+
+**Constraints:**
+- Output collapses as skin temperature rises; requires airflow for gradient.
+- Added thermal resistance cannot push ducts beyond safe limits.
+
+### Vibration / Kinetic Recovery
+Micro-generators at joint pivots and landing shock mounts.
+
+**Constraints:**
+- Must be mechanically isolated to avoid sensor contamination.
+- Output is spiky; buffer capacitors required.
+
+### Regenerative Electrical Capture (CVT + Descent)
+CVT-enabled back-drive for controlled descent and deceleration.
+
+**Constraints:**
+- Only enabled when control authority margins are high.
+- Torque limits enforced to prevent thrust instability.
+
+---
+
+## Governed Power-Management Layer (Hard Constraints + Derating)
+All sources flow into a **governed power-management layer** that enforces strict limits, derating logic, and failure handling.
+
+### Power Governance Rules
 1. **Priority 1 – Avionics survivability:** flight controller, IMU, GNSS, comms.
-2. **Priority 2 – Sensor continuity:** payload sensors, data recorder, collision avoidance.
+2. **Priority 2 – Sensor continuity:** payload sensors, collision avoidance.
 3. **Priority 3 – Safe return:** reserve energy for navigated return or controlled landing.
-4. **Priority 4 – Optional loads:** auxiliary compute, non-critical lighting.
+4. **Priority 4 – Optional loads:** auxiliary compute, non-critical payloads.
 
-**Rules:**
-- **No perpetual-flight logic:** supplemental sources are capped at **≤15% of instantaneous system load** and **≤8% of total mission energy**.
-- **Brownout guard:** if battery drops below mission reserve threshold, all supplemental inflows are routed to avionics-only storage.
-- **Thermal guard:** PV and TEG sources are throttled if skin temperature exceeds safe limits.
+**Hard Constraints:**
+- **No perpetual-flight logic:** augmentation ≤15% instantaneous load, ≤8% mission energy.
+- **Reserve floor:** battery SOC below reserve forces all supplemental input to avionics-only storage.
+- **Thermal guard:** PV/TEG throttled when skin or duct temperatures approach redlines.
+- **Acoustic guard:** thrust ramp rates limited to enforce SPL ceilings.
+
+### Derating Logic (Mandatory)
+- **Soft derate:** proportional clamp when thermal margin < 10°C or SPL rise rate exceeds limit.
+- **Hard derate:** clamp to minimum safe throttle on hard limit breach.
+- **Rail cut:** open high rail if unstable or unsafe conditions persist.
+
+### Failure Handling
+- Any violation of a hard limit forces **Degraded Mode**.
+- All violations and derates must be logged with timestamp, source, measured value, threshold, and resulting action.
+
+---
+
+## Flight Mode Constitution (Enforcement)
+The Flight Mode Constitution (`docs/flight_mode_constitution.md`) is binding:
+- **Invariants** define allowable ranges for thermal, power, and acoustic states.
+- **Forbidden states** cannot be entered, even if requested by mission logic.
+- **Safe degradation paths** are mandatory on any hard-limit violation.
+
+---
+
+## Logging & Evidence (Audit-Grade)
+All state transitions, power source contributions, constraint violations, and derating events must be logged as evidence-grade artifacts:
+- **State transitions:** from/to mode, trigger, thermal margin, active violations.
+- **Power ledger:** per-source contribution, caps applied, SOC reserve events.
+- **Constraint violations:** measured value, threshold, corrective action.
+- **Derating events:** derate level, duration, recovery status.
+
+Evidence is packaged according to `docs/echo_fusion_drone_evidence_pack.md` and `docs/power_augmentation_evidence_plan.md`.
 
 ---
 
@@ -218,8 +246,9 @@ Total augmentation target: **<8% of airframe mass**, preserving morphing agility
 ## Certification & Compliance Implications
 - **EMI/EMC:** Additional harvesting electronics must not interfere with avionics or comms.
 - **Thermal safety:** PV/TEG additions must pass skin temperature and burn hazard limits.
+- **Acoustic safety:** SPL limits enforced with logged ramp constraints.
 - **Structural integrity:** Added layers must maintain impact performance and morphing reliability.
-- **Energy governance audits:** Demonstrate that supplemental sources do not override safe-return reserves.
+- **Energy governance audits:** Demonstrate supplemental sources do not override safe-return reserves.
 
 ---
 
@@ -230,10 +259,5 @@ Total augmentation target: **<8% of airframe mass**, preserving morphing agility
 
 ---
 
-## Why This Is a World First
-This design combines **rotorless thrust**, **adaptive CVT power routing**, and **jointed morphing geometry** into a single integrated platform. Each concept exists individually in experimental form, but the fusion of all three produces a new class of drone: **quiet, safe, morphable, and energy-optimized**.
-
----
-
 ## Summary
-The Echo Fusion Drone blueprint delivers a holistic drone architecture that redefines how aerial platforms can operate. It is not just a drone—it is a reconfigurable aerial system that adapts itself to mission conditions in real time, without exposed rotors or fixed geometry.
+The Echo Fusion Drone blueprint delivers a holistic drone architecture that redefines how aerial platforms can operate. It is a reconfigurable aerial system that adapts itself to mission conditions in real time, without exposed rotors or fixed geometry, and with strict governance, limits, and auditability enforced end-to-end.
