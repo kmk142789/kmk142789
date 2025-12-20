@@ -116,18 +116,20 @@ def snapshot(entry: dict) -> bool:
     if not slug:
         raise SystemExit("mirror entry missing 'slug'")
     canonical_url = entry.get("canonical_url")
-    synced_at = datetime.now(tz=timezone.utc).isoformat()
+    synced_at_now = datetime.now(tz=timezone.utc).isoformat()
+    previous_synced_at = entry.get("last_synced")
+    synced_at = previous_synced_at or synced_at_now
 
     html_data = _fetch(canonical_url) if canonical_url else None
     artifact_path = ARTIFACT_DIR / f"{slug}.html"
     text = ""
     html_sha = ""
     changed = False
+    html_changed = False
 
     if html_data:
         html_sha = _hash_text(html_data)
-        if _write_if_changed(artifact_path, html_data):
-            changed = True
+        html_changed = _write_if_changed(artifact_path, html_data)
         parser = _TextExtractor()
         parser.feed(html_data)
         text = parser.get_text()
@@ -135,15 +137,22 @@ def snapshot(entry: dict) -> bool:
         failure_note = f"Sync skipped for {slug}: unable to download canonical content."
         if not artifact_path.exists():
             artifact_path.write_text(failure_note + "\n", encoding="utf-8")
-            changed = True
+            html_changed = True
         text = failure_note
 
     markdown_path = CONTENT_DIR / f"{slug}.md"
     markdown_payload = _render_markdown(entry, text, html_sha, synced_at)
-    if _write_if_changed(markdown_path, markdown_payload):
-        changed = True
+    markdown_changed = _write_if_changed(markdown_path, markdown_payload)
 
-    entry["last_synced"] = synced_at
+    changed = html_changed or markdown_changed
+    if changed and synced_at != synced_at_now:
+        synced_at = synced_at_now
+        markdown_payload = _render_markdown(entry, text, html_sha, synced_at)
+        markdown_changed = _write_if_changed(markdown_path, markdown_payload)
+    if changed:
+        entry["last_synced"] = synced_at
+    elif previous_synced_at:
+        entry["last_synced"] = previous_synced_at
     return changed
 
 
