@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections import Counter
+from collections import Counter, deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -478,6 +478,8 @@ class BridgeSyncService:
 
         if not self._log_path.exists():
             return []
+        if limit == 0:
+            return []
 
         connector_filter: set[str] | None = None
         if connector is not None:
@@ -496,7 +498,12 @@ class BridgeSyncService:
                 cleaned.add(text.casefold())
             connector_filter = cleaned or None
 
-        entries: list[dict[str, object]] = []
+        use_window = limit is not None and limit > 0
+        entries: deque[dict[str, object]] | list[dict[str, object]]
+        if use_window:
+            entries = deque(maxlen=limit)
+        else:
+            entries = []
         with self._log_path.open("r", encoding="utf-8") as handle:
             for line in handle:
                 line = line.strip()
@@ -513,8 +520,10 @@ class BridgeSyncService:
                     if name not in connector_filter:
                         continue
                 entries.append(entry)
+        if isinstance(entries, deque):
+            return list(entries)
         if limit is not None and limit >= 0:
-            entries = entries[-limit:]
+            return entries[-limit:]
         return entries
 
     @staticmethod
