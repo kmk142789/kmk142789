@@ -8,6 +8,7 @@ export const NAV_ITEMS = [
   { href: '/', label: 'Pulse' },
   { href: '/codex', label: 'Codex' },
   { href: '/assistant', label: 'Assistant' },
+  { href: '/reality-layer', label: 'RealityLayer' },
   { href: '/emotional-archaeology', label: 'Emotional Archaeology' },
   { href: '/wallets', label: 'Wallets' },
 ];
