@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kmk142789.github.io/kmk142789/schemas/ejc_judgment.schema.json",
+  "title": "EJC Judgment",
+  "type": "object",
+  "required": [
+    "judgment_id",
+    "case_id",
+    "issued_at",
+    "panel",
+    "findings",
+    "remedies",
+    "enforcement_hooks",
+    "finality",
+    "publication"
+  ],
+  "properties": {
+    "judgment_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "panel": {"type": "array", "items": {"type": "string"}},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "remedies": {"type": "array", "items": {"$ref": "#/$defs/remedy"}},
+    "enforcement_hooks": {"type": "array", "items": {"$ref": "#/$defs/hook"}},
+    "finality": {"$ref": "#/$defs/finality"},
+    "publication": {"$ref": "#/$defs/publication"}
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": ["finding_id", "summary"],
+      "properties": {
+        "finding_id": {"type": "string", "minLength": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "policy_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "remedy": {
+      "type": "object",
+      "required": ["remedy_id", "summary", "status"],
+      "properties": {
+        "remedy_id": {"type": "string", "minLength": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "enum": ["ordered", "in_progress", "complete"]},
+        "due_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "hook": {
+      "type": "object",
+      "required": ["system", "action", "verification"],
+      "properties": {
+        "system": {
+          "type": "string",
+          "enum": ["DBIS", "Treasury", "EFCTIA", "EOAG", "ECIA", "EDCSA", "Drones"]
+        },
+        "action": {"type": "string", "minLength": 1},
+        "verification": {"type": "string", "minLength": 1}
+      }
+    },
+    "finality": {
+      "type": "object",
+      "required": ["status", "effective_at"],
+      "properties": {
+        "status": {"type": "string", "enum": ["binding", "stayed", "reversed"]},
+        "effective_at": {"type": "string", "format": "date-time"},
+        "appeal_window_days": {"type": "integer", "minimum": 0}
+      }
+    },
+    "publication": {
+      "type": "object",
+      "required": ["tier", "summary"],
+      "properties": {
+        "tier": {"type": "string", "enum": ["public", "restricted", "sealed"]},
+        "summary": {"type": "string", "minLength": 1},
+        "redactions": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
