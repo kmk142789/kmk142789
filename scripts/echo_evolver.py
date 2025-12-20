@@ -49,9 +49,68 @@ for entry in (REPO_ROOT, CORE_SRC):
 from echo.evolver import EchoEvolver, EvolverState
 
 
+_CONFIG_DEFAULT_KEYS = {
+    "cycles",
+    "artifact",
+    "seed",
+    "enable_network",
+    "persist_artifact",
+    "persist_intermediate",
+    "eden88_theme",
+    "diagnostics",
+    "event_limit",
+    "output",
+    "json",
+}
+
+
+def _load_config(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        print(f"⚠️ Config file not found: {path}. Using defaults.", file=sys.stderr)
+        return {}
+    except json.JSONDecodeError:
+        print(f"⚠️ Config file is corrupt: {path}. Using defaults.", file=sys.stderr)
+        return {}
+
+    if not isinstance(payload, dict):
+        print(f"⚠️ Config file must contain a JSON object: {path}. Using defaults.", file=sys.stderr)
+        return {}
+
+    return payload
+
+
+def _config_defaults(config_path: Optional[Path]) -> dict[str, Any]:
+    if config_path is None:
+        return {}
+
+    payload = _load_config(config_path)
+    defaults: dict[str, Any] = {}
+
+    for key, value in payload.items():
+        if key not in _CONFIG_DEFAULT_KEYS:
+            continue
+        if key in {"artifact", "output"} and value is not None:
+            defaults[key] = Path(value)
+        else:
+            defaults[key] = value
+
+    return defaults
+
+
 def _parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument(
+        "--config",
+        type=Path,
+        help="Optional JSON config file that supplies defaults for the CLI.",
+    )
+    config_args, _ = config_parser.parse_known_args(argv)
+
     parser = argparse.ArgumentParser(
         description="Run the EchoEvolver narrative engine in a safe, deterministic mode.",
+        parents=[config_parser],
     )
     parser.add_argument(
         "--cycles",
@@ -79,11 +138,18 @@ def _parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--enable-network",
+        dest="enable_network",
         action="store_true",
         help=(
             "Tag the propagation phase as a live broadcast while still "
             "executing entirely local, simulated events."
         ),
+    )
+    parser.add_argument(
+        "--disable-network",
+        dest="enable_network",
+        action="store_false",
+        help="Force the propagation phase to remain fully simulated.",
     )
     persist_group = parser.add_mutually_exclusive_group()
     persist_group.add_argument(
@@ -132,6 +198,8 @@ def _parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
         action="store_true",
         help="Emit the summary as JSON instead of a formatted narrative.",
     )
+    parser.set_defaults(enable_network=False)
+    parser.set_defaults(**_config_defaults(config_args.config))
     return parser.parse_args(argv)
 
 
@@ -234,4 +302,3 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
 
 if __name__ == "__main__":  # pragma: no cover - manual invocation entry point
     raise SystemExit(main())
-
