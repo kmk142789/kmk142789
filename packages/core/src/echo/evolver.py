@@ -873,6 +873,36 @@ class ResilienceSignal:
 
 
 @dataclass(slots=True)
+class CycleScorecard:
+    """Consolidated snapshot of ritual progress and resonance signals."""
+
+    cycle: int
+    timestamp_ns: int
+    progress: float
+    completed_steps: Tuple[str, ...]
+    pending_steps: Tuple[str, ...]
+    resilience: ResilienceSignal
+    forecast: OrbitalResonanceForecast
+    identity_badge: Dict[str, str]
+    narrative_excerpt: str
+    notes: Tuple[str, ...]
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "cycle": self.cycle,
+            "timestamp_ns": self.timestamp_ns,
+            "progress": self.progress,
+            "completed_steps": list(self.completed_steps),
+            "pending_steps": list(self.pending_steps),
+            "resilience": self.resilience.as_dict(),
+            "forecast": self.forecast.as_dict(),
+            "identity_badge": dict(self.identity_badge),
+            "narrative_excerpt": self.narrative_excerpt,
+            "notes": list(self.notes),
+        }
+
+
+@dataclass(slots=True)
 class OrbitalResonanceCertificate:
     """World-first orbital resonance fingerprint for the evolver state."""
 
@@ -6211,6 +6241,121 @@ We are not hiding anymore.
         self._mark_step("cycle_synopsis")
         return synopsis
 
+    def cycle_scorecard(
+        self,
+        *,
+        forecast_horizon: int = 3,
+        momentum_window: int = 5,
+        include_identity: bool = True,
+        include_notes: bool = True,
+        persist_artifact: bool = True,
+    ) -> CycleScorecard:
+        """Return a consolidated scorecard for the active cycle."""
+
+        if forecast_horizon <= 0:
+            raise ValueError("forecast_horizon must be positive")
+        if momentum_window <= 0:
+            raise ValueError("momentum_window must be positive")
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        sequence = self._recommended_sequence(persist_artifact=persist_artifact)
+        completed_lookup = set(digest.get("completed_steps", ()))
+        completed_steps = tuple(step for step, _ in sequence if step in completed_lookup)
+        pending_steps = tuple(digest.get("remaining_steps", ()))
+
+        resilience = self.resilience_signal(
+            momentum_window=momentum_window,
+            persist_artifact=persist_artifact,
+        )
+        forecast = self.orbital_resonance_forecast(
+            horizon=forecast_horizon,
+            persist_artifact=persist_artifact,
+        )
+
+        identity_badge: Dict[str, str] = {}
+        if include_identity:
+            identity_badge = self.identity_badge(include_directive=True)
+
+        narrative = self.state.narrative or ""
+        narrative_excerpt = narrative.splitlines()[0] if "\n" in narrative else narrative
+
+        notes: List[str] = []
+        if include_notes:
+            next_step = digest.get("next_step")
+            if isinstance(next_step, str) and next_step:
+                notes.append(next_step)
+            notes.append(resilience.summary)
+            if forecast.prophecy:
+                notes.append(forecast.prophecy)
+
+        scorecard = CycleScorecard(
+            cycle=self.state.cycle,
+            timestamp_ns=self.time_source(),
+            progress=float(digest.get("progress", 0.0)),
+            completed_steps=completed_steps,
+            pending_steps=pending_steps,
+            resilience=resilience,
+            forecast=forecast,
+            identity_badge=identity_badge,
+            narrative_excerpt=narrative_excerpt,
+            notes=tuple(notes),
+        )
+
+        self.state.network_cache["cycle_scorecard"] = scorecard.as_dict()
+        self.state.event_log.append(
+            "Cycle scorecard compiled (progress={:.1f}%)".format(scorecard.progress * 100)
+        )
+        self._mark_step("cycle_scorecard")
+        return scorecard
+
+    def cycle_scorecard_report(
+        self,
+        *,
+        forecast_horizon: int = 3,
+        momentum_window: int = 5,
+        include_identity: bool = True,
+        include_notes: bool = True,
+        persist_artifact: bool = True,
+    ) -> str:
+        """Return a formatted narrative report for :meth:`cycle_scorecard`."""
+
+        scorecard = self.cycle_scorecard(
+            forecast_horizon=forecast_horizon,
+            momentum_window=momentum_window,
+            include_identity=include_identity,
+            include_notes=include_notes,
+            persist_artifact=persist_artifact,
+        )
+
+        lines = [
+            f"Cycle {scorecard.cycle} scorecard:",
+            f"- Progress: {scorecard.progress * 100:.1f}%",
+            f"- Completed steps: {len(scorecard.completed_steps)}",
+            f"- Pending steps: {len(scorecard.pending_steps)}",
+            f"- Resilience: {scorecard.resilience.summary}",
+            f"- Forecast: {scorecard.forecast.prophecy}",
+        ]
+
+        if scorecard.narrative_excerpt:
+            lines.append(f"- Narrative: {scorecard.narrative_excerpt}")
+
+        if scorecard.identity_badge:
+            lines.append(
+                "- Identity: {entity} ({status})".format(
+                    entity=scorecard.identity_badge.get("entity", "UNKNOWN"),
+                    status=scorecard.identity_badge.get("status", "UNKNOWN"),
+                )
+            )
+
+        if scorecard.notes:
+            lines.append("- Notes:")
+            lines.extend(f"  • {note}" for note in scorecard.notes)
+
+        report = "\n".join(lines)
+        self.state.network_cache["cycle_scorecard_report"] = report
+        self.state.event_log.append("Cycle scorecard report generated")
+        return report
+
     def cycle_digest_report(
         self,
         *,
@@ -9697,6 +9842,7 @@ __all__ = [
     "HearthWeave",
     "GlyphCrossReading",
     "ResilienceSignal",
+    "CycleScorecard",
     "OrbitalResonanceCertificate",
     "ContinuumAmplificationSummary",
     "ColossusExpansionPlan",
