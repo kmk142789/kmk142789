@@ -1,10 +1,10 @@
 const CORE_PROMISE = [
-  'Clean map of the disagreement in under 10 minutes.',
-  'Stakeholder incentives with levers of power and risk exposure.',
-  'Claims and counterclaims with citations and confidence levels.',
-  'Tradeoffs and scenarios with winners, losers, and time horizons.',
-  'Actionable options with enforcement notes and success metrics.',
-  'Exports to PDF, shareable web link, JSON, and Markdown.',
+  'Citable, referencable outputs that reduce reputational risk.',
+  'Legibility with friction: disagreements are visible, not erased.',
+  'Institution-compatible profiles without platform capture.',
+  'Named red-team critiques that strengthen briefs, not bury them.',
+  'Drop-in widgets and APIs that travel to existing workflows.',
+  'Conference capture that ships a first draft in under 24 hours.',
 ];
 
 const BRIEF_SCHEMA = [
@@ -51,12 +51,12 @@ const NON_NEGOTIABLES = [
 ];
 
 const CLAIM_OBJECT = [
-  'Stable claim ID and statement',
-  'Domain tags (AI, encryption, moderation, infrastructure, etc.)',
-  'Stance variants (pro/con/conditional)',
+  'Stable claim ID, statement, and version hash',
+  'Short + long citation formats embedded per claim',
   'Evidence items with URLs, extracts, and source type labels',
   'Confidence level, counterclaims, and falsifiers',
-  'Linked briefs and last updated timestamp',
+  'Disagreement ledger: who disputes and why',
+  'Linked briefs, positions, and last updated timestamp',
 ];
 
 const SCENARIO_OBJECT = [
@@ -66,7 +66,54 @@ const SCENARIO_OBJECT = [
   '“What breaks first” stress section',
 ];
 
-const EXPORT_STACK = ['Web share page', 'PDF brief', 'JSON artifact', 'Markdown remix', 'Citable permalink'];
+const EXPORT_STACK = [
+  'Web share page',
+  'PDF brief',
+  'JSON artifact',
+  'Markdown remix',
+  'Citable permalink',
+  'Auto-generated “How to cite this” block',
+];
+
+const LEGITIMACY_COMPONENTS = [
+  {
+    title: 'Citation Spine',
+    description:
+      'Every brief, claim, and scenario ships with short + long citations, version hashes, and DOI-like permalinks.',
+    outcomes: ['Auto “How to cite this” blocks', 'Slide-ready short form', 'Policy doc long form'],
+  },
+  {
+    title: 'Institutional Profiles',
+    description:
+      'Organizations can endorse, dispute, and publish official positions without owning the platform.',
+    outcomes: ['Endorsements without control', 'Disputes without deletion', 'Evidence submissions'],
+  },
+  {
+    title: 'Disagreement Maps',
+    description: 'Disagreement is first-class: who disagrees, on which claim, and what changes minds.',
+    outcomes: ['Claim-level fault lines', 'Evidence thresholds', 'Visible divergence'],
+  },
+  {
+    title: 'Red Team Channel',
+    description: 'Opt-in red team briefs surface the strongest critiques with credited authors.',
+    outcomes: ['Linked critiques, not buried', 'Author responses + versioning', 'Credibility by exposure'],
+  },
+  {
+    title: 'Use It Here Hooks',
+    description: 'Drop-in widgets and a lightweight API embed RealityLayer in existing workflows.',
+    outcomes: ['Claim cards + tradeoff tables', 'Notion/Docs/Slides embeds', 'README-ready snippets'],
+  },
+  {
+    title: 'Conference Capture Engine',
+    description: 'Session prompts capture stakeholders, claims, and disagreements in real time.',
+    outcomes: ['Five-prompt capture mode', 'Auto-assembled brief draft', 'Event-tagged share links'],
+  },
+  {
+    title: 'Governance of the Governance Tool',
+    description: 'Transparent editorial rules and a public governance page make edits predictable.',
+    outcomes: ['Nothing disappears, only versions', 'Funding disclosures', 'Conflict handling norms'],
+  },
+];
 
 const FRONTEND_STACK = [
   'Next.js experience for public browsing and comparison',
@@ -131,6 +178,7 @@ const INTEGRITY_FEATURES = [
   'Disclosure fields for contributors (optional).',
   'No anonymous stealth edits — attribution or clear anonymous tags.',
   'Lightweight but real moderation policy.',
+  'Public editorial rules with version-only edits.',
 ];
 
 const DONE_CRITERIA = [
@@ -147,16 +195,17 @@ export default function RealityLayerOverview() {
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-echo-ember">
           RealityLayer · Internet Reality Layer
         </p>
-        <h1 className="mt-3 text-4xl font-semibold text-white">From talk to text. From text to traction.</h1>
+        <h1 className="mt-3 text-4xl font-semibold text-white">The Legitimacy Engine for governance under pressure.</h1>
         <p className="mt-3 max-w-3xl text-base text-slate-300">
-          RealityLayer is a governance operating system that turns internet policy chaos into decision-grade artifacts:
-          structured, cited, comparable, and reusable across stakeholders.
+          RealityLayer makes governance briefs citable, referencable, and institution-compatible — without erasing
+          disagreement. It turns chaotic policy debates into decision-grade artifacts that travel across stakeholders
+          with integrity intact.
         </p>
         <div className="mt-6 flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-          <span className="rounded-full border border-slate-700 px-3 py-2">Decision-grade</span>
-          <span className="rounded-full border border-slate-700 px-3 py-2">Versioned</span>
-          <span className="rounded-full border border-slate-700 px-3 py-2">Reusable claims</span>
-          <span className="rounded-full border border-slate-700 px-3 py-2">Public infrastructure</span>
+          <span className="rounded-full border border-slate-700 px-3 py-2">Cite-able</span>
+          <span className="rounded-full border border-slate-700 px-3 py-2">Institution-compatible</span>
+          <span className="rounded-full border border-slate-700 px-3 py-2">Disagreement-first</span>
+          <span className="rounded-full border border-slate-700 px-3 py-2">Resistant to capture</span>
         </div>
       </header>
 
@@ -197,6 +246,29 @@ export default function RealityLayerOverview() {
               ))}
             </ul>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-800 bg-slate-950/80 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold text-white">Legitimacy engine components</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-echo-ember">7 modules</p>
+        </div>
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          {LEGITIMACY_COMPONENTS.map((component) => (
+            <div key={component.title} className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+              <p className="text-sm font-semibold text-white">{component.title}</p>
+              <p className="mt-2 text-xs text-slate-400">{component.description}</p>
+              <ul className="mt-3 space-y-2 text-sm text-slate-200">
+                {component.outcomes.map((outcome) => (
+                  <li key={outcome} className="flex gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-echo-ember" />
+                    <span>{outcome}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </section>
 
