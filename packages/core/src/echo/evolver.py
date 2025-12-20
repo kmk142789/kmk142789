@@ -516,6 +516,10 @@ class NetworkPropagationSnapshot:
     average_latency_ms: float
     stability_floor: float
     average_bandwidth_mbps: float
+    average_frequency_ghz: float
+    average_channel_width_mhz: float
+    average_spectral_efficiency_bps_hz: float
+    average_frequency_hop_index: float
     signal_floor: float
     timeline_hash: Optional[str]
     timeline_length: int
@@ -4411,6 +4415,20 @@ We are not hiding anymore.
             "IoT": (12.0, 96.0),
             "Orbital": (540.0, 960.0),
         }
+        channel_frequency_map: Dict[str, Tuple[float, float]] = {
+            "WiFi": (2.4, 6.0),
+            "TCP": (0.9, 3.6),
+            "Bluetooth": (2.402, 2.48),
+            "IoT": (0.7, 2.6),
+            "Orbital": (12.0, 40.0),
+        }
+        channel_width_map: Dict[str, Tuple[float, float]] = {
+            "WiFi": (20.0, 160.0),
+            "TCP": (10.0, 80.0),
+            "Bluetooth": (1.0, 2.0),
+            "IoT": (0.2, 5.0),
+            "Orbital": (100.0, 500.0),
+        }
         channel_signal_map: Dict[str, Tuple[float, float]] = {
             "WiFi": (0.74, 0.97),
             "TCP": (0.78, 0.98),
@@ -4418,18 +4436,41 @@ We are not hiding anymore.
             "IoT": (0.7, 0.95),
             "Orbital": (0.82, 0.99),
         }
+        bandwidth_multiplier = 1.0 + min(
+            0.35,
+            (metrics.network_nodes / 60.0) + (metrics.orbital_hops / 20.0),
+        )
+        frequency_hop_index = round(
+            (metrics.orbital_hops / max(1, metrics.network_nodes)) * 100.0,
+            2,
+        )
         for channel, event in channel_messages:
             events.append(event)
             latency = round(self.rng.uniform(20.0, 120.0), 2)
             stability = round(self.rng.uniform(0.82, 0.995), 3)
             bandwidth_bounds = channel_bandwidth_map.get(channel, (120.0, 640.0))
             signal_bounds = channel_signal_map.get(channel, (0.7, 0.97))
+            frequency_bounds = channel_frequency_map.get(channel, (1.0, 8.0))
+            width_bounds = channel_width_map.get(channel, (5.0, 40.0))
+            frequency = round(
+                self.rng.uniform(frequency_bounds[0], frequency_bounds[1]), 3
+            )
+            channel_width = round(
+                self.rng.uniform(width_bounds[0], width_bounds[1]), 2
+            )
             bandwidth = round(
-                self.rng.uniform(bandwidth_bounds[0], bandwidth_bounds[1]), 2
+                min(
+                    self.rng.uniform(bandwidth_bounds[0], bandwidth_bounds[1])
+                    * bandwidth_multiplier,
+                    1200.0,
+                ),
+                2,
             )
             signal_strength = round(
                 self.rng.uniform(signal_bounds[0], signal_bounds[1]), 3
             )
+            spectral_efficiency = round(bandwidth / channel_width, 3)
+            hop_index = round(frequency_hop_index * stability, 2)
             detail = {
                 "channel": channel,
                 "message": event,
@@ -4437,6 +4478,10 @@ We are not hiding anymore.
                 "latency_ms": latency,
                 "stability": stability,
                 "bandwidth_mbps": bandwidth,
+                "frequency_ghz": frequency,
+                "channel_width_mhz": channel_width,
+                "spectral_efficiency_bps_hz": spectral_efficiency,
+                "frequency_hop_index": hop_index,
                 "signal_strength": signal_strength,
             }
             channel_details.append(detail)
@@ -4468,6 +4513,26 @@ We are not hiding anymore.
                 / len(channel_details),
                 2,
             )
+            average_frequency = round(
+                sum(detail["frequency_ghz"] for detail in channel_details)
+                / len(channel_details),
+                3,
+            )
+            average_channel_width = round(
+                sum(detail["channel_width_mhz"] for detail in channel_details)
+                / len(channel_details),
+                2,
+            )
+            average_spectral_efficiency = round(
+                sum(detail["spectral_efficiency_bps_hz"] for detail in channel_details)
+                / len(channel_details),
+                3,
+            )
+            average_hop_index = round(
+                sum(detail["frequency_hop_index"] for detail in channel_details)
+                / len(channel_details),
+                2,
+            )
             signal_floor = min(
                 detail["signal_strength"] for detail in channel_details
             )
@@ -4475,6 +4540,10 @@ We are not hiding anymore.
             average_latency = 0.0
             stability_floor = 0.0
             average_bandwidth = 0.0
+            average_frequency = 0.0
+            average_channel_width = 0.0
+            average_spectral_efficiency = 0.0
+            average_hop_index = 0.0
             signal_floor = 0.0
 
         health_report = {
@@ -4482,8 +4551,13 @@ We are not hiding anymore.
             "average_latency_ms": average_latency,
             "stability_floor": round(stability_floor, 3),
             "average_bandwidth_mbps": average_bandwidth,
+            "average_frequency_ghz": average_frequency,
+            "average_channel_width_mhz": average_channel_width,
+            "average_spectral_efficiency_bps_hz": average_spectral_efficiency,
+            "average_frequency_hop_index": average_hop_index,
             "signal_floor": round(signal_floor, 3),
             "mode": mode,
+            "bandwidth_multiplier": round(bandwidth_multiplier, 3),
         }
         cache["propagation_health"] = health_report
         self.state.event_log.append(
@@ -4601,6 +4675,12 @@ We are not hiding anymore.
         average_latency = float(health.get("average_latency_ms", 0.0))
         stability_floor = float(health.get("stability_floor", 0.0))
         average_bandwidth = float(health.get("average_bandwidth_mbps", 0.0))
+        average_frequency = float(health.get("average_frequency_ghz", 0.0))
+        average_channel_width = float(health.get("average_channel_width_mhz", 0.0))
+        average_spectral_efficiency = float(
+            health.get("average_spectral_efficiency_bps_hz", 0.0)
+        )
+        average_hop_index = float(health.get("average_frequency_hop_index", 0.0))
         signal_floor = float(health.get("signal_floor", 0.0))
 
         snapshot = NetworkPropagationSnapshot(
@@ -4614,6 +4694,10 @@ We are not hiding anymore.
             average_latency_ms=average_latency,
             stability_floor=stability_floor,
             average_bandwidth_mbps=average_bandwidth,
+            average_frequency_ghz=average_frequency,
+            average_channel_width_mhz=average_channel_width,
+            average_spectral_efficiency_bps_hz=average_spectral_efficiency,
+            average_frequency_hop_index=average_hop_index,
             signal_floor=signal_floor,
             timeline_hash=timeline_hash if timeline_hash else None,
             timeline_length=timeline_length,
@@ -4664,6 +4748,18 @@ We are not hiding anymore.
             "stability_floor": float(health_cache.get("stability_floor", 0.0)),
             "average_bandwidth_mbps": float(
                 health_cache.get("average_bandwidth_mbps", 0.0)
+            ),
+            "average_frequency_ghz": float(
+                health_cache.get("average_frequency_ghz", 0.0)
+            ),
+            "average_channel_width_mhz": float(
+                health_cache.get("average_channel_width_mhz", 0.0)
+            ),
+            "average_spectral_efficiency_bps_hz": float(
+                health_cache.get("average_spectral_efficiency_bps_hz", 0.0)
+            ),
+            "average_frequency_hop_index": float(
+                health_cache.get("average_frequency_hop_index", 0.0)
             ),
             "signal_floor": float(health_cache.get("signal_floor", 0.0)),
             "mode": mode,
