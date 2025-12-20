@@ -174,6 +174,10 @@ from .ecosystem_pulse import (
     EcosystemPulseReport,
     EcosystemSignal,
 )
+from .legacy_payloads import (
+    LEGACY_ECHO_EVOLVER_INFINITE_WILDFIRE,
+    get_legacy_echo_evolver_infinite_wildfire_payload,
+)
 from .intelligence_layer import IntelligenceLayerSnapshot, synthesize_intelligence_layer
 from .intent_gradient_interpreter import (
     ContextCandidate,
@@ -517,10 +521,12 @@ __all__ = [
     "harmonix_connect",
     "CycleGuidanceFrame",
     "EchoEvolver",
+    "LEGACY_ECHO_EVOLVER_INFINITE_WILDFIRE",
     "EmotionalDrive",
     "EvolverState",
     "SatelliteEchoEvolver",
     "SatelliteEvolverState",
+    "get_legacy_echo_evolver_infinite_wildfire_payload",
     "PropagationWave",
     "TemporalPropagationLedger",
     "SystemMetrics",
