@@ -119,6 +119,20 @@ from .stewardship_compass import (
     craft_compass,
     demo as stewardship_demo,
 )
+from .next_gen_bandwidth_frequency_system import (
+    AdvancedPropagationEngine,
+    EncryptionHook,
+    EnvironmentType,
+    FrequencyBand,
+    InterferenceManager,
+    InterferenceSource,
+    LinkQualityMetrics,
+    ModulationScheme,
+    PropagationModel,
+    default_quantum_ready_hook,
+    demo as propagation_demo,
+)
+from .echo_evolver import EchoConfig, EchoEvolver, EchoState, demo as echo_evolver_demo
 
 __all__ = [
     "ChronicleEvent",
