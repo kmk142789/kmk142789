@@ -180,6 +180,13 @@ from .intent_gradient_interpreter import (
     IntentGradient,
     IntentGradientInterpreter,
 )
+from .neural_network_oracle import (
+    NeuralNetworkOracle,
+    OraclePrediction,
+    OracleTrainingReport,
+    OracleTrainingSample,
+    forge_neural_oracle,
+)
 from .hex_ingestion import (
     AnomalyAlert,
     HexPayloadReport,
