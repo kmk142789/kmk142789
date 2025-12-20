@@ -13,13 +13,13 @@ Evidence targets skeptical engineering review and certification discussion by do
 1. **Confirm realistic power budgets** and contribution caps stated in the blueprint.
 2. **Demonstrate safety and governance behavior** (derating, thermal guards, brownout handling).
 3. **Quantify reliability and degradation** (aging, temperature, duty-cycle stress).
-4. **Show system integration behavior** (interaction with flight modes, thermal limits, noise).
+4. **Show system integration behavior** (interaction with flight modes, thermal limits, acoustic limits, power caps).
 
 ## Global Assumptions & Test Controls
 - **Airframe baseline**: Hover 450–650 W, cruise 250–380 W, avionics 12–25 W, sensors 8–35 W.
 - **Power governance**: supplemental sources capped at ≤15% instantaneous load and ≤8% mission energy.
 - **Environmental envelopes**: -10°C to 45°C ambient, 10–90% RH, wind 0–5 m/s for bench, 0–10 m/s for outdoor.
-- **Instrumentation**: calibrated power analyzers (±0.5%), thermocouples (±1°C), IMU/accelerometers (±2%), torque sensors (±1%), irradiance meter (±5%).
+- **Instrumentation**: calibrated power analyzers (±0.5%), thermocouples (±1°C), IMU/accelerometers (±2%), torque sensors (±1%), irradiance meter (±5%), SPL microphone (±1 dBA).
 - **Data integrity**: all tests must log time-synchronized CSV/JSONL with clock drift <100 ms and run IDs.
 
 ## Evidence Artifacts (Required)
@@ -127,9 +127,11 @@ Evidence targets skeptical engineering review and certification discussion by do
 - **Cap enforcement**: confirm ≤15% instantaneous load and ≤8% mission energy from augmentation sources.
 - **Brownout guard**: force battery below reserve; verify routing to avionics-only storage.
 - **Thermal guard**: drive PV/TEG temperature past threshold; confirm throttling and alarms.
+- **Acoustic guard**: simulate SPL breaches and verify ramp clamp and mode constraints.
+- **Flight Mode Constitution**: transition tests that verify invariants and forbidden states.
 
 ### Logged Metrics
-- Power source contributions, battery SOC, reserve threshold events, derating state transitions, fault logs.
+- Power source contributions, battery SOC, reserve threshold events, derating state transitions, fault logs, acoustic limit events.
 
 ---
 
@@ -142,6 +144,7 @@ Evidence targets skeptical engineering review and certification discussion by do
 | Vibration | <1% avionics load | Shaker test | vib_power.csv | ≤1% load |
 | Regen | 1–4% mission energy | Flight sim | regen_energy.json | within band |
 | Governance | ≤15% inst. cap | HIL | governance_log.jsonl | no violations |
+| Governance | SPL guard | HIL | acoustic_guard.jsonl | no violations |
 
 ---
 
@@ -162,5 +165,5 @@ Evidence targets skeptical engineering review and certification discussion by do
 ## Certification Discussion Notes
 - Evidence shows **augmentation is supplemental** and **does not enable perpetual flight**.
 - Power governance logs provide deterministic enforcement of caps and safety thresholds.
-- Thermal and structural impacts are bounded and verified under worst-case conditions.
+- Thermal, acoustic, and structural impacts are bounded and verified under worst-case conditions.
 - All claims grounded in measured or simulated data with stated assumptions and limits.
