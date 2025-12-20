@@ -70,6 +70,24 @@ def _extract_manifest_path(decision: Mapping[str, object]) -> str | None:
     return None
 
 
+def _extract_triggers(decision: Mapping[str, object]) -> Sequence[Mapping[str, object]]:
+    """Return trigger definitions embedded within the decision."""
+
+    triggers = decision.get("triggers")
+    if isinstance(triggers, Sequence):
+        return [item for item in triggers if isinstance(item, Mapping)]
+    return []
+
+
+def _extract_offline_mode(decision: Mapping[str, object]) -> bool:
+    """Return whether the orchestrator ran in offline mode."""
+
+    offline_mode = decision.get("offline_mode")
+    if isinstance(offline_mode, bool):
+        return offline_mode
+    return False
+
+
 def _parse_csv_env(value: Optional[str]) -> list[str] | None:
     """Return comma-separated values as a cleaned list."""
 
@@ -77,6 +95,29 @@ def _parse_csv_env(value: Optional[str]) -> list[str] | None:
         return None
     entries = [item.strip() for item in value.split(",") if item.strip()]
     return entries or None
+
+
+def _parse_float_env(value: Optional[str]) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(str(value).strip())
+    except ValueError:
+        return None
+
+
+def _summarize_triggers(triggers: Sequence[Mapping[str, object]]) -> list[str]:
+    summaries: list[str] = []
+    for trigger in triggers:
+        trigger_id = trigger.get("id")
+        reason = trigger.get("reason")
+        if trigger_id and reason:
+            summaries.append(f"{trigger_id}: {reason}")
+        elif trigger_id:
+            summaries.append(str(trigger_id))
+        elif reason:
+            summaries.append(str(reason))
+    return summaries
 
 
 @dataclass(slots=True)
@@ -361,6 +402,118 @@ class GitHubIssueConnector:
         )
 
 
+@dataclass(slots=True)
+class StatuspageConnector:
+    """Connector that prepares status updates for incident dashboards."""
+
+    page_id: Optional[str] = None
+    component: Optional[str] = None
+    trigger_threshold: float | None = None
+    required_secrets: Sequence[str] | None = None
+
+    name: str = "statuspage"
+    action: str = "post_status"
+
+    def build_event(self, decision: Mapping[str, object]) -> SyncEvent | None:  # noqa: D401
+        """Create a status update when triggers or degraded coherence appear."""
+
+        page_id = (self.page_id or "").strip()
+        if not page_id:
+            return None
+
+        coherence = _extract_coherence(decision)
+        triggers = _extract_triggers(decision)
+        offline = _extract_offline_mode(decision)
+        degraded = offline or bool(triggers)
+        if coherence is not None and self.trigger_threshold is not None:
+            degraded = degraded or coherence < self.trigger_threshold
+        if not degraded:
+            return None
+
+        cycle = _extract_cycle(decision)
+        manifest_path = _extract_manifest_path(decision)
+        trigger_summaries = _summarize_triggers(triggers)
+        status = "degraded_performance" if triggers or offline else "minor_outage"
+        if coherence is not None and self.trigger_threshold is not None:
+            status = "major_outage" if coherence < self.trigger_threshold else status
+
+        payload = {
+            "page_id": page_id,
+            "status": status,
+            "component": self.component,
+            "cycle": cycle,
+            "coherence": coherence,
+            "manifest_path": manifest_path,
+            "triggers": trigger_summaries,
+            "offline_mode": offline,
+        }
+        detail = "Prepared Statuspage update"
+        if trigger_summaries:
+            detail += f" with {len(trigger_summaries)} trigger(s)."
+        else:
+            detail += "."
+        return SyncEvent(
+            connector=self.name,
+            action=self.action,
+            status="planned",
+            detail=detail,
+            payload=payload,
+        )
+
+
+@dataclass(slots=True)
+class PagerDutyConnector:
+    """Connector that prepares PagerDuty trigger events."""
+
+    routing_key_secret: Optional[str] = None
+    source: Optional[str] = None
+    component: Optional[str] = None
+    group: Optional[str] = None
+    trigger_threshold: float | None = None
+    required_secrets: Sequence[str] | None = None
+
+    name: str = "pagerduty"
+    action: str = "trigger_event"
+
+    def build_event(self, decision: Mapping[str, object]) -> SyncEvent | None:  # noqa: D401
+        """Emit a PagerDuty trigger when the cycle needs attention."""
+
+        triggers = _extract_triggers(decision)
+        coherence = _extract_coherence(decision)
+        needs_attention = bool(triggers)
+        if coherence is not None and self.trigger_threshold is not None:
+            needs_attention = needs_attention or coherence < self.trigger_threshold
+        if not needs_attention:
+            return None
+
+        cycle = _extract_cycle(decision)
+        manifest_path = _extract_manifest_path(decision)
+        trigger_summaries = _summarize_triggers(triggers)
+        severity = "critical" if triggers else "warning"
+        if coherence is not None and self.trigger_threshold is not None:
+            severity = "critical" if coherence < self.trigger_threshold else severity
+
+        payload = {
+            "source": self.source or "echo-bridge",
+            "component": self.component,
+            "group": self.group,
+            "severity": severity,
+            "summary": "Echo bridge attention required",
+            "cycle": cycle,
+            "coherence": coherence,
+            "manifest_path": manifest_path,
+            "triggers": trigger_summaries,
+        }
+        detail = "Prepared PagerDuty trigger event."
+        return SyncEvent(
+            connector=self.name,
+            action=self.action,
+            status="planned",
+            detail=detail,
+            payload=payload,
+        )
+
+
 class BridgeSyncService:
     """Persist and expose sync operations derived from orchestrator cycles."""
 
@@ -599,6 +752,21 @@ class BridgeSyncService:
         github_secret = os.getenv("ECHO_BRIDGE_GITHUB_SECRET", "GITHUB_TOKEN")
 
         repository = github_repository or os.getenv("ECHO_BRIDGE_GITHUB_REPOSITORY")
+        statuspage_page_id = os.getenv("ECHO_BRIDGE_STATUSPAGE_PAGE_ID")
+        statuspage_component = os.getenv("ECHO_BRIDGE_STATUSPAGE_COMPONENT")
+        statuspage_secret = os.getenv(
+            "ECHO_BRIDGE_STATUSPAGE_SECRET", "STATUSPAGE_API_TOKEN"
+        )
+        statuspage_threshold = _parse_float_env(
+            os.getenv("ECHO_BRIDGE_STATUSPAGE_THRESHOLD")
+        )
+        pagerduty_secret = os.getenv("ECHO_BRIDGE_PAGERDUTY_SECRET")
+        pagerduty_source = os.getenv("ECHO_BRIDGE_PAGERDUTY_SOURCE", "echo-bridge")
+        pagerduty_component = os.getenv("ECHO_BRIDGE_PAGERDUTY_COMPONENT")
+        pagerduty_group = os.getenv("ECHO_BRIDGE_PAGERDUTY_GROUP")
+        pagerduty_threshold = _parse_float_env(
+            os.getenv("ECHO_BRIDGE_PAGERDUTY_THRESHOLD")
+        )
 
         connectors: list[BridgeConnector] = [
             DomainInventoryConnector(
@@ -625,6 +793,20 @@ class BridgeSyncService:
                 repository=repository,
                 required_secrets=[github_secret] if repository and github_secret else None,
             ),
+            StatuspageConnector(
+                page_id=statuspage_page_id,
+                component=statuspage_component,
+                trigger_threshold=statuspage_threshold,
+                required_secrets=[statuspage_secret] if statuspage_page_id else None,
+            ),
+            PagerDutyConnector(
+                routing_key_secret=pagerduty_secret,
+                source=pagerduty_source,
+                component=pagerduty_component,
+                group=pagerduty_group,
+                trigger_threshold=pagerduty_threshold,
+                required_secrets=[pagerduty_secret] if pagerduty_secret else None,
+            ),
         ]
 
         return cls(state_dir=resolved_path, connectors=connectors)
@@ -635,6 +817,8 @@ __all__ = [
     "BridgeSyncService",
     "DomainInventoryConnector",
     "GitHubIssueConnector",
+    "PagerDutyConnector",
+    "StatuspageConnector",
     "SyncEvent",
     "UnstoppableDomainConnector",
     "VercelDeployConnector",
