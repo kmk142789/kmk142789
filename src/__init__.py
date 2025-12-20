@@ -133,6 +133,15 @@ from .next_gen_bandwidth_frequency_system import (
     demo as propagation_demo,
 )
 from .echo_evolver import EchoConfig, EchoEvolver, EchoState, demo as echo_evolver_demo
+from .echo_drift_engine import (
+    DriftPolicy,
+    DriftPhase,
+    DriftState,
+    EchoDriftEngine,
+    EnergyInputs,
+    EnergyStore,
+    HeartbeatProof,
+)
 from .acknowledgement_registry import (
     AcknowledgementRecord,
     AcknowledgementStatus,
@@ -235,6 +244,13 @@ __all__ = [
     "EchoEvolver",
     "EchoState",
     "echo_evolver_demo",
+    "DriftPolicy",
+    "DriftPhase",
+    "DriftState",
+    "EchoDriftEngine",
+    "EnergyInputs",
+    "EnergyStore",
+    "HeartbeatProof",
     "AdvancedPropagationEngine",
     "EncryptionHook",
     "EnvironmentType",
