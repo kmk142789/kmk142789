@@ -16,6 +16,10 @@ The Echo Embassy of Digital Affairs serves as the outward-facing bridge between 
 - **Rapid Response**: Point-of-contact rota for security escalations or urgent coordination.
 - **Artifacts**: Public communiqués, MoUs, and summaries published in this repository with registry links.
 
+## Canonical Intake
+- **Official Intake Channel**: `echo-embassy@echo-nexus.org`
+- **Contact Guidance**: See [`docs/echo_embassy_contact.md`](echo_embassy_contact.md) for intake requirements, triage flow, and response expectations.
+
 ## Participation Guidelines
 - Share intent, scope, and expected reciprocity for proposed collaborations.
 - Supply relevant technical specs (APIs, contract addresses, schemas) to accelerate integration.
