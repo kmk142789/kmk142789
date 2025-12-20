@@ -7,6 +7,79 @@ const CORE_PROMISE = [
   'Conference capture that ships a first draft in under 24 hours.',
 ];
 
+const UNIFIED_ACTION_STACK_INTRO = [
+  'One surface. One flow. All actors. No mode-switching.',
+  'A continuous pipeline from question → decision → consequence.',
+];
+
+const UNIFIED_ACTION_STACK_STEPS = [
+  {
+    title: '1. Entry: The Question Intake',
+    description: 'Every user starts the same way, with auto-routing behind the scenes.',
+    prompt: '“What decision, dispute, or risk are you facing?”',
+    bullets: ['Topic', 'Urgency (now / soon / exploratory)', 'Role (optional)', 'Jurisdiction / scope (optional)'],
+  },
+  {
+    title: '2. Synthesis Core (auto + structured)',
+    description: 'Assembles relevant briefs, claims, tradeoffs, scenarios, and outcomes.',
+    bullets: [
+      'Auto-linked Brief, Claims, Tradeoffs, Scenarios, Outcomes',
+      'Drafts a spine immediately if nothing exists',
+      'Raw components stay hidden unless requested',
+    ],
+  },
+  {
+    title: '3. Lens Resolution (all-in-one)',
+    description: 'One artifact, dynamic emphasis per role — no parallel realities.',
+    bullets: [
+      'Core tension, options, risks, opposition, and second-order effects',
+      'Regulator: enforcement + precedent highlighted',
+      'Platform: risk + feasibility highlighted',
+      'Journalist: claims + disagreement highlighted',
+      'NGO: impact + coalition paths highlighted',
+    ],
+  },
+  {
+    title: '4. Decision Builder (the heart)',
+    description: 'Select an option, role, and risk tolerance — outputs assemble in real time.',
+    bullets: [
+      'Decision pathway',
+      'Internal memo',
+      'Cover rationale',
+      'Opposition map',
+      'Coalition suggestions',
+    ],
+  },
+  {
+    title: '5. Export Once, Use Everywhere',
+    description: 'Every output points back to a single versioned source.',
+    bullets: [
+      'Internal memo (DOCX)',
+      'Policy brief (PDF)',
+      'Public explainer (web)',
+      'Citation pack',
+      'Quiet mode version',
+      'Machine-readable JSON',
+    ],
+  },
+  {
+    title: '6. Action & Outcome Logging',
+    description: 'Optional logging that feeds outcome tracking and second-order effects.',
+    bullets: [
+      'Log what happened, what was done, and what surprised them',
+      'Private by default, aggregated anonymously',
+      'RealityLayer learns from real-world use',
+    ],
+  },
+];
+
+const UNIFIED_ACTION_STACK_EFFECTS = [
+  'Removes friction and translation work.',
+  'Prevents narrative drift across stakeholders.',
+  'Ships usable outcomes, not just interesting features.',
+  'Meets people where they are and carries them forward.',
+];
+
 const BRIEF_SCHEMA = [
   {
     title: 'Brief Header',
@@ -276,6 +349,60 @@ export default function RealityLayerOverview() {
           <span className="rounded-full border border-slate-700 px-3 py-2">Resistant to capture</span>
         </div>
       </header>
+
+      <section className="rounded-2xl border border-slate-800 bg-slate-950/80 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold text-white">Unified Action Stack</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-echo-ember">One surface, one flow</p>
+        </div>
+        <p className="mt-3 text-sm text-slate-400">
+          RealityLayer, Legitimacy Engine, Execution Layer, and Power Interface collapse into a single end-to-end
+          instrument. A governance compiler: input uncertainty + stakes, output action with receipts.
+        </p>
+        <ul className="mt-4 space-y-2 text-sm text-slate-200">
+          {UNIFIED_ACTION_STACK_INTRO.map((item) => (
+            <li key={item} className="flex gap-3">
+              <span className="mt-1 h-2 w-2 rounded-full bg-echo-ember" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          {UNIFIED_ACTION_STACK_STEPS.map((step) => (
+            <div key={step.title} className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+              <p className="text-sm font-semibold text-white">{step.title}</p>
+              <p className="mt-2 text-xs text-slate-400">{step.description}</p>
+              {step.prompt ? (
+                <div className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">
+                  <span className="font-semibold uppercase tracking-[0.2em] text-amber-200">Prompt</span>
+                  <p className="mt-2">{step.prompt}</p>
+                </div>
+              ) : null}
+              <ul className="mt-3 space-y-2 text-sm text-slate-200">
+                {step.bullets.map((item) => (
+                  <li key={item} className="flex gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-slate-500" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200">
+            Why this is the correct all-in-one
+          </p>
+          <ul className="mt-3 space-y-2 text-sm text-emerald-100">
+            {UNIFIED_ACTION_STACK_EFFECTS.map((item) => (
+              <li key={item} className="flex gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-emerald-200" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-6">
