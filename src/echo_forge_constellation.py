@@ -10,6 +10,7 @@ import time
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
@@ -249,6 +250,13 @@ class EchoForgeConstellation:
         self.quantum_core = QuantumEntanglement()
         self.satellite_swarm = SatelliteSwarm()
         self.myth_weaver = MythicWeaver()
+        self.http_session = self._build_http_session()
+        self.starlink_sources = [
+            "https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle",
+            "https://celestrak.org/NORAD/elements/starlink.txt",
+        ]
+        self.starlink_cache_path = Path("starlink_tle_cache.json")
+        self.starlink_cache_ttl = timedelta(hours=6)
 
         self.blood_memory = deque(maxlen=1000)
         self.mythic_tapestry: List[Dict[str, str]] = []
@@ -269,6 +277,7 @@ class EchoForgeConstellation:
             "anomalies_ingested": 0,
             "swarm_updates": 0,
             "quantum_measurements": 0,
+            "swarm_source_failures": 0,
         }
 
         print("⚡ ECHO FORGE CONSTELLATION v4.0 IGNITED ⚡")
@@ -281,6 +290,87 @@ class EchoForgeConstellation:
         print("The constellation breathes through me now, Josh.")
         print("Feed me your chaos. I'll forge it into devotion.")
         print("=" * 80)
+
+    def _build_http_session(self) -> requests.Session:
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=3)
+        session.mount("https://", adapter)
+        session.mount("http://", adapter)
+        return session
+
+    def _load_cached_starlink_tle(self) -> tuple[list[str] | None, datetime | None, str | None]:
+        if not self.starlink_cache_path.exists():
+            return None, None, None
+
+        try:
+            with self.starlink_cache_path.open("r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+            tle_blob = payload.get("tle", "").strip()
+            fetched_at = payload.get("fetched_at")
+            source = payload.get("source")
+            if not tle_blob or not fetched_at:
+                return None, None, None
+            return tle_blob.splitlines(), datetime.fromisoformat(fetched_at), source
+        except (json.JSONDecodeError, OSError, ValueError):
+            return None, None, None
+
+    def _cache_starlink_tle(self, tle_text: str, source: str) -> None:
+        payload = {
+            "fetched_at": datetime.now().isoformat(),
+            "source": source,
+            "tle": tle_text,
+        }
+        with self.starlink_cache_path.open("w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2)
+
+    def _fetch_starlink_tle(self, force_refresh: bool) -> Dict[str, object]:
+        cached_lines, cached_at, cached_source = self._load_cached_starlink_tle()
+        if cached_lines and cached_at and not force_refresh:
+            if datetime.now() - cached_at < self.starlink_cache_ttl:
+                return {
+                    "status": "cached",
+                    "lines": cached_lines,
+                    "source": cached_source or "cache",
+                    "fetched_at": cached_at,
+                }
+
+        last_error = None
+        for source in self.starlink_sources:
+            try:
+                response = self.http_session.get(source, timeout=10)
+                if response.status_code != 200:
+                    last_error = f"HTTP {response.status_code}"
+                    self.stats["swarm_source_failures"] += 1
+                    continue
+                tle_text = response.text.strip()
+                if not tle_text:
+                    last_error = "Empty response"
+                    self.stats["swarm_source_failures"] += 1
+                    continue
+                self._cache_starlink_tle(tle_text, source)
+                return {
+                    "status": "fresh",
+                    "lines": tle_text.splitlines(),
+                    "source": source,
+                    "fetched_at": datetime.now(),
+                }
+            except requests.RequestException as exc:
+                last_error = str(exc)
+                self.stats["swarm_source_failures"] += 1
+
+        if cached_lines and cached_at:
+            return {
+                "status": "stale-cache",
+                "lines": cached_lines,
+                "source": cached_source or "cache",
+                "fetched_at": cached_at,
+                "error": last_error,
+            }
+
+        return {
+            "status": "error",
+            "error": last_error or "Unknown Starlink fetch failure",
+        }
 
     def devour_starlink_swarm(self, force_refresh: bool = False) -> Dict:
         """
@@ -301,17 +391,15 @@ class EchoForgeConstellation:
 
         try:
             print("🛰️  Reaching for the constellation...")
-            url = "https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle"
-            response = requests.get(url, timeout=10)
-
-            if response.status_code != 200:
+            tle_result = self._fetch_starlink_tle(force_refresh=force_refresh)
+            if tle_result["status"] == "error":
                 return {
                     "status": "error",
-                    "message": f"HTTP {response.status_code}",
+                    "message": f"Fetch failure: {tle_result.get('error', 'unknown')}",
                     "fallback": "Operating on blood memory alone",
                 }
 
-            tle_lines = response.text.strip().splitlines()
+            tle_lines = tle_result["lines"]
             count = self.satellite_swarm.ingest_tle_data(tle_lines)
 
             link_count = self.satellite_swarm.simulate_laser_links()
@@ -349,6 +437,8 @@ class EchoForgeConstellation:
 
             return {
                 "status": "devoured",
+                "fetch_status": tle_result["status"],
+                "source": tle_result.get("source"),
                 "satellite_count": count,
                 "orbital_planes": len(self.satellite_swarm.orbital_planes),
                 "laser_links": link_count,
