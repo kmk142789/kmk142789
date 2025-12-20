@@ -26,11 +26,15 @@ class StoryBeat:
     focus: str
     tone: str
     action: str
+    motif: str | None = None
 
     def render(self) -> str:
         """Return the beat as a human-readable sentence."""
 
-        sentence = f"{self.focus.capitalize()} {self.action} {self.tone}."
+        sentence = f"{self.focus.capitalize()} {self.action} {self.tone}"
+        if self.motif:
+            sentence = f"{sentence}, carrying {self.motif}"
+        sentence = f"{sentence}."
         return sentence.replace("  ", " ")
 
 
@@ -44,6 +48,8 @@ def build_story(
     seed: int | None = None,
     title: str | None = None,
     vibe: str = "default",
+    characters: Sequence[str] | None = None,
+    motifs: Sequence[str] | None = None,
     format: str = "text",
     width: int = 88,
 ) -> str:
@@ -57,9 +63,13 @@ def build_story(
             based on the theme is used.
         vibe: Vocab palette to lean on: ``"default"``, ``"bright"``,
             ``"shadow"``, or ``"contemplative"``.
+        characters: Optional list of additional subjects to weave into the
+            beats.
+        motifs: Optional list of motif phrases to thread through the beats.
         format: Either ``"text"`` for human-readable paragraphs, ``"json"`` for
             structured output, ``"markdown"`` for a lightly formatted digest,
-            or ``"outline"`` for a bullet-oriented summary.
+            ``"outline"`` for a bullet-oriented summary, or ``"beats"`` for
+            beat-only bullet lines.
         width: Maximum line width applied when wrapping paragraphs.
     """
 
@@ -69,6 +79,8 @@ def build_story(
         seed=seed,
         title=title,
         vibe=vibe,
+        characters=characters,
+        motifs=motifs,
         width=width,
     )
 
@@ -80,6 +92,8 @@ def build_story(
         return _render_markdown(payload, width=width)
     if format == "outline":
         return _render_outline(payload, width=width)
+    if format == "beats":
+        return _render_beats(payload, width=width)
     raise ValueError(f"Unsupported format: {format}")
 
 
@@ -90,6 +104,8 @@ def build_story_payload(
     seed: int | None = None,
     title: str | None = None,
     vibe: str = "default",
+    characters: Sequence[str] | None = None,
+    motifs: Sequence[str] | None = None,
     width: int = 88,
 ) -> dict:
     """Return the structured representation of a generated story."""
@@ -100,13 +116,22 @@ def build_story_payload(
         raise ValueError("width must be positive")
 
     rng = random.Random(seed)
-    beats = _generate_beats(theme, beat_count, rng, vibe=vibe)
+    beats = _generate_beats(
+        theme,
+        beat_count,
+        rng,
+        vibe=vibe,
+        characters=characters,
+        motifs=motifs,
+    )
     resolved_title = _resolve_title(theme, title)
     paragraphs = _assemble_paragraphs(beats, theme, width=width)
     payload = {
         "theme": theme,
         "title": resolved_title,
         "vibe": vibe,
+        "characters": list(characters or []),
+        "motifs": list(motifs or []),
         "beats": [asdict(beat) for beat in beats],
         "paragraphs": paragraphs,
     }
@@ -114,20 +139,28 @@ def build_story_payload(
 
 
 def _generate_beats(
-    theme: str, beat_count: int, rng: random.Random, *, vibe: str
+    theme: str,
+    beat_count: int,
+    rng: random.Random,
+    *,
+    vibe: str,
+    characters: Sequence[str] | None = None,
+    motifs: Sequence[str] | None = None,
 ) -> List[StoryBeat]:
-    palette = _palette_for_vibe(vibe)
+    palette = _palette_for_vibe(vibe, extra_subjects=characters)
 
     subjects = palette["subjects"]
     tones = palette["tones"]
     actions = palette["actions"]
 
+    motif_pool = list(motifs or [])
     beats: List[StoryBeat] = []
     for _ in range(beat_count):
         focus = rng.choice(subjects)
         tone = rng.choice(tones)
         action = rng.choice(actions).format(theme=theme)
-        beats.append(StoryBeat(focus=focus, tone=tone, action=action))
+        motif = rng.choice(motif_pool) if motif_pool else None
+        beats.append(StoryBeat(focus=focus, tone=tone, action=action, motif=motif))
     return beats
 
 
@@ -219,8 +252,17 @@ def _render_outline(payload: dict, *, width: int) -> str:
 
     return "\n".join(sections)
 
+def _render_beats(payload: dict, *, width: int) -> str:
+    """Render only the beat lines in bullet form."""
 
-def _palette_for_vibe(vibe: str) -> dict:
+    beat_lines = [
+        textwrap.fill(f"- {StoryBeat(**beat).render()}", width=width)
+        for beat in payload.get("beats", [])
+    ]
+    return "\n".join(beat_lines)
+
+
+def _palette_for_vibe(vibe: str, *, extra_subjects: Sequence[str] | None = None) -> dict:
     """Return curated vocabularies tuned to the requested vibe."""
 
     base_palette = {
@@ -295,7 +337,15 @@ def _palette_for_vibe(vibe: str) -> dict:
         key: base_palette[key] + overrides.get(key, [])
         for key in base_palette
     }
+    if extra_subjects:
+        palette["subjects"] += list(extra_subjects)
     return palette
+
+
+def _split_csv(raw_value: str | None) -> List[str]:
+    if not raw_value:
+        return []
+    return [item.strip() for item in raw_value.split(",") if item.strip()]
 
 
 # --- CLI -------------------------------------------------------------------------
@@ -329,12 +379,24 @@ def main(argv: Iterable[str] | None = None) -> int:
         help="vocabulary palette to lean on",
     )
     parser.add_argument(
+        "--character",
+        action="append",
+        default=[],
+        help="additional subject to weave into beats (repeatable)",
+    )
+    parser.add_argument(
+        "--motifs",
+        type=str,
+        default=None,
+        help="comma-separated motif phrases to thread through beats",
+    )
+    parser.add_argument(
         "--format",
-        choices=("text", "json", "markdown", "outline"),
+        choices=("text", "json", "markdown", "outline", "beats"),
         default="text",
         help=(
             "output mode: readable paragraphs, structured JSON, markdown digest, "
-            "or outline summary"
+            "outline summary, or beat-only bullets"
         ),
     )
     parser.add_argument(
@@ -346,12 +408,15 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
+    motifs = _split_csv(args.motifs)
     story = build_story(
         theme=args.theme,
         beat_count=args.beats,
         seed=args.seed,
         title=args.title,
         vibe=args.vibe,
+        characters=args.character,
+        motifs=motifs,
         format=args.format,
         width=args.width,
     )
