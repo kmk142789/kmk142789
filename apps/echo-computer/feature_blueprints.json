@@ -1,5 +1,5 @@
 {
-  "updated": "2025-06-07",
+  "updated": "2025-11-23",
   "features": [
     {
       "id": "cloud-offline-fusion",
@@ -129,6 +129,19 @@
         "Detect deterministic build outputs (node_modules, venv) and store them per-branch in a warm cache lane.",
         "Expose a cache hit/miss HUD inside the terminal footer with guidance to refresh or pin versions.",
         "Add a `echo-cache inspect` command that prints current keys, sizes, and invalidation signals."
+      ]
+    },
+    {
+      "id": "cloud-upgrade-orchestrator",
+      "focus": "Cloud",
+      "status": "Ready",
+      "title": "Upgrade orchestrator lane",
+      "description": "Provide a single dashboard to stage, approve, and verify Echo Computer upgrades.",
+      "impact": "Turns upgrade planning into a repeatable checklist with explicit rollback and verification gates.",
+      "blueprint": [
+        "Add an `upgrade/orchestrator` endpoint that lists pending updates, owners, and planned windows.",
+        "Surface pre-flight checks (dependency health, smoke tests, backup status) as blocking gates.",
+        "Export a signed upgrade report to `cloud/upgrade-orchestrator.json` for auditing."
       ]
     },
     {

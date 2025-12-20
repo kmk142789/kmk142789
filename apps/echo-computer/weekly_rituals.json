@@ -1,5 +1,5 @@
 {
-  "updated": "2025-06-07",
+  "updated": "2025-11-23",
   "rituals": [
     {
       "id": "code-orbit-recorder",
@@ -65,6 +65,19 @@
         "Publish guidance on default TTLs and manual overrides to the ritual archive."
       ],
       "tags": ["upgrade", "optimize", "code"]
+    },
+    {
+      "id": "cloud-upgrade-refresh",
+      "focus": "Cloud",
+      "title": "Refresh the upgrade & patch cadence",
+      "cadence": "weekly",
+      "description": "Review cloud dependencies and document the next patch window for Echo Computer.",
+      "steps": [
+        "Audit the deployed services and note any pending security or runtime updates.",
+        "Schedule a patch window with a rollback plan and add it to the ops calendar.",
+        "Publish the upgrade notes and checkpoints to the ritual archive."
+      ],
+      "tags": ["upgrade", "advance", "cloud"]
     },
     {
       "id": "collab-ops-journal",

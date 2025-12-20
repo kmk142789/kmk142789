@@ -1,5 +1,5 @@
 {
-  "updated": "2025-06-07",
+  "updated": "2025-11-23",
   "tasks": [
     {
       "id": "code-skyline-prewarm",
@@ -54,6 +54,17 @@
         "Run a representative build twice and capture timing + cache hit/miss signals.",
         "Toggle a dependency version to confirm the cache invalidates and restores cleanly.",
         "Record the commands and deltas inside `workspaces/demo/logs/cache-drift.json`."
+      ]
+    },
+    {
+      "id": "code-upgrade-sweep",
+      "focus": "Code",
+      "title": "Run the upgrade sweep checklist",
+      "description": "Update Echo Computer's core tooling and document any follow-up actions.",
+      "steps": [
+        "Capture current tool versions (`node`, `npm`, `python`, and `pip`) into `workspaces/demo/logs/upgrade-sweep.json`.",
+        "Apply the planned version bumps and re-run a representative build to confirm no regressions.",
+        "List any migration notes, warnings, or pinned dependencies that need review."
       ]
     },
     {
