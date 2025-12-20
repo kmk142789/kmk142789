@@ -29,6 +29,8 @@ jobs:
         run: git diff --exit-code system_architecture/architecture.graph.json
       - name: Verify inventory committed
         run: git diff --exit-code packages/glyphs/inventory.json
+      - name: Federation readiness
+        run: python tools/federation_readiness.py
 
   supply_chain_security:
     name: Supply chain security
