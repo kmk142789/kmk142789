@@ -236,6 +236,36 @@ def default_outerlink_abilities() -> List[OuterLinkAbility]:
             description="Enforces safe shell execution boundaries.",
             tier="interface",
         ),
+        OuterLinkAbility(
+            name="structured_citations",
+            description="Emits structured citations for external sources.",
+            tier="integration",
+        ),
+        OuterLinkAbility(
+            name="source_classification",
+            description="Classifies external sources by authority and provenance.",
+            tier="integration",
+        ),
+        OuterLinkAbility(
+            name="update_awareness",
+            description="Tracks staleness and refresh windows for sources.",
+            tier="integration",
+        ),
+        OuterLinkAbility(
+            name="offline_uncertainty_marking",
+            description="Marks uncertainty explicitly when operating offline.",
+            tier="resilience",
+        ),
+        OuterLinkAbility(
+            name="placeholder_references",
+            description="Provides placeholder references during degraded connectivity.",
+            tier="resilience",
+        ),
+        OuterLinkAbility(
+            name="source_artifacts",
+            description="Writes source bundles for downstream artifact capture.",
+            tier="operations",
+        ),
     ]
 
 
