@@ -5,6 +5,7 @@ from pathlib import Path
 
 from . import inventory
 from .attest import attest_reports
+from .required_actions import write_required_actions
 from .remedy.plan import build_plan
 from .signals import sentinel_workspace
 from .utils import write_json
@@ -34,6 +35,7 @@ def run_all(dry_run: bool, registry: Path | None) -> None:
     runner.write(reports, report_dir)
     sarif = _render_sarif(reports)
     write_json(report_dir / "sentinel-probes.sarif", sarif)
+    write_required_actions(reports, workspace / "required-actions")
 
     attest_dir = workspace / "attestations"
     attest_reports(report_dir, attest_dir)
@@ -55,4 +57,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
-
