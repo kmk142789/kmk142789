@@ -68,8 +68,9 @@ def build_story(
         motifs: Optional list of motif phrases to thread through the beats.
         format: Either ``"text"`` for human-readable paragraphs, ``"json"`` for
             structured output, ``"markdown"`` for a lightly formatted digest,
-            ``"outline"`` for a bullet-oriented summary, or ``"beats"`` for
-            beat-only bullet lines.
+            ``"outline"`` for a bullet-oriented summary, ``"beats"`` for
+            beat-only bullet lines, or ``"constellation"`` for a beat-mapped
+            starfield grid.
         width: Maximum line width applied when wrapping paragraphs.
     """
 
@@ -94,6 +95,8 @@ def build_story(
         return _render_outline(payload, width=width)
     if format == "beats":
         return _render_beats(payload, width=width)
+    if format == "constellation":
+        return _render_constellation(payload, width=width)
     raise ValueError(f"Unsupported format: {format}")
 
 
@@ -130,6 +133,7 @@ def build_story_payload(
         "theme": theme,
         "title": resolved_title,
         "vibe": vibe,
+        "seed": seed,
         "characters": list(characters or []),
         "motifs": list(motifs or []),
         "beats": [asdict(beat) for beat in beats],
@@ -262,6 +266,53 @@ def _render_beats(payload: dict, *, width: int) -> str:
     return "\n".join(beat_lines)
 
 
+def _render_constellation(payload: dict, *, width: int) -> str:
+    """Render beats into a compact constellation grid plus legend."""
+
+    title = payload["title"]
+    beats = payload.get("beats", [])
+    seed = payload.get("seed")
+
+    grid_size = 3
+    gutter = 3
+    cell_width = max(18, (width - (grid_size - 1) * gutter) // grid_size)
+
+    rng = random.Random(seed)
+    positions = list(range(grid_size * grid_size))
+    rng.shuffle(positions)
+
+    grid_cells = [" " * cell_width for _ in range(grid_size * grid_size)]
+    for index, beat in enumerate(beats):
+        if index >= len(positions):
+            break
+        label = f"{index + 1}:{beat['focus']}"
+        cell = textwrap.shorten(label, width=cell_width, placeholder="…")
+        grid_cells[positions[index]] = cell.ljust(cell_width)
+
+    rows = []
+    for row_index in range(grid_size):
+        start = row_index * grid_size
+        row = (" " * gutter).join(grid_cells[start : start + grid_size])
+        rows.append(row)
+
+    legend_lines = []
+    for index, beat in enumerate(beats):
+        sentence = StoryBeat(**beat).render()
+        legend_lines.append(textwrap.fill(f"{index + 1}. {sentence}", width=width))
+
+    return "\n".join(
+        [
+            f"# {title}",
+            "_Constellation map_",
+            "",
+            *rows,
+            "",
+            "Legend:",
+            *legend_lines,
+        ]
+    )
+
+
 def _palette_for_vibe(vibe: str, *, extra_subjects: Sequence[str] | None = None) -> dict:
     """Return curated vocabularies tuned to the requested vibe."""
 
@@ -392,11 +443,11 @@ def main(argv: Iterable[str] | None = None) -> int:
     )
     parser.add_argument(
         "--format",
-        choices=("text", "json", "markdown", "outline", "beats"),
+        choices=("text", "json", "markdown", "outline", "beats", "constellation"),
         default="text",
         help=(
             "output mode: readable paragraphs, structured JSON, markdown digest, "
-            "outline summary, or beat-only bullets"
+            "outline summary, beat-only bullets, or a constellation map"
         ),
     )
     parser.add_argument(
