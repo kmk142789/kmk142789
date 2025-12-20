@@ -297,28 +297,45 @@ class AgentMesh:
         ordered.extend(self.self_healing.values())
         ordered.extend(self.offline_agents.values())
         ordered.extend(self.agents.values())
-        return self._filter_candidates(ordered, policy, roles)
+        return self._filter_candidates(
+            ordered,
+            policy,
+            roles,
+            policy_tags=set(policy.tags),
+            policy_roles=set(policy.roles),
+        )
 
-    def _filter_candidates(self, agents: Iterable[Agent], policy: Policy, roles: Dict[str, Role]) -> List[Agent]:
+    def _filter_candidates(
+        self,
+        agents: Iterable[Agent],
+        policy: Policy,
+        roles: Dict[str, Role],
+        policy_tags: set[str],
+        policy_roles: set[str],
+    ) -> List[Agent]:
         seen: set[str] = set()
         filtered: List[Agent] = []
         for agent in agents:
             if agent.agent_id in seen:
                 continue
-            if policy.tags and not set(agent.tags) & set(policy.tags):
+            agent_tags = set(agent.tags)
+            if policy_tags and not agent_tags & policy_tags:
                 continue
-            if policy.roles and agent.role and agent.role in policy.roles:
+            if policy_roles and agent.role and agent.role in policy_roles:
                 seen.add(agent.agent_id)
                 filtered.append(agent)
                 continue
-            if not policy.roles:
+            if not policy_roles:
                 seen.add(agent.agent_id)
                 filtered.append(agent)
                 continue
             role_def = roles.get(agent.role or "")
-            if role_def and (set(role_def.tags) & set(policy.tags) or set(role_def.capabilities) & set(agent.capabilities)):
-                seen.add(agent.agent_id)
-                filtered.append(agent)
+            if role_def:
+                role_tags = set(role_def.tags)
+                role_caps = set(role_def.capabilities)
+                if role_tags & policy_tags or role_caps & set(agent.capabilities):
+                    seen.add(agent.agent_id)
+                    filtered.append(agent)
         return filtered
 
 
@@ -339,6 +356,8 @@ class GovernanceRouter:
         self.channels: Dict[str, ChannelHandler] = channels.copy() if channels else {}
         self.enforcement_events: List[Dict[str, Any]] = []
         self.last_route_trace: List[Dict[str, Any]] = []
+        self._latest_policy_cache: Dict[str, Policy] = {}
+        self._resolved_policy_cache: Dict[str, Policy] = {}
 
         # Provide a default channel that simply records the payload for observability.
         if "record" not in self.channels:
@@ -531,9 +550,8 @@ class GovernanceRouter:
         return report
 
     def _iter_effective_policies(self, now: datetime) -> Iterable[Policy]:
-        for versions in self.policy_versions.values():
-            latest = self._select_latest_version(versions)
-            resolved = self._resolve_inheritance(latest)
+        for latest in self._latest_policy_versions().values():
+            resolved = self._resolve_inheritance_cached(latest)
             yield self._apply_rotation(resolved, now)
 
     def _select_agent(self, policy: Policy) -> Agent:
@@ -560,6 +578,15 @@ class GovernanceRouter:
     def _add_policy_version(self, policy: Policy) -> None:
         family = policy.family or policy.policy_id
         self.policy_versions.setdefault(family, {})[policy.version] = policy
+        self._latest_policy_cache.clear()
+        self._resolved_policy_cache.clear()
+
+    def _latest_policy_versions(self) -> Dict[str, Policy]:
+        if self._latest_policy_cache:
+            return self._latest_policy_cache
+        for family, versions in self.policy_versions.items():
+            self._latest_policy_cache[family] = self._select_latest_version(versions)
+        return self._latest_policy_cache
 
     def _select_latest_version(self, policies: Dict[str, Policy]) -> Policy:
         def version_key(version: str) -> List[int]:
@@ -585,6 +612,15 @@ class GovernanceRouter:
         merged.active_from = policy.active_from or parent.active_from
         merged.active_until = policy.active_until or parent.active_until
         return merged
+
+    def _resolve_inheritance_cached(self, policy: Policy) -> Policy:
+        cache_key = f"{policy.policy_id}:{policy.version}"
+        cached = self._resolved_policy_cache.get(cache_key)
+        if cached:
+            return cached
+        resolved = self._resolve_inheritance(policy)
+        self._resolved_policy_cache[cache_key] = resolved
+        return resolved
 
     def _apply_rotation(self, policy: Policy, now: datetime) -> Policy:
         if not policy.rotation:
