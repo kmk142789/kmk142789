@@ -197,6 +197,8 @@ from .neural_network_oracle import (
     OracleTrainingSample,
     forge_neural_oracle,
 )
+from .neural_link import NeuralLinkCalibration, NeuralLinkPulse, NeuralLinkSystem
+from .echobridge import EchoBridge, EchoBridgePacket
 from .hex_ingestion import (
     AnomalyAlert,
     HexPayloadReport,
@@ -530,10 +532,15 @@ __all__ = [
     "BridgeSignals",
     "BridgeTuning",
     "EchoBridgeHarmonix",
+    "EchoBridge",
+    "EchoBridgePacket",
     "HarmonixBridgeState",
     "bridge_harmonix_main",
     "EchoBridgeSession",
     "harmonix_connect",
+    "NeuralLinkCalibration",
+    "NeuralLinkPulse",
+    "NeuralLinkSystem",
     "CycleGuidanceFrame",
     "ConstellationBriefing",
     "EchoEvolver",
