@@ -69,8 +69,9 @@ def build_story(
         format: Either ``"text"`` for human-readable paragraphs, ``"json"`` for
             structured output, ``"markdown"`` for a lightly formatted digest,
             ``"outline"`` for a bullet-oriented summary, ``"beats"`` for
-            beat-only bullet lines, or ``"constellation"`` for a beat-mapped
-            starfield grid.
+            beat-only bullet lines, ``"timeline"`` for a time-stamped
+            progression, or ``"constellation"`` for a beat-mapped starfield
+            grid.
         width: Maximum line width applied when wrapping paragraphs.
     """
 
@@ -95,6 +96,8 @@ def build_story(
         return _render_outline(payload, width=width)
     if format == "beats":
         return _render_beats(payload, width=width)
+    if format == "timeline":
+        return _render_timeline(payload, width=width)
     if format == "constellation":
         return _render_constellation(payload, width=width)
     raise ValueError(f"Unsupported format: {format}")
@@ -264,6 +267,31 @@ def _render_beats(payload: dict, *, width: int) -> str:
         for beat in payload.get("beats", [])
     ]
     return "\n".join(beat_lines)
+
+
+def _render_timeline(payload: dict, *, width: int) -> str:
+    """Render beats as a time-stamped sequence."""
+
+    title = payload["title"]
+    beats = payload.get("beats", [])
+    seed = payload.get("seed")
+
+    rng = random.Random(seed)
+    minutes = 0
+    timeline_lines = []
+    for beat in beats:
+        sentence = StoryBeat(**beat).render()
+        timeline_lines.append(textwrap.fill(f"- T+{minutes}m: {sentence}", width=width))
+        minutes += rng.randint(6, 18)
+
+    return "\n".join(
+        [
+            f"# {title}",
+            "_Timeline_",
+            "",
+            *timeline_lines,
+        ]
+    )
 
 
 def _render_constellation(payload: dict, *, width: int) -> str:
@@ -443,11 +471,19 @@ def main(argv: Iterable[str] | None = None) -> int:
     )
     parser.add_argument(
         "--format",
-        choices=("text", "json", "markdown", "outline", "beats", "constellation"),
+        choices=(
+            "text",
+            "json",
+            "markdown",
+            "outline",
+            "beats",
+            "timeline",
+            "constellation",
+        ),
         default="text",
         help=(
             "output mode: readable paragraphs, structured JSON, markdown digest, "
-            "outline summary, beat-only bullets, or a constellation map"
+            "outline summary, beat-only bullets, timeline sequence, or a constellation map"
         ),
     )
     parser.add_argument(
