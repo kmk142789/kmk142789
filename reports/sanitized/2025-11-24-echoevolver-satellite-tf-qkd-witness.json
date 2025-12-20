@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-12-20T13:25:27Z",
+  "note": "Captured EchoEvolver payload with Bitcoin script header",
+  "entries": [
+    {
+      "label": "echoevolver_satellite_tf_qkd_with_witness",
+      "sha256": "c26d51e1293d2156580f15b35d08c76f7d5c92aa520e45bec3626e7965029040",
+      "size": 17473,
+      "preview_start": "1FwnhahzY-QUk9fGa1X\\nPkscript\\n76a914a3ee5efee86510c255498f4af1fd8",
+      "preview_end": "   else:\\n        evolver = EchoEvolver()\\n    \\n    evolver.run()\\n",
+      "format": "mixed",
+      "contains_control": false,
+      "source": "/tmp/echoevolver_satellite_tf_qkd_payload.txt"
+    }
+  ]
+}
