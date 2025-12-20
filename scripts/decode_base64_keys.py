@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
+import os
 import pathlib
 import re
 import sys
@@ -82,7 +84,7 @@ def segments_from_tokens(tokens: Sequence[str]) -> list[str]:
 
 
 def decode_segment(index: int, token: str) -> DecodedSegment:
-    raw_bytes = base64.b64decode(token, validate=False)
+    raw_bytes = decode_bytes(token)
     integer: int | None = None
     if len(raw_bytes) <= 64:
         integer = int.from_bytes(raw_bytes, byteorder="big")
@@ -109,6 +111,43 @@ def decode_segment(index: int, token: str) -> DecodedSegment:
         length=len(raw_bytes),
         integer=integer if not is_text else None,
     )
+
+
+def decode_bytes(token: str) -> bytes:
+    """Decode a base64 token to raw bytes."""
+
+    return base64.b64decode(token, validate=False)
+
+
+def _secure_open(path: pathlib.Path, mode: str, perm: int):
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, perm)
+    return os.fdopen(fd, mode)
+
+
+def write_private_vault(vault_dir: pathlib.Path, tokens: Sequence[str]) -> pathlib.Path:
+    """Write decoded payloads into a private vault directory."""
+
+    vault_dir.mkdir(parents=True, exist_ok=True)
+    os.chmod(vault_dir, 0o700)
+
+    manifest: dict[str, object] = {"segments": []}
+    for index, token in enumerate(tokens, start=1):
+        raw_bytes = decode_bytes(token)
+        filename = f"segment_{index:03d}.bin"
+        segment_path = vault_dir / filename
+        with _secure_open(segment_path, "wb", 0o600) as handle:
+            handle.write(raw_bytes)
+        digest = hashlib.sha256(raw_bytes).hexdigest()
+        manifest["segments"].append(
+            {"index": index, "file": filename, "length": len(raw_bytes), "sha256": digest}
+        )
+
+    manifest_path = vault_dir / "manifest.json"
+    with _secure_open(manifest_path, "w", 0o600) as handle:
+        json.dump(manifest, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+
+    return manifest_path
 
 
 def decode_all(tokens: Sequence[str]) -> list[DecodedSegment]:
@@ -197,6 +236,15 @@ def main(argv: Iterable[str] | None = None) -> None:
             "file will contain raw tokens, decoded payloads, and metadata."
         ),
     )
+    parser.add_argument(
+        "--vault-dir",
+        type=pathlib.Path,
+        help=(
+            "Optional private directory to store decoded payloads. Segment "
+            "files and a manifest.json will be written with restrictive "
+            "permissions."
+        ),
+    )
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
@@ -240,6 +288,9 @@ def main(argv: Iterable[str] | None = None) -> None:
             args.json.write_text(
                 json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
             )
+        if args.vault_dir:
+            manifest_path = write_private_vault(args.vault_dir, tokens)
+            print(f"\n# private vault\nmanifest={manifest_path}")
     except BrokenPipeError:
         # Allow piping to commands like ``head`` without raising tracebacks.
         sys.exit(0)
