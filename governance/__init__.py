@@ -25,6 +25,14 @@ from governance.persistence import (
     load_snapshot,
     save_policy_readiness,
 )
+from governance.eoag import (
+    EOAGAuditLedger,
+    EOAGContinuousAudit,
+    EOAGEscalations,
+    EOAGFindings,
+    EOAGRegistry,
+    bootstrap_eoag_state,
+)
 
 __all__ = [
     "Agent",
@@ -48,4 +56,10 @@ __all__ = [
     "load_authority_presence",
     "load_snapshot",
     "save_policy_readiness",
+    "EOAGAuditLedger",
+    "EOAGContinuousAudit",
+    "EOAGEscalations",
+    "EOAGFindings",
+    "EOAGRegistry",
+    "bootstrap_eoag_state",
 ]

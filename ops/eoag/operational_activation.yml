@@ -1,0 +1,60 @@
+version: 1
+authority: EOAG
+status: active
+priorities:
+  - id: continuous-audit-hooks
+    description: "Mandatory audit hooks across DBIS, Treasury, EFCTIA, and all transaction-bearing entities."
+    owner: EOAG
+    enforcement: non-bypassable
+    deliverables:
+      - "state/eoag/registry.json"
+      - "state/eoag/audit_log.jsonl"
+  - id: immutable-audit-trails
+    description: "Append-only, hash-chained audit ledger with evidence preservation."
+    owner: EOAG
+    enforcement: immutable
+    deliverables:
+      - "state/eoag/audit_log.jsonl"
+  - id: independence-controls
+    description: "Conflict-of-interest checks, separation of duties, and auditor rotation controls."
+    owner: EOAG
+    enforcement: mandatory
+    deliverables:
+      - "state/eoag/registry.json"
+  - id: escalation-and-judiciary
+    description: "Escalation routing to judiciary/enforcement with corrective action tracking."
+    owner: EOAG
+    enforcement: mandatory
+    deliverables:
+      - "state/eoag/escalations.json"
+      - "state/eoag/findings.json"
+continuous_audit_scope:
+  systems:
+    - DBIS
+    - Treasury
+    - EFCTIA
+    - Governance
+    - Ecosystem
+  audit_events:
+    - transaction
+    - settlement
+    - pre_settlement
+    - post_settlement
+    - governance_decision
+non_bypassability:
+  requirements:
+    - "Settlement finality gated on EOAG clearance."
+    - "Audit hooks must be emitted before transaction execution."
+    - "Evidence must be captured for every settlement and governance vote."
+  enforcement_channels:
+    - governance_router
+    - settlement_finality_gate
+    - oversight_watchdog
+judiciary_integration:
+  escalation_targets:
+    - Echo Judiciary Council
+    - Enforcement Liaison
+  trigger_conditions:
+    - "Material misstatement or concealment."
+    - "Repeated bypass attempt or audit log tampering."
+    - "Settlement executed without EOAG clearance."
