@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.local/schemas/ecia_attestation.schema.json",
+  "title": "ECIA Identity Attestation",
+  "type": "object",
+  "required": [
+    "attestation_id",
+    "subject_id",
+    "event_type",
+    "issued_at",
+    "issuer",
+    "evidence_hashes",
+    "signatures",
+    "status"
+  ],
+  "properties": {
+    "attestation_id": {"type": "string"},
+    "subject_id": {"type": "string"},
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "issuance",
+        "verification",
+        "delegation",
+        "suspension",
+        "revocation",
+        "rotation"
+      ]
+    },
+    "issued_at": {"type": "string", "format": "date-time"},
+    "issuer": {
+      "type": "object",
+      "required": ["ecia_id", "did", "role"],
+      "properties": {
+        "ecia_id": {"type": "string"},
+        "did": {"type": "string"},
+        "role": {"type": "string"}
+      }
+    },
+    "evidence_hashes": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "signatures": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "superseded", "revoked"]
+    },
+    "propagation_hooks": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "notes": {"type": "string"}
+  }
+}

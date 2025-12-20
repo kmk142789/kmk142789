@@ -29,7 +29,7 @@
 - Dispute windows and rollback policy are captured in compliance profiles.
 
 ## Identity + DNS Binding
-- Party identities require `identity_id`, `did`, and `dns_record`.
+- Party identities require `identity_id`, `did`, `dns_record`, and ECIA attestation references.
 - Attestation records bind intents to DNS substrate entries.
 - DNS provenance follows `docs/dns/echo_dns_root_substrate.md`.
 

@@ -118,6 +118,7 @@ class TransactionIntegrityValidator:
 
     def __init__(self, *, high_value_threshold: Decimal = Decimal("1000000")) -> None:
         self.high_value_threshold = high_value_threshold
+        self.required_identity_authorities = {"ECIA", "Echo Citizenship & Identity Authority (ECIA)"}
 
     def validate(self, payload: TransactionPayload) -> IntegrityCheckResult:
         issues: list[IntegrityIssue] = []
@@ -179,6 +180,14 @@ class TransactionIntegrityValidator:
                 IntegrityIssue(
                     code="missing_governance_binding",
                     message="Governance kernel reference is mandatory for EFCTIA binding.",
+                )
+            )
+
+        if payload.identity_binding.authority not in self.required_identity_authorities:
+            issues.append(
+                IntegrityIssue(
+                    code="invalid_identity_authority",
+                    message="ECIA identity authority is required for EFCTIA integrity validation.",
                 )
             )
 

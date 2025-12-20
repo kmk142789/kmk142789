@@ -1,0 +1,42 @@
+{
+  "ecia_authority": "Echo Citizenship & Identity Authority (ECIA)",
+  "required_authority": "ECIA",
+  "required_attestation_prefix": "ecia:",
+  "systems": {
+    "DBIS": {
+      "description": "All DBIS intents, settlements, and attestations require ECIA identity bindings.",
+      "required_fields": ["identity_id", "did", "dns_record", "attestation_refs"],
+      "required_roles": ["transaction_initiator", "approver"],
+      "audit_hooks": ["dbis:transaction_ledger", "dbis:audit_log"]
+    },
+    "EFCTIA": {
+      "description": "EFCTIA integrity audits require ECIA-bound identity authority.",
+      "required_fields": ["identity_id", "authority", "assurance_level"],
+      "audit_hooks": ["efctia:integrity_log", "efctia:attestation"]
+    },
+    "EOAG": {
+      "description": "EOAG audits require ECIA identity for auditors and subjects.",
+      "required_fields": ["identity_id", "attestation_refs"],
+      "required_roles": ["auditor", "oversight"],
+      "audit_hooks": ["eoag:audit_log"]
+    },
+    "Judiciary": {
+      "description": "Judiciary actions require ECIA identity references for parties and adjudicators.",
+      "required_fields": ["identity_id", "attestation_refs"],
+      "required_roles": ["judge", "clerk", "litigant"],
+      "audit_hooks": ["judiciary:case_log", "judiciary:enforcement"]
+    },
+    "Treasury": {
+      "description": "Treasury approvals and disbursements require ECIA-bound signers.",
+      "required_fields": ["identity_id", "attestation_refs"],
+      "required_roles": ["treasury_steward", "approver"],
+      "audit_hooks": ["treasury:ledger", "treasury:approvals"]
+    },
+    "Drones": {
+      "description": "Autonomous devices must present ECIA device identity for mission actions.",
+      "required_fields": ["identity_id", "did", "attestation_refs"],
+      "required_roles": ["mission_executor"],
+      "audit_hooks": ["drone:mission_log", "drone:telemetry"]
+    }
+  }
+}

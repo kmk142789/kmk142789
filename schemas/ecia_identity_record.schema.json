@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.local/schemas/ecia_identity_record.schema.json",
+  "title": "ECIA Identity Record",
+  "type": "object",
+  "required": [
+    "ecia_id",
+    "entity_type",
+    "status",
+    "legal_name",
+    "jurisdiction",
+    "did",
+    "assurance_level",
+    "issued_at",
+    "roles",
+    "authority_bindings",
+    "attestations"
+  ],
+  "properties": {
+    "ecia_id": {"type": "string"},
+    "entity_type": {
+      "type": "string",
+      "enum": ["individual", "institution", "system", "agent", "autonomous_device"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "suspended", "revoked", "retired"]
+    },
+    "legal_name": {"type": "string"},
+    "display_name": {"type": "string"},
+    "jurisdiction": {"type": "string"},
+    "did": {"type": "string"},
+    "verification_keys": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/verification_key"},
+      "minItems": 1
+    },
+    "key_rotation": {"$ref": "#/definitions/key_rotation"},
+    "assurance_level": {"type": "string"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "roles": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "authority_bindings": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/authority_binding"},
+      "minItems": 1
+    },
+    "delegations": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/delegation"}
+    },
+    "attestations": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "audit_trail": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/audit_event"}
+    },
+    "external_frameworks": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/external_framework"}
+    }
+  },
+  "definitions": {
+    "verification_key": {
+      "type": "object",
+      "required": ["kid", "public_key", "purpose", "created_at"],
+      "properties": {
+        "kid": {"type": "string"},
+        "public_key": {"type": "string"},
+        "purpose": {"type": "string"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "key_rotation": {
+      "type": "object",
+      "properties": {
+        "last_rotated_at": {"type": "string", "format": "date-time"},
+        "next_rotation_due": {"type": "string", "format": "date-time"},
+        "rotation_policy": {"type": "string"}
+      }
+    },
+    "authority_binding": {
+      "type": "object",
+      "required": ["scope", "role", "actions"],
+      "properties": {
+        "scope": {"type": "string"},
+        "role": {"type": "string"},
+        "actions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 1
+        },
+        "requires": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "expires_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "delegation": {
+      "type": "object",
+      "required": ["delegate_id", "scope", "issued_at"],
+      "properties": {
+        "delegate_id": {"type": "string"},
+        "scope": {"type": "string"},
+        "issued_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "revocation_ref": {"type": "string"}
+      }
+    },
+    "audit_event": {
+      "type": "object",
+      "required": ["event_type", "timestamp", "attestation_ref"],
+      "properties": {
+        "event_type": {"type": "string"},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "attestation_ref": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    },
+    "external_framework": {
+      "type": "object",
+      "required": ["framework", "assurance"],
+      "properties": {
+        "framework": {"type": "string"},
+        "assurance": {"type": "string"},
+        "reference": {"type": "string"}
+      }
+    }
+  }
+}
