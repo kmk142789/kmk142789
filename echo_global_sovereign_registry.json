@@ -311,8 +311,9 @@
             "external_auditors": true
         },
         "incident_response_runbook": {
-            "status": "to_be_created",
-            "recommended_location": "reports/incident_response_runbook.md"
+            "status": "drafted",
+            "recommended_location": "reports/incident_response_runbook.md",
+            "last_updated": "2025-12-20"
         }
     },
     "scorecard": {
