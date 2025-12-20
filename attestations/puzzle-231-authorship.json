@@ -4,7 +4,7 @@
   "message": "Puzzle 231 authorship by kmk142789 — attestation sha256 f853adbdee909bd869caaa630048cd57d0b6ba35f1718e9bfcd12a32a63faea0",
   "signature": "oYeyQow537+gITELM4qiPUvL1SNsFe3QdEsbTZ6p6gzqeXOMp7iQbuHwIzfLekdi/JqkSnAQPoS/S8yBgwjSALs=",
   "algo": "bitcoin-message-base64",
-  "created_at": "2025-12-19T00:23:26Z",
+  "created_at": "2025-12-20T13:18:07Z",
   "hash_sha256": "a238727052272c39c1a5a1af06aabe6d42952a5584ce169e7646aac6c4474788",
   "notes": "Imported from satoshi/puzzle-proofs/puzzle231.json via scripts/generate_puzzle_attestations.py"
 }
