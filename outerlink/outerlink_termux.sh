@@ -4,11 +4,11 @@ shopt -s nullglob
 
 # OuterLink: Offline Governance Bridge Prototype
 # Defaults to Termux paths but can be overridden via BASE_DIR.
-BASE_DIR=${BASE_DIR:-"/data/data/com.termux/files/home"}
+BASE_DIR=${OUTERLINK_BASE_DIR:-${BASE_DIR:-"/data/data/com.termux/files/home"}}
 FALLBACK_BASE="$HOME/outerlink_termux"
-LOG="$BASE_DIR/outerlink.log"
-DB="$BASE_DIR/outerlink.db"
-JOBS_DIR="$BASE_DIR/outerlink_jobs"
+LOG=${OUTERLINK_LOG:-"$BASE_DIR/outerlink.log"}
+DB=${OUTERLINK_DB:-"$BASE_DIR/outerlink.db"}
+JOBS_DIR=${OUTERLINK_JOBS_DIR:-"$BASE_DIR/outerlink_jobs"}
 
 if ! mkdir -p "$BASE_DIR" "$JOBS_DIR" 2>/dev/null; then
   echo "[OuterLink] Unable to create Termux base; falling back to $FALLBACK_BASE" >&2

@@ -18,7 +18,7 @@ class OuterLinkRuntime:
     """Offline-first coordinator that binds router, broker, and event system."""
 
     def __init__(self, config: Optional[SafeModeConfig] = None, offline_state: Optional[OfflineState] = None) -> None:
-        self.config = config or SafeModeConfig()
+        self.config = config or SafeModeConfig.from_env()
         self.offline_state = offline_state or OfflineState()
         self.event_bus = EventBus(max_history=self.config.event_history_limit)
         self.dsi = DeviceSurfaceInterface(self.config)

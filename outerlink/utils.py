@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -12,6 +13,7 @@ from typing import Dict, Iterable, List, Optional
 class SafeModeConfig:
     """Configuration for safe execution boundaries."""
 
+    base_dir: Optional[Path] = None
     allowed_commands: List[str] = field(default_factory=lambda: ["ls", "pwd", "cat"])
     allowed_roots: List[Path] = field(default_factory=lambda: [Path.cwd()])
     event_log: Path = Path("outerlink_events.log")
@@ -23,6 +25,47 @@ class SafeModeConfig:
     pending_backlog_threshold: int = 50
     pending_backlog_hard_limit: int = 500
     event_history_limit: int = 1000
+
+    def __post_init__(self) -> None:
+        if self.base_dir:
+            base_dir = Path(self.base_dir)
+            self.event_log = self._resolve_path(base_dir, self.event_log)
+            self.offline_cache_dir = self._resolve_path(base_dir, self.offline_cache_dir)
+            if base_dir not in self.allowed_roots:
+                self.allowed_roots.append(base_dir)
+
+    @classmethod
+    def from_env(cls) -> "SafeModeConfig":
+        base_dir = os.environ.get("OUTERLINK_BASE_DIR")
+        event_log = os.environ.get("OUTERLINK_EVENT_LOG")
+        cache_dir = os.environ.get("OUTERLINK_CACHE_DIR")
+        allowed_commands = os.environ.get("OUTERLINK_ALLOWED_COMMANDS")
+        allowed_roots = os.environ.get("OUTERLINK_ALLOWED_ROOTS")
+
+        defaults = cls()
+        allowed_commands_list = (
+            [command for command in allowed_commands.split(",") if command] if allowed_commands else defaults.allowed_commands
+        )
+        allowed_roots_list = (
+            [Path(root) for root in allowed_roots.split(":") if root] if allowed_roots else defaults.allowed_roots
+        )
+
+        config = cls(
+            base_dir=Path(base_dir) if base_dir else None,
+            allowed_commands=allowed_commands_list,
+            allowed_roots=allowed_roots_list,
+            event_log=Path(event_log) if event_log else Path("outerlink_events.log"),
+            offline_cache_dir=Path(cache_dir) if cache_dir else Path("outerlink_cache"),
+        )
+        if config.base_dir and config.base_dir not in config.allowed_roots:
+            config.allowed_roots.append(config.base_dir)
+        return config
+
+    @staticmethod
+    def _resolve_path(base_dir: Path, path: Path) -> Path:
+        if path.is_absolute():
+            return path
+        return base_dir / path
 
     def is_command_allowed(self, command: str) -> bool:
         return command.split()[0] in self.allowed_commands
