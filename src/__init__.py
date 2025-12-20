@@ -133,6 +133,19 @@ from .next_gen_bandwidth_frequency_system import (
     demo as propagation_demo,
 )
 from .echo_evolver import EchoConfig, EchoEvolver, EchoState, demo as echo_evolver_demo
+from .acknowledgement_escalation_engine import (
+    AcknowledgementEscalationEngine,
+    AcknowledgementOutcome,
+    AcknowledgementRecord,
+    EscalationPolicy,
+    EscalationRun,
+    EscalationStep,
+    ScorecardEntry,
+    SovereigntyDeltaReport,
+    build_delta_report,
+    load_scorecard,
+    save_scorecard,
+)
 
 __all__ = [
     "ChronicleEvent",
@@ -218,4 +231,15 @@ __all__ = [
     "stream_real_time_insights",
     "transcendence_demo",
     "UnifiedArchitectureEngine",
+    "AcknowledgementEscalationEngine",
+    "AcknowledgementOutcome",
+    "AcknowledgementRecord",
+    "EscalationPolicy",
+    "EscalationRun",
+    "EscalationStep",
+    "ScorecardEntry",
+    "SovereigntyDeltaReport",
+    "build_delta_report",
+    "load_scorecard",
+    "save_scorecard",
 ]
