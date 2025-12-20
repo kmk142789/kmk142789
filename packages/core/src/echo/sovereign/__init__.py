@@ -19,6 +19,15 @@ from .entity import (
     SovereignEngine,
 )
 from .decisions import DecisionDebt, EscalationOutcome, StewardDecision, StewardDecisionRegistry
+from .acknowledgment_escalation import (
+    AcknowledgmentEscalation,
+    AcknowledgmentEscalationEngine,
+    AcknowledgmentSLA,
+    EscalationReview,
+    ScorecardOutcome,
+    StewardActionReport,
+    build_steward_action_report,
+)
 
 __all__ = [
     "GovernanceRegistry",
@@ -36,6 +45,13 @@ __all__ = [
     "EscalationOutcome",
     "StewardDecision",
     "StewardDecisionRegistry",
+    "AcknowledgmentEscalation",
+    "AcknowledgmentEscalationEngine",
+    "AcknowledgmentSLA",
+    "EscalationReview",
+    "ScorecardOutcome",
+    "StewardActionReport",
+    "build_steward_action_report",
     "DID",
     "Credential",
     "Governance",
