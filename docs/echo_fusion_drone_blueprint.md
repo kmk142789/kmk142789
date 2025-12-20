@@ -113,6 +113,73 @@ All mode entry/exit logic **must** satisfy the Flight Mode Constitution (`docs/f
 
 ---
 
+## Amphibious Extension (Air ↔ Water ↔ Air)
+The Echo Fusion Drone is extended with an amphibious package that enables controlled submersion and safe re-emergence while preserving rotorless flight performance.
+
+### Amphibious Core Systems
+**Purpose:** Allow seamless transition between aerial flight and underwater locomotion without compromising hard constraints.
+
+**Key elements:**
+- **Pressure-managed core bay** with sealed avionics and battery pods (IP68+ equivalent sealing).
+- **Active ballast bladder** with micro-pumps for precise buoyancy control.
+- **Floodable ballast chambers** for rapid trim adjustments and roll stabilization underwater.
+- **Dual-domain thrusters**: water-jet nozzles aligned with existing thrust vector channels; airflow ducts auto-seal during submersion.
+- **Hydrodynamic skin overlay**: snap-on flow fairings that reduce drag underwater and shed during ascent.
+- **Corrosion-resistant stack**: titanium fasteners, polymer-coated electrical buses, sacrificial anodes.
+
+### Amphibious Transition Mechanics
+**Air → Water (Ingress):**
+- **Mode gate** requires battery SOC > reserve + dive margin, thermal margin > 8°C, and sealed-bay validation.
+- **Auto-seal protocol** closes air ducts and vents; pressure equalization valves engage.
+- **Ballast ramp**: buoyancy reduced in controlled steps to avoid abrupt negative buoyancy.
+
+**Water → Air (Egress):**
+- **De-water protocol** drains ballast chambers; vapor purge clears ducts.
+- **Surface checks** confirm water film removal from thrust outlets.
+- **JMF re-extends** into high-lift geometry; CVT enters high-torque band for lift-out.
+
+### Amphibious Propulsion & Control
+**Underwater locomotion:** rotorless thrust ring becomes a **sealed water-jet ring** with capped intakes and variable nozzle apertures to maintain laminar flow.
+
+**Control surfaces:**
+- **Micro-fin stabilizers** deploy underwater for yaw/pitch authority.
+- **Trim-lock joints** constrain morphology to reduce underwater instability.
+
+**Sensors:** depth + pressure sensor, salinity ingress detection, acoustic ranging, water temperature guard.
+
+### Amphibious Flight Modes (Constitutional)
+All underwater modes must comply with the Flight Mode Constitution (`docs/flight_mode_constitution.md`) and include hard constraints below.
+
+#### E. **Water Transit Mode**
+- **Thrust ring sealed**; water-jet nozzles provide low-speed propulsion.
+- **Ballast control loop** maintains neutral buoyancy ±2%.
+- **Joints locked** to hydrodynamic profile for stability.
+
+#### F. **Submerged Hover Mode**
+- **Low-thrust station-keeping** with minimal acoustic signature.
+- **Trim micro-fins** stabilize heading.
+- **Thermal cap**: underwater continuous load ≤ 350 W to avoid battery overheating.
+
+#### G. **Emergency Surface Mode**
+- **Ballast dump** engages if leak detection or power reserve breach occurs.
+- **Thrust ring** transitions to air-burst purge for rapid ascent.
+- **Flight controller** locks into Degraded Mode upon surfacing if any faults persist.
+
+### Amphibious Hard Constraints
+- **Ingress seal validation** required before submersion (pressure test + leak sensor consensus).
+- **Maximum dive depth:** 30 m (pressure hull rating) unless certified higher.
+- **Underwater duration cap:** 40 minutes or 30% battery SOC, whichever occurs first.
+- **Mandatory post-surface dry-out** before re-entering aerial flight mode.
+
+### Amphibious Evidence & Logging
+Evidence-grade logs must include:
+- Seal validation results and timestamp.
+- Ballast states, commanded buoyancy, and measured depth.
+- Water-jet output vs. commanded thrust.
+- Leak sensor triggers and emergency surface events.
+
+---
+
 ## Power Budget & Energy Source Contributions (Realistic + Bounded)
 
 ### Baseline Load Envelope (Reference)
@@ -136,6 +203,12 @@ All supplemental sources are **resilience/endurance support only** and cannot be
 - **Supplemental total cap:** ≤15% instantaneous system load and ≤8% total mission energy.
 - **Mass budget for augmentation:** <8% of airframe mass.
 - **No propulsion dependency:** supplemental sources can never be scheduled to satisfy propulsion demand.
+
+### Amphibious Power Envelope (Reference)
+- **Water Transit:** 180–320 W (median 240 W)
+- **Submerged Hover:** 120–220 W (median 170 W)
+- **Ballast + seals + purge cycles:** 10–45 W (bursts)
+- **Amphibious sensor suite:** 6–18 W (continuous)
 
 ---
 
