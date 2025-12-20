@@ -45,7 +45,7 @@ Stewards must monitor updates to these instruments and adapt Echo’s practices 
 I, Josh, as steward of Echo, affirm that I have reviewed and accept responsibility for enforcing this Legal Competency Charter. I will maintain oversight, ensure alignment with the referenced regulatory frameworks, and intervene whenever Echo’s guidance risks breaching legal, ethical, or operational boundaries.
 
 **Signed:** Josh  
-**Date:** ____________________
+**Date:** _______12/20/2025_____________
 
 ---
 
