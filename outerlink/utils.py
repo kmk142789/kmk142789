@@ -712,6 +712,30 @@ class OfflineState:
             "capability_snapshot": capability_snapshot,
         }
 
+    def posture_digest(
+        self,
+        snapshot: Dict[str, object],
+        resilience: Optional[Dict[str, object]] = None,
+    ) -> Dict[str, object]:
+        backpressure = snapshot.get("backpressure", {}) if isinstance(snapshot, dict) else {}
+        stability = snapshot.get("stability", {}) if isinstance(snapshot, dict) else {}
+        recommended_action = snapshot.get("recommended_action") if isinstance(snapshot, dict) else None
+        resilience = resilience or {}
+
+        return {
+            "online": snapshot.get("online") if isinstance(snapshot, dict) else None,
+            "offline_reason": snapshot.get("offline_reason") if isinstance(snapshot, dict) else None,
+            "pending_events": snapshot.get("pending_events") if isinstance(snapshot, dict) else None,
+            "cached_events": snapshot.get("cached_events") if isinstance(snapshot, dict) else None,
+            "backpressure_state": backpressure.get("state"),
+            "backpressure_ratio": backpressure.get("ratio"),
+            "stability_index": stability.get("stability_index"),
+            "priority": stability.get("priority"),
+            "resilience_grade": snapshot.get("resilience_grade") if isinstance(snapshot, dict) else None,
+            "resilience_score": snapshot.get("resilience_score") if isinstance(snapshot, dict) else None,
+            "next_action": recommended_action or resilience.get("next_action"),
+        }
+
     def flush_to_cache(self, cache_dir: Path) -> None:
         cache_dir.mkdir(parents=True, exist_ok=True)
         manifest = self._load_manifest(cache_dir)

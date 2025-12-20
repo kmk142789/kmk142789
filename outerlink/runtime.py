@@ -23,7 +23,12 @@ class OuterLinkRuntime:
         self.event_bus = EventBus(max_history=self.config.event_history_limit)
         self.dsi = DeviceSurfaceInterface(self.config)
         self.broker = ExecutionBroker(self.config, self.dsi, self.event_bus, self.offline_state)
-        self.router = TaskRouter(self.event_bus, self.offline_state)
+        self.router = TaskRouter(
+            self.event_bus,
+            self.offline_state,
+            backlog_threshold=self.config.pending_backlog_threshold,
+            backlog_hard_limit=self.config.pending_backlog_hard_limit,
+        )
         self.abilities = AbilityRegistry(default_outerlink_abilities())
         self.sources = ExternalSourceRegistry()
         self._last_flush_index = 0
@@ -100,6 +105,7 @@ class OuterLinkRuntime:
             "metrics": metrics.__dict__,
             "offline": offline_snapshot,
             "resilience": resilience,
+            "digest": self.offline_state.posture_digest(offline_snapshot, resilience),
             "health_report": str(health_report),
             "abilities": self.abilities.snapshot(),
             "sources": source_bundle,
@@ -111,7 +117,13 @@ class OuterLinkRuntime:
 
     def handle_task(self, task: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         decision = self.router.route(task, payload)
-        response = {"task": task, "target": decision.target, "payload": payload or {}, "fallback": decision.fallback_used}
+        response = {
+            "task": task,
+            "target": decision.target,
+            "payload": payload or {},
+            "fallback": decision.fallback_used,
+            "reason": decision.reason,
+        }
         self.event_bus.emit("task_executed", response)
         return response
 
@@ -135,8 +147,9 @@ class OuterLinkRuntime:
         if self.offline_state.online:
             cached_events = self.offline_state.restore_cache(self.config.offline_cache_dir)
             self.offline_state.pending_events.clear()
-            history = self.event_bus.history
-            new_events = [event.to_dict() for event in history[start_index:]]
+            new_events = [
+                event.to_dict() for event in self.event_bus.history_since(start_index)
+            ]
 
             self._write_events(cached_events + new_events)
             self._last_flush_index = total_events
