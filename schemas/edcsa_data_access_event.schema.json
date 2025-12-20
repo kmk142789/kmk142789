@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.local/schemas/edcsa_data_access_event.schema.json",
+  "title": "EDCSA Data Access Event",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "timestamp",
+    "actor",
+    "system",
+    "dataset_id",
+    "classification",
+    "action",
+    "consent_basis",
+    "purpose_binding",
+    "provenance_chain",
+    "integrity_hash",
+    "outcome"
+  ],
+  "properties": {
+    "event_id": {"type": "string"},
+    "event_type": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "actor": {"type": "string"},
+    "system": {"type": "string"},
+    "dataset_id": {"type": "string"},
+    "classification": {
+      "type": "string",
+      "enum": ["public", "restricted", "sovereign", "sensitive"]
+    },
+    "action": {"type": "string"},
+    "consent_basis": {"type": "string"},
+    "purpose_binding": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "delegation_chain": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "jurisdiction": {"type": ["string", "null"]},
+    "retention_policy": {"type": ["string", "null"]},
+    "provenance_chain": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "integrity_hash": {"type": "string"},
+    "lineage_hash": {"type": ["string", "null"]},
+    "derived_output_id": {"type": ["string", "null"]},
+    "audit_signature": {"type": ["string", "null"]},
+    "enforcement_action_id": {"type": ["string", "null"]},
+    "outcome": {"type": "string"},
+    "details": {"type": "object", "additionalProperties": true}
+  }
+}
