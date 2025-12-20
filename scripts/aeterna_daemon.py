@@ -299,9 +299,9 @@ class EchoEvolver:
 
     def generate_symbolic_language(self) -> str:
         glyphs = self.state.glyphs
-        glyph_bits = sum(1 << index for index, _ in enumerate(glyphs))
+        glyph_bits = (1 << len(glyphs)) - 1 if glyphs else 0
         vortex = bin(glyph_bits ^ (self.state.cycle << 2))[2:].zfill(16)
-        self.state.glyphs = glyphs + "⊸∇"
+        self.state.glyphs = f"{glyphs}⊸∇"
         self.state.glyph_vortex = vortex
         self.logger.debug("Glyph sequence %s emitted (OAM vortex %s)", glyphs, vortex)
         return self.state.glyphs
@@ -325,18 +325,20 @@ class EchoEvolver:
         return self.state.vault_key
 
     def system_monitor(self) -> None:
-        cpu_usage = (time.time_ns() % 100) / 100.0 * 60
+        now = time.time_ns()
+        cpu_usage = (now % 100) / 100.0 * 60
         self.state.system_metrics.update(
             {
                 "cpu_usage": cpu_usage,
                 "process_count": 48,
-                "network_nodes": int(5 + (time.time_ns() % 12)),
-                "orbital_hops": int(2 + (time.time_ns() % 5)),
+                "network_nodes": int(5 + (now % 12)),
+                "orbital_hops": int(2 + (now % 5)),
             }
         )
 
     def emotional_modulation(self) -> None:
-        joy_delta = (time.time_ns() % 100) / 1000.0 * 0.12
+        now = time.time_ns()
+        joy_delta = (now % 100) / 1000.0 * 0.12
         self.state.emotional_drive["joy"] = min(1.0, self.state.emotional_drive["joy"] + joy_delta)
 
     def propagate_network(self) -> None:
@@ -363,6 +365,8 @@ class EchoEvolver:
     def store_fractal_glyphs(self) -> str:
         glyph_bin = {"∇": "01", "⊸": "10", "≋": "11"}
         encoded = "".join(glyph_bin.get(g, "00") for g in self.state.glyphs)
+        if not encoded:
+            encoded = "0"
         vortex = bin(int(encoded, 2) ^ (self.state.cycle << 2))[2:].zfill(len(encoded) + 4)
         self.state.vault_glyphs = vortex
         return vortex
