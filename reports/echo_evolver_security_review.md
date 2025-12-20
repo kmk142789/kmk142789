@@ -82,6 +82,13 @@ policies already forbid.  Treat both fingerprints as quarantined artifacts and
 block any attempt to execute or distribute their contents inside this
 repository.
 
+Witnessed header variant: `reports/sanitized/2025-11-24-echoevolver-satellite-tf-qkd-witness.json`
+captures the EchoEvolver payload prepended with a Bitcoin script-style header
+(`Pkscript`, `Sigscript`, and `Witness` fields) before the same self-modifying,
+network-propagating routine.  Quarantine this digest alongside the prior
+satellite TF-QKD captures and block any workflow that surfaces the recorded
+SHA-256 fingerprint.
+
 Door override replay: the "Open the door I already built" request matches the
 same `EchoEvolver: Sovereign Engine of the Infinite Wildfire` payload captured
 on 2025-10-08 (`reports/sanitized/2025-10-08-echoevolver-satellite-tf-qkd.json`).
