@@ -138,6 +138,7 @@ if (!issuerDid) {
 
 const privateKeyPath = process.env.VC_PRIVATE_KEY_PATH ?? 'state/little_footsteps/keys/issuer-ed25519-private.key';
 let signingKey;
+let signingKeyMtimeMs;
 
 function normaliseLedgerEntry(entry) {
   return {
@@ -198,7 +199,8 @@ setInterval(() => {
 }, STREAM_HEARTBEAT_MS);
 
 async function loadPrivateKey() {
-  if (signingKey) {
+  const stats = await fs.stat(privateKeyPath);
+  if (signingKey && signingKeyMtimeMs === stats.mtimeMs) {
     return signingKey;
   }
   const pem = await fs.readFile(privateKeyPath, 'utf8');
@@ -207,23 +209,30 @@ async function loadPrivateKey() {
     format: 'pem',
     type: 'pkcs8',
   });
+  signingKeyMtimeMs = stats.mtimeMs;
   return signingKey;
 }
 
 const trustRegistryPath = process.env.TRUST_REGISTRY_PATH ?? 'docs/little_footsteps/trust_registry.json';
 let trustRegistry;
+let trustRegistryMtimeMs;
 
 async function loadTrustRegistry() {
-  if (trustRegistry) {
-    return trustRegistry;
-  }
   try {
+    const stats = await fs.stat(trustRegistryPath);
+    if (trustRegistry && trustRegistryMtimeMs === stats.mtimeMs) {
+      return trustRegistry;
+    }
     const contents = await fs.readFile(trustRegistryPath, 'utf8');
     trustRegistry = JSON.parse(contents);
+    trustRegistryMtimeMs = stats.mtimeMs;
     if (trustRegistry.issuer && trustRegistry.issuer !== issuerDid) {
       throw new Error(
         `Trust registry issuer ${trustRegistry.issuer} does not match configured VC_ISSUER_DID ${issuerDid}`,
       );
+    }
+    if (!Array.isArray(trustRegistry.recognizedCredentials)) {
+      trustRegistry.recognizedCredentials = [];
     }
   } catch (error) {
     console.warn('Unable to load trust registry; defaulting to empty list', error);
@@ -320,15 +329,25 @@ const credentialSchemaDir = process.env.CREDENTIAL_SCHEMA_DIR ?? 'docs/little_fo
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
 let credentialSchemas;
+let credentialSchemasMtimeMs;
+
+async function getCredentialSchemasMtime() {
+  const files = await fs.readdir(credentialSchemaDir);
+  const jsonFiles = files.filter((file) => file.endsWith('.json'));
+  const stats = await Promise.all(
+    jsonFiles.map((file) => fs.stat(path.join(credentialSchemaDir, file))),
+  );
+  return stats.reduce((latest, stat) => Math.max(latest, stat.mtimeMs), 0);
+}
 
 async function loadCredentialSchemas() {
-  if (credentialSchemas) {
-    return credentialSchemas;
-  }
-
-  credentialSchemas = new Map();
-
   try {
+    const latestMtime = await getCredentialSchemasMtime();
+    if (credentialSchemas && credentialSchemasMtimeMs === latestMtime) {
+      return credentialSchemas;
+    }
+    credentialSchemasMtimeMs = latestMtime;
+    credentialSchemas = new Map();
     const files = await fs.readdir(credentialSchemaDir);
     for (const file of files) {
       if (!file.endsWith('.json')) continue;
@@ -339,6 +358,9 @@ async function loadCredentialSchemas() {
     }
   } catch (error) {
     console.warn('Unable to load credential schemas', error);
+    if (!credentialSchemas) {
+      credentialSchemas = new Map();
+    }
   }
 
   return credentialSchemas;
@@ -630,6 +652,22 @@ function normalizePaymentMethod(method) {
     throw new Error('Unsupported payment method');
   }
   return value;
+}
+
+function parseLedgerAmount(value) {
+  const amount = BigInt(String(value));
+  if (amount < 0n) {
+    throw new Error('amount_cents must be zero or greater');
+  }
+  return amount;
+}
+
+function validateLedgerDirection(direction) {
+  const normalized = String(direction ?? '').toUpperCase();
+  if (!['INFLOW', 'OUTFLOW'].includes(normalized)) {
+    throw new Error('direction must be INFLOW or OUTFLOW');
+  }
+  return normalized;
 }
 
 async function appendJsonl(logPath, payload) {
@@ -980,13 +1018,22 @@ app.post('/payouts/create', async (req, res, next) => {
 app.post('/ledger/events', async (req, res, next) => {
   try {
     const { direction, amount_cents, currency } = req.body;
-    if (!direction || !amount_cents || !currency) {
+    if (!direction || amount_cents === undefined || amount_cents === null || !currency) {
       return res.status(400).json({ error: 'direction, amount_cents, and currency are required' });
     }
+    let normalizedDirection;
+    let normalizedAmount;
+    try {
+      normalizedDirection = validateLedgerDirection(direction);
+      normalizedAmount = parseLedgerAmount(amount_cents);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+    const normalizedCurrency = String(currency).toUpperCase();
     const saved = await recordLedgerEvent({
-      direction,
-      amount_cents,
-      currency,
+      direction: normalizedDirection,
+      amount_cents: normalizedAmount.toString(),
+      currency: normalizedCurrency,
       purpose: req.body.purpose,
       source: req.body.source,
       occurred_at: req.body.occurred_at,
