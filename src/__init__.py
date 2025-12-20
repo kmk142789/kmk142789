@@ -132,7 +132,13 @@ from .next_gen_bandwidth_frequency_system import (
     default_quantum_ready_hook,
     demo as propagation_demo,
 )
-from .echo_evolver import EchoConfig, EchoEvolver, EchoState, demo as echo_evolver_demo
+from .echo_evolver import (
+    EchoConfig,
+    EchoEvolver,
+    EchoState,
+    ResonanceDiagnostics,
+    demo as echo_evolver_demo,
+)
 from .acknowledgement_registry import (
     AcknowledgementRecord,
     AcknowledgementStatus,
@@ -214,6 +220,7 @@ __all__ = [
     "generate_loop",
     "FusionInsight",
     "HoloSemanticEchoLoom",
+    "ResonanceDiagnostics",
     "revelation_demo",
     "stewardship_demo",
     "FusionOutcome",

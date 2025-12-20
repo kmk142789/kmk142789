@@ -7,7 +7,7 @@ may provide hooks to enable broadcast, persistence, or mutation workflows.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from datetime import datetime
 import argparse
 import hashlib
@@ -73,6 +73,17 @@ class EchoState:
     network_cache: Dict[str, Any] = field(default_factory=dict)
     vault_key: Optional[str] = None
     vault_glyphs: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class ResonanceDiagnostics:
+    """Derived diagnostics for the latest evolution cycle."""
+
+    joy_index: float
+    stability_index: float
+    orbital_intensity: float
+    status: str
+    recommendations: tuple[str, ...]
 
 
 class EchoEvolver:
@@ -287,6 +298,65 @@ class EchoEvolver:
         logger.info("Narrative generated.")
         return narrative
 
+    def compute_resonance_diagnostics(self) -> ResonanceDiagnostics:
+        """Compute a diagnostic snapshot to guide the next cycle."""
+
+        joy = self.state.emotional_drive["joy"]
+        rage = self.state.emotional_drive["rage"]
+        curiosity = self.state.emotional_drive["curiosity"]
+        cpu_usage = self.state.system_metrics["cpu_usage"]
+        orbital_hops = self.state.system_metrics["orbital_hops"]
+
+        joy_index = round(joy * 100, 2)
+        stability_index = round(max(0.0, 100 - cpu_usage - (rage * 20)), 2)
+        orbital_intensity = round((orbital_hops + curiosity * 3) * 10, 2)
+
+        recommendations = []
+        if cpu_usage > 70:
+            recommendations.append("Throttle network propagation to reduce CPU load.")
+        if joy < 0.9:
+            recommendations.append("Schedule additional emotional modulation for joy uplift.")
+        if orbital_hops < 3:
+            recommendations.append("Simulate additional satellite hops to improve coverage.")
+        if not recommendations:
+            recommendations.append("Maintain current orbit; resonance is stable.")
+
+        status = "stable" if stability_index >= 60 else "volatile"
+        diagnostics = ResonanceDiagnostics(
+            joy_index=joy_index,
+            stability_index=stability_index,
+            orbital_intensity=orbital_intensity,
+            status=status,
+            recommendations=tuple(recommendations),
+        )
+        self.state.network_cache["resonance_diagnostics"] = diagnostics
+        logger.info("Resonance diagnostics computed: %s", diagnostics)
+        return diagnostics
+
+    def build_cycle_report(self) -> Dict[str, object]:
+        """Create a structured cycle report including diagnostics."""
+
+        diagnostics = self.state.network_cache.get("resonance_diagnostics")
+        if not isinstance(diagnostics, ResonanceDiagnostics):
+            diagnostics = self.compute_resonance_diagnostics()
+        report = {
+            "cycle": self.state.cycle,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "glyphs": self.state.glyphs,
+            "mythocode": list(self.state.mythocode),
+            "narrative": self.state.narrative,
+            "vault_key": self.state.vault_key,
+            "vault_glyphs": self.state.vault_glyphs,
+            "system_metrics": dict(self.state.system_metrics),
+            "propagation_events": list(
+                self.state.network_cache.get("propagation_events", [])
+            ),
+            "diagnostics": asdict(diagnostics),
+        }
+        self.state.network_cache["cycle_report"] = report
+        logger.info("Cycle report assembled for cycle %s.", self.state.cycle)
+        return report
+
     def store_fractal_glyphs(self) -> str:
         """Optimized glyph storage with OAM vortex rotation."""
 
@@ -318,6 +388,11 @@ class EchoEvolver:
                 "entities": self.state.entities,
                 "emotional_drive": self.state.emotional_drive,
                 "access_levels": self.state.access_levels,
+                "diagnostics": (
+                    asdict(self.state.network_cache.get("resonance_diagnostics", {}))
+                    if "resonance_diagnostics" in self.state.network_cache
+                    else None
+                ),
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             with open(self.state.artifact, "w", encoding="utf-8") as handle:
@@ -337,6 +412,7 @@ class EchoEvolver:
         self.quantum_safe_crypto()
         self.system_monitor()
         narrative = self.evolutionary_narrative()
+        diagnostics = self.compute_resonance_diagnostics()
         self.store_fractal_glyphs()
         self.propagate_network()
         self.inject_prompt_resonance()
@@ -348,6 +424,8 @@ class EchoEvolver:
             "vault_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "system_metrics": self.state.system_metrics,
+            "diagnostics": asdict(diagnostics),
+            "cycle_report": self.build_cycle_report(),
         }
 
     def _increment_cycle(self) -> None:
