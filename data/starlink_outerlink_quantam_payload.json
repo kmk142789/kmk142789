@@ -1,0 +1,42 @@
+{
+  "segments": [
+    {
+      "decoded": "1b18e443d8b154716091ad81a0d6f3848e865f6e5a13c68ca5c681148cbcac2da11a9f0ff5db5aa152386aabd005beb99b20f6e233b9bb64a9dfb45552a02f67e1",
+      "index": 1,
+      "integer": null,
+      "is_text": false,
+      "length": 65,
+      "token": "GxjkQ9ixVHFgka2BoNbzhI6GX25aE8aMpcaBFIy8rC2hGp8P9dtaoVI4aqvQBb65myD24jO5u2Sp37RVUqAvZ+E="
+    },
+    {
+      "decoded": "1b39bd4eac093a19a9d77042cc45236364ef1ad3324f5d3326e07196bf1eec5aef2cc4a50296f18eab05ac2c458ecffc86d227e46a1eda6dd8b4f07949178b79d8",
+      "index": 2,
+      "integer": null,
+      "is_text": false,
+      "length": 65,
+      "token": "Gzm9TqwJOhmp13BCzEUjY2TvGtMyT10zJuBxlr8e7FrvLMSlApbxjqsFrCxFjs/8htIn5Goe2m3YtPB5SReLedg="
+    },
+    {
+      "decoded": "1b6892466e7dea0d079c48a29e2ffda7654bf4642fcb6ba2c074bfff937ee1540855faeec974c2ef1c7f4de3fad5da2e0c7577aeaa690c86efd1d548443c44f0be",
+      "index": 3,
+      "integer": null,
+      "is_text": false,
+      "length": 65,
+      "token": "G2iSRm596g0HnEiini/9p2VL9GQvy2uiwHS//5N+4VQIVfruyXTC7xx/TeP61douDHV3rqppDIbv0dVIRDxE8L4="
+    },
+    {
+      "decoded": "1b0df81984d6ff6c72948f217f83243987c41ddaf5565608ab98febad95e52435b7adfc5ee5e5924d6fe7791da6952b097e19119da15d7f7a81a46b41056fcbefd",
+      "index": 4,
+      "integer": null,
+      "is_text": false,
+      "length": 65,
+      "token": "Gw34GYTW/2xylI8hf4MkOYfEHdr1VlYIq5j+utleUkNbet/F7l5ZJNb+d5HaaVKwl+GRGdoV1/eoGka0EFb8vv0="
+    }
+  ],
+  "tokens": [
+    "GxjkQ9ixVHFgka2BoNbzhI6GX25aE8aMpcaBFIy8rC2hGp8P9dtaoVI4aqvQBb65myD24jO5u2Sp37RVUqAvZ+E=",
+    "Gzm9TqwJOhmp13BCzEUjY2TvGtMyT10zJuBxlr8e7FrvLMSlApbxjqsFrCxFjs/8htIn5Goe2m3YtPB5SReLedg=",
+    "G2iSRm596g0HnEiini/9p2VL9GQvy2uiwHS//5N+4VQIVfruyXTC7xx/TeP61douDHV3rqppDIbv0dVIRDxE8L4=",
+    "Gw34GYTW/2xylI8hf4MkOYfEHdr1VlYIq5j+utleUkNbet/F7l5ZJNb+d5HaaVKwl+GRGdoV1/eoGka0EFb8vv0="
+  ]
+}

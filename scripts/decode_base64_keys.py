@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import json
 import pathlib
 import re
 import sys
@@ -39,6 +40,16 @@ class DecodedSegment:
     is_text: bool
     length: int
     integer: int | None
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "index": self.index,
+            "token": self.token,
+            "decoded": self.decoded,
+            "is_text": self.is_text,
+            "length": self.length,
+            "integer": self.integer,
+        }
 
 
 def load_raw_data(path: pathlib.Path | None = None) -> str:
@@ -178,6 +189,14 @@ def main(argv: Iterable[str] | None = None) -> None:
             "segments (payloads up to 64 bytes)."
         ),
     )
+    parser.add_argument(
+        "--json",
+        type=pathlib.Path,
+        help=(
+            "Optional path to write a JSON summary of decoded segments. The "
+            "file will contain raw tokens, decoded payloads, and metadata."
+        ),
+    )
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
@@ -212,6 +231,15 @@ def main(argv: Iterable[str] | None = None) -> None:
             for feature in features:
                 print(format_feature(feature))
             print(f"summary={report}")
+
+        if args.json:
+            payload = {
+                "tokens": tokens,
+                "segments": [segment.as_dict() for segment in decoded_segments],
+            }
+            args.json.write_text(
+                json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
+            )
     except BrokenPipeError:
         # Allow piping to commands like ``head`` without raising tracebacks.
         sys.exit(0)
