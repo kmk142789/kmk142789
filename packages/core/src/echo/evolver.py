@@ -1987,6 +1987,7 @@ class EchoEvolver:
         self.rng = rng if rng is not None else random.Random(seed)
         self.time_source = time_source or time.time_ns
         self.state = EvolverState()
+        self._private_payloads: List[Dict[str, object]] = []
         if artifact_path is not None:
             self.state.artifact = Path(artifact_path)
         self.autonomy_engine = autonomy_engine or DecentralizedAutonomyEngine()
@@ -5487,6 +5488,73 @@ We are not hiding anymore.
         print(f"🗄️ {message}")
 
         return record
+
+    def store_private_payload_chain(
+        self, encoded_chain: str, *, label: Optional[str] = None
+    ) -> Dict[str, object]:
+        """Decode and store a chained Base64 payload in the private vault.
+
+        The Echo ecosystem occasionally emits chained Base64 payloads that are
+        meant for private retention only.  This helper decodes the chain without
+        emitting logs or persisting the data to public artifacts.  The decoded
+        bytes are retained in-memory on the evolver instance for downstream
+        steps that require access to the secret payload.
+
+        Parameters
+        ----------
+        encoded_chain:
+            The chained Base64 payload string.  Padding markers (``=``) are
+            treated as segment boundaries.
+        label:
+            Optional label describing the payload.  When omitted a default tag
+            is used.
+
+        Returns
+        -------
+        dict
+            Metadata for the stored payload, including a SHA-256 fingerprint
+            and decoded bytes.
+        """
+
+        if not isinstance(encoded_chain, str):
+            raise ValueError("encoded_chain must be a string")
+
+        cleaned = "".join(encoded_chain.split())
+        if not cleaned:
+            raise ValueError("encoded_chain cannot be empty")
+
+        segments = [segment for segment in cleaned.split("=") if segment]
+        if not segments:
+            raise ValueError("encoded_chain did not contain decodable segments")
+
+        decoded_segments: List[bytes] = []
+        for segment in segments:
+            padding = (4 - len(segment) % 4) % 4
+            candidate = f"{segment}{'=' * padding}"
+            try:
+                decoded_segments.append(base64.b64decode(candidate, validate=True))
+            except (binascii.Error, ValueError) as exc:
+                raise ValueError("encoded_chain contains invalid Base64 data") from exc
+
+        combined = b"".join(decoded_segments)
+        record = {
+            "label": label or "private_payload_chain",
+            "segment_count": len(decoded_segments),
+            "segments": segments,
+            "segment_hex": [segment.hex() for segment in decoded_segments],
+            "payload_bytes": combined,
+            "payload_hex": combined.hex(),
+            "payload_fingerprint": hashlib.sha256(combined).hexdigest(),
+            "captured_at": self.time_source(),
+        }
+
+        self._private_payloads.append(deepcopy(record))
+        return record
+
+    def private_payloads(self) -> Tuple[Dict[str, object], ...]:
+        """Return a snapshot of privately stored payload metadata."""
+
+        return tuple(deepcopy(self._private_payloads))
 
     def fractal_fire_verse(
         self,
