@@ -10,6 +10,7 @@ from .broker import ExecutionBroker
 from .dsi import DeviceSurfaceInterface
 from .events import EventBus
 from .router import TaskRouter
+from .sources import ExternalSourceRegistry
 from .utils import OfflineState, SafeModeConfig
 
 
@@ -24,13 +25,30 @@ class OuterLinkRuntime:
         self.broker = ExecutionBroker(self.config, self.dsi, self.event_bus, self.offline_state)
         self.router = TaskRouter(self.event_bus, self.offline_state)
         self.abilities = AbilityRegistry(default_outerlink_abilities())
+        self.sources = ExternalSourceRegistry()
         self._last_flush_index = 0
         self._bootstrap_default_mappings()
+        self._bootstrap_sources()
 
     def _bootstrap_default_mappings(self) -> None:
         self.router.register_module("device_status", "dsi")
         self.router.register_module("optimization_tick", "optimizer")
         self.router.register_module("policy_eval", "governance")
+
+    def _bootstrap_sources(self) -> None:
+        self.sources.load_from(self.config.external_source_manifest)
+        if not self.sources.list_sources():
+            self.sources.register_from_payloads(
+                [
+                    {
+                        "source_id": "outerlink_authority",
+                        "title": "OuterLink System Definition",
+                        "url": "outerlink/OUTERLINK_SYSTEM_DEFINITION.md",
+                        "classification": "authoritative",
+                        "description": "Offline-first runtime specification for OuterLink.",
+                    }
+                ]
+            )
 
     def emit_state(self) -> Dict[str, Any]:
         metrics = self.dsi.get_metrics()
@@ -50,6 +68,32 @@ class OuterLinkRuntime:
             self.config.pending_backlog_threshold,
         )
 
+        source_bundle = self.sources.build_citation_bundle(
+            online=bool(offline_snapshot.get("online")),
+            offline_reason=offline_snapshot.get("offline_reason"),
+            ttl_seconds=self.config.external_source_ttl_seconds,
+        )
+        source_artifact_path = self.sources.write_artifact(
+            self.config.offline_cache_dir / self.config.source_artifact_name,
+            source_bundle,
+        )
+        self._sync_source_capabilities(source_bundle, source_artifact_path)
+        refreshed_snapshot = self.offline_state.status(
+            self.config.offline_cache_dir,
+            self.config.offline_cache_ttl_seconds,
+        )
+        offline_snapshot.update(
+            {
+                "capabilities": refreshed_snapshot.get("capabilities"),
+                "capability_history": refreshed_snapshot.get("capability_history"),
+                "capability_readiness": refreshed_snapshot.get("capability_readiness"),
+                "capability_posture": refreshed_snapshot.get("capability_posture"),
+                "capability_gaps": refreshed_snapshot.get("capability_gaps"),
+                "capability_report": refreshed_snapshot.get("capability_report"),
+            }
+        )
+        self.abilities.sync_from_capabilities(offline_snapshot.get("capabilities", {}), source="source_bundle")
+
         payload = {
             "online": offline_snapshot["online"],
             "last_sync": offline_snapshot["last_sync"],
@@ -58,6 +102,8 @@ class OuterLinkRuntime:
             "resilience": resilience,
             "health_report": str(health_report),
             "abilities": self.abilities.snapshot(),
+            "sources": source_bundle,
+            "source_artifact": str(source_artifact_path),
         }
         self.event_bus.emit("device_status", payload)
         payload["events"] = self.event_bus.stats()
@@ -111,6 +157,26 @@ class OuterLinkRuntime:
 
     def safe_write_config(self, path: Path, content: Dict[str, str]) -> None:
         self.broker.write_config(path, content)
+
+    def _sync_source_capabilities(self, source_bundle: Dict[str, Any], source_artifact: Path) -> None:
+        citations = source_bundle.get("citations", [])
+        online = bool(source_bundle.get("online"))
+        has_placeholders = any(citation.get("placeholder") for citation in citations)
+        has_uncertainty = any(citation.get("uncertainty") for citation in citations)
+        has_classification = bool(source_bundle.get("classification_summary"))
+        has_updates = bool(source_bundle.get("update_summary"))
+
+        self.offline_state.set_capability("structured_citations", True, note="Citation bundle generated")
+        self.offline_state.set_capability("source_classification", has_classification)
+        self.offline_state.set_capability("update_awareness", has_updates)
+        self.offline_state.set_capability("offline_uncertainty_marking", has_uncertainty)
+        self.offline_state.set_capability("placeholder_references", has_placeholders)
+        self.offline_state.set_capability("source_artifacts", source_artifact.exists())
+
+        if not online and not has_uncertainty:
+            self.offline_state.add_resilience_note(
+                "Offline citations produced without uncertainty markers; verify placeholder policy"
+            )
 
     def _recommend_next_action(self, offline_snapshot: Dict[str, Any]) -> str:
         plan = self.offline_state.resilience_action_plan(

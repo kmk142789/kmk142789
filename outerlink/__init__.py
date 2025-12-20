@@ -7,6 +7,7 @@ from .dsi import DeviceSurfaceInterface, SensorReading, DeviceMetrics
 from .events import Event, EventBus
 from .mesh import MeshNode, OuterLinkMeshNetwork
 from .abilities import AbilityRegistry, OuterLinkAbility, default_outerlink_abilities
+from .sources import Citation, ExternalSourceRegistry, SourceClassification, SourceRecord
 from .utils import SafeModeConfig, OfflineState
 from .echo_world_runtime import (
     AstralProjectionSimulator,
@@ -34,6 +35,10 @@ __all__ = [
     "AbilityRegistry",
     "OuterLinkAbility",
     "default_outerlink_abilities",
+    "Citation",
+    "ExternalSourceRegistry",
+    "SourceClassification",
+    "SourceRecord",
     "AstralProjectionSimulator",
     "ConsciousnessPersistenceLayer",
     "EchoWorldRuntimeEnvironment",

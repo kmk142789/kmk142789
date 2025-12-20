@@ -17,6 +17,9 @@ class SafeModeConfig:
     event_log: Path = Path("outerlink_events.log")
     offline_cache_dir: Path = Path("outerlink_cache")
     offline_cache_ttl_seconds: Optional[int] = 24 * 60 * 60
+    external_source_manifest: Path = Path("outerlink_sources.json")
+    external_source_ttl_seconds: Optional[int] = 6 * 60 * 60
+    source_artifact_name: str = "outerlink_sources_snapshot.json"
     pending_backlog_threshold: int = 50
     pending_backlog_hard_limit: int = 500
     event_history_limit: int = 1000
@@ -75,6 +78,12 @@ class OfflineState:
             "device_metrics": True,
             "sensor_sampling": True,
             "safe_shell": True,
+            "structured_citations": True,
+            "source_classification": True,
+            "update_awareness": True,
+            "offline_uncertainty_marking": True,
+            "placeholder_references": True,
+            "source_artifacts": True,
         }
     )
     resilience_notes: List[str] = field(default_factory=list)
