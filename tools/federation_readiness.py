@@ -11,6 +11,21 @@ REQUIRED_CONSTRAINT_SETS = {"access_control", "supply_bounds", "ritual_safety"}
 REQUIRED_TOPICS = {"governance.cr", "ledger.append", "ritual.invoke"}
 REQUIRED_UQL_MODULES = {"access", "risk", "compliance"}
 REQUIRED_INTERFACES = {"governance_kernel", "change_request_pipeline", "ritual_engine"}
+REQUIRED_EFCTIA_DOCS = {
+    "docs/efctia/charter.md",
+    "docs/efctia/standards.md",
+    "docs/efctia/schemas.md",
+    "docs/efctia/workflows.md",
+}
+REQUIRED_EFCTIA_SCHEMAS = {
+    "schemas/efctia_transaction.schema.json",
+    "schemas/efctia_attestation.schema.json",
+}
+REQUIRED_EFCTIA_MODULES = {
+    "packages/core/src/echo/efctia/__init__.py",
+    "packages/core/src/echo/efctia/integrity.py",
+    "packages/core/src/echo/efctia/reporting.py",
+}
 
 
 def load_json(path: Path) -> dict:
@@ -241,6 +256,18 @@ def check_reference_instance(root: Path) -> list[str]:
     return issues
 
 
+def check_efctia_assets(root: Path) -> list[str]:
+    issues: list[str] = []
+    for relative_path in sorted(REQUIRED_EFCTIA_DOCS | REQUIRED_EFCTIA_SCHEMAS | REQUIRED_EFCTIA_MODULES):
+        path = root / relative_path
+        if not path.exists():
+            issues.append(format_issue(path, "required EFCTIA asset missing"))
+            continue
+        if path.is_file() and not path.read_text(encoding="utf-8").strip():
+            issues.append(format_issue(path, "required EFCTIA asset is empty"))
+    return issues
+
+
 def run(root: Path) -> int:
     issues: list[str] = []
     kernel_path = root / "governance_kernel.json"
@@ -251,6 +278,7 @@ def run(root: Path) -> int:
     issues.extend(check_interface_map(strong_path, "strong"))
     issues.extend(check_interface_map(weak_path, "weak"))
     issues.extend(check_reference_instance(root))
+    issues.extend(check_efctia_assets(root))
 
     if issues:
         print("Federation readiness check failed:\n")

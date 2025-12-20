@@ -40,11 +40,12 @@
       }
     },
     "event_dispatcher": {
-      "topics": ["governance.cr", "ledger.append", "ritual.invoke"],
+      "topics": ["governance.cr", "ledger.append", "ritual.invoke", "finance.integrity"],
       "handlers": {
         "governance.cr": ["validate_cr", "record_attestation"],
         "ledger.append": ["hash_event", "store_integrity"],
-        "ritual.invoke": ["apply_ritual", "state_correction"]
+        "ritual.invoke": ["apply_ritual", "state_correction"],
+        "finance.integrity": ["efctia_precheck", "efctia_attest"]
       },
       "retries": 3,
       "dead_letter": "logs/dispatcher.dlq"

@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EFCTIATransaction",
+  "type": "object",
+  "properties": {
+    "transaction_id": {"type": "string"},
+    "state": {
+      "type": "string",
+      "enum": ["proposed", "authorized", "settled", "disputed", "reversed", "finalized"]
+    },
+    "amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "asset": {"type": "string"},
+    "origin_institution": {"type": "string"},
+    "destination_institution": {"type": "string"},
+    "cross_institution": {"type": "boolean"},
+    "proposed_at": {"type": "string", "format": "date-time"},
+    "authorized_at": {"type": "string", "format": "date-time"},
+    "settled_at": {"type": "string", "format": "date-time"},
+    "dns_substrate_ref": {"type": "string"},
+    "governance_kernel_ref": {"type": "string"},
+    "identity_binding": {
+      "type": "object",
+      "properties": {
+        "identity_id": {"type": "string"},
+        "authority": {"type": "string"},
+        "assurance_level": {"type": "string"}
+      },
+      "required": ["identity_id", "authority", "assurance_level"]
+    },
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source_system": {"type": "string"},
+          "reference": {"type": "string"},
+          "checksum": {"type": "string"}
+        },
+        "required": ["source_system", "reference", "checksum"]
+      }
+    },
+    "authorization_chain": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "actor": {"type": "string"},
+          "action": {"type": "string"},
+          "timestamp": {"type": "string", "format": "date-time"},
+          "attestation_ref": {"type": "string"}
+        },
+        "required": ["actor", "action", "timestamp"]
+      }
+    },
+    "purpose": {
+      "type": "object",
+      "properties": {
+        "category": {"type": "string"},
+        "description": {"type": "string"}
+      },
+      "required": ["category", "description"]
+    },
+    "compliance": {
+      "type": "object",
+      "properties": {
+        "tier": {
+          "type": "string",
+          "enum": ["humanitarian", "public_service", "commercial", "sovereign"]
+        },
+        "aml_program": {"type": "string"},
+        "sanctions_signal": {"type": "string"},
+        "risk_rating": {"type": "string"},
+        "sealed_reference": {"type": "string"},
+        "public_summary": {"type": "string"}
+      },
+      "required": [
+        "tier",
+        "aml_program",
+        "sanctions_signal",
+        "risk_rating",
+        "sealed_reference",
+        "public_summary"
+      ]
+    },
+    "attestation": {
+      "type": "object",
+      "properties": {
+        "attestation_id": {"type": "string"},
+        "attestation_type": {"type": "string"},
+        "signer": {"type": "string"},
+        "signature_ref": {"type": "string"}
+      },
+      "required": ["attestation_id", "attestation_type", "signer", "signature_ref"]
+    },
+    "dispute_reference": {
+      "type": "object",
+      "properties": {
+        "case_id": {"type": "string"},
+        "tribunal": {"type": "string"},
+        "issued_by": {"type": "string"},
+        "reason": {"type": "string"}
+      },
+      "required": ["case_id", "tribunal", "issued_by", "reason"]
+    },
+    "enforcement_actions": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "required": [
+    "transaction_id",
+    "state",
+    "amount",
+    "asset",
+    "origin_institution",
+    "destination_institution",
+    "cross_institution",
+    "proposed_at",
+    "dns_substrate_ref",
+    "governance_kernel_ref",
+    "identity_binding",
+    "provenance",
+    "authorization_chain",
+    "purpose",
+    "compliance"
+  ]
+}

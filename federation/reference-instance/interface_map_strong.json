@@ -14,6 +14,11 @@
       "inputs": ["ritual_event", "state_snapshot"],
       "outputs": ["state_correction", "ritual_receipt"],
       "guarantees": ["idempotent", "safety_first"]
+    },
+    "efctia_authority": {
+      "inputs": ["transaction_payload", "identity_binding", "dns_binding"],
+      "outputs": ["integrity_result", "conduct_attestation", "audit_report"],
+      "guarantees": ["compliance_bound", "attested", "settlement_safe"]
     }
   }
 }

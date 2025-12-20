@@ -14,6 +14,11 @@
       "inputs": ["manual_invocation"],
       "outputs": ["non_binding_receipt"],
       "assumptions": ["observer_mode"]
+    },
+    "efctia_authority": {
+      "inputs": ["transaction_payload", "identity_binding", "dns_binding"],
+      "outputs": ["integrity_result", "conduct_attestation", "audit_report"],
+      "assumptions": ["identity_resolution_available", "attestation_framework_online"]
     }
   }
 }
