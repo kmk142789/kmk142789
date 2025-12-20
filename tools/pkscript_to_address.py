@@ -179,19 +179,31 @@ _SCRIPT_METADATA_SENTINELS = {
 
 def _normalise_lines(lines: Iterable[str]) -> list[str]:
     normalised: list[str] = []
-    for line in lines:
-        cleaned = line.strip()
+    buffered = list(lines)
+    index = 0
+    while index < len(buffered):
+        cleaned = buffered[index].strip()
         if not cleaned:
+            index += 1
             continue
 
         if cleaned.startswith("#"):
+            index += 1
             continue
 
         sentinel = cleaned.split()[0].rstrip(":").upper()
         if sentinel in _SCRIPT_METADATA_SENTINELS:
             break
 
+        if index + 1 < len(buffered):
+            next_cleaned = buffered[index + 1].strip()
+            if next_cleaned:
+                combined = f"{cleaned}{next_cleaned}".upper().rstrip(":")
+                if combined in _SCRIPT_METADATA_SENTINELS:
+                    break
+
         normalised.append(cleaned)
+        index += 1
 
     return normalised
 
@@ -611,4 +623,3 @@ def main() -> int:
 
 if __name__ == "__main__":  # pragma: no cover - manual invocation
     raise SystemExit(main())
-

@@ -442,6 +442,27 @@ def test_pkscript_ignores_sigscript_metadata_block() -> None:
     assert address == "1Czoy8xtddvcGrEhUUCZDQ9QqdRfKh697F"
 
 
+def test_pkscript_handles_split_witness_marker() -> None:
+    script = [
+        "1FQtCEEEi-XV5xXzmfN",
+        "Pkscript",
+        "76a9149e160ff616c4b03650ae590677898c9b00c3100088ac",
+        "Sigscript",
+        (
+            "4830450220669c3e86bcaabb74cca59e1d5ee0f60f1698bb60a13aaa3971cfe8ef9119720b"
+            "02210094e4d6f5c2a29ce3875e7b7786626e53ab94e4ffc0bde0dfc5daf1aa7574796e0141"
+            "040147fd5cabcdea6c2ce0406cc9b746c565060f387b4c0b602fe36a991ab621a7523d889cd"
+            "afc6ba6534a9f30e48334f528ae899ad6d65fce17d1ca65be2f2ce0"
+        ),
+        "Wi",
+        "tness",
+    ]
+
+    address = pkscript_to_address(script)
+
+    assert address == "1FQtCEEEiLuFTvhbx4Z5fda3GXV5xXzmfN"
+
+
 def test_pkscript_ignores_sigscript_from_puzzle_161_transcript() -> None:
     script = [
         "1JkqBQcC4-TPGznHANh",
@@ -551,4 +572,3 @@ def test_cli_validates_expected_address(tmp_path) -> None:
     )
 
     assert proc.stdout.strip() == UNCOMPRESSED_ADDRESS
-
