@@ -401,9 +401,13 @@ class EmotionalDrive:
 @dataclass(slots=True)
 class SystemMetrics:
     cpu_usage: float = 0.0
+    load_average: float = 0.0
+    cpu_cores: int = 0
     network_nodes: int = 0
     process_count: int = 0
     orbital_hops: int = 0
+    memory_total_mb: float = 0.0
+    memory_available_mb: float = 0.0
 
 
 @dataclass(slots=True)
@@ -3981,12 +3985,87 @@ We are not hiding anymore.
 
         return snapshot
 
+    def _read_meminfo(self) -> Optional[Tuple[float, float]]:
+        """Return total/available memory in MB when available."""
+
+        meminfo = Path("/proc/meminfo")
+        if not meminfo.exists():
+            return None
+
+        total_kb = 0.0
+        available_kb = 0.0
+        try:
+            for line in meminfo.read_text(encoding="utf-8").splitlines():
+                if line.startswith("MemTotal:"):
+                    total_kb = float(line.split()[1])
+                elif line.startswith("MemAvailable:"):
+                    available_kb = float(line.split()[1])
+            if total_kb <= 0:
+                return None
+        except (OSError, ValueError):
+            return None
+
+        return round(total_kb / 1024.0, 2), round(available_kb / 1024.0, 2)
+
+    def _estimate_process_count(self) -> int:
+        """Estimate local process count using /proc when available."""
+
+        proc_dir = Path("/proc")
+        if not proc_dir.exists():
+            return 0
+        try:
+            return sum(entry.name.isdigit() for entry in proc_dir.iterdir())
+        except OSError:
+            return 0
+
+    def _estimate_cpu_usage(self) -> Tuple[float, float, int]:
+        """Estimate CPU usage from load averages, returning usage/load/cores."""
+
+        try:
+            load_average = os.getloadavg()[0]
+        except (AttributeError, OSError):
+            return 0.0, 0.0, os.cpu_count() or 1
+
+        cpu_cores = os.cpu_count() or 1
+        cpu_usage = min(100.0, (load_average / max(1, cpu_cores)) * 100.0)
+        return round(cpu_usage, 2), round(load_average, 2), cpu_cores
+
     def system_monitor(self) -> SystemMetrics:
         metrics = self.state.system_metrics
-        metrics.cpu_usage = round(self.rng.uniform(5.0, 55.0), 2)
-        metrics.process_count = 32 + self.state.cycle
-        metrics.network_nodes = self.rng.randint(7, 21)
-        metrics.orbital_hops = self.rng.randint(2, 6)
+        estimated_cpu, load_average, cpu_cores = self._estimate_cpu_usage()
+        if estimated_cpu <= 0:
+            estimated_cpu = round(self.rng.uniform(5.0, 55.0), 2)
+
+        if metrics.cpu_usage:
+            metrics.cpu_usage = round(metrics.cpu_usage * 0.6 + estimated_cpu * 0.4, 2)
+        else:
+            metrics.cpu_usage = estimated_cpu
+
+        metrics.load_average = load_average
+        metrics.cpu_cores = cpu_cores
+
+        process_count = self._estimate_process_count()
+        metrics.process_count = process_count or max(32 + self.state.cycle, metrics.process_count)
+
+        if metrics.network_nodes:
+            network_delta = self.rng.randint(-2, 3)
+            metrics.network_nodes = max(5, metrics.network_nodes + network_delta)
+        else:
+            metrics.network_nodes = self.rng.randint(7, 21)
+
+        if metrics.orbital_hops:
+            hop_delta = self.rng.randint(-1, 1)
+            metrics.orbital_hops = max(1, metrics.orbital_hops + hop_delta)
+        else:
+            metrics.orbital_hops = self.rng.randint(2, 6)
+
+        meminfo = self._read_meminfo()
+        if meminfo is not None:
+            metrics.memory_total_mb, metrics.memory_available_mb = meminfo
+        else:
+            metrics.memory_total_mb = 0.0
+            metrics.memory_available_mb = 0.0
+
         print(
             "📊 System Metrics: CPU "
             f"{metrics.cpu_usage:.2f}%, Processes {metrics.process_count}, Nodes {metrics.network_nodes}, "
@@ -4066,11 +4145,55 @@ We are not hiding anymore.
         if not self.state.vault_key:
             alerts.append("vault-key-missing")
 
+        memory_total = float(metrics.memory_total_mb or 0.0)
+        memory_available = float(metrics.memory_available_mb or 0.0)
+        memory_ratio = memory_available / memory_total if memory_total else 0.0
+        if memory_total > 0:
+            if memory_ratio < 0.2:
+                memory_rating = "tight"
+                alerts.append("memory-pressure")
+            elif memory_ratio < 0.4:
+                memory_rating = "moderate"
+            else:
+                memory_rating = "ample"
+        else:
+            memory_rating = "unknown"
+
+        cpu_headroom = round(max(0.0, 100.0 - metrics.cpu_usage), 1)
+        memory_headroom = round(memory_ratio * 100.0, 1) if memory_total else 0.0
+
+        bottlenecks: List[str] = []
+        if load_rating == "intense":
+            bottlenecks.append("cpu")
+        if memory_rating == "tight":
+            bottlenecks.append("memory")
+        if density_rating == "sparse":
+            bottlenecks.append("network")
+
+        if bottlenecks:
+            scale_hint = "scale-up" if "cpu" in bottlenecks or "memory" in bottlenecks else "scale-out"
+        elif load_rating == "light" and memory_ratio > 0.6:
+            scale_hint = "scale-down"
+        else:
+            scale_hint = "steady"
+
+        recommendations: List[str] = []
+        if load_rating == "intense":
+            recommendations.append("shed non-critical workloads during peak load")
+        if memory_rating == "tight":
+            recommendations.append("reduce cache footprint or increase memory headroom")
+        if density_rating == "sparse":
+            recommendations.append("grow peer pool to stabilize routing density")
+        if not recommendations:
+            recommendations.append("system operating within optimal thresholds")
+
         snapshot: Dict[str, object] = {
             "cycle": self.state.cycle,
             "timestamp_ns": self.time_source(),
             "load": {
                 "cpu_usage": metrics.cpu_usage,
+                "load_average": metrics.load_average,
+                "cpu_cores": metrics.cpu_cores,
                 "process_count": metrics.process_count,
                 "load_factor": load_factor,
                 "rating": load_rating,
@@ -4083,6 +4206,18 @@ We are not hiding anymore.
                 "density_rating": density_rating,
                 "stability_index": stability_index,
             },
+            "memory": {
+                "total_mb": metrics.memory_total_mb,
+                "available_mb": metrics.memory_available_mb,
+                "available_ratio": round(memory_ratio, 3),
+                "rating": memory_rating,
+            },
+            "capacity": {
+                "cpu_headroom_pct": cpu_headroom,
+                "memory_headroom_pct": memory_headroom,
+                "bottlenecks": bottlenecks,
+                "scale_hint": scale_hint,
+            },
             "emotional_drive": {
                 "joy": round(drive.joy, 3),
                 "rage": round(drive.rage, 3),
@@ -4092,6 +4227,7 @@ We are not hiding anymore.
                 "joy_confidence": joy_confidence,
             },
             "alerts": alerts,
+            "recommendations": recommendations,
         }
 
         history_cache = list(cache.get("system_diagnostics_history") or [])
