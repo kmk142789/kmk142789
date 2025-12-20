@@ -1,0 +1,103 @@
+{
+  "hooks": [
+    {
+      "hook_id": "dbis-transaction-hook",
+      "entity": "DBIS",
+      "event_type": "transaction",
+      "description": "Capture all DBIS transaction requests and approvals.",
+      "required": true,
+      "audit_gate": true,
+      "evidence_required": true,
+      "settlement_finality_gate": true
+    },
+    {
+      "hook_id": "dbis-settlement-hook",
+      "entity": "DBIS",
+      "event_type": "settlement",
+      "description": "Gate DBIS settlement finality on EOAG audit clearance.",
+      "required": true,
+      "audit_gate": true,
+      "evidence_required": true,
+      "settlement_finality_gate": true
+    },
+    {
+      "hook_id": "treasury-transaction-hook",
+      "entity": "Treasury",
+      "event_type": "transaction",
+      "description": "Record treasury disbursements, mints, and burns with evidence.",
+      "required": true,
+      "audit_gate": true,
+      "evidence_required": true,
+      "settlement_finality_gate": true
+    },
+    {
+      "hook_id": "treasury-settlement-hook",
+      "entity": "Treasury",
+      "event_type": "settlement",
+      "description": "Require EOAG clearance before treasury settlement finality.",
+      "required": true,
+      "audit_gate": true,
+      "evidence_required": true,
+      "settlement_finality_gate": true
+    },
+    {
+      "hook_id": "efctia-pre-settlement",
+      "entity": "EFCTIA",
+      "event_type": "pre_settlement",
+      "description": "Log EFCTIA pre-settlement audit checkpoint and approvals.",
+      "required": true,
+      "audit_gate": true,
+      "evidence_required": true,
+      "settlement_finality_gate": true
+    },
+    {
+      "hook_id": "efctia-post-settlement",
+      "entity": "EFCTIA",
+      "event_type": "post_settlement",
+      "description": "Capture EFCTIA post-settlement audit and finality receipts.",
+      "required": true,
+      "audit_gate": true,
+      "evidence_required": true,
+      "settlement_finality_gate": true
+    },
+    {
+      "hook_id": "governance-decision-hook",
+      "entity": "Governance",
+      "event_type": "governance_decision",
+      "description": "Audit governance decisions, votes, and policy ratifications.",
+      "required": true,
+      "audit_gate": true,
+      "evidence_required": true,
+      "settlement_finality_gate": true
+    },
+    {
+      "hook_id": "ecosystem-transaction-hook",
+      "entity": "Ecosystem",
+      "event_type": "transaction",
+      "description": "Ensure all transaction-bearing entities emit EOAG audit hooks.",
+      "required": true,
+      "audit_gate": true,
+      "evidence_required": true,
+      "settlement_finality_gate": true
+    }
+  ],
+  "independence": {
+    "separation_of_duties": [
+      "Auditors cannot approve or execute settlements.",
+      "Auditors cannot author the transactions they review.",
+      "Audit leads rotate independently of operational leadership."
+    ],
+    "conflict_checks": [
+      "Confirm no shared key custody between auditors and operators.",
+      "Validate disclosures for any personal or financial ties.",
+      "Enforce dual-control for audit log access and export."
+    ],
+    "recusal_triggers": [
+      "Direct participation in the audited transaction or vote.",
+      "Recent employment or advisory role with the audited entity.",
+      "Family or financial relationship with transaction beneficiaries."
+    ],
+    "auditor_rotation_days": 90,
+    "external_review_required": true
+  }
+}
