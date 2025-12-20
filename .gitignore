@@ -26,6 +26,9 @@ reports/figures/*.png
 # EchoDex auto-refiner state
 .echodex_state.json
 
+# Private decoded secret vaults
+.secrets/
+
 # Sensitive user-provided key dumps
 data/user_provided_keys.txt
 
