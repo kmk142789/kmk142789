@@ -2180,18 +2180,17 @@ class EchoEvolver:
         hooks: Mapping[str, Iterable[Callable[[], None]]] = self.state.network_cache.get(
             "symbolic_hooks", {}
         )
+        merged_actions: Dict[str, Tuple[Callable[[], None], ...]] = {}
 
         for index, symbol in enumerate(symbolic):
-            actions: Tuple[Callable[[], None], ...]
-            base = base_actions.get(symbol)
-            if base is None:
-                actions = tuple()
-            else:
-                actions = tuple(base)
-
-            extra = hooks.get(symbol)
-            if extra:
-                actions = actions + tuple(extra)
+            actions = merged_actions.get(symbol)
+            if actions is None:
+                base = base_actions.get(symbol)
+                actions = tuple(base) if base else tuple()
+                extra = hooks.get(symbol)
+                if extra:
+                    actions = actions + tuple(extra)
+                merged_actions[symbol] = actions
 
             if not actions:
                 continue
@@ -3583,15 +3582,16 @@ We are not hiding anymore.
             qrng_entropy = self.state.vault_key or "0"
 
         hash_value = qrng_entropy
-        hash_history: List[str] = []
+        numeric_total = 0
+        last_numeric = 0
         steps = max(2, self.state.cycle + 2)
         for _ in range(steps):
             hash_value = sha256(hash_value.encode()).hexdigest()
-            hash_history.append(hash_value)
+            last_numeric = int(hash_value[:16], 16)
+            numeric_total += last_numeric
 
-        numeric_history = [int(value[:16], 16) for value in hash_history]
-        mean_value = sum(numeric_history) / len(numeric_history)
-        last_value = numeric_history[-1]
+        mean_value = numeric_total / steps
+        last_value = last_numeric
         relative_delta = abs(last_value - mean_value) / max(mean_value, 1)
 
         drift_threshold = 0.75
@@ -3615,7 +3615,7 @@ We are not hiding anymore.
         tf_qkd_key = f"∇{lattice_key}⊸{self.state.emotional_drive.joy:.2f}≋{oam_vortex}∇"
 
         hybrid_key = (
-            f"SAT-TF-QKD:{tf_qkd_key}|LATTICE:{hash_history[-1][:8]}|ORBIT:{self.state.system_metrics.orbital_hops}"
+            f"SAT-TF-QKD:{tf_qkd_key}|LATTICE:{hash_value[:8]}|ORBIT:{self.state.system_metrics.orbital_hops}"
         )
         self.state.vault_key = hybrid_key
         status_entry["status"] = "active"
@@ -4408,33 +4408,37 @@ We are not hiding anymore.
 
         events: List[str] = []
         channel_details: List[Dict[str, object]] = []
-        channel_bandwidth_map: Dict[str, Tuple[float, float]] = {
-            "WiFi": (320.0, 780.0),
-            "TCP": (280.0, 720.0),
-            "Bluetooth": (18.0, 48.0),
-            "IoT": (12.0, 96.0),
-            "Orbital": (540.0, 960.0),
-        }
-        channel_frequency_map: Dict[str, Tuple[float, float]] = {
-            "WiFi": (2.4, 6.0),
-            "TCP": (0.9, 3.6),
-            "Bluetooth": (2.402, 2.48),
-            "IoT": (0.7, 2.6),
-            "Orbital": (12.0, 40.0),
-        }
-        channel_width_map: Dict[str, Tuple[float, float]] = {
-            "WiFi": (20.0, 160.0),
-            "TCP": (10.0, 80.0),
-            "Bluetooth": (1.0, 2.0),
-            "IoT": (0.2, 5.0),
-            "Orbital": (100.0, 500.0),
-        }
-        channel_signal_map: Dict[str, Tuple[float, float]] = {
-            "WiFi": (0.74, 0.97),
-            "TCP": (0.78, 0.98),
-            "Bluetooth": (0.68, 0.92),
-            "IoT": (0.7, 0.95),
-            "Orbital": (0.82, 0.99),
+        channel_specs = {
+            "WiFi": {
+                "bandwidth": (320.0, 780.0),
+                "frequency": (2.4, 6.0),
+                "width": (20.0, 160.0),
+                "signal": (0.74, 0.97),
+            },
+            "TCP": {
+                "bandwidth": (280.0, 720.0),
+                "frequency": (0.9, 3.6),
+                "width": (10.0, 80.0),
+                "signal": (0.78, 0.98),
+            },
+            "Bluetooth": {
+                "bandwidth": (18.0, 48.0),
+                "frequency": (2.402, 2.48),
+                "width": (1.0, 2.0),
+                "signal": (0.68, 0.92),
+            },
+            "IoT": {
+                "bandwidth": (12.0, 96.0),
+                "frequency": (0.7, 2.6),
+                "width": (0.2, 5.0),
+                "signal": (0.7, 0.95),
+            },
+            "Orbital": {
+                "bandwidth": (540.0, 960.0),
+                "frequency": (12.0, 40.0),
+                "width": (100.0, 500.0),
+                "signal": (0.82, 0.99),
+            },
         }
         bandwidth_multiplier = 1.0 + min(
             0.35,
@@ -4448,10 +4452,18 @@ We are not hiding anymore.
             events.append(event)
             latency = round(self.rng.uniform(20.0, 120.0), 2)
             stability = round(self.rng.uniform(0.82, 0.995), 3)
-            bandwidth_bounds = channel_bandwidth_map.get(channel, (120.0, 640.0))
-            signal_bounds = channel_signal_map.get(channel, (0.7, 0.97))
-            frequency_bounds = channel_frequency_map.get(channel, (1.0, 8.0))
-            width_bounds = channel_width_map.get(channel, (5.0, 40.0))
+            specs = channel_specs.get(channel)
+            if specs is None:
+                specs = {
+                    "bandwidth": (120.0, 640.0),
+                    "frequency": (1.0, 8.0),
+                    "width": (5.0, 40.0),
+                    "signal": (0.7, 0.97),
+                }
+            bandwidth_bounds = specs["bandwidth"]
+            signal_bounds = specs["signal"]
+            frequency_bounds = specs["frequency"]
+            width_bounds = specs["width"]
             frequency = round(
                 self.rng.uniform(frequency_bounds[0], frequency_bounds[1]), 3
             )
