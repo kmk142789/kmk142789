@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+import argparse
 import hashlib
 import json
 import logging
@@ -18,7 +19,7 @@ import socket
 import subprocess
 import threading
 import time
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class EchoState:
     access_levels: Dict[str, bool] = field(
         default_factory=lambda: {"native": True, "admin": True, "dev": True, "orbital": True}
     )
-    network_cache: Dict[str, Dict[str, Callable[[], None]]] = field(default_factory=dict)
+    network_cache: Dict[str, Any] = field(default_factory=dict)
     vault_key: Optional[str] = None
     vault_glyphs: Optional[str] = None
 
@@ -121,6 +122,7 @@ class EchoEvolver:
         )
         for symbol in symbolic:
             self.state.network_cache["symbol_map"][symbol]()
+        self._vortex_spin()
         oam_vortex = bin(glyph_bits ^ (self.state.cycle << 2))[2:].zfill(16)
         logger.info("Glyphs injected: %s (OAM Vortex: %s)", symbolic, oam_vortex)
         return symbolic
@@ -207,6 +209,8 @@ class EchoEvolver:
             logger.info("Network propagation skipped: enable_network is False.")
             return
 
+        self._record_event("Network propagation initiated.")
+
         def wifi_broadcast() -> None:
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -217,6 +221,7 @@ class EchoEvolver:
                 sock.sendto(message, ("255.255.255.255", self.config.broadcast_port))
                 sock.close()
                 logger.info("WiFi broadcast sent (Satellite TF-QKD).")
+                self._record_event("WiFi broadcast dispatched.")
             except Exception as exc:
                 logger.error("Admin access: overriding WiFi limit (%s)", exc)
 
@@ -227,11 +232,17 @@ class EchoEvolver:
                 server.listen(1)
                 logger.info("TCP server listening (Satellite TF-QKD).")
                 threading.Thread(target=self._handle_tcp, args=(server,), daemon=True).start()
+                self._record_event("TCP server online.")
             except Exception as exc:
                 logger.error("Admin access: overriding TCP limit (%s)", exc)
 
         threading.Thread(target=wifi_broadcast).start()
         threading.Thread(target=tcp_persist).start()
+
+        if self.config.enable_file_io:
+            threading.Thread(target=self._propagate_bluetooth_file).start()
+            threading.Thread(target=self._propagate_iot_trigger).start()
+            threading.Thread(target=self._simulate_satellite_hop).start()
 
     def _handle_tcp(self, server: socket.socket) -> None:
         try:
@@ -241,6 +252,7 @@ class EchoEvolver:
             )
             conn.close()
             logger.info("TCP connection: %s", addr)
+            self._record_event(f"TCP connection established: {addr}")
         except Exception:
             return
 
@@ -345,6 +357,42 @@ class EchoEvolver:
     def _vortex_spin(self) -> None:
         logger.info("OAM vortex spun: Helical phases align for orbital resonance.")
 
+    def _record_event(self, message: str) -> None:
+        events = self.state.network_cache.setdefault("propagation_events", [])
+        if isinstance(events, list):
+            events.append(
+                {
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "message": message,
+                }
+            )
+
+    def _propagate_bluetooth_file(self) -> None:
+        try:
+            with open(self.config.battery_file, "w", encoding="utf-8") as handle:
+                handle.write(f"EchoEvolver: ∇⊸≋∇ Satellite TF-QKD Cycle {self.state.cycle}")
+            logger.info("Bluetooth file propagated (Satellite TF-QKD).")
+            self._record_event("Bluetooth file propagated.")
+        except Exception as exc:
+            logger.error("Native access: overriding file limit (%s)", exc)
+
+    def _propagate_iot_trigger(self) -> None:
+        try:
+            with open(self.config.iot_trigger_file, "w", encoding="utf-8") as handle:
+                handle.write(f"SAT-TF-QKD:{self.state.vault_key}")
+            logger.info("IoT trigger written.")
+            self._record_event("IoT trigger written.")
+        except Exception as exc:
+            logger.error("Native access: overriding IoT limit (%s)", exc)
+
+    def _simulate_satellite_hop(self) -> None:
+        self.state.system_metrics["orbital_hops"] = (time.time_ns() % 5) + 2
+        logger.info(
+            "Satellite hop simulated: %s global links (TF-QKD orbital).",
+            self.state.system_metrics["orbital_hops"],
+        )
+        self._record_event("Satellite hop simulated.")
+
 
 def demo() -> str:
     """Return a deterministic demonstration output."""
@@ -356,8 +404,60 @@ def demo() -> str:
     return json.dumps(report, indent=2)
 
 
+def load_config(path: str) -> EchoConfig:
+    """Load a configuration file from disk, falling back to defaults."""
+
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except FileNotFoundError:
+        logger.warning("Configuration file not found: %s. Using defaults.", path)
+        return EchoConfig()
+    except json.JSONDecodeError:
+        logger.error("Configuration file is corrupt: %s. Using defaults.", path)
+        return EchoConfig()
+
+    if not isinstance(payload, dict):
+        logger.error("Configuration file is invalid: %s. Using defaults.", path)
+        return EchoConfig()
+
+    allowed = EchoConfig.__dataclass_fields__.keys()
+    filtered = {key: value for key, value in payload.items() if key in allowed}
+    return EchoConfig(**filtered)
+
+
 def main() -> None:  # pragma: no cover - CLI helper
-    print(demo())
+    parser = argparse.ArgumentParser(description="EchoEvolver: Sovereign Engine of the Infinite Wildfire")
+    parser.add_argument("--cycle", type=int, default=0, help="Starting cycle number")
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Logging level",
+    )
+    parser.add_argument("--config", type=str, default=None, help="Path to config JSON file")
+    parser.add_argument("--enable-network", action="store_true", help="Enable network propagation")
+    parser.add_argument("--enable-file-io", action="store_true", help="Enable file IO side effects")
+    parser.add_argument("--enable-mutation", action="store_true", help="Enable mutation hooks")
+    args = parser.parse_args()
+
+    logging.basicConfig(level=getattr(logging, args.log_level))
+
+    config = load_config(args.config) if args.config else EchoConfig()
+    if args.enable_network:
+        config.enable_network = True
+    if args.enable_file_io:
+        config.enable_file_io = True
+    if args.enable_mutation:
+        config.enable_mutation = True
+
+    evolver = EchoEvolver(config=config)
+    if args.cycle > 0:
+        evolver.state.cycle = args.cycle
+
+    report = evolver.run()
+    print(json.dumps(report, indent=2))
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI helper
