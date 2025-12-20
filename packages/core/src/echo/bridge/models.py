@@ -51,6 +51,17 @@ class PlanRequest(BaseModel):
         description="Limit planning to the supplied connector names (case-insensitive).",
         examples=[["slack", "webhook"]],
     )
+    secret_payload: Optional[str] = Field(
+        default=None,
+        description=(
+            "Optional Base64-encoded secret payload to store privately while "
+            "exposing only decoded metadata to bridge connectors."
+        ),
+    )
+    secret_label: Optional[str] = Field(
+        default=None,
+        description="Optional label describing the secret payload stored privately.",
+    )
 
 
 class PlanModel(BaseModel):
@@ -158,4 +169,3 @@ class SyncResponse(BaseModel):
         default=None,
         description="Optional aggregate metrics about the included sync operations.",
     )
-

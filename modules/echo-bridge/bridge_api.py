@@ -33,6 +33,7 @@ class RelayContext:
     plain_text: Optional[str] = None
     social_text: Optional[str] = None
     base_document: Optional[Dict[str, Any]] = None
+    decoded_payload: Optional[Dict[str, Any]] = None
 
 
 class EchoBridgeAPI:
@@ -249,6 +250,7 @@ class EchoBridgeAPI:
         topics: Optional[Sequence[str]] = None,
         priority: Optional[str] = None,
         connectors: Optional[Sequence[str]] = None,
+        decoded_payload: Optional[Dict[str, Any]] = None,
     ) -> List[BridgePlan]:
         """Build relay plans for configured connectors.
 
@@ -272,6 +274,7 @@ class EchoBridgeAPI:
             links=link_items,
             topics=topic_items,
             priority=priority_text,
+            decoded_payload=decoded_payload,
         )
         plans: List[BridgePlan] = []
         context.base_document = self._base_document(
@@ -283,6 +286,7 @@ class EchoBridgeAPI:
             links=link_items,
             topics=topic_items,
             priority=priority_text,
+            decoded_payload=decoded_payload,
         )
 
         if (
@@ -2395,6 +2399,7 @@ class EchoBridgeAPI:
         links: List[str],
         topics: List[str],
         priority: Optional[str],
+        decoded_payload: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         document: Dict[str, Any] = {
             "identity": identity,
@@ -2410,6 +2415,8 @@ class EchoBridgeAPI:
             document["links"] = links
         if topics:
             document["topics"] = topics
+        if decoded_payload:
+            document["decoded_payload"] = decoded_payload
         return document
 
     @staticmethod
