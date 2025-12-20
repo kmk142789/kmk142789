@@ -4,6 +4,8 @@ import json
 import os
 import subprocess
 import sys
+import time
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +20,22 @@ def run(args: list[str], *, env: dict[str, str] | None = None) -> subprocess.Com
         [sys.executable, str(ECHOCTL), *args],
         cwd=ROOT,
         check=True,
+        capture_output=True,
+        text=True,
+        env=run_env,
+    )
+
+
+def run_unchecked(
+    args: list[str], *, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
+    run_env = os.environ.copy()
+    if env:
+        run_env.update(env)
+    return subprocess.run(
+        [sys.executable, str(ECHOCTL), *args],
+        cwd=ROOT,
+        check=False,
         capture_output=True,
         text=True,
         env=run_env,
@@ -53,6 +71,20 @@ def test_cycle_generates_plan(tmp_path, monkeypatch):
     run(["cycle"], env=env)
     plan = (docs_root / "NEXT_CYCLE_PLAN.md").read_text(encoding="utf-8")
     assert "Proposed Actions" in plan
+
+
+def test_plan_command_reports_missing_plan(tmp_path, monkeypatch):
+    monkeypatch.setenv("PYTHONPATH", str(ROOT))
+    data_root = tmp_path / "data"
+    docs_root = tmp_path / "docs"
+    env = {
+        "ECHO_DATA_ROOT": str(data_root),
+        "ECHO_DOCS_ROOT": str(docs_root),
+    }
+
+    result = run(["plan"], env=env)
+
+    assert "No plan yet. Run: echoctl cycle" in result.stdout
 
 
 def test_summary_command_uses_custom_data_root(tmp_path, monkeypatch):
@@ -186,3 +218,74 @@ def test_pulse_command_text_output(tmp_path, monkeypatch):
     assert "Filter: 'auto' (2 matches)" in result.stdout
     assert "Recent events (showing 1 of 2):" in result.stdout
     assert "craft:auto:cc" in result.stdout
+
+
+def test_health_command_reports_ok_json(tmp_path, monkeypatch):
+    monkeypatch.setenv("PYTHONPATH", str(ROOT))
+    plan_path = tmp_path / "NEXT_CYCLE_PLAN.md"
+    manifest_path = tmp_path / "wish_manifest.json"
+    pulses_path = tmp_path / "pulse_history.json"
+
+    plan_path.write_text("# Plan\n", encoding="utf-8")
+    manifest = {
+        "version": "1.0.0",
+        "wishes": [
+            {
+                "wisher": "Echo",
+                "desire": "Keep the plan fresh",
+                "catalysts": ["care"],
+                "created_at": datetime.utcnow().isoformat() + "Z",
+                "status": "new",
+            }
+        ],
+    }
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    pulses = [
+        {
+            "timestamp": time.time(),
+            "message": "🌀 evolve:manual:ok",
+            "hash": "abc123",
+        }
+    ]
+    pulses_path.write_text(json.dumps(pulses), encoding="utf-8")
+
+    result = run(
+        [
+            "health",
+            "--plan",
+            str(plan_path),
+            "--manifest",
+            str(manifest_path),
+            "--pulses",
+            str(pulses_path),
+            "--json",
+        ]
+    )
+
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "ok"
+    assert payload["plan_exists"] is True
+    assert payload["wish_total"] == 1
+    assert payload["pulse_count"] == 1
+
+
+def test_health_command_reports_critical_for_missing_files(tmp_path, monkeypatch):
+    monkeypatch.setenv("PYTHONPATH", str(ROOT))
+    plan_path = tmp_path / "missing_plan.md"
+    manifest_path = tmp_path / "missing_manifest.json"
+    pulses_path = tmp_path / "missing_pulses.json"
+
+    result = run_unchecked(
+        [
+            "health",
+            "--plan",
+            str(plan_path),
+            "--manifest",
+            str(manifest_path),
+            "--pulses",
+            str(pulses_path),
+        ]
+    )
+
+    assert result.returncode == 2
+    assert "Status: CRITICAL" in result.stdout
