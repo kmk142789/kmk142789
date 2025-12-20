@@ -143,6 +143,8 @@ except ImportError:  # pragma: no cover - executed when run as script
     _PULSE_HEALTH_SPEC.loader.exec_module(_PULSE_HEALTH)  # type: ignore[attr-defined]
     compute_pulse_metrics = _PULSE_HEALTH.compute_pulse_metrics  # type: ignore[attr-defined]
 
+from .continuum_snapshot import build_snapshot
+
 try:  # pragma: no cover - executed when run as module
     from ._paths import DATA_ROOT, DOCS_ROOT, REPO_ROOT
 except ImportError:  # pragma: no cover - executed when run as script
@@ -499,6 +501,104 @@ def run_idea(argv: List[str]) -> int:
         print(json.dumps(plan.to_dict(), ensure_ascii=False, indent=2))
     else:
         print(plan.to_markdown())
+
+    return 0
+
+
+def run_snapshot(argv: List[str]) -> int:
+    """Emit a holistic snapshot of continuum health, wishes, and pulses."""
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl snapshot",
+        description="Generate a combined snapshot of continuum health, wishes, and pulse cadence.",
+    )
+    parser.add_argument(
+        "--plan",
+        type=Path,
+        default=PLAN,
+        help="Path to the continuum plan markdown file (default: docs/NEXT_CYCLE_PLAN.md).",
+    )
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=WISH,
+        help="Path to the wish manifest JSON file (default: data/wish_manifest.json).",
+    )
+    parser.add_argument(
+        "--pulses",
+        type=Path,
+        default=PULSE_HISTORY,
+        help="Path to the pulse history JSON file (default: repo pulse_history.json).",
+    )
+    parser.add_argument(
+        "--warning-hours",
+        type=float,
+        default=24.0,
+        help="Warning threshold in hours for time since last pulse (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--critical-hours",
+        type=float,
+        default=72.0,
+        help="Critical threshold in hours for time since last pulse (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--recent",
+        type=int,
+        default=5,
+        help="Number of recent pulse events to display (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--observatory",
+        action="store_true",
+        help="Include a continuum observatory scan in the snapshot.",
+    )
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=REPO_ROOT,
+        help="Root path for the observatory scan (default: repo root).",
+    )
+    parser.add_argument(
+        "--lane-limit",
+        type=int,
+        default=5,
+        help="Number of lane highlights to include (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit JSON instead of a formatted summary.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional path to persist the JSON snapshot payload.",
+    )
+
+    options = parser.parse_args(argv)
+
+    report = build_snapshot(
+        plan_path=options.plan,
+        manifest_path=options.manifest,
+        pulses_path=options.pulses,
+        warning_hours=options.warning_hours,
+        critical_hours=options.critical_hours,
+        recent_limit=options.recent,
+        include_observatory=options.observatory,
+        observatory_root=options.root,
+        lane_limit=options.lane_limit,
+    )
+
+    if options.output:
+        options.output.parent.mkdir(parents=True, exist_ok=True)
+        options.output.write_text(json.dumps(report.to_dict(), indent=2), encoding="utf-8")
+        print(f"📦 snapshot payload saved to {options.output}", file=sys.stderr)
+
+    if options.json:
+        print(json.dumps(report.to_dict(), indent=2))
+    else:
+        print(report.describe())
 
     return 0
 
@@ -1217,7 +1317,7 @@ def run_temporal_mirror(argv: List[str]) -> int:
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
         print(
-            "usage: echoctl [cycle|plan|summary|wish-report|health|pulse|groundbreaking|moonshot|wish|idea|next-step|inspire|ledger|flux|telemetry|advance|puzzle|temporal-mirror] ..."
+            "usage: echoctl [cycle|plan|summary|wish-report|health|pulse|snapshot|groundbreaking|moonshot|wish|idea|next-step|inspire|ledger|flux|telemetry|advance|puzzle|temporal-mirror] ..."
         )
         return 1
     cmd = argv[1]
@@ -1236,6 +1336,8 @@ def main(argv: List[str]) -> int:
         return run_health(argv[2:])
     if cmd == "pulse":
         return run_pulse(argv[2:])
+    if cmd == "snapshot":
+        return run_snapshot(argv[2:])
     if cmd == "groundbreaking":
         return run_groundbreaking(argv[2:])
     if cmd == "moonshot":
