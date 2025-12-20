@@ -115,6 +115,74 @@ const LEGITIMACY_COMPONENTS = [
   },
 ];
 
+const POWER_INTERFACE_COMPONENTS = [
+  {
+    title: 'Coalition builder',
+    description: 'Turns options into a coordination map with sequencing and incentives.',
+    outcomes: [
+      'Natural allies and likely blockers',
+      'Incentive map and outreach order',
+      'Lightweight guidance for first moves',
+    ],
+  },
+  {
+    title: 'Opposition anticipator',
+    description: 'Surfaces the strongest counter-arguments and where they land.',
+    outcomes: [
+      'Who will argue against the option and why',
+      'Evidence opponents will cite',
+      'Which objections are genuinely dangerous',
+    ],
+  },
+  {
+    title: 'Action logging',
+    description: 'Creates a memory of real-world use and outcomes with privacy control.',
+    outcomes: [
+      'Log where a brief was used and what decision followed',
+      'Record outcomes and unexpected effects',
+      'Aggregated, anonymized learning by default',
+    ],
+  },
+  {
+    title: 'Quiet mode',
+    description: 'A stripped-down view for use in sensitive contexts.',
+    outcomes: [
+      'No branding or rhetoric',
+      'Pure structure and evidence',
+      'Adoption where publicity would block action',
+    ],
+  },
+];
+
+const ROLE_LENSES = [
+  'Regulator',
+  'Policy staffer',
+  'Minister / executive',
+  'Platform policy lead',
+  'Infrastructure operator',
+  'Civil society advocate',
+  'Journalist',
+];
+
+const MEMO_TONES = ['Neutral briefing', 'Risk alert', 'Recommendation', 'Dissent memo'];
+
+const DECISION_COVER_QUESTIONS = [
+  'If this fails, who gets blamed?',
+  'What evidence shows this wasn’t reckless?',
+  'What precedent supports this?',
+  'What uncertainty was acknowledged?',
+];
+
+const POWER_INTERFACE_EFFECTS = [
+  'People stop saying “this is interesting but not for me.”',
+  'RealityLayer walks straight into ministries, companies, and orgs.',
+  'People with authority dare to act.',
+  'Users move from analysis to coordination.',
+  'RealityLayer becomes a prep tool, not a sermon.',
+  'The platform learns from reality, not ideology.',
+  'Adoption where publicity would kill it.',
+];
+
 const FRONTEND_STACK = [
   'Next.js experience for public browsing and comparison',
   'Generator UI with preview, schema validation, and diff view',
@@ -269,6 +337,91 @@ export default function RealityLayerOverview() {
               </ul>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-800 bg-slate-950/80 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold text-white">Power Interface</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-echo-ember">Agency layer</p>
+        </div>
+        <p className="mt-3 text-sm text-slate-400">
+          Translates RealityLayer outputs into institution-compatible moves so real actors can operate under real
+          constraints without asking permission.
+        </p>
+        <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_1fr]">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+            <p className="text-sm font-semibold text-white">Role-based views</p>
+            <p className="mt-2 text-xs text-slate-400">
+              Same truth, different entry points. Each lens reorders the brief and highlights the decision pathway for
+              the audience.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-200">
+              {ROLE_LENSES.map((item) => (
+                <span key={item} className="rounded-full border border-slate-700 px-3 py-1">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+            <p className="text-sm font-semibold text-white">Internal memo generator</p>
+            <p className="mt-2 text-xs text-slate-400">
+              Converts any brief into an internal memo that can ship inside ministries, companies, and orgs.
+            </p>
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-echo-ember">Tone presets</p>
+              <ul className="mt-3 space-y-2 text-sm text-slate-200">
+                {MEMO_TONES.map((item) => (
+                  <li key={item} className="flex gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-echo-ember" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+          <p className="text-sm font-semibold text-white">Decision cover mode</p>
+          <p className="mt-2 text-xs text-slate-400">
+            Explicitly documents risk and precedent so decisions survive scrutiny without hiding uncertainty.
+          </p>
+          <ul className="mt-4 grid gap-3 text-sm text-slate-200 md:grid-cols-2">
+            {DECISION_COVER_QUESTIONS.map((item) => (
+              <li key={item} className="flex gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-amber-200" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {POWER_INTERFACE_COMPONENTS.map((component) => (
+            <div key={component.title} className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+              <p className="text-sm font-semibold text-white">{component.title}</p>
+              <p className="mt-2 text-xs text-slate-400">{component.description}</p>
+              <ul className="mt-3 space-y-2 text-sm text-slate-200">
+                {component.outcomes.map((outcome) => (
+                  <li key={outcome} className="flex gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-echo-ember" />
+                    <span>{outcome}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200">Effect</p>
+          <ul className="mt-3 space-y-2 text-sm text-emerald-100">
+            {POWER_INTERFACE_EFFECTS.map((item) => (
+              <li key={item} className="flex gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-emerald-200" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
