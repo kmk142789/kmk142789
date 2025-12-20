@@ -25,6 +25,8 @@ jobs:
                   ok=False; print(f'ERROR {f}: {e}')
           sys.exit(0 if ok else 1)
           PY
+      - name: Validate case assets
+        run: python tools/validate_case_assets.py
       - name: Generate Echo attestation
         run: python scripts/echo_attestation_generator.py --output attestations/auto --context echo-ci
       - name: Produce MirrorNet sync plan
