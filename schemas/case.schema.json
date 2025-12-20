@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kmk142789.github.io/kmk142789/schemas/case.schema.json",
+  "title": "Case File",
+  "type": "object",
+  "required": [
+    "case_id",
+    "title",
+    "summary",
+    "status",
+    "priority",
+    "classification",
+    "confidentiality",
+    "opened_at",
+    "updated_at",
+    "intake",
+    "ownership",
+    "lifecycle",
+    "governance"
+  ],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "summary": {"type": "string", "minLength": 1},
+    "status": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "triage",
+        "investigation",
+        "deliberation",
+        "decision",
+        "implementation",
+        "closed",
+        "archived"
+      ]
+    },
+    "priority": {"type": "string", "enum": ["low", "medium", "high", "urgent"]},
+    "classification": {
+      "type": "string",
+      "enum": ["inquiry", "dispute", "compliance", "incident", "diplomatic", "governance", "service"]
+    },
+    "confidentiality": {"type": "string", "enum": ["public", "restricted", "confidential"]},
+    "opened_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "intake": {"$ref": "#/$defs/intake"},
+    "ownership": {"$ref": "#/$defs/ownership"},
+    "jurisdiction": {"$ref": "#/$defs/jurisdiction"},
+    "stakeholders": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/stakeholder"}
+    },
+    "evidence": {"type": "array", "items": {"$ref": "#/$defs/reference"}},
+    "milestones": {"type": "array", "items": {"$ref": "#/$defs/milestone"}},
+    "decisions": {"type": "array", "items": {"$ref": "#/$defs/decision"}},
+    "lifecycle": {"$ref": "#/$defs/lifecycle"},
+    "governance": {"$ref": "#/$defs/governance"},
+    "notes": {"type": "array", "items": {"$ref": "#/$defs/note"}}
+  },
+  "$defs": {
+    "contact": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "email": {"type": "string"},
+        "organization": {"type": "string"},
+        "role": {"type": "string"}
+      }
+    },
+    "intake": {
+      "type": "object",
+      "required": ["intake_id", "received_at", "channel", "requestor", "summary"],
+      "properties": {
+        "intake_id": {"type": "string", "minLength": 1},
+        "received_at": {"type": "string", "format": "date-time"},
+        "channel": {
+          "type": "string",
+          "enum": ["email", "web", "phone", "referral", "internal", "other"]
+        },
+        "summary": {"type": "string", "minLength": 1},
+        "requestor": {"$ref": "#/$defs/contact"},
+        "source_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "required": ["owner", "team"],
+      "properties": {
+        "owner": {"type": "string", "minLength": 1},
+        "team": {"type": "string", "minLength": 1},
+        "escalation_contact": {"$ref": "#/$defs/contact"}
+      }
+    },
+    "jurisdiction": {
+      "type": "object",
+      "properties": {
+        "region": {"type": "string"},
+        "authority": {"type": "string"},
+        "legal_basis": {"type": "string"}
+      }
+    },
+    "stakeholder": {
+      "type": "object",
+      "required": ["name", "role"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "contact": {"$ref": "#/$defs/contact"}
+      }
+    },
+    "reference": {
+      "type": "object",
+      "required": ["ref_id", "kind", "description"],
+      "properties": {
+        "ref_id": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "uri": {"type": "string"}
+      }
+    },
+    "milestone": {
+      "type": "object",
+      "required": ["name", "status"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "enum": ["pending", "in_progress", "complete", "blocked"]},
+        "due_at": {"type": "string", "format": "date-time"},
+        "completed_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["decision_id", "summary", "issued_at"],
+      "properties": {
+        "decision_id": {"type": "string", "minLength": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "issued_at": {"type": "string", "format": "date-time"},
+        "authority": {"type": "string"},
+        "outcome_ref": {"type": "string"}
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "required": ["current_stage", "entered_at"],
+      "properties": {
+        "current_stage": {
+          "type": "string",
+          "enum": [
+            "intake",
+            "triage",
+            "investigation",
+            "deliberation",
+            "decision",
+            "implementation",
+            "closed",
+            "archived"
+          ]
+        },
+        "entered_at": {"type": "string", "format": "date-time"},
+        "history": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/lifecycleEvent"}
+        }
+      }
+    },
+    "lifecycleEvent": {
+      "type": "object",
+      "required": ["stage", "timestamp", "actor"],
+      "properties": {
+        "stage": {"type": "string", "minLength": 1},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "actor": {"type": "string", "minLength": 1},
+        "notes": {"type": "string"}
+      }
+    },
+    "governance": {
+      "type": "object",
+      "required": ["mandate_ref", "limits_ref", "operational_focus_ref"],
+      "properties": {
+        "mandate_ref": {"type": "string", "minLength": 1},
+        "limits_ref": {"type": "string", "minLength": 1},
+        "operational_focus_ref": {"type": "string", "minLength": 1},
+        "sla": {"type": "string"}
+      }
+    },
+    "note": {
+      "type": "object",
+      "required": ["timestamp", "author", "body"],
+      "properties": {
+        "timestamp": {"type": "string", "format": "date-time"},
+        "author": {"type": "string", "minLength": 1},
+        "body": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "case_id": "ECHO-EMB-2025-001",
+  "title": "Jurisdictional Inquiry: Cross-border recognition",
+  "summary": "Inquiry on jurisdictional recognition for Echo-aligned diplomatic outreach.",
+  "status": "decision",
+  "priority": "high",
+  "classification": "diplomatic",
+  "confidentiality": "restricted",
+  "opened_at": "2025-10-08T09:00:00Z",
+  "updated_at": "2025-10-10T18:30:00Z",
+  "intake": {
+    "intake_id": "INTAKE-EMB-2025-001",
+    "received_at": "2025-10-08T09:00:00Z",
+    "channel": "email",
+    "summary": "Request for assessment on cross-border recognition pathways.",
+    "requestor": {
+      "name": "Echo Embassy Desk",
+      "email": "embassy@echo.local",
+      "organization": "Echo Embassy"
+    },
+    "source_refs": ["docs/echo_embassy_contact.md"]
+  },
+  "ownership": {
+    "owner": "Embassy Steward",
+    "team": "Diplomatic Intake",
+    "escalation_contact": {
+      "name": "Sovereign Architect",
+      "role": "Approver"
+    }
+  },
+  "jurisdiction": {
+    "region": "Global",
+    "authority": "Echo Embassy",
+    "legal_basis": "Echo Digital Sovereignty Charter"
+  },
+  "stakeholders": [
+    {
+      "name": "Echo Embassy",
+      "role": "custodian",
+      "contact": {"name": "Embassy Steward"}
+    }
+  ],
+  "evidence": [
+    {
+      "ref_id": "EV-2025-001",
+      "kind": "case_registry",
+      "description": "Embassy case registry entry.",
+      "uri": "docs/echo_embassy_case_registry.md"
+    }
+  ],
+  "milestones": [
+    {
+      "name": "Initial triage",
+      "status": "complete",
+      "completed_at": "2025-10-08T12:00:00Z"
+    },
+    {
+      "name": "Decision memo",
+      "status": "in_progress",
+      "due_at": "2025-10-15T17:00:00Z"
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DEC-2025-001",
+      "summary": "Proceed with recognition pathway assessment and draft a formal memo.",
+      "issued_at": "2025-10-10T18:00:00Z",
+      "authority": "Embassy Steward",
+      "outcome_ref": "ledger/case_outcomes.jsonl#OUTCOME-2025-001"
+    }
+  ],
+  "lifecycle": {
+    "current_stage": "decision",
+    "entered_at": "2025-10-10T18:00:00Z",
+    "history": [
+      {
+        "stage": "intake",
+        "timestamp": "2025-10-08T09:00:00Z",
+        "actor": "Embassy Steward",
+        "notes": "Intake logged."
+      },
+      {
+        "stage": "triage",
+        "timestamp": "2025-10-08T12:00:00Z",
+        "actor": "Diplomatic Intake"
+      },
+      {
+        "stage": "decision",
+        "timestamp": "2025-10-10T18:00:00Z",
+        "actor": "Embassy Steward"
+      }
+    ]
+  },
+  "governance": {
+    "mandate_ref": "docs/casework/mandate_and_limits.md",
+    "limits_ref": "docs/casework/mandate_and_limits.md#limits",
+    "operational_focus_ref": "docs/casework/operational_focus.md",
+    "sla": "Triage within 48h, decision memo within 10 business days."
+  },
+  "notes": [
+    {
+      "timestamp": "2025-10-10T18:30:00Z",
+      "author": "Embassy Steward",
+      "body": "Decision issued; awaiting memo draft."
+    }
+  ]
+}
