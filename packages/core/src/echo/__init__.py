@@ -394,7 +394,14 @@ from .thoughtlog import ThoughtLogger, thought_trace
 from .wish_insights import summarize_wishes
 
 if TYPE_CHECKING:  # pragma: no cover - import-time convenience for type checkers
-    from .idea_processor import IdeaAnalysis, IdeaProcessor, IdeaResult, process_idea
+    from .idea_processor import (
+        ConstellationStar,
+        IdeaAnalysis,
+        IdeaConstellation,
+        IdeaProcessor,
+        IdeaResult,
+        process_idea,
+    )
     from .bridge_harmonix import (
         BridgeSignals,
         BridgeTuning,
@@ -407,6 +414,8 @@ if TYPE_CHECKING:  # pragma: no cover - import-time convenience for type checker
 
 _LAZY_MODULES = {
     "IdeaAnalysis": "idea_processor",
+    "IdeaConstellation": "idea_processor",
+    "ConstellationStar": "idea_processor",
     "IdeaProcessor": "idea_processor",
     "IdeaResult": "idea_processor",
     "process_idea": "idea_processor",
@@ -609,6 +618,8 @@ __all__ = [
     "main",
     "forge_chronicle",
     "IdeaAnalysis",
+    "IdeaConstellation",
+    "ConstellationStar",
     "IdeaProcessor",
     "IdeaResult",
     "process_idea",
