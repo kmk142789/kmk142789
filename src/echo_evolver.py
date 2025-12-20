@@ -78,6 +78,8 @@ class EchoState:
     vault_glyphs: Optional[str] = None
     event_log: list[str] = field(default_factory=list)
     eden88_creations: list[Dict[str, object]] = field(default_factory=list)
+    capability_profile: Optional[Dict[str, object]] = None
+    optimization_log: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -106,6 +108,21 @@ class CycleDigest:
     joy_index: float
     stability_index: float
     recent_events: list[str]
+
+    def as_dict(self) -> Dict[str, object]:
+        return asdict(self)
+
+
+@dataclass
+class CapabilityProfile:
+    """Structured capability profile derived from the current cycle."""
+
+    timestamp: str
+    cycle: int
+    signature: str
+    dominant_ability: str
+    capability_scores: Dict[str, float]
+    recommendations: list[str]
 
     def as_dict(self) -> Dict[str, object]:
         return asdict(self)
@@ -348,6 +365,8 @@ class EchoEvolver:
             resonance_snapshot = self.state.network_cache.get("resonance_snapshot")
             cycle_digest = self.state.network_cache.get("cycle_digest")
             orbital_forecast = self.state.network_cache.get("orbital_resonance_forecast")
+            capability_profile = self.state.network_cache.get("capability_profile")
+            cycle_optimization = self.state.network_cache.get("cycle_optimization")
             payload = {
                 "cycle": self.state.cycle,
                 "glyphs": self.state.glyphs,
@@ -366,6 +385,9 @@ class EchoEvolver:
                 "resonance_snapshot": resonance_snapshot,
                 "cycle_digest": cycle_digest,
                 "orbital_resonance_forecast": orbital_forecast,
+                "capability_profile": capability_profile,
+                "cycle_optimization": cycle_optimization,
+                "optimization_log": list(self.state.optimization_log),
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             with open(self.state.artifact, "w", encoding="utf-8") as handle:
@@ -384,6 +406,8 @@ class EchoEvolver:
         self.invent_mythocode()
         self.quantum_safe_crypto()
         self.system_monitor()
+        capability_profile = self.evaluate_capabilities()
+        cycle_optimization = self.optimize_cycle()
         narrative = self.evolutionary_narrative()
         forecast = self.forecast_orbital_resonance()
         resonance_snapshot = self.record_resonance_snapshot()
@@ -404,6 +428,8 @@ class EchoEvolver:
             "cycle_digest": cycle_digest,
             "orbital_resonance_forecast": forecast,
             "eden88_creation": eden88_creation,
+            "capability_profile": capability_profile,
+            "cycle_optimization": cycle_optimization,
         }
 
     def _increment_cycle(self) -> None:
@@ -534,6 +560,96 @@ class EchoEvolver:
         self.state.network_cache["cycle_digest"] = digest_dict
         logger.info("Cycle digest compiled for cycle %s.", self.state.cycle)
         return digest_dict
+
+    def evaluate_capabilities(self) -> Dict[str, object]:
+        """Evaluate and store a capability profile for the current cycle."""
+
+        cpu_usage = float(self.state.system_metrics.get("cpu_usage", 0.0))
+        network_nodes = float(self.state.system_metrics.get("network_nodes", 0.0))
+        process_count = float(self.state.system_metrics.get("process_count", 0.0))
+        joy = float(self.state.emotional_drive.get("joy", 0.0))
+        curiosity = float(self.state.emotional_drive.get("curiosity", 0.0))
+        rage = float(self.state.emotional_drive.get("rage", 0.0))
+
+        resilience = max(0.0, 1.0 - (cpu_usage / 100.0))
+        perception = min(1.0, (joy * 0.6) + (curiosity * 0.4))
+        creativity = min(1.0, (joy + curiosity) / 2.0)
+        stability = max(0.0, 1.0 - rage)
+        orchestration = min(1.0, (network_nodes / 20.0) + (process_count / 120.0))
+
+        scores = {
+            "perception": round(perception, 3),
+            "creativity": round(creativity, 3),
+            "resilience": round(resilience, 3),
+            "stability": round(stability, 3),
+            "orchestration": round(orchestration, 3),
+        }
+        dominant_ability = max(scores, key=scores.get)
+        signature = f"cap-{self.state.cycle}-{dominant_ability}-{int(scores[dominant_ability] * 100)}"
+
+        recommendations = []
+        if resilience < 0.45:
+            recommendations.append("stabilize_system_load")
+        if creativity < 0.6:
+            recommendations.append("pulse_emotional_modulation")
+        if orchestration < 0.5:
+            recommendations.append("increase_network_sync")
+        if not recommendations:
+            recommendations.append("maintain_current_orbit")
+
+        profile = CapabilityProfile(
+            timestamp=datetime.utcnow().isoformat() + "Z",
+            cycle=self.state.cycle,
+            signature=signature,
+            dominant_ability=dominant_ability,
+            capability_scores=scores,
+            recommendations=recommendations,
+        )
+        profile_dict = profile.as_dict()
+        self.state.capability_profile = profile_dict
+        self.state.network_cache["capability_profile"] = profile_dict
+        self._record_event("Capability profile evaluated.")
+        return profile_dict
+
+    def optimize_cycle(self) -> Dict[str, object]:
+        """Tune symbolic sequencing and event strategy for the next cycle."""
+
+        cpu_usage = float(self.state.system_metrics.get("cpu_usage", 0.0))
+        stability = max(0.0, 1.0 - (cpu_usage / 100.0))
+        sequence = self.state.symbolic_sequence or self.config.symbolic_sequence
+        new_sequence = sequence
+        action = "sequence_maintained"
+
+        if stability < 0.45 and len(sequence) > 2:
+            new_sequence = sequence[:2]
+            action = "sequence_compressed"
+        elif stability > 0.8 and len(sequence) < 6:
+            new_sequence = f"{sequence}⊸"
+            action = "sequence_expanded"
+
+        if new_sequence != self.state.symbolic_sequence:
+            self.state.symbolic_sequence = new_sequence
+            self._record_event(f"Symbolic sequence optimized: {new_sequence}.")
+
+        if cpu_usage > 55.0:
+            event_strategy = "throttle_events"
+            self._record_event("Optimization: throttling events due to CPU load.")
+        else:
+            event_strategy = "balance_events"
+            self._record_event("Optimization: balanced event cadence.")
+        self.state.optimization_log.append(event_strategy)
+
+        payload = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "cycle": self.state.cycle,
+            "stability": round(stability, 3),
+            "cpu_usage": round(cpu_usage, 2),
+            "symbolic_sequence": new_sequence,
+            "sequence_action": action,
+            "event_strategy": event_strategy,
+        }
+        self.state.network_cache["cycle_optimization"] = payload
+        return payload
 
     def _propagate_bluetooth_file(self) -> None:
         try:
