@@ -4,9 +4,11 @@ import importlib
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+import hashlib
 
 from echo.bridge import BridgeSyncService
 from echo.bridge.router import create_router
+from echo.bridge.secrets import BridgeSecretStore
 
 bridge_module = importlib.import_module("modules.echo-bridge.bridge_api")
 EchoBridgeAPI = bridge_module.EchoBridgeAPI
@@ -198,6 +200,41 @@ def test_plan_endpoint_returns_bridge_instructions() -> None:
     assert discord_plan["action"] == "send_webhook"
     assert discord_plan["payload"]["webhook_env"] == "DISCORD_ECHO_WEBHOOK"
     assert discord_plan["payload"]["context"]["cycle"] == "01"
+
+
+def test_plan_endpoint_stores_secret_payload_privately(tmp_path) -> None:
+    app = FastAPI()
+    bridge_api = EchoBridgeAPI(
+        github_repository="EchoOrg/sovereign",
+        firebase_collection="echo/identity",
+    )
+    secret_store = BridgeSecretStore(tmp_path)
+    app.include_router(create_router(bridge_api, secret_store=secret_store))
+    client = TestClient(app)
+
+    secret = b"secret-echo"
+    encoded = "c2VjcmV0LWVjaG8="
+    expected_hash = hashlib.sha256(secret).hexdigest()
+
+    response = client.post(
+        "/bridge/plan",
+        json={
+            "identity": "EchoWildfire",
+            "cycle": "02",
+            "signature": "eden88::cycle02",
+            "secret_payload": encoded,
+            "secret_label": "vault-fragment",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    plans = {plan["platform"]: plan for plan in payload["plans"]}
+    firebase_plan = plans["firebase"]
+    decoded = firebase_plan["payload"]["data"]["decoded_payload"]
+    assert decoded["sha256"] == expected_hash
+    assert decoded["bytes"] == len(secret)
+    assert decoded["label"] == "vault-fragment"
+    assert decoded["encoding"] == "base64"
     assert discord_plan["payload"].get("embeds")
     embed_fields = {field["name"]: field["value"] for field in discord_plan["payload"]["embeds"][0]["fields"]}
     assert embed_fields["Priority"] == "high"

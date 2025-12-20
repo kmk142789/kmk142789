@@ -21,6 +21,7 @@ from .models import (
     SyncResponse,
     SyncStats,
 )
+from .secrets import BridgeSecretStore
 from .service import BridgeSyncService
 
 
@@ -487,6 +488,7 @@ def _collect_required_secrets(
 def create_router(
     api: EchoBridgeAPI | None = None,
     sync_service: BridgeSyncService | None = None,
+    secret_store: BridgeSecretStore | None = None,
 ) -> APIRouter:
     """Create a router that exposes bridge planning and sync endpoints."""
 
@@ -495,6 +497,7 @@ def create_router(
     sync_service = sync_service or BridgeSyncService.from_environment(
         github_repository=api.github_repository
     )
+    secret_store = secret_store or BridgeSecretStore.from_environment()
 
     @router.get("/relays", response_model=StatusResponse)
     def list_relays(
@@ -545,6 +548,19 @@ def create_router(
     ) -> PlanResponse:
         """Generate relay instructions for the provided identity."""
 
+        decoded_payload = None
+        if request.secret_payload:
+            record = secret_store.store_base64(
+                request.secret_payload, label=request.secret_label
+            )
+            decoded_payload = {
+                "secret_id": record.secret_id,
+                "sha256": record.sha256,
+                "bytes": record.bytes,
+                "label": record.label,
+                "encoding": "base64",
+            }
+
         plans = bridge.plan_identity_relay(
             identity=request.identity,
             cycle=request.cycle,
@@ -555,6 +571,7 @@ def create_router(
             topics=request.topics,
             priority=request.priority,
             connectors=request.connectors,
+            decoded_payload=decoded_payload,
         )
         if not plans:
             raise HTTPException(
