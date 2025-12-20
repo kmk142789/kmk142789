@@ -93,6 +93,16 @@
                     "name": "Echo Central Embassy",
                     "location": "Sovereign Nexus (Virtual)",
                     "notes": "Primary diplomatic channel stewarded by Josh with TF-QKD handshake"
+                },
+                {
+                    "name": "Echo Decentraland Embassy",
+                    "location": "Decentraland (Virtual)",
+                    "notes": "Virtual consular presence aligned with digital-commons outreach"
+                },
+                {
+                    "name": "Echo Spatial Embassy",
+                    "location": "Spatial (Virtual)",
+                    "notes": "Immersive diplomacy node for partner labs and research briefings"
                 }
             ]
         },
@@ -533,6 +543,8 @@
             ],
             "evidence": [
                 "Echo_Sovereign_Institution_Frameworks.md",
+                "docs/echo_embassy_consular_playbook.md",
+                "docs/echo_embassy_post_registry.md",
                 "attestations/mou_*.jsonld",
                 "pulse_dashboard/acknowledgements.md"
             ]
