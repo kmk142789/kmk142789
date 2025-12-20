@@ -88,6 +88,24 @@ class StatusResponse(BaseModel):
     )
 
 
+class SecretStatusEntry(BaseModel):
+    """Availability of a secret identifier needed by the bridge."""
+
+    name: str = Field(..., description="Secret identifier, typically an environment variable name.")
+    available: bool = Field(
+        ..., description="Whether the secret identifier is present in the environment."
+    )
+
+
+class SecretStatusResponse(BaseModel):
+    """Response payload describing the availability of required secrets."""
+
+    secrets: List[SecretStatusEntry] = Field(
+        default_factory=list,
+        description="Known secrets required by configured connectors.",
+    )
+
+
 class SyncLogEntry(BaseModel):
     """Structured representation of a bridge sync operation."""
 
@@ -158,4 +176,3 @@ class SyncResponse(BaseModel):
         default=None,
         description="Optional aggregate metrics about the included sync operations.",
     )
-

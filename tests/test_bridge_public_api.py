@@ -837,3 +837,19 @@ def test_api_module_respects_bridge_state_dir(monkeypatch, tmp_path) -> None:
         assert api._bridge_sync_service.log_path.parent == bridge_state
     finally:
         sys.modules.pop("echo.api", None)
+
+
+def test_secrets_endpoint_reports_availability(monkeypatch) -> None:
+    app = _make_app()
+    client = TestClient(app)
+
+    monkeypatch.setenv("SLACK_ECHO_WEBHOOK", "present")
+    monkeypatch.setenv("ECHO_ACTIVITYPUB_SECRET", "present")
+
+    response = client.get("/bridge/secrets")
+    assert response.status_code == 200
+    payload = response.json()
+
+    secrets = {item["name"]: item["available"] for item in payload["secrets"]}
+    assert secrets["SLACK_ECHO_WEBHOOK"] is True
+    assert secrets["ECHO_ACTIVITYPUB_SECRET"] is True
