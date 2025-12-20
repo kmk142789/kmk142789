@@ -9,10 +9,11 @@ from .archive import ArchiveProbe
 from .fs import FileSystemProbe
 from .git import GitProbe
 from .http import HttpProbe
+from .watcher import AutonomousWatcherProbe
 
 
 def _build_runner() -> ProbeRunner:
-    probes = [FileSystemProbe(), GitProbe(), HttpProbe(), ArchiveProbe()]
+    probes = [FileSystemProbe(), GitProbe(), HttpProbe(), ArchiveProbe(), AutonomousWatcherProbe()]
     return ProbeRunner(probes)
 
 
@@ -65,4 +66,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
-
