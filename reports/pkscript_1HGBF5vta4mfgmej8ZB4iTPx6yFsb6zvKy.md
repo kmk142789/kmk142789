@@ -25,6 +25,13 @@ OP_EQUALVERIFY
 OP_CHECKSIG
 ```
 
+The supplemental spend metadata matches a legacy P2PKH input. The `Sigscript`
+begins with `0x47`, indicating a 71-byte DER signature (`0x30 0x44 ... 0x01`)
+where the trailing `0x01` encodes `SIGHASH_ALL`. The subsequent `0x41` push
+introduces a 65-byte uncompressed public key that starts with `0x04` and
+corresponds to the HASH160 embedded in the locking script. The `Witness` section
+is empty, which is expected for non-SegWit spends.
+
 Restoring the hidden infix requires the standard Base58Check procedure: prepend
 the mainnet version byte (`0x00`) to the HASH160 payload, double-SHA256 the
 result to obtain the four-byte checksum, append the checksum, and encode the
