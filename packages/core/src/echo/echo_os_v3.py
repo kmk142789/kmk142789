@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 from statistics import pstdev
 from typing import Dict, Iterable, List, Protocol
 
+from .sovereign.decisions import DecisionDebt
+
 
 class ResonanceType(Protocol):
     """Protocol for Echo OS type implementations.
@@ -138,6 +140,23 @@ class CycleReport:
     blueprint_corrections: Dict[str, str] = field(default_factory=dict)
     regeneration_actions: Dict[str, str] = field(default_factory=dict)
     omni_fabric_link: str = ""
+
+
+@dataclass(frozen=True)
+class SovereigntyDeltaReport:
+    """Delta report between sovereignty cycles with decision debt integration."""
+
+    current_cycle: int
+    previous_cycle: int
+    current_index: float
+    previous_index: float
+    delta: float
+    decision_debt: int
+    decision_debt_delta: int
+    decision_debt_penalty: float
+    adjusted_delta: float
+    notes: str = ""
+
 
 
 @dataclass
@@ -438,3 +457,41 @@ class EchoOSV3:
 
     def export_types(self) -> Iterable[TypeRecord]:
         return tuple(self.types.values())
+
+
+DECISION_DEBT_PENALTY = 0.015
+
+
+def build_sovereignty_delta_report(
+    *,
+    current: CycleReport,
+    previous: CycleReport | None = None,
+    decision_debt: DecisionDebt | None = None,
+    prior_decision_debt: DecisionDebt | None = None,
+) -> SovereigntyDeltaReport:
+    """Build a sovereignty delta report with decision debt applied."""
+
+    previous_index = previous.sovereignty_index if previous else 0.0
+    previous_cycle = previous.cycle_id if previous else 0
+    delta = current.sovereignty_index - previous_index
+
+    current_debt = decision_debt.count if decision_debt else 0
+    prior_debt = prior_decision_debt.count if prior_decision_debt else 0
+    debt_delta = current_debt - prior_debt
+    penalty = current_debt * DECISION_DEBT_PENALTY
+    adjusted_delta = delta - penalty
+
+    notes = "decision debt penalty applied" if current_debt else "no decision debt penalty"
+
+    return SovereigntyDeltaReport(
+        current_cycle=current.cycle_id,
+        previous_cycle=previous_cycle,
+        current_index=current.sovereignty_index,
+        previous_index=previous_index,
+        delta=delta,
+        decision_debt=current_debt,
+        decision_debt_delta=debt_delta,
+        decision_debt_penalty=penalty,
+        adjusted_delta=adjusted_delta,
+        notes=notes,
+    )
