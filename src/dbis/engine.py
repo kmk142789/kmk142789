@@ -187,6 +187,90 @@ class AttestationRecord:
         }
 
 
+@dataclass(frozen=True)
+class InstitutionProfile:
+    institution_id: str
+    legal_name: str
+    did: str
+    dns_record: str
+    rails_supported: tuple[Rail, ...]
+    settlement_endpoint: str
+    contact_email: str
+    status: str = "ACTIVE"
+    attestation_refs: tuple[str, ...] = ()
+    created_at: str = field(default_factory=lambda: _now_iso())
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "institution_id": self.institution_id,
+            "legal_name": self.legal_name,
+            "did": self.did,
+            "dns_record": self.dns_record,
+            "rails_supported": [rail.value for rail in self.rails_supported],
+            "settlement_endpoint": self.settlement_endpoint,
+            "contact_email": self.contact_email,
+            "status": self.status,
+            "attestation_refs": list(self.attestation_refs),
+            "created_at": self.created_at,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass(frozen=True)
+class SettlementInstruction:
+    instruction_id: str
+    intent_id: str
+    institution_id: str
+    amount: float
+    currency: str
+    rail: Rail
+    reference: str
+    settlement_endpoint: str
+    continuity_token: str
+    status: str
+    created_at: str
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "instruction_id": self.instruction_id,
+            "intent_id": self.intent_id,
+            "institution_id": self.institution_id,
+            "amount": self.amount,
+            "currency": self.currency,
+            "rail": self.rail.value,
+            "reference": self.reference,
+            "settlement_endpoint": self.settlement_endpoint,
+            "continuity_token": self.continuity_token,
+            "status": self.status,
+            "created_at": self.created_at,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass(frozen=True)
+class ContinuityRecord:
+    continuity_id: str
+    intent_id: str
+    institution_id: str
+    previous_token: str | None
+    continuity_token: str
+    created_at: str
+    status: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "continuity_id": self.continuity_id,
+            "intent_id": self.intent_id,
+            "institution_id": self.institution_id,
+            "previous_token": self.previous_token,
+            "continuity_token": self.continuity_token,
+            "created_at": self.created_at,
+            "status": self.status,
+        }
+
+
 class DbisLedger:
     """Append-only JSONL ledger with hash chaining."""
 
@@ -231,6 +315,30 @@ class DbisLedger:
         return entries[-1].get("hash")
 
 
+class DbisRegistry:
+    """Simple JSON registry for DBIS operational state."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.path.exists():
+            self.path.write_text("{}", encoding="utf-8")
+
+    def all(self) -> dict[str, dict[str, Any]]:
+        return json_loads(self.path.read_text(encoding="utf-8"))
+
+    def get(self, key: str) -> dict[str, Any] | None:
+        return self.all().get(key)
+
+    def upsert(self, key: str, payload: dict[str, Any]) -> None:
+        data = self.all()
+        data[key] = payload
+        self.path.write_text(json_dumps(data), encoding="utf-8")
+
+    def values(self) -> list[dict[str, Any]]:
+        return list(self.all().values())
+
+
 class DbisEngine:
     """DBIS transaction coordination engine."""
 
@@ -239,6 +347,10 @@ class DbisEngine:
         self.transaction_ledger = DbisLedger(self.state_dir / "transaction_ledger.jsonl")
         self.audit_ledger = DbisLedger(self.state_dir / "audit_log.jsonl")
         self.reconciliation_ledger = DbisLedger(self.state_dir / "reconciliation_log.jsonl")
+        self.interoperability_ledger = DbisLedger(self.state_dir / "interoperability_log.jsonl")
+        self.continuity_ledger = DbisLedger(self.state_dir / "continuity_log.jsonl")
+        self.institution_registry = DbisRegistry(self.state_dir / "institutions.json")
+        self.settlement_registry = DbisRegistry(self.state_dir / "settlement_queue.json")
 
     def create_intent(
         self,
@@ -414,6 +526,131 @@ class DbisEngine:
         self.audit_ledger.append("attestation", record.as_dict())
         return record
 
+    def register_institution(
+        self,
+        profile: InstitutionProfile,
+        *,
+        actor: str,
+    ) -> InstitutionProfile:
+        self.institution_registry.upsert(profile.institution_id, profile.as_dict())
+        self.audit_ledger.append(
+            "audit_event",
+            self._audit_event(
+                event_type="INSTITUTION_REGISTERED",
+                actor=actor,
+                intent_id=None,
+                details=profile.as_dict(),
+            ).as_dict(),
+        )
+        return profile
+
+    def list_institutions(self) -> list[dict[str, Any]]:
+        return self.institution_registry.values()
+
+    def create_settlement_instruction(
+        self,
+        intent: TransactionIntent,
+        compliance: ComplianceProfile,
+        *,
+        actor: str,
+        institution_id: str,
+        reference: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> SettlementInstruction:
+        issues = self.validate_intent(intent, compliance)
+        if issues:
+            raise ValueError(f"intent invalid: {issues}")
+        institution = self.institution_registry.get(institution_id)
+        if not institution:
+            raise ValueError("institution_not_registered")
+        if institution.get("status") != "ACTIVE":
+            raise ValueError("institution_not_active")
+        if intent.rail.value not in institution.get("rails_supported", []):
+            raise ValueError("unsupported_rail")
+
+        previous_token = self._latest_continuity_token()
+        continuity_token = _hash_payload(
+            {
+                "prev": previous_token,
+                "intent": intent.as_dict(),
+                "institution": institution_id,
+                "reference": reference,
+                "timestamp": _now_iso(),
+            }
+        )
+        continuity_record = ContinuityRecord(
+            continuity_id=str(uuid4()),
+            intent_id=intent.intent_id,
+            institution_id=institution_id,
+            previous_token=previous_token,
+            continuity_token=continuity_token,
+            created_at=_now_iso(),
+            status="DISPATCHED",
+        )
+        self.continuity_ledger.append("continuity_record", continuity_record.as_dict())
+
+        instruction = SettlementInstruction(
+            instruction_id=str(uuid4()),
+            intent_id=intent.intent_id,
+            institution_id=institution_id,
+            amount=intent.amount,
+            currency=intent.currency,
+            rail=intent.rail,
+            reference=reference,
+            settlement_endpoint=institution["settlement_endpoint"],
+            continuity_token=continuity_token,
+            status="DISPATCHED",
+            created_at=_now_iso(),
+            metadata=metadata or {},
+        )
+        self.settlement_registry.upsert(instruction.instruction_id, instruction.as_dict())
+        self.interoperability_ledger.append("settlement_instruction", instruction.as_dict())
+        self.audit_ledger.append(
+            "audit_event",
+            self._audit_event(
+                event_type="SETTLEMENT_DISPATCHED",
+                actor=actor,
+                intent_id=intent.intent_id,
+                details=instruction.as_dict(),
+            ).as_dict(),
+        )
+        return instruction
+
+    def confirm_settlement_instruction(
+        self,
+        instruction_id: str,
+        *,
+        actor: str,
+        external_reference: str,
+        notes: str | None = None,
+    ) -> dict[str, Any]:
+        instruction = self.settlement_registry.get(instruction_id)
+        if not instruction:
+            raise ValueError("instruction_not_found")
+        confirmation = {
+            **instruction,
+            "status": "CONFIRMED",
+            "confirmed_at": _now_iso(),
+            "external_reference": external_reference,
+            "notes": notes or "",
+        }
+        self.settlement_registry.upsert(instruction_id, confirmation)
+        self.interoperability_ledger.append("settlement_confirmation", confirmation)
+        self.audit_ledger.append(
+            "audit_event",
+            self._audit_event(
+                event_type="SETTLEMENT_CONFIRMED",
+                actor=actor,
+                intent_id=confirmation["intent_id"],
+                details={
+                    "instruction_id": instruction_id,
+                    "external_reference": external_reference,
+                    "notes": notes or "",
+                },
+            ).as_dict(),
+        )
+        return confirmation
+
     def generate_scorecard(self) -> dict[str, Any]:
         entries = self.transaction_ledger.entries()
         receipts = [e for e in entries if e.get("entry_type") == "settlement_receipt"]
@@ -443,6 +680,8 @@ class DbisEngine:
             "notes": notes,
             "ledger_tip": self.transaction_ledger._last_hash(),
             "audit_tip": self.audit_ledger._last_hash(),
+            "interop_tip": self.interoperability_ledger._last_hash(),
+            "continuity_tip": self.continuity_ledger._last_hash(),
         }
         entry = self.reconciliation_ledger.append("reconciliation", payload)
         return entry
@@ -463,6 +702,12 @@ class DbisEngine:
             intent_id=intent_id,
             details=details,
         )
+
+    def _latest_continuity_token(self) -> str | None:
+        entries = self.continuity_ledger.entries()
+        if not entries:
+            return None
+        return entries[-1]["payload"].get("continuity_token")
 
 
 def _now_iso() -> str:
@@ -502,9 +747,13 @@ __all__ = [
     "ComplianceProfile",
     "DbisEngine",
     "DbisLedger",
+    "DbisRegistry",
+    "ContinuityRecord",
+    "InstitutionProfile",
     "PartyIdentity",
     "Rail",
     "SettlementReceipt",
+    "SettlementInstruction",
     "TransactionBatch",
     "TransactionIntent",
 ]
