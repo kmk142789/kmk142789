@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
+from collections import deque
 import hashlib
+import json
 from typing import Callable, Dict, Iterable, Optional
 
 
@@ -52,6 +54,9 @@ class DriftPolicy:
     observation_cost: float = 0.05
     work_cost: float = 0.2
     upload_surplus: float = 0.5
+    harvest_window: int = 6
+    min_income_rate: float = 0.08
+    reserve_voltage: float = 0.1
 
 
 @dataclass
@@ -79,7 +84,10 @@ class DriftState:
     last_heartbeat: Optional[datetime] = None
     brownout_count: int = 0
     energy_income_rate: float = 0.0
+    average_income_rate: float = 0.0
+    energy_trend: float = 0.0
     duty_budget: float = 0.0
+    harvest_samples: deque[float] = field(default_factory=lambda: deque(maxlen=6))
     ledgers: Dict[str, list[dict]] = field(
         default_factory=lambda: {
             "heartbeat_ledger": [],
@@ -106,6 +114,7 @@ class EchoDriftEngine:
         self.store = store or EnergyStore()
         self.policy = policy or DriftPolicy()
         self.state = DriftState()
+        self.state.harvest_samples = deque(maxlen=self.policy.harvest_window)
         self.ledger_capacity = ledger_capacity
         self.signer = signer or self._default_signer
         self.time_source = time_source or (lambda: datetime.utcnow())
@@ -153,9 +162,23 @@ class EchoDriftEngine:
 
     def _harvest(self, inputs: EnergyInputs) -> None:
         total = inputs.total()
+        self.state.harvest_samples.append(total)
         self.store.supercap_voltage = max(0.0, self.store.supercap_voltage + total * 0.01)
         self.store.microcell_charge = min(1.0, self.store.microcell_charge + total * 0.001)
         self.state.energy_income_rate = total
+        self._refresh_energy_profile()
+
+    def _refresh_energy_profile(self) -> None:
+        samples = list(self.state.harvest_samples)
+        if not samples:
+            self.state.average_income_rate = 0.0
+            self.state.energy_trend = 0.0
+            return
+        self.state.average_income_rate = sum(samples) / len(samples)
+        if len(samples) < 2:
+            self.state.energy_trend = 0.0
+        else:
+            self.state.energy_trend = samples[-1] - samples[0]
 
     def _verify_integrity(self) -> bool:
         return bool(self.state.last_proof_hash)
@@ -163,13 +186,17 @@ class EchoDriftEngine:
     def _observe_energy(self, inputs: EnergyInputs) -> None:
         self.state.duty_budget = max(
             0.0,
-            self.store.supercap_voltage - self.policy.observation_cost,
+            self.store.supercap_voltage
+            - self.policy.observation_cost
+            - self.policy.reserve_voltage,
         )
         self._record_event(
             "Harvest observe",
             {
                 "inputs_mw": asdict(inputs),
                 "income_rate": self.state.energy_income_rate,
+                "average_income_rate": self.state.average_income_rate,
+                "energy_trend": self.state.energy_trend,
                 "duty_budget": self.state.duty_budget,
             },
         )
@@ -182,7 +209,11 @@ class EchoDriftEngine:
             else None
         )
         due = next_due is None or now >= next_due
-        return due and self.state.duty_budget >= self.policy.work_cost
+        income_ready = (
+            self.state.average_income_rate >= self.policy.min_income_rate
+            or self.store.supercap_voltage >= self.policy.upload_surplus
+        )
+        return due and income_ready and self.state.duty_budget >= self.policy.work_cost
 
     def _emit_proof(self, inputs: EnergyInputs) -> HeartbeatProof:
         timestamp = self.time_source().isoformat() + "Z"
@@ -267,4 +298,4 @@ class EchoDriftEngine:
 
 
 def json_bytes(payload: Dict[str, object]) -> bytes:
-    return str(payload).encode("utf-8")
+    return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
