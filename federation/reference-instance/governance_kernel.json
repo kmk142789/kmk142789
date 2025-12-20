@@ -1,0 +1,65 @@
+{
+  "version": "0.1.0",
+  "kernel": {
+    "manifest_loader": {
+      "enabled": true,
+      "sources": [
+        "manifest/*.json",
+        "governance/*.json",
+        "contracts/*.json"
+      ],
+      "validators": [
+        "json_schema",
+        "signature_chain",
+        "uql_preflight"
+      ]
+    },
+    "uql_enforcer": {
+      "enabled": true,
+      "constraint_sets": [
+        "access_control",
+        "supply_bounds",
+        "ritual_safety"
+      ],
+      "solver": "uql-integrated",
+      "fallback_strategy": "reject_on_conflict"
+    },
+    "state_machine": {
+      "initial_state": "INITIAL",
+      "states": ["INITIAL", "FUNCTIONAL", "DEGRADED", "RESET"],
+      "transitions": {
+        "INITIAL": ["FUNCTIONAL"],
+        "FUNCTIONAL": ["DEGRADED", "RESET"],
+        "DEGRADED": ["FUNCTIONAL", "RESET"],
+        "RESET": ["INITIAL"]
+      },
+      "guards": {
+        "FUNCTIONAL": ["uql_enforced", "manifest_validated"],
+        "DEGRADED": ["incident_logged"],
+        "RESET": ["ritual_reset"]
+      }
+    },
+    "event_dispatcher": {
+      "topics": ["governance.cr", "ledger.append", "ritual.invoke"],
+      "handlers": {
+        "governance.cr": ["validate_cr", "record_attestation"],
+        "ledger.append": ["hash_event", "store_integrity"],
+        "ritual.invoke": ["apply_ritual", "state_correction"]
+      },
+      "retries": 3,
+      "dead_letter": "logs/dispatcher.dlq"
+    },
+    "constraints": {
+      "uql": {
+        "syntax_version": "1.0",
+        "modules": ["access", "risk", "compliance"],
+        "default_action": "deny"
+      },
+      "solver": {
+        "type": "sat+uql",
+        "max_iterations": 256,
+        "timeout_ms": 250
+      }
+    }
+  }
+}

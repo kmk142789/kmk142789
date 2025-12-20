@@ -1,0 +1,19 @@
+{
+  "interfaces": {
+    "governance_kernel": {
+      "inputs": ["manifest", "uql_constraints", "events"],
+      "outputs": ["state_transition", "enforcement_result", "ledger_event"],
+      "guarantees": ["deterministic", "validated", "audited"]
+    },
+    "change_request_pipeline": {
+      "inputs": ["cr_payload", "signer_proof"],
+      "outputs": ["review_state", "merge_instruction"],
+      "guarantees": ["quorum_checked", "ledger_attested"]
+    },
+    "ritual_engine": {
+      "inputs": ["ritual_event", "state_snapshot"],
+      "outputs": ["state_correction", "ritual_receipt"],
+      "guarantees": ["idempotent", "safety_first"]
+    }
+  }
+}
