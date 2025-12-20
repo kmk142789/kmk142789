@@ -1,0 +1,45 @@
+name: edcsa
+version: 0.1.0
+authority: Echo Data Commons & Stewardship Authority
+classification:
+  levels:
+    - public
+    - restricted
+    - sovereign
+    - sensitive
+lifecycle:
+  required_stages:
+    - creation
+    - access
+    - use
+    - sharing
+    - retention
+    - deletion
+consent:
+  basis_required: true
+  delegation_required: true
+  purpose_binding_required: true
+audit:
+  required: true
+  schema: schemas/edcsa_data_access_event.schema.json
+  ledger_targets:
+    - genesis_ledger/ledger.jsonl
+enforcement:
+  pre_access_gate: true
+  runtime_guardrails: true
+  post_access_review: true
+  escalation_required: true
+interoperability:
+  standards:
+    - W3C DID
+    - ISO 8601
+    - RFC 3339
+    - JSON Schema 2020-12
+systems:
+  - DBIS
+  - EOAG
+  - ECIA
+  - EFCTIA
+  - Judiciary
+  - Drones
+  - AI
