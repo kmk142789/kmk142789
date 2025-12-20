@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EFCTIAConductAttestation",
+  "type": "object",
+  "properties": {
+    "attestation_id": {"type": "string"},
+    "authority": {"type": "string"},
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "pre_settlement_audit",
+        "post_settlement_audit",
+        "sanctions_signal",
+        "fraud_alert",
+        "enforcement_action",
+        "dispute_resolution"
+      ]
+    },
+    "transaction_reference": {"type": "string"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "governance_kernel_ref": {"type": "string"},
+    "identity_binding": {"type": "string"},
+    "dns_substrate_ref": {"type": "string"},
+    "summary": {"type": "string"},
+    "sealed_reference": {"type": "string"},
+    "evidence": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "required": [
+    "attestation_id",
+    "authority",
+    "event_type",
+    "transaction_reference",
+    "issued_at",
+    "governance_kernel_ref",
+    "identity_binding",
+    "dns_substrate_ref",
+    "summary",
+    "sealed_reference"
+  ]
+}
