@@ -10,6 +10,7 @@ import json
 import os
 import random
 import sys
+import time
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -1142,10 +1143,81 @@ def run_puzzle(argv: List[str]) -> int:
     return 1
 
 
+def run_temporal_mirror(argv: List[str]) -> int:
+    """Generate a temporal mirror cadence from pulse history."""
+
+    from .temporal_mirror import generate_temporal_mirror, load_pulse_history, render_mirror_report
+
+    parser = argparse.ArgumentParser(
+        prog="echoctl temporal-mirror",
+        description="World-first temporal mirror cadence synthesizer.",
+    )
+    parser.add_argument(
+        "--history",
+        type=Path,
+        default=PULSE_HISTORY,
+        help="Pulse history JSON file to mirror (default: pulse_history.json).",
+    )
+    parser.add_argument(
+        "--count",
+        type=int,
+        default=0,
+        help="Number of cadence intervals to mirror (default: all).",
+    )
+    parser.add_argument(
+        "--anchor",
+        type=float,
+        help="Anchor timestamp (epoch seconds) for mirror generation (default: now).",
+    )
+    parser.add_argument(
+        "--min-interval",
+        type=float,
+        default=1.0,
+        help="Minimum interval size in seconds (default: 1.0).",
+    )
+    parser.add_argument(
+        "--format",
+        choices=("json", "text"),
+        default="json",
+        help="Output format for the mirror report.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional file path to write the mirror report.",
+    )
+
+    options = parser.parse_args(argv)
+    history = load_pulse_history(options.history)
+    anchor = options.anchor if options.anchor is not None else time.time()
+    count = options.count if options.count and options.count > 0 else None
+    pulses = generate_temporal_mirror(
+        history,
+        anchor=anchor,
+        count=count,
+        minimum_interval=max(0.1, options.min_interval),
+    )
+    report = render_mirror_report(pulses, anchor=anchor, source=options.history)
+
+    if options.output:
+        options.output.parent.mkdir(parents=True, exist_ok=True)
+        options.output.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        print(f"📦 temporal mirror saved to {options.output}", file=sys.stderr)
+
+    if options.format == "json":
+        print(json.dumps(report, indent=2))
+    else:
+        print(report["world_first_feature"])
+        print(f"Anchor: {report['anchor_iso']}")
+        for pulse in report["mirrors"]:
+            print(f"🪞 {pulse['mirrored_iso']} :: {pulse['message']}")
+    return 0
+
+
 def main(argv: List[str]) -> int:
     if len(argv) < 2:
         print(
-            "usage: echoctl [cycle|plan|summary|wish-report|health|pulse|groundbreaking|moonshot|wish|idea|next-step|inspire|ledger|flux|telemetry|advance|puzzle] ..."
+            "usage: echoctl [cycle|plan|summary|wish-report|health|pulse|groundbreaking|moonshot|wish|idea|next-step|inspire|ledger|flux|telemetry|advance|puzzle|temporal-mirror] ..."
         )
         return 1
     cmd = argv[1]
@@ -1178,6 +1250,8 @@ def main(argv: List[str]) -> int:
         return run_advance(argv[2:])
     if cmd == "puzzle":
         return run_puzzle(argv[2:])
+    if cmd == "temporal-mirror":
+        return run_temporal_mirror(argv[2:])
     if cmd == "idea":
         return run_idea(argv[2:])
     if cmd == "next-step":
