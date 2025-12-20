@@ -171,6 +171,19 @@ class OuterLinkRuntime:
     def safe_write_config(self, path: Path, content: Dict[str, str]) -> None:
         self.broker.write_config(path, content)
 
+    def ingest_neural_link(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Accept NeuralLink payloads and emit them as OuterLink events."""
+
+        envelope = {
+            "event": "neural_link_pulse",
+            "received_at": datetime.now(timezone.utc).isoformat(),
+            "payload": payload,
+        }
+        self.event_bus.emit("neural_link_pulse", envelope)
+        if not self.offline_state.online:
+            self.offline_state.record_pending(envelope)
+        return envelope
+
     def _sync_source_capabilities(self, source_bundle: Dict[str, Any], source_artifact: Path) -> None:
         citations = source_bundle.get("citations", [])
         online = bool(source_bundle.get("online"))
