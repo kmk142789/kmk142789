@@ -34,14 +34,21 @@ class EventBus:
     def history(self) -> List[Event]:
         return list(self._history)
 
+    def history_since(self, index: int) -> List[Event]:
+        if index <= 0:
+            return list(self._history)
+        return list(self._history[index:])
+
     def stats(self) -> Dict[str, Optional[int]]:
         """Return retention stats without exposing the internal history list."""
 
+        last_event_ts = self._history[-1].ts.isoformat() if self._history else None
         return {
             "limit": self._max_history,
             "retained": len(self._history),
             "dropped": self._dropped_events,
             "total": len(self._history) + self._dropped_events,
+            "last_event_ts": last_event_ts,
         }
 
     def subscribe(self, callback: Callable[[Event], None]) -> None:
