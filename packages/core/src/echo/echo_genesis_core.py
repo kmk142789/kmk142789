@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Mapping, MutableMapping, Sequence
 import json
 
 ProbeFn = Callable[[], Mapping[str, Any] | MutableMapping[str, Any] | Any]
@@ -45,6 +45,7 @@ class SubsystemPulse:
 
 if TYPE_CHECKING:
     from .privacy.zk_layer import ProofClaim, ProofResult, ZeroKnowledgePrivacyLayer
+    from .sovereign.decisions import StewardDecisionRegistry
 
 
 class EchoGenesisCore:
@@ -57,6 +58,7 @@ class EchoGenesisCore:
         state_dir: Path | str | None = None,
         history_limit: int = 256,
         privacy_layer: "ZeroKnowledgePrivacyLayer" | None = None,
+        decision_registry: "StewardDecisionRegistry" | None = None,
     ) -> None:
         self._probes: list[SubsystemProbe] = list(probes or [])
         self._state_dir = Path(state_dir or "state/echo_genesis_core")
@@ -65,6 +67,7 @@ class EchoGenesisCore:
         self._history_path = self._state_dir / "genesis_history.jsonl"
         self._history_limit = max(16, int(history_limit))
         self._privacy_layer = privacy_layer
+        self._decision_registry = decision_registry
 
     # ------------------------------------------------------------------
     # Probe management
@@ -357,7 +360,7 @@ class EchoGenesisCore:
     def _governance_summary(self, pulses: Sequence[SubsystemPulse]) -> Mapping[str, Any]:
         stable = [pulse.name for pulse in pulses if pulse.status in {"ascending", "stable"}]
         escalations = [pulse.name for pulse in pulses if pulse.status in {"recovering", "dormant"}]
-        return {
+        summary: Dict[str, Any] = {
             "stable": stable,
             "escalate": escalations,
             "policy": {
@@ -365,6 +368,9 @@ class EchoGenesisCore:
                 for name, pulse in ((pulse.name, pulse) for pulse in pulses)
             },
         }
+        if self._decision_registry is not None:
+            summary.update(self._decision_registry.snapshot(escalations))
+        return summary
 
     def _refinement_index(
         self,

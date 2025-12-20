@@ -185,6 +185,8 @@ def test_case_state_machine_transition_appends_ledger() -> None:
         actor="case.manager",
         role="case_manager",
         reason="Work completed",
+        decision_id="decision-001",
+        decision_version="1.0.0",
     )
 
     assert updated.status == CaseStatus.resolved
@@ -205,6 +207,8 @@ def test_case_state_machine_permissions_enforced() -> None:
             actor="case.analyst",
             role="analyst",
             reason="Attempted transition",
+            decision_id="decision-002",
+            decision_version="1.0.0",
         )
 
     with pytest.raises(ValueError):
@@ -214,4 +218,19 @@ def test_case_state_machine_permissions_enforced() -> None:
             actor="case.manager",
             role="case_manager",
             reason="Invalid transition",
+        )
+
+
+def test_case_resolution_requires_decision_reference() -> None:
+    registry = _build_registry_payload()
+    case = registry.cases[0]
+    machine = CaseStateMachine()
+
+    with pytest.raises(ValueError):
+        machine.transition_case(
+            case,
+            to_status=CaseStatus.resolved,
+            actor="case.manager",
+            role="case_manager",
+            reason="Missing decision",
         )

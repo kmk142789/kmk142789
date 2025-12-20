@@ -76,6 +76,8 @@
         "action": {"type": "string", "minLength": 1},
         "status": {"type": "string"},
         "notes": {"type": "string"},
+        "decision_id": {"type": "string"},
+        "decision_version": {"type": "string"},
         "metadata": {"type": "object", "additionalProperties": {"type": "string"}}
       }
     },
@@ -120,6 +122,8 @@
         },
         "reason": {"type": "string"},
         "notes": {"type": "string"},
+        "decision_id": {"type": "string"},
+        "decision_version": {"type": "string"},
         "metadata": {"type": "object", "additionalProperties": {"type": "string"}}
       }
     },

@@ -18,6 +18,7 @@ from .entity import (
     Governance,
     SovereignEngine,
 )
+from .decisions import DecisionDebt, EscalationOutcome, StewardDecision, StewardDecisionRegistry
 
 __all__ = [
     "GovernanceRegistry",
@@ -31,6 +32,10 @@ __all__ = [
     "ComplianceShield",
     "ComplianceEntry",
     "TransparencyPortal",
+    "DecisionDebt",
+    "EscalationOutcome",
+    "StewardDecision",
+    "StewardDecisionRegistry",
     "DID",
     "Credential",
     "Governance",

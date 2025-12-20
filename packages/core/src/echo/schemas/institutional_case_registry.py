@@ -93,6 +93,8 @@ class CaseEvent(BaseModel):
     action: str = Field(..., min_length=1)
     status: Optional[CaseStatus] = None
     notes: Optional[str] = None
+    decision_id: Optional[str] = None
+    decision_version: Optional[str] = None
     metadata: Dict[str, str] = Field(default_factory=dict)
 
 
@@ -107,6 +109,8 @@ class CaseTransition(BaseModel):
     to_status: CaseStatus
     reason: Optional[str] = None
     notes: Optional[str] = None
+    decision_id: Optional[str] = None
+    decision_version: Optional[str] = None
     metadata: Dict[str, str] = Field(default_factory=dict)
 
 
@@ -148,6 +152,10 @@ class CaseRecord(BaseModel):
                 raise ValueError("latest transition must match case status")
             if ordered[-1].timestamp > self.updated_at:
                 raise ValueError("updated_at must be on or after latest transition timestamp")
+            if self.status in {CaseStatus.resolved, CaseStatus.closed}:
+                latest_transition = ordered[-1]
+                if not latest_transition.decision_id or not latest_transition.decision_version:
+                    raise ValueError("resolved/closed cases require a decision reference")
         return self
 
 
@@ -312,6 +320,8 @@ class CaseStateMachine:
         role: str,
         reason: Optional[str] = None,
         notes: Optional[str] = None,
+        decision_id: Optional[str] = None,
+        decision_version: Optional[str] = None,
         metadata: Optional[Dict[str, str]] = None,
         timestamp: Optional[datetime] = None,
         transition_id: Optional[str] = None,
@@ -326,6 +336,9 @@ class CaseStateMachine:
         permission = transition_permission_key(from_status, to_status)
         if not has_permission(role, permission, self._role_permissions):
             raise PermissionError(f"role {role} lacks permission {permission}")
+        if to_status in {CaseStatus.resolved, CaseStatus.closed}:
+            if not decision_id or not decision_version:
+                raise ValueError("decision reference required when resolving or closing a case")
 
         now = timestamp or datetime.now(timezone.utc)
         transition_id = transition_id or f"{case.case_id}-transition-{len(case.transition_ledger) + 1}"
@@ -339,6 +352,8 @@ class CaseStateMachine:
             to_status=to_status,
             reason=reason,
             notes=notes,
+            decision_id=decision_id,
+            decision_version=decision_version,
             metadata=metadata,
         )
         event_id = event_id or f"{transition_id}-event"
@@ -350,6 +365,8 @@ class CaseStateMachine:
             action=action,
             status=to_status,
             notes=event_notes,
+            decision_id=decision_id,
+            decision_version=decision_version,
             metadata=metadata,
         )
         events = list(case.events)
