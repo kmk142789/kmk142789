@@ -12,6 +12,7 @@ from echo.schemas.institutional_case_registry import (
     CaseEvent,
     CasePriority,
     CaseStatus,
+    CaseStateMachine,
     ContactInfo,
     EngagementEdge,
     EngagementMap,
@@ -170,4 +171,47 @@ def test_case_event_status_mismatch_raises() -> None:
                 }
             ],
             engagement_map=EngagementMap(institutions=[], engagements=[]),
+        )
+
+
+def test_case_state_machine_transition_appends_ledger() -> None:
+    registry = _build_registry_payload()
+    case = registry.cases[0]
+    machine = CaseStateMachine()
+
+    updated = machine.transition_case(
+        case,
+        to_status=CaseStatus.resolved,
+        actor="case.manager",
+        role="case_manager",
+        reason="Work completed",
+    )
+
+    assert updated.status == CaseStatus.resolved
+    assert updated.transition_ledger[-1].from_status == CaseStatus.in_progress
+    assert updated.transition_ledger[-1].to_status == CaseStatus.resolved
+    assert updated.events[-1].status == CaseStatus.resolved
+
+
+def test_case_state_machine_permissions_enforced() -> None:
+    registry = _build_registry_payload()
+    case = registry.cases[0]
+    machine = CaseStateMachine()
+
+    with pytest.raises(PermissionError):
+        machine.transition_case(
+            case,
+            to_status=CaseStatus.resolved,
+            actor="case.analyst",
+            role="analyst",
+            reason="Attempted transition",
+        )
+
+    with pytest.raises(ValueError):
+        machine.transition_case(
+            case,
+            to_status=CaseStatus.new,
+            actor="case.manager",
+            role="case_manager",
+            reason="Invalid transition",
         )
