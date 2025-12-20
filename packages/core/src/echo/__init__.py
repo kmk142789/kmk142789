@@ -168,6 +168,15 @@ from .evolver import (
     main,
 )
 from .echo_evolver_satellite import SatelliteEchoEvolver, SatelliteEvolverState
+from .bandwidth_frequency import (
+    BandwidthFrequencyManager,
+    BandProfile,
+    ChannelConfig,
+    EnvironmentProfile,
+    FrequencyBand,
+    NetworkNode,
+    PropagationMetrics,
+)
 from .ecosystem_pulse import (
     EcosystemAreaConfig,
     EcosystemPulse,
