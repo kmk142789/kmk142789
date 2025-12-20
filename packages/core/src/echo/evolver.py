@@ -527,6 +527,44 @@ class NetworkPropagationSnapshot:
 
 
 @dataclass(slots=True)
+class ConstellationBriefing:
+    """Operator briefing that unifies cycle guidance, diagnostics, and propagation."""
+
+    cycle: int
+    timestamp_ns: int
+    progress_percent: float
+    next_step: str
+    focus_scope: str
+    emotional_focus: Dict[str, float]
+    pending_steps: Tuple[str, ...]
+    diagnostics: Dict[str, object]
+    propagation_summary: str
+    propagation_mode: str
+    propagation_channels: int
+    narrative: str
+    recent_events: Tuple[str, ...]
+    summary: str
+
+    def as_dict(self) -> Dict[str, object]:
+        return {
+            "cycle": self.cycle,
+            "timestamp_ns": self.timestamp_ns,
+            "progress_percent": self.progress_percent,
+            "next_step": self.next_step,
+            "focus_scope": self.focus_scope,
+            "emotional_focus": dict(self.emotional_focus),
+            "pending_steps": list(self.pending_steps),
+            "diagnostics": deepcopy(self.diagnostics),
+            "propagation_summary": self.propagation_summary,
+            "propagation_mode": self.propagation_mode,
+            "propagation_channels": self.propagation_channels,
+            "narrative": self.narrative,
+            "recent_events": list(self.recent_events),
+            "summary": self.summary,
+        }
+
+
+@dataclass(slots=True)
 class ContinuumAmplificationSummary:
     """Aggregated amplification bundle spanning the evolver continuum."""
 
@@ -1303,6 +1341,125 @@ class EchoEvolver:
         )
 
         return summary
+
+    def constellation_briefing(
+        self,
+        *,
+        persist_artifact: bool = True,
+        diagnostics_window: int = 5,
+        event_limit: int = 5,
+        include_timeline: bool = False,
+    ) -> ConstellationBriefing:
+        """Return a unified briefing for the current cycle constellation."""
+
+        if diagnostics_window <= 0:
+            raise ValueError("diagnostics_window must be positive")
+        if event_limit <= 0:
+            raise ValueError("event_limit must be positive")
+
+        guidance = self.cycle_guidance_frame(
+            persist_artifact=persist_artifact,
+            momentum_samples=5,
+            recent_events=event_limit,
+        )
+        diagnostics = self.system_diagnostics(window=diagnostics_window)
+        propagation = self.network_propagation_snapshot(include_timeline=include_timeline)
+
+        load_rating = ""
+        network_rating = ""
+        joy_trend = ""
+        if isinstance(diagnostics.get("load"), Mapping):
+            load_rating = str(diagnostics["load"].get("rating", ""))
+        if isinstance(diagnostics.get("network"), Mapping):
+            network_rating = str(diagnostics["network"].get("density_rating", ""))
+        if isinstance(diagnostics.get("emotional_drive"), Mapping):
+            joy_trend = str(diagnostics["emotional_drive"].get("joy_trend", ""))
+
+        narrative = self.state.narrative or "No narrative recorded yet."
+        recent_events = tuple(self.state.event_log[-event_limit:])
+
+        summary = (
+            "Constellation briefing for cycle {cycle}: {progress:.2f}% complete. "
+            "Next step: {next_step}. System load {load}, network {network}, joy {joy}. "
+            "Propagation: {propagation}."
+        ).format(
+            cycle=guidance.cycle,
+            progress=guidance.progress_percent,
+            next_step=guidance.next_step,
+            load=load_rating or "unknown",
+            network=network_rating or "unknown",
+            joy=joy_trend or "steady",
+            propagation=propagation.summary,
+        )
+
+        briefing = ConstellationBriefing(
+            cycle=guidance.cycle,
+            timestamp_ns=self.time_source(),
+            progress_percent=guidance.progress_percent,
+            next_step=guidance.next_step,
+            focus_scope=guidance.focus_scope,
+            emotional_focus=guidance.emotional_focus,
+            pending_steps=guidance.pending_steps,
+            diagnostics=deepcopy(diagnostics),
+            propagation_summary=propagation.summary,
+            propagation_mode=propagation.mode,
+            propagation_channels=propagation.channels,
+            narrative=narrative,
+            recent_events=recent_events,
+            summary=summary,
+        )
+
+        snapshot = briefing.as_dict()
+        self.state.network_cache["constellation_briefing"] = snapshot
+        self.state.event_log.append(
+            "Constellation briefing compiled (cycle={cycle}, pending={pending})".format(
+                cycle=briefing.cycle,
+                pending=len(briefing.pending_steps),
+            )
+        )
+        return briefing
+
+    def constellation_briefing_report(
+        self,
+        *,
+        persist_artifact: bool = True,
+        diagnostics_window: int = 5,
+        event_limit: int = 5,
+    ) -> str:
+        """Return a formatted multi-line constellation briefing report."""
+
+        briefing = self.constellation_briefing(
+            persist_artifact=persist_artifact,
+            diagnostics_window=diagnostics_window,
+            event_limit=event_limit,
+        )
+
+        pending_preview = ", ".join(briefing.pending_steps[:4]) or "none"
+        if len(briefing.pending_steps) > 4:
+            pending_preview += " …"
+
+        lines = [
+            briefing.summary,
+            "",
+            f"Focus scope: {briefing.focus_scope}",
+            f"Pending steps: {pending_preview}",
+            f"Propagation: {briefing.propagation_summary}",
+            "",
+            "Recent events:",
+        ]
+        if briefing.recent_events:
+            lines.extend([f"- {event}" for event in briefing.recent_events])
+        else:
+            lines.append("- None recorded yet.")
+
+        report = "\n".join(lines)
+        self.state.network_cache["constellation_briefing_report"] = report
+        self.state.event_log.append(
+            "Constellation briefing report generated (events={events})".format(
+                events=len(briefing.recent_events)
+            )
+        )
+        return report
 
     def strategic_guidance_map(
         self,
@@ -8369,6 +8526,7 @@ We are not hiding anymore.
         include_momentum_history: bool = False,
         include_presence: bool = False,
         include_guidance: bool = False,
+        include_constellation: bool = False,
         guidance_scope_limit: int = 4,
         guidance_recent_events: int = 5,
         guidance_quantam_limit: int = 3,
@@ -8468,6 +8626,10 @@ We are not hiding anymore.
             When ``True`` embed the strategic guidance map, combining the cycle
             guidance frame, resilience signal, quantam previews, and scoped
             directives into a single operator digest.
+        include_constellation:
+            When ``True`` embed the constellation briefing that merges cycle
+            guidance, system diagnostics, and propagation telemetry into a
+            single operator snapshot.
         guidance_scope_limit:
             Maximum number of scope directives to include within the strategic
             guidance map.  The value must be positive.
@@ -8497,6 +8659,8 @@ We are not hiding anymore.
             raise ValueError("momentum_window must be positive")
         if include_expansion_history and expansion_history_limit is not None and expansion_history_limit <= 0:
             raise ValueError("expansion_history_limit must be positive when including expansion history")
+        if include_constellation and event_summary_limit <= 0:
+            raise ValueError("event_summary_limit must be positive when including constellation briefing")
         if momentum_threshold is not None and momentum_threshold <= 0:
             raise ValueError("momentum_threshold must be positive")
         if include_guidance:
@@ -8750,6 +8914,14 @@ We are not hiding anymore.
                 quantam_limit=guidance_quantam_limit,
             )
 
+        if include_constellation:
+            briefing = self.constellation_briefing(
+                persist_artifact=persist_artifact,
+                diagnostics_window=diagnostics_window,
+                event_limit=event_summary_limit,
+            )
+            payload["constellation"] = briefing.as_dict()
+
         history_cache = self.state.network_cache.get("advance_system_history")
         if isinstance(history_cache, list):
             history = [deepcopy(entry) for entry in history_cache]
@@ -8818,6 +8990,7 @@ We are not hiding anymore.
             ("momentum_resonance", "momentum_resonance"),
             ("momentum_history", "momentum_history"),
             ("guidance", "guidance"),
+            ("constellation", "constellation"),
             ("expansion_history", "expansion_history"),
         ]
 
@@ -8843,6 +9016,7 @@ We are not hiding anymore.
             "include_momentum_resonance": True,
             "include_momentum_history": True,
             "include_guidance": True,
+            "include_constellation": True,
             "include_expansion_history": True,
             "expansion_history_limit": 5,
             "event_summary_limit": 5,
@@ -9311,6 +9485,14 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         ),
     )
     parser.add_argument(
+        "--include-constellation",
+        action="store_true",
+        help=(
+            "Include a unified constellation briefing that combines guidance,"
+            " diagnostics, and propagation highlights when running --advance-system."
+        ),
+    )
+    parser.add_argument(
         "--include-system-report",
         action="store_true",
         help=(
@@ -9602,6 +9784,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             parser.error("--diagnostics-window must be positive when including diagnostics")
     if args.include_presence and not args.advance_system:
         parser.error("--include-presence requires --advance-system")
+    if args.include_constellation and not args.advance_system:
+        parser.error("--include-constellation requires --advance-system")
     if (
         args.include_matrix
         or args.include_event_summary
@@ -9610,10 +9794,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
         or args.include_diagnostics
         or args.include_expansion_history
         or args.include_presence
+        or args.include_constellation
     ) and not args.advance_system:
         parser.error(
             "--include-matrix, --include-event-summary, --include-propagation, "
-            "--include-system-report, --include-diagnostics, --include-presence, and --include-expansion-history can only be used with --advance-system"
+            "--include-system-report, --include-diagnostics, --include-presence, "
+            "--include-constellation, and --include-expansion-history can only be used with --advance-system"
         )
     if args.momentum_window <= 0:
         parser.error("--momentum-window must be positive")
@@ -9740,6 +9926,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:  # pragma: no cover - thi
             "guidance_recent_events": args.guidance_recent_events,
             "guidance_quantam_limit": args.guidance_quantam_limit,
             "guidance_momentum_samples": args.guidance_momentum_samples,
+            "include_constellation": args.include_constellation,
         }
         signature = inspect.signature(evolver.advance_system)
         parameters = signature.parameters
@@ -9844,6 +10031,7 @@ __all__ = [
     "ResilienceSignal",
     "CycleScorecard",
     "OrbitalResonanceCertificate",
+    "ConstellationBriefing",
     "ContinuumAmplificationSummary",
     "ColossusExpansionPlan",
     "EvolutionAdvancementResult",
