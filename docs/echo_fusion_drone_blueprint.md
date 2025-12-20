@@ -90,6 +90,124 @@ Together, they enable a drone that is safer to operate near humans, exceptionall
 
 ---
 
+## Supplemental Ambient Power Augmentation (Lawful/Passive Sources)
+These systems extend mission endurance and improve avionics survivability; they do **not** enable perpetual flight. All sources feed a governed power-management layer with explicit prioritization and hard limits.
+
+### Baseline Power Envelope (Reference)
+- **Hover:** ~450–650 W (median 520 W)
+- **Cruise:** ~250–380 W (median 300 W)
+- **Avionics + comms + navigation:** ~12–25 W
+- **Sensor suite (EO/IR/LiDAR):** ~8–35 W (duty-cycled)
+
+These figures ground the augmentation budgets below; supplemental sources are sized to cover avionics, not propulsion.
+
+### A. Flexible Photovoltaic Skin (PV)
+**Concept:** Conformal thin-film PV laminated onto upper shell panels.
+
+**Realistic power budget:**
+- **Peak (full sun, clean skin):** 20–45 W
+- **Typical midday (partial angles):** 8–20 W
+- **Overcast/low sun:** 2–8 W
+
+**Duty-cycle contribution:**
+- **Cruise daylight:** 5–12% of avionics + sensor load.
+- **Hover daylight:** 3–8% of avionics + sensor load.
+
+**Limits:**
+- No meaningful propulsion contribution.
+- Heavily geometry- and attitude-dependent; degrades during high-bank maneuvers.
+
+### B. Thermal Gradient Harvesting (TEG)
+**Concept:** Thermoelectric strips bridging warm internal ducts and cooler external skin.
+
+**Realistic power budget:**
+- **Steady cruise (ΔT 15–30°C):** 1–5 W
+- **High load hover (ΔT 25–40°C):** 2–8 W
+
+**Duty-cycle contribution:**
+- **Continuous baseline:** 0.5–3% of avionics + sensor load.
+
+**Limits:**
+- Output collapses as skin temperature rises; requires airflow for gradient.
+- Adds thermal resistance; must not impede duct heat rejection.
+
+### C. Vibration / Kinetic Energy Recovery
+**Concept:** Micro-generators at jointed morphology pivots and landing shock mounts.
+
+**Realistic power budget:**
+- **In-flight vibration (steady):** 0.2–1.2 W
+- **Landing events (bursty):** 1–3 W equivalent during touchdown windows
+
+**Duty-cycle contribution:**
+- **Low, opportunistic:** <1% of avionics + sensor load; useful for trickle charging sensor buffers.
+
+**Limits:**
+- Must be mechanically isolated to avoid coupling noise into sensors.
+- Energy is spiky; requires buffer capacitor.
+
+### D. Regenerative Electrical Capture (CVT + Descent)
+**Concept:** CVT-enabled back-drive for controlled descent and deceleration phases.
+
+**Realistic power budget:**
+- **Short descent windows:** 15–60 W
+- **Average across mission:** 1–4% of total energy, depending on profile
+
+**Duty-cycle contribution:**
+- **Best-case urban inspection:** 3–6% battery life extension.
+- **Long cruise:** negligible.
+
+**Limits:**
+- Not available during aggressive maneuvers or low-altitude safety descents.
+- Requires strict torque limits to avoid destabilizing thrust ring control.
+
+---
+
+## Governed Power-Management Layer (Priority & Limits)
+All supplemental sources are routed through a **power governance layer** that enforces survivability-first policies:
+
+1. **Priority 1 – Avionics survivability:** flight controller, IMU, GNSS, comms.
+2. **Priority 2 – Sensor continuity:** payload sensors, data recorder, collision avoidance.
+3. **Priority 3 – Safe return:** reserve energy for navigated return or controlled landing.
+4. **Priority 4 – Optional loads:** auxiliary compute, non-critical lighting.
+
+**Rules:**
+- **No perpetual-flight logic:** supplemental sources are capped at **≤15% of instantaneous system load** and **≤8% of total mission energy**.
+- **Brownout guard:** if battery drops below mission reserve threshold, all supplemental inflows are routed to avionics-only storage.
+- **Thermal guard:** PV and TEG sources are throttled if skin temperature exceeds safe limits.
+
+---
+
+## Failure Modes, Thermal Impacts, and Weight Tradeoffs
+
+### Failure Modes
+- **PV skin delamination:** localized power loss, potential airflow noise; must fail benignly.
+- **TEG short/open circuits:** minor power loss; may create hot spots if not isolated.
+- **Vibration harvester seizure:** joint friction increase; could reduce morphing responsiveness.
+- **Regen over-torque:** risk of thrust control instability during descent if limits are exceeded.
+
+### Thermal Impacts
+- **PV skin:** raises outer skin temp by 2–6°C in high sun; must preserve internal cooling paths.
+- **TEG:** adds thermal resistance; requires ducted airflow management and heat spreaders.
+- **Regen capture:** can increase motor/impeller temperatures during long descents.
+
+### Weight Tradeoffs (Indicative)
+- **PV skin:** +120–260 g (surface dependent).
+- **TEG strips:** +40–90 g.
+- **Vibration harvesters + buffers:** +20–60 g.
+- **Regen electronics (bidirectional controller):** +60–140 g.
+
+Total augmentation target: **<8% of airframe mass**, preserving morphing agility.
+
+---
+
+## Certification & Compliance Implications
+- **EMI/EMC:** Additional harvesting electronics must not interfere with avionics or comms.
+- **Thermal safety:** PV/TEG additions must pass skin temperature and burn hazard limits.
+- **Structural integrity:** Added layers must maintain impact performance and morphing reliability.
+- **Energy governance audits:** Demonstrate that supplemental sources do not override safe-return reserves.
+
+---
+
 ## Safety & Control
 - **Thrust vector redundancy:** Failure in one nozzle redistributes flow.
 - **Joint lock safeguards:** Hardware failsafe to prevent unintended morphs.
