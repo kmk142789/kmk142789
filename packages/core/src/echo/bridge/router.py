@@ -13,6 +13,8 @@ from .models import (
     PlanModel,
     PlanRequest,
     PlanResponse,
+    SecretStatusEntry,
+    SecretStatusResponse,
     StatusResponse,
     SyncLogEntry,
     SyncRequest,
@@ -465,6 +467,23 @@ def _discover_connectors(api: EchoBridgeAPI) -> List[ConnectorDescriptor]:
     return connectors
 
 
+def _collect_required_secrets(
+    api: EchoBridgeAPI,
+    sync_service: BridgeSyncService | None,
+) -> list[SecretStatusEntry]:
+    secrets: set[str] = set()
+    for connector in _discover_connectors(api):
+        secrets.update(connector.requires_secrets)
+    if sync_service is not None:
+        for descriptor in sync_service.describe_connectors():
+            secrets.update(descriptor.get("requires_secrets") or [])
+
+    entries: list[SecretStatusEntry] = []
+    for name in sorted(filter(None, secrets)):
+        entries.append(SecretStatusEntry(name=name, available=bool(os.getenv(name))))
+    return entries
+
+
 def create_router(
     api: EchoBridgeAPI | None = None,
     sync_service: BridgeSyncService | None = None,
@@ -506,6 +525,18 @@ def create_router(
                 for descriptor in sync_service.describe_connectors()
             ]
         return StatusResponse(connectors=connectors, sync_connectors=sync_connectors)
+
+    @router.get("/secrets", response_model=SecretStatusResponse)
+    def list_secrets(
+        include_sync: bool = Query(
+            True,
+            description="When true, include secrets required by sync connectors.",
+        ),
+    ) -> SecretStatusResponse:
+        """Return required secret identifiers and availability in the environment."""
+
+        secrets = _collect_required_secrets(api, sync_service if include_sync else None)
+        return SecretStatusResponse(secrets=secrets)
 
     @router.post("/plan", response_model=PlanResponse)
     def plan_relay(
