@@ -158,6 +158,7 @@ from .sovereign_coordination_kernel import (
     SovereignKernelReport,
 )
 from .evolver import (
+    ConstellationBriefing,
     CycleGuidanceFrame,
     EchoEvolver,
     EmotionalDrive,
@@ -534,6 +535,7 @@ __all__ = [
     "EchoBridgeSession",
     "harmonix_connect",
     "CycleGuidanceFrame",
+    "ConstellationBriefing",
     "EchoEvolver",
     "EmotionalDrive",
     "EvolverState",
