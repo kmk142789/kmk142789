@@ -266,6 +266,21 @@ app.post('/echo/bridge/sync', async (req, res) => {
   res.json({ sessionId, synchronized: success });
 });
 
+app.post('/echo/bridge/upgrade', async (req, res) => {
+  const { keys, source } = req.body || {};
+  if (!keys) {
+    return res.status(400).json({ error: 'Base64 key or key list required' });
+  }
+
+  const { echoBridge } = await import('./lib/echo_bridge.js');
+  try {
+    const result = await echoBridge.applyUpgradeKeys(keys, source || 'api');
+    res.json({ upgraded: true, result });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Invalid base64 key' });
+  }
+});
+
 app.get('/echo/forge/state', async (_req, res) => {
   const { promptForge } = await import('./lib/prompt_forge.js');
   res.json(promptForge.getForgeState());
