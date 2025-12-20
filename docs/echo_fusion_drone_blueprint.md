@@ -334,3 +334,28 @@ Total augmentation target: **<8% of airframe mass**, preserving morphing agility
 
 ## Summary
 The Echo Fusion Drone blueprint delivers a holistic drone architecture that redefines how aerial platforms can operate. It is a reconfigurable aerial system that adapts itself to mission conditions in real time, without exposed rotors or fixed geometry, and with strict governance, limits, and auditability enforced end-to-end.
+
+---
+
+## Autonomous Economic Capability (DBIS Integration)
+The drone carries a secure financial module bound to Echo identity and DNS substrate records, enabling regulated economic activity.
+
+### Financial Module Capabilities
+- **Pay for services**: landing, charging, data relay, and mission services.
+- **Receive funds**: completion payouts, bounties, and cooperative tasks.
+- **Log economic activity**: every movement recorded to DBIS audit and settlement ledgers.
+- **Offline signing**: staged transactions signed on-device for delayed settlement.
+
+### Identity + DNS Binding
+- Drone identity anchors to `identity_id`, DID, and DNS records.
+- DNS substrate entries reference ledger attestations for each financial action.
+
+### Compliance + Governance
+- Transactions require governance references and role approvals.
+- AML/sanctions checks are enforced before settlement.
+- Dispute and rollback hooks are attached to every receipt.
+
+### Energy + Finance Coupling
+- Power ledger entries include service-payment metadata.
+- Economic events are cross-linked to energy optimization logs.
+- Revenue inflows can be routed to maintenance reserves or mission escrow.

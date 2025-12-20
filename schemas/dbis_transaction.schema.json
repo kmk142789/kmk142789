@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.local/schemas/dbis_transaction.schema.json",
+  "title": "DBIS Transaction Intent",
+  "type": "object",
+  "required": [
+    "intent_id",
+    "amount",
+    "currency",
+    "rail",
+    "sender",
+    "receiver",
+    "memo",
+    "governance_ref",
+    "created_at",
+    "status"
+  ],
+  "properties": {
+    "intent_id": {"type": "string"},
+    "amount": {"type": "number", "exclusiveMinimum": 0},
+    "currency": {"type": "string"},
+    "rail": {
+      "type": "string",
+      "enum": ["fiat", "cbdc", "stablecoin", "tokenized_asset", "offchain_instrument"]
+    },
+    "sender": {"$ref": "#/definitions/party_identity"},
+    "receiver": {"$ref": "#/definitions/party_identity"},
+    "memo": {"type": "string"},
+    "governance_ref": {"type": "string"},
+    "approvals": {"type": "array", "items": {"type": "string"}},
+    "metadata": {"type": "object", "additionalProperties": true},
+    "created_at": {"type": "string", "format": "date-time"},
+    "status": {"type": "string"}
+  },
+  "definitions": {
+    "party_identity": {
+      "type": "object",
+      "required": ["identity_id", "legal_name", "did", "dns_record"],
+      "properties": {
+        "identity_id": {"type": "string"},
+        "legal_name": {"type": "string"},
+        "did": {"type": "string"},
+        "dns_record": {"type": "string"},
+        "roles": {"type": "array", "items": {"type": "string"}},
+        "attestation_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

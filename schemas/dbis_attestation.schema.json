@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.local/schemas/dbis_attestation.schema.json",
+  "title": "DBIS Ledger Attestation",
+  "type": "object",
+  "required": [
+    "attestation_id",
+    "intent_id",
+    "ledger_hash",
+    "governance_ref",
+    "subject_identity",
+    "dns_binding",
+    "issued_at",
+    "signatures"
+  ],
+  "properties": {
+    "attestation_id": {"type": "string"},
+    "intent_id": {"type": "string"},
+    "ledger_hash": {"type": "string"},
+    "governance_ref": {"type": "string"},
+    "subject_identity": {"$ref": "dbis_transaction.schema.json#/definitions/party_identity"},
+    "dns_binding": {"type": "string"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "signatures": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+  }
+}

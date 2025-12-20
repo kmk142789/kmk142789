@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.local/schemas/dbis_audit_event.schema.json",
+  "title": "DBIS Audit Event",
+  "type": "object",
+  "required": ["event_id", "event_type", "actor", "timestamp", "details"],
+  "properties": {
+    "event_id": {"type": "string"},
+    "event_type": {"type": "string"},
+    "actor": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "intent_id": {"type": ["string", "null"]},
+    "details": {"type": "object", "additionalProperties": true}
+  }
+}
