@@ -109,12 +109,17 @@ class CompassReport:
 
         commitment_lines = "\n".join(
             [
-                f"- **{commitment.name}** ({commitment.weight:.2f}) — {commitment.intention}",
-                *[
-                    f"  - Action: {action}"
-                    for commitment in self.commitments
-                    for action in commitment.actions
-                ],
+                line
+                for commitment in self.commitments
+                for line in (
+                    [
+                        (
+                            f"- **{commitment.name}** ({commitment.weight:.2f})"
+                            f" — {commitment.intention}"
+                        )
+                    ]
+                    + [f"  - Action: {action}" for action in commitment.actions]
+                )
             ]
         )
         signal_lines = "\n".join(
@@ -149,6 +154,93 @@ class CompassReport:
                 f"- Care index: {self.care_index:.2f}",
                 f"- Risk index: {self.risk_index:.2f}",
                 f"- Stakeholder coverage: {self.metrics.get('stakeholder_coverage', 0.0):.2f}",
+            ]
+        )
+
+
+@dataclass(frozen=True)
+class StewardshipRitual:
+    """Rituals that keep stewardship commitments visible."""
+
+    name: str
+    cadence: str
+    intention: str
+    linked_commitments: Sequence[str]
+    weight: float
+
+
+@dataclass(frozen=True)
+class StewardshipPulse:
+    """Actionable pulse generated from a compass report."""
+
+    purpose: str
+    created_at: str
+    focus_areas: Sequence[str]
+    rituals: Sequence[StewardshipRitual]
+    actions: Sequence[str]
+    checkin_questions: Sequence[str]
+    pulse_score: float
+    risk_signal: str
+    gratitude_note: str
+
+    def to_dict(self) -> Dict[str, object]:
+        """Return a JSON-serialisable snapshot of the pulse."""
+
+        return {
+            "purpose": self.purpose,
+            "created_at": self.created_at,
+            "focus_areas": list(self.focus_areas),
+            "rituals": [
+                {
+                    "name": ritual.name,
+                    "cadence": ritual.cadence,
+                    "intention": ritual.intention,
+                    "linked_commitments": list(ritual.linked_commitments),
+                    "weight": ritual.weight,
+                }
+                for ritual in self.rituals
+            ],
+            "actions": list(self.actions),
+            "checkin_questions": list(self.checkin_questions),
+            "pulse_score": self.pulse_score,
+            "risk_signal": self.risk_signal,
+            "gratitude_note": self.gratitude_note,
+        }
+
+    def to_markdown(self) -> str:
+        """Return a markdown rendering of the pulse."""
+
+        ritual_lines = "\n".join(
+            f"- **{ritual.name}** ({ritual.cadence}) — {ritual.intention}"
+            for ritual in self.rituals
+        ) or "- none"
+        action_lines = "\n".join(f"- {action}" for action in self.actions) or "- none"
+        question_lines = (
+            "\n".join(f"- {question}" for question in self.checkin_questions) or "- none"
+        )
+
+        return "\n".join(
+            [
+                "# Stewardship Pulse",
+                "",
+                f"**Purpose:** {self.purpose}",
+                f"**Created:** {self.created_at}",
+                f"**Pulse score:** {self.pulse_score:.2f}",
+                f"**Risk signal:** {self.risk_signal}",
+                "",
+                "## Focus areas",
+                "\n".join(f"- {area}" for area in self.focus_areas) or "- none",
+                "",
+                "## Rituals",
+                ritual_lines,
+                "",
+                "## Next actions",
+                action_lines,
+                "",
+                "## Check-in questions",
+                question_lines,
+                "",
+                f"_{self.gratitude_note}_",
             ]
         )
 
@@ -188,6 +280,68 @@ def craft_compass(seed: CompassSeed) -> CompassReport:
         risk_index=risk_index,
         created_at=created_at,
         metrics=metrics,
+    )
+
+
+def compose_stewardship_pulse(
+    report: CompassReport, *, focus_limit: int = 3
+) -> StewardshipPulse:
+    """Create an action pulse from a compass report."""
+
+    focus_limit = max(1, focus_limit)
+    sorted_commitments = sorted(
+        report.commitments, key=lambda commitment: commitment.weight, reverse=True
+    )
+    focus_areas = tuple(
+        commitment.name for commitment in sorted_commitments[:focus_limit]
+    )
+    rituals: List[StewardshipRitual] = []
+    for commitment in sorted_commitments[:focus_limit]:
+        cadence = "weekly" if commitment.weight >= 0.3 else "biweekly"
+        rituals.append(
+            StewardshipRitual(
+                name=f"{commitment.name} pulse",
+                cadence=cadence,
+                intention=commitment.intention,
+                linked_commitments=(commitment.name,),
+                weight=commitment.weight,
+            )
+        )
+
+    actions: List[str] = []
+    for commitment in sorted_commitments[:focus_limit]:
+        for action in commitment.actions:
+            if action not in actions:
+                actions.append(action)
+    actions = actions[: max(3, focus_limit)]
+
+    checkin_questions = [
+        f"How are we doing on {signal.name}? {signal.description}"
+        for signal in report.signals
+    ]
+    pulse_score = round(report.care_index * (1.0 - report.risk_index), 2)
+    if report.risk_index >= 0.6:
+        risk_signal = "High"  # guardrails need a review
+    elif report.risk_index >= 0.35:
+        risk_signal = "Moderate"
+    else:
+        risk_signal = "Low"
+    gratitude_note = (
+        "Thank you for honoring care, clarity, and consent in every decision."
+    )
+
+    created_at = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+
+    return StewardshipPulse(
+        purpose=report.purpose,
+        created_at=created_at,
+        focus_areas=focus_areas,
+        rituals=tuple(rituals),
+        actions=tuple(actions),
+        checkin_questions=tuple(checkin_questions),
+        pulse_score=pulse_score,
+        risk_signal=risk_signal,
+        gratitude_note=gratitude_note,
     )
 
 
