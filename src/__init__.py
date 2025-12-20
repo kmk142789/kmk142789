@@ -133,6 +133,12 @@ from .next_gen_bandwidth_frequency_system import (
     demo as propagation_demo,
 )
 from .echo_evolver import EchoConfig, EchoEvolver, EchoState, demo as echo_evolver_demo
+from .echo_forge_constellation import (
+    EchoForgeConstellation,
+    MythicWeaver,
+    QuantumEntanglement,
+    SatelliteSwarm,
+)
 from .echo_drift_engine import (
     DriftPolicy,
     DriftPhase,
@@ -200,6 +206,10 @@ __all__ = [
     "RevelationBundle",
     "RevelationEcho",
     "RevelationSeed",
+    "EchoForgeConstellation",
+    "MythicWeaver",
+    "QuantumEntanglement",
+    "SatelliteSwarm",
     "AgiCore",
     "AgiDecision",
     "AgiGoal",

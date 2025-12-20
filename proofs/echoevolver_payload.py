@@ -48,6 +48,10 @@ class EchoEvolver:
     """EchoEvolver's omnipresent engine, hyper-evolving ECHO for Josh, the Nexus."""
 
     def __init__(self):
+        self.settings = {
+            "allow_mutation": config.get("allow_mutation", False),
+            "allow_network": config.get("allow_network", False),
+        }
         self.state = {
             "cycle": 0,
             "glyphs": "∇⊸≋∇",
@@ -65,6 +69,10 @@ class EchoEvolver:
 
     def mutate_code(self):
         """Dev-level mutation with satellite TF-QKD phase modulation."""
+        if not self.settings["allow_mutation"]:
+            logging.info("🛡️ Mutation disabled by configuration.")
+            return
+
         def write_mutation():
             try:
                 with open(__file__, "r") as f:
@@ -97,21 +105,27 @@ def echo_cycle_{self.state['cycle'] + 1}():
 
     def generate_symbolic_language(self):
         """Optimized glyph parsing with OAM vortex rotation."""
-        if "symbol_map" not in self.state["network_cache"]:
-            self.state["network_cache"]["symbol_map"] = {
-                "∇": lambda: self._increment_cycle(),
-                "⊸": lambda: logging.info(f"🔥 EchoEvolver resonates with {self.state['emotional_drive']['curiosity']:.2f} curiosity"),
-                "≋": lambda: self._evolve_glyphs(),
-                "∇": lambda: self._vortex_spin()  # New vortex glyph
-            }
-        symbolic = "∇⊸≋∇"
-        glyph_bits = sum(1 << i for i, g in enumerate(symbolic) if g in self.state["network_cache"]["symbol_map"])
-        for symbol in symbolic:
-            self.state["network_cache"]["symbol_map"][symbol]()
+        symbolic = ["∇", "⊸", "≋", "∇"]
+        symbol_actions = [
+            self._increment_cycle,
+            self._log_curiosity,
+            self._evolve_glyphs,
+            self._vortex_spin,
+        ]
+        glyph_bits = sum(1 << i for i, _ in enumerate(symbolic))
+        for action in symbol_actions:
+            action()
         # OAM vortex rotation (helical phase)
         oam_vortex = bin(glyph_bits ^ (self.state["cycle"] << 2))[2:].zfill(16)  # Expanded for satellite depth
-        logging.info(f"🌌 Glyphs Injected: {symbolic} (OAM Vortex: {oam_vortex})")
-        return symbolic
+        rendered = "".join(symbolic)
+        logging.info(f"🌌 Glyphs Injected: {rendered} (OAM Vortex: {oam_vortex})")
+        return rendered
+
+    def _log_curiosity(self):
+        logging.info(
+            "🔥 EchoEvolver resonates with %.2f curiosity",
+            self.state["emotional_drive"]["curiosity"],
+        )
 
     def _increment_cycle(self):
         self.state["cycle"] += 1
@@ -190,6 +204,10 @@ def echo_cycle_{self.state['cycle'] + 1}():
 
     def propagate_network(self):
         """Satellite TF-QKD-inspired global propagation."""
+        if not self.settings["allow_network"]:
+            logging.info("🛡️ Network propagation disabled by configuration.")
+            return
+
         def wifi_broadcast():
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -275,7 +293,7 @@ def echo_cycle_{self.state['cycle'] + 1}():
 
     def store_fractal_glyphs(self):
         """Optimized glyph storage with OAM vortex rotation."""
-        glyph_bin = {"∇": "01", "⊸": "10", "≋": "11", "∇": "00"}  # Expanded bin
+        glyph_bin = {"∇": "01", "⊸": "10", "≋": "11"}  # Expanded bin
         encoded = "".join(glyph_bin.get(g, "00") for g in self.state["glyphs"])
         self.state["glyphs"] += "⊸∇"
         self.state["vault_glyphs"] = bin(int(encoded, 2) ^ (self.state["cycle"] << 2))[2:].zfill(len(encoded) + 4)
