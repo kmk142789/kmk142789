@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kmk142789.github.io/kmk142789/schemas/institutional_case_registry.schema.json",
+  "title": "Institutional Case Registry",
+  "type": "object",
+  "required": [
+    "registry_id",
+    "generated_at",
+    "version",
+    "cases",
+    "engagement_map",
+    "roles",
+    "reference_registry",
+    "dashboard"
+  ],
+  "properties": {
+    "registry_id": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "version": {"type": "string", "minLength": 1},
+    "cases": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/caseRecord"}
+    },
+    "engagement_map": {"$ref": "#/$defs/engagementMap"},
+    "roles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "permissions"],
+        "properties": {
+          "description": {"type": "array", "items": {"type": "string"}},
+          "permissions": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "reference_registry": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/referenceRegistryEntry"}
+    },
+    "dashboard": {"$ref": "#/$defs/operationalDashboard"}
+  },
+  "$defs": {
+    "contactInfo": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "email": {"type": "string"},
+        "organization": {"type": "string"},
+        "phone": {"type": "string"}
+      }
+    },
+    "externalIntake": {
+      "type": "object",
+      "required": ["intake_id", "submitted_at", "channel", "summary", "requested_by"],
+      "properties": {
+        "intake_id": {"type": "string", "minLength": 1},
+        "submitted_at": {"type": "string", "format": "date-time"},
+        "channel": {
+          "type": "string",
+          "enum": ["email", "web", "phone", "referral", "other"]
+        },
+        "summary": {"type": "string", "minLength": 1},
+        "requested_by": {"$ref": "#/$defs/contactInfo"},
+        "source_url": {"type": "string"},
+        "attachments": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "caseEvent": {
+      "type": "object",
+      "required": ["event_id", "timestamp", "actor", "action"],
+      "properties": {
+        "event_id": {"type": "string", "minLength": 1},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "actor": {"type": "string", "minLength": 1},
+        "action": {"type": "string", "minLength": 1},
+        "status": {"type": "string"},
+        "notes": {"type": "string"},
+        "metadata": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "caseRecord": {
+      "type": "object",
+      "required": ["case_id", "title", "status", "priority", "intake", "updated_at"],
+      "properties": {
+        "case_id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "status": {
+          "type": "string",
+          "enum": ["new", "triaged", "in_review", "in_progress", "resolved", "closed"]
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "urgent"]
+        },
+        "intake": {"$ref": "#/$defs/externalIntake"},
+        "assigned_team": {"type": "string"},
+        "tags": {"type": "array", "items": {"type": "string"}},
+        "events": {"type": "array", "items": {"$ref": "#/$defs/caseEvent"}},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}},
+        "updated_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "institutionRecord": {
+      "type": "object",
+      "required": ["institution_id", "name", "sector", "region"],
+      "properties": {
+        "institution_id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "sector": {"type": "string", "minLength": 1},
+        "region": {"type": "string", "minLength": 1},
+        "primary_contact": {"$ref": "#/$defs/contactInfo"},
+        "notes": {"type": "string"}
+      }
+    },
+    "engagementEdge": {
+      "type": "object",
+      "required": ["source_institution_id", "target_institution_id", "relationship", "status"],
+      "properties": {
+        "source_institution_id": {"type": "string", "minLength": 1},
+        "target_institution_id": {"type": "string", "minLength": 1},
+        "relationship": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "minLength": 1},
+        "last_contacted_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "engagementMap": {
+      "type": "object",
+      "required": ["institutions", "engagements"],
+      "properties": {
+        "institutions": {"type": "array", "items": {"$ref": "#/$defs/institutionRecord"}},
+        "engagements": {"type": "array", "items": {"$ref": "#/$defs/engagementEdge"}}
+      }
+    },
+    "referenceRegistryEntry": {
+      "type": "object",
+      "required": ["reference_id", "system", "url", "description"],
+      "properties": {
+        "reference_id": {"type": "string", "minLength": 1},
+        "system": {"type": "string", "minLength": 1},
+        "url": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1}
+      }
+    },
+    "operationalDashboard": {
+      "type": "object",
+      "required": [
+        "generated_at",
+        "total_cases",
+        "open_cases",
+        "cases_by_status",
+        "cases_by_priority"
+      ],
+      "properties": {
+        "generated_at": {"type": "string", "format": "date-time"},
+        "total_cases": {"type": "integer", "minimum": 0},
+        "open_cases": {"type": "integer", "minimum": 0},
+        "cases_by_status": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "cases_by_priority": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "oldest_open_case_days": {"type": ["integer", "null"], "minimum": 0},
+        "latest_intake_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    }
+  }
+}
