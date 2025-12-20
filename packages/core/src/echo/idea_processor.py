@@ -21,7 +21,8 @@ import random
 import re
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Iterable, List, MutableMapping, Optional
+from hashlib import sha1
+from typing import Iterable, List, MutableMapping, Optional, Sequence
 
 WORD_RE = re.compile(r"[\w']+")
 
@@ -35,6 +36,31 @@ class IdeaAnalysis:
     sentiment: str
     complexity: float
     density: float
+    constellation: "IdeaConstellation"
+
+
+@dataclass(slots=True)
+class ConstellationStar:
+    """Single anchor point in the idea constellation map."""
+
+    token: str
+    x: float
+    y: float
+    z: float
+    power: float
+
+
+@dataclass(slots=True)
+class IdeaConstellation:
+    """World-first constellation map for a creative prompt."""
+
+    anchor: str
+    stars: List[ConstellationStar]
+    trail: List[str]
+    fingerprint: str
+
+    def summary(self) -> str:
+        return f"{self.anchor} · {len(self.stars)} stars · {self.fingerprint}"
 
 
 @dataclass(slots=True)
@@ -137,6 +163,47 @@ def _complexity_score(density: float, unique_ratio: float) -> float:
     return round(min(1.0, (density * 0.6) + (unique_ratio * 0.4)), 3)
 
 
+def _build_constellation(tokens: Sequence[str], keywords: Sequence[str]) -> IdeaConstellation:
+    if not tokens:
+        return IdeaConstellation(anchor="void", stars=[], trail=[], fingerprint="0" * 12)
+
+    unique_tokens: List[str] = []
+    for token in tokens:
+        if token not in unique_tokens:
+            unique_tokens.append(token)
+    anchor = keywords[0] if keywords else unique_tokens[0]
+
+    stars: List[ConstellationStar] = []
+    total = max(1, len(unique_tokens))
+    for index, token in enumerate(unique_tokens[:12]):
+        digest = sha1(token.encode("utf-8")).hexdigest()
+        x = ((int(digest[:4], 16) % 200) - 100) / 10
+        y = ((int(digest[4:8], 16) % 200) - 100) / 10
+        z = ((int(digest[8:12], 16) % 200) - 100) / 10
+        power = min(1.0, 0.35 + (len(token) / 12) + (index / total) * 0.25)
+        stars.append(
+            ConstellationStar(
+                token=token,
+                x=round(x, 2),
+                y=round(y, 2),
+                z=round(z, 2),
+                power=round(power, 3),
+            )
+        )
+
+    trail = []
+    for left, right in zip(unique_tokens, unique_tokens[1:]):
+        if left != right:
+            trail.append(f"{left}->{right}")
+        if len(trail) >= 6:
+            break
+
+    fingerprint_seed = f"{anchor}|{len(stars)}|{','.join(star.token for star in stars)}"
+    fingerprint = sha1(fingerprint_seed.encode("utf-8")).hexdigest()[:12]
+
+    return IdeaConstellation(anchor=anchor, stars=stars, trail=trail, fingerprint=fingerprint)
+
+
 @dataclass(slots=True)
 class IdeaProcessor:
     """Analyse creative prompts and produce structured metadata."""
@@ -151,12 +218,14 @@ class IdeaProcessor:
         density = _lexical_density(tokens, keywords)
         unique_ratio = len(set(tokens)) / max(1, len(tokens))
         complexity = _complexity_score(density, unique_ratio)
+        constellation = _build_constellation(tokens, keywords)
         return IdeaAnalysis(
             word_count=len(tokens),
             keywords=keywords,
             sentiment=sentiment,
             complexity=complexity,
             density=round(density, 3),
+            constellation=constellation,
         )
 
     def generate_output(self) -> IdeaResult:
@@ -210,6 +279,9 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         print(f"Word Count       : {analysis.word_count}")
         print(f"Lexical Density  : {analysis.density}")
         print(f"Complexity Score : {analysis.complexity}")
+        print(f"Constellation    : {analysis.constellation.summary()}")
+        if analysis.constellation.trail:
+            print("Trail            : " + " → ".join(analysis.constellation.trail))
         if analysis.keywords:
             print("Keywords         : " + ", ".join(analysis.keywords))
         else:
@@ -219,6 +291,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
 
 __all__ = [
     "IdeaAnalysis",
+    "IdeaConstellation",
+    "ConstellationStar",
     "IdeaResult",
     "IdeaProcessor",
     "process_idea",
@@ -228,4 +302,3 @@ __all__ = [
 
 if __name__ == "__main__":  # pragma: no cover - command line entry point
     raise SystemExit(main())
-
