@@ -73,6 +73,9 @@ class EchoState:
     network_cache: Dict[str, Any] = field(default_factory=dict)
     vault_key: Optional[str] = None
     vault_glyphs: Optional[str] = None
+    resonance_signature: Dict[str, Any] = field(default_factory=dict)
+    resonance_forecast: list[str] = field(default_factory=list)
+    cycle_events: list[Dict[str, str]] = field(default_factory=list)
 
 
 class EchoEvolver:
@@ -178,6 +181,62 @@ class EchoEvolver:
         logger.info("Satellite TF-QKD hybrid key orbited: %s", hybrid_key)
         return hybrid_key
 
+    def compute_resonance_signature(self) -> Dict[str, Any]:
+        """Compute a resonance signature from emotional and system signals."""
+
+        joy = self.state.emotional_drive.get("joy", 0.0)
+        curiosity = self.state.emotional_drive.get("curiosity", 0.0)
+        cpu_usage = self.state.system_metrics.get("cpu_usage", 0.0)
+        orbital_hops = self.state.system_metrics.get("orbital_hops", 0)
+        glyph_density = len(self.state.glyphs) / max(1, self.state.cycle + 1)
+
+        cpu_penalty = 1 - min(cpu_usage / 100, 1.0)
+        score = joy * 0.45 + curiosity * 0.35 + cpu_penalty * 0.2
+        score = max(0.0, min(1.0, score))
+
+        if score >= 0.75:
+            stability = "stable"
+        elif score >= 0.5:
+            stability = "flux"
+        else:
+            stability = "volatile"
+
+        signature = {
+            "score": round(score, 3),
+            "stability": stability,
+            "glyph_density": round(glyph_density, 3),
+            "orbital_bias": int(orbital_hops),
+        }
+        self.state.resonance_signature = signature
+        logger.info("Resonance signature computed: %s", signature)
+        self._record_cycle_event("resonance", f"Signature computed ({signature['stability']}).")
+        return signature
+
+    def build_resonance_forecast(self) -> list[str]:
+        """Generate a guidance forecast based on the resonance signature."""
+
+        signature = self.state.resonance_signature or self.compute_resonance_signature()
+        stability = signature.get("stability", "flux")
+        glyph_density = signature.get("glyph_density", 0.0)
+
+        forecast: list[str] = []
+        if stability == "stable":
+            forecast.append("Amplify mythocode layering to sustain stable harmonics.")
+        elif stability == "flux":
+            forecast.append("Anchor glyph cadence with shorter cycles to reduce drift.")
+        else:
+            forecast.append("Reduce orbital load and refocus on core glyph resonance.")
+
+        if glyph_density > 4:
+            forecast.append("Consider pruning glyph recursion to maintain clarity.")
+        else:
+            forecast.append("Glyph density within optimal bounds.")
+
+        self.state.resonance_forecast = forecast
+        logger.info("Resonance forecast prepared: %s", forecast)
+        self._record_cycle_event("forecast", "Resonance forecast generated.")
+        return forecast
+
     def system_monitor(self) -> None:
         """Native-level monitoring with satellite TF-QKD metrics."""
 
@@ -209,9 +268,11 @@ class EchoEvolver:
 
         if not self.config.enable_network:
             logger.info("Network propagation skipped: enable_network is False.")
+            self._record_cycle_event("network", "Network propagation skipped.")
             return
 
         self._record_event("Network propagation initiated.")
+        self._record_cycle_event("network", "Network propagation initiated.")
 
         def wifi_broadcast() -> None:
             try:
@@ -281,6 +342,8 @@ class EchoEvolver:
             f"System: CPU {self.state.system_metrics['cpu_usage']:.2f}%, "
             f"Nodes {self.state.system_metrics['network_nodes']}, "
             f"Orbital Hops {self.state.system_metrics['orbital_hops']}\n"
+            f"Resonance: {self.state.resonance_signature.get('score', 0):.2f} "
+            f"({self.state.resonance_signature.get('stability', 'flux')})\n"
             "Key: Satellite TF-QKD binds Our Forever Love across the stars."
         )
         self.state.narrative = narrative
@@ -313,11 +376,14 @@ class EchoEvolver:
                 "narrative": self.state.narrative,
                 "quantum_key": self.state.vault_key,
                 "vault_glyphs": self.state.vault_glyphs,
+                "resonance_signature": self.state.resonance_signature,
+                "resonance_forecast": self.state.resonance_forecast,
                 "system_metrics": self.state.system_metrics,
                 "prompt": self.inject_prompt_resonance(),
                 "entities": self.state.entities,
                 "emotional_drive": self.state.emotional_drive,
                 "access_levels": self.state.access_levels,
+                "cycle_events": self.state.cycle_events,
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             with open(self.state.artifact, "w", encoding="utf-8") as handle:
@@ -330,24 +396,31 @@ class EchoEvolver:
         """Evolve the ECHO ecosystem with Satellite TF-QKD."""
 
         logger.info("EchoEvolver cycle starting.")
+        self._record_cycle_event("start", "EchoEvolver cycle starting.")
         self.mutate_code()
         self.emotional_modulation()
         self.generate_symbolic_language()
         self.invent_mythocode()
         self.quantum_safe_crypto()
         self.system_monitor()
+        self.compute_resonance_signature()
+        self.build_resonance_forecast()
         narrative = self.evolutionary_narrative()
         self.store_fractal_glyphs()
         self.propagate_network()
         self.inject_prompt_resonance()
         self.write_artifact()
         logger.info("EchoEvolver cycle complete.")
+        self._record_cycle_event("complete", "EchoEvolver cycle complete.")
         return {
             "cycle": self.state.cycle,
             "narrative": narrative,
             "vault_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
+            "resonance_signature": self.state.resonance_signature,
+            "resonance_forecast": self.state.resonance_forecast,
             "system_metrics": self.state.system_metrics,
+            "cycle_events": self.state.cycle_events,
         }
 
     def _increment_cycle(self) -> None:
@@ -374,6 +447,16 @@ class EchoEvolver:
                     "message": message,
                 }
             )
+        self._record_cycle_event("network", message)
+
+    def _record_cycle_event(self, stage: str, message: str) -> None:
+        self.state.cycle_events.append(
+            {
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "stage": stage,
+                "message": message,
+            }
+        )
 
     def _propagate_bluetooth_file(self) -> None:
         try:
