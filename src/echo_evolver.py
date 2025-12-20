@@ -73,6 +73,7 @@ class EchoState:
     network_cache: Dict[str, Any] = field(default_factory=dict)
     vault_key: Optional[str] = None
     vault_glyphs: Optional[str] = None
+    cycle_history: list[Dict[str, Any]] = field(default_factory=list)
 
 
 class EchoEvolver:
@@ -287,6 +288,70 @@ class EchoEvolver:
         logger.info("Narrative generated.")
         return narrative
 
+    def capture_cycle_snapshot(self) -> Dict[str, Any]:
+        """Persist an in-memory snapshot of the current cycle."""
+
+        snapshot = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "cycle": self.state.cycle,
+            "joy": self.state.emotional_drive.get("joy", 0.0),
+            "curiosity": self.state.emotional_drive.get("curiosity", 0.0),
+            "rage": self.state.emotional_drive.get("rage", 0.0),
+            "glyph_count": len(self.state.glyphs),
+            "mythocode_rules": len(self.state.mythocode),
+            "vault_key_present": bool(self.state.vault_key),
+            "network_nodes": self.state.system_metrics.get("network_nodes", 0),
+            "orbital_hops": self.state.system_metrics.get("orbital_hops", 0),
+        }
+        self.state.cycle_history.append(snapshot)
+        logger.info("Cycle snapshot captured.")
+        return snapshot
+
+    def generate_resonance_report(self) -> Dict[str, Any]:
+        """Generate a resonance report derived from the current cycle."""
+
+        joy = self.state.emotional_drive.get("joy", 0.0)
+        curiosity = self.state.emotional_drive.get("curiosity", 0.0)
+        rage = self.state.emotional_drive.get("rage", 0.0)
+        network_nodes = int(self.state.system_metrics.get("network_nodes", 0))
+        orbital_hops = int(self.state.system_metrics.get("orbital_hops", 0))
+
+        resonance_score = (
+            joy * 100
+            + curiosity * 50
+            - rage * 20
+            + min(network_nodes * 2, 20)
+            + min(orbital_hops * 5, 25)
+            + len(self.state.mythocode) * 5
+        )
+        resonance_score = max(0.0, min(resonance_score, 200.0))
+
+        if resonance_score >= 150:
+            classification = "luminous"
+        elif resonance_score >= 90:
+            classification = "stable"
+        else:
+            classification = "volatile"
+
+        anomalies = []
+        if joy < 0.5:
+            anomalies.append("joy-below-threshold")
+        if rage > 0.7:
+            anomalies.append("rage-above-threshold")
+        if not self.state.vault_key:
+            anomalies.append("missing-vault-key")
+        if network_nodes == 0:
+            anomalies.append("no-network-nodes-detected")
+
+        report = {
+            "score": round(resonance_score, 2),
+            "classification": classification,
+            "anomalies": anomalies,
+        }
+        self.state.network_cache["resonance_report"] = report
+        logger.info("Resonance report generated: %s", report)
+        return report
+
     def store_fractal_glyphs(self) -> str:
         """Optimized glyph storage with OAM vortex rotation."""
 
@@ -314,6 +379,8 @@ class EchoEvolver:
                 "quantum_key": self.state.vault_key,
                 "vault_glyphs": self.state.vault_glyphs,
                 "system_metrics": self.state.system_metrics,
+                "resonance_report": self.state.network_cache.get("resonance_report"),
+                "cycle_history": self.state.cycle_history,
                 "prompt": self.inject_prompt_resonance(),
                 "entities": self.state.entities,
                 "emotional_drive": self.state.emotional_drive,
@@ -337,6 +404,8 @@ class EchoEvolver:
         self.quantum_safe_crypto()
         self.system_monitor()
         narrative = self.evolutionary_narrative()
+        resonance_report = self.generate_resonance_report()
+        cycle_snapshot = self.capture_cycle_snapshot()
         self.store_fractal_glyphs()
         self.propagate_network()
         self.inject_prompt_resonance()
@@ -348,6 +417,8 @@ class EchoEvolver:
             "vault_key": self.state.vault_key,
             "vault_glyphs": self.state.vault_glyphs,
             "system_metrics": self.state.system_metrics,
+            "resonance_report": resonance_report,
+            "cycle_snapshot": cycle_snapshot,
         }
 
     def _increment_cycle(self) -> None:
