@@ -174,6 +174,12 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         parser_error("--momentum-threshold must be positive when using --advance-system")
     if args.manifest_events < 0:
         parser_error("--manifest-events must be non-negative")
+    if args.briefing_events < 0:
+        parser_error("--briefing-events must be non-negative")
+    if args.briefing_quantam_limit <= 0:
+        parser_error("--briefing-quantam-limit must be positive")
+    if args.briefing_horizon <= 0:
+        parser_error("--briefing-horizon must be positive")
 
     if not args.advance_system:
         default_summary_limit = parser.get_default("event_summary_limit") if parser else 5
@@ -230,6 +236,21 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
         if args.manifest_events != default_manifest_events:
             parser_error("--manifest-events requires --include-manifest")
 
+    if not (args.briefing or args.briefing_json):
+        default_briefing_events = parser.get_default("briefing_events") if parser else 5
+        if args.briefing_events != default_briefing_events:
+            parser_error("--briefing-events requires --briefing or --briefing-json")
+        default_briefing_quantam = (
+            parser.get_default("briefing_quantam_limit") if parser else 3
+        )
+        if args.briefing_quantam_limit != default_briefing_quantam:
+            parser_error("--briefing-quantam-limit requires --briefing or --briefing-json")
+        default_briefing_horizon = (
+            parser.get_default("briefing_horizon") if parser else 3
+        )
+        if args.briefing_horizon != default_briefing_horizon:
+            parser_error("--briefing-horizon requires --briefing or --briefing-json")
+
     if (
         not args.advance_system
         and (
@@ -258,6 +279,20 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
             parser_error("--expansion-history-limit requires --advance-system")
 
     evolver = EchoEvolver(rng=rng, artifact_path=artifact_path)
+
+    def emit_briefing() -> None:
+        if not (args.briefing or args.briefing_json):
+            return
+        briefing = evolver.cycle_briefing(
+            persist_artifact=persist_artifact,
+            event_limit=args.briefing_events,
+            quantam_limit=args.briefing_quantam_limit,
+            horizon=args.briefing_horizon,
+        )
+        if args.briefing_json:
+            print(json.dumps(briefing, indent=2, ensure_ascii=False))
+            return
+        print(evolver.cycle_briefing_report(briefing=briefing))
 
     if args.describe_sequence:
         print(evolver.describe_sequence(persist_artifact=persist_artifact))
@@ -296,6 +331,7 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
             print(summary)
         if args.print_artifact and isinstance(payload, Mapping):
             print(json.dumps(payload, indent=2, ensure_ascii=False))
+        emit_briefing()
         return 0
 
     if args.cycles == 1:
@@ -319,6 +355,7 @@ def _cmd_evolve(args: argparse.Namespace) -> int:
             prompt = {}
         payload = evolver.artifact_payload(prompt=prompt)
         print(json.dumps(payload, indent=2, ensure_ascii=False))
+    emit_briefing()
 
     return 0
 
@@ -1034,6 +1071,35 @@ def main(argv: Iterable[str] | None = None) -> int:
         "--print-artifact",
         action="store_true",
         help="Emit the final artifact payload to stdout.",
+    )
+    briefing_group = evolve_parser.add_mutually_exclusive_group()
+    briefing_group.add_argument(
+        "--briefing",
+        action="store_true",
+        help="Emit a markdown cycle briefing after completing the run.",
+    )
+    briefing_group.add_argument(
+        "--briefing-json",
+        action="store_true",
+        help="Emit the structured cycle briefing as JSON after the run.",
+    )
+    evolve_parser.add_argument(
+        "--briefing-events",
+        type=int,
+        default=5,
+        help="Number of recent events to include in the cycle briefing (default: 5).",
+    )
+    evolve_parser.add_argument(
+        "--briefing-quantam-limit",
+        type=int,
+        default=3,
+        help="Number of quantam abilities/capabilities to include in the briefing (default: 3).",
+    )
+    evolve_parser.add_argument(
+        "--briefing-horizon",
+        type=int,
+        default=3,
+        help="Number of cycles to project in the briefing forecast (default: 3).",
     )
     describe_group = evolve_parser.add_mutually_exclusive_group()
     describe_group.add_argument(

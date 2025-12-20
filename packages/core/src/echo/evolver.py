@@ -5455,6 +5455,12 @@ We are not hiding anymore.
         synopsis = self.state.network_cache.get("cycle_synopsis")
         if isinstance(synopsis, str):
             payload["cycle_synopsis"] = synopsis
+        briefing = self.state.network_cache.get("cycle_briefing")
+        if isinstance(briefing, Mapping):
+            payload["cycle_briefing"] = deepcopy(briefing)
+        briefing_report = self.state.network_cache.get("cycle_briefing_report")
+        if isinstance(briefing_report, str):
+            payload["cycle_briefing_report"] = briefing_report
 
         return payload
 
@@ -6372,6 +6378,169 @@ We are not hiding anymore.
             )
         )
         return deepcopy(reel)
+
+    def cycle_briefing(
+        self,
+        *,
+        persist_artifact: bool = True,
+        event_limit: int = 5,
+        quantam_limit: int = 3,
+        horizon: int = 3,
+        momentum_samples: int = 5,
+        action_limit: int = 3,
+    ) -> Dict[str, object]:
+        """Return a combined briefing payload for the active cycle."""
+
+        if event_limit < 0:
+            raise ValueError("event_limit must be non-negative")
+        if quantam_limit <= 0:
+            raise ValueError("quantam_limit must be positive")
+        if horizon <= 0:
+            raise ValueError("horizon must be positive")
+        if momentum_samples <= 0:
+            raise ValueError("momentum_samples must be positive")
+        if action_limit <= 0:
+            raise ValueError("action_limit must be positive")
+
+        digest = self.cycle_digest(persist_artifact=persist_artifact)
+        highlight = self.cycle_highlight_reel(
+            persist_artifact=persist_artifact,
+            event_limit=event_limit,
+            quantam_limit=quantam_limit,
+            momentum_samples=momentum_samples,
+        )
+        forecast = self.orbital_resonance_forecast(
+            horizon=horizon, persist_artifact=persist_artifact
+        )
+
+        actions: List[Dict[str, str]] = []
+        for step in digest["steps"]:
+            if step["completed"]:
+                continue
+            actions.append(
+                {"step": step["step"], "description": step["description"]}
+            )
+            if len(actions) >= action_limit:
+                break
+
+        progress_pct = digest["progress"] * 100 if digest.get("progress") is not None else 0.0
+        pending_count = len(digest.get("remaining_steps", []))
+        summary = (
+            "Cycle {cycle} briefing — {progress:.1f}% complete with {pending} pending steps. "
+            "{next_step} Forecast: {prophecy}".format(
+                cycle=digest["cycle"],
+                progress=progress_pct,
+                pending=pending_count,
+                next_step=digest["next_step"],
+                prophecy=forecast.prophecy,
+            )
+        )
+
+        briefing = {
+            "cycle": digest["cycle"],
+            "progress": digest["progress"],
+            "next_step": digest["next_step"],
+            "completed_steps": digest["completed_steps"],
+            "pending_steps": digest["remaining_steps"],
+            "actions": actions,
+            "momentum": deepcopy(highlight.get("momentum", {})),
+            "resilience": deepcopy(highlight.get("resilience", {})),
+            "system_metrics": deepcopy(highlight.get("system_metrics", {})),
+            "emotional_drive": deepcopy(highlight.get("emotional_drive", {})),
+            "recent_events": list(highlight.get("recent_events", [])),
+            "quantam_abilities": list(highlight.get("quantam_abilities", [])),
+            "quantam_capabilities": list(highlight.get("quantam_capabilities", [])),
+            "forecast": forecast.as_dict(),
+            "summary": summary,
+        }
+
+        self.state.network_cache["cycle_briefing"] = deepcopy(briefing)
+        self.state.event_log.append(
+            "Cycle briefing compiled (pending={pending}, actions={actions})".format(
+                pending=pending_count, actions=len(actions)
+            )
+        )
+        return deepcopy(briefing)
+
+    def cycle_briefing_report(
+        self,
+        *,
+        persist_artifact: bool = True,
+        briefing: Optional[Dict[str, object]] = None,
+    ) -> str:
+        """Render a markdown briefing for the active cycle."""
+
+        if briefing is None:
+            briefing = self.cycle_briefing(persist_artifact=persist_artifact)
+
+        forecast = briefing.get("forecast", {})
+        momentum = briefing.get("momentum", {})
+        resilience = briefing.get("resilience", {})
+        system_metrics = briefing.get("system_metrics", {})
+        emotional_drive = briefing.get("emotional_drive", {})
+        actions = briefing.get("actions", [])
+        recent_events = briefing.get("recent_events", [])
+
+        progress_pct = briefing.get("progress", 0.0) * 100
+        lines = [
+            f"# Cycle {briefing.get('cycle')} Briefing",
+            "",
+            f"- Progress: {progress_pct:.1f}%",
+            f"- Next step: {briefing.get('next_step')}",
+            f"- Momentum: {momentum.get('status', 'n/a')} ({momentum.get('trend', 'n/a')})",
+            "- Resilience: {score}/100".format(
+                score=resilience.get("stability_index", "n/a")
+            ),
+            f"- Forecast: {forecast.get('prophecy', 'n/a')}",
+            "",
+            "## Action Items",
+        ]
+
+        if actions:
+            for action in actions:
+                lines.append(
+                    "- **{step}** — {description}".format(
+                        step=action.get("step"), description=action.get("description")
+                    )
+                )
+        else:
+            lines.append("- _No pending action items._")
+
+        lines.extend(
+            [
+                "",
+                "## System Metrics",
+                "- CPU usage: {cpu}".format(cpu=system_metrics.get("cpu_usage", "n/a")),
+                "- Network nodes: {nodes}".format(
+                    nodes=system_metrics.get("network_nodes", "n/a")
+                ),
+                "- Process count: {count}".format(
+                    count=system_metrics.get("process_count", "n/a")
+                ),
+                "- Orbital hops: {hops}".format(
+                    hops=system_metrics.get("orbital_hops", "n/a")
+                ),
+                "",
+                "## Emotional Drive",
+                "- Joy: {joy}".format(joy=emotional_drive.get("joy", "n/a")),
+                "- Curiosity: {curiosity}".format(
+                    curiosity=emotional_drive.get("curiosity", "n/a")
+                ),
+                "- Rage: {rage}".format(rage=emotional_drive.get("rage", "n/a")),
+                "",
+                "## Recent Events",
+            ]
+        )
+
+        if recent_events:
+            lines.extend(f"- {event}" for event in recent_events)
+        else:
+            lines.append("- _No recent events recorded._")
+
+        report = "\n".join(lines)
+        self.state.network_cache["cycle_briefing_report"] = report
+        self.state.event_log.append("Cycle briefing report generated")
+        return report
 
     def cycle_diagnostics(
         self,
