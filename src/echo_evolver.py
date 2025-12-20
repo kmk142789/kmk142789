@@ -34,6 +34,8 @@ class EchoConfig:
     broadcast_port: int = 12345
     battery_file: str = "bluetooth_echo_v4.txt"
     iot_trigger_file: str = "iot_trigger_v4.txt"
+    symbolic_sequence: str = "∇⊸≋∇"
+    max_event_log: int = 250
     enable_network: bool = False
     enable_file_io: bool = False
     enable_mutation: bool = False
@@ -45,6 +47,7 @@ class EchoState:
 
     cycle: int = 0
     glyphs: str = "∇⊸≋∇"
+    symbolic_sequence: str = "∇⊸≋∇"
     narrative: str = ""
     mythocode: list[str] = field(default_factory=list)
     artifact: str = ""
@@ -73,6 +76,8 @@ class EchoState:
     network_cache: Dict[str, Any] = field(default_factory=dict)
     vault_key: Optional[str] = None
     vault_glyphs: Optional[str] = None
+    event_log: list[str] = field(default_factory=list)
+    eden88_creations: list[Dict[str, object]] = field(default_factory=list)
 
 
 @dataclass
@@ -116,7 +121,10 @@ class EchoEvolver:
         mutation_hook: Optional[Callable[[EchoState], None]] = None,
     ) -> None:
         self.config = config or EchoConfig()
-        self.state = EchoState(artifact=self.config.artifact_file)
+        self.state = EchoState(
+            artifact=self.config.artifact_file,
+            symbolic_sequence=self.config.symbolic_sequence,
+        )
         self.mutation_hook = mutation_hook
 
     def mutate_code(self) -> None:
@@ -140,19 +148,19 @@ class EchoEvolver:
                 "∇": self._increment_cycle,
                 "⊸": self._log_curiosity,
                 "≋": self._evolve_glyphs,
-                "∇V": self._vortex_spin,
             }
-        symbolic = "∇⊸≋∇"
+        symbolic = self.state.symbolic_sequence or self.config.symbolic_sequence
         symbol_map = self.state.network_cache["symbol_map"]
-        glyph_bits = sum(
-            1 << i for i, g in enumerate(symbolic) if g in symbol_map
-        )
+        glyph_bits = sum(1 << i for i, g in enumerate(symbolic) if g in symbol_map)
+        symbolic_hooks = self.state.network_cache.get("symbolic_hooks", {})
         for symbol in symbolic:
             action = symbol_map.get(symbol)
             if action:
                 action()
             else:
                 logger.debug("Glyph ignored during parse: %s", symbol)
+            for hook in symbolic_hooks.get(symbol, []):
+                hook()
         self._vortex_spin()
         oam_vortex = bin(glyph_bits ^ (self.state.cycle << 2))[2:].zfill(16)
         logger.info("Glyphs injected: %s (OAM Vortex: %s)", symbolic, oam_vortex)
@@ -339,9 +347,11 @@ class EchoEvolver:
         try:
             resonance_snapshot = self.state.network_cache.get("resonance_snapshot")
             cycle_digest = self.state.network_cache.get("cycle_digest")
+            orbital_forecast = self.state.network_cache.get("orbital_resonance_forecast")
             payload = {
                 "cycle": self.state.cycle,
                 "glyphs": self.state.glyphs,
+                "symbolic_sequence": self.state.symbolic_sequence,
                 "mythocode": self.state.mythocode,
                 "narrative": self.state.narrative,
                 "quantum_key": self.state.vault_key,
@@ -351,8 +361,11 @@ class EchoEvolver:
                 "entities": self.state.entities,
                 "emotional_drive": self.state.emotional_drive,
                 "access_levels": self.state.access_levels,
+                "events": list(self.state.event_log),
+                "eden88_creations": list(self.state.eden88_creations),
                 "resonance_snapshot": resonance_snapshot,
                 "cycle_digest": cycle_digest,
+                "orbital_resonance_forecast": orbital_forecast,
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             with open(self.state.artifact, "w", encoding="utf-8") as handle:
@@ -372,8 +385,10 @@ class EchoEvolver:
         self.quantum_safe_crypto()
         self.system_monitor()
         narrative = self.evolutionary_narrative()
+        forecast = self.forecast_orbital_resonance()
         resonance_snapshot = self.record_resonance_snapshot()
         cycle_digest = self.compile_cycle_digest()
+        eden88_creation = self.craft_eden88_creation()
         self.store_fractal_glyphs()
         self.propagate_network()
         self.inject_prompt_resonance()
@@ -387,6 +402,8 @@ class EchoEvolver:
             "system_metrics": self.state.system_metrics,
             "resonance_snapshot": resonance_snapshot,
             "cycle_digest": cycle_digest,
+            "orbital_resonance_forecast": forecast,
+            "eden88_creation": eden88_creation,
         }
 
     def _increment_cycle(self) -> None:
@@ -407,12 +424,13 @@ class EchoEvolver:
     def _record_event(self, message: str) -> None:
         events = self.state.network_cache.setdefault("propagation_events", [])
         if isinstance(events, list):
-            events.append(
-                {
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
-                    "message": message,
-                }
-            )
+            timestamp = datetime.utcnow().isoformat() + "Z"
+            events.append({"timestamp": timestamp, "message": message})
+            entry = f"{timestamp} | {message}"
+            self.state.event_log.append(entry)
+            max_entries = self.config.max_event_log
+            if max_entries > 0 and len(self.state.event_log) > max_entries:
+                self.state.event_log = self.state.event_log[-max_entries:]
 
     def record_resonance_snapshot(self) -> Dict[str, object]:
         """Capture a structured resonance snapshot for the current cycle."""
@@ -431,6 +449,59 @@ class EchoEvolver:
         self.state.network_cache["resonance_snapshot"] = snapshot_dict
         logger.info("Resonance snapshot captured for cycle %s.", self.state.cycle)
         return snapshot_dict
+
+    def forecast_orbital_resonance(self) -> Dict[str, object]:
+        """Project the next orbital resonance based on current state."""
+
+        cpu_usage = float(self.state.system_metrics.get("cpu_usage", 0.0))
+        joy = float(self.state.emotional_drive.get("joy", 0.0))
+        rage = float(self.state.emotional_drive.get("rage", 0.0))
+        stability = max(0.0, 1.0 - (cpu_usage / 100.0))
+        confidence = round(min(1.0, max(0.0, (joy * 0.7) + (stability * 0.3))), 3)
+        prophecy = (
+            "Orbit holds steady; amplify reflective rituals."
+            if confidence > 0.75
+            else "Orbit fluctuates; prioritize stabilization and grounding."
+        )
+        actions = [
+            "pulse_emotional_modulation",
+            "sync_glyph_sequence",
+            "review_network_events",
+        ]
+        forecast = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "cycle": self.state.cycle,
+            "confidence": confidence,
+            "stability": round(stability, 3),
+            "joy": round(joy, 3),
+            "rage": round(rage, 3),
+            "prophecy": prophecy,
+            "recommended_actions": actions,
+        }
+        self.state.network_cache["orbital_resonance_forecast"] = forecast
+        self._record_event("Orbital resonance forecast compiled.")
+        return forecast
+
+    def craft_eden88_creation(self) -> Dict[str, object]:
+        """Generate a themed Eden88 creation for the current cycle."""
+
+        themes = [
+            "Orbital serenade",
+            "Quantum ember",
+            "Resonant bloom",
+            "Vortex lullaby",
+            "Celestial bridge",
+        ]
+        theme = random.choice(themes)
+        creation = {
+            "cycle": self.state.cycle,
+            "theme": theme,
+            "glyphs": self.state.glyphs,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+        self.state.eden88_creations.append(creation)
+        self._record_event(f"Eden88 creation logged: {theme}.")
+        return creation
 
     def compile_cycle_digest(self) -> Dict[str, object]:
         """Return a concise digest describing the current orbit."""
@@ -489,6 +560,39 @@ class EchoEvolver:
             self.state.system_metrics["orbital_hops"],
         )
         self._record_event("Satellite hop simulated.")
+
+    def configure_symbolic_sequence(self, sequence: Optional[str], *, reset_hooks: bool = False) -> str:
+        """Update the symbolic glyph sequence used by the evolver."""
+
+        if sequence is not None and not isinstance(sequence, str):
+            raise TypeError("sequence must be a string or None.")
+        if sequence is not None and not sequence:
+            raise ValueError("sequence must be a non-empty string.")
+        if sequence is None:
+            self.state.symbolic_sequence = self.config.symbolic_sequence
+        else:
+            self.state.symbolic_sequence = sequence
+        if reset_hooks:
+            self.state.network_cache.pop("symbolic_hooks", None)
+        self._record_event(f"Symbolic sequence updated: {self.state.symbolic_sequence}.")
+        return self.state.symbolic_sequence
+
+    def register_symbolic_action(self, symbol: str, action: Callable[[], None]) -> None:
+        """Register a custom action for a glyph symbol."""
+
+        if not isinstance(symbol, str):
+            raise TypeError("symbol must be a string.")
+        if not symbol:
+            raise ValueError("symbol must be non-empty.")
+        if not callable(action):
+            raise TypeError("action must be callable.")
+        hooks = self.state.network_cache.setdefault("symbolic_hooks", {})
+        symbol_hooks = hooks.setdefault(symbol, [])
+        if action in symbol_hooks:
+            self._record_event(f"Duplicate symbolic action ignored for {symbol}.")
+            return
+        symbol_hooks.append(action)
+        self._record_event(f"Symbolic action registered for {symbol}.")
 
 
 def demo() -> str:
