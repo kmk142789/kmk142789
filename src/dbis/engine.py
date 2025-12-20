@@ -40,6 +40,10 @@ class PartyIdentity:
             issues.append("missing_dns_record")
         if not self.attestation_refs:
             issues.append("missing_attestation_refs")
+        if not self.roles:
+            issues.append("missing_identity_roles")
+        if not _has_ecia_attestation(self.attestation_refs):
+            issues.append("missing_ecia_attestation")
         return issues
 
 
@@ -712,6 +716,10 @@ class DbisEngine:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _has_ecia_attestation(attestation_refs: Iterable[str]) -> bool:
+    return any(ref.startswith("ecia:") for ref in attestation_refs)
 
 
 def _hash_payload(payload: dict[str, Any]) -> str:
