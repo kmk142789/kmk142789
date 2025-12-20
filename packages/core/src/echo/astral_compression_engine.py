@@ -20,6 +20,7 @@ The design leans on deterministic, testable transformations:
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import dataclass
 from math import log2
 from typing import Dict, Iterable, Mapping, MutableMapping, Sequence
@@ -129,7 +130,7 @@ class AstralCompressionEngine:
             )
             entropy_history.append(entropy)
 
-        final_entropy = field.entropy(self._epsilon)
+        final_entropy = entropy_history[-1]
         entropy_gradient = tuple(
             round(previous - current, 6)
             for previous, current in zip(entropy_history, entropy_history[1:])
@@ -197,7 +198,8 @@ class AstralCompressionEngine:
     ) -> ProbabilityField:
         intensity = _clamp(float(params.get("intensity", 1.0)), 0.0, 4.0)
         power = 1.0 + intensity * 0.5
-        scaled = {k: v**power for k, v in field.normalized(self._epsilon).amplitudes.items()}
+        normalized = field.normalized(self._epsilon)
+        scaled = {k: v**power for k, v in normalized.amplitudes.items()}
         return ProbabilityField(field.label, scaled).normalized(self._epsilon)
 
     def _op_interfere(
@@ -260,13 +262,24 @@ class PFieldCompiler:
         "wildcard": {"explore", "expand", "branch", "diversify"},
     }
 
-    def __init__(self, default_weight: float = 0.45) -> None:
+    def __init__(self, default_weight: float = 0.45, cache_size: int = 128) -> None:
         self._default_weight = _clamp(default_weight, 0.1, 0.9)
+        self._cache_size = max(0, cache_size)
+        self._cache: "OrderedDict[tuple[str, tuple[str, ...] | None], Sequence[CompressionInstruction]]" = (
+            OrderedDict()
+        )
 
     def compile_goal(
         self, goal: str, base_channels: Iterable[str] | None = None
     ) -> Sequence[CompressionInstruction]:
-        tokens = goal.lower().split()
+        normalized_goal = goal.lower().strip()
+        base_channels_tuple = tuple(base_channels) if base_channels else None
+        cache_key = (normalized_goal, base_channels_tuple)
+        if self._cache_size and cache_key in self._cache:
+            self._cache.move_to_end(cache_key)
+            return self._cache[cache_key]
+
+        tokens = normalized_goal.split()
         bias: Dict[str, float] = {}
 
         for channel, keywords in self._keyword_map.items():
@@ -295,7 +308,12 @@ class PFieldCompiler:
         if "stabilize" in tokens or "steady" in tokens:
             instructions.insert(3, CompressionInstruction("attenuate", {"damping": 0.15}))
 
-        return tuple(instructions)
+        compiled = tuple(instructions)
+        if self._cache_size:
+            self._cache[cache_key] = compiled
+            if len(self._cache) > self._cache_size:
+                self._cache.popitem(last=False)
+        return compiled
 
     def _intensity_from_goal(self, tokens: Sequence[str]) -> float:
         if any(token in {"aggressive", "force", "tight", "crisp"} for token in tokens):
