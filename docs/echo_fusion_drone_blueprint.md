@@ -102,7 +102,17 @@ These systems extend mission endurance and improve avionics survivability; they 
 These figures ground the augmentation budgets below; supplemental sources are sized to cover avionics, not propulsion.
 
 ### A. Flexible Photovoltaic Skin (PV)
-**Concept:** Conformal thin-film PV laminated onto upper shell panels.
+**Concept:** Conformal thin-film PV laminated onto upper shell panels and morphing surface segments to create a **solar augmentation subsystem** that flexes with the jointed frame.
+
+**Role framing (resilience/endurance support):**
+- Solar is **not** a primary lift power source; it is a resilience layer that reduces avionics draw, extends loiter windows, and slows battery depletion.
+- Contribution is capped by the governed power layer and is explicitly secondary to mission-critical propulsion and stabilization.
+
+**MPPT behavior under morphing geometry & incidence:**
+- **Distributed MPPT zones:** Each morphing panel string has its own micro-MPPT channel to isolate shading and variable curvature.
+- **Geometry-aware setpoint:** The flight controller provides surface normal vectors and joint angles to the power manager; MPPT duty cycles bias toward the predicted maximum-power angle of incidence.
+- **Rapid re-tracking:** MPPT refresh rate increases during morph transitions (e.g., 5–10 Hz) and relaxes during steady cruise (e.g., 0.5–1 Hz).
+- **Partial shading logic:** If any string sees a >30% mismatch in V-I curve slope, it is isolated and throttled to protect the rest of the array.
 
 **Realistic power budget:**
 - **Peak (full sun, clean skin):** 20–45 W
@@ -116,6 +126,11 @@ These figures ground the augmentation budgets below; supplemental sources are si
 **Limits:**
 - No meaningful propulsion contribution.
 - Heavily geometry- and attitude-dependent; degrades during high-bank maneuvers.
+
+**Degradation, shadowing, and thermal interaction:**
+- **Degradation:** Flexible thin-film efficiency degrades 1–2%/year under UV, micro-cracking, and flex fatigue; budget a 10–15% derate over service life.
+- **Shadowing:** Morphing surfaces can self-shadow; MPPT zones and bypass diodes prevent collapse but reduce net output during high-curvature or folded modes.
+- **Thermal coupling:** PV adds a skin heat load (2–6°C rise) and can reduce duct heat rejection; thermal guard throttles PV input when skin exceeds safe limits or when internal duct temps approach redline.
 
 ### B. Thermal Gradient Harvesting (TEG)
 **Concept:** Thermoelectric strips bridging warm internal ducts and cooler external skin.
