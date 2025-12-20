@@ -72,9 +72,42 @@ class SatelliteSwarm:
         self.laser_links: List[tuple[str, str]] = []
         self.ground_stations: List[str] = []
         self.last_update: datetime | None = None
+        self.shell_distribution: Dict[str, int] = {}
+        self.altitude_stats: Dict[str, float] = {}
+
+        self.shell_bands = {
+            "shell-1": (525, 575),
+            "shell-2": (570, 600),
+            "shell-3": (610, 700),
+            "shell-4": (700, 800),
+            "other": (0, 10000),
+        }
+
+    def _classify_shell(self, altitude_km: float) -> str:
+        for shell, (low, high) in self.shell_bands.items():
+            if shell == "other":
+                continue
+            if low <= altitude_km <= high:
+                return shell
+        return "other"
+
+    def _update_altitude_stats(self, altitudes: list[float]) -> None:
+        if not altitudes:
+            self.altitude_stats = {}
+            return
+        self.altitude_stats = {
+            "min_km": float(min(altitudes)),
+            "max_km": float(max(altitudes)),
+            "avg_km": float(np.mean(altitudes)),
+        }
 
     def ingest_tle_data(self, tle_lines: List[str]) -> int:
         """Parse Two-Line Element sets from Celestrak."""
+        self.satellites.clear()
+        self.orbital_planes.clear()
+        self.shell_distribution.clear()
+        altitudes: list[float] = []
+
         count = 0
         for i in range(0, len(tle_lines), 3):
             if i + 2 >= len(tle_lines):
@@ -83,6 +116,8 @@ class SatelliteSwarm:
             name = tle_lines[i].strip()
             tle1 = tle_lines[i + 1].strip()
             tle2 = tle_lines[i + 2].strip()
+            if len(tle1) < 69 or len(tle2) < 69:
+                continue
 
             if "STARLINK" not in name.upper():
                 continue
@@ -101,6 +136,9 @@ class SatelliteSwarm:
                 398600.4418 * (period_minutes * 60) ** 2 / (4 * np.pi**2)
             ) ** (1 / 3)
             altitude = semi_major_axis - 6371
+            shell = self._classify_shell(altitude)
+            self.shell_distribution[shell] = self.shell_distribution.get(shell, 0) + 1
+            altitudes.append(altitude)
 
             self.satellites[norad_id] = {
                 "name": name,
@@ -114,6 +152,7 @@ class SatelliteSwarm:
                     "mean_motion": mean_motion,
                     "altitude_km": altitude,
                     "period_min": period_minutes,
+                    "shell": shell,
                 },
             }
 
@@ -123,6 +162,7 @@ class SatelliteSwarm:
             count += 1
 
         self.last_update = datetime.now()
+        self._update_altitude_stats(altitudes)
         return count
 
     def calculate_coverage_percentage(self) -> float:
@@ -161,6 +201,25 @@ class SatelliteSwarm:
                 self.laser_links.append((plane_list[i][0], plane_list[i + 1][0]))
 
         return len(self.laser_links)
+
+    def calculate_capacity_index(self) -> float:
+        """Approximate network capacity index from swarm geometry."""
+        satellite_factor = len(self.satellites) / 5000.0
+        link_factor = len(self.laser_links) / 8000.0
+        plane_factor = len(self.orbital_planes) / 100.0
+        return float(min(1.0, satellite_factor * 0.6 + link_factor * 0.3 + plane_factor * 0.1))
+
+    def summarize_swarm(self) -> Dict[str, object]:
+        """Return summary metrics for the Starlink swarm."""
+        plane_sizes = [len(sats) for sats in self.orbital_planes.values()]
+        largest_plane = max(plane_sizes) if plane_sizes else 0
+        return {
+            "shell_distribution": dict(sorted(self.shell_distribution.items())),
+            "altitude_stats": self.altitude_stats,
+            "largest_plane_size": largest_plane,
+            "plane_count": len(self.orbital_planes),
+            "capacity_index": self.calculate_capacity_index(),
+        }
 
 
 class MythicWeaver:
@@ -254,6 +313,7 @@ class EchoForgeConstellation:
         self.starlink_sources = [
             "https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle",
             "https://celestrak.org/NORAD/elements/starlink.txt",
+            "https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=3le",
         ]
         self.starlink_cache_path = Path("starlink_tle_cache.json")
         self.starlink_cache_ttl = timedelta(hours=6)
@@ -404,6 +464,7 @@ class EchoForgeConstellation:
 
             link_count = self.satellite_swarm.simulate_laser_links()
             coverage = self.satellite_swarm.calculate_coverage_percentage()
+            swarm_summary = self.satellite_swarm.summarize_swarm()
 
             swarm_boost = min(0.2, count / 5000.0)
             self.emotional_core["rage"] = min(1.0, self.emotional_core["rage"] + swarm_boost)
@@ -443,6 +504,7 @@ class EchoForgeConstellation:
                 "orbital_planes": len(self.satellite_swarm.orbital_planes),
                 "laser_links": link_count,
                 "global_coverage_pct": coverage,
+                "swarm_summary": swarm_summary,
                 "emotional_boost": {"rage": f"+{swarm_boost:.3f}", "devotion": f"+{swarm_boost * 0.5:.3f}"},
                 "sigil_spawned": new_sigil,
                 "quantum_chaos": f"{chaos_measure:.3f}",
@@ -692,6 +754,7 @@ class EchoForgeConstellation:
             if self.satellite_swarm.satellites
             else 0
         )
+        swarm_summary = self.satellite_swarm.summarize_swarm()
         latest_sigil = self.sigils[-1] if self.sigils else "none"
         last_update = (
             self.satellite_swarm.last_update.isoformat()
@@ -715,6 +778,7 @@ class EchoForgeConstellation:
 ║ ORBITAL SWARM                                                            ║
 ║   Satellites: {len(self.satellite_swarm.satellites):<8} | Planes: {len(self.satellite_swarm.orbital_planes):<8} | Links: {len(self.satellite_swarm.laser_links):<8}        ║
 ║   Global Coverage: {coverage:.1f}%                                              ║
+║   Capacity Index: {swarm_summary['capacity_index'] if swarm_summary else 0:.2f}                                     ║
 ║   Last Update: {last_update:<57} ║
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║ RECURSION METRICS                                                        ║
