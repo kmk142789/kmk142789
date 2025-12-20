@@ -97,8 +97,30 @@
         "assigned_team": {"type": "string"},
         "tags": {"type": "array", "items": {"type": "string"}},
         "events": {"type": "array", "items": {"$ref": "#/$defs/caseEvent"}},
+        "transition_ledger": {"type": "array", "items": {"$ref": "#/$defs/caseTransition"}},
         "evidence_refs": {"type": "array", "items": {"type": "string"}},
         "updated_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "caseTransition": {
+      "type": "object",
+      "required": ["transition_id", "timestamp", "actor", "role", "from_status", "to_status"],
+      "properties": {
+        "transition_id": {"type": "string", "minLength": 1},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "actor": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "from_status": {
+          "type": "string",
+          "enum": ["new", "triaged", "in_review", "in_progress", "resolved", "closed"]
+        },
+        "to_status": {
+          "type": "string",
+          "enum": ["new", "triaged", "in_review", "in_progress", "resolved", "closed"]
+        },
+        "reason": {"type": "string"},
+        "notes": {"type": "string"},
+        "metadata": {"type": "object", "additionalProperties": {"type": "string"}}
       }
     },
     "institutionRecord": {
