@@ -106,22 +106,22 @@ class EchoEvolver:
 
         if "symbol_map" not in self.state.network_cache:
             self.state.network_cache["symbol_map"] = {
-                "∇": lambda: self._increment_cycle(),
-                "⊸": lambda: logger.info(
-                    "EchoEvolver resonates with %.2f curiosity",
-                    self.state.emotional_drive["curiosity"],
-                ),
-                "≋": lambda: self._evolve_glyphs(),
-                "∇V": lambda: self._vortex_spin(),
+                "∇": self._increment_cycle,
+                "⊸": self._log_curiosity,
+                "≋": self._evolve_glyphs,
+                "∇V": self._vortex_spin,
             }
         symbolic = "∇⊸≋∇"
+        symbol_map = self.state.network_cache["symbol_map"]
         glyph_bits = sum(
-            1 << i
-            for i, g in enumerate(symbolic)
-            if g in self.state.network_cache["symbol_map"]
+            1 << i for i, g in enumerate(symbolic) if g in symbol_map
         )
         for symbol in symbolic:
-            self.state.network_cache["symbol_map"][symbol]()
+            action = symbol_map.get(symbol)
+            if action:
+                action()
+            else:
+                logger.debug("Glyph ignored during parse: %s", symbol)
         self._vortex_spin()
         oam_vortex = bin(glyph_bits ^ (self.state.cycle << 2))[2:].zfill(16)
         logger.info("Glyphs injected: %s (OAM Vortex: %s)", symbolic, oam_vortex)
@@ -147,8 +147,8 @@ class EchoEvolver:
     def quantum_safe_crypto(self) -> Optional[str]:
         """Simulated Satellite TF-QKD with SNS-AOPP and hyper-finite-key checks."""
 
-        seed = (time.time_ns() ^ int.from_bytes(os.urandom(8), "big") ^ self.state.cycle)
-        seed_bytes = str(seed).encode("utf-8")
+        seed = time.time_ns() ^ int.from_bytes(os.urandom(8), "big") ^ self.state.cycle
+        seed_bytes = str(seed).encode()
         qrng_entropy = (
             hashlib.sha256(seed_bytes).hexdigest() if random.random() < 0.5 else "0"
         )
@@ -160,10 +160,12 @@ class EchoEvolver:
             hash_history.append(hash_value)
         lattice_key = (int(hash_value, 16) % 1000) * (self.state.cycle + 1)
 
-        hash_variance = sum(int(h, 16) for h in hash_history) / len(hash_history)
-        if abs(hash_variance - int(hash_value, 16)) > 1e-12:
+        sample_values = [int(h[-6:], 16) / 0xFFFFFF for h in hash_history]
+        mean_value = sum(sample_values) / len(sample_values)
+        last_value = sample_values[-1]
+        if abs(mean_value - last_value) > 1e-3:
             self.state.vault_key = None
-            logger.error("Key discarded: Hyper-finite-key error (ε > 10^-12)")
+            logger.error("Key discarded: Hyper-finite-key error (ε > 10^-3)")
             return None
 
         oam_vortex = bin(lattice_key ^ (self.state.cycle << 2))[2:].zfill(16)
@@ -350,6 +352,12 @@ class EchoEvolver:
 
     def _increment_cycle(self) -> None:
         self.state.cycle += 1
+
+    def _log_curiosity(self) -> None:
+        logger.info(
+            "EchoEvolver resonates with %.2f curiosity",
+            self.state.emotional_drive["curiosity"],
+        )
 
     def _evolve_glyphs(self) -> None:
         self.state.glyphs += "≋∇"
