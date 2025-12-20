@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echo.local/schemas/ebscm_metric_publication.schema.json",
+  "title": "EBSCM Metric Publication Record",
+  "type": "object",
+  "required": [
+    "metric_id",
+    "version",
+    "status",
+    "published_at",
+    "period_start",
+    "period_end",
+    "dataset_hash",
+    "publication_hash",
+    "ledger_receipt",
+    "disclosure_class"
+  ],
+  "properties": {
+    "metric_id": {"type": "string"},
+    "version": {"type": "string"},
+    "status": {
+      "type": "string",
+      "enum": ["provisional", "final", "superseded", "deprecated"]
+    },
+    "published_at": {"type": "string", "format": "date-time"},
+    "period_start": {"type": "string", "format": "date-time"},
+    "period_end": {"type": "string", "format": "date-time"},
+    "methodology_hash": {"type": "string"},
+    "dataset_hash": {"type": "string"},
+    "publication_hash": {"type": "string"},
+    "ledger_receipt": {
+      "type": "object",
+      "required": ["ledger", "receipt_hash"],
+      "properties": {
+        "ledger": {"type": "string"},
+        "receipt_hash": {"type": "string"},
+        "record_uri": {"type": "string"}
+      }
+    },
+    "disclosure_class": {
+      "type": "string",
+      "enum": ["public", "restricted", "sealed"]
+    },
+    "confidence": {
+      "type": "object",
+      "properties": {
+        "level": {"type": "number", "minimum": 0, "maximum": 1},
+        "margin_of_error": {"type": "number", "minimum": 0}
+      }
+    },
+    "revision_of": {"type": "string"},
+    "validation_artifacts": {"type": "array", "items": {"type": "string"}},
+    "notes": {"type": "string"}
+  }
+}

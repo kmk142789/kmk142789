@@ -1,0 +1,58 @@
+version: "1.0.0"
+authority: "EBSCM"
+purpose: "Canonical measurement, statistics, and civic metrics authority for Echo."
+links:
+  taxonomy: "data/ebscm/metric_taxonomy.json"
+  edcsa_governance: "docs/edcsa/edcsa_governance_standard.md"
+requirements:
+  taxonomy:
+    - "Every metric must map to a category and domain in the canonical taxonomy."
+    - "Cross-domain metrics must declare a primary category and secondary references."
+  lifecycle:
+    definition:
+      - "Define metric id, name, purpose, calculation, unit, and authoritative owner."
+      - "Document collection cadence, storage location, and disclosure class."
+    collection:
+      - "Bind every source to EDCSA provenance rules with consent enforcement."
+      - "Capture source system, extraction method, and data steward." 
+    validation:
+      - "Run statistical integrity checks before publication."
+      - "Record validation artifacts and anomaly thresholds."
+    revision:
+      - "Revisions require version increment and rationale." 
+      - "Historical values remain immutable; only superseding versions are published."
+    deprecation:
+      - "Deprecate only with replacement or sunset rationale."
+  edcsa_binding:
+    - "All source datasets must register an EDCSA access event with consent scope and purpose."
+    - "Provenance chain must include source system, extract timestamp, steward, and hash receipt."
+  statistical_integrity:
+    sampling:
+      - "Declare sampling frame and coverage percentage."
+      - "State confidence level and margin of error for samples."
+    bias_controls:
+      - "Document bias risks and mitigation steps."
+      - "Require stratification or reweighting when demographic coverage is uneven."
+    revisions:
+      - "Publish revision policy and frequency per metric."
+      - "Flag provisional releases until validation completes."
+  publication:
+    - "Publish metrics as immutable records with content hash and ledger receipt."
+    - "Expose versioned snapshots for audit and judicial review."
+  mandatory_hooks:
+    treasury:
+      - "Treasury disbursements must reference EBSCM metric ids for impact tracking."
+      - "Spending reports include metric version and publication hash."
+    programs:
+      - "Program outcomes require EBSCM-aligned metrics for evaluation and funding gates."
+    audits:
+      - "Audit reports must cite metric versions and validation artifacts."
+    judiciary:
+      - "Judicial review relies on EBSCM-certified metrics for evidentiary packets."
+  disclosure:
+    - "Classify metrics as public, restricted, or sealed per EDCSA sensitivity rules."
+    - "Public releases must include methodology, confidence, and revision notes."
+  anti_manipulation:
+    - "Monitor for abrupt shifts, unusual variance, or mismatch with source trends."
+    - "Require secondary verification when metrics drive funding or legal outcomes."
+    - "Log metric gaming alerts with evidence references."

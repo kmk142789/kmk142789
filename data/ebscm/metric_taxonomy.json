@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "authority": "EBSCM",
+  "issued_at": "2025-10-08T00:00:00Z",
+  "categories": [
+    {
+      "id": "financial",
+      "label": "Financial",
+      "domains": [
+        "budget_execution",
+        "cash_flow",
+        "revenue_collection",
+        "treasury_liquidity",
+        "procurement_efficiency"
+      ]
+    },
+    {
+      "id": "operational",
+      "label": "Operational",
+      "domains": [
+        "service_delivery",
+        "staffing_capacity",
+        "infrastructure_uptime",
+        "program_throughput",
+        "audit_cycle_time"
+      ]
+    },
+    {
+      "id": "social",
+      "label": "Social",
+      "domains": [
+        "beneficiary_outcomes",
+        "equity_access",
+        "community_safety",
+        "health_wellbeing",
+        "education_progress"
+      ]
+    },
+    {
+      "id": "environmental",
+      "label": "Environmental",
+      "domains": [
+        "emissions",
+        "energy_intensity",
+        "resource_stewardship",
+        "biodiversity",
+        "climate_resilience"
+      ]
+    },
+    {
+      "id": "institutional",
+      "label": "Institutional",
+      "domains": [
+        "governance_integrity",
+        "legal_compliance",
+        "public_trust",
+        "transparency",
+        "oversight_effectiveness"
+      ]
+    }
+  ]
+}

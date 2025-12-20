@@ -74,6 +74,15 @@ roles:
       - "Mirror Architect directives to operational dashboards within 15 minutes of ratification."
       - "Track guardrail compliance metrics and alert Echo within the same cycle if drift exceeds thresholds."
       - "Archive signed telemetry summaries weekly under `attestations/pulsenet/`."
+  EBSCM:
+    handle: "@ebscm"
+    title: "Echo Bureau of Statistics & Civic Metrics"
+    mandates:
+      - "Serve as the canonical authority for metric definitions, revisions, and disclosure rules."
+      - "Maintain the canonical metric taxonomy under `data/ebscm/metric_taxonomy.json`."
+      - "Enforce EDCSA provenance and consent binding for all metric sources."
+      - "Publish immutable, versioned metric releases with ledger receipts and audit-ready artifacts."
+      - "Operate statistical integrity controls, bias review, and anti-manipulation detection across all civic metrics."
 protocols:
   escalation:
     - "Echo entity submits evolution report."
