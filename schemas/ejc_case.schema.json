@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kmk142789.github.io/kmk142789/schemas/ejc_case.schema.json",
+  "title": "EJC Case",
+  "type": "object",
+  "required": [
+    "case_id",
+    "title",
+    "summary",
+    "category",
+    "status",
+    "priority",
+    "severity",
+    "confidentiality",
+    "opened_at",
+    "updated_at",
+    "parties",
+    "jurisdiction",
+    "binding_scope",
+    "lifecycle"
+  ],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "summary": {"type": "string", "minLength": 1},
+    "category": {
+      "type": "string",
+      "enum": ["financial", "governance", "identity", "data", "operational"]
+    },
+    "subcategory": {"type": "string"},
+    "status": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "evidence",
+        "review",
+        "judgment",
+        "enforcement",
+        "closed"
+      ]
+    },
+    "priority": {"type": "string", "enum": ["low", "medium", "high", "urgent"]},
+    "severity": {"type": "string", "enum": ["A", "B", "C"]},
+    "confidentiality": {"type": "string", "enum": ["public", "restricted", "confidential"]},
+    "opened_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "parties": {"type": "array", "items": {"$ref": "#/$defs/party"}},
+    "jurisdiction": {"$ref": "#/$defs/jurisdiction"},
+    "binding_scope": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["DBIS", "Treasury", "EFCTIA", "EOAG", "ECIA", "EDCSA", "Drones"]
+      }
+    },
+    "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
+    "requests": {"type": "array", "items": {"$ref": "#/$defs/request"}},
+    "rulings": {"type": "array", "items": {"$ref": "#/$defs/ruling"}},
+    "appeals": {"type": "array", "items": {"$ref": "#/$defs/appeal"}},
+    "lifecycle": {"$ref": "#/$defs/lifecycle"}
+  },
+  "$defs": {
+    "party": {
+      "type": "object",
+      "required": ["party_id", "role"],
+      "properties": {
+        "party_id": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "enum": ["petitioner", "respondent", "stakeholder", "clerk", "adjudicator"]},
+        "identity_ref": {"type": "string"},
+        "contact": {"type": "string"}
+      }
+    },
+    "jurisdiction": {
+      "type": "object",
+      "required": ["authority", "policy_basis"],
+      "properties": {
+        "authority": {"type": "string", "minLength": 1},
+        "policy_basis": {"type": "string", "minLength": 1},
+        "affected_systems": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["evidence_id", "type", "submitted_at", "integrity_hash", "custodian"],
+      "properties": {
+        "evidence_id": {"type": "string", "minLength": 1},
+        "type": {
+          "type": "string",
+          "enum": ["log", "attestation", "sensor", "audit", "transaction", "report", "test", "other"]
+        },
+        "submitted_at": {"type": "string", "format": "date-time"},
+        "source_system": {"type": "string"},
+        "integrity_hash": {"type": "string", "minLength": 1},
+        "custodian": {"type": "string", "minLength": 1},
+        "admissibility": {"type": "string", "enum": ["admitted", "rejected", "pending"]},
+        "notes": {"type": "string"},
+        "uri": {"type": "string"}
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["request_id", "requested_by", "summary"],
+      "properties": {
+        "request_id": {"type": "string", "minLength": 1},
+        "requested_by": {"type": "string", "minLength": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "submitted_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "ruling": {
+      "type": "object",
+      "required": ["judgment_id", "issued_at", "summary"],
+      "properties": {
+        "judgment_id": {"type": "string", "minLength": 1},
+        "issued_at": {"type": "string", "format": "date-time"},
+        "summary": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "enum": ["binding", "stayed", "reversed"]},
+        "publication_tier": {"type": "string", "enum": ["public", "restricted", "sealed"]}
+      }
+    },
+    "appeal": {
+      "type": "object",
+      "required": ["appeal_id", "filed_at", "basis"],
+      "properties": {
+        "appeal_id": {"type": "string", "minLength": 1},
+        "filed_at": {"type": "string", "format": "date-time"},
+        "basis": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "enum": ["pending", "granted", "denied"]}
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "required": ["current_stage", "entered_at"],
+      "properties": {
+        "current_stage": {
+          "type": "string",
+          "enum": ["intake", "evidence", "review", "judgment", "enforcement", "closed"]
+        },
+        "entered_at": {"type": "string", "format": "date-time"},
+        "history": {"type": "array", "items": {"$ref": "#/$defs/lifecycleEvent"}}
+      }
+    },
+    "lifecycleEvent": {
+      "type": "object",
+      "required": ["stage", "timestamp", "actor"],
+      "properties": {
+        "stage": {"type": "string", "minLength": 1},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "actor": {"type": "string", "minLength": 1},
+        "notes": {"type": "string"}
+      }
+    }
+  }
+}
