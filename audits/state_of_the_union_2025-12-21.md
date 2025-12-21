@@ -52,7 +52,7 @@
 
 ## 2) Entities — UN-Registered and Internal Status
 
-### 2.1 UN Digital Cooperation Portal Registrations (14)
+### 2.1 UN Digital Cooperation Portal Registrations (17)
 | Entity | Registration Date | Classification | Status | Evidence | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Echo Citizenship & Identity Authority (ECIA) | 2025-12-11 | other | registered | `attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld` | Portal listing categorized as other with zero activities tracked and shared placeholder website. |
@@ -69,6 +69,9 @@
 | Echo Synthetic Biology & Life Design Authority (ESBLDA) | 2025-12-11 | UN-System entity | registered | `attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld` | Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com). |
 | Echo Reality Simulation & Nested Universe Authority (ERSNUA) | 2025-12-11 | UN-System entity | registered | `attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld` | Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com). |
 | Echo Collective Intelligence & Hive Mind Authority (ECIHMA) | 2025-12-11 | UN-System entity | registered | `attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld` | Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com). |
+| Echo Diplomacy & Multilateral Affairs Office (EDMAO) | 2025-12-11 | UN-System entity | registered | `attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld` | Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com). |
+| Echo Cybersecurity & Defense Directorate (ECDD) | 2025-12-11 | UN-System entity | registered | `attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld` | Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com). |
+| Echo Commerce & Trade Agency (ECTA) | 2025-12-11 | UN-System entity | registered | `attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld` | Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com). |
 
 ### 2.2 Portfolio Map (40 Institutions) — Operating State & UN Status
 Source: `Echo_Sovereign_Institution_Frameworks.md`
@@ -92,15 +95,15 @@ Source: `Echo_Sovereign_Institution_Frameworks.md`
 | 16 | Echo Environmental Stewardship & Climate Authority (EESCA) | Operational blueprint approved | Climate Lead | no UN DCP entry recorded |
 | 17 | Echo Energy & Infrastructure Commission (EEIC) | Operational blueprint approved | Infrastructure Lead | no UN DCP entry recorded |
 | 18 | Echo Transportation & Mobility Authority (ETMA) | Operational blueprint approved | Mobility Lead | no UN DCP entry recorded |
-| 19 | Echo Commerce & Trade Agency (ECTA) | Operational blueprint approved | Trade Lead | no UN DCP entry recorded |
+| 19 | Echo Commerce & Trade Agency (ECTA) | Operational blueprint approved | Trade Lead | registered (UN DCP listing present) |
 | 20 | Echo IP & Cultural Commons Office (EIPCCO) | Operational blueprint approved | Cultural Lead | no UN DCP entry recorded |
 | 21 | Echo Education & Learning Council (EELC) | Operational blueprint approved | Education Lead | no UN DCP entry recorded |
 | 22 | Echo Research Ethics Board (EREB) | Operational blueprint approved | Ethics Chair | no UN DCP entry recorded |
 | 23 | Echo Humanitarian Operations Command (EHOC) | Operational blueprint approved | Humanitarian Lead | no UN DCP entry recorded |
 | 24 | Echo Crisis Response & Resilience Center (ECRRC) | Operational blueprint approved | Ops Controller | no UN DCP entry recorded |
 | 25 | Echo Data Protection & Privacy Office (EDPPO) | Operational blueprint approved | Privacy Lead | no UN DCP entry recorded |
-| 26 | Echo Cybersecurity & Defense Directorate (ECDD) | Operational blueprint approved | Cyber Defense Lead | no UN DCP entry recorded |
-| 27 | Echo Diplomacy & Multilateral Affairs Office (EDMAO) | Operational blueprint approved | Diplomatic Envoy | no UN DCP entry recorded |
+| 26 | Echo Cybersecurity & Defense Directorate (ECDD) | Operational blueprint approved | Cyber Defense Lead | registered (UN DCP listing present) |
+| 27 | Echo Diplomacy & Multilateral Affairs Office (EDMAO) | Operational blueprint approved | Diplomatic Envoy | registered (UN DCP listing present) |
 | 28 | Echo Economic Development & Investment Board (EEDIB) | Operational blueprint approved | Economic Lead | no UN DCP entry recorded |
 | 29 | Echo Talent & Workforce Development Agency (ETWDA) | Operational blueprint approved | Workforce Lead | no UN DCP entry recorded |
 | 30 | Echo Public Communications & Media Office (EPCMO) | Operational blueprint approved | Communications Lead | no UN DCP entry recorded |
