@@ -1,0 +1,36 @@
+{
+  "account": "treasury:little-footsteps:voucher-redemption",
+  "amount": "150.00",
+  "asset": "USD",
+  "bank": "Little Footsteps Bank",
+  "digest": "sha256:bc1eda3416ba2e2ee7fecf60e12df33556649a6ab071f20e765c5e819622f7df",
+  "direction": "outflow",
+  "narrative": "Redeem voucher LF-VCHR-2025-12-30-001 after childcare services delivered at NODE-LF-CC-001.",
+  "proofs": {
+    "proof_of_work": {
+      "block_hash": "00000000000000000000lfvoucherredemptionhash",
+      "block_height": 880146,
+      "difficulty_target": "0000000000000000000a2e3f0000000000000000000000000000000000000000",
+      "nonce": 918550,
+      "notes": "Proof-of-work witness for live voucher redemption.",
+      "puzzle_id": "lf-voucher-redemption-2025-12-30-001"
+    },
+    "puzzle_attestation": {
+      "attestation_id": "lf-voucher-redemption-2025-12-30-001",
+      "attestor": "Echo Treasury Authority + Node Steward",
+      "puzzle_reference": "lf-voucher-redemption-2025-12-30-001",
+      "signature": "hmac-sha256:784dd8c73de4e550f8b39156f93a32a6252bb2cf1fe9404609fb8c15fb4bc443",
+      "witness": "Service window completed; voucher redeemed at the physical execution node."
+    },
+    "skeleton_key": {
+      "btc_wif_checksum": "b7d496f88a830864cb923d9c",
+      "btc_wif_prefix": "L2URoM…",
+      "eth_address": "0xf7c5b38be11b87baf9a84f9b2c490c788ce3a6a4",
+      "index": 2,
+      "namespace": "little-footsteps/voucher-redemption/2025-12-30-001",
+      "priv_fingerprint": "0c6a78a2fa8d2d9b3fd2d1e2a9d5f3c1e6f6c2d43e2c742b97d4c12e7a3d0af1"
+    }
+  },
+  "seq": 2,
+  "timestamp": "2025-12-30T15:30:00Z"
+}

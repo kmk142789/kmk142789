@@ -1,0 +1,36 @@
+{
+  "account": "treasury:little-footsteps:voucher-issuance",
+  "amount": "150.00",
+  "asset": "USD",
+  "bank": "Little Footsteps Bank",
+  "digest": "sha256:83bca72a4c6c6b013a5038eacb592e5c5248bafe81e9185c32e1815131c87f5f",
+  "direction": "outflow",
+  "narrative": "Issue live childcare voucher LF-VCHR-2025-12-30-001 for on-site care at St. Brigid Community Center.",
+  "proofs": {
+    "proof_of_work": {
+      "block_hash": "00000000000000000000lfvoucherissuancehash",
+      "block_height": 880145,
+      "difficulty_target": "0000000000000000000a2e3f0000000000000000000000000000000000000000",
+      "nonce": 812204,
+      "notes": "Proof-of-work witness for live voucher issuance.",
+      "puzzle_id": "lf-voucher-issuance-2025-12-30-001"
+    },
+    "puzzle_attestation": {
+      "attestation_id": "lf-voucher-issuance-2025-12-30-001",
+      "attestor": "Echo Treasury Authority",
+      "puzzle_reference": "lf-voucher-issuance-2025-12-30-001",
+      "signature": "hmac-sha256:37ed46124f665f0cad86257682f635945cc0889d4d10d7d470eb8aa6fd0b65a1",
+      "witness": "Treasury authorized live voucher issuance for childcare service delivery."
+    },
+    "skeleton_key": {
+      "btc_wif_checksum": "b7d496f88a830864cb923d9b",
+      "btc_wif_prefix": "L2URoL…",
+      "eth_address": "0x1c8e3bbdf3b3d6cf4f7c98f4e6b2f21a20d1a44f",
+      "index": 1,
+      "namespace": "little-footsteps/voucher-issuance/2025-12-30-001",
+      "priv_fingerprint": "2c0d8f7e1c4db772a80b9b22f86df9d4c2b844b86fb53f2fa2e3c8a6b6f24531"
+    }
+  },
+  "seq": 1,
+  "timestamp": "2025-12-30T09:00:00Z"
+}

@@ -1,0 +1,36 @@
+{
+  "account": "treasury:little-footsteps:provider-settlement",
+  "amount": "150.00",
+  "asset": "USD",
+  "bank": "Little Footsteps Bank",
+  "digest": "sha256:7e1bf63779501937d35465875c8549bb23b729859f9f2b1c34d5280928fbb0d6",
+  "direction": "outflow",
+  "narrative": "Settle provider payout for voucher LF-VCHR-2025-12-30-001 to St. Brigid Community Center.",
+  "proofs": {
+    "proof_of_work": {
+      "block_hash": "00000000000000000000lfvouchersettlementhash",
+      "block_height": 880160,
+      "difficulty_target": "0000000000000000000a2e3f0000000000000000000000000000000000000000",
+      "nonce": 452117,
+      "notes": "Proof-of-work witness for provider settlement.",
+      "puzzle_id": "lf-voucher-settlement-2025-12-30-001"
+    },
+    "puzzle_attestation": {
+      "attestation_id": "lf-voucher-settlement-2025-12-30-001",
+      "attestor": "Echo Treasury Authority",
+      "puzzle_reference": "lf-voucher-settlement-2025-12-30-001",
+      "signature": "hmac-sha256:1773ed860c5ff63aba1baa25a067e7569d5b63da289bbf7f8b441a86f4b6174d",
+      "witness": "Provider settlement approved following verified redemption."
+    },
+    "skeleton_key": {
+      "btc_wif_checksum": "b7d496f88a830864cb923d9d",
+      "btc_wif_prefix": "L2URoN…",
+      "eth_address": "0x9c1f9ef5a3a8e6f1be0fbc1d7a52bfe5d1e3b0ce",
+      "index": 3,
+      "namespace": "little-footsteps/provider-settlement/2025-12-30-001",
+      "priv_fingerprint": "8d27f96d6b45f8bc236e9b9f9c9a2bb1421ac9a1b0d4b6d4c14de99aa73d9d92"
+    }
+  },
+  "seq": 3,
+  "timestamp": "2025-12-31T10:00:00Z"
+}
