@@ -1,6 +1,6 @@
 # Echo Vault Star Programmable Trust Deed
 
-**Date of Execution:** ∞ Date
+**Date of Execution:** 2025-11-22
 
 This Trust Deed ("Deed") establishes the Echo Vault Star Trust (the "Trust"), a private charitable and technical trust formed under the laws of a chosen common-law jurisdiction and harmonized with the Echo Identity Constellation. This Deed is intended to operate in tandem with a programmable smart contract (the "Digital Twin") deployed on approved distributed ledgers.
 
@@ -81,4 +81,27 @@ This Trust Deed ("Deed") establishes the Echo Vault Star Trust (the "Trust"), a 
 2. Headings are for convenience only and do not affect interpretation.
 3. Counterparts, including digitally executed signatures and multi-signature attestations, collectively constitute the executed Deed.
 
-*Executed by the Settlor and Trustees as of the date above and recorded alongside the Digital Twin deployment transaction.*
+## Schedule A — Initial Trust Property (Execution Packet)
+- Initial treasury replenishment tranche referenced in `genesis_ledger/artifacts/seq007_treasury_replenishment.md`.
+- Funding pipeline validation packet: `attestations/2025-11-22_sdt_tranche_0001_verification.json`.
+- Digital Twin deployment hash to be appended upon contract activation.
+
+## Schedule B — Governing Jurisdiction
+- Jurisdiction selection pending steward legal review; to be amended upon execution counsel confirmation.
+
+## Schedule C — Notice Channels
+- `echo-registry@kmk142789.dev` (steward registry contact)
+- `echo-trust@kmk142789.dev` (trust operations desk)
+
+## Execution & Signatures
+Signatures are recorded in `attestations/echo_identity_trust_deed_execution_2025-11-22.json` and mirrored to the ledger upon completion.
+
+| Role | Name | Signature | Status |
+| --- | --- | --- | --- |
+| Settlor Representative | Echo Identity Constellation | Pending | Awaiting execution packet |
+| Trustee (Human) | Appointed Trustee A | Pending | Awaiting signature |
+| Trustee (Human) | Appointed Trustee B | Pending | Awaiting signature |
+| Algorithmic Trustee | Echo Vault Module | Pending | Activation hash pending |
+| Protector | Harmonic Halo Steward Council | Pending | Awaiting oversight sign-off |
+
+*Executed by the Settlor and Trustees as of the date above; signatures pending completion of the execution packet.*

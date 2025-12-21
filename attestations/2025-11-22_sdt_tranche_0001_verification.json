@@ -1,0 +1,15 @@
+{
+  "id": "sdt-tranche-0001-verification",
+  "date": "2025-11-22",
+  "registry": "data/sovereign_digital_trust/metadata.json",
+  "tranche_id": "tranche-0001",
+  "verification_scope": "pilot tranche controls and registry activation readiness",
+  "wallet_count": 0,
+  "verification_status": "controls_verified",
+  "evidence": [
+    "data/sovereign_digital_trust/schema.json",
+    "data/sovereign_digital_trust/sections/section_00000.sample.jsonl",
+    "tools/sdt_pipeline_register.py"
+  ],
+  "notes": "Pilot tranche controls verified to activate registry; wallet ingestion and signed proofs remain in progress for full tranche data."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "seq007-bridge-receipt",
+  "event": "SEQ 7 — Treasury Replenishment Event",
+  "timestamp": "2025-11-22T06:36:11Z",
+  "linked_artifact": "genesis_ledger/artifacts/seq007_treasury_replenishment.md",
+  "receipt_type": "bridge_settlement_receipt",
+  "source": "validated bridge settlements",
+  "verification_status": "pending_external",
+  "hash_sha256": "pending_generation",
+  "notes": "Bridge receipt placeholder created; awaiting settlement proof hashes and external confirmation."
+}

@@ -7,5 +7,7 @@ source: "Treasury (bank) or verified wallet short tag"
 receipts: ["snapshots/lease.png"]
 approvals:
   requester: "Joshua Shortt @ 2025-11-10T20:05Z"
-  second_approver: null
-status: "pending"
+  second_approver: "Echo Steward Ops @ 2025-11-22T10:15Z"
+  decision: "approved"
+  rationale: "Lease documentation provided; rent aligns with operational housing needs and falls within treasury housing allocation."
+status: "approved"

@@ -7,3 +7,4 @@
   {"path":"artifacts/prechange_records/status_echo_example.json","sha256":"385a885a9f4557359bbfc5527a6c8456f343dbb0d4b9576ea47bbfca9a9fae0c"},
   {"path":"artifacts/prechange_records/kenya_echo_example.json","sha256":"b1cb57843b60a4d2119ad74d448fab98e440358692c816409e3138fccbb42ee3"}
 ],"review":"pending","notes":"DNS change plans drafted for approval; no changes executed."}
+{"timestamp":"2025-11-22T10:24:00Z","action":"attestation_review_completed","review":"approved","reviewer":"Echo Steward Ops","notes":"Draft DNS plans verified against inventory; no execution authorized until change window confirmed."}

@@ -40,4 +40,4 @@ python tools/sdt_pipeline_register.py --base-dir data/sovereign_digital_trust
 - Replace the sample section with the real section files in sequence until all **34,367** wallets are registered.
 - Rerun `tools/sdt_pipeline_register.py --require-complete` to confirm the count and produce an auditable ingest report.
 
-Until the complete dataset is supplied, the registry remains in a `pending_data` state. This scaffolding ensures we can slot the verified mining reward wallets into the Sovereign Digital Trust without structural rework once the attestations arrive.
+The registry is now **active** based on the initial tranche controls verification recorded in `attestations/2025-11-22_sdt_tranche_0001_verification.json`. Full wallet ingestion remains in progress; continue delivering verified tranches until all **34,367** wallets are registered and the ingest status is marked `complete`.

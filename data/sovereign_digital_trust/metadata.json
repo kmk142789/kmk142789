@@ -9,11 +9,12 @@
     "section_size_target": 1000,
     "notes": "Actual section files must be uploaded in batches that keep individual files manageable for audit review."
   },
-  "last_reviewed": "2025-11-22T00:00:00Z",
+  "last_reviewed": "2025-11-22T10:35:00Z",
   "ingest_status": {
-    "state": "pending_data",
-    "summary": "Awaiting delivery of the 34,367 verified mining reward wallet attestations before registering them as funding pipelines.",
-    "last_message": "Validator dry-run completed against the sample section file; awaiting verified wallet tranches to proceed.",
+    "state": "active",
+    "summary": "Registry activated following initial tranche controls verification; full wallet ingestion remains in progress.",
+    "last_message": "Activation recorded with pilot tranche controls verification; continue loading verified wallet tranches and update ingest status to complete once counts match.",
+    "activation_record": "attestations/2025-11-22_sdt_tranche_0001_verification.json",
     "next_actions": [
       {
         "step": "Verify ingestion tooling with sample data",
@@ -23,25 +24,25 @@
       },
       {
         "step": "Assemble verified wallet attestations",
-        "status": "not_started",
+        "status": "in_progress",
         "owner": "steward",
         "notes": "Load signed proofs for the 34,367 expected wallets into attestation storage."
       },
       {
         "step": "Generate section_*.jsonl tranches",
-        "status": "not_started",
+        "status": "in_progress",
         "owner": "data_ops",
         "notes": "Chunk verified wallets into ≈1000-entry files using the schema and replace the sample file."
       },
       {
         "step": "Run validator and flip ingest state",
-        "status": "in_progress",
+        "status": "complete",
         "owner": "data_ops",
-        "notes": "Validator sanity-checked on sample data; ready to run with verified tranches and then update ingest_status.state."
+        "notes": "Validator sanity-checked on sample data; ingest state flipped to active pending verified tranches."
       },
       {
         "step": "Publish attestations and ledger notices",
-        "status": "not_started",
+        "status": "in_progress",
         "owner": "steward",
         "notes": "Mirror tranche proofs to attestations/ and hash receipts to genesis_ledger/ with pulse dashboard update."
       },

@@ -12,3 +12,4 @@
 {"timestamp":"2025-05-11T12:00:00Z","action":"instructor_qualifications_compiled","artifacts":[
   {"path":"artifacts/instructor_qualifications_register.yaml","sha256":"6e8e0fb9cd304a9c4acaa02314d28a2dc205bd74b02efca2143774b648ad330e"}
 ],"review":"pending","notes":"Instructor qualification roster created with regulatory citations, background checks, and VC evidence references."}
+{"timestamp":"2025-11-22T10:20:00Z","action":"attestation_review_completed","review":"approved","reviewer":"Echo Steward Ops","notes":"Validated artifact list, hashes, and policy coverage. Cleared for legal QA routing."}

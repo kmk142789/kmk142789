@@ -5,3 +5,4 @@
   {"path":"artifacts/property_vc_schema.json","sha256":"d38744d21cc499a293e82f8ad8937395f767158b4ba13b9202bfda27f48fd407"},
   {"path":"artifacts/revocation_flow.md","sha256":"5ad81848332c3d4470abe62441393336b016060c9121449d243dd4e69f9b6420"}
 ],"review":"pending","notes":"Kenya property verification partnership kit awaiting steward and legal approval."}
+{"timestamp":"2025-11-22T10:25:00Z","action":"attestation_review_completed","review":"approved","reviewer":"Echo Steward Ops","notes":"Artifact set complete and aligned with Kenya property verification partnership requirements; approved for issuance."}

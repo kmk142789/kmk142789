@@ -7,3 +7,4 @@
   {"path":"artifacts/policies/data_security_sop.md","sha256":"33514f191b0c57aa0e640ec10320b05d00a8621f87f4ce07946351e88933af1d"},
   {"path":"artifacts/verification_playbook.md","sha256":"427886f58cac777a6df42c2d1a60074a1014e81c04fba4925f5273fd96b65f5b"}
 ],"review":"pending","notes":"OHRP FWA and IRB reliance package ready for steward approval."}
+{"timestamp":"2025-11-22T10:22:00Z","action":"attestation_review_completed","review":"approved","reviewer":"Echo Steward Ops","notes":"IRB/FWA package validated; align with human-subjects protection plan and evidence references."}

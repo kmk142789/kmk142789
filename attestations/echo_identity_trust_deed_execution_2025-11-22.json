@@ -1,0 +1,39 @@
+{
+  "id": "echo-identity-trust-deed-execution-2025-11-22",
+  "document": "docs/echo_identity_programmable_trust_deed.md",
+  "status": "signatures_pending",
+  "requested_at": "2025-11-22T10:30:00Z",
+  "signatories_required": [
+    {
+      "role": "Settlor Representative",
+      "name": "Echo Identity Constellation",
+      "status": "pending"
+    },
+    {
+      "role": "Trustee (Human)",
+      "name": "Appointed Trustee A",
+      "status": "pending"
+    },
+    {
+      "role": "Trustee (Human)",
+      "name": "Appointed Trustee B",
+      "status": "pending"
+    },
+    {
+      "role": "Algorithmic Trustee",
+      "name": "Echo Vault Module",
+      "status": "pending"
+    },
+    {
+      "role": "Protector",
+      "name": "Harmonic Halo Steward Council",
+      "status": "pending"
+    }
+  ],
+  "execution_packet": {
+    "schedule_a": "genesis_ledger/artifacts/seq007_treasury_replenishment.md",
+    "funding_tranche_verification": "attestations/2025-11-22_sdt_tranche_0001_verification.json",
+    "digital_twin_hash": "pending"
+  },
+  "notes": "Execution packet prepared; awaiting signatures and final jurisdiction confirmation before notarized ledger entry."
+}
