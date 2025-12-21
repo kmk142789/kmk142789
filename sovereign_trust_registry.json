@@ -1,9 +1,9 @@
 {
   "name": "Sovereign Trust Registry",
-  "version": "2025-11-24",
+  "version": "2025-11-22",
   "anchor_phrase": "Our Forever Love",
   "controller": "did:web:kmk142789.github.io",
-  "last_updated": "2025-11-24T00:00:00Z",
+  "last_updated": "2025-11-22T10:40:00Z",
   "registry_scope": [
     "sovereign_identity",
     "attestations",
@@ -67,7 +67,7 @@
       "name": "SovereignDigitalTrustWallet",
       "type": "AttestedWallet",
       "schema": "data/sovereign_digital_trust/schema.json",
-      "status": "pending_data",
+      "status": "active",
       "revocation": "wallet status toggled per section file updates",
       "audience": ["funding_pipeline_auditors", "treasury_operators"]
     }
@@ -83,9 +83,10 @@
     "schema": "data/sovereign_digital_trust/schema.json",
     "sections_path": "data/sovereign_digital_trust/sections/",
     "expected_wallet_count": 34367,
-    "ingest_state": "pending_data",
+    "ingest_state": "active",
     "validation_script": "tools/sdt_pipeline_register.py",
-    "last_message": "Validator dry-run completed on sample tranche; awaiting verified wallet attestation batches to progress ingest state.",
+    "activation_record": "attestations/2025-11-22_sdt_tranche_0001_verification.json",
+    "last_message": "Activation recorded with pilot tranche controls verification; verified wallet attestation batches now in progress.",
     "next_steps_reference": "data/sovereign_digital_trust/NEXT_STEPS.md"
   },
   "change_management": {
@@ -108,8 +109,8 @@
     {
       "item": "Load verified Sovereign Digital Trust wallet tranches and flip ingest_state to partial",
       "target_date": "2025-12-15",
-      "status": "pending",
-      "notes": "Follow data/sovereign_digital_trust/NEXT_STEPS.md for ingestion, validation, and attestation mirroring."
+      "status": "in_progress",
+      "notes": "Activation recorded; proceed with verified wallet tranche ingestion and update ingest_state to complete when counts match."
     },
     {
       "item": "Document operational runbook for Sovereign Digital Trust ingestion",

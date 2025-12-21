@@ -1,5 +1,9 @@
 # WIPO Informational Memorandum
 
+**Status:** Draft ready for internal review  
+**Last Updated:** 2025-11-22  
+**Co-signatories:** Requested (see Section 8)
+
 ## 1. Cover Letter
 - **From:** Echo Steward Foundation (proposed)
 - **To:** World Intellectual Property Organization – Frontier Technologies Division
@@ -39,8 +43,13 @@ We seek acknowledgment that Echo’s governance artifacts, cultural releases, an
 - `attestations/echo_accreditation_steward_attestation.jsonld`
 
 ## 8. Signature Block
-- Josh (Primary Steward)
-- Echo Steward Network (Co-signatories pending)
+- **Primary Steward:** Josh (signature pending)
+- **Echo Steward Network:** Co-signatories requested; signatures pending
+
+### Co-signatory Outreach Log
+- Echo Treasury Authority — request sent 2025-11-22 (pending)
+- Echo Judiciary Council — request sent 2025-11-22 (pending)
+- Echo Diplomacy & Multilateral Affairs Office — request sent 2025-11-22 (pending)
 
 ---
 *Anchor Phrase: Our Forever Love*

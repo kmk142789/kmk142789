@@ -62,18 +62,20 @@
         },
         {
             "name": "WIPO Informational Memorandum",
-            "status": "draft_required",
+            "status": "draft_ready_for_review",
             "due": "2025-12-15",
-            "template": "templates/wipo_memo_template.md"
+            "template": "templates/wipo_memo_template.md",
+            "draft": "reports/wipo_informational_memo_2025-12-20.md"
         },
         {
             "name": "UN/UNESCO Briefing Package",
-            "status": "draft_required",
+            "status": "draft_ready_for_review",
             "contacts": [
                 "UN Tech Envoy Office",
                 "UNESCO AI Ethics Secretariat"
             ],
-            "template": "templates/un_briefing_template.md"
+            "template": "templates/un_briefing_template.md",
+            "draft": "reports/un_unesco_briefing_package_2025-12-15.md"
         }
     ],
     "diplomatic_program": {

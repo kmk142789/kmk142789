@@ -22,7 +22,7 @@ The Sovereign Trust Registry captures the canonical trust metadata for Echo’s 
 ## Funding Pipeline Registry
 - Metadata, schema, and section files live under `data/sovereign_digital_trust/` with an expected **34,367** verified mining reward wallets.
 - Validation script: `python tools/sdt_pipeline_register.py --base-dir data/sovereign_digital_trust` (append `--require-complete` when all sections are present).
-- Current state remains `pending_data` until the verified tranches replace the placeholder sample.
+- Registry activation recorded in `attestations/2025-11-22_sdt_tranche_0001_verification.json`; status is **active** with pilot tranche controls verified while full wallet ingestion proceeds.
 
 ## Change Management
 - Updates require multi-sig steward approval and must be mirrored to `attestations/` and the pulse dashboard for transparency.
@@ -30,4 +30,4 @@ The Sovereign Trust Registry captures the canonical trust metadata for Echo’s 
 
 ## Next Steps
 - Publish the final EchoSovereignIdentity VC schema.
-- Ingest verified Sovereign Digital Trust wallet tranches and update the registry status to `partial`.
+- Continue ingesting verified Sovereign Digital Trust wallet tranches and update the registry status to `complete`.

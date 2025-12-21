@@ -6,5 +6,11 @@
   "algo": "bitcoin-message-base64",
   "created_at": "2025-10-19T15:48:51Z",
   "hash_sha256": "8c7d6b5a4f3e2d1c0b9a8877665544332211ffeeddccbbaa9988776655443322",
-  "notes": "Continuum bridge proof pending ledger notarization."
+  "notarization": {
+    "status": "recorded_pending_validation",
+    "recorded_at": "2025-11-22T10:50:00Z",
+    "record": "state/sovereign_ledger/notarizations/puzzle-079-continuum-bridge.json",
+    "method": "internal-ledger-entry"
+  },
+  "notes": "Continuum bridge proof notarization recorded; awaiting external validation hash confirmation."
 }

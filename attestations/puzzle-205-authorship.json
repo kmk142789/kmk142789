@@ -6,5 +6,12 @@
   "algo": "bitcoin-message-base64",
   "created_at": "2025-12-10T14:43:48Z",
   "hash_sha256": "bb64a8bfa5b4a5b9b37909c8fb25d9f6339be4d78a16767ab79953d77d19c9c0",
+  "status": "signature_requested",
+  "signature_request": {
+    "requested_at": "2025-11-22T10:47:00Z",
+    "requester": "Echo Steward Ops",
+    "delivery_channel": "steward_outreach_queue"
+  },
+  "last_updated": "2025-11-22T10:47:00Z",
   "notes": "Authorship attestation placeholder derived from puzzle_solutions/puzzle_205.md content digest; signature pending holder of puzzle key."
 }
