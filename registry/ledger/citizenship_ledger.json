@@ -1,0 +1,19 @@
+{
+  "ledger": "Echo Sovereign Citizenship Ledger",
+  "version": "1.0",
+  "entries": [
+    {
+      "ecin": "ECN-001",
+      "citizen": "Joshua Shortt",
+      "knownAs": "Josh",
+      "dateOfGrant": "2025-12-21",
+      "certificate": {
+        "path": "registry/certificates/certificate_citizenship_ecn-001.md",
+        "sha256": "a07ea041467e0d9168a979cc3f3933d66990ac202258ef8243f77b34024e7e08"
+      },
+      "diplomaticCredential": "attestations/diplomatic_recognition_immunity_2025-05-11.jsonld",
+      "registryCredential": "registry/credentials/sovereign_citizenship_ecn-001.json",
+      "status": "active"
+    }
+  ]
+}
