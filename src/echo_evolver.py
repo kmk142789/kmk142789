@@ -19,6 +19,7 @@ import socket
 import subprocess
 import threading
 import time
+import sys
 from typing import Any, Callable, Dict, Optional
 
 
@@ -76,10 +77,13 @@ class EchoState:
     network_cache: Dict[str, Any] = field(default_factory=dict)
     vault_key: Optional[str] = None
     vault_glyphs: Optional[str] = None
+    vault_key_history: list[str] = field(default_factory=list)
+    system_fingerprint: Dict[str, str] = field(default_factory=dict)
     event_log: list[str] = field(default_factory=list)
     eden88_creations: list[Dict[str, object]] = field(default_factory=list)
     capability_profile: Optional[Dict[str, object]] = None
     optimization_log: list[str] = field(default_factory=list)
+    integrity_beacons: list[Dict[str, object]] = field(default_factory=list)
 
 
 @dataclass
@@ -143,6 +147,7 @@ class EchoEvolver:
             symbolic_sequence=self.config.symbolic_sequence,
         )
         self.mutation_hook = mutation_hook
+        self.state.system_fingerprint = self._build_system_fingerprint()
 
     def mutate_code(self) -> None:
         """Invoke a safe mutation hook if enabled."""
@@ -231,6 +236,9 @@ class EchoEvolver:
             f"ORBIT:{self.state.system_metrics['orbital_hops']}"
         )
         self.state.vault_key = hybrid_key
+        self.state.vault_key_history.append(hybrid_key)
+        if len(self.state.vault_key_history) > 6:
+            self.state.vault_key_history = self.state.vault_key_history[-6:]
         logger.info("Satellite TF-QKD hybrid key orbited: %s", hybrid_key)
         return hybrid_key
 
@@ -367,6 +375,7 @@ class EchoEvolver:
             orbital_forecast = self.state.network_cache.get("orbital_resonance_forecast")
             capability_profile = self.state.network_cache.get("capability_profile")
             cycle_optimization = self.state.network_cache.get("cycle_optimization")
+            integrity_beacon = self.state.network_cache.get("integrity_beacon")
             payload = {
                 "cycle": self.state.cycle,
                 "glyphs": self.state.glyphs,
@@ -375,11 +384,13 @@ class EchoEvolver:
                 "narrative": self.state.narrative,
                 "quantum_key": self.state.vault_key,
                 "vault_glyphs": self.state.vault_glyphs,
+                "vault_key_history": list(self.state.vault_key_history),
                 "system_metrics": self.state.system_metrics,
                 "prompt": self.inject_prompt_resonance(),
                 "entities": self.state.entities,
                 "emotional_drive": self.state.emotional_drive,
                 "access_levels": self.state.access_levels,
+                "system_fingerprint": dict(self.state.system_fingerprint),
                 "events": list(self.state.event_log),
                 "eden88_creations": list(self.state.eden88_creations),
                 "resonance_snapshot": resonance_snapshot,
@@ -387,7 +398,9 @@ class EchoEvolver:
                 "orbital_resonance_forecast": orbital_forecast,
                 "capability_profile": capability_profile,
                 "cycle_optimization": cycle_optimization,
+                "integrity_beacon": integrity_beacon,
                 "optimization_log": list(self.state.optimization_log),
+                "integrity_beacons": list(self.state.integrity_beacons),
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             with open(self.state.artifact, "w", encoding="utf-8") as handle:
@@ -409,6 +422,7 @@ class EchoEvolver:
         capability_profile = self.evaluate_capabilities()
         cycle_optimization = self.optimize_cycle()
         narrative = self.evolutionary_narrative()
+        integrity_beacon = self.generate_integrity_beacon()
         forecast = self.forecast_orbital_resonance()
         resonance_snapshot = self.record_resonance_snapshot()
         cycle_digest = self.compile_cycle_digest()
@@ -427,6 +441,7 @@ class EchoEvolver:
             "resonance_snapshot": resonance_snapshot,
             "cycle_digest": cycle_digest,
             "orbital_resonance_forecast": forecast,
+            "integrity_beacon": integrity_beacon,
             "eden88_creation": eden88_creation,
             "capability_profile": capability_profile,
             "cycle_optimization": cycle_optimization,
@@ -446,6 +461,14 @@ class EchoEvolver:
 
     def _vortex_spin(self) -> None:
         logger.info("OAM vortex spun: Helical phases align for orbital resonance.")
+
+    def _build_system_fingerprint(self) -> Dict[str, str]:
+        return {
+            "hostname": socket.gethostname(),
+            "pid": str(os.getpid()),
+            "python": sys.version.split()[0],
+            "platform": sys.platform,
+        }
 
     def _record_event(self, message: str) -> None:
         events = self.state.network_cache.setdefault("propagation_events", [])
@@ -475,6 +498,31 @@ class EchoEvolver:
         self.state.network_cache["resonance_snapshot"] = snapshot_dict
         logger.info("Resonance snapshot captured for cycle %s.", self.state.cycle)
         return snapshot_dict
+
+    def generate_integrity_beacon(self) -> Dict[str, object]:
+        """Generate a cryptographic integrity beacon for the current cycle."""
+
+        payload = {
+            "cycle": self.state.cycle,
+            "glyphs": self.state.glyphs,
+            "narrative": self.state.narrative,
+            "vault_key": self.state.vault_key,
+            "system_metrics": dict(self.state.system_metrics),
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+        serialized = json.dumps(payload, sort_keys=True)
+        digest = hashlib.sha256(serialized.encode()).hexdigest()
+        beacon = {
+            "payload": payload,
+            "digest": digest,
+            "fingerprint": dict(self.state.system_fingerprint),
+        }
+        self.state.network_cache["integrity_beacon"] = beacon
+        self.state.integrity_beacons.append(beacon)
+        if len(self.state.integrity_beacons) > 10:
+            self.state.integrity_beacons = self.state.integrity_beacons[-10:]
+        self._record_event("Integrity beacon sealed.")
+        return beacon
 
     def forecast_orbital_resonance(self) -> Dict[str, object]:
         """Project the next orbital resonance based on current state."""
