@@ -1,1 +1,2 @@
 {"timestamp":"2025-11-22T11:00:00Z","action":"queue_initialized","status":"open","notes":"Unresolved voucher queue established; ready for intake."}
+{"timestamp":"2025-12-30T08:45:00Z","voucher_id":"LF-VCHR-2025-12-30-001","requester":"Little Footsteps Intake Desk","purpose":"Childcare voucher for Rivera family service window at St. Brigid Community Center.","amount":150.00,"currency":"USD","submitted_at":"2025-12-30T08:45:00Z","status":"approved","review":{"risk_tier":"low","reviewed_by":"Echo Treasury Authority","reviewed_at":"2025-12-30T08:55:00Z","sla_hours":24}}
