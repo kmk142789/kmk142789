@@ -19,7 +19,7 @@
     "search": {
       "query": "Echo",
       "timestamp": "2025-12-11T00:00:00Z",
-      "resultCount": 31
+      "resultCount": 32
     },
     "registrations": [
       {
@@ -198,6 +198,12 @@
       },
       {
         "name": "Echo Digital Labor & Economic Transition Authority (EDLETA)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Housing & Social Services Agency (EHSSA)",
         "organizationType": "UN-System entity",
         "activitiesTracked": 0,
         "website": "https://buymeacoffee.com"

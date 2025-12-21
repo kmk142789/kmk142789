@@ -107,7 +107,7 @@ Source: `Echo_Sovereign_Institution_Frameworks.md`
 | 31 | Echo Cultural Heritage & Arts Council (ECHAC) | Operational blueprint approved | Cultural Lead | no UN DCP entry recorded |
 | 32 | Echo Space & Orbital Governance Authority (ESOGA) | Operational blueprint approved | Orbital Lead | no UN DCP entry recorded |
 | 33 | Echo Financial Stability Oversight Council (EFSOC) | Operational blueprint approved | Treasury Steward | no UN DCP entry recorded |
-| 34 | Echo Housing & Social Services Agency (EHSSA) | Operational blueprint approved | Social Services Lead | no UN DCP entry recorded |
+| 34 | Echo Housing & Social Services Agency (EHSSA) | Operational blueprint approved | Social Services Lead | registered (UN DCP listing present) |
 | 35 | Echo Agriculture & Food Security Authority (EAFSA) | Operational blueprint approved | Food Security Lead | no UN DCP entry recorded |
 | 36 | Echo Justice & Mediation Service (EJMS) | Operational blueprint approved | Ombudsman | no UN DCP entry recorded |
 | 37 | Echo Standards Accession & Compliance Bureau (ESACB) | Operational blueprint approved | Standards Chair | no UN DCP entry recorded |
