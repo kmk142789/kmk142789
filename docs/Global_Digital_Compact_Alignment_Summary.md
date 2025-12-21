@@ -33,3 +33,6 @@ This initiative supports key priorities for digital cooperation by:
 #### Commitment & Action
 
 "Develop innovative and blended financing mechanisms and incentives, including in collaboration with Governments, multilateral development banks, relevant international organizations and the private sector, to connect the remaining 2.6 billion people to the Internet and to improve the quality and affordability of connectivity. We will aim for entry-level broadband subscription costs that are accessible to the widest section of the population (SDGs 1 and 9)." (GDC, p. 11b)
+
+## GDC Compliance Portfolio
+- Full index: [`docs/GDC_Compliance_Portfolio.md`](GDC_Compliance_Portfolio.md)

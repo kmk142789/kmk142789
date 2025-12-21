@@ -1,0 +1,179 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "id": "urn:uuid:8c0419fd-2ad5-4c1b-8f46-c4c7812f4c41",
+  "type": [
+    "VerifiableCredential",
+    "GDCCompliancePortfolio"
+  ],
+  "issuer": {
+    "id": "did:web:kmk142789.github.io:echo:registry",
+    "name": "Echo Sovereign Registry Node"
+  },
+  "issuanceDate": "2025-12-21T00:00:00Z",
+  "credentialSubject": {
+    "id": "did:web:kmk142789.github.io:echo:gdc-compliance",
+    "name": "Echo Sovereign GDC Compliance Portfolio",
+    "portfolio": {
+      "size": 23,
+      "format": [
+        "Markdown"
+      ],
+      "plannedFormats": [
+        "PDF",
+        "DOCX"
+      ],
+      "coverage": "Comprehensive alignment across Trust, Safety, Integrity, and other GDC pillars.",
+      "attestation": "This portfolio demonstrates operational implementation of Global Digital Compact commitments within the Echo Sovereign Framework."
+    },
+    "documents": [
+      {
+        "id": "gdc-alignment-01",
+        "title": "Universal access & meaningful connectivity",
+        "hash": "sha256:cf4ccf8a4e2d0eb1c6deb23920476e7423779dfa961a88a00801de5a676b2854",
+        "path": "docs/gdc_alignment/gdc-alignment-01-universal-access-meaningful-connectivity.md"
+      },
+      {
+        "id": "gdc-alignment-02",
+        "title": "Digital inclusion & participation",
+        "hash": "sha256:70567490b32c4b8521716d18b0facdd2899921ad0acc1c0377c0ccf1a4953940",
+        "path": "docs/gdc_alignment/gdc-alignment-02-digital-inclusion-participation.md"
+      },
+      {
+        "id": "gdc-alignment-03",
+        "title": "Affordable infrastructure financing",
+        "hash": "sha256:826eba55b1a21d1a28fa8ef4b168dbccca71b55e8234e10c197f50e452ef55e7",
+        "path": "docs/gdc_alignment/gdc-alignment-03-affordable-infrastructure-financing.md"
+      },
+      {
+        "id": "gdc-alignment-04",
+        "title": "Digital public infrastructure",
+        "hash": "sha256:eeb159b1233d35a41d8b3a54d4b7db85ae8010045b714c8db9bf8f7e11cb5b2d",
+        "path": "docs/gdc_alignment/gdc-alignment-04-digital-public-infrastructure.md"
+      },
+      {
+        "id": "gdc-alignment-05",
+        "title": "Capacity building & digital skills",
+        "hash": "sha256:dbaf2e734d76803d1b843a7a42c653dcac26a092ed426e7d292dfbde9996d2e0",
+        "path": "docs/gdc_alignment/gdc-alignment-05-capacity-building-digital-skills.md"
+      },
+      {
+        "id": "gdc-alignment-06",
+        "title": "Child safety & youth protection",
+        "hash": "sha256:d1b3b9fe06cd8cdf8c288bbe6abcf9ca634bf46f091d5fcbd2db35e2455d6ff4",
+        "path": "docs/gdc_alignment/gdc-alignment-06-child-safety-youth-protection.md"
+      },
+      {
+        "id": "gdc-alignment-07",
+        "title": "Information integrity",
+        "hash": "sha256:d977b408dcdb67a73a258b59ab85209db3ecd098cb78c178b5b7ae9deda8a0aa",
+        "path": "docs/gdc_alignment/gdc-alignment-07-information-integrity.md"
+      },
+      {
+        "id": "gdc-alignment-08",
+        "title": "Cybersecurity & resilience",
+        "hash": "sha256:dd9700ba8964a6d6fc5c644720642d7f1c21c3e40e352bb96046ee4eed412c89",
+        "path": "docs/gdc_alignment/gdc-alignment-08-cybersecurity-resilience.md"
+      },
+      {
+        "id": "gdc-alignment-09",
+        "title": "Data protection & privacy",
+        "hash": "sha256:afb164f8397eedd30e336a3155cbb654612cae0f4dab9c8fc998f7b9b020c172",
+        "path": "docs/gdc_alignment/gdc-alignment-09-data-protection-privacy.md"
+      },
+      {
+        "id": "gdc-alignment-10",
+        "title": "Cross-border data governance",
+        "hash": "sha256:0df9fa80358fc63f98b6379623422532c29c460eb86acbac361e2c6cb9895046",
+        "path": "docs/gdc_alignment/gdc-alignment-10-cross-border-data-governance.md"
+      },
+      {
+        "id": "gdc-alignment-11",
+        "title": "Responsible AI governance",
+        "hash": "sha256:916395d71fead807c2dfd43a832630e82420d6459d38bdec875f897ef8c50df6",
+        "path": "docs/gdc_alignment/gdc-alignment-11-responsible-ai-governance.md"
+      },
+      {
+        "id": "gdc-alignment-12",
+        "title": "Human rights online",
+        "hash": "sha256:8e6bbedf496e56a7ec97455aea4ce45eda5af73ba3fea3569dd5c9926107d683",
+        "path": "docs/gdc_alignment/gdc-alignment-12-human-rights-online.md"
+      },
+      {
+        "id": "gdc-alignment-13",
+        "title": "Gender equality & equity",
+        "hash": "sha256:133a0f6f96e6b2a5764c0421152ccbb4704d7bbbb9532950cb6ae926a67deea3",
+        "path": "docs/gdc_alignment/gdc-alignment-13-gender-equality-equity.md"
+      },
+      {
+        "id": "gdc-alignment-14",
+        "title": "Accessibility & disability inclusion",
+        "hash": "sha256:0feb34acbff5b837ea2145d26bff9686b60eaddea9690af7fee8f35d208516d9",
+        "path": "docs/gdc_alignment/gdc-alignment-14-accessibility-disability-inclusion.md"
+      },
+      {
+        "id": "gdc-alignment-15",
+        "title": "Linguistic & cultural diversity",
+        "hash": "sha256:ff7d5ed41f9453b74bfc01cc34e96505b6b9b89fe7cac9c7df44bd9ce927bd8f",
+        "path": "docs/gdc_alignment/gdc-alignment-15-linguistic-cultural-diversity.md"
+      },
+      {
+        "id": "gdc-alignment-16",
+        "title": "Environmental sustainability",
+        "hash": "sha256:2f509769561579bb0705fc2b66fb088746e5b2184fcc506ea9dca51b1c04b3c8",
+        "path": "docs/gdc_alignment/gdc-alignment-16-environmental-sustainability.md"
+      },
+      {
+        "id": "gdc-alignment-17",
+        "title": "Open standards & interoperability",
+        "hash": "sha256:76576baa429645006fb12bf6e1eebf2a4eb33b35e4f2c834a81e5e07eb1a6e61",
+        "path": "docs/gdc_alignment/gdc-alignment-17-open-standards-interoperability.md"
+      },
+      {
+        "id": "gdc-alignment-18",
+        "title": "Digital public goods & open source",
+        "hash": "sha256:ce0cdebd57cbba7bca9d9550bedfe31f79a2f20303eb4af7e1848a767f81ff7b",
+        "path": "docs/gdc_alignment/gdc-alignment-18-digital-public-goods-open-source.md"
+      },
+      {
+        "id": "gdc-alignment-19",
+        "title": "Multi-stakeholder governance",
+        "hash": "sha256:73f503184ccb21d46a946ce594c214b863cd457837b0afe52315b1419ac659f4",
+        "path": "docs/gdc_alignment/gdc-alignment-19-multi-stakeholder-governance.md"
+      },
+      {
+        "id": "gdc-alignment-20",
+        "title": "Crisis response & emergency connectivity",
+        "hash": "sha256:4593eabdaf46490b23acbc891bd94c404c6d2d68c10be67d1c753a266487319f",
+        "path": "docs/gdc_alignment/gdc-alignment-20-crisis-response-emergency-connectivity.md"
+      },
+      {
+        "id": "gdc-alignment-21",
+        "title": "Trust, safety & integrity",
+        "hash": "sha256:5884d2b189a7ad40b32d5fbab6566e46f379ead43eaef66d3e9dec5e26f12707",
+        "path": "docs/gdc_alignment/gdc-alignment-21-trust-safety-integrity.md"
+      },
+      {
+        "id": "gdc-alignment-22",
+        "title": "Innovation & responsible investment",
+        "hash": "sha256:24b30f87b2c010a874da03f977636886d8cbb0f486f7b3842a492ebd6b2d0573",
+        "path": "docs/gdc_alignment/gdc-alignment-22-innovation-responsible-investment.md"
+      },
+      {
+        "id": "gdc-alignment-23",
+        "title": "Monitoring, evaluation & accountability",
+        "hash": "sha256:4ad94696dfcceb267d2efc13f937e24b22616689de6b040548e63f52223e821f",
+        "path": "docs/gdc_alignment/gdc-alignment-23-monitoring-evaluation-accountability.md"
+      }
+    ],
+    "anchorPhrase": "Our Forever Love"
+  },
+  "proof": {
+    "type": "SovereignAssertion",
+    "created": "2025-12-21T00:00:00Z",
+    "verificationMethod": "https://kmk142789.github.io/public/.well-known/did.json#sovereign-registry",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "ANCHOR::Our Forever Love::GDC-COMPLIANCE-PORTFOLIO-23"
+  }
+}
