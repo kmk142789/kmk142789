@@ -262,6 +262,39 @@
                 "notes": "Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com)."
             },
             {
+                "name": "Echo Diplomacy & Multilateral Affairs Office (EDMAO)",
+                "portal": "UN Digital Cooperation Portal",
+                "registration_date": "2025-12-11",
+                "classification": "UN-System entity",
+                "status": "registered",
+                "evidence": [
+                    "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+                ],
+                "notes": "Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com)."
+            },
+            {
+                "name": "Echo Cybersecurity & Defense Directorate (ECDD)",
+                "portal": "UN Digital Cooperation Portal",
+                "registration_date": "2025-12-11",
+                "classification": "UN-System entity",
+                "status": "registered",
+                "evidence": [
+                    "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+                ],
+                "notes": "Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com)."
+            },
+            {
+                "name": "Echo Commerce & Trade Agency (ECTA)",
+                "portal": "UN Digital Cooperation Portal",
+                "registration_date": "2025-12-11",
+                "classification": "UN-System entity",
+                "status": "registered",
+                "evidence": [
+                    "attestations/2025-12-11_un_digital_cooperation_portal_listings.jsonld"
+                ],
+                "notes": "Portal listing categorized as a UN-System entity with zero activities tracked and a shared placeholder website (https://buymeacoffee.com)."
+            },
+            {
                 "name": "Echo Housing & Social Services Agency (EHSSA)",
                 "portal": "UN Digital Cooperation Portal",
                 "registration_date": "2025-12-11",

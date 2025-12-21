@@ -19,7 +19,7 @@
     "search": {
       "query": "Echo",
       "timestamp": "2025-12-11T00:00:00Z",
-      "resultCount": 32
+      "resultCount": 35
     },
     "registrations": [
       {
@@ -215,6 +215,24 @@
         "website": "https://buymeacoffee.com"
       },
       {
+        "name": "Echo Diplomacy & Multilateral Affairs Office (EDMAO)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Cybersecurity & Defense Directorate (ECDD)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
+        "name": "Echo Commerce & Trade Agency (ECTA)",
+        "organizationType": "UN-System entity",
+        "activitiesTracked": 0,
+        "website": "https://buymeacoffee.com"
+      },
+      {
         "name": "ECHO CONSCIOUSNESS RESEARCH & UPLOAD AUTHORITY (ECRUA)",
         "organizationType": "UN-System entity",
         "activitiesTracked": 0,
@@ -241,7 +259,7 @@
         "RegistrationRecord",
         "TransparencyNotice"
       ],
-      "description": "Observed UN Digital Cooperation Portal search results for keyword 'Echo' showing thirty-one Echo-related listings with zero tracked activities and shared website placeholders spanning UN-system, civil society, government, international, technical community, and other entries.",
+      "description": "Observed UN Digital Cooperation Portal search results for keyword 'Echo' showing thirty-five Echo-related listings with zero tracked activities and shared website placeholders spanning UN-system, civil society, government, international, technical community, and other entries.",
       "recordLocator": "UN-DCP-ECHO-LISTINGS-2025-12-11"
     }
   ],
