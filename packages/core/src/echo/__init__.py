@@ -184,6 +184,15 @@ from .ecosystem_pulse import (
     EcosystemPulseReport,
     EcosystemSignal,
 )
+from .civilization_validation import (
+    CivilizationScaleValidationReport,
+    DomainRoutingRecord,
+    ExecutionNodeSummary,
+    FailureEvent,
+    PublicVerificationBundle,
+    ServiceTransaction,
+    build_civilization_scale_validation,
+)
 from .intelligence_layer import IntelligenceLayerSnapshot, synthesize_intelligence_layer
 from .intent_gradient_interpreter import (
     ContextCandidate,
