@@ -28,6 +28,7 @@ from .timeline import build_cycle_timeline, refresh_cycle_timeline
 from .tools.forecast import project_indices, sparkline
 from .tools.resonance_index import compute_resonance_fingerprint
 from .novelty import NoveltyGenerator
+from .civilization_validation import build_civilization_scale_validation
 from .semantic_negotiation import (
     NegotiationIntent,
     NegotiationParticipant,
@@ -124,6 +125,27 @@ def _cmd_show(args: argparse.Namespace) -> int:
 
 def _cmd_verify(args: argparse.Namespace) -> int:
     return 0 if verify_manifest(args.path) else 1
+
+
+def _cmd_phase3_validation(args: argparse.Namespace) -> int:
+    report = build_civilization_scale_validation(
+        seed=args.seed,
+        node_count=args.nodes,
+        domains=args.domain,
+    )
+
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(report.to_json())
+    if args.bundle_out:
+        args.bundle_out.parent.mkdir(parents=True, exist_ok=True)
+        args.bundle_out.write_text(report.public_bundle.to_json())
+
+    if args.json:
+        print(report.to_json())
+    else:
+        print(report.render_markdown())
+    return 0
 
 
 def _cmd_satellite(args: argparse.Namespace) -> int:
@@ -1566,6 +1588,43 @@ def main(argv: Iterable[str] | None = None) -> int:
         help="Repository root to resolve relative paths (default: current directory)",
     )
     timeline_parser.set_defaults(func=_cmd_timeline)
+
+    phase3_parser = subparsers.add_parser(
+        "phase3-validation",
+        help="Generate Phase III civilization-scale validation artifacts",
+    )
+    phase3_parser.add_argument(
+        "--nodes",
+        type=_positive_int,
+        default=3,
+        help="Number of independent execution nodes (minimum 3)",
+    )
+    phase3_parser.add_argument(
+        "--seed",
+        type=int,
+        help="Optional seed for deterministic output",
+    )
+    phase3_parser.add_argument(
+        "--domain",
+        action="append",
+        help="Service domain to include (repeatable)",
+    )
+    phase3_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit JSON to stdout instead of markdown",
+    )
+    phase3_parser.add_argument(
+        "--out",
+        type=Path,
+        help="Write the full validation report to a JSON file",
+    )
+    phase3_parser.add_argument(
+        "--bundle-out",
+        type=Path,
+        help="Write the public verification bundle to a JSON file",
+    )
+    phase3_parser.set_defaults(func=_cmd_phase3_validation)
 
     pulse_parser = subparsers.add_parser("pulse", help="Pulse Weaver utilities")
     pulse_sub = pulse_parser.add_subparsers(dest="pulse_command", required=True)
