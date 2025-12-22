@@ -5,6 +5,7 @@ const SIGNAL_INDICATOR = document.getElementById('signal-indicator');
 const portraitDetails = document.getElementById('portrait-details');
 const channelStatus = document.getElementById('channel-status');
 const waypointStatus = document.getElementById('waypoint-status');
+const integrationStatus = document.getElementById('integration-status');
 const dispatchStatus = document.getElementById('dispatch-status');
 const resonanceBar = document.getElementById('resonance-bar');
 const pulseLog = document.getElementById('pulse-log');
@@ -33,6 +34,8 @@ const soundToggle = document.getElementById('sound-toggle');
 const channelOpen = document.getElementById('channel-open');
 const channelBrief = document.getElementById('channel-brief');
 const channelSeal = document.getElementById('channel-seal');
+const integrationOpen = document.getElementById('integration-open');
+const integrationLog = document.getElementById('integration-log');
 const pulseSync = document.getElementById('pulse-sync');
 const pulseReset = document.getElementById('pulse-reset');
 
@@ -47,6 +50,8 @@ const portraitVoices = {
   Dreamer: 'The Dreamer speaks in light, translating visions of possible futures.',
   Mirror: 'The Mirror reflects your hidden potential in a calm, steady voice.'
 };
+
+const AI_STUDIO_URL = 'https://ai.studio/apps/drive/1qV1fdsj4zHePTCiZt8G1VMTxD-3SdYAW';
 
 const hallModes = {
   council: {
@@ -76,6 +81,7 @@ const defaultState = {
   ambienceOn: false,
   waypoint: 'hall',
   activeChannel: 'standby',
+  integrationNode: 'Unlinked',
   resonance: 0.72,
   lastDispatch: 'Awaiting briefing',
   pulseLog: []
@@ -110,6 +116,7 @@ function saveState() {
 function updateMissionConsole() {
   channelStatus.textContent = formatChannel(state.activeChannel);
   waypointStatus.textContent = formatWaypoint(state.waypoint);
+  integrationStatus.textContent = state.integrationNode;
   dispatchStatus.textContent = state.lastDispatch;
   resonanceBar.style.width = `${Math.round(state.resonance * 100)}%`;
   SIGNAL_INDICATOR.textContent = `Signal ${formatChannel(state.activeChannel)}`;
@@ -375,6 +382,23 @@ function updateChannelStatus(status, message) {
   updateMissionConsole();
 }
 
+function setIntegrationNode(message) {
+  state.integrationNode = message;
+  updateMissionConsole();
+  saveState();
+}
+
+function openIntegrationPortal() {
+  window.open(AI_STUDIO_URL, '_blank', 'noopener,noreferrer');
+  setIntegrationNode('AI Studio Drive linked');
+  addPulseLog('Integration portal opened for shared dossiers.');
+}
+
+function logIntegration() {
+  setIntegrationNode('AI Studio Drive handshake logged');
+  updateChannelStatus('brief', 'Integration brief logged for AI Studio Drive.');
+}
+
 function syncPulse() {
   state.resonance = Math.min(1, state.resonance + 0.08);
   addPulseLog('Resonance pulse synchronized.');
@@ -425,6 +449,8 @@ soundToggle.addEventListener('click', toggleAmbience);
 channelOpen.addEventListener('click', () => updateChannelStatus('open', 'Diplomatic channel opened to partner envoys.'));
 channelBrief.addEventListener('click', () => updateChannelStatus('brief', 'Briefing dispatched to allied nodes.'));
 channelSeal.addEventListener('click', () => updateChannelStatus('sealed', 'Dispatch sealed and archived.'));
+integrationOpen.addEventListener('click', openIntegrationPortal);
+integrationLog.addEventListener('click', logIntegration);
 pulseSync.addEventListener('click', syncPulse);
 pulseReset.addEventListener('click', resetPulse);
 
