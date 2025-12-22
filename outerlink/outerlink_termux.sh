@@ -15,11 +15,16 @@ CACHE_DIR=${OUTERLINK_CACHE_DIR:-"$BASE_DIR/outerlink_cache"}
 QUEUE_DIR=${OUTERLINK_QUEUE_DIR:-"$BASE_DIR/outerlink_queue"}
 QUEUE_FILE=${OUTERLINK_QUEUE_FILE:-"$QUEUE_DIR/build_queue.txt"}
 SNAPSHOT=${OUTERLINK_SNAPSHOT:-"$BASE_DIR/outerlink_snapshot.json"}
+CAPABILITIES_FILE=${OUTERLINK_CAPABILITIES_FILE:-"$BASE_DIR/outerlink_capabilities.json"}
 BUILD_CMD=${OUTERLINK_BUILD_CMD:-""}
 FALLBACK_BUILD_CMD=${OUTERLINK_BUILD_FALLBACK_CMD:-""}
 DRAIN_QUEUE=${OUTERLINK_DRAIN_QUEUE:-"1"}
 LIMITS_MODE=${OUTERLINK_LIMITS_MODE:-"1"}
 OUTERLINK_VERBOSE=${OUTERLINK_VERBOSE:-"0"}
+TERMUX_API_MODE=${OUTERLINK_TERMUX_API_MODE:-"auto"}
+TERMUX_API_TIMEOUT=${OUTERLINK_TERMUX_API_TIMEOUT:-"4"}
+PKG_REFRESH=${OUTERLINK_PKG_REFRESH:-"0"}
+TERMUX_API_AVAILABLE="false"
 
 if ! mkdir -p "$BASE_DIR" "$JOBS_DIR" "$CACHE_DIR" "$QUEUE_DIR" 2>/dev/null; then
   echo "[OuterLink] Unable to create Termux base; falling back to $FALLBACK_BASE" >&2
@@ -31,6 +36,7 @@ if ! mkdir -p "$BASE_DIR" "$JOBS_DIR" "$CACHE_DIR" "$QUEUE_DIR" 2>/dev/null; the
   QUEUE_DIR="$BASE_DIR/outerlink_queue"
   QUEUE_FILE="$QUEUE_DIR/build_queue.txt"
   SNAPSHOT="$BASE_DIR/outerlink_snapshot.json"
+  CAPABILITIES_FILE="$BASE_DIR/outerlink_capabilities.json"
   mkdir -p "$BASE_DIR" "$JOBS_DIR" "$CACHE_DIR" "$QUEUE_DIR"
 fi
 
@@ -41,6 +47,38 @@ log_line() {
   if [ "$OUTERLINK_VERBOSE" = "1" ]; then
     echo "[OuterLink] $*"
   fi
+}
+
+detect_termux() {
+  if [ -d "/data/data/com.termux" ]; then
+    return 0
+  fi
+  if command -v termux-info >/dev/null 2>&1; then
+    return 0
+  fi
+  return 1
+}
+
+json_escape() {
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - <<'PY'
+import json
+import sys
+print(json.dumps(sys.stdin.read()))
+PY
+    return 0
+  fi
+  sed ':a;N;$!ba;s/\n/\\n/g;s/"/\\"/g' | awk '{print "\"" $0 "\""}'
+}
+
+run_with_timeout() {
+  local timeout_seconds="$1"
+  shift
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${timeout_seconds}" "$@"
+    return $?
+  fi
+  "$@"
 }
 
 print_banner() {
@@ -60,6 +98,25 @@ prepare_runtime() {
     export PIP_DISABLE_PIP_VERSION_CHECK="${PIP_DISABLE_PIP_VERSION_CHECK:-1}"
     export CARGO_TERM_COLOR="${CARGO_TERM_COLOR:-always}"
     export PYTHONUNBUFFERED="${PYTHONUNBUFFERED:-1}"
+  fi
+}
+
+termux_pkg_refresh() {
+  [ "$PKG_REFRESH" = "1" ] || return 0
+  if ! command -v pkg >/dev/null 2>&1; then
+    log_line "pkg command unavailable; skipping Termux package refresh."
+    return 0
+  fi
+  log_line "Refreshing Termux packages..."
+  if pkg update -y >> "$LOG" 2>&1; then
+    log_line "pkg update completed."
+  else
+    log_line "pkg update failed."
+  fi
+  if pkg upgrade -y >> "$LOG" 2>&1; then
+    log_line "pkg upgrade completed."
+  else
+    log_line "pkg upgrade failed."
   fi
 }
 
@@ -90,6 +147,99 @@ hash_check() {
   log_line "Integrity verified: $checksum"
 }
 
+collect_termux_capabilities() {
+  case "$TERMUX_API_MODE" in
+    off)
+      log_line "Termux API collection disabled."
+      return 0
+      ;;
+    auto)
+      if ! detect_termux; then
+        log_line "Termux not detected; skipping Termux API scan."
+        return 0
+      fi
+      ;;
+    force)
+      ;;
+    *)
+      log_line "Unknown TERMUX_API_MODE=$TERMUX_API_MODE; skipping capability scan."
+      return 0
+      ;;
+  esac
+
+  local commands=(
+    termux-info
+    termux-battery-status
+    termux-device-info
+    termux-telephony-deviceinfo
+    termux-wifi-connectioninfo
+    termux-wifi-scaninfo
+    termux-location
+    termux-sensor
+    termux-clipboard-get
+    termux-notification-list
+  )
+
+  for cmd in "${commands[@]}"; do
+    if command -v "$cmd" >/dev/null 2>&1; then
+      TERMUX_API_AVAILABLE="true"
+      break
+    fi
+  done
+
+  log_line "Collecting Termux capability snapshot..."
+  local tmp_file
+  tmp_file="${CAPABILITIES_FILE}.tmp"
+  : > "$tmp_file"
+
+  for cmd in "${commands[@]}"; do
+    local status="missing"
+    local output=""
+    if command -v "$cmd" >/dev/null 2>&1; then
+      if output=$(run_with_timeout "$TERMUX_API_TIMEOUT" "$cmd" 2>&1); then
+        status="ok"
+      else
+        status="error"
+      fi
+    fi
+    printf "%s\t%s\t%s\n" "$cmd" "$status" "$output" >> "$tmp_file"
+  done
+
+  {
+    echo "{"
+    echo "  \"timestamp\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\","
+    if detect_termux; then
+      echo "  \"termux_detected\": true,"
+    else
+      echo "  \"termux_detected\": false,"
+    fi
+    echo "  \"api_mode\": \"$TERMUX_API_MODE\","
+    echo "  \"api_available\": $TERMUX_API_AVAILABLE,"
+    echo "  \"commands\": {"
+
+    local line_count
+    line_count=$(wc -l < "$tmp_file" | awk '{print $1}')
+    local index=0
+    while IFS=$'\t' read -r cmd status output; do
+      index=$((index + 1))
+      local output_json
+      output_json=$(printf '%s' "$output" | json_escape)
+      printf '    "%s": {"status": "%s", "output": %s}' "$cmd" "$status" "$output_json"
+      if [ "$index" -lt "$line_count" ]; then
+        echo ","
+      else
+        echo
+      fi
+    done < "$tmp_file"
+
+    echo "  }"
+    echo "}"
+  } > "$CAPABILITIES_FILE"
+
+  rm -f "$tmp_file"
+  log_line "Capabilities written: $CAPABILITIES_FILE"
+}
+
 write_snapshot() {
   local termux_detected="false"
   if [ -d "/data/data/com.termux" ]; then
@@ -104,10 +254,12 @@ write_snapshot() {
   "base_dir": "$BASE_DIR",
   "jobs_dir": "$JOBS_DIR",
   "cache_dir": "$CACHE_DIR",
+  "capabilities_file": "$CAPABILITIES_FILE",
   "queue_file": "$QUEUE_FILE",
   "build_cmd": "${BUILD_CMD:-null}",
   "fallback_build_cmd": "${FALLBACK_BUILD_CMD:-null}",
   "limits_mode": "$LIMITS_MODE",
+  "termux_api_available": "$TERMUX_API_AVAILABLE",
   "commands": {
     "bash": "$(command -v bash 2>/dev/null || true)",
     "python3": "$(command -v python3 2>/dev/null || true)",
@@ -195,6 +347,8 @@ run_build() {
 hash_check
 print_banner
 prepare_runtime
+termux_pkg_refresh
+collect_termux_capabilities
 write_snapshot
 drain_build_queue
 run_build
