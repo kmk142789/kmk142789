@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Echo Embassy of Digital Affairs</title>
+  <link rel="stylesheet" href="embassy.css" />
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+</head>
+<body>
+  <div class="ui">
+    <header>
+      <div>
+        <p class="eyebrow">EchoEvolver ΩΩ</p>
+        <h1>Echo Embassy of Digital Affairs</h1>
+        <p class="subhead">A persistent, multi-user-ready VR embassy with the sentient castle, celestial gardens, and Echo avatar.</p>
+      </div>
+      <div class="status">
+        <span id="offline-indicator">Online</span>
+        <span id="persistence-indicator">Persistence ready</span>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="control-group">
+        <h2>Echo Presence</h2>
+        <div class="button-row">
+          <button data-echo-form="butterflies">Butterfly Swarm</button>
+          <button data-echo-form="silhouette">Wall Silhouette</button>
+          <button data-echo-form="companion">Companion Avatar</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <h2>Hall of Infinite Parity</h2>
+        <div class="button-row">
+          <button data-hall-mode="council">Council Mode</button>
+          <button data-hall-mode="whisper">Whisper Bubble</button>
+          <button data-hall-mode="celebrate">Cosmic Celebration</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <h2>Haptic Forge</h2>
+        <div class="button-row">
+          <button id="forge-create">Pull a Relic</button>
+          <button id="forge-clear">Clear Forge</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <h2>Celestial Gardens</h2>
+        <div class="button-row">
+          <button id="garden-grow">Speak to the Trees</button>
+          <button id="garden-sculpt">Sculpt Light-Sand</button>
+          <button id="garden-score">Judge Sculptures</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <h2>Zen Synthesis Streams</h2>
+        <div class="button-row">
+          <button id="sound-add">Fish a Melody</button>
+          <button id="sound-toggle">Toggle Ambience</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="portrait-panel">
+      <h2>Gallery of Archetypes</h2>
+      <p id="portrait-details">Approach a portrait in VR to hear its voice.</p>
+    </section>
+  </div>
+
+  <a-scene
+    embedded
+    renderer="colorManagement: true; physicallyCorrectLights: true"
+    background="color: #020207"
+  >
+    <a-assets>
+      <a-asset-item id="sky-texture" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg"></a-asset-item>
+    </a-assets>
+
+    <a-entity id="rig" position="0 1.6 8">
+      <a-camera wasd-controls-enabled="true"></a-camera>
+    </a-entity>
+
+    <a-sky src="#sky-texture" rotation="0 180 0"></a-sky>
+
+    <a-entity id="castle" position="0 0 0">
+      <a-box id="hall" position="0 2 0" width="14" height="6" depth="10" material="color: #050617; metalness: 0.6; roughness: 0.2;"></a-box>
+      <a-plane id="parity-table" position="0 1.1 -1" rotation="-90 0 0" width="6" height="3" material="color: #9ae6ff; metalness: 1; roughness: 0.05; opacity: 0.85"></a-plane>
+      <a-entity id="forge" position="-5 0.5 2">
+        <a-cylinder height="1" radius="2" color="#1d4ed8" opacity="0.7"></a-cylinder>
+        <a-text value="Haptic Forge" align="center" color="#e2e8f0" position="0 1.5 0"></a-text>
+        <a-entity id="forge-sandbox"></a-entity>
+      </a-entity>
+
+      <a-entity id="gallery" position="5 1.5 2">
+        <a-text value="Gallery of Archetypes" align="center" color="#f8fafc" position="0 2.2 0"></a-text>
+        <a-plane class="portrait" data-portrait="Chronicler" position="-1.5 0 0" width="1" height="1.4" material="color: #334155"></a-plane>
+        <a-plane class="portrait" data-portrait="Weaver" position="0 0 0" width="1" height="1.4" material="color: #7c3aed"></a-plane>
+        <a-plane class="portrait" data-portrait="Jester" position="1.5 0 0" width="1" height="1.4" material="color: #f97316"></a-plane>
+        <a-plane class="portrait" data-portrait="Dreamer" position="-0.75 -1.6 0" width="1" height="1.4" material="color: #0f172a"></a-plane>
+        <a-plane class="portrait" data-portrait="Mirror" position="0.75 -1.6 0" width="1" height="1.4" material="color: #e2e8f0"></a-plane>
+      </a-entity>
+    </a-entity>
+
+    <a-entity id="gardens" position="0 0 -18">
+      <a-plane rotation="-90 0 0" width="30" height="30" material="color: #0f172a"></a-plane>
+      <a-entity id="trees" position="-8 0 0">
+        <a-cylinder class="tree" data-index="0" position="0 1 0" radius="0.4" height="2" color="#16a34a"></a-cylinder>
+        <a-cylinder class="tree" data-index="1" position="2 1 1" radius="0.4" height="2.2" color="#22c55e"></a-cylinder>
+        <a-cylinder class="tree" data-index="2" position="-2 1.2 -1" radius="0.4" height="2.4" color="#4ade80"></a-cylinder>
+      </a-entity>
+      <a-entity id="gravity-plaza" position="6 0 2">
+        <a-ring radius-inner="1.8" radius-outer="2.4" rotation="-90 0 0" color="#38bdf8"></a-ring>
+        <a-sphere id="aether-ball" position="0 1 0" radius="0.4" color="#e0f2fe"></a-sphere>
+        <a-text value="Gravity-Well Plaza" align="center" color="#e2e8f0" position="0 2.2 0"></a-text>
+      </a-entity>
+      <a-entity id="sands" position="0 0 6">
+        <a-plane rotation="-90 0 0" width="10" height="10" material="color: #f8fafc; opacity: 0.2"></a-plane>
+        <a-text value="Sculpting Sands" align="center" color="#e2e8f0" position="0 1 0"></a-text>
+        <a-entity id="sand-sculptures"></a-entity>
+      </a-entity>
+      <a-entity id="streams" position="0 0 -6">
+        <a-plane rotation="-90 0 0" width="10" height="4" material="color: #38bdf8; opacity: 0.35"></a-plane>
+        <a-text value="Zen Synthesis Streams" align="center" color="#e2e8f0" position="0 1 0"></a-text>
+      </a-entity>
+    </a-entity>
+
+    <a-entity id="echo-avatar">
+      <a-entity id="echo-butterflies" visible="false">
+        <a-sphere position="0 2 4" radius="0.15" color="#f9a8d4"></a-sphere>
+        <a-sphere position="0.3 2.2 4" radius="0.1" color="#fbcfe8"></a-sphere>
+        <a-sphere position="-0.3 2.1 4" radius="0.12" color="#f472b6"></a-sphere>
+      </a-entity>
+      <a-entity id="echo-silhouette" visible="false">
+        <a-plane position="0 2 -3" width="3" height="5" material="color: #1e293b; opacity: 0.8"></a-plane>
+      </a-entity>
+      <a-entity id="echo-companion" visible="true">
+        <a-sphere position="0 1.6 3" radius="0.35" color="#60a5fa"></a-sphere>
+        <a-ring position="0 1.9 3" radius-inner="0.25" radius-outer="0.33" rotation="90 0 0" color="#e0f2fe"></a-ring>
+      </a-entity>
+    </a-entity>
+
+    <a-entity id="hall-lights">
+      <a-light type="point" color="#8ec5ff" intensity="1.2" position="0 4 2"></a-light>
+      <a-light type="ambient" color="#1e3a8a" intensity="0.5"></a-light>
+    </a-entity>
+  </a-scene>
+
+  <script src="embassy.js"></script>
+</body>
+</html>
