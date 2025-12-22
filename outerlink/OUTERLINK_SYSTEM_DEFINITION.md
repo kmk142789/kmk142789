@@ -38,6 +38,13 @@ bash outerlink/outerlink_termux.sh
 
 Default paths target Termux (`/data/data/com.termux/files/home`), but you can override the base directory with `BASE_DIR=/custom/path bash outerlink/outerlink_termux.sh` for local testing.
 
+The Termux runtime can now capture a capability snapshot (battery, device, network, sensors) and optional package refreshes:
+
+- `OUTERLINK_TERMUX_API_MODE=auto|force|off` controls whether Termux API commands are queried.
+- `OUTERLINK_TERMUX_API_TIMEOUT=4` sets per-command timeout seconds for Termux API calls.
+- `OUTERLINK_PKG_REFRESH=1` runs `pkg update` + `pkg upgrade` before the snapshot.
+- `OUTERLINK_CAPABILITIES_FILE=/path/to/file.json` overrides the capabilities snapshot path.
+
 ## 5. Governance Module (Concept Spec)
 - `auth_policy.json` – defines allowed operations per node (SHA-256 + signature verification).
 - `audit.log` – immutable local ledger (append-only).
