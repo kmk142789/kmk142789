@@ -111,6 +111,83 @@ button:hover {
   transform: translateY(-1px);
 }
 
+.mission-panel {
+  background: rgba(10, 14, 34, 0.88);
+  border-radius: 16px;
+  padding: 1.2rem 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.35);
+  pointer-events: auto;
+  max-width: 640px;
+}
+
+.mission-panel h2 {
+  margin: 0 0 0.8rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mission-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.mission-grid .label {
+  margin: 0 0 0.3rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.mission-grid p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #e2e8f0;
+}
+
+.resonance {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.meter {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  overflow: hidden;
+}
+
+#resonance-bar {
+  height: 100%;
+  width: 72%;
+  background: linear-gradient(90deg, #38bdf8, #a855f7);
+  transition: width 200ms ease;
+}
+
+#pulse-log {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+#pulse-log li {
+  padding: 0.35rem 0.6rem;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
 .portrait-panel {
   margin-top: auto;
   align-self: flex-end;
