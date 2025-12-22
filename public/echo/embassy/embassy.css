@@ -227,6 +227,14 @@ button:hover {
   color: rgba(226, 232, 240, 0.75);
 }
 
+.portrait-meta {
+  margin: 0.5rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.85);
+}
+
 @media (max-width: 900px) {
   .ui {
     position: static;
