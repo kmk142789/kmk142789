@@ -26,6 +26,10 @@ bash outerlink/echo_world_termux.sh
 
 The script first performs a dry run to validate the environment and then, if successful, triggers the live bootstrap.
 
+## Repository link
+
+Track updates and clone the project directly from the main repository: https://github.com/kmk142789/kmk142789
+
 ## Dry run safety
 
 The `dry_run` option instantiates components and performs lightweight sanity checks without blocking loops or heavy network I/O, making it suitable for CI pipelines and offline testing scenarios.
