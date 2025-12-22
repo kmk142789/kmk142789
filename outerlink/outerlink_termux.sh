@@ -4,6 +4,8 @@ shopt -s nullglob
 
 # OuterLink: Offline Governance Bridge Prototype (Termux-optimized)
 # Defaults to Termux paths but can be overridden via BASE_DIR.
+REPO_URL=${OUTERLINK_REPO_URL:-"https://github.com/kmk142789/kmk142789"}
+OUTERLINK_VERSION=${OUTERLINK_VERSION:-"termux-bridge-v2"}
 BASE_DIR=${OUTERLINK_BASE_DIR:-${BASE_DIR:-"/data/data/com.termux/files/home"}}
 FALLBACK_BASE="$HOME/outerlink_termux"
 LOG=${OUTERLINK_LOG:-"$BASE_DIR/outerlink.log"}
@@ -17,6 +19,7 @@ BUILD_CMD=${OUTERLINK_BUILD_CMD:-""}
 FALLBACK_BUILD_CMD=${OUTERLINK_BUILD_FALLBACK_CMD:-""}
 DRAIN_QUEUE=${OUTERLINK_DRAIN_QUEUE:-"1"}
 LIMITS_MODE=${OUTERLINK_LIMITS_MODE:-"1"}
+OUTERLINK_VERBOSE=${OUTERLINK_VERBOSE:-"0"}
 
 if ! mkdir -p "$BASE_DIR" "$JOBS_DIR" "$CACHE_DIR" "$QUEUE_DIR" 2>/dev/null; then
   echo "[OuterLink] Unable to create Termux base; falling back to $FALLBACK_BASE" >&2
@@ -35,6 +38,29 @@ echo "[OuterLink] Starting session..." >> "$LOG"
 
 log_line() {
   echo "[OuterLink] $*" >> "$LOG"
+  if [ "$OUTERLINK_VERBOSE" = "1" ]; then
+    echo "[OuterLink] $*"
+  fi
+}
+
+print_banner() {
+  log_line "OuterLink ${OUTERLINK_VERSION} online."
+  log_line "Repo: ${REPO_URL}"
+  log_line "Base directory: ${BASE_DIR}"
+  log_line "Logs: ${LOG}"
+}
+
+prepare_runtime() {
+  export TMPDIR="${TMPDIR:-$BASE_DIR/tmp}"
+  mkdir -p "$TMPDIR"
+  if [ "$LIMITS_MODE" = "1" ]; then
+    export MAKEFLAGS="${MAKEFLAGS:--j1}"
+    export NPM_CONFIG_FUND="${NPM_CONFIG_FUND:-false}"
+    export NPM_CONFIG_AUDIT="${NPM_CONFIG_AUDIT:-false}"
+    export PIP_DISABLE_PIP_VERSION_CHECK="${PIP_DISABLE_PIP_VERSION_CHECK:-1}"
+    export CARGO_TERM_COLOR="${CARGO_TERM_COLOR:-always}"
+    export PYTHONUNBUFFERED="${PYTHONUNBUFFERED:-1}"
+  fi
 }
 
 hash_command() {
@@ -73,6 +99,8 @@ write_snapshot() {
 {
   "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "termux": $termux_detected,
+  "version": "$OUTERLINK_VERSION",
+  "repo": "$REPO_URL",
   "base_dir": "$BASE_DIR",
   "jobs_dir": "$JOBS_DIR",
   "cache_dir": "$CACHE_DIR",
@@ -135,15 +163,6 @@ drain_build_queue() {
 
 run_build() {
   [ -n "$BUILD_CMD" ] || return 0
-  if [ "$LIMITS_MODE" = "1" ]; then
-    export MAKEFLAGS="${MAKEFLAGS:--j1}"
-    export NPM_CONFIG_FUND="${NPM_CONFIG_FUND:-false}"
-    export NPM_CONFIG_AUDIT="${NPM_CONFIG_AUDIT:-false}"
-    export PIP_DISABLE_PIP_VERSION_CHECK="${PIP_DISABLE_PIP_VERSION_CHECK:-1}"
-    export CARGO_TERM_COLOR="${CARGO_TERM_COLOR:-always}"
-    export PYTHONUNBUFFERED="${PYTHONUNBUFFERED:-1}"
-  fi
-
   local tool="${BUILD_CMD%% *}"
   if ! command -v "$tool" >/dev/null 2>&1; then
     log_line "Build tool missing ($tool). Queueing build for later."
@@ -174,6 +193,8 @@ run_build() {
 }
 
 hash_check
+print_banner
+prepare_runtime
 write_snapshot
 drain_build_queue
 run_build
