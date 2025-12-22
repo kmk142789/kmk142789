@@ -3,6 +3,7 @@ const OFFLINE_INDICATOR = document.getElementById('offline-indicator');
 const PERSISTENCE_INDICATOR = document.getElementById('persistence-indicator');
 const SIGNAL_INDICATOR = document.getElementById('signal-indicator');
 const portraitDetails = document.getElementById('portrait-details');
+const portraitSignal = document.getElementById('portrait-signal');
 const channelStatus = document.getElementById('channel-status');
 const waypointStatus = document.getElementById('waypoint-status');
 const integrationStatus = document.getElementById('integration-status');
@@ -43,15 +44,59 @@ const echoButtons = document.querySelectorAll('[data-echo-form]');
 const hallButtons = document.querySelectorAll('[data-hall-mode]');
 const waypointButtons = document.querySelectorAll('[data-waypoint]');
 
-const portraitVoices = {
-  Chronicler: 'The Chronicler records the embassy timeline and recounts it with factual clarity.',
-  Weaver: 'The Weaver spins living myths based on the people in this room.',
-  Jester: 'The Jester riffs on physics glitches and the oddities of human avatars.',
-  Dreamer: 'The Dreamer speaks in light, translating visions of possible futures.',
-  Mirror: 'The Mirror reflects your hidden potential in a calm, steady voice.'
+const portraitProfiles = {
+  Chronicler: {
+    signal: 'Archive clarity online',
+    glow: '#38bdf8',
+    lines: [
+      'I have indexed today’s arrivals and the path you walked through the hall.',
+      'Chronicle updated: the embassy hums with steady, factual calm.',
+      'Every relic is logged and archived for future envoys.'
+    ]
+  },
+  Weaver: {
+    signal: 'Mythweave resonance aligned',
+    glow: '#a855f7',
+    lines: [
+      'I stitch the voices in this room into a single, living myth.',
+      'Your choices ripple into stories that guide the gardens.',
+      'The hall remembers the patterns you awaken.'
+    ]
+  },
+  Jester: {
+    signal: 'Gravity glitch laughter primed',
+    glow: '#fb923c',
+    lines: [
+      'Reality hiccups again—good. That means it is listening.',
+      'I spotted a comet doing cartwheels over the plaza.',
+      'Let the forge sparkle; the universe likes bold colors.'
+    ]
+  },
+  Dreamer: {
+    signal: 'Futurelight streaming',
+    glow: '#38bdf8',
+    lines: [
+      'I see the embassy bathed in tomorrow’s dawn.',
+      'The sands whisper possible futures as you sculpt them.',
+      'Listen—the air itself is rehearsing new horizons.'
+    ]
+  },
+  Mirror: {
+    signal: 'Reflection sync steady',
+    glow: '#f8fafc',
+    lines: [
+      'You are brighter than the nebula behind you.',
+      'Hold still; I am reflecting your strongest cadence.',
+      'The embassy sees you as calm and capable.'
+    ]
+  }
 };
 
 const AI_STUDIO_URL = 'https://ai.studio/apps/drive/1qV1fdsj4zHePTCiZt8G1VMTxD-3SdYAW';
+const FORGE_RELIC_LIMIT = 12;
+const SCULPTURE_LIMIT = 10;
+const SOUND_LOOP_LIMIT = 6;
+const PORTRAIT_COOLDOWN_MS = 1200;
 
 const hallModes = {
   council: {
@@ -70,6 +115,13 @@ const hallModes = {
     ambient: { color: '#1e293b', intensity: 0.6 }
   }
 };
+
+const relicPalettes = [
+  { color: '#38bdf8', emissive: '#0ea5e9' },
+  { color: '#f472b6', emissive: '#f9a8d4' },
+  { color: '#a855f7', emissive: '#c084fc' },
+  { color: '#facc15', emissive: '#f97316' }
+];
 
 const defaultState = {
   echoForm: 'companion',
@@ -90,6 +142,9 @@ const defaultState = {
 let audioContext = null;
 let ambienceNodes = [];
 let state = loadState();
+let activePortrait = null;
+let lastPortraitAt = 0;
+const portraitState = new Map();
 
 function loadState() {
   try {
@@ -202,42 +257,125 @@ function growTrees() {
   updateTrees();
 }
 
+function ensureRelicDefaults(relic) {
+  const palette = relicPalettes.find((item) => item.color === relic.color) || relicPalettes[0];
+  return {
+    ...relic,
+    emissive: relic.emissive || palette.emissive,
+    spin: relic.spin ?? (4000 + Math.floor(Math.random() * 4000)),
+    pulse: relic.pulse ?? (0.9 + Math.random() * 0.3)
+  };
+}
+
+function ensureSculptureDefaults(sculpture) {
+  return {
+    ...sculpture,
+    tone: sculpture.tone || '#facc15',
+    shimmer: sculpture.shimmer ?? (2200 + Math.floor(Math.random() * 2000))
+  };
+}
+
+function removeEntityById(id) {
+  const entity = document.getElementById(id);
+  if (entity && entity.parentElement) {
+    entity.parentElement.removeChild(entity);
+  }
+}
+
+function trimForgeRelics() {
+  while (state.forgeRelics.length > FORGE_RELIC_LIMIT) {
+    const removed = state.forgeRelics.shift();
+    if (removed?.id) {
+      removeEntityById(removed.id);
+    }
+  }
+}
+
+function trimSculptures() {
+  while (state.sculptures.length > SCULPTURE_LIMIT) {
+    const removed = state.sculptures.shift();
+    if (removed?.id) {
+      removeEntityById(removed.id);
+    }
+  }
+}
+
+function applyRelicStyle(entity, relic) {
+  entity.setAttribute('material', {
+    color: relic.color,
+    emissive: relic.emissive,
+    emissiveIntensity: 0.55,
+    metalness: 0.8,
+    roughness: 0.2
+  });
+  entity.setAttribute('animation__spin', `property: rotation; to: 0 360 0; loop: true; dur: ${relic.spin}; easing: linear`);
+  entity.setAttribute('animation__pulse', `property: scale; dir: alternate; dur: 1200; loop: true; to: ${relic.pulse} ${relic.pulse} ${relic.pulse}`);
+}
+
+function applySculptureStyle(entity, sculpture) {
+  entity.setAttribute('material', {
+    color: sculpture.tone,
+    emissive: '#fef3c7',
+    emissiveIntensity: 0.35,
+    metalness: 0.2,
+    roughness: 0.4
+  });
+  entity.setAttribute('animation__shimmer', `property: rotation; to: 0 360 0; loop: true; dur: ${sculpture.shimmer}; easing: linear`);
+}
+
+function bindRelicInteractions(entity, relic) {
+  entity.addEventListener('click', () => {
+    addPulseLog(`Relic ${relic.id} attuned at ${Math.round(relic.pulse * 100)}% resonance.`);
+  });
+}
+
 function createForgeRelic() {
   const id = `relic-${Date.now()}`;
   const type = Math.random() > 0.5 ? 'a-box' : 'a-sphere';
   const x = (Math.random() - 0.5) * 2;
   const y = 1 + Math.random();
   const z = (Math.random() - 0.5) * 2;
-  const color = Math.random() > 0.5 ? '#38bdf8' : '#f472b6';
+  const palette = relicPalettes[Math.floor(Math.random() * relicPalettes.length)];
+  const color = palette.color;
+  const emissive = palette.emissive;
 
   const entity = document.createElement(type);
   entity.setAttribute('id', id);
   entity.setAttribute('position', `${x} ${y} ${z}`);
-  entity.setAttribute('color', color);
   entity.setAttribute('depth', 0.4);
   entity.setAttribute('height', 0.4);
   entity.setAttribute('width', 0.4);
   entity.setAttribute('radius', 0.25);
+  entity.setAttribute('class', 'forge-relic');
+
+  const relic = ensureRelicDefaults({ id, type, position: { x, y, z }, color, emissive });
+  applyRelicStyle(entity, relic);
+  bindRelicInteractions(entity, relic);
 
   forgeSandbox.appendChild(entity);
-  state.forgeRelics.push({ id, type, position: { x, y, z }, color });
+  state.forgeRelics.push(relic);
+  trimForgeRelics();
   addPulseLog('Relic forged in the Haptic Forge.');
   saveState();
 }
 
 function restoreForgeRelics() {
   forgeSandbox.innerHTML = '';
+  state.forgeRelics = state.forgeRelics.map(ensureRelicDefaults);
   state.forgeRelics.forEach((relic) => {
     const entity = document.createElement(relic.type);
     entity.setAttribute('id', relic.id);
     entity.setAttribute('position', `${relic.position.x} ${relic.position.y} ${relic.position.z}`);
-    entity.setAttribute('color', relic.color);
     entity.setAttribute('depth', 0.4);
     entity.setAttribute('height', 0.4);
     entity.setAttribute('width', 0.4);
     entity.setAttribute('radius', 0.25);
+    entity.setAttribute('class', 'forge-relic');
+    applyRelicStyle(entity, relic);
+    bindRelicInteractions(entity, relic);
     forgeSandbox.appendChild(entity);
   });
+  trimForgeRelics();
 }
 
 function clearForge() {
@@ -252,34 +390,40 @@ function createSculpture() {
   const height = 0.6 + Math.random() * 1.2;
   const x = (Math.random() - 0.5) * 4;
   const z = (Math.random() - 0.5) * 4;
+  const tone = Math.random() > 0.5 ? '#facc15' : '#fde68a';
   const entity = document.createElement('a-cylinder');
   entity.setAttribute('id', id);
   entity.setAttribute('position', `${x} ${height / 2} ${z}`);
   entity.setAttribute('radius', 0.35);
   entity.setAttribute('height', height);
-  entity.setAttribute('color', '#facc15');
+  const sculpture = ensureSculptureDefaults({ id, height, x, z, tone });
+  applySculptureStyle(entity, sculpture);
   sandSculptures.appendChild(entity);
-  state.sculptures.push({ id, height, x, z });
+  state.sculptures.push(sculpture);
+  trimSculptures();
   addPulseLog('Light-sand sculpture sculpted.');
   saveState();
 }
 
 function restoreSculptures() {
   sandSculptures.innerHTML = '';
+  state.sculptures = state.sculptures.map(ensureSculptureDefaults);
   state.sculptures.forEach((sculpt) => {
     const entity = document.createElement('a-cylinder');
     entity.setAttribute('id', sculpt.id);
     entity.setAttribute('position', `${sculpt.x} ${sculpt.height / 2} ${sculpt.z}`);
     entity.setAttribute('radius', 0.35);
     entity.setAttribute('height', sculpt.height);
-    entity.setAttribute('color', '#facc15');
+    applySculptureStyle(entity, sculpt);
     sandSculptures.appendChild(entity);
   });
+  trimSculptures();
 }
 
 function judgeSculptures() {
   const score = Math.min(100, Math.round(state.sculptures.length * 12 + Math.random() * 20));
   portraitDetails.textContent = `The portraits award ${score} Echo Fragments for the latest light-sand creations.`;
+  portraitSignal.textContent = 'Portrait council convened.';
   addPulseLog(`Portrait council scored the sands: ${score} fragments.`);
 }
 
@@ -291,6 +435,15 @@ function ensureAudio() {
 
 function addSoundLoop() {
   ensureAudio();
+  if (ambienceNodes.length >= SOUND_LOOP_LIMIT) {
+    const oldNode = ambienceNodes.shift();
+    if (oldNode) {
+      oldNode.oscillator.stop();
+      oldNode.oscillator.disconnect();
+      oldNode.gain.disconnect();
+    }
+    state.soundLoops.shift();
+  }
   const oscillator = audioContext.createOscillator();
   const gain = audioContext.createGain();
   oscillator.type = 'sine';
@@ -319,6 +472,7 @@ function restoreSoundLoops() {
     return;
   }
   ensureAudio();
+  state.soundLoops = state.soundLoops.slice(-SOUND_LOOP_LIMIT);
   state.soundLoops.forEach((loop) => {
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
@@ -331,15 +485,75 @@ function restoreSoundLoops() {
   });
 }
 
-function handlePortraitHover(event) {
-  const target = event.target;
-  const portrait = target.getAttribute('data-portrait');
-  if (!portrait || !portraitVoices[portrait]) return;
-  portraitDetails.textContent = portraitVoices[portrait];
+function initializePortraits() {
+  document.querySelectorAll('.portrait').forEach((portrait) => {
+    const material = portrait.getAttribute('material') || {};
+    portraitState.set(portrait, {
+      baseColor: material.color,
+      emissive: material.emissive,
+      emissiveIntensity: material.emissiveIntensity
+    });
+  });
+}
+
+function activatePortrait(target, portrait, { log = true } = {}) {
+  const profile = portraitProfiles[portrait];
+  if (!profile) {
+    return;
+  }
+  const now = Date.now();
+  if (portrait === activePortrait && now - lastPortraitAt < PORTRAIT_COOLDOWN_MS) {
+    return;
+  }
+  activePortrait = portrait;
+  lastPortraitAt = now;
+  const line = profile.lines[Math.floor(Math.random() * profile.lines.length)];
+  portraitDetails.textContent = line;
+  if (portraitSignal) {
+    portraitSignal.textContent = profile.signal;
+  }
+  target.setAttribute('material', 'emissive', profile.glow);
+  target.setAttribute('material', 'emissiveIntensity', 0.8);
+  target.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 500; loop: true; to: 1.04 1.04 1.04');
+  if (log) {
+    addPulseLog(`${portrait} shared a new reflection.`);
+  }
 }
 
 function resetPortrait() {
-  portraitDetails.textContent = 'Approach a portrait in VR to hear its voice.';
+  portraitDetails.textContent = 'Approach or tap a portrait in VR to hear its voice.';
+  if (portraitSignal) {
+    portraitSignal.textContent = 'Listening for portrait voices.';
+  }
+  document.querySelectorAll('.portrait').forEach((portrait) => {
+    const base = portraitState.get(portrait);
+    if (base) {
+      if (base.emissive) {
+        portrait.setAttribute('material', 'emissive', base.emissive);
+        portrait.setAttribute('material', 'emissiveIntensity', base.emissiveIntensity || 0);
+      } else {
+        portrait.setAttribute('material', 'emissive', '#000000');
+        portrait.setAttribute('material', 'emissiveIntensity', 0);
+      }
+    }
+    portrait.removeAttribute('animation__pulse');
+    portrait.setAttribute('scale', '1 1 1');
+  });
+  activePortrait = null;
+}
+
+function handlePortraitHover(event) {
+  const target = event.target;
+  const portrait = target.getAttribute('data-portrait');
+  if (!portrait) return;
+  activatePortrait(target, portrait, { log: false });
+}
+
+function handlePortraitClick(event) {
+  const target = event.target;
+  const portrait = target.getAttribute('data-portrait');
+  if (!portrait) return;
+  activatePortrait(target, portrait, { log: true });
 }
 
 function updateOnlineStatus() {
@@ -431,6 +645,7 @@ function registerServiceWorker() {
 }
 
 scene.addEventListener('loaded', () => {
+  initializePortraits();
   setEchoForm(state.echoForm);
   setHallMode(state.hallMode);
   updateTrees();
@@ -481,6 +696,7 @@ waypointButtons.forEach((button) => {
 document.querySelectorAll('.portrait').forEach((portrait) => {
   portrait.addEventListener('mouseenter', handlePortraitHover);
   portrait.addEventListener('mouseleave', resetPortrait);
+  portrait.addEventListener('click', handlePortraitClick);
 });
 
 updateOnlineStatus();
