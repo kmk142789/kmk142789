@@ -18,6 +18,7 @@
       <div class="status">
         <span id="offline-indicator">Online</span>
         <span id="persistence-indicator">Persistence ready</span>
+        <span id="signal-indicator">Signal calibrating</span>
       </div>
     </header>
 
@@ -60,6 +61,54 @@
           <button id="sound-toggle">Toggle Ambience</button>
         </div>
       </div>
+      <div class="control-group">
+        <h2>Embassy Wayfinding</h2>
+        <div class="button-row">
+          <button data-waypoint="hall">Hall of Parity</button>
+          <button data-waypoint="gardens">Celestial Gardens</button>
+          <button data-waypoint="plaza">Gravity Plaza</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <h2>Diplomatic Channels</h2>
+        <div class="button-row">
+          <button id="channel-open">Open Channel</button>
+          <button id="channel-brief">Dispatch Brief</button>
+          <button id="channel-seal">Seal Dispatch</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <h2>Resonance Pulse</h2>
+        <div class="button-row">
+          <button id="pulse-sync">Sync Pulse</button>
+          <button id="pulse-reset">Reset Pulse</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="mission-panel">
+      <h2>Embassy Mission Console</h2>
+      <div class="mission-grid">
+        <div>
+          <p class="label">Active Channel</p>
+          <p id="channel-status">Standby</p>
+        </div>
+        <div>
+          <p class="label">Wayfinding</p>
+          <p id="waypoint-status">Hall of Parity</p>
+        </div>
+        <div>
+          <p class="label">Last Dispatch</p>
+          <p id="dispatch-status">Awaiting briefing</p>
+        </div>
+      </div>
+      <div class="resonance">
+        <span>Resonance Index</span>
+        <div class="meter">
+          <div id="resonance-bar"></div>
+        </div>
+      </div>
+      <ul id="pulse-log"></ul>
     </section>
 
     <section class="portrait-panel">
@@ -102,6 +151,12 @@
       </a-entity>
     </a-entity>
 
+    <a-entity id="envoy-drones" position="0 3 1">
+      <a-sphere radius="0.15" color="#fcd34d" position="2 0 0" animation="property: position; dir: alternate; dur: 4000; loop: true; to: 2 1.2 -1"></a-sphere>
+      <a-sphere radius="0.12" color="#93c5fd" position="-2 0 0" animation="property: position; dir: alternate; dur: 3600; loop: true; to: -2 1 -1"></a-sphere>
+      <a-sphere radius="0.1" color="#f472b6" position="0 0 -2" animation="property: position; dir: alternate; dur: 4200; loop: true; to: 0 1.4 -2"></a-sphere>
+    </a-entity>
+
     <a-entity id="gardens" position="0 0 -18">
       <a-plane rotation="-90 0 0" width="30" height="30" material="color: #0f172a"></a-plane>
       <a-entity id="trees" position="-8 0 0">
@@ -123,6 +178,19 @@
         <a-plane rotation="-90 0 0" width="10" height="4" material="color: #38bdf8; opacity: 0.35"></a-plane>
         <a-text value="Zen Synthesis Streams" align="center" color="#e2e8f0" position="0 1 0"></a-text>
       </a-entity>
+    </a-entity>
+
+    <a-entity id="wayfinding-beacons">
+      <a-ring id="beacon-hall" position="0 0.05 6" rotation="-90 0 0" radius-inner="0.6" radius-outer="0.9" color="#38bdf8"></a-ring>
+      <a-ring id="beacon-gardens" position="0 0.05 -12" rotation="-90 0 0" radius-inner="0.6" radius-outer="0.9" color="#64748b"></a-ring>
+      <a-ring id="beacon-plaza" position="6 0.05 -16" rotation="-90 0 0" radius-inner="0.6" radius-outer="0.9" color="#64748b"></a-ring>
+      <a-text value="Wayfinding Beacons" align="center" color="#e2e8f0" position="0 1.2 4"></a-text>
+    </a-entity>
+
+    <a-entity id="constellation-map" position="-6 2 -4" rotation="0 30 0">
+      <a-plane width="4" height="2.5" material="color: #0f172a; opacity: 0.7"></a-plane>
+      <a-text value="Embassy Constellation Map" align="center" color="#f8fafc" position="0 0.9 0.01" width="4"></a-text>
+      <a-text value="• Central Hall\n• Gardens\n• Gravity Plaza" align="center" color="#cbd5f5" position="0 0 0.01" width="3.6"></a-text>
     </a-entity>
 
     <a-entity id="echo-avatar">

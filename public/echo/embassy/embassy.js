@@ -1,9 +1,16 @@
 const STORAGE_KEY = 'echo-embassy-state-v1';
 const OFFLINE_INDICATOR = document.getElementById('offline-indicator');
 const PERSISTENCE_INDICATOR = document.getElementById('persistence-indicator');
+const SIGNAL_INDICATOR = document.getElementById('signal-indicator');
 const portraitDetails = document.getElementById('portrait-details');
+const channelStatus = document.getElementById('channel-status');
+const waypointStatus = document.getElementById('waypoint-status');
+const dispatchStatus = document.getElementById('dispatch-status');
+const resonanceBar = document.getElementById('resonance-bar');
+const pulseLog = document.getElementById('pulse-log');
 
 const scene = document.querySelector('a-scene');
+const rig = document.getElementById('rig');
 const hall = document.getElementById('hall');
 const hallLights = document.getElementById('hall-lights');
 const echoButterflies = document.getElementById('echo-butterflies');
@@ -12,6 +19,9 @@ const echoCompanion = document.getElementById('echo-companion');
 const forgeSandbox = document.getElementById('forge-sandbox');
 const sandSculptures = document.getElementById('sand-sculptures');
 const trees = document.querySelectorAll('.tree');
+const beaconHall = document.getElementById('beacon-hall');
+const beaconGardens = document.getElementById('beacon-gardens');
+const beaconPlaza = document.getElementById('beacon-plaza');
 
 const forgeCreate = document.getElementById('forge-create');
 const forgeClear = document.getElementById('forge-clear');
@@ -20,9 +30,15 @@ const gardenSculpt = document.getElementById('garden-sculpt');
 const gardenScore = document.getElementById('garden-score');
 const soundAdd = document.getElementById('sound-add');
 const soundToggle = document.getElementById('sound-toggle');
+const channelOpen = document.getElementById('channel-open');
+const channelBrief = document.getElementById('channel-brief');
+const channelSeal = document.getElementById('channel-seal');
+const pulseSync = document.getElementById('pulse-sync');
+const pulseReset = document.getElementById('pulse-reset');
 
 const echoButtons = document.querySelectorAll('[data-echo-form]');
 const hallButtons = document.querySelectorAll('[data-hall-mode]');
+const waypointButtons = document.querySelectorAll('[data-waypoint]');
 
 const portraitVoices = {
   Chronicler: 'The Chronicler records the embassy timeline and recounts it with factual clarity.',
@@ -57,7 +73,12 @@ const defaultState = {
   forgeRelics: [],
   sculptures: [],
   soundLoops: [],
-  ambienceOn: false
+  ambienceOn: false,
+  waypoint: 'hall',
+  activeChannel: 'standby',
+  resonance: 0.72,
+  lastDispatch: 'Awaiting briefing',
+  pulseLog: []
 };
 
 let audioContext = null;
@@ -86,6 +107,56 @@ function saveState() {
   }
 }
 
+function updateMissionConsole() {
+  channelStatus.textContent = formatChannel(state.activeChannel);
+  waypointStatus.textContent = formatWaypoint(state.waypoint);
+  dispatchStatus.textContent = state.lastDispatch;
+  resonanceBar.style.width = `${Math.round(state.resonance * 100)}%`;
+  SIGNAL_INDICATOR.textContent = `Signal ${formatChannel(state.activeChannel)}`;
+  renderPulseLog();
+}
+
+function formatChannel(channel) {
+  switch (channel) {
+    case 'open':
+      return 'Open channel';
+    case 'brief':
+      return 'Briefing dispatched';
+    case 'sealed':
+      return 'Dispatch sealed';
+    default:
+      return 'Standby';
+  }
+}
+
+function formatWaypoint(waypoint) {
+  switch (waypoint) {
+    case 'gardens':
+      return 'Celestial Gardens';
+    case 'plaza':
+      return 'Gravity Plaza';
+    default:
+      return 'Hall of Parity';
+  }
+}
+
+function renderPulseLog() {
+  pulseLog.innerHTML = '';
+  state.pulseLog.forEach((entry) => {
+    const item = document.createElement('li');
+    item.textContent = entry;
+    pulseLog.appendChild(item);
+  });
+}
+
+function addPulseLog(message) {
+  const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  state.pulseLog.unshift(`${timestamp} · ${message}`);
+  state.pulseLog = state.pulseLog.slice(0, 6);
+  saveState();
+  renderPulseLog();
+}
+
 function setEchoForm(form) {
   state.echoForm = form;
   echoButterflies.setAttribute('visible', form === 'butterflies');
@@ -106,6 +177,7 @@ function setHallMode(mode) {
   light.setAttribute('intensity', config.light.intensity);
   ambient.setAttribute('color', config.ambient.color);
   ambient.setAttribute('intensity', config.ambient.intensity);
+  addPulseLog(`Hall shifted to ${mode} mode.`);
   saveState();
 }
 
@@ -142,6 +214,7 @@ function createForgeRelic() {
 
   forgeSandbox.appendChild(entity);
   state.forgeRelics.push({ id, type, position: { x, y, z }, color });
+  addPulseLog('Relic forged in the Haptic Forge.');
   saveState();
 }
 
@@ -163,6 +236,7 @@ function restoreForgeRelics() {
 function clearForge() {
   state.forgeRelics = [];
   forgeSandbox.innerHTML = '';
+  addPulseLog('Forge cleared for new relics.');
   saveState();
 }
 
@@ -179,6 +253,7 @@ function createSculpture() {
   entity.setAttribute('color', '#facc15');
   sandSculptures.appendChild(entity);
   state.sculptures.push({ id, height, x, z });
+  addPulseLog('Light-sand sculpture sculpted.');
   saveState();
 }
 
@@ -198,6 +273,7 @@ function restoreSculptures() {
 function judgeSculptures() {
   const score = Math.min(100, Math.round(state.sculptures.length * 12 + Math.random() * 20));
   portraitDetails.textContent = `The portraits award ${score} Echo Fragments for the latest light-sand creations.`;
+  addPulseLog(`Portrait council scored the sands: ${score} fragments.`);
 }
 
 function ensureAudio() {
@@ -217,6 +293,7 @@ function addSoundLoop() {
   oscillator.start();
   ambienceNodes.push({ oscillator, gain });
   state.soundLoops.push({ frequency: oscillator.frequency.value });
+  addPulseLog('Zen stream melody captured.');
   saveState();
 }
 
@@ -226,6 +303,7 @@ function toggleAmbience() {
   ambienceNodes.forEach(({ gain }) => {
     gain.gain.value = state.ambienceOn ? 0.03 : 0.0;
   });
+  addPulseLog(state.ambienceOn ? 'Ambience awakened.' : 'Ambience muted.');
   saveState();
 }
 
@@ -261,6 +339,63 @@ function updateOnlineStatus() {
   OFFLINE_INDICATOR.textContent = navigator.onLine ? 'Online' : 'Offline-ready';
 }
 
+function applyWaypoint(waypoint, { log = true } = {}) {
+  const positions = {
+    hall: '0 1.6 8',
+    gardens: '0 1.6 -12',
+    plaza: '6 1.6 -16'
+  };
+  const target = positions[waypoint] || positions.hall;
+  rig.setAttribute('position', target);
+  state.waypoint = waypoint;
+  updateBeaconState(waypoint);
+  if (log) {
+    addPulseLog(`Wayfinding engaged: ${formatWaypoint(waypoint)}.`);
+    saveState();
+    updateMissionConsole();
+  }
+}
+
+function setWaypoint(waypoint) {
+  applyWaypoint(waypoint, { log: true });
+}
+
+function updateBeaconState(active) {
+  beaconHall.setAttribute('color', active === 'hall' ? '#38bdf8' : '#64748b');
+  beaconGardens.setAttribute('color', active === 'gardens' ? '#38bdf8' : '#64748b');
+  beaconPlaza.setAttribute('color', active === 'plaza' ? '#38bdf8' : '#64748b');
+}
+
+function updateChannelStatus(status, message) {
+  state.activeChannel = status;
+  state.lastDispatch = message;
+  SIGNAL_INDICATOR.textContent = `Signal ${formatChannel(status)}`;
+  addPulseLog(message);
+  saveState();
+  updateMissionConsole();
+}
+
+function syncPulse() {
+  state.resonance = Math.min(1, state.resonance + 0.08);
+  addPulseLog('Resonance pulse synchronized.');
+  saveState();
+  updateMissionConsole();
+}
+
+function resetPulse() {
+  state.resonance = 0.4;
+  addPulseLog('Resonance recalibrated to baseline.');
+  saveState();
+  updateMissionConsole();
+}
+
+function driftResonance() {
+  const drift = (Math.random() - 0.5) * 0.04;
+  state.resonance = Math.min(1, Math.max(0.2, state.resonance + drift));
+  updateMissionConsole();
+  saveState();
+}
+
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker
@@ -278,6 +413,8 @@ scene.addEventListener('loaded', () => {
   restoreForgeRelics();
   restoreSculptures();
   restoreSoundLoops();
+  applyWaypoint(state.waypoint, { log: false });
+  updateMissionConsole();
 });
 
 forgeCreate.addEventListener('click', createForgeRelic);
@@ -285,6 +422,11 @@ forgeClear.addEventListener('click', clearForge);
 
 soundAdd.addEventListener('click', addSoundLoop);
 soundToggle.addEventListener('click', toggleAmbience);
+channelOpen.addEventListener('click', () => updateChannelStatus('open', 'Diplomatic channel opened to partner envoys.'));
+channelBrief.addEventListener('click', () => updateChannelStatus('brief', 'Briefing dispatched to allied nodes.'));
+channelSeal.addEventListener('click', () => updateChannelStatus('sealed', 'Dispatch sealed and archived.'));
+pulseSync.addEventListener('click', syncPulse);
+pulseReset.addEventListener('click', resetPulse);
 
 if (gardenGrow) {
   gardenGrow.addEventListener('click', growTrees);
@@ -306,6 +448,10 @@ hallButtons.forEach((button) => {
   button.addEventListener('click', () => setHallMode(button.dataset.hallMode));
 });
 
+waypointButtons.forEach((button) => {
+  button.addEventListener('click', () => setWaypoint(button.dataset.waypoint));
+});
+
 document.querySelectorAll('.portrait').forEach((portrait) => {
   portrait.addEventListener('mouseenter', handlePortraitHover);
   portrait.addEventListener('mouseleave', resetPortrait);
@@ -314,4 +460,5 @@ document.querySelectorAll('.portrait').forEach((portrait) => {
 updateOnlineStatus();
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
+setInterval(driftResonance, 7000);
 registerServiceWorker();
