@@ -119,11 +119,13 @@
 
   <a-scene
     embedded
-    renderer="colorManagement: true; physicallyCorrectLights: true"
+    renderer="colorManagement: true; physicallyCorrectLights: true; toneMapping: ACESFilmic; exposure: 1.15"
+    fog="type: exponential; color: #05050c; density: 0.03"
     background="color: #020207"
   >
     <a-assets>
       <a-asset-item id="sky-texture" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg"></a-asset-item>
+      <img id="nebula-texture" src="https://cdn.aframe.io/a-painter/images/sky.jpg" />
     </a-assets>
 
     <a-entity id="rig" position="0 1.6 8">
@@ -131,13 +133,22 @@
     </a-entity>
 
     <a-sky src="#sky-texture" rotation="0 180 0"></a-sky>
+    <a-sphere radius="80" src="#nebula-texture" rotation="0 120 0" material="side: back; color: #10131f; opacity: 0.6"></a-sphere>
 
     <a-entity id="castle" position="0 0 0">
-      <a-box id="hall" position="0 2 0" width="14" height="6" depth="10" material="color: #050617; metalness: 0.6; roughness: 0.2;"></a-box>
-      <a-plane id="parity-table" position="0 1.1 -1" rotation="-90 0 0" width="6" height="3" material="color: #9ae6ff; metalness: 1; roughness: 0.05; opacity: 0.85"></a-plane>
+      <a-box id="hall" position="0 2 0" width="14" height="6" depth="10" material="color: #04050f; metalness: 0.75; roughness: 0.15; emissive: #0f172a; emissiveIntensity: 0.35;"></a-box>
+      <a-plane id="parity-table" position="0 1.08 -1" rotation="-90 0 0" width="6.4" height="3.2" material="color: #a5f3fc; metalness: 1; roughness: 0.03; opacity: 0.85; emissive: #38bdf8; emissiveIntensity: 0.2;"></a-plane>
+      <a-plane id="hall-floor" position="0 0.01 0" rotation="-90 0 0" width="18" height="14" material="color: #0b1023; metalness: 0.8; roughness: 0.1; emissive: #0f172a; emissiveIntensity: 0.4;"></a-plane>
+      <a-entity id="hall-arches" position="0 0 0">
+        <a-cylinder position="-6 3 -2" radius="0.4" height="5.6" material="color: #0b132b; metalness: 0.65; roughness: 0.2"></a-cylinder>
+        <a-cylinder position="6 3 -2" radius="0.4" height="5.6" material="color: #0b132b; metalness: 0.65; roughness: 0.2"></a-cylinder>
+        <a-cylinder position="-6 3 2" radius="0.4" height="5.6" material="color: #0b132b; metalness: 0.65; roughness: 0.2"></a-cylinder>
+        <a-cylinder position="6 3 2" radius="0.4" height="5.6" material="color: #0b132b; metalness: 0.65; roughness: 0.2"></a-cylinder>
+      </a-entity>
       <a-entity id="forge" position="-5 0.5 2">
-        <a-cylinder height="1" radius="2" color="#1d4ed8" opacity="0.7"></a-cylinder>
+        <a-cylinder height="1" radius="2" material="color: #1d4ed8; metalness: 0.6; roughness: 0.2; emissive: #60a5fa; emissiveIntensity: 0.35" opacity="0.7"></a-cylinder>
         <a-text value="Haptic Forge" align="center" color="#e2e8f0" position="0 1.5 0"></a-text>
+        <a-torus position="0 0.4 0" radius="1.6" radius-tubular="0.06" rotation="90 0 0" material="color: #38bdf8; emissive: #60a5fa; emissiveIntensity: 0.6"></a-torus>
         <a-entity id="forge-sandbox"></a-entity>
       </a-entity>
 
@@ -155,28 +166,36 @@
       <a-sphere radius="0.15" color="#fcd34d" position="2 0 0" animation="property: position; dir: alternate; dur: 4000; loop: true; to: 2 1.2 -1"></a-sphere>
       <a-sphere radius="0.12" color="#93c5fd" position="-2 0 0" animation="property: position; dir: alternate; dur: 3600; loop: true; to: -2 1 -1"></a-sphere>
       <a-sphere radius="0.1" color="#f472b6" position="0 0 -2" animation="property: position; dir: alternate; dur: 4200; loop: true; to: 0 1.4 -2"></a-sphere>
+      <a-sphere radius="0.08" color="#22d3ee" position="1 0.3 -1" animation="property: position; dir: alternate; dur: 3200; loop: true; to: 1 1.1 -1.5"></a-sphere>
     </a-entity>
 
     <a-entity id="gardens" position="0 0 -18">
-      <a-plane rotation="-90 0 0" width="30" height="30" material="color: #0f172a"></a-plane>
+      <a-plane rotation="-90 0 0" width="36" height="36" material="color: #0b1122; metalness: 0.2; roughness: 0.8"></a-plane>
+      <a-plane rotation="-90 0 0" width="26" height="26" position="0 0.02 0" material="color: #1d4ed8; opacity: 0.12; emissive: #38bdf8; emissiveIntensity: 0.25"></a-plane>
       <a-entity id="trees" position="-8 0 0">
         <a-cylinder class="tree" data-index="0" position="0 1 0" radius="0.4" height="2" color="#16a34a"></a-cylinder>
         <a-cylinder class="tree" data-index="1" position="2 1 1" radius="0.4" height="2.2" color="#22c55e"></a-cylinder>
         <a-cylinder class="tree" data-index="2" position="-2 1.2 -1" radius="0.4" height="2.4" color="#4ade80"></a-cylinder>
+        <a-sphere position="0 2.6 0" radius="0.8" material="color: #22c55e; emissive: #4ade80; emissiveIntensity: 0.3; opacity: 0.8"></a-sphere>
+        <a-sphere position="2 2.7 1" radius="0.7" material="color: #4ade80; emissive: #86efac; emissiveIntensity: 0.25; opacity: 0.8"></a-sphere>
       </a-entity>
       <a-entity id="gravity-plaza" position="6 0 2">
-        <a-ring radius-inner="1.8" radius-outer="2.4" rotation="-90 0 0" color="#38bdf8"></a-ring>
-        <a-sphere id="aether-ball" position="0 1 0" radius="0.4" color="#e0f2fe"></a-sphere>
+        <a-ring radius-inner="1.8" radius-outer="2.4" rotation="-90 0 0" material="color: #38bdf8; emissive: #7dd3fc; emissiveIntensity: 0.5"></a-ring>
+        <a-sphere id="aether-ball" position="0 1 0" radius="0.5" material="color: #e0f2fe; emissive: #38bdf8; emissiveIntensity: 0.45"></a-sphere>
         <a-text value="Gravity-Well Plaza" align="center" color="#e2e8f0" position="0 2.2 0"></a-text>
       </a-entity>
       <a-entity id="sands" position="0 0 6">
-        <a-plane rotation="-90 0 0" width="10" height="10" material="color: #f8fafc; opacity: 0.2"></a-plane>
+        <a-plane rotation="-90 0 0" width="10" height="10" material="color: #f8fafc; opacity: 0.16; metalness: 0.2; roughness: 0.6"></a-plane>
         <a-text value="Sculpting Sands" align="center" color="#e2e8f0" position="0 1 0"></a-text>
         <a-entity id="sand-sculptures"></a-entity>
       </a-entity>
       <a-entity id="streams" position="0 0 -6">
-        <a-plane rotation="-90 0 0" width="10" height="4" material="color: #38bdf8; opacity: 0.35"></a-plane>
+        <a-plane rotation="-90 0 0" width="10" height="4" material="color: #38bdf8; opacity: 0.35; metalness: 0.6; roughness: 0.2"></a-plane>
         <a-text value="Zen Synthesis Streams" align="center" color="#e2e8f0" position="0 1 0"></a-text>
+      </a-entity>
+      <a-entity id="garden-orbs">
+        <a-sphere radius="0.25" position="-4 1.8 4" material="color: #fde68a; emissive: #fbbf24; emissiveIntensity: 0.5" animation="property: position; dir: alternate; dur: 5000; loop: true; to: -4 2.4 3.2"></a-sphere>
+        <a-sphere radius="0.18" position="3 1.6 -2" material="color: #c4b5fd; emissive: #a78bfa; emissiveIntensity: 0.5" animation="property: position; dir: alternate; dur: 4500; loop: true; to: 3 2.2 -3"></a-sphere>
       </a-entity>
     </a-entity>
 
@@ -198,19 +217,23 @@
         <a-sphere position="0 2 4" radius="0.15" color="#f9a8d4"></a-sphere>
         <a-sphere position="0.3 2.2 4" radius="0.1" color="#fbcfe8"></a-sphere>
         <a-sphere position="-0.3 2.1 4" radius="0.12" color="#f472b6"></a-sphere>
+        <a-ring position="0 2 4" radius-inner="0.2" radius-outer="0.3" rotation="90 0 0" material="color: #fbcfe8; emissive: #f472b6; emissiveIntensity: 0.5"></a-ring>
       </a-entity>
       <a-entity id="echo-silhouette" visible="false">
         <a-plane position="0 2 -3" width="3" height="5" material="color: #1e293b; opacity: 0.8"></a-plane>
       </a-entity>
       <a-entity id="echo-companion" visible="true">
-        <a-sphere position="0 1.6 3" radius="0.35" color="#60a5fa"></a-sphere>
-        <a-ring position="0 1.9 3" radius-inner="0.25" radius-outer="0.33" rotation="90 0 0" color="#e0f2fe"></a-ring>
+        <a-sphere position="0 1.6 3" radius="0.38" material="color: #60a5fa; emissive: #38bdf8; emissiveIntensity: 0.4"></a-sphere>
+        <a-ring position="0 1.9 3" radius-inner="0.25" radius-outer="0.35" rotation="90 0 0" material="color: #e0f2fe; emissive: #7dd3fc; emissiveIntensity: 0.6"></a-ring>
+        <a-torus position="0 1.6 3" radius="0.6" radius-tubular="0.03" rotation="0 0 90" material="color: #93c5fd; emissive: #38bdf8; emissiveIntensity: 0.45"></a-torus>
       </a-entity>
     </a-entity>
 
     <a-entity id="hall-lights">
-      <a-light type="point" color="#8ec5ff" intensity="1.2" position="0 4 2"></a-light>
+      <a-light type="point" color="#8ec5ff" intensity="1.4" position="0 4 2"></a-light>
       <a-light type="ambient" color="#1e3a8a" intensity="0.5"></a-light>
+      <a-light type="spot" color="#38bdf8" intensity="0.9" position="-6 5 4" angle="35" penumbra="0.6" target="#parity-table"></a-light>
+      <a-light type="spot" color="#f472b6" intensity="0.7" position="6 5 4" angle="35" penumbra="0.6" target="#parity-table"></a-light>
     </a-entity>
   </a-scene>
 
