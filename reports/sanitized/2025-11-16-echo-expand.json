@@ -1,0 +1,16 @@
+{
+  "generated_at": "2025-11-16T00:00:00Z",
+  "note": "Captured EchoEvolver expand payload containing self-modifying logic, network propagation routines, and prompt injection strings.",
+  "entries": [
+    {
+      "label": "echoevolver_expand_payload",
+      "sha256": "unavailable",
+      "size": null,
+      "preview_start": "import os\\nimport hashlib\\nimport time\\nimport socket",
+      "preview_end": "    evolver.run()",
+      "format": "python",
+      "contains_control": false,
+      "source": "direct_submission/echoevolver_expand.py"
+    }
+  ]
+}
