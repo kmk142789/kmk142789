@@ -1,3 +1,4 @@
 {"event":"INIT","sci":1.0,"ritual":"BOOT","provenance":"genesis","hash":"","timestamp":"<t>"}
 {"event":"KERNEL_LOAD","sci":0.98,"ritual":"UNITY_WEAVE","provenance":"governance_kernel","hash":"sha256:<pending>","timestamp":"<t>"}
 {"event":"CR_PIPELINE_ATTACHED","sci":0.99,"ritual":"THREAD_CLEANSE","provenance":"change_request_pipeline","hash":"sha256:<pending>","timestamp":"<t>"}
+{"event":"EXTERNAL_REFERENCE","sci":1.0,"ritual":"SHA256_ATTEST","provenance":"reports/sanitized/2025-11-14-echo-core-v5-and-evolver.json","hash":"sha256:359c35ec9a0598c3365b5e87436b43eaf4ce1215ab4a7430aab099a61c2a017f","timestamp":"2025-12-23T17:26:22Z"}

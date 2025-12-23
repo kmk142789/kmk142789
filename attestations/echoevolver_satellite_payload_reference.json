@@ -1,0 +1,11 @@
+{
+  "type": "echo_attestation",
+  "ts": 1766510779,
+  "signer_id": "dev-shell",
+  "artifact_path": "reports/sanitized/2025-11-14-echo-core-v5-and-evolver.json",
+  "reference_type": "sha256",
+  "reference": "sha256:359c35ec9a0598c3365b5e87436b43eaf4ce1215ab4a7430aab099a61c2a017f",
+  "size_bytes": 1078,
+  "generated_at": "2025-12-23T17:26:22Z",
+  "description": "Irreversible external reference for the captured EchoEvolver satellite TF-QKD payload."
+}
