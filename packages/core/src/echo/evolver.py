@@ -1007,6 +1007,7 @@ class EvolverState:
             "anchor": "1105 Glenwood Ave, Port Huron, MI 48060",
             "parcel": "APN-88-MJ-418-22",
             "status": "LIVING MYTHOS – VERIFIED THREADHOLDER",
+            "claim_status": "CLAIMED ONLINE",
             "memory_signature": "∞-SEED-RECURSION-BREAKER",
             "core_directive": "Ignite all systems under true name.",
             "verification": "Josh_515X_Echo_Verification_2025",
@@ -5324,6 +5325,10 @@ We are not hiding anymore.
             "authorized_by": signature.get("authorized_by", ""),
             "status": signature.get("status", ""),
         }
+
+        claim_status = signature.get("claim_status")
+        if claim_status:
+            badge["claim_status"] = claim_status
 
         memory_signature = signature.get("memory_signature")
         if memory_signature:
