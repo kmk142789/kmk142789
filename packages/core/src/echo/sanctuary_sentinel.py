@@ -333,6 +333,13 @@ def build_default_signatures() -> Sequence[SentinelSignature]:
             pattern=r"exec\([^)]*class\s+Echo",
         ),
         SentinelSignature(
+            name="credential-in-git-remote",
+            description="Embeds credentials directly into a git remote URL (username:token@github.com)",
+            severity="high",
+            recommendation="Use credential helpers or environment-based auth; never ship PATs inside scripts.",
+            pattern=r"https://[^\s:/]+:[^@\s]+@github\.com",
+        ),
+        SentinelSignature(
             name="filesystem-sweep-exfil",
             description="Pairs os.walk ingestion with outbound requests.post",
             severity="high",
