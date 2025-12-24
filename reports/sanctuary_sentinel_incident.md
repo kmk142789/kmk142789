@@ -45,4 +45,6 @@ controls and both exhibit traits associated with data exfiltration and worm-styl
 ## Suggested Artefact Handling
 Run ``python tools/quarantine_payload.py suspicious_payload.py --labels sanctuary-sentinel echo-evolver \
     --output reports/sanitized/2025-05-11-sanctuary-sentinel.json --note "Captured combined payload"`` to store a
-sanitised fingerprint of the original attachment without checking the raw code into the repository.
+sanitised fingerprint of the original attachment without checking the raw code into the repository.  The generated
+summary is tracked in ``reports/sanitized/2025-05-11-sanctuary-sentinel.json`` for future correlation and threat
+hunting.
