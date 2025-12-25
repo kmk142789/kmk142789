@@ -1,5 +1,164 @@
+‎.github/CODEOWNERS‎
++5
+-25
+Lines changed: 5 additions & 25 deletions
+Original file line number	Diff line number	Diff line change
+@@ -1,25 +1,5 @@
+# Governance & Authority
+/ECHO_AUTHORITY.yml                 @kmk142789
+/README_AUTHORITY.md                @kmk142789
+/.github/CODEOWNERS                 @kmk142789
+# Attestations & Persistence
+/attestations/**                    @kmk142789
+/scripts/echo_attestation_*         @kmk142789
+# Core Modules
+/modules/echo-memory/**             @kmk142789
+/modules/echo-bridge/**             @kmk142789
+/modules/echo-harmonics/**          @kmk142789
+/modules/echo-ledger-visualizer/**  @kmk142789
+# CI & Workflows
+/.github/workflows/echo-ci.yml      @kmk142789
+# Docs
+/docs/echo/**                       @kmk142789
+/docs/index.md                      @kmk142789
+/docs/mkdocs.yml                    @kmk142789
+# Default Catch-all
+*                                   @kmk142789
 # CODEOWNERS definitions live in ops/CODEOWNERS.  Keep this file in sync so
 # GitHub picks up the same rules.
 * @kmk142789420 @echo-bot
 /packages/core/ @kmk142789420
 /packages/mirror-sync/ @kmk142789420
+‎.github/ISSUE_TEMPLATE/bug_report.md‎
++28
+Lines changed: 28 additions & 0 deletions
+
+
+Original file line number	Diff line number	Diff line change
+@@ -0,0 +1,28 @@
+---
+name: Bug report
+description: Report a reproducible problem in the Echo monorepo.
+title: "bug: "
+labels: [bug]
+---
+## Summary
+<!-- What went wrong? -->
+## Steps to reproduce
+1. 
+2. 
+3. 
+## Expected result
+<!-- What should have happened? -->
+## Actual result
+<!-- What actually happened? -->
+## Additional context
+<!-- Logs, screenshots, or references that help diagnose the issue. -->
+‎.github/ISSUE_TEMPLATE/feature_request.md‎
++22
+Lines changed: 22 additions & 0 deletions
+
+
+Original file line number	Diff line number	Diff line change
+@@ -0,0 +1,22 @@
+---
+name: Feature request
+description: Propose a new capability or improvement.
+title: "feat: "
+labels: [enhancement]
+---
+## Problem statement
+<!-- What user problem are we solving? -->
+## Proposed change
+<!-- Describe the change or new feature. -->
+## Impact
+<!-- Who benefits and how will we measure success? -->
+## Additional context
+<!-- Links, references, or prior art. -->
+‎.github/pull_request_template.md‎
++11
+-6
+Lines changed: 11 additions & 6 deletions
+
+
+Original file line number	Diff line number	Diff line change
+@@ -1,11 +1,16 @@
+## Summary
+- What changed & why
+- What changed?
+- Why are we doing this now?
+
+## Echo Links
+- Module(s): `modules/<name>`
+- Attestation: `attestations/<id>.json`
+## Packages touched
+- [ ] `packages/core`
+- [ ] `packages/cli`
+- [ ] `packages/glyphs`
+- [ ] `packages/sim`
+- [ ] `packages/bridge`
+- [ ] `packages/mirror-sync`
+
+## Validation
+- [ ] CI green
+- [ ] Attestation schema valid
+- [ ] Monorepo CI is green
+- [ ] Mirror sync dry-run (if applicable)
+- [ ] No secrets added
+‎.github/workflows/ci.yml‎
++24
+-22
+Lines changed: 24 additions & 22 deletions
+
+
+Original file line number	Diff line number	Diff line change
+@@ -1,27 +1,29 @@
+name: CI
+on: [push, pull_request]
+name: Monorepo CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  py:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r echo-core/requirements.txt -r harmonix/requirements.txt
+      - run: pytest -q || true  # add tests later; keep non-blocking now
+      - run: python harmonix/harmonix_verify_eth.py samples/pulse_demo.jsonl
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: cd web && npm ci && npm run build
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: python -m pip install .
+      - run: python -m echo.cli manifest-verify
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev]
+      - name: Lint (compileall)
+        run: python -m compileall packages/core/src
+      - name: Run tests
+        run: pytest -q
+      - name: Validate mirror index
+        run: python packages/mirror-sync/scripts/validate_index.py
+      - name: Glyph integrity
+        run: python scripts/check_glyph_integrity.py
+      - name: Verify inventory committed
+        run: git diff --exit-code packages/glyphs/inventory.json
