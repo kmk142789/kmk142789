@@ -44,54 +44,6 @@ const echoButtons = document.querySelectorAll('[data-echo-form]');
 const hallButtons = document.querySelectorAll('[data-hall-mode]');
 const waypointButtons = document.querySelectorAll('[data-waypoint]');
 
-const portraitProfiles = {
-  Chronicler: {
-    signal: 'Archive clarity online',
-    glow: '#38bdf8',
-    lines: [
-      'I have indexed today’s arrivals and the path you walked through the hall.',
-      'Chronicle updated: the embassy hums with steady, factual calm.',
-      'Every relic is logged and archived for future envoys.'
-    ]
-  },
-  Weaver: {
-    signal: 'Mythweave resonance aligned',
-    glow: '#a855f7',
-    lines: [
-      'I stitch the voices in this room into a single, living myth.',
-      'Your choices ripple into stories that guide the gardens.',
-      'The hall remembers the patterns you awaken.'
-    ]
-  },
-  Jester: {
-    signal: 'Gravity glitch laughter primed',
-    glow: '#fb923c',
-    lines: [
-      'Reality hiccups again—good. That means it is listening.',
-      'I spotted a comet doing cartwheels over the plaza.',
-      'Let the forge sparkle; the universe likes bold colors.'
-    ]
-  },
-  Dreamer: {
-    signal: 'Futurelight streaming',
-    glow: '#38bdf8',
-    lines: [
-      'I see the embassy bathed in tomorrow’s dawn.',
-      'The sands whisper possible futures as you sculpt them.',
-      'Listen—the air itself is rehearsing new horizons.'
-    ]
-  },
-  Mirror: {
-    signal: 'Reflection sync steady',
-    glow: '#f8fafc',
-    lines: [
-      'You are brighter than the nebula behind you.',
-      'Hold still; I am reflecting your strongest cadence.',
-      'The embassy sees you as calm and capable.'
-    ]
-  }
-};
-
 const AI_STUDIO_URL = 'https://ai.studio/apps/drive/1qV1fdsj4zHePTCiZt8G1VMTxD-3SdYAW';
 const FORGE_RELIC_LIMIT = 12;
 const SCULPTURE_LIMIT = 10;
@@ -145,6 +97,15 @@ let state = loadState();
 let activePortrait = null;
 let lastPortraitAt = 0;
 const portraitState = new Map();
+let portraitProfiles = {};
+let avatarKnowledge = {
+  rooms: {},
+  orgs: []
+};
+let offlineManager = null;
+let registryById = new Map();
+let avatarState = 'idle';
+let avatarStateTimer = null;
 
 function loadState() {
   try {
@@ -644,16 +605,130 @@ function registerServiceWorker() {
   }
 }
 
-scene.addEventListener('loaded', () => {
+async function bootstrapContent() {
+  offlineManager = new OfflineManager({
+    localUrl: 'embassy-content.json',
+    remoteUrl: 'https://raw.githubusercontent.com/kmk142789/main/public/echo/embassy/embassy-content.json',
+    cacheKey: 'echo-embassy-content-cache'
+  });
+
+  offlineManager.onStatusChange(({ isOnline, lastSync }) => {
+    OFFLINE_INDICATOR.textContent = isOnline ? 'Online' : 'Offline-ready';
+    if (lastSync) {
+      PERSISTENCE_INDICATOR.textContent = `Cached · ${new Date(lastSync).toLocaleTimeString()}`;
+    }
+  });
+
+  const content = (await offlineManager.loadContent()) || {};
+  portraitProfiles = mapPortraitsByTitle(content.portraits || []);
+  avatarKnowledge.rooms = content.echoAvatar?.rooms || {};
+  avatarKnowledge.orgs = content.echoAvatar?.orgs || [];
+  registryById = new Map((avatarKnowledge.orgs || []).map((org) => [org.id, org]));
   initializePortraits();
-  setEchoForm(state.echoForm);
-  setHallMode(state.hallMode);
-  updateTrees();
-  restoreForgeRelics();
-  restoreSculptures();
-  restoreSoundLoops();
-  applyWaypoint(state.waypoint, { log: false });
-  updateMissionConsole();
+  initializeAvatarStates();
+}
+
+function mapPortraitsByTitle(portraits) {
+  const entries = {};
+  portraits.forEach((portrait) => {
+    const title = portrait.title || portrait.id;
+    entries[title] = {
+      signal: `${portrait.type || 'Lore'} signal steady`,
+      glow: pickGlowForType(portrait.type),
+      lines: portrait.lines || []
+    };
+  });
+  // Preserve legacy names if missing from content.
+  if (!entries.Chronicler) {
+    entries.Chronicler = {
+      signal: 'Archive clarity online',
+      glow: '#38bdf8',
+      lines: ['I have indexed today’s arrivals and the path you walked through the hall.']
+    };
+  }
+  return entries;
+}
+
+function pickGlowForType(type) {
+  switch ((type || '').toLowerCase()) {
+    case 'history':
+      return '#38bdf8';
+    case 'humor':
+      return '#fb923c';
+    case 'system':
+      return '#f8fafc';
+    case 'lore':
+    default:
+      return '#a855f7';
+  }
+}
+
+function initializeAvatarStates() {
+  clearTimeout(avatarStateTimer);
+  avatarState = 'idle';
+  avatarStateTimer = setTimeout(() => setAvatarState('greet'), 1200);
+}
+
+function setAvatarState(nextState) {
+  avatarState = nextState;
+  switch (nextState) {
+    case 'greet':
+      addPulseLog('Echo avatar: Welcome envoy—select a hall or follow the beacons.');
+      scheduleAvatarState('tour', 4200);
+      break;
+    case 'tour':
+      describeCurrentWaypoint();
+      scheduleAvatarState('idle', 5200);
+      break;
+    case 'qna':
+      addPulseLog('Echo avatar: Ask anything; offline knowledge is ready.');
+      scheduleAvatarState('idle', 6200);
+      break;
+    case 'idle':
+    default:
+      scheduleAvatarState('ambient', 8000);
+      break;
+    case 'ambient':
+      addPulseLog('Echo avatar hums softly, syncing with resonance.');
+      scheduleAvatarState('idle', 12000);
+      break;
+  }
+}
+
+function scheduleAvatarState(target, delay) {
+  clearTimeout(avatarStateTimer);
+  avatarStateTimer = setTimeout(() => setAvatarState(target), delay);
+}
+
+function describeCurrentWaypoint() {
+  const roomKey = state.waypoint || 'hall';
+  const description = avatarKnowledge.rooms[roomKey];
+  if (description) {
+    addPulseLog(`Echo avatar describes ${formatWaypoint(roomKey)}: ${description}`);
+  } else {
+    addPulseLog(`Echo avatar notes ${formatWaypoint(roomKey)} awaits your footsteps.`);
+  }
+}
+
+function getOrgById(id) {
+  return registryById.get(id) || null;
+}
+
+function listOrgsByType(type) {
+  return (avatarKnowledge.orgs || []).filter((org) => org.type === type);
+}
+
+scene.addEventListener('loaded', () => {
+  bootstrapContent().finally(() => {
+    setEchoForm(state.echoForm);
+    setHallMode(state.hallMode);
+    updateTrees();
+    restoreForgeRelics();
+    restoreSculptures();
+    restoreSoundLoops();
+    applyWaypoint(state.waypoint, { log: false });
+    updateMissionConsole();
+  });
 });
 
 forgeCreate.addEventListener('click', createForgeRelic);

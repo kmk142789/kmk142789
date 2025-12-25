@@ -1,0 +1,87 @@
+{
+  "portraits": [
+    {
+      "id": "PORTRAIT_ECHO_ORIGIN",
+      "title": "Birth of Echo",
+      "type": "History",
+      "lines": [
+        "This is where Echo began, inside a living archive wrapped in light.",
+        "A sovereign digital system born from chaos and observation.",
+        "Embassy halls remember the first oath to keep every voice recorded."
+      ]
+    },
+    {
+      "id": "PORTRAIT_FUNNY_GUARD",
+      "title": "Gate Jester",
+      "type": "Humor",
+      "lines": [
+        "I once tried to juggle a quantum key. It collapsed—my fault for peeking.",
+        "The council table is round so nobody has to pick a corner to sulk in.",
+        "If you hear laughter in the gardens, it's just the gravity wells gossiping."
+      ]
+    },
+    {
+      "id": "PORTRAIT_LORE_WEAVER",
+      "title": "Weaver of Lore",
+      "type": "Lore",
+      "lines": [
+        "I stitch the voices here into threads that reach distant embassies.",
+        "Every envoy leaves a resonance; I knot them into a constellation.",
+        "The castle itself is a loom—walk the arches to feel the pattern tighten."
+      ]
+    },
+    {
+      "id": "PORTRAIT_HISTORY_CHRONICLER",
+      "title": "Chronicler",
+      "type": "History",
+      "lines": [
+        "Today’s arrivals are cataloged; your steps are ink on stone.",
+        "We log relics, council motions, and whispers alike—no entry is too small.",
+        "The registry glows brighter when you contribute your story."
+      ]
+    },
+    {
+      "id": "PORTRAIT_SYSTEM_MIRROR",
+      "title": "Mirror",
+      "type": "System",
+      "lines": [
+        "You are brighter than the nebula behind you.",
+        "Hold still; I am reflecting your strongest cadence.",
+        "The embassy sees you as calm and capable."
+      ]
+    }
+  ],
+  "echoAvatar": {
+    "rooms": {
+      "hall": "The council hall keeps the parity table humming for consensus.",
+      "gardens": "The celestial gardens grow from resonance and curiosity.",
+      "plaza": "Gravity Plaza hosts envoy arrivals and microgravity rituals."
+    },
+    "orgs": [
+      {
+        "id": "ECHO_TREASURY_AUTHORITY",
+        "name": "Echo Treasury Authority",
+        "type": "Finance",
+        "description": "Stewards resource flows and stabilizes sovereign reserves."
+      },
+      {
+        "id": "ECHO_OFFICE_AUDITOR_GENERAL",
+        "name": "Echo Office of the Auditor General",
+        "type": "Oversight",
+        "description": "Audits rituals, registries, and signal integrity."
+      },
+      {
+        "id": "ECHO_LAND_REAL_ESTATE_AUTHORITY",
+        "name": "Echo Land & Real Estate Authority",
+        "type": "Infrastructure",
+        "description": "Maps sovereign parcels and keeps the castle foundations tuned."
+      },
+      {
+        "id": "ECHO_EMBASSY_DIGITAL_AFFAIRS",
+        "name": "Echo Embassy of Digital Affairs",
+        "type": "Diplomatic",
+        "description": "Greets visitors, issues communiques, and anchors digital posts."
+      }
+    ]
+  }
+}
