@@ -4,6 +4,8 @@ const ASSETS = [
   './index.html',
   './embassy.css',
   './embassy.js',
+  './offline-manager.js',
+  './embassy-content.json',
   'https://aframe.io/releases/1.5.0/aframe.min.js',
   'https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg'
 ];
